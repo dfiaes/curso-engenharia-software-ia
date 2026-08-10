@@ -7,16 +7,16 @@ Método completo em [`docs/como-estudar.md`](docs/como-estudar.md).
 ## Estado atual
 
 - **Módulo:** M00 · Ferramental
-- **Bloco:** 0 de 3
-- **Última sessão:** —
-- **Próximo passo:** ler `docs/como-estudar.md`, depois `modulos/M00-ferramental/README.md`
-- **Travado em:** —
+- **Bloco:** 1 de 3
+- **Última sessão:** 2026-08-10
+- **Próximo passo:** Completar bloco 2 de M00 (primitivas e índices de contexto)
+- **Travado em:** dinâmica do curso e navegação dos arquivos markdown
 
 ## Placar
 
 | Módulo | Blocos | Checkpoint | Data |
 |---|---|---|---|
-| M00 Ferramental: as 5 primitivas | 0/3 | ☐ | |
+| M00 Ferramental: as 5 primitivas | 1/3 | ☐ | 2026-08-10 |
 | M01 Workflow IA-driven: SDD + Harness | 0/5 | ☐ | |
 | M02 Python vindo de C# | 0/6 | ☐ | |
 | M03 FastAPI, Postgres, Docker, CI | 0/8 | ☐ | |
@@ -31,7 +31,7 @@ Método completo em [`docs/como-estudar.md`](docs/como-estudar.md).
 | M12 Produção: segurança, billing, SRE com IA | 0/9 | ☐ | |
 | M13 Capstone | 0/20 | ☐ | |
 
-**Total:** 0 / 109 blocos (~218h)
+**Total:** 1 / 109 blocos (~218h)
 **ADRs escritos:** 0 / 25
 **Posts publicados:** 0 / 14
 
@@ -66,13 +66,23 @@ Método completo em [`docs/como-estudar.md`](docs/como-estudar.md).
   - versionamento/rollback:
 ```
 
+### 2026-08-10 · M00 · bloco 1
+**Fiz:** Aprendi sobre o bloco 1: isolamento de contexto nas LLMs
+**Entendi:** O isolamento de contexto compra espaço (menos tokens consumidos) e custa a capacidade de ver relações entre as partes isoladas (loss de coerência entre decisões distantes)
+**Travei em:** Dinâmica do curso e estrutura dos arquivos markdown — não li o conteúdo das aulas previamente e tive dificuldade de responder questionamentos aqui no chat
+**Errei na recuperação ativa:** Falta de leitura prévia dos arquivos README e roteiro dos módulos
+**Próximo passo:** Ler integralmente `modulos/M00-ferramental/README.md` antes de começar o bloco 2
+**As 3 perguntas de sênior:** (não aplicável para M00)
+
 ---
 
 ## Lista de revisão
 
 O que você errou na recuperação ativa e ainda não recuperou. Esvaziar é o objetivo.
 
-- [ ]
+- [ ] Importância de ler os arquivos README dos módulos **antes** de iniciar os blocos
+- [ ] Dinâmica de navegação entre `CLAUDE.md` → `docs/como-estudar.md` → `modulos/MXX/README.md`
+- [ ] Conceito de isolamento de contexto: trade-off entre espaço (tokens) e coerência
 
 ---
 
