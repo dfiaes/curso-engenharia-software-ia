@@ -41,7 +41,7 @@ A hierarquia completa de conceitos — LLM, prompt, tool, MCP, RAG, agent loop, 
 | M10 | **Graph engineering + saúde arquitetural** | 10 | Grafo de conhecimento + orquestrador |
 | M11 | Fundamentos de ML/DL e modelos locais | 8 | Entendimento de custo, latência e limites |
 | M12 | Produção: segurança, multi-tenant, billing, SRE com IA | 9 | Produto vendável |
-| M13 | **Capstone** — o produto | 20+ | Lançamento |
+| M13 | **Capstone** — o produto | 20 | Lançamento |
 
 **Os quatro módulos em negrito são os que o mercado mais valoriza e menos gente sabe.** M01 é produtividade real; M06 é o principal sinal de contratação em IA; M10 é o que quase nenhum curso cobre; M13 é a prova.
 
@@ -463,6 +463,8 @@ Não é "terminar o código". É: produto no ar, landing page, primeiro usuário
 ---
 
 ## Trilhas paralelas (rodam o curso inteiro, 30 min por vez)
+
+> **Elas não entram nos 109 blocos.** São fatias de 30 min encaixadas fora do bloco de estudo — a caminho do trabalho, no almoço, antes de dormir. Se você contá-las, a carga real fica em torno de 260h. O placar mede só o currículo.
 
 ### ADR — Architecture Decision Record
 Toda decisão não-óbvia vira `docs/adr/NNNN-titulo.md`: contexto, opções, decisão, consequências. Fixa o aprendizado, produz prova de raciocínio arquitetural, e vira material bruto para system design em entrevista sem "estudar para a prova". **Meta: 25 ADRs.**

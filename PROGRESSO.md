@@ -41,7 +41,7 @@ Método completo em [`docs/como-estudar.md`](docs/como-estudar.md).
 |---|---|---|
 | após M02 | Revisão em espiral 1 | ☐ |
 | após M04 | **Defesa técnica — Fase 0+1** | ☐ |
-| após M07 | Revisão em espiral 2 | ☐ |
+| após M07 | Revisão em espiral 2, **depois** a defesa abaixo | ☐ |
 | após M07 | **Defesa técnica — Fase 2** | ☐ |
 | após M10 | Revisão em espiral 3 | ☐ |
 | após M10 | **Defesa técnica — Fase 3** | ☐ |

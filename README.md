@@ -28,7 +28,7 @@ docs/
 modulos/
   M00-ferramental/           ← comece aqui
   M01..M13/                  criados conforme você avança
-capstone/                    o produto, construído a partir do M05
+capstone/                    o produto, construído a partir do M03
 .claude/
   skills/                    suas skills (incluindo a `tutor-ia`)
   agents/                    seus subagentes

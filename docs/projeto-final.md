@@ -25,13 +25,13 @@ Cruzando isso com o seu perfil, uma coisa salta: **você trabalha há anos dentr
 - **Domínio que só você tem.** Você não vai pesquisar essa dor, você vive nela.
 - **Serve o objetivo nº 1 imediatamente.** Você disse que a prioridade é subir de nível no emprego atual. Uma ferramenta que documenta e mapeia o sistema legado da sua empresa te torna, em semanas, a pessoa que resolve o problema que todo mundo evita. Isso é visibilidade real, não teoria.
 - **É o exercício técnico perfeito para o currículo.** Um grafo de dependências de código é o caso canônico de GraphRAG. "O que quebra se eu alterar esta tabela?" é impossível com busca vetorial e trivial com travessia de grafo. Você vai aprender graph engineering onde ele é obviamente superior, não com exemplo de brinquedo.
-- **Tem verdade verificável — logo, evals de verdade.** Diferente de resumo de texto, aqui existe resposta certa: ou o método é chamado por aquelas 7 classes, ou não é. Isso te permite construir uma suíte de avaliação séria (M04), que é o principal sinal de contratação de IA em 2026.
+- **Tem verdade verificável — logo, evals de verdade.** Diferente de resumo de texto, aqui existe resposta certa: ou o método é chamado por aquelas 7 classes, ou não é. Isso te permite construir uma suíte de avaliação séria (M06), que é o principal sinal de contratação de IA em 2026.
 - **Já é vendável em três formatos:** consultoria de assessment de legado (ticket alto, começa amanhã), self-serve por repositório (baixo suporte, seu requisito), e servidor MCP corporativo (o item mais pedido em consultoria de IA hoje).
 - **É o portfólio mais forte possível.** "Construí um sistema de GraphRAG sobre código-fonte com evals na CI, servidor MCP e orquestração durável" é uma frase que abre porta em entrevista sênior. E você consegue defender cada decisão porque construiu.
 
 **Riscos e como mitigo:** parsing de C# é trabalhoso — resolvemos com Roslyn via CLI ou tree-sitter, não escrevendo parser. Venda para banco é lenta — por isso o produto self-serve mira desenvolvedores, agências e consultores fazendo assessment de legado, não o departamento de compras do banco. E não subimos código de cliente para lugar nenhum sem opção de processamento local: isso vira feature de venda, não obstáculo.
 
-**Cunha inicial (o MVP que cabe no M11):** "aponte para um repositório .NET, receba um relatório de arquitetura + mapa de dependências + top 10 riscos de modernização". Preço por repositório. Sem onboarding, sem call.
+**Cunha inicial (o MVP que cabe no M13):** "aponte para um repositório .NET, receba um relatório de arquitetura + mapa de dependências + top 10 riscos de modernização". Preço por repositório. Sem onboarding, sem call.
 
 ---
 
@@ -73,41 +73,42 @@ Se você discordar, diga — a estrutura do curso não muda, só as peças que c
 
 ```
                      ┌─────────────────────────────────────┐
-   repositório  ───▶ │  Ingestão (M02)                     │
-   .NET             │  clone, walk, filtro, fila           │
+   repositório  ───▶ │  Ingestão (M03)                     │
+   legado            │  clone, walk, filtro, fila           │
                      └────────────────┬────────────────────┘
                                       ▼
                      ┌─────────────────────────────────────┐
-                     │  Parse determinístico (M08)         │
+                     │  Parse determinístico (M10)         │
                      │  Roslyn/tree-sitter → símbolos,     │
                      │  referências, SQL embutido           │
                      └────────┬───────────────────┬────────┘
                               ▼                   ▼
               ┌──────────────────────┐  ┌────────────────────────┐
-              │ Grafo (M08)          │  │ Índice híbrido (M05)   │
+              │ Grafo (M10)          │  │ Índice híbrido (M07)   │
               │ Postgres+AGE ou Neo4j│  │ pgvector + BM25 + rerank│
               └──────────┬───────────┘  └───────────┬────────────┘
                          └────────────┬─────────────┘
                                       ▼
                      ┌─────────────────────────────────────┐
-                     │  Agente investigador (M06)          │
+                     │  Agente investigador (M08)          │
                      │  ferramentas: buscar, ler,          │
                      │  travessia de grafo, perguntar      │
                      └────────────────┬────────────────────┘
                                       ▼
                      ┌─────────────────────────────────────┐
-                     │  Orquestrador durável (M08)         │
+                     │  Orquestrador durável (M10)         │
                      │  LangGraph + checkpoint + HITL      │
                      └────────────────┬────────────────────┘
                     ┌─────────────────┼──────────────────┐
                     ▼                 ▼                  ▼
          ┌──────────────┐   ┌──────────────┐   ┌──────────────────┐
-         │ Relatório    │   │ Servidor MCP │   │ API + UI (M02)   │
-         │ (M03)        │   │ (M07)        │   │                  │
+         │ Relatório    │   │ Servidor MCP │   │ API + UI (M03)   │
+         │ (M05)        │   │ (M09)        │   │                  │
          └──────────────┘   └──────────────┘   └──────────────────┘
 
-    Transversal:  Evals na CI (M04) · Custo e tracing (M03/M04)
-                  Multi-tenant, RLS, billing, segurança (M10)
+    Documentação-alvo: o gabarito do que gerar vem do M04 (PRD, C4, ADR)
+    Transversal:  Evals na CI (M06) · Custo e tracing (M05/M06)
+                  Multi-tenant, RLS, billing, segurança (M12)
 ```
 
 **Regra de ouro da arquitetura:** o que é determinístico fica determinístico. Parse de código, resolução de referências e travessia de grafo são feitos por ferramenta, **não** por LLM. O modelo entra para explicar, priorizar e conversar. Isso derruba custo, elimina alucinação estrutural e é exatamente o julgamento arquitetural que separa engenheiro de IA sênior de quem só chama API.
@@ -134,17 +135,17 @@ Note que o M06 (evals) aparece cedo no currículo e tarde nesta tabela **de prop
 
 ## Perguntas que o produto tem que responder (e que definem "pronto")
 
-Nível 1 — busca (RAG resolve, M05):
+Nível 1 — busca (RAG resolve, M07):
 - "Onde está a regra de cálculo de juros?"
 - "Como funciona a autenticação neste sistema?"
 
-Nível 2 — estrutura (só grafo resolve, M08):
+Nível 2 — estrutura (só grafo resolve, M10):
 - "O que quebra se eu alterar a assinatura deste método?"
 - "Quais telas dependem, direta ou indiretamente, desta tabela?"
 - "Que código está morto — sem nenhum caminho de chamada a partir de um entry point?"
 - "Onde estão os ciclos de dependência entre módulos?"
 
-Nível 3 — julgamento (agente + grafo + LLM, M06+M08):
+Nível 3 — julgamento (agente + grafo + LLM, M08+M10):
 - "Se eu for extrair um microsserviço deste monólito, qual é a fronteira de menor acoplamento?"
 - "Qual a ordem de menor risco para modernizar estes 40 arquivos?"
 
