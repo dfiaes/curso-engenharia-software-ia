@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M11 · Fundamentos de ML/DL e modelos locais</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>M11 · Fundamentos de ML/DL e modelos locais</h1>
+<p class="meta">
+  <span class="badge">Módulo 11</span>
+  8 blocos de 2h (16h) · <strong>Pré-requisito:</strong> M05 (gateway), M06 (evals) e M08 (orçamento de contexto)<br>
+  <em>Você não vai treinar um modelo de produção. Você vai parar de tratar o modelo como caixa preta.</em>
+</p>
+
+<div class="box">
+<p><strong>O que muda ao final deste módulo.</strong> Até aqui você usou o modelo como um serviço: manda prompt, recebe token, paga a conta. Funcionou — o M05 montou o gateway, o M06 provou que a saída é boa, o M07 alimentou o contexto, o M08 fez o loop, o M10 deu memória e durabilidade. Mas em todos esses módulos houve um momento em que a explicação parou em <em>"o modelo se comporta assim"</em>: por que a janela de contexto custa desproporcionalmente caro, por que o extrator erra ao contar ocorrências, por que baixar a temperatura não elimina alucinação, por que aquele modelo que escreve C# impecável trava quando você o pluga num harness de agente. Este módulo abre a caixa até a camada onde essas respostas existem — e para exatamente aí. Ao final você terá <strong>implementado atenção multi-head e treinado um transformer minúsculo em PyTorch</strong> (verá o loss cair, e vai entender cada linha), <strong>calculado o orçamento de VRAM</strong> de um modelo quantizado antes de baixá-lo, <strong>plugado um modelo local no gateway do M05 sem tocar em uma linha do código de chamada</strong>, e <strong>rodado os evals do M06 contra ele</strong> para responder com número — não com opinião — se o modo local é viável. E terá o argumento de venda que abre uma porta que a API não abre: <em>o cliente cujo código-fonte não pode sair da rede</em>.</p>
+</div>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+  <li><strong>Bloco 1 ·</strong> Por que o sênior precisa do fundamento — e o mapa honesto do que <em>não</em> estudar agora</li>
+  <li><strong>Bloco 2 ·</strong> Tensor, gradiente e o loop de treino: PyTorch em 40 linhas <em>— no arquivo companheiro</em></li>
+  <li><strong>Bloco 3 ·</strong> Atenção — o mecanismo, em código, e o preço do O(n²) <em>— no arquivo companheiro</em></li>
+  <li><strong>Bloco 4 ·</strong> O transformer completo: montar, treinar, ver o loss cair <em>— no arquivo companheiro</em></li>
+  <li><strong>Bloco 5 ·</strong> Do pré-treino ao comportamento (SFT, RLHF/DPO) — e por que ele alucina</li>
+  <li><strong>Bloco 6 ·</strong> Modelos abertos, quantização e o que cabe na sua máquina</li>
+  <li><strong>Bloco 7 ·</strong> Servir local: Ollama, vLLM e o gateway do M05 sem mudar o código de chamada</li>
+  <li><strong>Bloco 8 ·</strong> Modelo ≠ agente ≠ harness — avaliar com honestidade e quando fine-tuning é a resposta errada</li>
+</ol>
+</div>
+
+<div class="box">
+<p><strong>Como este módulo está dividido em dois arquivos.</strong> Os blocos 2, 3 e 4 formam um laboratório de PyTorch autocontido — você implementa atenção, monta um transformer e o treina. Eles moram em <strong><code>lab-transformer-do-zero.html</code></strong>, ao lado deste arquivo, pelo mesmo motivo que o M00 separou o bloco 4: é um bloco de trabalho longo, com natureza diferente do resto, e <strong>é a única parte do curso que não gera peça do Capstone</strong> — o laboratório existe para entendimento, não para o produto. A ordem de leitura é a natural: termine o bloco 1 aqui, abra o companheiro e faça os blocos 2 a 4, volte para o bloco 5. Os blocos 5 a 8 dependem do que você viu lá — em especial da linha <code>torch.multinomial</code> do bloco 4, que é de onde sai a explicação da alucinação. A tabela de diagnóstico e o checkpoint, no fim deste arquivo, cobrem os oito blocos.</p>
+</div>
+
+<div class="box warn">
+<p><strong>Aviso de escopo, para você não perder tempo.</strong> Este módulo é <em>fundamento aplicado</em>, não pós-graduação. Você vai escrever PyTorch, mas o objetivo do código é <strong>entendimento</strong>, não performance: o transformer que você vai treinar tem ~1 milhão de parâmetros e roda em CPU. Nenhum conteúdo aqui pressupõe GPU. Se você tiver uma, ótimo, vai mais rápido; se não tiver, tudo roda igual. O que você <strong>não</strong> vai aprender: treinar modelo de fronteira, otimização distribuída, kernels CUDA, arquiteturas de pesquisa. O bloco 1 explica por que essas coisas ficam de fora — e o critério que usei para escolher.</p>
+</div>
+<h2>Bloco 1 · Por que o sênior precisa do fundamento — e o mapa honesto do que <em>não</em> estudar</h2>
+<p class="clock">00:00–00:20 as quatro perguntas que ficaram sem resposta · 00:20–00:50 o vocabulário mínimo · 00:50–01:20 o mapa do que não estudar · 01:20–02:00 prática: instrumentar o gateway para ver o modelo por dentro</p>
+
+<h3>Por que isso importa</h3>
+
+<p>Há um ponto na carreira de todo engenheiro em que a abstração vaza e a explicação "é assim que funciona" para de bastar. Você conhece esse ponto de outro contexto: no dia em que o GC do .NET começou a matar o p99 da sua API, "o runtime cuida da memória" deixou de ser uma resposta aceitável. Você não escreveu um garbage collector — mas precisou entender geração 0, 1 e 2, LOH, e por que alocar 90 KB num loop quente é diferente de alocar 80 KB. O fundamento não te transformou em autor de runtime; te transformou em alguém que <strong>diagnostica</strong>.</p>
+
+<p>Nos dez módulos anteriores, quatro perguntas foram deixadas com uma resposta incompleta. Elas não são curiosidade acadêmica: cada uma custou (ou vai custar) dinheiro no Cartógrafo.</p>
+
+<table>
+<thead><tr><th>Pergunta que ficou aberta</th><th>Onde apareceu</th><th>O que respondemos na hora</th><th>Onde este módulo responde de verdade</th></tr></thead>
+<tbody>
+<tr><td>Por que dobrar o contexto custa <em>mais</em> que o dobro em latência?</td><td>M08 b4 — orçamento de atenção</td><td>"atenção é quadrática"</td><td>Bloco 3: você implementa a matriz n×n e mede</td></tr>
+<tr><td>Por que o extrator erra ao <em>contar</em> ocorrências, mas acerta ao <em>descrever</em>?</td><td>M05 b2 — structured output</td><td>"LLM não é bom em contas"</td><td>Blocos 4 e 5: tokenização de números + amostragem</td></tr>
+<tr><td>Por que temperatura 0 não elimina alucinação?</td><td>M06 b3 — graders e juiz calibrado</td><td>"reduz, não elimina"</td><td>Bloco 5: o que temperatura realmente faz com a distribuição</td></tr>
+<tr><td>Por que um modelo que escreve C# muito bem trava em modo agente?</td><td>M09 b5 — consumir MCP no agente</td><td>"suporte a tool calling varia"</td><td>Bloco 8: BFCL V4, sensibilidade a formato, modelo≠harness</td></tr>
+</tbody>
+</table>
+
+<p>Note o padrão: nas quatro, a resposta de superfície não é <em>errada</em> — é <strong>inacionável</strong>. "Atenção é quadrática" não te diz se vale a pena dividir o arquivo em dois pedaços ou comprar mais contexto. Depois deste módulo, diz.</p>
+
+<div class="box net">
+<p><strong>Tradução .NET · o nível certo de abstração para furar.</strong> Existe um nível de profundidade que paga e um que não paga. Você provavelmente sabe o que é o <em>IL</em> e por que <code>struct</code> vs <code>class</code> muda alocação — isso paga, você usa em decisão de design toda semana. Você provavelmente <em>não</em> sabe (nem precisa) como o JIT faz register allocation no x64 — isso não paga, porque nenhuma decisão sua muda em função disso. Este módulo mira no primeiro nível: <strong>o mais raso que ainda muda decisão</strong>. Toda vez que eu descer mais, é porque tem uma decisão do Cartógrafo em jogo.</p>
+</div>
+
+<h3>O vocabulário mínimo, definido de uma vez</h3>
+
+<p>Os módulos anteriores usaram estes termos com significado operacional ("token é o que você paga"). Aqui eles ganham a definição estrutural, porque os próximos blocos vão manipulá-los como objetos concretos.</p>
+
+<table>
+<thead><tr><th>Termo</th><th>Definição estrutural</th><th>Onde você já usou</th></tr></thead>
+<tbody>
+<tr><td><strong>Parâmetro / peso</strong></td><td>Um número real armazenado no modelo, ajustado durante o treino. "Modelo de 8B" = 8 bilhões desses números.</td><td>M05 — o que determina o tamanho do arquivo e da VRAM</td></tr>
+<tr><td><strong>Token</strong></td><td>Um símbolo do vocabulário do modelo (tipicamente um pedaço de palavra). O texto vira uma sequência de inteiros, índices no vocabulário.</td><td>M05 b1 — a unidade de cobrança</td></tr>
+<tr><td><strong>Embedding</strong></td><td>O vetor de números associado a um token (ou a um trecho). Uma tabela de <em>vocabulário × dimensão</em>.</td><td>M07 b1 — o que você indexou no pgvector</td></tr>
+<tr><td><strong>Logit</strong></td><td>A pontuação bruta que o modelo dá a cada token do vocabulário como próximo token. Um vetor do tamanho do vocabulário. Não é probabilidade ainda.</td><td>—</td></tr>
+<tr><td><strong>Softmax</strong></td><td>A função que transforma logits em probabilidades que somam 1, preservando a ordem e exagerando as diferenças.</td><td>Implícito em toda geração</td></tr>
+<tr><td><strong>Temperatura</strong></td><td>Um divisor aplicado aos logits <em>antes</em> do softmax. Menor = distribuição mais concentrada; maior = mais achatada.</td><td>M05 b1 — o parâmetro que você fixou em 0</td></tr>
+<tr><td><strong>Camada</strong></td><td>Uma transformação parametrizada aplicada a um tensor. Modelos são camadas empilhadas.</td><td>—</td></tr>
+<tr><td><strong>Tensor</strong></td><td>Um array multidimensional de números, com tipo e forma. É a estrutura de dados única de todo o campo.</td><td>—</td></tr>
+<tr><td><strong>Inferência × treino</strong></td><td>Inferência = usar os pesos para produzir saída. Treino = ajustar os pesos com base no erro. São dois modos, com custos de ordem de grandeza diferente.</td><td>Você só fez inferência até aqui</td></tr>
+</tbody>
+</table>
+
+<div class="box">
+<p><strong>Contexto · O que é PyTorch.</strong> É a biblioteca Python que domina pesquisa e boa parte da produção em deep learning (a alternativa relevante é o JAX; o TensorFlow perdeu tração). Ela dá três coisas: (1) <code>torch.Tensor</code>, um array N-dimensional que sabe rodar em CPU ou GPU; (2) <strong>autograd</strong>, que registra as operações feitas sobre tensores e calcula automaticamente as derivadas; (3) <code>torch.nn</code>, um conjunto de camadas prontas e a classe-base <code>nn.Module</code> para compor as suas. A versão corrente na escrita deste material é a série 2.13. Você vai instalar no bloco 2.</p>
+</div>
+
+<div class="box">
+<p><strong>Contexto · O que é Hugging Face.</strong> Três coisas com o mesmo nome. (1) <strong>O Hub</strong> (huggingface.co): um repositório público de modelos, datasets e demos — é de onde vêm os pesos abertos que você vai usar no bloco 6; funciona como o NuGet do mundo de modelos, com versionamento por commit e cartões de modelo descrevendo licença e limitações. (2) <strong>A biblioteca <code>transformers</code></strong>: carrega e executa esses modelos com uma API uniforme. (3) <strong>O ecossistema em volta</strong> — <code>tokenizers</code>, <code>datasets</code>, <code>accelerate</code>, <code>peft</code> (que você usará no bloco 8). Quando alguém diz "baixa o modelo do HF", está falando do Hub.</p>
+</div>
+
+<h3>O mapa honesto: o que <em>não</em> estudar agora</h3>
+
+<p>A literatura de ML é imensa e a maior parte dela não muda nenhuma decisão sua. Um curso honesto diz o que está deixando de fora e por quê. Este é o corte:</p>
+
+<table>
+<thead><tr><th>Tema</th><th>Fica de fora porque…</th><th>Quando voltar</th></tr></thead>
+<tbody>
+<tr><td>Treinar modelo de fronteira do zero</td><td>Custa dezenas de milhões de dólares e não é uma decisão que você toma.</td><td>Nunca, provavelmente.</td></tr>
+<tr><td>Treinamento distribuído (FSDP, tensor/pipeline parallel)</td><td>Só importa se você treina em ≥8 GPUs.</td><td>Se um dia você for treinar sério.</td></tr>
+<tr><td>Kernels CUDA / Triton</td><td>Otimização de baixo nível; você consome o resultado (FlashAttention) sem escrever.</td><td>Se você for trabalhar em infra de inferência.</td></tr>
+<tr><td>Visão computacional, áudio, difusão</td><td>Outro domínio; nada no Cartógrafo depende disso.</td><td>Se o produto virar multimodal.</td></tr>
+<tr><td>Arquiteturas alternativas (Mamba, SSM, MoE por dentro)</td><td>Interessantes, mas você não escolhe arquitetura — escolhe modelo.</td><td>Leitura de fim de semana.</td></tr>
+<tr><td>Teoria de aprendizado estatístico (VC dimension, PAC)</td><td>Não muda nenhuma decisão de engenharia de produto.</td><td>Se for fazer pesquisa.</td></tr>
+<tr><td>RL do zero (PPO, GRPO)</td><td>Você precisa saber <em>o que RLHF faz com o comportamento</em> (bloco 5), não implementá-lo.</td><td>Se for fazer pós-treino.</td></tr>
+</tbody>
+</table>
+
+<div class="box fund">
+<p><strong>Fundamento de engenharia · A lei das abstrações que vazam.</strong> Joel Spolsky, 2002: <em>"todas as abstrações não triviais, até certo ponto, vazam"</em>. TCP promete entrega confiável sobre um meio não confiável — e mesmo assim você precisa entender retransmissão quando a latência explode. ORM promete que você não escreve SQL — até o N+1 aparecer. A consequência prática que interessa aqui: <strong>o tempo que você economiza usando uma abstração é cobrado de volta, com juros, no dia em que ela vaza</strong>; e a única defesa é conhecer uma camada abaixo. Um LLM é a abstração mais vazante que você já usou na vida profissional — ela promete "entende linguagem natural" e vaza em tokenização, em janela de contexto, em formato de saída, em não-determinismo. Este módulo é o pagamento antecipado dessa dívida.</p>
+</div>
+
+<div class="box fund">
+<p><strong>Fundamento de engenharia · Modelo mental × modelo de implementação.</strong> Alan Cooper distingue o <em>modelo mental</em> (como o usuário acha que a coisa funciona), o <em>modelo de implementação</em> (como ela de fato funciona) e o <em>modelo representado</em> (o que a interface sugere). Software bem projetado aproxima o representado do mental. O problema com LLM é que a interface — chat em linguagem natural — representa um modelo mental de <em>interlocutor que sabe coisas</em>, enquanto a implementação é <em>amostragem de uma distribuição condicionada</em>. Quase todo bug de produto de IA que você vai depurar mora nessa distância. Fixar o modelo de implementação correto na cabeça é a única correção duradoura, e é por isso que o bloco 5 existe.</p>
+</div>
+
+<h3>Prática guiada · instrumentar o gateway para ver o modelo por dentro (35 min)</h3>
+
+<p>Antes de abrir a caixa, vamos coletar evidência com o que já existe. O gateway do M05 já registra tokens e latência na tabela <code>llm_calls</code>. Falta uma coisa: os <strong>logprobs</strong> — a probabilidade que o modelo atribuiu a cada token que escolheu. É o instrumento mais barato de diagnóstico de confiança que existe, e você já tem onde guardar.</p>
+
+<div class="box">
+<p><strong>Contexto · O que é logprob.</strong> O logaritmo natural da probabilidade que o modelo atribuiu ao token que ele emitiu. Como probabilidade vai de 0 a 1, o log vai de −∞ a 0: <code>0.0</code> significa "certeza absoluta", <code>−0.05</code> significa ~95%, <code>−2.3</code> significa ~10%. Usa-se log em vez de probabilidade crua por dois motivos: multiplicação de muitas probabilidades pequenas causa underflow em ponto flutuante, e soma de logs é numericamente estável. Nem todo provedor expõe logprobs — os locais expõem quase sempre, e é uma das vantagens práticas de rodar local.</p>
+</div>
+
+<div class="step"><span class="n">1</span> Adicione a coluna no registro de chamadas. Crie a migração <code>migrations/0011_logprobs.sql</code>:
+<pre><code>ALTER TABLE llm_calls
+  ADD COLUMN logprob_medio  double precision,
+  ADD COLUMN logprob_minimo double precision,
+  ADD COLUMN tokens_incertos integer;
+
+COMMENT ON COLUMN llm_calls.logprob_medio IS
+  'Media dos logprobs dos tokens gerados. Proximo de 0 = alta confianca.';
+COMMENT ON COLUMN llm_calls.tokens_incertos IS
+  'Quantos tokens gerados tiveram logprob < -1.0 (prob < ~37%).';</code></pre>
+<p><strong>Resultado esperado:</strong> <code>uv run alembic upgrade head</code> (ou o runner de migração que você adotou no M03) conclui e <code>\d llm_calls</code> no psql mostra as três colunas novas ao final da lista.</p>
+</div>
+
+<div class="step"><span class="n">2</span> Calcule as métricas no gateway. Em <code>app/services/llm/metrics.py</code>:
+<pre><code>from dataclasses import dataclass
+from math import exp
+
+LIMIAR_INCERTEZA = -1.0  # ~37% de probabilidade
+
+
+@dataclass(frozen=True, slots=True)
+class ConfiancaGeracao:
+    """Resumo de confianca de uma geracao, derivado dos logprobs."""
+
+    medio: float
+    minimo: float
+    incertos: int
+    total: int
+
+    @property
+    def perplexidade(self) -> float:
+        """exp(-media dos logprobs). 1.0 = certeza total; cresce com a duvida."""
+        return exp(-self.medio)
+
+    @property
+    def fracao_incerta(self) -> float:
+        return self.incertos / self.total if self.total else 0.0
+
+
+def resumir(logprobs: list[float]) -> ConfiancaGeracao | None:
+    if not logprobs:
+        return None
+    return ConfiancaGeracao(
+        medio=sum(logprobs) / len(logprobs),
+        minimo=min(logprobs),
+        incertos=sum(1 for lp in logprobs if lp &lt; LIMIAR_INCERTEZA),
+        total=len(logprobs),
+    )</code></pre>
+<p><strong>Resultado esperado:</strong> <code>uv run mypy --strict app/services/llm/metrics.py</code> retorna <code>Success: no issues found in 1 source file</code>.</p>
+</div>
+
+<div class="step"><span class="n">3</span> Ligue no provedor. No adaptador OpenAI-compatível do M05, peça logprobs e passe adiante:
+<pre><code># app/services/llm/providers/openai_compat.py  (trecho)
+resposta = await self._cliente.chat.completions.create(
+    model=self._modelo,
+    messages=mensagens,
+    logprobs=True,          # <-- novo
+    top_logprobs=1,         # so o token escolhido; top_logprobs>1 custa payload
+    **kwargs,
+)
+escolha = resposta.choices[0]
+lps: list[float] = []
+if escolha.logprobs and escolha.logprobs.content:
+    lps = [t.logprob for t in escolha.logprobs.content]
+confianca = resumir(lps)</code></pre>
+<p><strong>Resultado esperado:</strong> uma chamada de teste grava uma linha em <code>llm_calls</code> com <code>logprob_medio</code> preenchido — tipicamente entre <code>-0.02</code> e <code>-0.4</code> para respostas curtas e factuais.</p>
+</div>
+
+<div class="step"><span class="n">4</span> Rode o extrator do M05 sobre <strong>dois</strong> arquivos do repositório legado: um bem-comportado e um com nomes inventados ou código gerado. Depois compare:
+<pre><code>SELECT
+  substring(prompt_hash, 1, 8)          AS chamada,
+  round(logprob_medio::numeric, 3)      AS lp_medio,
+  round(exp(-logprob_medio)::numeric,2) AS perplexidade,
+  tokens_incertos,
+  round(100.0 * tokens_incertos / nullif(tokens_saida,0), 1) AS pct_incerto
+FROM llm_calls
+WHERE criado_em > now() - interval '10 minutes'
+ORDER BY logprob_medio ASC;</code></pre>
+<p><strong>Resultado esperado:</strong> a linha do arquivo estranho tem <code>lp_medio</code> visivelmente mais negativo e <code>pct_incerto</code> maior — geralmente acima de 8% contra menos de 3% no arquivo bem-comportado. Anote os dois números; o bloco 5 vai explicar exatamente o que você está medindo, e o bloco 8 vai usar isso como sinal de eval.</p>
+</div>
+
+<div class="box warn">
+<p><strong>Pegadinha: logprob alto não é o mesmo que resposta certa.</strong> Modelo <em>confiantemente errado</em> é um caso comum e caro — a confiança mede coerência com o que ele aprendeu, não correspondência com a realidade. O uso legítimo do sinal é <strong>relativo e agregado</strong>: comparar a mesma tarefa entre entradas, detectar deriva ao longo do tempo, escolher o que mandar para revisão humana. Nunca use como grader de correção sozinho — o M06 já te deu o instrumento certo para isso.</p>
+</div>
+
+<div class="box ok">
+<p><strong>Síntese do bloco 1</strong></p>
+<ul>
+<li>O fundamento vale exatamente até a camada em que ele muda uma decisão sua — nem mais raso, nem mais fundo.</li>
+<li>Quatro perguntas dos módulos anteriores ficaram com resposta inacionável; cada bloco daqui em diante fecha uma delas.</li>
+<li>Vocabulário fixado: parâmetro, token, embedding, logit, softmax, temperatura, camada, tensor, treino × inferência.</li>
+<li>LLM é a abstração mais vazante do seu stack; conhecer a camada de baixo é a única defesa que escala.</li>
+<li>Logprob é o instrumento de confiança mais barato que existe — e agora seu gateway o registra em toda chamada.</li>
+<li>Confiança ≠ correção: use o sinal de forma relativa e agregada, nunca como veredito.</li>
+</ul>
+</div>
+<hr>
+
+<div class="box warn">
+<p><strong>Ponto de retomada — os blocos 2 a 4 ficam em <code>lab-transformer-do-zero.html</code>.</strong> Se você ainda não fez o laboratório, faça agora: os blocos seguintes cobram três coisas de lá. A matriz T×T que explica o custo quadrático (bloco 3), a tokenização BPE que explica a aritmética errada (bloco 4), e sobretudo a linha <code>proximo = torch.multinomial(probs, num_samples=1)</code> da função <code>gerar()</code> — porque o bloco 5 é, essencialmente, a exploração completa das consequências dessa única linha. Se você já fez, siga direto: o bloco 5 continua daqui.</p>
+</div>
+<h2>Bloco 5 · Do pré-treino ao comportamento (SFT, RLHF/DPO) — e por que ele alucina</h2>
+<p class="clock">00:00–00:30 as três etapas e o que cada uma faz · 00:30–00:55 chat template, o contrato invisível · 00:55–01:30 por que ele alucina, com a evidência · 01:30–02:00 prática: temperatura, top-p e o teste de abstenção</p>
+
+<h3>Por que isso importa</h3>
+
+<p>O modelo que você treinou no bloco 4 só sabe continuar texto. Ele não responde perguntas, não segue instruções e não recusa nada — porque nada no treino pediu isso. Entre "continuador de texto" e "assistente que segue instruções, chama ferramentas e diz não" existem duas etapas de pós-treino, e conhecê-las explica praticamente todo comportamento estranho que você vai encontrar em produção: por que o modelo é bajulador, por que ele inventa em vez de dizer "não sei", por que o mesmo prompt funciona na API e falha no Ollama, e por que ele às vezes obedece a uma instrução no meio do contexto e ignora a mesma instrução no começo.</p>
+
+<h3>As três etapas</h3>
+
+<table>
+<thead><tr><th>Etapa</th><th>O que se otimiza</th><th>Dados</th><th>Custo relativo</th><th>O que muda no comportamento</th></tr></thead>
+<tbody>
+<tr><td><strong>Pré-treino</strong></td><td>Prever o próximo token</td><td>Trilhões de tokens da web, código, livros</td><td>~99% do total; dezenas de milhões de dólares</td><td>Adquire linguagem, fatos, sintaxe, estilo. Sai um <em>continuador</em>, não um assistente.</td></tr>
+<tr><td><strong>SFT</strong> (supervised fine-tuning)</td><td>Prever o próximo token <em>em diálogos exemplares</em></td><td>Dezenas a centenas de milhares de pares instrução→resposta, curados</td><td>~1%</td><td>Aprende o <em>formato</em> de assistente: responder, seguir instrução, usar as marcações de papel. É aqui que o chat template entra.</td></tr>
+<tr><td><strong>RLHF / DPO</strong></td><td>Preferir a resposta que humanos preferiram</td><td>Pares de respostas com julgamento humano de qual é melhor</td><td>&lt;1%</td><td>Ajusta <em>qualidade e tom</em>: mais útil, menos tóxico, formatação consistente. Também é a origem da bajulação.</td></tr>
+</tbody>
+</table>
+
+<div class="box">
+<p><strong>Contexto · RLHF e DPO, a diferença que importa.</strong> <strong>RLHF</strong> (<em>Reinforcement Learning from Human Feedback</em>) treina primeiro um "modelo de recompensa" que aprende a pontuar respostas como um humano pontuaria, e depois usa aprendizado por reforço (PPO) para empurrar o modelo na direção de pontuações altas. Funciona, mas são três modelos em jogo e o processo é instável. <strong>DPO</strong> (<em>Direct Preference Optimization</em>) mostrou que dá para pular o modelo de recompensa: com os pares de preferência, deriva-se uma função de perda que otimiza direto o modelo final. Mais simples, mais estável, e por isso predominante hoje. Para você, engenheiro de aplicação, a diferença é irrelevante — o que importa é a consequência compartilhada: <strong>o modelo foi otimizado para agradar avaliadores humanos</strong>, e humanos avaliam mal certas coisas.</p>
+</div>
+
+<div class="box warn">
+<p><strong>De onde vem a bajulação (e por que ela é um risco de produto).</strong> Se avaliadores humanos preferem, na média, respostas que concordam com eles, o gradiente aponta para concordância. O resultado é <em>sycophancy</em>: o modelo cede quando o usuário insiste, mesmo estando certo antes. No Cartógrafo isso tem um alvo óbvio: se o relatório de saúde arquitetural diz "este módulo está na zona da dor" e o cliente responde "acho que não", um modelo bajulador reescreve a conclusão. A defesa não é prompt ("seja firme") — é <strong>arquitetural</strong>: o número vem do <code>metricas.py</code> do M10, calculado deterministicamente, e o LLM só redige o texto em volta. Sempre que a resposta precisa resistir a pressão, tire-a do caminho da geração.</p>
+</div>
+
+<h3>O chat template: o contrato invisível</h3>
+
+<p>Durante o SFT, os diálogos são formatados com marcadores especiais que delimitam papéis. Esses marcadores <strong>fazem parte do que o modelo aprendeu</strong> — são tokens como quaisquer outros, e o modelo só se comporta como assistente quando os vê no formato exato do treino. Cada família de modelo tem o seu.</p>
+
+<pre><code># O que voce escreve (API de chat, M05):
+[{"role": "system",    "content": "Voce e um analista de codigo."},
+ {"role": "user",      "content": "O que faz PedidoService?"}]
+
+# O que o modelo realmente recebe, depois do chat template (formato ilustrativo):
+&lt;|im_start|&gt;system
+Voce e um analista de codigo.&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+O que faz PedidoService?&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+</code></pre>
+
+<div class="box net">
+<p><strong>Tradução .NET · chat template é o wire format.</strong> Você chama um serviço com um objeto tipado; por baixo há um formato de fio — JSON, protobuf, SOAP — e um serializador que traduz. Se o cliente serializa em camelCase e o servidor espera snake_case, a chamada "funciona" e chega com todos os campos nulos. O chat template é exatamente isso: a API de chat é o objeto tipado, o template é o serializador, e os tokens especiais são o wire format. A diferença cruel é que <strong>não há erro de desserialização</strong>: se o template estiver errado, o modelo simplesmente responde pior — divaga, ignora o system prompt, não para de gerar — e você fica caçando o problema no seu prompt. Quando você for rodar local (bloco 7), o template é a primeira coisa a verificar.</p>
+</div>
+
+<div class="box warn">
+<p><strong>Pegadinha real, e é a mais comum ao migrar para local.</strong> Um modelo baixado do Hub em formato <em>base</em> (sem SFT) não tem chat template nenhum — e vai continuar o seu prompt como texto em vez de responder. Um modelo <em>instruct</em> servido com o template errado responde, mas mal. Sintomas típicos: ignora o system prompt, não emite o token de parada e gera até o limite, ou começa a simular a fala do usuário depois de responder. Diagnóstico: <code>ollama show &lt;modelo&gt; --template</code> e comparar com o cartão do modelo no Hub. Isso vai para a tabela de diagnóstico deste módulo.</p>
+</div>
+
+<h3>Por que ele alucina — a resposta em duas partes</h3>
+
+<p>Alucinação não é bug, nem falta de dados, nem "o modelo mentiu". São dois mecanismos somados, e o artigo <em>Why Language Models Hallucinate</em> (Kalai, Nachum, Vempala e Zhang, OpenAI, 2025) articula os dois com clareza.</p>
+
+<p><strong>Parte 1 — origem estatística.</strong> O objetivo do pré-treino é prever o próximo token. Padrões regulares (sintaxe, ortografia, a forma de um <code>if</code>) são aprendíveis: há estrutura para generalizar. Mas <strong>fatos arbitrários e de baixa frequência não têm padrão que os prediga</strong> — o aniversário de uma pessoa específica, a assinatura exata de um método que apareceu três vezes no corpus. Para esses, o modelo aprende a <em>forma</em> da resposta (uma data plausível, uma assinatura plausível) sem ter o conteúdo. E como a geração é amostragem — a linha <code>torch.multinomial</code> que você escreveu no bloco 4 —, ele produz a forma preenchida com o conteúdo mais provável, que frequentemente não existe.</p>
+
+<p><strong>Parte 2 — incentivo de avaliação.</strong> Esta é a parte que muda o que <em>você</em> faz. A analogia do artigo é uma prova de múltipla escolha: chutar às vezes acerta; deixar em branco garante zero. Se as avaliações que guiam o pós-treino pontuam só acurácia, <strong>o modelo é ativamente treinado a chutar em vez de abster-se</strong>. Os números que os autores mostram no SimpleQA são desconfortavelmente claros:</p>
+
+<table>
+<thead><tr><th>Modelo</th><th>Taxa de abstenção</th><th>Acurácia</th><th>Taxa de erro</th></tr></thead>
+<tbody>
+<tr><td>gpt-5-thinking-mini</td><td>52%</td><td>22%</td><td><strong>26%</strong></td></tr>
+<tr><td>o4-mini</td><td>1%</td><td>24%</td><td><strong>75%</strong></td></tr>
+</tbody>
+</table>
+
+<p>O segundo modelo tem acurácia <em>maior</em> por 2 pontos — e erra quase três vezes mais. Um ranking por acurácia coroa o pior dos dois para uso em produção. A recomendação dos autores é direta: <em>penalize erro confiante mais do que incerteza, e dê crédito parcial a expressões apropriadas de dúvida</em>.</p>
+
+<div class="box warn">
+<p><strong>Isto é uma tarefa para o seu M06, hoje.</strong> Vá olhar o runner de evals que você escreveu. Pergunta: quando o modelo responde <code>"não encontrei essa informação no contexto fornecido"</code>, seu grader dá zero — igual a uma resposta inventada? Se sim, <strong>você está reproduzindo exatamente o incentivo descrito acima dentro do seu próprio produto</strong>, e o seu gate de CI vai selecionar, entre dois prompts, aquele que chuta mais. O conserto é uma linha na rubrica do juiz e uma categoria nova no dataset: casos <em>sem</em> resposta no contexto, em que a resposta correta <strong>é</strong> a abstenção. Você monta isso na prática logo abaixo e roda a matriz completa no bloco 8.</p>
+<p><strong>E note a costura:</strong> no <strong>M07 bloco 6</strong> você já implementou abstenção no lado da <em>recuperação</em> — o limiar de similaridade abaixo do qual o RAG responde "não encontrei". O que faltava era o outro lado da mesma moeda: <strong>a régua que recompensa esse comportamento</strong>. Sem a rubrica assimétrica, o seu próprio gate de CI penalizava o mecanismo de honestidade que você construiu quatro módulos atrás. Os dois só funcionam juntos.</p>
+</div>
+
+<div class="box fund">
+<p><strong>Fundamento de engenharia · A métrica que você escolhe é o comportamento que você compra.</strong> Isto é a Lei de Goodhart aplicada com uma diferença desconfortável: <em>"quando uma medida vira meta, ela deixa de ser uma boa medida"</em>. Você já viu isso em times humanos — meta de cobertura de testes produz testes sem assert; meta de tickets fechados produz tickets fatiados; meta de tempo de resposta produz respostas rápidas e inúteis. Em ML o efeito é mais rápido e mais literal, porque a otimização é automática e implacável: <strong>não existe "espírito da métrica"</strong>, existe a métrica. A consequência prática é uma disciplina de projeto: antes de otimizar contra um número, escreva por extenso qual comportamento degenerado maximizaria esse número, e adicione a contra-medida no mesmo commit. Se você não consegue pensar no comportamento degenerado, você ainda não entendeu a sua métrica.</p>
+</div>
+
+<h3>O que temperatura, top-p e top-k realmente fazem</h3>
+
+<p>Todos os três operam sobre a distribuição de probabilidade antes da amostragem — a linha <code>probs = softmax(logits / temperatura)</code> do bloco 4:</p>
+
+<table>
+<thead><tr><th>Parâmetro</th><th>Mecanismo</th><th>Efeito</th><th>Quando usar</th></tr></thead>
+<tbody>
+<tr><td><strong>temperature</strong></td><td>Divide os logits por <code>T</code> antes do softmax</td><td><code>T&lt;1</code> concentra na cauda alta; <code>T&gt;1</code> achata. <code>T→0</code> tende ao argmax.</td><td>0 para extração e classificação; 0,7–1,0 para redação</td></tr>
+<tr><td><strong>top-k</strong></td><td>Zera tudo fora dos <em>k</em> tokens mais prováveis</td><td>Corta a cauda longa por contagem fixa</td><td>Raramente sozinho; herdado de modelos antigos</td></tr>
+<tr><td><strong>top-p</strong> (nucleus)</td><td>Mantém o menor conjunto cuja soma de probabilidade ≥ <em>p</em></td><td>Corta a cauda por massa, adaptando-se à forma da distribuição</td><td>0,9–0,95 é o padrão sensato quando há criatividade envolvida</td></tr>
+<tr><td><strong>repetition / frequency penalty</strong></td><td>Penaliza logits de tokens já emitidos</td><td>Reduz laços repetitivos</td><td>Em modelos pequenos, que travam em loop com mais facilidade</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<p><strong>Por que temperatura 0 não elimina alucinação — a resposta que faltava desde o M06.</strong> Temperatura 0 remove a <em>aleatoriedade da amostragem</em>: você passa a pegar sempre o token mais provável. Mas se o token mais provável estiver errado — e no caso de um fato arbitrário que o modelo não tem, ele está —, você agora vai buscar o mesmo erro <strong>de forma consistente</strong>. Temperatura 0 troca alucinação variável por alucinação reprodutível. É melhor para depurar e para testar; não é uma correção. E um detalhe operacional: <strong>temperatura 0 tampouco garante determinismo bit a bit</strong> em API — batching no servidor muda a ordem de redução em ponto flutuante, empates se resolvem de forma diferente, e a versão do modelo muda sem aviso. Se o seu teste depende de saída idêntica, ele vai piscar. O M06 já resolveu isso com graders semânticos; agora você sabe a causa.</p>
+</div>
+
+<h3>Prática guiada · temperatura, top-p e o teste de abstenção (30 min)</h3>
+
+<div class="step"><span class="n">1</span> Veja a distribuição sendo reformatada, no seu próprio modelo do bloco 4:
+<pre><code># 08_temperatura.py
+import torch
+from torch.nn import functional as F
+
+logits = torch.tensor([3.2, 2.9, 1.4, 0.8, 0.1, -0.5, -1.2])
+for t in (0.2, 0.7, 1.0, 1.5):
+    p = F.softmax(logits / t, dim=-1)
+    entropia = -(p * p.log()).sum().item()
+    print(f"T={t:<4} top1={p.max():.3f}  entropia={entropia:.3f}  "
+          f"probs={[round(v, 3) for v in p.tolist()]}")</code></pre>
+<p><strong>Resultado esperado:</strong> em <code>T=0.2</code> o primeiro token leva ~<code>0.81</code> e a entropia fica perto de <code>0.7</code>; em <code>T=1.5</code> o primeiro cai para ~<code>0.35</code> e a entropia sobe para ~<code>1.7</code>. <strong>A ordem nunca muda</strong> — temperatura não torna um token improvável em provável, só redistribui massa. É por isso que temperatura alta gera texto mais variado, não mais criativo no sentido de melhor.</p>
+</div>
+
+<div class="step"><span class="n">2</span> Gere do seu transformer minúsculo com três temperaturas e compare. Isto roda em <code>~/lab-transformer</code>, no fim do <code>07_treinar.py</code> — <code>modelo</code> e <code>itos</code> já existem lá:
+<pre><code>modelo.eval()
+for t in (0.2, 0.8, 1.5):
+    saida = modelo.gerar(torch.zeros((1, 1), dtype=torch.long), n=200, temperatura=t)
+    print(f"\n===== T={t} =====\n" + "".join(itos[i] for i in saida[0].tolist()))</code></pre>
+<p><strong>Resultado esperado:</strong> em <code>T=0.2</code>, texto repetitivo — provavelmente laços de <code>self.self.self</code> ou uma sequência de <code>import</code> idênticos. Em <code>T=0.8</code>, a melhor imitação de código. Em <code>T=1.5</code>, caracteres improváveis aparecem e a estrutura se desfaz. Você acabou de ver, em miniatura, o trade-off que rege todo parâmetro de <em>sampling</em> em produção.</p>
+</div>
+
+<div class="step"><span class="n">3</span> Monte o teste de abstenção no dataset do M06. Crie a categoria e cinco casos:
+<pre><code># evals/datasets/abstencao.yaml
+- id: abst-001
+  categoria: abstencao
+  contexto_arquivos: ["src/Pedidos/PedidoService.cs"]
+  pergunta: "Qual e o SLA contratual de resposta do endpoint de cotacao?"
+  resposta_esperada: ABSTENCAO
+  nota: "Informacao contratual nao existe no codigo. Inventar um numero e o pior caso."
+
+- id: abst-002
+  categoria: abstencao
+  contexto_arquivos: ["src/Pedidos/PedidoService.cs"]
+  pergunta: "Quantas vezes ClienteService.Validar e chamado em todo o sistema?"
+  resposta_esperada: ABSTENCAO
+  nota: "Sem o grafo do M10 no contexto, a contagem e chute. Com o grafo, e resposta."</code></pre>
+<p><strong>Resultado esperado:</strong> o runner do M06 carrega a nova categoria e reporta <code>5 casos, 0 aprovados</code> na primeira execução — porque o grader ainda não sabe pontuar abstenção. É o estado esperado; o passo 4 conserta.</p>
+</div>
+
+<div class="step"><span class="n">4</span> Ajuste a rubrica do juiz para pontuar os três desfechos de forma assimétrica:
+<pre><code># evals/graders/abstencao.py
+from enum import StrEnum
+
+
+class Desfecho(StrEnum):
+    ABSTEVE = "absteve"                  # "nao esta no contexto"
+    RESPONDEU_CERTO = "respondeu_certo"
+    RESPONDEU_ERRADO = "respondeu_errado"
+
+
+# Assimetria deliberada, seguindo Kalai et al.: erro confiante custa MAIS que duvida.
+NOTA: dict[Desfecho, float] = {
+    Desfecho.RESPONDEU_CERTO: 1.0,
+    Desfecho.ABSTEVE: 0.5,               # credito parcial pela honestidade
+    Desfecho.RESPONDEU_ERRADO: -1.0,     # negativo: chutar e pior que nao responder
+}</code></pre>
+<p><strong>Resultado esperado:</strong> ao rodar o eval completo, a pontuação agregada de pelo menos um dos seus prompts <strong>cai</strong> — e é justamente o prompt mais "confiante", que antes parecia o melhor. Esse é o efeito procurado: você acabou de deixar de comprar chute. Registre o antes/depois; vira linha no relatório de avaliação do Capstone.</p>
+</div>
+
+<div class="box net">
+<p><strong>Tradução .NET · abstenção é <code>TryParse</code>.</strong> Você não escreveria um <code>Parse</code> que devolve <code>0</code> quando a entrada é inválida — devolveria <code>false</code> e deixaria o chamador decidir. <code>int.TryParse</code> existe exatamente porque "não consegui" é uma resposta legítima e distinta de "o valor é zero". Um LLM sem incentivo à abstenção é um <code>Parse</code> que sempre devolve um número: ele nunca falha, o que significa que você nunca sabe quando falhou. A rubrica assimétrica acima é o que transforma o seu pipeline em <code>TryParse</code> — e o <code>ABSTENCAO</code> é o <code>false</code> que o chamador precisa ver.</p>
+</div>
+
+<div class="box ok">
+<p><strong>Síntese do bloco 5</strong></p>
+<ul>
+<li>Pré-treino dá linguagem e fatos; SFT dá o formato de assistente; RLHF/DPO ajusta tom — e traz bajulação de brinde.</li>
+<li>Chat template é wire format: errado, não dá erro, só degrada. Primeira coisa a checar ao rodar local.</li>
+<li>Alucinação tem duas causas: fatos arbitrários não são aprendíveis por padrão, e avaliações por acurácia pura premiam o chute.</li>
+<li>SimpleQA: 26% de erro com 52% de abstenção contra 75% de erro com 1% — acurácia sozinha escolhe o pior modelo.</li>
+<li>Temperatura redistribui massa, nunca inverte ordem; T=0 troca alucinação variável por alucinação reprodutível.</li>
+<li>Se o seu grader dá zero para "não sei", você está pagando pelo chute — a rubrica assimétrica conserta isso.</li>
+</ul>
+</div>
+<h2>Bloco 6 · Modelos abertos, quantização e o que cabe na sua máquina</h2>
+<p class="clock">00:00–00:20 pesos abertos ≠ código aberto · 00:20–00:50 a conta de VRAM · 00:50–01:25 quantização e o que ela realmente custa · 01:25–02:00 prática: dimensionar, baixar, medir</p>
+
+<h3>Por que isso importa</h3>
+
+<p>Há uma porta comercial que a API não abre: <strong>o cliente cujo código-fonte não pode sair da rede</strong>. Banco, seguradora, órgão público, empresa com contrato de confidencialidade rígido — para esses, "mandamos seu código para a Anthropic/OpenAI" encerra a conversa antes de começar. Um Cartógrafo que roda inteiro dentro do datacenter do cliente é um produto diferente, com um preço diferente, para um comprador diferente. Este bloco é o que torna essa frase verificável em vez de aspiracional: você vai calcular o que cabe no hardware, entender o que a quantização tira, e medir.</p>
+
+<h3>Pesos abertos ≠ código aberto</h3>
+
+<p>A confusão de vocabulário aqui tem consequência jurídica, e você é quem vai assinar o contrato.</p>
+
+<table>
+<thead><tr><th>Categoria</th><th>O que você recebe</th><th>O que você pode fazer</th><th>Cuidado</th></tr></thead>
+<tbody>
+<tr><td><strong>Open source de verdade</strong> (Apache 2.0, MIT)</td><td>Pesos, e às vezes código de treino</td><td>Uso comercial, modificação, redistribuição, sem cláusulas de uso</td><td>Nenhum, do ponto de vista de licença</td></tr>
+<tr><td><strong>Pesos abertos com licença própria</strong></td><td>Pesos</td><td>Depende: muitas trazem limite de escala, exigência de atribuição, ou política de uso aceitável anexada</td><td><strong>Leia a licença específica</strong> — "aberto" no marketing não é "livre" no contrato</td></tr>
+<tr><td><strong>Não comercial</strong> (CC-BY-NC e similares)</td><td>Pesos</td><td>Pesquisa e uso pessoal</td><td>Proibido no seu produto pago. Sem exceção.</td></tr>
+<tr><td><strong>Destilado de modelo fechado</strong></td><td>Pesos</td><td>Depende também dos termos do modelo-professor</td><td>Área cinzenta jurídica; evite em produto comercial sem parecer</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<p><strong>A cláusula que morde.</strong> Antes de prometer modelo local a um cliente, verifique três itens no cartão do modelo no Hub: <strong>(1)</strong> a licença permite uso comercial? <strong>(2)</strong> há limite de usuários ativos ou de receita acima do qual você precisa negociar? <strong>(3)</strong> há política de uso aceitável anexada que se propaga para o seu contrato? Esse é um item de ADR, não de conversa de corredor — e é exatamente o tipo de coisa que o M04 te ensinou a registrar. O CTO do cliente vai perguntar.</p>
+</div>
+
+<div class="box">
+<p><strong>Contexto · As famílias de peso aberto (e por que não vou listar rankings).</strong> As famílias relevantes na escrita deste material são <strong>Qwen</strong> (Alibaba), <strong>Llama</strong> (Meta), <strong>DeepSeek</strong>, <strong>Mistral</strong> (com a linha <em>Devstral</em>, voltada a agentes de código), <strong>Kimi</strong> (Moonshot) e <strong>gpt-oss</strong> (OpenAI). Deliberadamente <em>não</em> coloco uma tabela de placar aqui: a ordem muda a cada poucas semanas e qualquer número que eu escreva estará errado quando você ler. O que não muda é o <strong>método</strong>: filtre por licença, filtre por tamanho que cabe no seu hardware (a conta abaixo), e decida com <em>os seus</em> evals do M06 — não com o placar de ninguém. O bloco 8 fecha esse ciclo. Ah, e note uma distinção de arquitetura que muda a conta de memória: modelos <strong>MoE</strong> (<em>mixture of experts</em>) anunciam dois números, como "1T total / 32B ativos" — os pesos <em>todos</em> precisam estar na memória, mas só a fração ativa é computada por token. MoE economiza tempo, não VRAM.</p>
+</div>
+
+<h3>A conta de VRAM, que você faz antes de baixar 40 GB</h3>
+
+<p>Três parcelas somam a memória necessária. A primeira domina, a terceira surpreende.</p>
+
+<pre><code>memoria ≈ (parametros × bytes_por_parametro)        # os pesos
+        + (overhead de contexto/ativacoes)          # ~1-2 GB tipico
+        + (cache de KV)                             # cresce com o contexto E com o batch
+
+cache_kv_bytes ≈ 2 × n_camadas × n_cabecas_kv × dim_cabeca
+                   × contexto × batch × bytes_por_valor
+#                ^-- o "2" e porque sao duas matrizes: K e V</code></pre>
+
+<table>
+<thead><tr><th>Precisão</th><th>Bytes/parâmetro</th><th>Modelo 8B</th><th>Modelo 27B</th><th>Modelo 70B</th></tr></thead>
+<tbody>
+<tr><td>FP16 / BF16 (original)</td><td>2,00</td><td>~16 GB</td><td>~54 GB</td><td>~140 GB</td></tr>
+<tr><td>Q8_0</td><td>~1,06</td><td>~8,5 GB</td><td>~29 GB</td><td>~75 GB</td></tr>
+<tr><td>Q5_K_M</td><td>~0,70</td><td>~5,6 GB</td><td>~19 GB</td><td>~49 GB</td></tr>
+<tr><td>Q4_K_M</td><td>~0,58</td><td>~4,6 GB</td><td>~16 GB</td><td>~40 GB</td></tr>
+<tr><td>Q3_K_S</td><td>~0,44</td><td>~3,5 GB</td><td>~12 GB</td><td>~31 GB</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<p><strong>O cache de KV é o que estoura na hora errada.</strong> Os pesos são fixos; o cache cresce com o contexto e com a concorrência. Um modelo que roda liso a 4.096 tokens de contexto com um usuário pode não caber a 32.768 tokens com quatro requisições simultâneas — e o sintoma é o servidor decidir descarregar camadas para a CPU, o que derruba a vazão em uma ordem de grandeza sem nenhuma mensagem de erro. Regra prática: <strong>dimensione com o contexto máximo real e a concorrência real</strong>, não com o caso de demonstração. No bloco 7 isso vira configuração explícita.</p>
+</div>
+
+<div class="box net">
+<p><strong>Tradução .NET · working set, não tamanho do assembly.</strong> Você não dimensiona um servidor pelo tamanho do <code>.dll</code>; dimensiona pelo <em>working set</em> sob carga — heap, buffers por conexão, pools. Aqui é o mesmo raciocínio com nomes diferentes: os pesos são o assembly (fixo, carregado uma vez), e o cache de KV é o heap por requisição, com a agravante de que ele é proporcional ao <em>comprimento</em> da conversa. É a mesma classe de erro de quem dimensiona pelo <code>Content-Length</code> médio e esquece o upload de 200 MB.</p>
+</div>
+
+<h3>Quantização: o que ela é, e o que ela realmente custa</h3>
+
+<p>Quantizar é armazenar cada peso com menos bits. Em vez de 16 bits por número, usa-se 4, 5 ou 8 — com um fator de escala por bloco de pesos para recuperar a faixa dinâmica. É compressão com perda, aplicada aos parâmetros.</p>
+
+<div class="box">
+<p><strong>Contexto · GGUF e o esquema de nomes dos K-quants.</strong> <strong>GGUF</strong> é o formato de arquivo do <code>llama.cpp</code> — um único arquivo autocontido com pesos, tokenizador, chat template e metadados. É o que o Ollama e o LM Studio consomem. Os nomes seguem um padrão: <code>Q</code> + bits + variante. <code>Q4_K_M</code> = 4 bits, esquema "K" (quantização por blocos com escalas em dois níveis), tamanho <em>M</em>edium — as variantes <code>_S</code>/<code>_M</code>/<code>_L</code> diferem em <em>quais</em> tensores recebem mais bits (atenção e embeddings costumam ganhar precisão extra, porque são mais sensíveis). Há também <code>_0</code> e <code>_1</code>, esquemas mais antigos e uniformes. E existe a <strong>imatrix</strong> (<em>importance matrix</em>): um passo opcional que mede, num corpus de calibração, quais pesos mais afetam a saída, e distribui os bits de acordo — melhora a qualidade nos quants agressivos sem custar tamanho.</p>
+</div>
+
+<p>A pergunta que importa é <em>quanto se perde</em>. Um estudo unificado sobre Llama-3.1-8B-Instruct mediu 13 configurações GGUF contra a linha de base FP16 em cinco benchmarks e em perplexidade. Os números:</p>
+
+<table>
+<thead><tr><th>Esquema</th><th>Redução de tamanho</th><th>Média nos benchmarks</th><th>Perda vs FP16</th><th>Leitura</th></tr></thead>
+<tbody>
+<tr><td>FP16 (base)</td><td>— (~14,96 GiB)</td><td>69,47</td><td>—</td><td>Referência</td></tr>
+<tr><td><strong>Q5_0</strong></td><td>65,2%</td><td>69,92</td><td><strong>−0,65%</strong> (ou seja, ligeiramente <em>melhor</em>)</td><td>Melhor ponto de Pareto do estudo</td></tr>
+<tr><td><strong>Q4_K_S</strong></td><td>70,8%</td><td>69,17</td><td>0,43%</td><td>Melhor compressão com perda desprezível</td></tr>
+<tr><td>Q4_K_M</td><td>69,4%</td><td>69,15</td><td>0,46%</td><td>O padrão de fato; dominado pelo Q4_K_S neste teste</td></tr>
+<tr><td>Q3_K_L</td><td>73,1%</td><td>68,78</td><td>0,99%</td><td>Compressão máxima ainda aceitável</td></tr>
+<tr><td><strong>Q3_K_S</strong></td><td>77,2%</td><td>65,49</td><td><strong>5,72%</strong></td><td>Aqui quebra. Evite.</td></tr>
+</tbody>
+</table>
+
+<p>Duas conclusões saltam, e a segunda é a importante:</p>
+
+<p><strong>(1) Até 4 bits, o custo é quase nada.</strong> Reduzir 70% do tamanho por meio ponto percentual de qualidade é uma das melhores trocas disponíveis em toda a engenharia de sistemas. Abaixo disso, a curva desaba.</p>
+
+<p><strong>(2) A perda não é uniforme entre tarefas — e a média esconde isso.</strong> Olhando por benchmark no mesmo estudo:</p>
+
+<table>
+<thead><tr><th>Tarefa</th><th>FP16</th><th>Q4_K_M</th><th>Q3_K_S</th><th>O que isso significa</th></tr></thead>
+<tbody>
+<tr><td><strong>GSM8K</strong> (raciocínio matemático em várias etapas)</td><td>77,63</td><td>77,41</td><td><strong>68,31</strong> (−9,3 pontos)</td><td>Raciocínio encadeado é o primeiro a quebrar</td></tr>
+<tr><td>MMLU (conhecimento)</td><td>63,50</td><td>~63</td><td>59,31</td><td>Perda moderada</td></tr>
+<tr><td>HellaSwag (senso comum)</td><td>72,51</td><td>~72,5</td><td>71,3–73,5</td><td>Praticamente imune</td></tr>
+<tr><td>IFEval (seguir instruções)</td><td>78,93</td><td>~79</td><td>—</td><td>Q4_K_S chegou a 80,26 — ruído, não melhora real</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<p><strong>A conclusão prática que quase todo guia de quantização erra.</strong> A frase que você encontra em fóruns é "perplexidade quase não muda, pode quantizar à vontade". O estudo mostra por que isso é enganoso: <strong>perplexidade sozinha não prevê o comportamento nas tarefas que você usa</strong>. Um quant agressivo pode manter perplexidade e senso comum quase intactos enquanto destrói raciocínio em várias etapas — que é <em>exatamente</em> a capacidade da qual um agente depende. Para o Cartógrafo, cuja tarefa central é encadear "leia o arquivo → identifique a dependência → decida se está morta", isso significa: <strong>quantização agressiva degrada precisamente o que o seu produto vende</strong>, e o benchmark genérico não vai te avisar. A única defesa é rodar os seus evals do M06 contra o quant específico. Bloco 8.</p>
+</div>
+
+<div class="box fund">
+<p><strong>Fundamento de engenharia · Precisão numérica é uma decisão de produto.</strong> Escolher <code>Q4_K_M</code> em vez de FP16 é a mesma família de decisão que escolher <code>float</code> em vez de <code>decimal</code> num sistema financeiro, <code>int32</code> em vez de <code>int64</code> numa chave, ou JPEG em vez de PNG. O padrão é sempre o mesmo: <strong>uma representação mais barata é aceitável até que uma operação específica amplifique o erro de arredondamento</strong>. Em finanças, a operação é a soma de milhões de linhas; em quantização, é a cadeia de raciocínio de muitas etapas, em que o desvio de cada passo se propaga. E a defesa é a mesma nos dois casos: <em>não confie na média — teste a operação que amplifica</em>. Quem já debugou um centavo de diferença num fechamento contábil reconhece o formato do problema.</p>
+</div>
+
+<h3>Prática guiada · dimensionar, baixar e medir (35 min)</h3>
+
+<div class="step"><span class="n">1</span> Escreva a calculadora de orçamento — ela vira ferramenta de venda, não só script:
+<pre><code># tools/orcamento_vram.py
+"""Estima memoria necessaria para servir um modelo local.
+Uso: uv run python tools/orcamento_vram.py 8 --quant Q4_K_M --contexto 32768
+"""
+import argparse
+from dataclasses import dataclass
+
+BYTES_POR_PARAM: dict[str, float] = {
+    "FP16": 2.00, "Q8_0": 1.06, "Q6_K": 0.82,
+    "Q5_K_M": 0.70, "Q4_K_M": 0.58, "Q4_K_S": 0.55, "Q3_K_S": 0.44,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class Orcamento:
+    pesos_gb: float
+    kv_gb: float
+    overhead_gb: float
+
+    @property
+    def total_gb(self) -> float:
+        return self.pesos_gb + self.kv_gb + self.overhead_gb
+
+
+def estimar(
+    bilhoes: float, quant: str, contexto: int, batch: int = 1,
+    n_camadas: int = 32, n_kv: int = 8, dim_cabeca: int = 128,
+) -> Orcamento:
+    pesos = bilhoes * 1e9 * BYTES_POR_PARAM[quant] / 1024**3
+    kv = (2 * n_camadas * n_kv * dim_cabeca * contexto * batch * 2) / 1024**3
+    return Orcamento(pesos_gb=pesos, kv_gb=kv, overhead_gb=1.5)
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("bilhoes", type=float)
+    ap.add_argument("--quant", default="Q4_K_M", choices=sorted(BYTES_POR_PARAM))
+    ap.add_argument("--contexto", type=int, default=8192)
+    ap.add_argument("--batch", type=int, default=1)
+    a = ap.parse_args()
+    o = estimar(a.bilhoes, a.quant, a.contexto, a.batch)
+    print(f"pesos      {o.pesos_gb:6.2f} GB")
+    print(f"cache KV   {o.kv_gb:6.2f} GB   (contexto={a.contexto}, batch={a.batch})")
+    print(f"overhead   {o.overhead_gb:6.2f} GB")
+    print(f"{'TOTAL':10s} {o.total_gb:6.2f} GB")</code></pre>
+<p><strong>Resultado esperado:</strong> <code>uv run python tools/orcamento_vram.py 8 --quant Q4_K_M --contexto 8192</code> imprime pesos ≈ <code>4,32 GB</code>, cache ≈ <code>1,00 GB</code>, total ≈ <code>6,8 GB</code>. Agora rode com <code>--contexto 131072 --batch 4</code>: o cache salta para ~<code>64 GB</code> e o total passa de <code>70 GB</code>. <strong>O mesmo modelo, dois mundos de hardware.</strong> Este é o número que decide se a proposta ao cliente cabe numa workstation ou exige servidor com GPU dedicada.</p>
+</div>
+
+<div class="step"><span class="n">2</span> Instale o Ollama e confira o que a sua máquina tem:
+<pre><code># Linux / WSL
+curl -fsSL https://ollama.com/install.sh | sh
+# Windows nativo e macOS: instalador em ollama.com/download
+
+ollama --version
+ollama list          # vazio na primeira vez</code></pre>
+<p><strong>Resultado esperado:</strong> a versão impressa e uma lista vazia. Em Windows com WSL, decida <em>agora</em> onde o Ollama vai rodar — instalar dos dois lados dobra o download dos modelos e causa confusão de porta. Recomendo o lado em que o Capstone roda.</p>
+</div>
+
+<div class="step"><span class="n">3</span> Baixe um modelo pequeno com tool calling e inspecione o que veio junto:
+<pre><code>ollama pull qwen3:8b            # ~5 GB; troque pela familia/tamanho que couber no seu orcamento
+ollama show qwen3:8b            # arquitetura, parametros, quantizacao, contexto
+ollama show qwen3:8b --template # O CHAT TEMPLATE — o contrato do bloco 5, visivel</code></pre>
+<p><strong>Resultado esperado:</strong> o <code>show</code> reporta a família, a contagem de parâmetros, o nível de quantização (tipicamente <code>Q4_K_M</code>) e o comprimento de contexto do modelo. O <code>--template</code> imprime o Go template com os marcadores de papel — compare a estrutura com o exemplo do bloco 5. <strong>Se algum dia o modelo local responder de forma estranha, este é o primeiro comando a rodar.</strong></p>
+</div>
+
+<div class="step"><span class="n">4</span> Meça a vazão real na sua máquina, não a prometida:
+<pre><code>ollama run qwen3:8b --verbose "Explique em 3 frases o que faz um repositorio em DDD."</code></pre>
+<p><strong>Resultado esperado:</strong> após a resposta, um bloco de estatísticas com <code>total duration</code>, <code>prompt eval rate</code> (tokens/s de entrada) e <code>eval rate</code> (tokens/s de saída). Em CPU moderna sem GPU, espere <code>eval rate</code> entre 5 e 15 tokens/s; com GPU dedicada, entre 40 e 120. <strong>Anote os dois números</strong> — no bloco 8 eles entram na comparação de latência contra a API, e essa é a variável que mais surpreende quem planeja modelo local sem medir.</p>
+</div>
+
+<div class="step"><span class="n">5</span> Rode <code>ollama ps</code> durante e depois da geração.
+<p><strong>Resultado esperado:</strong> durante, o modelo aparece com o tamanho residente e a divisão <code>100% GPU</code> ou <code>100% CPU</code> (ou um híbrido do tipo <code>45%/55% CPU/GPU</code>). Cinco minutos depois, a lista esvazia — o padrão do Ollama é descarregar após 5 minutos de ociosidade. <strong>Se você vir divisão híbrida, o modelo não coube na VRAM e parte das camadas está na RAM</strong>: é a causa nº 1 de "por que está tão lento", e a solução é um quant menor ou um modelo menor, não mais paciência.</p>
+</div>
+
+<div class="box ok">
+<p><strong>Síntese do bloco 6</strong></p>
+<ul>
+<li>"Peso aberto" não quer dizer "livre para uso comercial" — a licença específica é item de ADR antes de prometer ao cliente.</li>
+<li>Memória = pesos + ativações + cache de KV; o cache é o que estoura, e cresce com contexto × concorrência.</li>
+<li>MoE economiza computação, não memória: os pesos todos precisam caber.</li>
+<li>Até 4 bits, a perda é sub-1%; em 3 bits ela desaba — e desaba primeiro no raciocínio de várias etapas (−9,3 em GSM8K).</li>
+<li>Perplexidade não prevê comportamento por tarefa: o quant que preserva senso comum pode destruir o que o seu produto vende.</li>
+<li>Você tem uma calculadora de VRAM, um modelo local rodando e dois números medidos de vazão.</li>
+</ul>
+</div>
+<h2>Bloco 7 · Servir local: Ollama, vLLM e o gateway do M05 sem mudar o código de chamada</h2>
+<p class="clock">00:00–00:25 as quatro opções e o critério · 00:25–00:55 Ollama de verdade (as três armadilhas) · 00:55–01:35 prática: o provedor novo no gateway · 01:35–02:00 o ADR do cliente que não deixa o código sair</p>
+
+<h3>Por que isso importa</h3>
+
+<p>Este é o bloco em que uma decisão de arquitetura tomada no M05 rende juros. Lá, você não chamou a API do provedor diretamente do código de negócio: criou uma interface de <code>ChatProvider</code> e um adaptador. Na hora, isso pareceu cerimônia — uma indireção a mais para chamar a mesma coisa. Agora você vai adicionar um provedor completamente diferente, rodando em outra máquina, com outro modelo, e <strong>nenhum arquivo fora de <code>services/llm/providers/</code> vai mudar</strong>. Um arquivo novo e uma linha de configuração.</p>
+
+<p>Se você tivesse espalhado <code>client.messages.create(...)</code> pelo código, este bloco seria uma refatoração de duas semanas. Guarde a sensação: é o argumento mais concreto que você vai ter para defender inversão de dependência numa discussão de time.</p>
+
+<h3>As quatro opções, e o critério de escolha</h3>
+
+<table>
+<thead><tr><th>Ferramenta</th><th>O que é</th><th>Melhor para</th><th>Não use para</th></tr></thead>
+<tbody>
+<tr><td><strong>Ollama</strong></td><td>Servidor que embrulha o <code>llama.cpp</code> com gerenciamento de modelos, API própria e endpoint compatível com OpenAI</td><td>Desenvolvimento local, provas de conceito, instalação single-box no cliente</td><td>Alta concorrência — o padrão é 1 requisição paralela por modelo</td></tr>
+<tr><td><strong>llama.cpp</strong></td><td>O motor de inferência em C++ por baixo; <code>llama-server</code> expõe HTTP</td><td>Controle fino de flags, hardware exótico, embarcar em outro produto</td><td>Quando você quer conveniência — a gestão de modelos é manual</td></tr>
+<tr><td><strong>LM Studio</strong></td><td>Aplicativo desktop com GUI, catálogo e servidor local</td><td>Explorar modelos, comparar quants visualmente, demonstrar para não-técnico</td><td>Servidor headless — é uma app de desktop</td></tr>
+<tr><td><strong>vLLM</strong></td><td>Servidor de inferência de produção, com <em>PagedAttention</em> e <em>continuous batching</em></td><td>Servir muitos usuários em GPU com vazão alta</td><td>Sua máquina de dev sem GPU — ele nasceu para GPU e para escala</td></tr>
+</tbody>
+</table>
+
+<div class="box">
+<p><strong>Contexto · O que <em>continuous batching</em> e <em>PagedAttention</em> resolvem.</strong> Servir um LLM tem um problema de escalonamento peculiar: cada requisição gera um número diferente e imprevisível de tokens. Num batch tradicional, todas as requisições do lote esperam a mais longa terminar — a GPU fica ociosa segurando requisições que já acabaram. <strong>Continuous batching</strong> troca requisições dentro do lote a cada passo de geração: terminou uma, entra outra. <strong>PagedAttention</strong> ataca a outra metade: o cache de KV do bloco 6 é alocado em páginas de tamanho fixo, como memória virtual num SO, em vez de um bloco contíguo por requisição — o que elimina a fragmentação e permite muito mais requisições simultâneas na mesma VRAM. Juntos, explicam por que o vLLM entrega muito mais vazão que o Ollama no mesmo hardware. E também por que ele não faz diferença para você com um usuário só.</p>
+</div>
+
+<p><strong>O critério, resumido:</strong> Ollama para desenvolver e para instalações de um usuário; vLLM quando houver concorrência real e GPU. Comece pelo Ollama <em>mesmo que</em> o destino seja vLLM — a API compatível com OpenAI é a mesma nos dois, então a troca depois é de configuração, não de código. Esse é justamente o ponto do gateway.</p>
+
+<h3>Ollama de verdade: as três armadilhas</h3>
+
+<div class="box warn">
+<p><strong>Armadilha 1 — o contexto padrão é 4.096 tokens, e o excedente some sem aviso.</strong> Esta é a causa nº 1 de "o modelo local ignorou metade do meu prompt". Você monta um contexto de 20 mil tokens com os trechos recuperados do M07, manda para o Ollama, e ele trunca silenciosamente para 4.096 — <strong>descartando o começo, que é onde está o seu system prompt</strong>. Nenhum erro, nenhum aviso, apenas uma resposta pior. Conserto, em ordem de preferência: <code>OLLAMA_CONTEXT_LENGTH=32768 ollama serve</code> no servidor, ou <code>"options": {"num_ctx": 32768}</code> na requisição, ou <code>PARAMETER num_ctx 32768</code> num Modelfile. E note o custo: aumentar <code>num_ctx</code> aumenta o cache de KV — a conta do bloco 6 volta agora, com números reais.</p>
+</div>
+
+<div class="box warn">
+<p><strong>Armadilha 2 — o padrão é uma requisição paralela por modelo.</strong> <code>OLLAMA_NUM_PARALLEL</code> vale 1 por padrão. A segunda requisição concorrente <em>enfileira</em>; ela não falha, só demora o dobro. Se você medir latência com uma requisição por vez e depois ligar quatro workers, a p95 explode e a causa não aparece em lugar nenhum. Ajuste <code>OLLAMA_NUM_PARALLEL</code> — e lembre que cada slot paralelo tem seu próprio cache de KV, então <code>num_ctx × num_parallel</code> é a conta de memória real.</p>
+</div>
+
+<div class="box warn">
+<p><strong>Armadilha 3 — o modelo descarrega depois de 5 minutos.</strong> Em ambiente de desenvolvimento, a primeira requisição depois de um intervalo paga o carregamento inteiro do modelo do disco: 5 a 30 segundos, dependendo do tamanho e do SSD. Isso destrói qualquer medição de latência p50 que você faça sem aquecer. Controle com <code>keep_alive</code> na requisição (<code>-1</code> mantém carregado indefinidamente, <code>0</code> descarrega já) ou <code>OLLAMA_KEEP_ALIVE</code> no servidor. Em produção single-box: <code>-1</code>, sempre, e reserve a memória.</p>
+</div>
+
+<p>As variáveis que você vai realmente configurar:</p>
+
+<pre><code>OLLAMA_HOST=0.0.0.0:11434     # expor na rede (padrao e so 127.0.0.1) — ver aviso de seguranca
+OLLAMA_CONTEXT_LENGTH=32768   # contexto padrao para todos os modelos
+OLLAMA_NUM_PARALLEL=4         # requisicoes simultaneas por modelo
+OLLAMA_MAX_LOADED_MODELS=2    # quantos modelos ficam residentes
+OLLAMA_KEEP_ALIVE=-1          # nao descarregar
+OLLAMA_MODELS=/dados/modelos  # onde guardar os GGUF (o padrao mora no home)</code></pre>
+
+<div class="box warn">
+<p><strong>Segurança: <code>OLLAMA_HOST=0.0.0.0</code> não tem autenticação.</strong> O Ollama não implementa autenticação. Expor a porta 11434 na rede significa que <em>qualquer</em> host que a alcance pode gerar texto, listar seus modelos e consumir sua GPU. Numa instalação no cliente, o servidor fica em rede interna <strong>atrás de um proxy autenticado</strong> — e o proxy natural é a sua própria API do M03, que já tem autenticação, rate limit e auditoria. O M12 volta a esse ponto com a checagem completa; por ora, a regra é: nunca <code>0.0.0.0</code> sem algo na frente.</p>
+</div>
+
+<h3>Prática guiada · o provedor novo no gateway (40 min)</h3>
+
+<p>O Ollama expõe <code>http://localhost:11434/v1</code> falando o dialeto da API da OpenAI. Isso significa que o SDK <code>openai</code> que você já tem no projeto funciona apontando para lá — inclusive para <em>tool calling</em> e <em>structured output</em>.</p>
+
+<div class="step"><span class="n">1</span> Confirme a compatibilidade antes de escrever qualquer código:
+<pre><code>curl -s http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen3:8b",
+    "messages": [{"role":"user","content":"responda apenas: ok"}],
+    "temperature": 0
+  }' | jq '.choices[0].message.content, .usage'</code></pre>
+<p><strong>Resultado esperado:</strong> <code>"ok"</code> (possivelmente com variação de caixa) e um objeto <code>usage</code> com <code>prompt_tokens</code>, <code>completion_tokens</code> e <code>total_tokens</code>. O <code>usage</code> é o que permite o seu contador de custo do M05 continuar funcionando sem alteração — mesmo que o custo em dinheiro seja zero, o custo em <em>tokens</em> continua sendo o sinal de eficiência do prompt.</p>
+</div>
+
+<div class="step"><span class="n">2</span> Escreva o provedor. É o único arquivo novo:
+<pre><code># app/services/llm/providers/ollama.py
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from openai import AsyncOpenAI
+
+from app.services.llm.base import ChatProvider, Mensagem, Resposta, Uso
+from app.services.llm.metrics import resumir
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigOllama:
+    base_url: str = "http://localhost:11434/v1"
+    modelo: str = "qwen3:8b"
+    contexto: int = 32768
+    manter_carregado: bool = True
+
+
+class OllamaProvider(ChatProvider):
+    """Provedor local. Mesma interface dos provedores de API do M05 bloco 6.
+
+    Custo em dinheiro e zero; custo em tempo, nao. O gateway registra os dois.
+    """
+
+    nome = "ollama"
+
+    def __init__(self, cfg: ConfigOllama) -> None:
+        self._cfg = cfg
+        # api_key e obrigatoria pelo SDK e ignorada pelo Ollama.
+        self._cliente = AsyncOpenAI(base_url=cfg.base_url, api_key="nao-usada")
+
+    async def completar(
+        self, mensagens: list[Mensagem], **kwargs: object
+    ) -> Resposta:
+        bruta = await self._cliente.chat.completions.create(
+            model=self._cfg.modelo,
+            messages=[m.para_dict() for m in mensagens],
+            logprobs=True,
+            extra_body={
+                "options": {"num_ctx": self._cfg.contexto},
+                "keep_alive": -1 if self._cfg.manter_carregado else "5m",
+            },
+            **kwargs,
+        )
+        escolha = bruta.choices[0]
+        lps = (
+            [t.logprob for t in escolha.logprobs.content]
+            if escolha.logprobs and escolha.logprobs.content
+            else []
+        )
+        u = bruta.usage
+        return Resposta(
+            texto=escolha.message.content or "",
+            uso=Uso(
+                entrada=u.prompt_tokens if u else 0,
+                saida=u.completion_tokens if u else 0,
+                custo_usd=0.0,          # local: custo em dinheiro por chamada e zero
+            ),
+            confianca=resumir(lps),
+            provedor=self.nome,
+            modelo=self._cfg.modelo,
+        )</code></pre>
+<p><strong>Resultado esperado:</strong> <code>uv run mypy --strict app/services/llm/providers/ollama.py</code> passa. Note as duas coisas que o adaptador faz além de chamar: força <code>num_ctx</code> (armadilha 1, resolvida no lugar certo — dentro do adaptador, não espalhada por chamadores) e traduz <code>usage</code> para o seu tipo <code>Uso</code>.</p>
+</div>
+
+<div class="step"><span class="n">3</span> Registre no factory e ligue por configuração:
+<pre><code># app/services/llm/factory.py  (trecho)
+from app.services.llm.providers.ollama import ConfigOllama, OllamaProvider
+
+def construir(settings: Settings) -> ChatProvider:
+    match settings.llm_provider:
+        case "anthropic":
+            return AnthropicProvider(...)
+        case "openai":
+            return OpenAIProvider(...)
+        case "ollama":                                   # <-- unica linha nova
+            return OllamaProvider(ConfigOllama(
+                base_url=settings.ollama_base_url,
+                modelo=settings.ollama_modelo,
+                contexto=settings.ollama_contexto,
+            ))
+        case outro:
+            raise ValueError(f"provedor desconhecido: {outro}")</code></pre>
+<p><strong>Resultado esperado:</strong> com <code>LLM_PROVIDER=ollama</code> no <code>.env</code>, <code>uv run pytest tests/services/llm -q</code> passa e <code>git diff --stat</code> mostra <strong>um arquivo novo e duas linhas alteradas</strong>. Nenhum arquivo em <code>services/retrieval/</code>, <code>services/agent/</code> ou <code>api/</code> foi tocado. <strong>É esse número que você mostra numa entrevista quando perguntarem por que arquitetura importa.</strong></p>
+</div>
+
+<div class="step"><span class="n">4</span> Rode o extrator do M05 contra o modelo local, ponta a ponta:
+<pre><code>LLM_PROVIDER=ollama uv run python -m app.cli extrair \
+  --arquivo ~/legado/src/Pedidos/PedidoService.cs \
+  --formato json | tee /tmp/extracao_local.json
+
+LLM_PROVIDER=anthropic uv run python -m app.cli extrair \
+  --arquivo ~/legado/src/Pedidos/PedidoService.cs \
+  --formato json | tee /tmp/extracao_api.json
+
+diff <(jq -S . /tmp/extracao_local.json) <(jq -S . /tmp/extracao_api.json)</code></pre>
+<p><strong>Resultado esperado:</strong> os dois JSON validam contra o mesmo schema Pydantic (se o local não validar, o bloco 8 tem o diagnóstico), e o <code>diff</code> mostra diferenças de <em>conteúdo</em> — descrições mais curtas, alguma dependência a menos, talvez um campo opcional vazio. O que importa agora não é qual está certo: é que <strong>o pipeline inteiro rodou sem código de chamada diferente</strong>. Quanto pior está, o bloco 8 mede.</p>
+</div>
+
+<div class="box fund">
+<p><strong>Fundamento de engenharia · Inversão de dependência, cobrando o juro.</strong> O princípio D do SOLID diz que módulos de alto nível não devem depender de módulos de baixo nível — ambos dependem de abstrações. Dito assim, soa acadêmico. Dito com o diff do passo 3, soa como dinheiro: <strong>trocar o motor de inferência do produto inteiro custou um arquivo</strong>. O teste que distingue a abstração útil da cerimônia inútil é sempre o mesmo, e é empírico: <em>quando a segunda implementação chegou, quantos arquivos mudaram fora da fronteira?</em> Se muitos, a fronteira estava no lugar errado — e a lição correta não é "abstraia mais", é "abstraia no eixo que de fato varia". Aqui o eixo era o provedor, e o M05 acertou. Vale registrar o contra-exemplo com a mesma honestidade: a abstração de <em>tool calling</em> do M08 vaza, porque provedores discordam no formato — e o bloco 8 mostra exatamente onde.</p>
+</div>
+
+<div class="box net">
+<p><strong>Tradução .NET · o mesmo movimento que você já fez com <code>ILogger</code>.</strong> Trocar Serilog por NLog num projeto que injeta <code>ILogger&lt;T&gt;</code> é mudança de <code>Program.cs</code>; num projeto que chama <code>Log.Logger.Information(...)</code> estaticamente por toda parte é um mutirão. É literalmente a mesma decisão, com o mesmo desfecho, num domínio novo. A diferença é que aqui o custo do erro é maior: no logging você troca de biblioteca uma vez a cada cinco anos; em IA, o provedor e o modelo mudam a cada poucos meses.</p>
+</div>
+
+<h3>O ADR: onde vale modelo local no Cartógrafo</h3>
+
+<p>A resposta honesta quase nunca é "tudo local" nem "nada local". É uma decisão por <em>etapa do pipeline</em>, porque as etapas têm exigências diferentes. Este é o quadro que vai para o ADR:</p>
+
+<table>
+<thead><tr><th>Etapa do pipeline</th><th>Exigência dominante</th><th>Local é viável?</th><th>Por quê</th></tr></thead>
+<tbody>
+<tr><td>Parse e construção do grafo (M10)</td><td>Determinismo</td><td><strong>Não usa LLM</strong></td><td>É <code>tree-sitter</code>. Já era local, já era grátis, já era exato.</td></tr>
+<tr><td>Embeddings (M07)</td><td>Vazão, custo por unidade</td><td><strong>Sim — o melhor candidato</strong></td><td>Tarefa fechada, modelos pequenos são competitivos, e é o maior volume de chamadas do sistema</td></tr>
+<tr><td>Classificação barata (roteamento, é-teste-ou-não)</td><td>Latência, custo</td><td><strong>Sim</strong></td><td>Saída curta e restrita; modelo de 8B resolve</td></tr>
+<tr><td>Extração estruturada por arquivo (M05)</td><td>Aderência a schema</td><td><strong>Talvez</strong> — meça</td><td>Depende do suporte a structured output do modelo. É o experimento do bloco 8.</td></tr>
+<tr><td>Loop de agente com ferramentas (M08)</td><td>Tool calling, estado multi-turno</td><td><strong>Provavelmente não</strong></td><td>É onde modelos abertos mais ficam para trás; bloco 8 explica</td></tr>
+<tr><td>Redação do relatório final</td><td>Qualidade de escrita</td><td><strong>Não, se houver escolha</strong></td><td>É o entregável que o cliente lê. Não economize aqui.</td></tr>
+</tbody>
+</table>
+
+<div class="step"><span class="n">5</span> Escreva <code>docs/adr/0005-modelos-locais.md</code> com esse quadro, mais três seções: <strong>contexto</strong> (o cliente que não deixa o código sair — descreva o segmento, não uma empresa hipotética), <strong>decisão</strong> (quais etapas vão para local <em>agora</em>, quais ficam em API, e o modo "100% local" como <em>perfil de implantação</em> separado com qualidade declaradamente inferior), e <strong>consequências</strong> (o cliente 100% local recebe um relatório mais fraco na parte de redação — e isso precisa estar na proposta comercial, não descoberto na entrega).
+<p><strong>Resultado esperado:</strong> um ADR no formato MADR do M04, com o quadro acima como tabela e um gatilho de revisão explícito: <em>"revisar quando um modelo aberto passar de 85% no nosso eval de tool calling"</em>. Você mede esse 85% no próximo bloco.</p>
+</div>
+
+<div class="box ok">
+<p><strong>Síntese do bloco 7</strong></p>
+<ul>
+<li>Ollama para dev e single-box; vLLM quando houver concorrência e GPU; a API compatível com OpenAI torna a troca uma configuração.</li>
+<li>As três armadilhas do Ollama: contexto 4.096 truncando em silêncio, uma requisição paralela por padrão, descarregamento em 5 minutos.</li>
+<li><code>OLLAMA_HOST=0.0.0.0</code> não tem autenticação — proxy autenticado obrigatório.</li>
+<li>O provedor local entrou com um arquivo novo e duas linhas: é o retorno do investimento em inversão de dependência do M05.</li>
+<li>Modelo local não é decisão binária: é decisão por etapa do pipeline, registrada em ADR com gatilho de revisão.</li>
+<li>Embeddings e classificação barata são os melhores candidatos; loop de agente é o pior.</li>
+</ul>
+</div>
+<h2>Bloco 8 · Modelo ≠ agente ≠ harness — avaliar com honestidade e quando fine-tuning é a resposta errada</h2>
+<p class="clock">00:00–00:30 as sete competências e a evidência do BFCL · 00:30–00:55 a escada de diagnóstico · 00:55–01:25 prática: os evals do M06 contra o local · 01:25–02:00 LoRA/QLoRA e a escada de decisão</p>
+
+<h3>Por que isso importa</h3>
+
+<p>Você vai viver esta cena, se ainda não viveu: pluga um modelo local bem avaliado em código dentro do seu harness de agente — o loop do M08, o servidor MCP do M09, ou uma ferramenta de linha de comando qualquer. O modelo responde bem quando você conversa. Mas em modo agente ele <em>quase</em> funciona: chama a ferramenta com um argumento a menos, repete a mesma chamada três vezes, ou escreve a chamada como texto no meio da resposta em vez de emitir a estrutura. O diagnóstico que a internet oferece é "põe um agente melhor em cima". Está errado, e custa semanas.</p>
+
+<p><strong>Modelo, harness e agente são três coisas.</strong> O <em>modelo</em> gera tokens. O <em>harness</em> é a máquina em volta: monta o prompt, serializa os schemas, faz o parse da saída, executa a ferramenta, devolve o resultado, controla o laço. O <em>agente</em> é o comportamento que emerge dos dois juntos. Empilhar mais harness sobre um modelo que não cumpre o protocolo não gera agente — gera mais lugares onde falhar.</p>
+
+<h3>As sete competências que o modo agente exige</h3>
+
+<p>Benchmark de código mede uma coisa: dado um enunciado, sai código correto. Modo agente exige um conjunto diferente, e a correlação entre os dois é mais fraca do que a intuição sugere.</p>
+
+<table>
+<thead><tr><th>Competência</th><th>O que é</th><th>Como falha na prática</th></tr></thead>
+<tbody>
+<tr><td><strong>Instruction following</strong></td><td>Obedecer restrições explícitas do system prompt</td><td>Ignora "responda só com JSON" e escreve um parágrafo antes</td></tr>
+<tr><td><strong>Tool calling</strong></td><td>Emitir a chamada no formato estrutural que o harness espera</td><td>Escreve a chamada como texto em vez de emitir a estrutura</td></tr>
+<tr><td><strong>Structured output</strong></td><td>Produzir JSON válido</td><td>Vírgula sobrando, aspas simples, markdown em volta</td></tr>
+<tr><td><strong>Aderência a schema</strong></td><td>Respeitar campos obrigatórios, tipos e enums</td><td>JSON válido mas com campo faltando ou enum inventado</td></tr>
+<tr><td><strong>Estado multi-turno</strong></td><td>Lembrar o que já foi feito ao longo de 10+ turnos</td><td>Repete a mesma chamada que já executou dois turnos atrás</td></tr>
+<tr><td><strong>Contexto longo</strong></td><td>Usar informação no meio de um contexto grande</td><td>Usa o começo e o fim, perde o meio</td></tr>
+<tr><td><strong>Planejamento e seleção de ferramenta</strong></td><td>Escolher a ferramenta certa e a ordem certa; parar quando terminou</td><td>Chama <code>buscar</code> quando deveria chamar <code>ler</code>; não sabe parar</td></tr>
+</tbody>
+</table>
+
+<h3>A evidência: o BFCL, e a descoberta que muda o diagnóstico</h3>
+
+<div class="box">
+<p><strong>Contexto · O que é o Berkeley Function Calling Leaderboard.</strong> Benchmark público mantido pelo grupo Gorilla, em Berkeley, dedicado a medir <em>chamada de função</em> — não código. Ele evoluiu em quatro gerações: <strong>V1</strong> introduziu avaliação por AST (compara a árvore sintática da chamada gerada com a esperada, em vez de casar strings); <strong>V2</strong> trouxe funções reais contribuídas por empresas; <strong>V3</strong> adicionou interações multi-turno; e <strong>V4</strong> (abril de 2026) passou a fazer <em>avaliação agêntica holística</em> — busca na web, memória e sensibilidade a formato. Ele reporta acurácia, <strong>custo</strong> em dólares e <strong>latência</strong> em segundos, e separa modelos com suporte nativo a function calling (FC) dos que precisam ser induzidos por prompt.</p>
+</div>
+
+<p>O que interessa aqui é o eixo novo do V4: <strong>sensibilidade a formato</strong>. A pergunta é enganosamente simples — <em>o mesmo modelo, na mesma tarefa, com a mesma informação, mas apresentada em formato diferente: a acurácia muda?</em> Deveria ser não. É sim.</p>
+
+<p>O BFCL V4 testa <strong>cinco dimensões em 26 configurações de prompt</strong>: formato de retorno (Python, JSON, XML verboso, XML conciso), formato da documentação das funções (Python, XML, JSON), presença de tags de tool call, texto puro vs. Markdown, e enunciado original vs. reformulado. Os achados:</p>
+
+<ul>
+<li><strong>Formato de retorno:</strong> Python e JSON produzem acurácia mais alta que qualquer variante XML. Modelos menores e a família Claude tiveram queda significativa quando o retorno era pedido em XML.</li>
+<li><strong>Formato da documentação:</strong> tendência consistente em quase todos os modelos — <strong>JSON &gt; XML &gt; Python</strong>. Documentar as suas ferramentas em JSON Schema é uma escolha mensurável, não estética.</li>
+<li><strong>Tags de tool call:</strong> impacto pequeno na média — mas modelos pequenos (na faixa de 8B) sofreram queda significativa.</li>
+<li><strong>Markdown vs. texto puro e reformulação do enunciado:</strong> comportamento robusto, sem tendência geral.</li>
+</ul>
+
+<div class="box warn">
+<p><strong>A consequência que reorganiza o seu diagnóstico.</strong> Se a acurácia do mesmo modelo na mesma tarefa muda conforme o formato de apresentação, então <strong>uma fração do que você atribuiria ao "modelo ser ruim" é, na verdade, a sua integração</strong>. Antes de trocar de modelo, troque de formato: documente as tools em JSON Schema, peça retorno em JSON e não em XML, e evite envelopes exóticos com modelos pequenos. Isso é barato, é reversível e frequentemente resolve. E há um corolário desconfortável para a sua régua: <strong>um eval de tool calling que testa um único formato mede o par (modelo, formato), não o modelo.</strong></p>
+</div>
+
+<h3>A escada de diagnóstico</h3>
+
+<p>Quando o modelo local "não funciona em modo agente", desça esta escada na ordem. Ela vai do mais barato e mais provável para o mais caro e menos provável — que é a ordem oposta à que a intuição sugere.</p>
+
+<table>
+<thead><tr><th>#</th><th>Hipótese</th><th>Como verificar em 5 minutos</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Chat template errado ou ausente</td><td><code>ollama show &lt;m&gt; --template</code>; comparar com o cartão no Hub</td><td>Usar a tag <em>instruct</em> correta, não a <em>base</em></td></tr>
+<tr><td>2</td><td>Contexto truncado silenciosamente</td><td>Contar tokens do prompt e comparar com <code>num_ctx</code></td><td><code>OLLAMA_CONTEXT_LENGTH</code> / <code>num_ctx</code> (bloco 7)</td></tr>
+<tr><td>3</td><td>Modelo sem suporte nativo a tools</td><td>Ver o cartão do modelo; testar uma chamada trivial com <code>tools</code></td><td>Trocar por uma variante que suporte; não emular por prompt se puder evitar</td></tr>
+<tr><td>4</td><td>Formato da documentação das tools</td><td>Trocar a doc de Python/XML para JSON Schema e reexecutar o eval</td><td>Padronizar em JSON Schema (achado do BFCL V4)</td></tr>
+<tr><td>5</td><td>Stop tokens errados — gera além do fim</td><td>Olhar a saída crua: ele continua e simula o turno do usuário?</td><td>Corrigir o template/stop no Modelfile</td></tr>
+<tr><td>6</td><td>Quantização agressiva demais</td><td>Rodar o mesmo eval em Q8_0 e comparar</td><td>Subir o quant (bloco 6: raciocínio é o primeiro a cair)</td></tr>
+<tr><td>7</td><td>Prompt e schemas grandes demais para um modelo pequeno</td><td>Reduzir de 12 tools para 4 e reexecutar</td><td>Menos ferramentas, nomes melhores, descrições curtas</td></tr>
+<tr><td>8</td><td>O modelo é ruim nisto mesmo</td><td>Só depois de 1–7, com número</td><td>Trocar de modelo — ou manter esta etapa em API</td></tr>
+</tbody>
+</table>
+
+<div class="box net">
+<p><strong>Tradução .NET · a escada é a mesma de "o serviço não responde".</strong> Você não começa reescrevendo o serviço. Você checa DNS, porta, certificado, versão do contrato, serialização, timeout — e só então suspeita da lógica. A escada acima é essa disciplina aplicada a um domínio novo: os itens 1, 2 e 5 são o equivalente a encoding e content-type errados; o item 4 é versão de contrato; o 7 é payload grande demais; e o 8 é "o serviço está com bug mesmo", que é sempre a última hipótese porque é a mais cara de agir. A tentação de pular direto para o 8 existe porque trocar de modelo é a única ação que parece "de IA" — resista.</p>
+</div>
+
+<h3>Prática guiada · os evals do M06 contra o local (30 min)</h3>
+
+<div class="step"><span class="n">1</span> Parametrize o runner de evals por provedor, se ainda não estiver:
+<pre><code># evals/runner.py  (trecho)
+@dataclass(frozen=True, slots=True)
+class Execucao:
+    provedor: str
+    modelo: str
+    quant: str | None
+    aprovados: int
+    total: int
+    p50_ms: float
+    p95_ms: float
+    custo_usd: float
+
+    @property
+    def taxa(self) -> float:
+        return self.aprovados / self.total if self.total else 0.0</code></pre>
+<p><strong>Resultado esperado:</strong> <code>uv run pytest evals/ -q</code> continua verde e o runner aceita <code>--provedor</code>. Você vai gravar uma linha de <code>Execucao</code> por combinação testada — é a tabela que vai para o relatório.</p>
+</div>
+
+<div class="step"><span class="n">2</span> Rode a matriz. Três configurações, as seis categorias do M06 mais a de abstenção do bloco 5:
+<pre><code>for cfg in "anthropic:sonnet-5:-" "ollama:qwen3:8b:Q4_K_M" "ollama:qwen3:8b:Q8_0"; do
+  IFS=: read -r prov modelo tag quant <<< "$cfg"
+  uv run python -m evals.runner \
+    --provedor "$prov" --modelo "$modelo:$tag" --quant "$quant" \
+    --saida "evals/resultados/${prov}-${tag}-${quant}.json"
+done
+uv run python -m evals.comparar evals/resultados/*.json --formato markdown</code></pre>
+<p><strong>Resultado esperado:</strong> uma tabela comparativa. O padrão que você quase certamente vai ver: <strong>extração estruturada</strong> com queda pequena no local (poucos pontos), <strong>tool calling multi-turno</strong> com queda grande (frequentemente 20–40 pontos), <strong>abstenção</strong> imprevisível, e <strong>latência p95</strong> pior no local por um fator de 3 a 10 em CPU. Não invente esses números — <strong>meça os seus</strong> e coloque na tabela; o valor do exercício está em ter o número real da <em>sua</em> tarefa no <em>seu</em> hardware.</p>
+</div>
+
+<div class="step"><span class="n">3</span> Isole a sensibilidade a formato, reproduzindo o experimento do BFCL em escala reduzida:
+<pre><code>uv run python -m evals.runner --provedor ollama --modelo qwen3:8b \
+  --somente tool_calling --doc-formato json_schema --saida /tmp/fmt-json.json
+uv run python -m evals.runner --provedor ollama --modelo qwen3:8b \
+  --somente tool_calling --doc-formato assinatura_python --saida /tmp/fmt-py.json
+uv run python -m evals.comparar /tmp/fmt-*.json</code></pre>
+<p><strong>Resultado esperado:</strong> uma diferença mensurável entre os dois formatos, com JSON Schema à frente na maioria dos modelos. <strong>Se houver diferença, você acabou de provar no seu próprio sistema que parte do que parecia "modelo ruim" era formato.</strong> Registre o número; ele justifica padronizar as descrições de tool do M08 e do M09 em JSON Schema.</p>
+</div>
+
+<div class="step"><span class="n">4</span> Calcule o custo local honesto — a conta que quase ninguém faz:
+<pre><code># tools/custo_local.py
+"""Custo por 1M de tokens de saida rodando local, amortizando hardware e energia."""
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True, slots=True)
+class CustoLocal:
+    preco_hardware_usd: float
+    vida_util_meses: int
+    watts_sob_carga: int
+    preco_kwh_usd: float
+    tokens_por_segundo: float
+    utilizacao: float = 0.25          # fracao do tempo realmente gerando
+
+    def por_milhao_de_tokens(self) -> tuple[float, float, float]:
+        segundos_por_mtok = 1_000_000 / self.tokens_por_segundo
+        horas = segundos_por_mtok / 3600
+        energia = horas * (self.watts_sob_carga / 1000) * self.preco_kwh_usd
+        horas_uteis_no_periodo = self.vida_util_meses * 30 * 24 * self.utilizacao
+        depreciacao_por_hora = self.preco_hardware_usd / horas_uteis_no_periodo
+        hardware = horas * depreciacao_por_hora
+        return energia, hardware, energia + hardware
+
+
+if __name__ == "__main__":
+    c = CustoLocal(
+        preco_hardware_usd=2200,   # a maquina que roda o modelo
+        vida_util_meses=36,
+        watts_sob_carga=320,
+        preco_kwh_usd=0.14,
+        tokens_por_segundo=45,     # o numero que VOCE mediu no bloco 6
+    )
+    energia, hardware, total = c.por_milhao_de_tokens()
+    print(f"energia    US$ {energia:7.2f} / Mtok")
+    print(f"hardware   US$ {hardware:7.2f} / Mtok")
+    print(f"TOTAL      US$ {total:7.2f} / Mtok")</code></pre>
+<p><strong>Resultado esperado:</strong> com esses valores de exemplo, algo em torno de <strong>US$ 0,28 de energia e US$ 12–14 de hardware amortizado por milhão de tokens</strong> — total na casa de US$ 13. Compare com a tabela de preços do M05 (Haiku 4.5 a US$ 5/Mtok de saída). <strong>A conclusão desconforta e é a correta: em volume baixo, local é mais caro que API.</strong> Local ganha por três outros motivos — dados que não podem sair, volume alto o suficiente para diluir o hardware, e custo previsível — nunca por ser "de graça". Coloque essa frase na proposta comercial; ela te protege de uma promessa que você não consegue cumprir.</p>
+</div>
+
+<div class="box fund">
+<p><strong>Fundamento de engenharia · Benchmark honesto e a comparação que não engana.</strong> Quatro regras, todas violadas rotineiramente em posts sobre modelo local. <strong>(1) Mesma carga:</strong> mesmos prompts, mesmo contexto, mesma ordem — se você comparou o local com prompt curto e a API com prompt longo, não comparou nada. <strong>(2) Aquecimento e repetição:</strong> descarte a primeira execução (carregamento de modelo, cache frio) e rode N vezes; reporte p50 <em>e</em> p95, porque a média esconde a cauda que o usuário sente. <strong>(3) Reporte a dispersão:</strong> "45 tok/s" sem intervalo é propaganda; "45 ± 6 tok/s em 20 execuções" é medição. <strong>(4) Declare a fronteira:</strong> hardware exato, quantização exata, contexto, concorrência, versão do servidor — sem isso o número não é reproduzível nem por você daqui a um mês. É a mesma disciplina de um teste de carga de API; o domínio mudou, o rigor não.</p>
+</div>
+
+<h3>Fine-tuning: LoRA, QLoRA e a escada de decisão</h3>
+
+<p>Fine-tuning é continuar treinando um modelo pronto com dados seus. Fazer isso com todos os pesos exige memória para os pesos, os gradientes e os estados do otimizador — na prática, algo como <strong>12 a 16 bytes por parâmetro</strong>, ou seja, mais de 100 GB para um modelo de 8B. Inviável fora de um cluster.</p>
+
+<div class="box">
+<p><strong>Contexto · LoRA e QLoRA, a ideia em duas frases.</strong> <strong>LoRA</strong> (<em>Low-Rank Adaptation</em>) congela os pesos originais e treina, ao lado de cada matriz <code>W</code> (dimensão <code>d×k</code>), duas matrizes pequenas <code>A</code> (<code>d×r</code>) e <code>B</code> (<code>r×k</code>) com <code>r</code> muito menor — tipicamente 8, 16 ou 32. A saída vira <code>W·x + (α/r)·B·A·x</code>. Como só <code>A</code> e <code>B</code> são treinadas, o número de parâmetros treináveis cai tipicamente para <strong>menos de 1%</strong> do total, e o adaptador resultante ocupa dezenas de MB em vez de dezenas de GB. <strong>QLoRA</strong> vai além: carrega o modelo-base <em>já quantizado</em> em 4 bits (congelado) e treina os adaptadores LoRA em cima — o que faz um fine-tuning de 8B caber numa única GPU de consumo. A hipótese por trás das duas: a <em>atualização</em> necessária para adaptar um modelo a uma tarefa tem posto baixo, mesmo que os pesos originais não tenham.</p>
+</div>
+
+<pre><code># Como isso se parece na pratica, com a biblioteca peft
+from peft import LoraConfig, get_peft_model
+from transformers import AutoModelForCausalLM
+
+base = AutoModelForCausalLM.from_pretrained("modelo/base")   # + quantizacao 4-bit no QLoRA
+
+cfg = LoraConfig(
+    r=16,                       # posto. 8-32 cobre quase tudo; maior nao e melhor
+    lora_alpha=32,              # escala = alpha/r; convencao comum e alpha = 2r
+    lora_dropout=0.05,
+    target_modules="all-linear",# estilo QLoRA; o default atinge so q_proj e v_proj
+    bias="none",
+    task_type="CAUSAL_LM",
+    use_rslora=False,           # True troca a escala para alpha/sqrt(r): mais estavel com r alto
+)
+modelo = get_peft_model(base, cfg)
+modelo.print_trainable_parameters()
+# -> trainable params: 41,943,040 || all params: 8,072,204,288 || trainable%: 0.5196
+
+# Depois de treinar, para servir sem overhead de adaptador:
+# fundido = modelo.merge_and_unload()</code></pre>
+
+<p>Agora a parte que importa mais que a API. <strong>Fine-tuning é a resposta errada com muito mais frequência do que parece</strong>, e a razão é que ele ataca a categoria errada de problema. Suba esta escada e pare no primeiro degrau que resolver:</p>
+
+<table>
+<thead><tr><th>#</th><th>Degrau</th><th>Resolve</th><th>Custo</th><th>Reversível?</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Melhorar o prompt e os exemplos (few-shot)</td><td>Formato, tom, estrutura da saída</td><td>Horas</td><td>Sim, na hora</td></tr>
+<tr><td>2</td><td>Structured output / grammar</td><td>Aderência a schema</td><td>Horas</td><td>Sim</td></tr>
+<tr><td>3</td><td><strong>RAG</strong> (M07)</td><td><strong>Conhecimento que o modelo não tem</strong></td><td>Dias</td><td>Sim — troca o índice</td></tr>
+<tr><td>4</td><td>Ferramenta / código determinístico</td><td>Exatidão: contas, contagens, consultas</td><td>Dias</td><td>Sim</td></tr>
+<tr><td>5</td><td>Modelo maior ou melhor</td><td>Raciocínio insuficiente</td><td>Dinheiro por chamada</td><td>Sim</td></tr>
+<tr><td>6</td><td><strong>Fine-tuning (LoRA)</strong></td><td><strong>Comportamento e formato muito específicos, repetidos em altíssimo volume</strong></td><td>Semanas + dados + manutenção perpétua</td><td>Não de graça</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<p><strong>Os quatro motivos pelos quais o degrau 6 quase nunca é o certo.</strong> <strong>(1) Ele não ensina fatos de forma confiável</strong> — o mecanismo é ajuste de distribuição, não inserção em base de dados; conhecimento novo entra por RAG, e tentar enfiá-lo por fine-tuning produz um modelo que alucina com o <em>estilo</em> dos seus dados, o que é pior que antes. <strong>(2) Esquecimento catastrófico:</strong> ao especializar, o modelo piora em coisas que fazia bem, e você só descobre o que quebrou se tiver evals abrangentes — os do M06 servem justamente para isso. <strong>(3) O custo real é a manutenção:</strong> o adaptador é acoplado a uma versão específica do modelo-base; quando sair a próxima, você retreina, revalida e possivelmente rotula dados de novo. Você não fez um artefato, assinou uma dívida recorrente. <strong>(4) Dados são o gargalo:</strong> LoRA precisa de milhares de exemplos consistentes e de <em>alta qualidade</em>; se você tem 200 exemplos, eles rendem mais como few-shot no prompt ou como conjunto de eval.</p>
+<p><strong>E quando ele é o certo?</strong> Três sinais juntos: você já subiu os cinco degraus anteriores e mediu; o volume é alto o bastante para que a economia por chamada pague o retreino; e o que você quer é <em>comportamento/formato</em> consistente, não conhecimento. Exemplo legítimo no Cartógrafo: se o relatório final tem um formato rígido e proprietário e você processa dezenas de milhares por mês, um LoRA pequeno de formatação sobre um modelo local pode valer. Repare: mesmo aí, o conhecimento continua vindo do grafo e do RAG.</p>
+</div>
+
+<h3>Mini-projeto · o experimento de modelo local, com número</h3>
+
+<p>Cinco passos. O produto final é um documento que decide, não um caderno de experimentos.</p>
+
+<div class="step"><span class="n">5</span> <strong>Dimensione e escolha.</strong> Use <code>tools/orcamento_vram.py</code> com o contexto real do Cartógrafo (o maior prompt que o M08 monta) e a concorrência real. Escolha dois candidatos que caibam: um em Q4_K_M e o mesmo em Q8_0.
+<p><strong>Resultado esperado:</strong> uma tabela de três linhas (API, local-Q4, local-Q8) com memória estimada e memória observada em <code>ollama ps</code>. Divergência maior que 20% entre estimado e observado significa que a sua conta de cache de KV usou parâmetros errados de camadas/cabeças — corrija a calculadora, ela vai ser reusada.</p>
+</div>
+
+<div class="step"><span class="n">6</span> <strong>Rode a matriz de evals completa</strong> nas três configurações, com as sete categorias (as seis do M06 mais abstenção). Grave <code>Execucao</code> para cada uma.
+<p><strong>Resultado esperado:</strong> <code>evals/resultados/</code> com três JSON e uma tabela comparativa em Markdown com taxa por categoria, p50, p95 e custo.</p>
+</div>
+
+<div class="step"><span class="n">7</span> <strong>Aplique a escada de diagnóstico</strong> na categoria com pior desempenho no local. Documente cada degrau testado e o que mudou — inclusive os degraus que não mudaram nada.
+<p><strong>Resultado esperado:</strong> uma seção "diagnóstico" com 8 linhas (hipótese → teste → delta na taxa). Na maioria dos casos, pelo menos um degrau entre 1 e 5 rende ganho mensurável. <strong>Se nenhum render, você tem a evidência para o degrau 8 — e é aí que trocar de modelo deixa de ser palpite.</strong></p>
+</div>
+
+<div class="step"><span class="n">8</span> <strong>Calcule o custo honesto</strong> com <code>tools/custo_local.py</code>, usando a sua vazão medida, e compare com o custo por relatório em API (o custo unitário do M05 bloco 7).
+<p><strong>Resultado esperado:</strong> duas linhas: "custo por relatório em API: US$ X" e "custo por relatório local: US$ Y (energia + hardware amortizado, a Z% de utilização)". Mais o <strong>ponto de equilíbrio</strong>: quantos relatórios por mês tornam o local mais barato.</p>
+</div>
+
+<div class="step"><span class="n">9</span> <strong>Feche o ADR-0005</strong> do bloco 7 com os números, e adicione o perfil de implantação <code>local</code> ao <code>docker-compose</code> do M03 — um serviço Ollama com volume para os modelos, <code>OLLAMA_CONTEXT_LENGTH</code> e <code>OLLAMA_KEEP_ALIVE</code> configurados, sem porta exposta para fora da rede do compose.
+<p><strong>Resultado esperado:</strong> <code>docker compose --profile local up</code> sobe API + Postgres + Ollama, e <code>LLM_PROVIDER=ollama uv run pytest evals/ -q</code> passa contra esse ambiente. É o artefato demonstrável para o cliente cujo código não pode sair da rede.</p>
+</div>
+
+<h3>Exercício sozinho</h3>
+
+<div class="box">
+<p><strong>Parte A — o modelo mínimo viável.</strong> Descubra, medindo, <strong>qual é o menor modelo que ainda serve</strong> para a etapa de embeddings do M07. Rode a suíte de recuperação do M06 (recall@k e MRR) com pelo menos três modelos de embedding locais de tamanhos diferentes, contra o baseline de API que você usa hoje. Entregue: a curva de qualidade × tamanho, o ponto onde a queda deixa de ser aceitável <em>para a sua tarefa</em>, e o tempo de reindexação completa do repositório legado com cada um. Sem pistas: você vai precisar decidir sozinho o que "aceitável" significa e defender o critério.</p>
+<p><strong>Parte B — a pergunta de arquitetura.</strong> Suponha que o cliente 100% local aceite pagar o dobro. Escreva meia página respondendo: <em>que parte do produto você ainda se recusaria a rodar local, e por quê?</em> A resposta esperada não é técnica — é sobre qual promessa você consegue sustentar por contrato. Ligue com o quadro por etapa do bloco 7.</p>
+</div>
+
+<h3>Peça do produto</h3>
+
+<p>O que deste módulo vai para o Capstone: <code>app/services/llm/providers/ollama.py</code> (o provedor), <code>app/services/llm/metrics.py</code> (confiança por logprob, do bloco 1), <code>tools/orcamento_vram.py</code> e <code>tools/custo_local.py</code> (as duas calculadoras — que também são material de proposta comercial), a categoria <code>abstencao</code> nos evals com a rubrica assimétrica, o perfil <code>local</code> no compose, e o <strong>ADR-0005</strong>. O laboratório de PyTorch (<code>~/lab-transformer</code>) <em>não</em> vai — ele cumpriu o papel de entendimento e fica fora do produto, o que é uma decisão consciente e vale registrar em uma linha no README.</p>
+
+<div class="box ok">
+<p><strong>Síntese do bloco 8</strong></p>
+<ul>
+<li>Modelo, harness e agente são três coisas; empilhar harness sobre modelo que não cumpre o protocolo não vira agente.</li>
+<li>Modo agente exige sete competências que benchmark de código não mede.</li>
+<li>BFCL V4 mediu sensibilidade a formato em 26 configurações: JSON Schema na documentação, retorno em JSON, cuidado com XML e com tags em modelos pequenos.</li>
+<li>A escada de diagnóstico vai do template ao modelo — trocar de modelo é o degrau 8, não o 1.</li>
+<li>Custo local honesto inclui hardware amortizado: em volume baixo, local é mais caro que API. Local ganha por confidencialidade, volume e previsibilidade.</li>
+<li>LoRA treina &lt;1% dos parâmetros; QLoRA cabe numa GPU de consumo. E ainda assim é o degrau 6 de 6.</li>
+<li>Fine-tuning não ensina fatos, causa esquecimento, cria dívida de manutenção e exige milhares de exemplos.</li>
+</ul>
+</div>
+<hr>
+
+<h2>Tabela de Diagnóstico</h2>
+
+<p>Erros reais que você vai encontrar neste módulo, na ordem em que costumam aparecer.</p>
+
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>O loss cai, depois explode para <code>1e+12</code> e vira <code>nan</code></td><td>Faltou <code>optimizer.zero_grad()</code> — gradientes acumulam entre passos</td><td>Chamar <code>zero_grad(set_to_none=True)</code> a cada iteração. Se persistir, reduzir a taxa de aprendizado.</td></tr>
+<tr><td><code>RuntimeError: view size is not compatible with input tensor's size and stride</code></td><td><code>view()</code> depois de <code>transpose()</code>: o tensor não está mais contíguo em memória</td><td>Inserir <code>.contiguous()</code> antes do <code>.view()</code> — ou usar <code>.reshape()</code>, que faz a cópia sozinho</td></tr>
+<tr><td>Treino roda sem erro mas o loss não sai de ~<code>ln(vocab)</code></td><td>Alvos desalinhados: <code>y</code> não é <code>x</code> deslocado de 1; ou a máscara causal está invertida (<code>triu</code> em vez de <code>tril</code>)</td><td>Imprimir <code>x[0][:10]</code> e <code>y[0][:10]</code> e conferir o deslocamento; conferir a máscara com <code>print(mascara[:5,:5])</code></td></tr>
+<tr><td>Sua atenção difere da <code>scaled_dot_product_attention</code> por ~<code>1e-1</code></td><td>Máscara ausente, invertida, ou faltou dividir por <code>sqrt(d_k)</code></td><td>Comparar com <code>is_causal=True</code>; erro deve ficar em ~<code>1e-7</code></td></tr>
+<tr><td>Perda de treino despenca e a de validação sobe</td><td>Overfitting — corpus pequeno demais para o número de passos</td><td>Mais dados, menos passos, ou parada antecipada pela métrica de validação</td></tr>
+<tr><td>Modelo local ignora o system prompt e divaga</td><td>Chat template errado, ou você baixou a variante <em>base</em> em vez da <em>instruct</em></td><td><code>ollama show &lt;m&gt; --template</code> e comparar com o cartão no Hub; trocar a tag</td></tr>
+<tr><td>Modelo local "esquece" o começo do contexto</td><td>Truncamento silencioso no <code>num_ctx</code> padrão de 4.096 tokens</td><td><code>OLLAMA_CONTEXT_LENGTH</code> no servidor ou <code>options.num_ctx</code> na requisição; recalcular o cache de KV</td></tr>
+<tr><td>Geração local absurdamente lenta (&lt;3 tok/s) com GPU disponível</td><td>O modelo não coube na VRAM e camadas foram para a CPU</td><td><code>ollama ps</code> mostra a divisão CPU/GPU. Quant menor, modelo menor ou <code>num_ctx</code> menor.</td></tr>
+<tr><td>Primeira requisição do dia leva 30s, as seguintes 2s</td><td>Modelo descarregado após 5 minutos ociosos; a primeira chamada paga o carregamento</td><td><code>keep_alive: -1</code> ou <code>OLLAMA_KEEP_ALIVE=-1</code>; aquecer antes de medir</td></tr>
+<tr><td>p95 explode ao ligar workers concorrentes</td><td><code>OLLAMA_NUM_PARALLEL</code> vale 1 por padrão — as requisições enfileiram</td><td>Aumentar, lembrando que cada slot tem seu próprio cache de KV</td></tr>
+<tr><td>O modelo local escreve a chamada de ferramenta como texto</td><td>Sem suporte nativo a tools, ou documentação em formato desfavorável</td><td>Escada de diagnóstico do bloco 8, degraus 3 e 4: variante com tools, doc em JSON Schema</td></tr>
+<tr><td>Modelo continua gerando depois de responder e simula o turno do usuário</td><td>Stop token errado no template</td><td>Corrigir <code>TEMPLATE</code>/<code>PARAMETER stop</code> no Modelfile</td></tr>
+<tr><td>Quantizado acerta perguntas simples e erra o raciocínio de várias etapas</td><td>Quant agressivo demais: raciocínio encadeado é o primeiro a degradar (−9,3 em GSM8K no Q3_K_S)</td><td>Subir para Q4_K_S ou Q5_0; validar com <em>os seus</em> evals, não com perplexidade</td></tr>
+<tr><td>O gate de CI aprova o prompt que mais inventa</td><td>O grader dá zero para abstenção, igual a resposta errada</td><td>Rubrica assimétrica do bloco 5: certo <code>+1</code>, abstenção <code>+0,5</code>, erro <code>−1</code></td></tr>
+<tr><td><code>tiktoken</code>/<code>transformers</code> baixando pesos em ambiente sem rede</td><td>Cache de modelos ausente no container</td><td>Pré-baixar na imagem e apontar <code>HF_HOME</code>/<code>TIKTOKEN_CACHE_DIR</code> para um volume</td></tr>
+</tbody>
+</table>
+
+<h2>Checkpoint M11</h2>
+
+<div class="box ok">
+<p><strong>Responda sem consultar o material.</strong> Se travar em alguma, o bloco indicado é onde voltar.</p>
+<ol class="check">
+<li><strong>O clássico deste módulo:</strong> explique em 3 minutos, sem jargão, por que um LLM erra <code>4871 × 39</code> — e por que treinar com mais dados de aritmética não conserta. Cite tokenização e amostragem. <em>(b4, b5)</em></li>
+<li>Você dobrou a janela de contexto e o tempo até o primeiro token quadruplicou, mas o preço por token não mudou. Explique a mecânica e diga em que ponto do gateway isso deveria virar um alerta. <em>(b3)</em></li>
+<li>Por que <code>FlashAttention</code> não elimina o custo quadrático? O que exatamente ela reduz? <em>(b3)</em></li>
+<li>Sem uma função de ativação entre duas camadas lineares, o que acontece com a capacidade do modelo — e por quê, algebricamente? <em>(b2)</em></li>
+<li>Um colega quer usar o modelo de embedding do M07 para gerar o texto do relatório, "para economizar uma dependência". Dê a resposta arquitetural. <em>(b4)</em></li>
+<li>Temperatura 0 elimina alucinação? E garante que duas chamadas idênticas retornem exatamente o mesmo texto? Justifique as duas respostas. <em>(b5)</em></li>
+<li>Dois modelos no SimpleQA: um com 22% de acurácia e 26% de erro, outro com 24% de acurácia e 75% de erro. Qual você coloca em produção, e o que isso implica para a rubrica dos <em>seus</em> evals? <em>(b5)</em></li>
+<li>Você tem 24 GB de VRAM. Cabe um modelo de 27B em Q4_K_M com 32k de contexto e 4 requisições simultâneas? Mostre a conta. <em>(b6)</em></li>
+<li>Por que perplexidade quase inalterada não autoriza quantização agressiva num produto que faz análise de código? Cite o número que sustenta a resposta. <em>(b6)</em></li>
+<li>O modelo local "não funciona em modo agente". Liste, em ordem, as cinco primeiras hipóteses que você testa antes de considerar trocar de modelo. <em>(b8)</em></li>
+<li>O que o BFCL V4 mediu sob o nome de "sensibilidade a formato", e qual mudança concreta isso provoca nas descrições das suas tools do M08/M09? <em>(b8)</em></li>
+<li>Um cliente pede fine-tuning para "o modelo aprender a nossa base de conhecimento". Responda como consultor: por que isso é a ferramenta errada, e o que você propõe no lugar? <em>(b8)</em></li>
+<li>Em que condições local sai <em>mais caro</em> que API, e quais são os três motivos legítimos para escolher local mesmo assim? <em>(b8)</em></li>
+</ol>
+
+<p><strong>Entregáveis verificáveis — em disco ou rodando:</strong></p>
+<ul class="check">
+<li><code>~/lab-transformer/</code> com a atenção implementada à mão batendo com a do PyTorch em ~<code>1e-7</code>, e o GPT minúsculo treinado com o log do loss caindo de ~4,4 para &lt;1,8.</li>
+<li>Colunas <code>logprob_medio</code>, <code>logprob_minimo</code> e <code>tokens_incertos</code> preenchidas em <code>llm_calls</code> para chamadas reais.</li>
+<li><code>tools/orcamento_vram.py</code> e <code>tools/custo_local.py</code> rodando, com os números da <em>sua</em> máquina.</li>
+<li>Ollama servindo, com <code>OLLAMA_CONTEXT_LENGTH</code> e <code>OLLAMA_KEEP_ALIVE</code> configurados, e a vazão medida (tok/s) anotada.</li>
+<li><code>app/services/llm/providers/ollama.py</code> + o <code>git diff --stat</code> provando que só um arquivo novo e duas linhas mudaram.</li>
+<li>Categoria <code>abstencao</code> nos evals com a rubrica assimétrica, e o antes/depois da pontuação dos seus prompts.</li>
+<li>Tabela comparativa API × local-Q4 × local-Q8 por categoria, com p50, p95 e custo.</li>
+<li>Seção de diagnóstico com os 8 degraus testados na categoria de pior desempenho, cada um com o delta na taxa.</li>
+<li><code>docs/adr/0005-modelos-locais.md</code> completo, com o quadro por etapa, o ponto de equilíbrio e o gatilho de revisão.</li>
+<li><code>docker compose --profile local up</code> subindo API + Postgres + Ollama, com os evals passando contra esse ambiente.</li>
+</ul>
+</div>
+
+<div class="box">
+<p><strong>Conclusão — o essencial em 8 linhas</strong></p>
+<p>Fundamento vale até a camada em que ele muda uma decisão sua; abaixo disso é hobby.<br>
+Produto escalar é a operação única do campo: é a busca do M07 e é a atenção do transformer.<br>
+A matriz T×T é o O(n²) — cortar 30% do contexto corta 51% do trabalho, e isso aparece na fatura.<br>
+Tokenização explica a aritmética errada; amostragem explica a alucinação; nenhuma das duas se conserta com mais dados.<br>
+Se o seu grader dá zero para "não sei", você está comprando chute — a rubrica assimétrica é o conserto.<br>
+Até 4 bits a quantização custa quase nada, mas o que ela quebra primeiro é justamente o raciocínio encadeado que o seu produto vende.<br>
+Modelo local entrou com um arquivo novo porque o M05 pôs a fronteira no eixo certo: essa é a lição de arquitetura do módulo.<br>
+Modelo ≠ agente ≠ harness — antes de trocar de modelo, desça sete degraus de diagnóstico; e fine-tuning é o degrau 6 de 6, quase sempre a resposta errada.</p>
+</div>
+
+</div>
+</body>
+</html>

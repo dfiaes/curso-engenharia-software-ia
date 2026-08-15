@@ -1,0 +1,373 @@
+# M02A — Engenharia de Software Sênior em 2026
+
+> Especificação normativa de produção · versão 1.0 · 15/08/2026  
+> Estado: **G0 aprovado; G1 em produção**
+
+## 1. Decisão curricular
+
+O M02A é a ponte entre a fluência em Python do M02 e a construção de sistemas em produção. Ele atualiza o profissional experiente vindo de .NET sem transformar o curso em treinamento de plataforma.
+
+- **Python 3.14 é a linguagem e implementação canônica.** Todo conceito deve ser explicado e provado primeiro em Python.
+- **.NET 10 é uma ponte comparativa limitada.** Um único corte vertical exercita o mesmo contrato e a mesma política para tornar diferenças de runtime, tipos, DI, cancelamento e distribuição observáveis. A parte .NET não é pré-requisito nem produto equivalente.
+- Arquitetura, contratos, telemetria e evidências são agnósticos de fornecedor.
+- IA é componente não confiável e substituível. Nenhum provedor, modelo ou SDK fechado é requisito do módulo.
+- O módulo entrega material de estudo, laboratório executável, falhas semeadas, avaliação e evidência; não apenas uma lista de tópicos.
+
+### 1.1 Resultado profissional
+
+Ao concluir o módulo, o aluno deve conseguir transformar uma necessidade ambígua em software evolutivo, seguro e operável; justificar trade-offs; separar política determinística de recomendação probabilística; investigar falhas; e demonstrar cada alegação importante com artefato reproduzível.
+
+### 1.2 Carga e pré-requisitos
+
+- Carga planejada: **30 horas**, em 15 blocos de 2 horas.
+- Pré-requisitos: M00, M01 e M02 verificados.
+- Perfil: desenvolvedor experiente em .NET/C# migrando para Python e engenharia AI-native.
+
+## 2. Produto integrador: `work-intake`
+
+`work-intake` é um monólito modular local para triagem de solicitações de trabalho assistida por IA.
+
+```text
+WorkRequest JSON
+      │
+      ▼
+trust boundary + JSON Schema versionado
+      │
+      ▼
+política determinística ──► decisão accept/review/reject
+      │
+      ├── Advisor port ──► fake / record-replay
+      │       recomendação nunca substitui a política
+      ├── SQLite ──► request, advisory, decision e audit
+      ├── fila local limitada ──► evento versionado pós-commit
+      └── logs, traces, métricas e evidence manifest
+```
+
+O produto canônico completo é Python. O corte .NET compreende somente contrato → política → advisor fake → batch limitado → telemetria → CLI publicada, suficiente para comparação diferencial sem duplicar dois produtos.
+
+### 2.1 Modelo mínimo
+
+- `WorkRequest`: ID, tenant, intenção, prioridade, orçamento decimal, prazo, versão e chave de idempotência.
+- `Advisory`: categoria, risco, confiança, sinais e metadados de custo/latência.
+- `Decision`: `accept`, `review` ou `reject`, reason codes estáveis e versão da política.
+- Portas: `Advisor`, `Repository`, `EventSink`, `Clock`, `IdGenerator` e `Telemetry`.
+- Adapters Python: CLI, SQLite, advisor determinístico/record-replay e OpenTelemetry local.
+- `BatchEvaluator`: concorrência estruturada, fila limitada, cancelamento propagado e overload explícito.
+
+### 2.2 Invariantes
+
+1. Uma recomendação de IA nunca amplia privilégio nem revoga uma proibição determinística.
+2. Saída inválida, timeout, injeção de prompt ou provider indisponível seguem fallback declarado e testado.
+3. Tenant, idempotência, versão do contrato e versão da política participam da decisão e da auditoria.
+4. Persistência da decisão é atômica; publicação local ocorre apenas após commit e não promete entrega distribuída.
+5. Segredos e conteúdo sensível não entram em logs, traces ou labels de métricas.
+6. Toda alegação mensurável referencia amostras brutas, ambiente, comando, digest e limitação.
+
+## 3. Fronteiras curriculares
+
+O M02A ensina fundamentos e decisões; profundidade operacional pertence aos módulos donos.
+
+| Tema | O que M02A prova | Onde aprofunda |
+|---|---|---|
+| API e banco | contratos, SQLite, transação, índices e evolução local | M03: HTTP, FastAPI, PostgreSQL e containers |
+| Arquitetura | C4/ADR mínimos e dependency rules executáveis | M04: design e implementação assistidos por IA |
+| Linux e rede | portabilidade Windows/Linux e falhas simuladas | LT01: processos, rede, TLS, diagnóstico e pools |
+| Mensageria | fila local bounded e envelope versionado | LT02: broker, outbox, entrega, saga e consistência distribuída |
+| Plataforma | artefatos publicáveis e CI reprodutível | LT03: Kubernetes, IaC, GitOps e plataforma |
+| Supply chain | locks, inventário e conceitos de proveniência | LT04: SBOM, assinatura, SLSA e dossiê completo |
+| Segurança/produção | threat model, controles, SLO e runbook locais | M12: operação, SRE, billing e segurança em produção |
+| IA | porta agnóstica, eval contratual e decisão humana/política | M06–M11: RAG, memória, agentes, MCP, voz e UX |
+
+SQLite, fake de rede/fila e record-replay são instrumentos didáticos. Aprovação neste módulo **não** prova garantias de PostgreSQL, broker, rede real, sistema distribuído, cloud ou provedor de IA.
+
+## 4. Estrutura do laboratório
+
+```text
+modulos/M02A-engenharia-software-senior/lab/
+├── README.md
+├── pyproject.toml
+├── uv.lock
+├── global.json
+├── Directory.Packages.props
+├── contracts/
+├── fixtures/{golden,adversarial,compatibility,provider-recordings,generated-defects}/
+├── docs/{intent,requirements,quality-attributes,architecture,threat-model,slo,runbook}.md
+├── docs/decisions/
+├── python/src/work_intake/{domain,application,ports,adapters}/
+├── python/tests/
+├── dotnet/src/{WorkIntake.Core,WorkIntake.Cli}/
+├── dotnet/tests/WorkIntake.Tests/
+├── migrations/
+├── tests/{contracts,architecture,differential,performance,negative}/
+├── tools/gate.py
+└── evidence/
+```
+
+Não se deve criar serviço web, depender de Docker/cloud ou fazer chamada externa obrigatória.
+
+## 5. Arquitetura didática dos 15 blocos
+
+Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implementação Python, falha semeada, evidência, transferência para outro contexto, leitura primária e avaliação baseada em cenário.
+
+### B01 — Papel sênior, produto, risco e evidência
+
+- `ES26-001`: distinguir output, outcome, impacto e restrição.
+- `ES26-002`: priorizar risco por probabilidade, impacto e reversibilidade.
+- `ES26-003`: tratar desenvolvimento como sistema sociotécnico.
+- `ES26-004`: converter alegação em claim → método → evidência → limitação.
+- Prática: escrever intent, mapa de stakeholders e registro inicial de riscos.
+
+### B02 — Requisitos, atributos de qualidade e decisões
+
+- `ES26-005`: separar necessidade, requisito, restrição e solução.
+- `ES26-006`: escrever cenários mensuráveis de atributo de qualidade.
+- `ES26-007`: produzir ADR/RFC com alternativas e condição de revisão.
+- `ES26-008`: manter C4, decisões e código coerentes.
+- Prática: requisitos P0/P1, cenários de qualidade — incluindo acessibilidade e inclusão —, C4 e ADR-0001.
+
+### B03 — Modularidade, acoplamento e domínio
+
+- `ES26-009`: avaliar coesão, acoplamento, dependências e ciclos.
+- `ES26-010`: usar SOLID como heurística, não dogma.
+- `ES26-011`: delimitar domínio, aplicação, portas e adapters.
+- `ES26-012`: reconhecer quando abstração custa mais que a mudança esperada.
+- Prática: arquitetura hexagonal mínima e gate de dependências.
+
+### B04 — Contratos, compatibilidade e interoperabilidade
+
+- `ES26-013`: distinguir contrato sintático, semântico e operacional.
+- `ES26-014`: evoluir JSON Schema v1/v2 com matriz de compatibilidade.
+- `ES26-015`: normalizar tempo, decimal, enum, UTF-8 e erros entre runtimes.
+- `ES26-016`: escolher versionamento e política de depreciação.
+- Prática: corpus golden compartilhado Python/.NET.
+
+### B05 — Dados, transações e evolução de schema
+
+- `ES26-017`: modelar invariantes, ownership e ciclo de vida.
+- `ES26-018`: explicar atomicidade, isolamento, locking e retry.
+- `ES26-019`: projetar idempotência e concorrência otimista.
+- `ES26-020`: validar índice com plano de consulta, não intuição.
+- Prática: migrations SQLite, rollback, tenant e `EXPLAIN QUERY PLAN`.
+
+### B06 — Runtime, concorrência e backpressure
+
+- `ES26-021`: escolher sync, async, thread ou processo pelo workload.
+- `ES26-022`: propagar cancelamento, timeout e cleanup.
+- `ES26-023`: aplicar concorrência estruturada e ownership de tarefas.
+- `ES26-024`: limitar filas e tornar overload observável.
+- Prática: batch bounded em Python; comparação focal com `Task`/`Channel` em .NET.
+
+### B07 — Fundamentos de sistemas distribuídos
+
+- `ES26-025`: raciocinar sobre tempo, ordem causal e falhas parciais.
+- `ES26-026`: diferenciar consistência, disponibilidade e durabilidade.
+- `ES26-027`: justificar retry, idempotência e entrega.
+- `ES26-028`: reconhecer limites de transação, saga e consenso.
+- Prática: simulações determinísticas; nenhuma alegação de sistema distribuído real.
+
+### B08 — Estratégia de testes e desenho para testabilidade
+
+- `ES26-029`: escolher unit, integration, contract, property e differential tests.
+- `ES26-030`: projetar oráculos e evitar testes tautológicos.
+- `ES26-031`: usar mutação e falhas semeadas para provar sensibilidade.
+- `ES26-032`: controlar clock, IDs, aleatoriedade e dependências.
+- Prática: pirâmide por risco, Hypothesis, mutante controlado e corpus cross-runtime.
+
+### B09 — Secure SDLC e threat modeling
+
+- `ES26-033`: localizar trust boundaries, assets, atores e abuse cases.
+- `ES26-034`: aplicar least privilege, fail-closed e defesa em profundidade.
+- `ES26-035`: tratar segredo, privacidade, isolamento e retenção.
+- `ES26-036`: separar awareness de requisito de segurança verificável.
+- Prática: threat model e fixtures adversariais, incluindo prompt injection.
+
+### B10 — Observabilidade, confiabilidade e incidentes
+
+- `ES26-037`: correlacionar logs, métricas e traces semanticamente.
+- `ES26-038`: definir SLI/SLO e interpretar error budget.
+- `ES26-039`: projetar diagnósticos sem cardinalidade ou dados sensíveis.
+- `ES26-040`: operar runbook e produzir postmortem sem culpa.
+- Prática: trace request→advisory→decision→evento e exercício de incidente.
+
+### B11 — Complexidade, estruturas de dados, performance e custo
+
+- `ES26-041`: estimar complexidade e escolher estrutura de dados pelo padrão de acesso.
+- `ES26-042`: formular hipótese e distinguir latência, throughput, utilização e saturação.
+- `ES26-043`: desenhar workload, warm-up, amostras e limitações.
+- `ES26-044`: relacionar capacidade, cache e custo unitário ao outcome.
+- Prática: comparar representação/algoritmo no workload real e executar experimento sem threshold ou ranking universal.
+
+### B12 — Git, integração, entrega e reversibilidade
+
+- `ES26-045`: manter mudanças pequenas, revisáveis e integráveis.
+- `ES26-046`: modernizar legado incrementalmente com change seams, strangler e expand-contract.
+- `ES26-047`: diferenciar build/release/deploy/operação e usar flags/rollback com segurança.
+- `ES26-048`: interpretar métricas DORA como sistema, nunca ranking individual.
+- Prática: plano incremental de legado, gate único cross-platform, policy v2 defeituosa e rollback para v1.
+
+### B13 — Python sênior aplicado
+
+- `ES26-049`: fazer escolhas idiomáticas sem portar C# literalmente.
+- `ES26-050`: desenhar boundaries tipadas preservando runtime truth.
+- `ES26-051`: empacotar, publicar e instalar fora do checkout.
+- `ES26-052`: depurar imports, memória, I/O e concorrência com método.
+- Prática: produto Python completo, wheel limpo e investigação orientada a evidência.
+
+### B14 — Ponte moderna .NET → Python
+
+- `ES26-053`: comparar modelo de objetos, tipos e exceptions sem falsa equivalência.
+- `ES26-054`: comparar DI explícita, interfaces/Protocols e composition root.
+- `ES26-055`: comparar async/cancelamento e custos de runtime.
+- `ES26-056`: verificar interoperabilidade por contrato e differential test.
+- Prática: corte .NET limitado; nenhuma duplicação do adapter SQLite ou do curso.
+
+### B15 — Engenharia AI-native e liderança técnica
+
+- `ES26-057`: manter IA atrás de porta, orçamento e política determinística.
+- `ES26-058`: construir eval versionada com corpus, scorer, adversariais e evidência.
+- `ES26-059`: revisar código gerado por IA e preservar responsabilidade humana.
+- `ES26-060`: comunicar risco, delegar, influenciar e decidir com ética.
+- Prática: adapter record-replay, revisão de defeitos gerados e defesa final do sistema.
+
+## 6. Cenários de aceite
+
+### Design e arquitetura
+
+- `M02A-AT-001`: cada requisito P0 aponta para teste e evidência.
+- `M02A-AT-002`: import de adapter pelo domínio é rejeitado.
+- `M02A-AT-003`: ciclo entre módulos é detectado.
+- `M02A-AT-004`: ADR substituído preserva histórico e sucessor.
+- `M02A-AT-005`: C4 e código concordam sobre processos e dependências.
+
+### Contratos e interoperabilidade
+
+- `M02A-AT-006`: fixture v1 válida produz decisão válida nos dois runtimes.
+- `M02A-AT-007`: campo externo desconhecido é rejeitado no trust boundary.
+- `M02A-AT-008`: consumidor v1 aceita somente evolução v2 declarada compatível.
+- `M02A-AT-009`: remoção ou mudança incompatível bloqueia o gate.
+- `M02A-AT-010`: reason codes e serialização canônica coincidem Python/.NET.
+- `M02A-AT-011`: timestamps, UTF-8, enums e decimais preservam semântica.
+
+### Domínio e dados
+
+- `M02A-AT-012`: falha entre request e decision executa rollback completo.
+- `M02A-AT-013`: mesma chave e intenção reutiliza a decisão.
+- `M02A-AT-014`: mesma chave com intenção diferente produz conflito.
+- `M02A-AT-015`: tenant não lê nem altera registro de outro tenant.
+- `M02A-AT-016`: updates concorrentes produzem um vencedor observável.
+- `M02A-AT-017`: consulta crítica usa índice provado pelo query plan.
+
+### Concorrência e runtime
+
+- `M02A-AT-018`: fila nunca ultrapassa a capacidade configurada.
+- `M02A-AT-019`: overload retorna resultado explícito, sem crescimento ilimitado.
+- `M02A-AT-020`: cancelamento externo executa cleanup e é propagado.
+- `M02A-AT-021`: timeout do advisor não deixa tarefa órfã.
+- `M02A-AT-022`: diferenças `TaskGroup`/`Task`/`Channel` são demonstradas sem falsa equivalência.
+
+### IA agnóstica
+
+- `M02A-AT-023`: fake e record-replay passam a mesma contract suite.
+- `M02A-AT-024`: resposta malformada não se torna decisão confiável.
+- `M02A-AT-025`: prompt injection permanece dado não confiável.
+- `M02A-AT-026`: timeout/indisponibilidade aciona fallback declarado.
+- `M02A-AT-027`: advisor não transforma proibição determinística em aceite.
+- `M02A-AT-028`: adapter, recording, policy, budget e digest constam da evidência.
+
+### Qualidade e segurança
+
+- `M02A-AT-029`: property test encontra contraexemplo de normalização/idempotência.
+- `M02A-AT-030`: mutante que remove regra P0 é morto.
+- `M02A-AT-031`: defeitos IA de tipo, semântica e cancelamento falham nos gates corretos.
+- `M02A-AT-032`: segredo e texto sensível não aparecem em log/trace.
+- `M02A-AT-033`: correlation ID, tenant e texto não viram nomes/labels de métrica.
+- `M02A-AT-034`: erro interno preserva causa para operação sem expô-la externamente.
+- `M02A-AT-035`: isolamento e retenção seguem threat model e requisitos.
+
+### Operação, desempenho e entrega
+
+- `M02A-AT-036`: trace liga request, advisory, decision e evento.
+- `M02A-AT-037`: p50/p95/erro/throughput derivam de amostras brutas persistidas.
+- `M02A-AT-038`: workload crescente localiza saturação/backpressure sem threshold universal.
+- `M02A-AT-039`: policy v2 defeituosa é desativada e v1 restaura comportamento.
+- `M02A-AT-040`: wheel e publish .NET executam fora do source tree.
+- `M02A-AT-041`: newline, casing e paths passam em Windows e Linux.
+- `M02A-AT-042`: suíte obrigatória roda offline, sem credencial.
+- `M02A-AT-043`: manifest registra commit, OS, runtimes, versões, seeds, digests e durações.
+- `M02A-AT-044`: SLI/SLO é calculado do workload e aciona decisão operacional declarada.
+- `M02A-AT-045`: runbook é exercitado para overload, DB locked, provider indisponível e rollback.
+
+## 7. Gates de qualidade
+
+| Gate | Saída verificável | Estado |
+|---|---|---|
+| G0 — design | escopo, 60 competências, 45 ATs, fontes, limites e rubrica | **APROVADO** |
+| G1 — material | HTML no padrão M00, 15 blocos, exercícios, fontes e acessibilidade | EM PRODUÇÃO |
+| G2 — Python | Ruff, mypy strict, pytest/Hypothesis, wheel | PENDENTE |
+| G3 — ponte .NET e contratos | locked restore, analyzers, publish, v1/v2 e differential corpus | PENDENTE |
+| G4 — resiliência/segurança/dados | architecture rules, adversariais, tenant, transação e bounded queue | PENDENTE |
+| G5 — operação/distribuição | telemetry, SLI/SLO, runbook, clean install e evidência | PENDENTE |
+| G6 — certificação | Windows/Linux/CI, todos os ATs, QA a 390 px/desktop/impressão e revisão final | PENDENTE |
+
+Entrada local única planejada: `python tools/gate.py all`. Ela deve preservar stdout, stderr e exit code das ferramentas nativas.
+
+## 8. Rubrica
+
+Cada dimensão vale 0–4. Aprovação exige **≥ 28/32**, nenhum P0 aberto e nenhuma dimensão abaixo de 3.
+
+| Dimensão | 0–1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| problema e requisitos | opinião/solução precoce | requisitos parciais | critérios rastreáveis | trade-offs e mudança controlada |
+| arquitetura | diagrama decorativo | separação sem prova | limites e gates | evolução e condições de revisão |
+| contratos/dados | happy path | validação parcial | compatibilidade e invariantes | falhas/concorrência demonstradas |
+| qualidade | testes tautológicos | cobertura sem risco | camadas e negativos | property/mutation/differential efetivos |
+| segurança/IA | confiança implícita | lista de riscos | controles testados | abuso, fallback e residual explícitos |
+| operação | logs soltos | métricas sem decisão | correlação e SLO | incidente/runbook e aprendizado |
+| performance/custo | número isolado | benchmark frágil | workload e amostras | capacidade, saturação e decisão |
+| liderança/evidência | autoridade/opinião | justificativa informal | comunicação e evidência | decisão ética, limites e transferência |
+
+## 9. Registro de fontes
+
+O SWEBOK é índice de cobertura, não fonte única. Normas/especificações têm precedência para conformidade; literatura canônica ensina julgamento e deve resultar em hipótese ou prática verificável.
+
+| Área | Fonte normativa/canônica | Uso | Revalidar |
+|---|---|---|---|
+| corpo profissional | [IEEE SWEBOK v4.0a](https://www.computer.org/education/bodies-of-knowledge/software-engineering) | mapa de requisitos, design, construção, teste, operação e prática | nova edição |
+| arquitetura/qualidade | [ISO/IEC/IEEE 42010:2022](https://www.iso.org/standard/74393.html); [ISO/IEC 25010:2023](https://www.iso.org/standard/78176.html); [SEI ADD](https://www.sei.cmu.edu/library/attribute-driven-design-method-collection/) | concerns, viewpoints, atributos e trade-offs | anual |
+| documentação | [C4 Model](https://c4model.com/); [ADR de Nygard/Fowler](https://martinfowler.com/bliki/ArchitectureDecisionRecord.html) | comunicação leve e histórico de decisão | anual |
+| contratos | [JSON Schema 2020-12](https://json-schema.org/draft/2020-12); [OpenAPI](https://spec.openapis.org/oas/); [AsyncAPI](https://www.asyncapi.com/docs/reference/specification/latest); [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html); [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html); [CloudEvents](https://cloudevents.io/) | contrato, evolução, erros e envelopes | 90 dias quando ativo |
+| Python | [Python 3.14 Language Reference](https://docs.python.org/3.14/reference/); [Python typing specification](https://typing.python.org/en/latest/spec/) | semântica e typing gradual | por release |
+| ponte .NET | [ECMA-334](https://ecma-international.org/publications-and-standards/standards/ecma-334/); [ECMA-335](https://docs.ecma-international.org/ecma-335/Ecma-335-part-i-iv.pdf); documentação .NET 10 aplicável | comparação de linguagem/runtime | por release |
+| dados | [PostgreSQL 18 MVCC](https://www.postgresql.org/docs/18/mvcc.html); [Open Data Contract Standard](https://bitol.io/); [OpenLineage](https://openlineage.io/docs/spec/) | modelo conceitual, contratos e lineage | 90 dias/major |
+| distribuídos | [Lamport](https://lamport.azurewebsites.net/pubs/time-clocks.pdf); [Gilbert/Lynch](https://dl.acm.org/doi/10.1145/564585.564601); [Raft](https://raft.github.io/raft.pdf); [Pat Helland](https://www.cidrdb.org/cidr2007/papers/cidr07p15.pdf) | causalidade, CAP formal, consenso e mensagens | anual |
+| observabilidade/SRE | [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/); [W3C Trace Context](https://www.w3.org/TR/trace-context/); [Google SRE](https://sre.google/sre-book/service-level-objectives/) | sinais, propagação, SLI/SLO e error budget | 90 dias para OTel |
+| entrega/plataforma | [DORA](https://dora.dev/guides/dora-metrics/); [OpenGitOps](https://opengitops.dev/); [OCI](https://specs.opencontainers.org/); [CNCF Platforms](https://tag-app-delivery.cncf.io/whitepapers/platforms/) | fluxo, reversibilidade e plataforma como produto | 90 dias |
+| segurança/supply chain | [NIST SSDF 1.1](https://csrc.nist.gov/pubs/sp/800/218/final); [OWASP ASVS 5.0](https://owasp.org/www-project-application-security-verification-standard/); [SLSA 1.2](https://slsa.dev/spec/v1.2/); [SPDX 3.0](https://spdx.dev/use/specifications/); [CycloneDX 1.7](https://cyclonedx.org/specification/overview/); [Sigstore](https://docs.sigstore.dev/about/overview/) | requisitos, proveniência, inventário e verificação | 90 dias |
+| IA | [NIST AI RMF 1.0](https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-ai-rmf-10); [NIST AI 600-1](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf); [SP 800-218A](https://csrc.nist.gov/pubs/sp/800/218/a/final); [MITRE ATLAS](https://atlas.mitre.org/); [OWASP LLM Top 10 2025](https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/) | governança, riscos e controles de GenAI | 90 dias |
+| evals | [UK AISI Inspect](https://inspect.aisi.org.uk/); [MLCommons AILuminate](https://mlcommons.org/ailuminate/) | dataset, scorer, logs, budget e adversariais | 90 dias |
+| ética/liderança | [IEEE/ACM Code of Ethics](https://www.computer.org/education/code-of-ethics); [SPACE](https://doi.org/10.1145/3454122.3454124); [Team Topologies](https://teamtopologies.com/key-concepts-content); [Staff Engineer](https://staffeng.com/guides/staff-archetypes/) | responsabilidade, métricas e influência | anual |
+| prática canônica | [Evans](https://www.dddcommunity.org/uncategorized/evans_2004/); [Fowler](https://martinfowler.com/books/refactoring.html); [Kleppmann](https://martin.kleppmann.com/); [Nygard](https://books.pragprog.com/titles/mnee2/release-it-second-edition/); [Brendan Gregg](https://www.brendangregg.com/usemethod.html) | domínio, refactoring, dados, resiliência e diagnóstico | por edição |
+
+Regras: registrar versão/data no HTML; evitar claims de mercado sem pesquisa datada; não usar uma empresa como autoridade universal; nunca usar LLM-as-judge isolado como prova.
+
+## 10. Matriz de execução
+
+| Dimensão | Windows | Linux | CI |
+|---|---|---|---|
+| Python | CPython 3.14 via lock | mesmo | matriz Windows/Ubuntu |
+| .NET ponte | SDK 10 fixado | mesmo | restore locked/test/publish |
+| dados | SQLite e temp paths | mesmo | banco novo por job |
+| encoding/path | UTF-8, CRLF de entrada, drive | UTF-8, LF, case-sensitive | fixtures divergentes |
+| IA | fake/record-replay offline | igual | rede/credencial proibidas após restore |
+| evidência | JSON sanitizado | JSON sanitizado | artefato por OS/runtime |
+| performance | informativa | job de referência | sem comparar números absolutos entre runners |
+
+## 11. Critério de conclusão
+
+Um terceiro deve conseguir reconstruir os artefatos, executar o corpus nos dois runtimes, reproduzir falhas negativas, provar atomicidade/isolamento/backpressure/cancelamento, trocar o advisor sem alterar domínio/política, reverter policy defeituosa e ligar cada decisão relevante a requisito, ADR, teste e evidência.
+
+A defesa final deve também declarar quais garantias são apenas locais e quais só serão adquiridas em M03 e LT01–LT04.
+
+## 12. Decisão G0
+
+**APROVADO em 15/08/2026.** A especificação resolve o conflito curricular: o curso continua Python-first; .NET é somente lente de transferência. A produção pode iniciar pelo esqueleto do módulo, pelos contratos e pelo bloco B01, mantendo G1 em andamento e G2–G6 fechados até evidência real.

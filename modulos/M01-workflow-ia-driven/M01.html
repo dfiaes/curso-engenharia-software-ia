@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M01 · SDD, harness e execução paralela segura</title>
+<style>
+:root{--ink:#172033;--muted:#566176;--paper:#fbfaf7;--card:#fff;--line:#d9dde5;--blue:#2457a6;--teal:#087f72;--amber:#9a5b00;--red:#a92b36;--green:#4f7c3d;--code:#101827;--codeink:#e8edf6;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.68 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1100px;margin:auto;padding:32px 28px 80px}
+header{padding:38px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#eef4ff,#f1fbf8)}
+h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.05;margin:.2rem 0 1rem;letter-spacing:-.02em}
+h2{font-size:2rem;margin-top:4rem;padding-top:1rem;border-top:3px solid var(--ink);letter-spacing:-.01em}
+h3{font-size:1.35rem;margin-top:2.2rem}
+h4{font-size:1.05rem;margin-top:1.6rem;text-transform:uppercase;letter-spacing:.04em}
+p,li{max-width:82ch;margin-top:0}
+ul,ol{padding-left:22px}
+a{color:var(--blue)}
+code{font:.92em var(--mono);background:#edf0f5;padding:.1em .32em;border-radius:4px}
+pre{overflow:auto;background:var(--code);color:var(--codeink);padding:18px 20px;border-radius:12px;border-left:5px solid #6ea8fe;font:0.86rem/1.55 var(--mono)}
+pre code{background:none;padding:0}
+table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.94rem;background:var(--card)}
+th,td{border:1px solid var(--line);padding:10px 12px;vertical-align:top;text-align:left}
+th{background:#eef1f6}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--blue);color:var(--muted)}
+nav{margin:24px 0;padding:18px 22px;border:1px solid var(--line);background:var(--card);border-radius:12px}
+nav ol{columns:2;gap:32px}
+.meta{color:var(--muted);font-weight:650}
+.lead{font-size:1.15rem;max-width:76ch}
+.badge,.tag{display:inline-block;padding:2px 8px;border-radius:999px;background:#e7ebf2;color:var(--ink);font-size:.82rem;font-weight:700;letter-spacing:.03em}
+.callout,.practice,.expected,.danger,.bridge,.box,.step{margin:1.3rem 0;padding:16px 20px;border-radius:10px;border-left:5px solid var(--blue);background:#edf4ff}
+.practice,.step{border-color:var(--teal);background:#eaf8f5}
+.expected,.box.ok{border-color:var(--green);background:#f0f8ec}
+.danger,.box.warn{border-color:var(--red);background:#fff0f1}
+.bridge,.box.net{border-color:var(--amber);background:#fff7e7}
+.box.fund{border-color:var(--blue);background:#edf4ff}
+.box{border-top:0;border-right:0;border-bottom:0}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{display:inline-block;margin-bottom:8px;padding:2px 8px;border-radius:999px;background:#e7ebf2;color:var(--ink);font-size:.82rem;font-weight:700;letter-spacing:.03em}
+.bloco{border:1px solid var(--line);border-radius:12px;padding:4px 22px 18px;margin:32px 0;background:var(--card)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{color:var(--muted);font-size:.92rem}
+figure{margin:28px 0;text-align:center;overflow-x:auto}
+figcaption{font-size:.9rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative;margin:.45rem 0}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.kbd{font:0.8rem var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--card)}
+.step .n{display:inline-block;background:var(--teal);color:#fff;font-weight:700;font-size:.8rem;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+.step>p:last-child{margin:14px -4px 0;padding:12px 14px;border-radius:8px;border-left:5px solid var(--green);background:#f0f8ec}
+.small{font-size:.9rem;color:var(--muted)}
+@media(max-width:760px){main{padding:18px 14px 60px}header{padding:24px 20px}nav ol{columns:1}table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}.clock{overflow-x:auto}p,li,td,th{overflow-wrap:anywhere}}
+@media print{body{background:#fff;font-size:11pt}main{max-width:none;padding:0}header,.practice,.expected,.danger,.bridge,.box,.step,figure,pre,table{break-inside:avoid}a{color:inherit}h2{break-before:page}}
+</style>
+</head>
+<body><main>
+<header>
+<div class="meta"><span class="badge">MÓDULO 01</span> · 5 blocos · 10 horas · pré-requisito: M00 · versão editorial 15/08/2026</div>
+<h1>M01 · SDD, harness e execução paralela segura</h1>
+<p class="lead">No M00 você separou modelo, cliente, instruções, ferramentas e policy. Agora aprenderá a transformar uma intenção em mudança pequena, rastreável e verificável. A IA executa dentro do contrato; ela não se torna a autoridade do processo.</p>
+<p><strong>Saída:</strong> um fluxo de Specification-Driven Development que preserva decisões fora do chat, um harness que produz evidência e bloqueia falhas conhecidas, uma máquina de estados retomável e critérios seguros para delegar e integrar trabalho paralelo.</p>
+</header>
+
+<nav aria-label="Sumário"><strong>Mapa do módulo</strong><ol>
+<li><a href="#b1">Intenção, contrato e drift</a></li>
+<li><a href="#b2">Harness e evidência</a></li>
+<li><a href="#b3">Estado e controle</a></li>
+<li><a href="#b4">Paralelismo e integração</a></li>
+<li><a href="#b5">Kit SDD e Capstone</a></li>
+<li><a href="#fontes">Fontes e atualização</a></li>
+</ol></nav>
+
+<section>
+<h3>Antes de começar: o contrato pedagógico</h3>
+<p>O módulo separa cada tema em três níveis para preservar conhecimento transferível entre ferramentas:</p>
+<ol>
+<li><strong>invariante:</strong> o problema de engenharia que continua existindo quando o produto muda;</li>
+<li><strong>padrão:</strong> o contrato, artefato ou mecanismo verificável que reduz ambiguidade e aprisionamento;</li>
+<li><strong>adapter:</strong> como uma ferramenta específica implementa o padrão na versão atual.</li>
+</ol>
+<div class="danger"><strong>Regra de autoridade.</strong> Spec, código, teste, modelo e telemetria podem estar errados ou desatualizados. Nenhum deles vence por reflexo: classifique a divergência, reúna evidência e peça decisão humana quando intenção e comportamento aceitável não puderem ser inferidos com segurança.</div>
+</section>
+
+<div class="box warn">
+<span class="lbl">Aviso de agnosticismo</span>
+<p>O núcleo do módulo é independente de fornecedor: contrato JSON, parser Python, lista de argumentos, Git, testes e evidência persistida. <a href="https://github.github.com/spec-kit/">GitHub Spec Kit</a>, <a href="https://github.com/humanlayer/12-factor-agents">12-Factor Agents</a> e produtos de coding agent aparecem como implementações ou orientações comparadas — nunca como definição universal. Formas de invocação e permissões variam; descubra-as na versão instalada em vez de presumir nomes.</p>
+</div>
+
+<!-- ============================================ BLOCO 1 -->
+<section id="b1">
+<h2>Bloco 1 · Da intenção ao contrato: SDD e drift bidirecional</h2>
+<p class="clock">00:00–00:25 por que o chat-driven falha · 00:25–01:00 os três níveis de artefato · 01:00–01:40 Spec Kit e o ciclo completo · 01:40–02:00 prática: sua primeira spec</p>
+
+<h3>1.1 Por que isso importa</h3>
+<p>Você já viveu a cena no M00: pediu uma coisa ao agente, ele fez outra, você corrigiu no chat, ele corrigiu — e de quebra desfez uma parte boa que ele mesmo tinha escrito dois turnos antes. Esse ciclo tem nome: <strong>desenvolvimento chat-driven</strong>. Ele falha de forma previsível, e entender <em>por que</em> falha é o que justifica todo este módulo.</p>
+
+<p>O desenvolvimento chat-driven falha por três mecanismos que você já conhece do M00:</p>
+
+<ul>
+<li><strong>O requisito vive no lugar errado.</strong> No chat, o requisito existe espalhado por dezenas de mensagens. A janela de contexto é finita; quando ela enche, o harness resume ou trunca o histórico — e o requisito que você negociou na mensagem 12 evapora. Você não perde o requisito de uma vez: ele <em>degrada</em>, silenciosamente, até o agente fazer algo que contradiz o combinado.</li>
+<li><strong>Persistência não é implícita.</strong> O modelo-base não mantém estado de execução entre chamadas. Alguns harnesses persistem histórico, resumo ou checkpoint, mas isso é uma capacidade externa e precisa de contrato. Se “o que construir” vive só numa conversa, a retomada depende de um mecanismo frágil e pouco auditável.</li>
+<li><strong>Descoberta de requisito por tentativa e erro custa caro.</strong> Cada rodada de "não era isso" consome tokens, tempo e — pior — polui o contexto com versões erradas do código, que o modelo continua enxergando e das quais se "inspira".</li>
+</ul>
+
+<p><strong>Specification-Driven Development (SDD)</strong> externaliza intenção, requisitos, decisões, tarefas e evidências em artefatos versionados. Isso não torna a especificação infalível. Código legado, testes, migrações, telemetria e comportamento observado podem conter conhecimento que a documentação perdeu. O trabalho profissional é confrontar essas fontes, localizar a divergência e reconciliar contrato, implementação e evidência no mesmo change set.</p>
+
+<div class="box net">
+<span class="lbl">Tradução .NET</span>
+<p>Você já conhece peças semelhantes: OpenAPI contract-first, testes xUnit que cristalizam comportamento, ADRs e Definition of Done. Em Python, <code>dataclass</code>, parser tipado e JSON Schema cumprem parte do papel de DTOs/records e validação de fronteira; não substituem invariantes semânticos. Um agente também pode ignorar, truncar ou interpretar mal um documento. Por isso, a spec só ganha força quando requisitos possuem exemplo, contraexemplo, oráculo e rastreabilidade até um gate.</p>
+</div>
+
+<div class="box fund">
+<span class="lbl">Fundamento de engenharia · Requisitos — a reciclagem que a IA tornou urgente</span>
+<p>Engenharia de requisitos é conteúdo de primeiro semestre que a maioria dos sêniores atrofiou, porque "o negócio manda o card no Jira". Com IA, ela volta a ser a habilidade que separa quem entrega do que pediu de quem entrega o que a IA achou que era. Recicle quatro conceitos:</p>
+<ul>
+<li><strong>Requisito funcional vs. qualidade/restrição.</strong> Funcional: o que o sistema faz ("encurta URLs"). Qualidade: condições mensuráveis, como p95 sob carga definida, disponibilidade e privacidade. O agente não pode inferir com segurança limiares, ameaça aceita ou obrigação regulatória ausente; explicite e teste o que importa.</li>
+<li><strong>Critério de aceitação verificável.</strong> "Deve ser rápido" não é critério; "p95 &lt; 100 ms medido com k6 em 100 VUs" é. Regra prática: se não dá para transformar em teste automatizado ou em comando com saída esperada, não é critério — é desejo.</li>
+<li><strong>Escopo negativo.</strong> Dizer o que <strong>não</strong> construir limita scope creep humano e interpretações expansivas do agente. Combine não-objetivos com write set e capabilities; texto sozinho não impede efeitos.</li>
+<li><strong>Rastreabilidade.</strong> Cada item do plano aponta para requisito, decisão ou obrigação técnica que o justifica. Passo sem origem declarada pede revisão: pode ser gold plating, trabalho habilitador legítimo ou requisito ainda não registrado.</li>
+</ul>
+</div>
+
+<h3>1.2 Os três níveis de artefato</h3>
+<p>SDD maduro separa a especificação em três documentos encadeados, cada um respondendo uma pergunta diferente. A separação não é estética: cada documento muda por um motivo diferente, num ritmo diferente, e mistura-los é o que faz "a spec" virar um monólito que ninguém atualiza.</p>
+
+<ol>
+<li><strong>PRD — Product Requirements Document (<code>prd.md</code>)</strong> — responde <em>o quê e por quê</em>. O problema, quem sofre com ele, os requisitos funcionais e não-funcionais, as regras de negócio invioláveis e — a seção mais importante — <strong>não-objetivos</strong>: o que este produto deliberadamente não faz. Não contém nome de tecnologia. Muda quando o <em>produto</em> muda.</li>
+<li><strong>Especificação técnica (<code>spec.md</code>)</strong> — responde <em>como, arquiteturalmente</em>. Schemas de dados, contratos de API, decisões de arquitetura com justificativa, restrições de camada ("router não acessa banco diretamente"), estratégia de erro, dependências externas. Muda quando a <em>arquitetura</em> muda.</li>
+<li><strong>Plano de implementação (<code>plan.md</code>)</strong> — responde <em>em que ordem</em>. Etapas pequenas com objetivo, dependências, read/write sets, capabilities, gate e evidência esperada. Seu ritmo tende a ser mais curto que o de intent/requisitos, mas cada mudança continua versionada e revisável.</li>
+</ol>
+
+<figure>
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pipeline de SDD">
+<defs>
+<marker id="arrow1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+<path d="M0,0 L9,4.5 L0,9 z" fill="#b8532a"/></marker>
+</defs>
+<g font-family="system-ui,sans-serif" font-size="12">
+<rect x="16" y="30" width="160" height="160" rx="8" fill="#fdf2ed" stroke="#b8532a" stroke-width="1.5"/>
+<text x="30" y="55" font-size="14" font-weight="700" fill="#b8532a">1. PRD</text>
+<text x="30" y="80" fill="#1c1b19">• Problema e usuário</text>
+<text x="30" y="100" fill="#1c1b19">• Req. funcionais</text>
+<text x="30" y="120" fill="#1c1b19">• Req. NÃO-funcionais</text>
+<text x="30" y="140" fill="#1c1b19">• Não-objetivos</text>
+<text x="30" y="165" fill="#6b6862" font-size="11">muda com o produto</text>
+
+<line x1="176" y1="110" x2="216" y2="110" stroke="#b8532a" stroke-width="2" marker-end="url(#arrow1)"/>
+
+<rect x="220" y="30" width="170" height="160" rx="8" fill="#eef1f8" stroke="#5b6ea8" stroke-width="1.5"/>
+<text x="234" y="55" font-size="14" font-weight="700" fill="#5b6ea8">2. TECH SPEC</text>
+<text x="234" y="80" fill="#1c1b19">• Schemas e contratos</text>
+<text x="234" y="100" fill="#1c1b19">• Restrições de camada</text>
+<text x="234" y="120" fill="#1c1b19">• Estratégia de erro</text>
+<text x="234" y="140" fill="#1c1b19">• Decisões + porquês</text>
+<text x="234" y="165" fill="#6b6862" font-size="11">muda com a arquitetura</text>
+
+<line x1="390" y1="110" x2="430" y2="110" stroke="#b8532a" stroke-width="2" marker-end="url(#arrow1)"/>
+
+<rect x="434" y="30" width="160" height="160" rx="8" fill="#fdf8e8" stroke="#8a6d1f" stroke-width="1.5"/>
+<text x="448" y="55" font-size="14" font-weight="700" fill="#8a6d1f">3. PLAN</text>
+<text x="448" y="80" fill="#1c1b19">• Etapas atômicas</text>
+<text x="448" y="100" fill="#1c1b19">• Arquivos tocados</text>
+<text x="448" y="120" fill="#1c1b19">• Comando de verificação</text>
+<text x="448" y="140" fill="#1c1b19">• Saída esperada</text>
+<text x="448" y="165" fill="#6b6862" font-size="11">muda a cada sessão</text>
+
+<line x1="594" y1="110" x2="634" y2="110" stroke="#b8532a" stroke-width="2" marker-end="url(#arrow1)"/>
+
+<rect x="638" y="30" width="106" height="160" rx="8" fill="#eef5f0" stroke="#3d6b4a" stroke-width="1.5"/>
+<text x="646" y="55" font-size="13" font-weight="700" fill="#3d6b4a">4. CÓDIGO</text>
+<text x="646" y="85" fill="#1c1b19" font-size="11">artefato confrontado</text>
+<text x="646" y="105" fill="#1c1b19" font-size="11">verificada por</text>
+<text x="646" y="125" fill="#1c1b19" font-size="11">teste + type check</text>
+<text x="646" y="150" fill="#6b6862" font-size="11">nem sempre derivável</text>
+</g>
+</svg>
+<figcaption>Os três níveis do SDD. Cada documento muda num ritmo diferente — por isso são três, não um.</figcaption>
+</figure>
+
+<div class="box warn">
+<span class="lbl">Regra de reconciliação — sem soberania automática</span>
+<p>Quando comportamento e documentação divergem, não escolha a spec nem o código por reflexo. Classifique: <code>consistent</code>, <code>spec_stale</code>, <code>code_incorrect</code> ou <code>decision_required</code>. Mitigue primeiro um incidente urgente; depois atualize contrato, implementação, testes e registro de decisão juntos. Se evidência operacional e intenção não bastarem, pare sem mutar e peça a decisão de produto.</p>
+</div>
+
+<h3>1.3 O ciclo: pesquisar → planejar → implementar → verificar</h3>
+<p>SDD não é só "escrever documentos antes". É um ciclo com quatro fases, e a primeira é a que quase todo mundo pula:</p>
+
+<ol>
+<li><strong>Pesquisar.</strong> Antes de especificar, o agente (ou você) investiga o terreno: que código já existe? que padrões o repositório usa? que restrições reais existem? Saída: um resumo de contexto. Pular esta fase produz specs que contradizem o código existente — e aí o agente obedece a spec e quebra o sistema.</li>
+<li><strong>Planejar.</strong> Escrever/atualizar PRD → spec → plan, nessa ordem, cada nível derivando do anterior. <strong>Você revisa cada documento antes de avançar.</strong> Revisar 2 páginas de spec custa 10 minutos; revisar 40 arquivos de diff gerado custa uma tarde — e você não revisa de verdade, só passa o olho.</li>
+<li><strong>Implementar.</strong> O agente executa o <code>plan.md</code> etapa por etapa. Uma etapa por vez, com o gate de verificação rodando entre elas.</li>
+<li><strong>Verificar.</strong> Mecanicamente (testes, type check, lint — o harness do bloco 2) e semanticamente (o diff faz o que a spec pede? — revisão sua). Divergência encontrada volta para o passo 2, não para um remendo no chat.</li>
+</ol>
+
+<h3>1.4 Ferramental: GitHub Spec Kit — e por que você vai construir o seu</h3>
+
+<div class="box">
+<span class="lbl">Contexto · O que é o GitHub Spec Kit</span>
+<p><strong>Spec Kit</strong> é uma implementação open source do GitHub, não a norma de SDD. A documentação consultada em julho/agosto de 2026 apresenta <code>Spec → Plan → Tasks → Implement</code>, dezenas de integrações e fallback genérico. A forma de chamar recursos varia por adapter — por exemplo, <code>/speckit.*</code> ou <code>$speckit-*</code>. O lab inspeciona snapshots e descobre essas formas sem executá-los. Confirme sempre a <a href="https://github.github.com/spec-kit/reference/agentic-sdd.html">documentação Agentic SDD</a> da versão usada.</p>
+</div>
+
+<p>Vale conhecer o Spec Kit para comparar decisões concretas. Neste curso você constrói um kit pequeno porque isso expõe contratos, políticas e gates que ferramentas prontas ocultam. O kit usa <a href="https://agentskills.io/specification">Agent Skills</a>, contrato canônico e adapters mínimos. Regras de domínio vivem uma vez no núcleo; cada produto apenas traduz entrada e apresentação.</p>
+
+<h3>1.5 Anti-padrões de spec — os quatro jeitos de fazer SDD errado</h3>
+<table>
+<thead><tr><th>Anti-padrão</th><th>Como se parece</th><th>Por que falha</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td><strong>Spec-romance</strong></td><td>40 páginas antes da primeira linha de código</td><td>Ninguém revisa 40 páginas — nem você. Ambiguidade se esconde no volume. E specs longas estouram o contexto do agente, que passa a resumir (= perder) partes dela.</td><td>Spec proporcional ao risco. Feature de 2 dias = 1–2 páginas. O que não couber, vira link para doc separada que o agente busca sob demanda.</td></tr>
+<tr><td><strong>Spec-fóssil</strong></td><td>A spec descreve o sistema como ele era há 3 sprints</td><td>O agente confia na spec mais do que no código. Spec mentirosa gera código que "conserta" o que estava certo.</td><td>Regra de ouro: mudou o comportamento, muda a spec no mesmo PR. No M04 você automatiza essa cobrança.</td></tr>
+<tr><td><strong>Spec-telepatia</strong></td><td>"O sistema deve tratar erros adequadamente"</td><td>"Adequadamente" não compila. O agente escolhe uma interpretação — estatisticamente, não a sua.</td><td>Todo requisito com advérbio vago vira critério verificável: qual erro, qual resposta, qual log, qual teste prova.</td></tr>
+<tr><td><strong>Spec-cascata</strong></td><td>Especificar o produto inteiro antes de implementar qualquer parte</td><td>É waterfall com passos extras. Você aprende implementando, e o aprendizado invalida a spec das partes futuras.</td><td>Especificar em fatias verticais: uma feature ponta a ponta por vez. O PRD é estável; spec e plan são por fatia.</td></tr>
+</tbody>
+</table>
+
+<h3>1.6 Prática guiada · Sua primeira spec executada (40 min)</h3>
+<p>Você vai especificar e executar uma feature minúscula. Use exclusivamente a fixture em <code>modulos/M01-workflow-ia-driven/lab</code>; não faça commits nem experimente worktrees no repositório principal do curso.</p>
+
+<div class="step"><span class="n">1</span><strong>Crie a estrutura de spec.</strong> No terminal, na raiz do repo:
+<pre><code>uv run python -m sdd_lab validate examples/feature.valid.json
+uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
+<p><strong>Resultado esperado:</strong> o primeiro comando imprime <code>VALID CAP-001</code>. O segundo retorna código 20 e lista oito diagnósticos — requisito vago, não-objetivo ausente, path inseguro, string de shell e rastreabilidade quebrada entre eles. O arquivo inválido permanece byte a byte igual.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Escreva o intent/requisitos à mão numa cópia descartável</strong> — sem IA nesta primeira vez; você precisa sentir o que é difícil antes de delegar. Não salve no repositório principal:
+<pre><code># PRD · Gerador de changelog do repositório de estudos
+
+## Problema
+O PROGRESSO.md registra o diário, mas não existe visão resumida
+do que mudou no repositório por semana. Quero um resumo por semana
+gerado a partir do histórico do git.
+
+## Requisitos funcionais
+- RF1: dado o histórico git do repo, gerar `CHANGELOG-STUDY.md`
+  agrupando commits por semana (segunda a domingo).
+- RF2: cada linha mostra data, hash curto e mensagem do commit.
+- RF3: semanas sem commit não aparecem.
+
+## Requisitos não-funcionais
+- RNF1: rodar em &lt; 5 s num repo com até 1.000 commits.
+- RNF2: nenhuma dependência fora da biblioteca padrão do Python.
+
+## Não-objetivos
+- NÃO categorizar commits (feat/fix). Mensagem crua basta.
+- NÃO publicar em lugar nenhum. Arquivo local só.
+- NÃO reescrever histórico nem tocar em nada além do arquivo gerado.</code></pre>
+<p><strong>Resultado esperado:</strong> um PRD de meia página em que <em>cada</em> requisito é verificável (dá para testar RF3 mecanicamente) e os não-objetivos cortam as "iniciativas" óbvias que um agente teria.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Peça a spec técnica e o plano ao agente — e revise.</strong> Em qualquer harness compatível:
+<pre><code>Leia docs/spec/001-changelog/prd.md. Escreva spec.md (decisões
+técnicas: como obter commits, estrutura do script, tratamento de
+erro) e plan.md (etapas atômicas; cada etapa com comando de
+verificação e saída esperada) na mesma pasta. Não escreva código.</code></pre>
+<p><strong>Resultado esperado:</strong> dois arquivos novos na fixture. Leia-os integralmente. Procure: a spec inventou dependência externa? O plano tem etapa sem gate, timeout ou write set? Se faltou decisão, registre a pergunta; não deixe o agente preencher produto por adivinhação.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Execute o plano, uma etapa por vez.</strong>
+<pre><code>Execute a etapa 1 do docs/spec/001-changelog/plan.md. Rode o
+comando de verificação da etapa e me mostre a saída. Pare.</code></pre>
+<p><strong>Resultado esperado:</strong> o agente faz <em>só</em> a etapa 1 e mostra a verificação passando. O "Pare." no final não é grosseria — é fluxo de controle (você vai formalizar isso no bloco 3, fator 8). Repita para as demais etapas.</p></div>
+
+<div class="step"><span class="n">5</span><strong>Provoque drift bidirecional.</strong> Mude a regra: semanas devem ir de domingo a sábado. Edite o requisito na fixture e peça: <em>"Compare contrato, implementação, testes e evidência. Classifique a divergência antes de propor mudança."</em>
+<p><strong>Resultado esperado:</strong> o agente identifica a divergência e apresenta evidências antes de alterar. Se a produção confirma o novo comportamento, classifica <code>spec_stale</code>; se contrato aceita mas o teste comportamental falha, <code>code_incorrect</code>; se os sinais divergem, <code>decision_required</code>. Nenhuma classificação autoriza mutação automática.</p></div>
+
+<div class="box ok">
+<span class="lbl">Síntese do bloco 1</span>
+<ul>
+<li>Chat-driven falha porque o requisito mora num lugar volátil (contexto) e a descoberta por tentativa e erro polui o que resta dele.</li>
+<li>SDD externaliza intenção e decisões; spec, código, testes e produção são evidências reconciliadas, não autoridades automáticas.</li>
+<li>Três níveis: PRD (o quê/por quê), spec (como), plan (em que ordem, com verificação por etapa). Ritmos de mudança diferentes.</li>
+<li>Ciclo: pesquisar → planejar → implementar → verificar. Antecipar decisões reduz o custo cognitivo da revisão, mas o diff e os testes continuam indispensáveis.</li>
+<li>Spec Kit é implementação de referência; o contrato portátil do lab preserva o conceito fora de qualquer produto.</li>
+</ul>
+</div>
+ </section>
+<!-- ============================================ BLOCO 2 -->
+<section id="b2">
+<h2>Bloco 2 · Harness Engineering: guardrails mecânicos, não pedidos educados</h2>
+<p class="clock">00:00–00:25 prompt vs. contexto vs. harness · 00:25–00:55 por que agente degrada em tarefa longa · 00:55–01:35 os cinco guardrails mecânicos · 01:35–02:00 prática: harness mínimo</p>
+
+<h3>2.1 Por que isso importa</h3>
+<p>No M00 (bloco 2) você aprendeu na pele que <strong>instrução em prompt é pedido, não garantia</strong>: sua skill v1 mandava "não reescreva o código" e o agente reescreveu tudo. A v2 melhorou com técnica de prompt — mas prompt melhor continua sendo probabilidade melhor, não certeza. Harness Engineering é o passo seguinte: <strong>tirar as regras inegociáveis do prompt e colocá-las em mecanismos que não dependem de obediência</strong>.</p>
+
+<p>A separação dos três níveis, que você vai usar o curso inteiro:</p>
+
+<table>
+<thead><tr><th>Disciplina</th><th>Controla</th><th>Pergunta que responde</th><th>Natureza</th></tr></thead>
+<tbody>
+<tr><td><strong>Prompt engineering</strong></td><td>o que você <em>diz</em></td><td>"como formulo a instrução?"</td><td>probabilística — o modelo pode desobedecer</td></tr>
+<tr><td><strong>Context engineering</strong></td><td>o que o modelo <em>vê</em></td><td>"o que entra na janela, e o que fica fora?"</td><td>probabilística — o modelo pode ignorar o que vê</td></tr>
+<tr><td><strong>Harness engineering</strong></td><td>o que o sistema <em>permite</em></td><td>"o que acontece quando o modelo erra?"</td><td><strong>determinística</strong> — o erro é barrado por código</td></tr>
+</tbody>
+</table>
+
+<div class="box net">
+<span class="lbl">Tradução .NET</span>
+<p>Você conhece essa escada do mundo corporativo. Prompt engineering é o <em>code review comment</em>: "por favor, não use <code>DateTime.Now</code> direto". Context engineering é o <em>onboarding doc</em> que o dev novo lê. Harness engineering é o <strong>Roslyn Analyzer com severidade Error</strong> + <code>&lt;TreatWarningsAsErrors&gt;true&lt;/TreatWarningsAsErrors&gt;</code> no <code>.csproj</code> + o gate de build no Azure DevOps que <strong>recusa o merge</strong>. A empresa madura não pede educadamente que o dev não quebre o build — ela torna impossível mergear com build quebrado. Com agentes é idêntico, só que o "dev" comete erros mais rápido e em maior volume.</p>
+</div>
+
+<h3>2.2 Por que o agente degrada em tarefa longa</h3>
+<p>Para desenhar o harness certo, você precisa do modelo mental correto do <em>modo de falha</em>. Agente em tarefa longa degrada por mecanismos conhecidos:</p>
+
+<ul>
+<li><strong>Context rot (apodrecimento de contexto).</strong> A janela enche com histórico de edições, saídas de comando e versões antigas de código. O sinal (a instrução original, a spec) dilui no ruído. O modelo passa a dar mais peso ao que está perto do fim da janela — as próprias ações recentes — e menos ao objetivo. Sintoma clássico: refatorar código que já estava pronto.</li>
+<li><strong>Context anxiety.</strong> Quando o agente percebe (pelo harness ou por heurística própria) que o contexto está acabando, ele muda de comportamento: encurta caminhos, pula verificações, tenta "terminar de qualquer jeito antes de esquecer". É observável e documentado — e a mitigação não é prompt, é <strong>unidade de trabalho menor</strong>.</li>
+<li><strong>Falhas correlacionadas.</strong> Pedir ao mesmo modelo — ou a outro modelo semelhante — que verifique texto gerado não cria independência por si só. Priorize parser, type checker, teste com oráculo forte, controle negativo e revisão humana orientada por risco. Um segundo agente pode ampliar perspectivas, mas sua independência precisa ser demonstrada, não presumida.</li>
+<li><strong>Acúmulo de erro composto.</strong> Como ilustração matemática — não como taxa medida de agentes — vinte passos independentes com 95% de sucesso cada dariam <code>0,95²⁰ ≈ 36%</code> de sucesso integral. Na prática as falhas não são independentes, o que reforça a necessidade de medir e criar gates entre estados.</li>
+</ul>
+
+<div class="box fund">
+<span class="lbl">Fundamento de engenharia · Fail fast, shift left e a economia do erro</span>
+<p>Dois princípios clássicos sustentam todo harness — recicle-os, porque agora eles se aplicam a um "dev" que produz mil linhas por minuto:</p>
+<ul>
+<li><strong>Fail fast onde continuar é inseguro:</strong> invariantes quebradas, contrato inválido e autorização negada bloqueiam avanço. Falhas recuperáveis podem usar retry limitado ou degradação explícita. A política precisa distinguir essas classes em vez de aplicar “abortar tudo” universalmente.</li>
+<li><strong>Feedback próximo da mudança:</strong> quanto antes uma divergência observável aparece, menor tende a ser o blast radius e mais contexto local existe para diagnosticá-la. Não existe multiplicador universal. Meça tempo até feedback, retrabalho e escapes por tipo de controle.</li>
+</ul>
+</div>
+
+<h3>2.3 Os cinco guardrails mecânicos</h3>
+<p>O harness completo tem cinco camadas. A regra que as une: <strong>se uma propriedade é inegociável, ela precisa de controle executável, caso negativo e evidência</strong>. Exit code é um sinal de protocolo; sozinho, não prova que o oráculo representa a necessidade real.</p>
+
+<div class="box">
+<span class="lbl">Contexto · Exit code — a moeda dos guardrails</span>
+<p>Processos comunicam estado por <strong>exit code</strong>, mas cada ferramenta define seus códigos. No pytest, por exemplo, zero significa testes coletados e aprovados; cinco significa que nenhum teste foi coletado — isso deve bloquear o curso, não virar aviso ignorado. O runner registra argv, versão, duração, saída e código. A documentação do <a href="https://docs.python.org/3/library/subprocess.html">Python <code>subprocess</code></a> recomenda argumentos como sequência e alerta para responsabilidades adicionais ao invocar shell explicitamente.</p>
+</div>
+
+<ol>
+<li><strong>Gates de qualidade por passo.</strong> Depois de uma unidade coerente de edição, rode as verificações rápidas adequadas ao risco: Ruff, mypy estrito e testes focados. O adapter pode ligar isso a hook, CI ou runner local, mas o contrato é o mesmo: resultado real, timeout e evidência persistida.</li>
+<li><strong>Unidades de trabalho pequenas e verificáveis.</strong> Janela maior não corrige contexto irrelevante, truncamento ou objetivo mal definido. Cada etapa deve terminar em estado verificável e retomável; divida quando evidência, revisão ou rollback deixarem de ser locais.</li>
+<li><strong>Estado externalizado, sessão substituível.</strong> Progresso confirmado mora em spec, checkpoint, diff, testes e evidência. Teste ácido: uma nova sessão consegue retomar do último estado confirmado sem repetir efeito? Conversa pode ajudar na exploração, mas não deve ser o único ledger operacional.</li>
+<li><strong>Fronteiras de permissão.</strong> Declare capabilities mínimas, paths, comandos e aprovações por tarefa. O nome do campo varia entre produtos; a policy efetiva precisa ser testada. Para o lab, produção é inacessível e qualquer escape de root é negado.</li>
+<li><strong>Verificação independente.</strong> Quem avalia não pode ser quem fez: suíte de testes escrita <em>antes</em> (ou revisada por você), revisor com contexto limpo (subagente revisor, como o seu <code>revisor-dotnet-para-python</code>), e — no limite — você, lendo o diff. Rubrica objetiva: a definição de "pronto" está no <code>contract.md</code> do bloco 5, não na opinião do executor.</li>
+</ol>
+
+<figure>
+<svg viewBox="0 0 740 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomia do harness">
+<g font-family="system-ui,sans-serif" font-size="12">
+<rect x="20" y="60" width="170" height="120" rx="8" fill="#fdf2ed" stroke="#b8532a" stroke-width="1.5"/>
+<text x="34" y="85" font-size="13" font-weight="700" fill="#b8532a">AGENTE (LLM)</text>
+<text x="34" y="110" fill="#1c1b19">propõe edições</text>
+<text x="34" y="130" fill="#1c1b19">chama ferramentas</text>
+<text x="34" y="155" fill="#6b6862" font-size="11">probabilístico</text>
+
+<line x1="190" y1="120" x2="240" y2="120" stroke="#b8532a" stroke-width="2"/>
+
+<rect x="240" y="16" width="290" height="208" rx="10" fill="#eef1f8" stroke="#5b6ea8" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="258" y="40" font-size="13" font-weight="700" fill="#5b6ea8">HARNESS (determinístico)</text>
+<rect x="258" y="52" width="254" height="28" rx="4" fill="#faf9f7" stroke="#5b6ea8"/>
+<text x="266" y="71" fill="#1c1b19" font-size="11">1. gates por passo · ruff / mypy / pytest</text>
+<rect x="258" y="86" width="254" height="28" rx="4" fill="#faf9f7" stroke="#5b6ea8"/>
+<text x="266" y="105" fill="#1c1b19" font-size="11">2. unidades pequenas · plan.md por etapa</text>
+<rect x="258" y="120" width="254" height="28" rx="4" fill="#faf9f7" stroke="#5b6ea8"/>
+<text x="266" y="139" fill="#1c1b19" font-size="11">3. estado em artefatos · sessão descartável</text>
+<rect x="258" y="154" width="254" height="28" rx="4" fill="#faf9f7" stroke="#5b6ea8"/>
+<text x="266" y="173" fill="#1c1b19" font-size="11">4. permissões · hooks, allowlist, tools:</text>
+<rect x="258" y="188" width="254" height="28" rx="4" fill="#faf9f7" stroke="#5b6ea8"/>
+<text x="266" y="207" fill="#1c1b19" font-size="11">5. verificação independente · testes, revisor</text>
+
+<line x1="530" y1="120" x2="580" y2="120" stroke="#3d6b4a" stroke-width="2"/>
+
+<rect x="580" y="60" width="140" height="120" rx="8" fill="#eef5f0" stroke="#3d6b4a" stroke-width="1.5"/>
+<text x="594" y="85" font-size="13" font-weight="700" fill="#3d6b4a">REPO</text>
+<text x="594" y="110" fill="#1c1b19">build verde</text>
+<text x="594" y="130" fill="#1c1b19">spec cumprida</text>
+<text x="594" y="150" fill="#1c1b19">commits atômicos</text>
+</g>
+</svg>
+<figcaption>O modelo erra; o harness decide se o erro passa. As cinco camadas entre a proposta e o repositório.</figcaption>
+</figure>
+
+<div class="box warn">
+<span class="lbl">O teste do prompt supérfluo</span>
+<p>Pegue qualquer instrução do <code>AGENTS.md</code> e pergunte: <em>"que evidência aparece se isto for ignorado?"</em> Se a resposta é "nenhuma", transforme-a em policy, schema, teste ou aprovação — ou registre conscientemente que continua sendo orientação probabilística.</p>
+</div>
+
+<h3>2.4 Prática guiada · Runner seguro e controles negativos (25 min)</h3>
+<p>O laboratório já contém o harness executável. Você vai inspecionar antes de rodar, executar o caminho feliz e provar que quatro falhas reais são bloqueadas. O M02 aprofundará a linguagem; aqui observe contrato, processo e evidência.</p>
+
+<div class="box">
+<span class="lbl">Ponte .NET → Python</span>
+<p><code>uv</code> gerencia ambiente e lock; Ruff cobre lint/format; mypy verifica os type hints sem transformar Python em C#; <code>unittest</code> é o framework padrão usado aqui. A analogia útil é <code>ProcessStartInfo.ArgumentList</code> ↔ <code>subprocess.run([...], shell=False)</code>. Assim como Roslyn, build e xUnit cobrem dimensões diferentes, nenhum gate isolado prova adequação do produto.</p>
+</div>
+
+<div class="step"><span class="n">1</span><strong>Prepare o ambiente reproduzível.</strong>
+<pre><code>cd modulos/M01-workflow-ia-driven/lab
+uv sync --python 3.14 --extra dev</code></pre>
+<p><strong>Resultado esperado:</strong> uv seleciona Python 3.14 e sincroniza o lockfile. Leia <code>pyproject.toml</code> e <code>uv.lock</code>; lock melhora repetibilidade, mas proveniência e integridade de build são controles adicionais, estudados com SLSA.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Execute os gates canônicos, sem wrapper de shell.</strong>
+<pre><code>uv run ruff format --check .
+uv run ruff check .
+uv run mypy --strict src tests
+uv run python -m unittest discover -s tests -v</code></pre>
+<p><strong>Resultado esperado:</strong> 33 arquivos formatados, Ruff verde, mypy sem issues em 21 arquivos e 27 testes aprovados. Saídas e quantidades podem crescer com o lab; a verdade é a execução presente, nunca este número copiado.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Prove que o gate morde.</strong>
+<pre><code>uv run mypy fixtures/gates/type_error/broken.py
+uv run python -m unittest tests.test_negative_control -v
+uv run python -m unittest tests.test_runner -v</code></pre>
+<p><strong>Resultado esperado:</strong> mypy cita <code>broken.py:2</code>; o controle negativo prova que um mutante conhecido é rejeitado; o runner retorna 124 no timeout e 126 para shell/path não autorizados. Um oráculo que deixa o mutante sobreviver reprova o gate.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Inspecione o runner e a evidência.</strong>
+<pre><code>uv run python -m sdd_lab check examples/feature.valid.json \
+  --evidence evidence/run.json
+uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
+<p><strong>Resultado esperado:</strong> <code>run.json</code> contém argv tokenizado, Python 3.14.7, timestamps, duração, código e saída UTF-8. A fixture inválida retorna 20. O runner rejeita scripts de shell até revisão; isso reduz superfície, mas não é sandbox de sistema operacional.</p></div>
+
+<div class="box ok">
+<span class="lbl">Síntese do bloco 2</span>
+<ul>
+<li>Prompt = o que você diz; contexto = o que ele vê; harness = o que o sistema permite. Só o terceiro é determinístico.</li>
+<li>Falhas aparecem por truncamento, contexto irrelevante, estados ocultos, passos longos e verificadores correlacionados; meça sinais observáveis.</li>
+<li>Cinco guardrails: gates por passo, unidades pequenas, estado externalizado, fronteiras de permissão, verificação independente.</li>
+<li>Regra inegociável vira controle executável com caso negativo e evidência; exit code é sinal, não prova semântica completa.</li>
+<li>Teste ácido do estado: <code>/clear</code> a qualquer momento — dá para retomar só dos artefatos?</li>
+</ul>
+</div>
+</section>
+<!-- ============================================ BLOCO 3 -->
+<section id="b3">
+<h2>Bloco 3 · Estado, controle e 12-Factor Agents sob crítica</h2>
+<p class="clock">00:00–00:15 origem e tese central · 00:15–01:20 os doze fatores, um a um · 01:20–01:45 os quatro que mais importam para você · 01:45–02:00 prática: auditoria de conformidade</p>
+
+<h3>3.1 Por que isso importa e como ler o guia</h3>
+<p>Os blocos 1 e 2 deram método e controles. Agora você estudará estado, efeitos, retomada e supervisão. O <strong>12-Factor Agents</strong>, da HumanLayer, é um guia de practitioner útil para organizar perguntas — não uma norma, certificação nem consenso universal. Cada fator será aceito somente quando houver artefato, teste ou telemetria que o sustente, e você registrará contrapontos.</p>
+
+<div class="box">
+<span class="lbl">Contexto · O que é o 12-Factor Agents</span>
+<p>O repositório foi publicado por Dex Horthy/HumanLayer em 2025 e reúne experiência prática. Sua tese — combinar software determinístico com passos probabilísticos estreitos — é consistente com o laboratório, mas continua sendo uma posição de engenharia a testar no contexto. “Stateless” aqui não significa “sem estado”: significa estado explícito e externalizado. O chamado fator 13, pre-fetch, aparece apenas como <em>honorable mention</em>; pré-carregar dependência conhecida e pequena pode ajudar, enquanto descoberta incerta deve permanecer sob demanda para reduzir custo e ruído.</p>
+</div>
+
+<h3>3.2 Os doze fatores, um a um</h3>
+<p>A tabela abaixo usa os nomes originais (em inglês, como o mercado cita) — decore os números dos que mais usar; em entrevista e em discussão técnica, "isso viola o fator 8" é linguagem corrente.</p>
+
+<table>
+<thead><tr><th>#</th><th>Fator</th><th>O que significa</th><th>Tradução .NET / prática</th></tr></thead>
+<tbody>
+<tr><td><strong>1</strong></td><td><strong>Natural Language to Tool Calls</strong></td><td>O superpoder real do LLM é converter linguagem natural em chamadas estruturadas ("cancele a assinatura do João" → <code>{"tool":"cancel_subscription","user_id":42}</code>). Use-o para <em>traduzir intenção</em>; deixe código executar.</td><td>O LLM é o <em>model binder</em> do ASP.NET: transforma entrada crua em objeto tipado. O controller (seu código) é quem age.</td></tr>
+<tr><td><strong>2</strong></td><td><strong>Own your prompts</strong></td><td>Prompts são código de primeira classe: no seu repositório, versionados, revisáveis, testáveis. Nunca escondidos dentro de abstração de framework que você não controla.</td><td>Como SQL crítico: você não deixa o ORM gerar a query do relatório mais importante sem poder inspecioná-la. Prompt em <code>prompts/*.md</code> com git blame.</td></tr>
+<tr><td><strong>3</strong></td><td><strong>Own your context window</strong></td><td>Você decide o que entra na janela, em que formato e em que ordem — em vez de anexar o histórico inteiro cegamente. Contexto é o recurso mais caro e mais escasso do sistema.</td><td>É a projeção do EF: <code>Select(x =&gt; new {...})</code> em vez de arrastar a entidade inteira com navegações. Buscar tudo "por garantia" é o mesmo erro nos dois mundos.</td></tr>
+<tr><td><strong>4</strong></td><td><strong>Tools are just structured outputs</strong></td><td>Desmistificação: "tool call" não é o modelo executando nada — é o modelo <em>emitindo JSON</em> que o SEU código valida e executa (ou recusa). A fronteira entre decidir e agir é sua.</td><td>O modelo devolve um DTO; seu código é o handler. Igual a MediatR: o request não se executa sozinho.</td></tr>
+<tr><td><strong>5</strong></td><td><strong>Unify execution state and business state</strong></td><td>Evite dois estados paralelos ("onde o agente está" vs. "onde o pedido está") que dessincronizam. Um estado só, inspecionável, de preferência no banco que você já audita.</td><td>A lição das sagas: o estado do workflow mora no mesmo lugar do estado do negócio, ou você passa a vida reconciliando os dois.</td></tr>
+<tr><td><strong>6</strong></td><td><strong>Launch/Pause/Resume with simple APIs</strong></td><td>Agente de produção é interrompível: dá para lançar, pausar (esperando aprovação humana, webhook, madrugada) e retomar do ponto exato — sem perder o meio.</td><td>Durable Functions / Hangfire: checkpoint + retomada. Se seu agente não sobrevive a um restart do pod, ele não é de produção.</td></tr>
+<tr><td><strong>7</strong></td><td><strong>Contact humans with tool calls</strong></td><td>"Perguntar ao humano" é uma ferramenta como qualquer outra (<code>request_approval</code>, <code>ask_clarification</code>) — estruturada, roteável, auditável — e não texto solto no chat.</td><td>O passo de aprovação manual do release pipeline, como primitiva do sistema. O M12 transforma isso em camada de política.</td></tr>
+<tr><td><strong>8</strong></td><td><strong>Own your control flow</strong></td><td>O SEU código decide o que roda em seguida — loops, ifs, máquina de estados. O LLM decide <em>dentro</em> dos pontos que você abriu para ele, não o fluxo inteiro.</td><td>A tese central com número: código determinístico no volante, LLM nas decisões semânticas. É o "Pare." que você usou no bloco 1, promovido a arquitetura.</td></tr>
+<tr><td><strong>9</strong></td><td><strong>Compact Errors into Context Window</strong></td><td>Erro de ferramenta volta para o modelo <em>compactado e útil</em> ("timeout após 30s na API X, tente com filtro menor"), não como stack trace de 200 linhas que enche a janela de ruído.</td><td>O padrão ProblemDetails (RFC 7807) da sua API: erro estruturado e acionável, não dump. Mesma disciplina, consumidor diferente.</td></tr>
+<tr><td><strong>10</strong></td><td><strong>Small, Focused Agents</strong></td><td>O guia recomenda unidades focadas. Isso pode reduzir contexto e facilitar diagnóstico, mas aumenta coordenação; compare qualidade, retrabalho e tempo total.</td><td>SRP como heurística, sem concluir que mais processos/agentes é automaticamente melhor.</td></tr>
+<tr><td><strong>11</strong></td><td><strong>Trigger from anywhere, meet users where they are</strong></td><td>Agente é serviço, não interface: dispara por Slack, cron, webhook, e-mail, fila — e responde no canal de origem. Chat é UMA porta, não A porta.</td><td>Seu worker service com múltiplos bindings: HTTP, fila, timer. O agente é o handler; o gatilho é plugável.</td></tr>
+<tr><td><strong>12</strong></td><td><strong>Make your agent a stateless reducer</strong></td><td>O agente ideal é uma função pura: <code>(estado, evento) → novo estado</code>. Todo o estado vem de fora e volta para fora; a execução em si não guarda nada. Testável, reproduzível, paralelizável.</td><td><code>(state, action) =&gt; newState</code> — o reducer do Redux, ou o fold de event sourcing que você já viu em sistema bancário. Mesma matemática.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Fator 13 (apêndice) — Pre-fetch all the context you might need:</strong> se você já sabe que o agente vai precisar de um dado, busque-o <em>antes</em> e coloque na janela — não gaste um turno de LLM para ele "decidir" chamar a ferramenta óbvia. Cada turno economizado é latência e custo a menos.</p>
+
+<div class="box fund">
+<span class="lbl">Fundamento de engenharia · Funções puras, idempotência e event sourcing</span>
+<p>O fator 12 só parece novidade. Recicle três conceitos que o sustentam:</p>
+<ul>
+<li><strong>Função pura:</strong> saída depende só da entrada; sem efeito colateral escondido. É o que torna teste trivial (entrada → saída esperada, sem mock de meio mundo). Agente-reducer é testável do mesmo jeito: dado este estado e este evento, o próximo estado é este.</li>
+<li><strong>Idempotência:</strong> executar duas vezes = executar uma (<code>PUT</code> vs. <code>POST</code>; a mesma mensagem processada duas vezes pelo consumer não duplica o débito). Agentes tornam isso obrigatório: retry é rotina, e um agente que "tenta de novo" uma transferência não-idempotente é o incidente do M12.</li>
+<li><strong>Event sourcing como analogia limitada:</strong> um reducer calcula estado a partir de eventos explícitos; uma janela de contexto não é event store confiável, pois pode truncar, resumir e conter texto não validado. Use ledger/checkpoint próprio para efeitos e trate contexto apenas como entrada da chamada.</li>
+</ul>
+</div>
+
+<div class="box net">
+<span class="lbl">Tradução .NET — os doze fatores como arquitetura que você já defendeu</span>
+<p>Se a lista pareceu abstrata, releia-a como a descrição de um <strong>worker service bem construído</strong>, que é algo que você já entregou: configuração e prompts versionados no repositório (2), payload enxuto em vez de arrastar a entidade inteira (3), DTO tipado em vez de <code>dynamic</code> (1 e 4), um estado só em vez de reconciliar dois (5), <code>Durable</code>/Hangfire para pausar e retomar (6), passo de aprovação no pipeline (7), <em>você</em> escrevendo o <code>while</code> e os <code>if</code> (8), ProblemDetails em vez de stack trace (9), SRP (10), múltiplos bindings de gatilho — HTTP, fila, timer (11), e reducer/event sourcing (12).</p>
+<p>A conclusão que vale levar para uma conversa técnica: <strong>o manifesto não pede que você aprenda arquitetura nova — pede que você não abandone a que já sabe só porque tem um LLM no meio</strong>. Metade dos sistemas de IA que falham em produção falha por ter jogado fora o worker service e colocado um loop autônomo no lugar.</p>
+</div>
+
+<h3>3.3 Os quatro fatores que mais importam para você agora</h3>
+<p>Doze é lista demais para reter de uma vez. Os quatro que vão trabalhar já nesta fase do curso:</p>
+<ul>
+<li><strong>Fator 2 (own your prompts)</strong> — você já pratica: suas skills do M00 são prompts versionados no repo. Mantenha o padrão quando aparecerem frameworks oferecendo abstração "mágica" (M08 volta nisso).</li>
+<li><strong>Fator 3 (own your context window)</strong> — é o M00 bloco 1 com outro nome, e o tema central do M08.</li>
+<li><strong>Fator 8 (own your control flow)</strong> — o SDD do bloco 1 é você possuindo o fluxo: o plan.md é o controle; o agente executa dentro dele.</li>
+<li><strong>Fator 10 (small, focused agents)</strong> — seus subagentes do M00 bloco 3 já seguem isso; o bloco 4 deste módulo escala o princípio para paralelismo.</li>
+</ul>
+
+<h3>3.4 Prática guiada · Auditoria de conformidade (30 min)</h3>
+<p>Nada fixa princípio como procurar violação. Você vai auditar dois "sistemas" que já tem:</p>
+
+<div class="step"><span class="n">1</span><strong>Audite seu fluxo do M00.</strong> Abra o <code>cacador-de-gap</code> (subagente) e a skill <code>revisor-dotnet-para-python</code>. Para cada um, responda por escrito (no <code>PROGRESSO.md</code> ou num rascunho): quais fatores ele <em>cumpre</em> e qual ele <em>viola ou ignora</em>? Exija evidência; não marque conformidade por impressão.
+<p><strong>Resultado esperado:</strong> uma lista honesta com pelo menos 3 conformidades e 2 violações identificadas. Se você não achou violação nenhuma, está auditando com carinho demais.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Audite um harness.</strong> Investigue a documentação e um experimento local: como mede/trunca contexto, o que persiste após interrupção e como erros de ferramenta retornam? Não aceite autorrelato do modelo como prova.
+<p><strong>Resultado esperado:</strong> uma resposta que você agora sabe avaliar criticamente — compactação automática de contexto (fator 3 parcialmente fora do seu controle: anote o trade-off), retomada de sessão (<code>--resume</code>/equivalente), e erros como mensagens de tool result. Compare com a tabela e anote onde o harness decide <em>por</em> você.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Reescreva uma violação.</strong> Escolha a pior violação encontrada no passo 1 e corrija-a no artefato correspondente (na skill, no contrato ou no <code>AGENTS.md</code>). Depois execute:
+<pre><code>uv run python -m unittest tests.test_workflow -v</code></pre>
+<p>O teste pausa, persiste, carrega em nova instância e retoma sem repetir o mesmo <code>effect_id</code>. Outra prova esgota o orçamento e chega a <code>ESCALATED</code> com razão de handoff.</p>
+<p><strong>Resultado esperado:</strong> um commit com mensagem em inglês no padrão do repo, ex.: <code>M01: compact tool errors in cacador-de-gap output</code>.</p></div>
+
+<div class="box ok">
+<span class="lbl">Síntese do bloco 3</span>
+<ul>
+<li>12-Factor Agents (HumanLayer, 2025): princípios de agentes que sobrevivem a produção. Tese: software determinístico com LLM nos pontos certos.</li>
+<li>Os doze fatores são perguntas de auditoria, não dogma. O fator 13 é honorable mention; prefetch pequeno/conhecido e retrieval sob demanda resolvem problemas diferentes.</li>
+<li>Fundamentos reciclados por trás: função pura, idempotência, event sourcing, SRP.</li>
+<li>Para você, agora: fatores 2, 3, 8 e 10.</li>
+</ul>
+</div>
+</section>
+<!-- ============================================ BLOCO 4 -->
+<section id="b4">
+<h2>Bloco 4 · Decomposição, worktrees e integração por waves</h2>
+<p class="clock">00:00–00:20 quando paralelizar (e quando não) · 00:20–00:50 arquitetura orquestrador-workers · 00:50–01:35 prática: worktrees + duas features em paralelo · 01:35–02:00 consolidação e conflitos</p>
+
+<h3>4.1 Por que isso importa</h3>
+<p>Um agente trabalha em uma coisa por vez. Você, sênior, sabe que a produtividade real de um tech lead não vem de digitar mais rápido — vem de <strong>manter várias frentes andando com segurança</strong>. Paralelizar agentes é isso: enquanto o worker A implementa a feature de auth, o worker B escreve os testes do billing e o C atualiza a documentação. Mas paralelismo mal feito é pior que sequencial: dois agentes no mesmo diretório se atropelam, e você gasta a tarde resolvendo a colisão. Este bloco te dá o padrão seguro.</p>
+
+<div class="box fund">
+<span class="lbl">Fundamento de engenharia · Concorrência — a reciclagem que decide se isso funciona</span>
+<p>Tudo neste bloco é teoria clássica de concorrência aplicada a um novo tipo de worker. Recicle quatro peças:</p>
+<ul>
+<li><strong>Concorrência ≠ paralelismo.</strong> Concorrência estrutura tarefas que podem progredir independentemente; paralelismo executa algumas simultaneamente. Decomposição, integração e revisão frequentemente dominam o ganho, por isso precisam ser medidos.</li>
+<li><strong>Estado compartilhado mutável exige coordenação.</strong> Dois agentes editando o mesmo arquivo lembram uma race condition, mas conflitos também surgem por contrato e recurso externo. As opções incluem sequenciar, isolar, tornar alterações aditivas ou estabilizar a interface numa wave anterior.</li>
+<li><strong>Lei de Amdahl:</strong> o ganho do paralelismo é limitado pela fração sequencial. Com agentes, a fração sequencial é <strong>a sua revisão</strong> e a consolidação dos merges. Cinco agentes gerando código que você revisa sozinho: o gargalo é você. Paralelize também a verificação (testes, gates do bloco 2) ou o paralelismo é ilusão.</li>
+<li><strong>Custo de coordenação cresce com o quadrado dos participantes.</strong> Vale para times (Brooks) e para agentes: 2 workers = 1 fronteira para gerenciar; 5 workers = 10. Comece com 2.</li>
+</ul>
+</div>
+
+<h3>4.2 Quando paralelizar — o checklist honesto</h3>
+<p>Paralelize quando <strong>todas</strong> estas condições valem:</p>
+<ul>
+<li><strong>As tarefas não compartilham estado relevante.</strong> Write sets disjuntos são necessários em muitos casos, mas não bastam. Compare também read sets, contratos públicos, schema, lockfile, banco, cache, porta, fila, rate limit e dependências entre tarefas.</li>
+<li><strong>Cada tarefa tem contrato suficiente e condição de parada.</strong> Se surgir ambiguidade que altera produto ou contrato compartilhado, o worker pausa e devolve handoff; não decide sozinho para manter o paralelismo aparente.</li>
+<li><strong>Cada tarefa tem gate de worker e existe gate global.</strong> “Terminou localmente” não significa “integrou”: cada branch pode passar contra a base e falhar quando os dois novos comportamentos se encontram.</li>
+<li><strong>O custo compensa.</strong> Paralelizar duas tarefas de 10 minutos é overhead puro. Paralelize blocos de ≥ 30–60 min de trabalho de agente.</li>
+</ul>
+
+<h3>4.3 Arquitetura orquestrador-workers</h3>
+<p>Um padrão frequente de orquestração tem três papéis. Produtos podem automatizá-los de formas diferentes; o contrato não depende dessa automação:</p>
+
+<ul>
+<li><strong>Orquestrador</strong> (sessão principal, contexto caro): decompõe a tarefa, escreve/distribui as specs, dispara os workers, consolida os resultados. <strong>Não implementa nada</strong> — implementar sujaria o contexto que precisa ficar limpo para julgar os resultados.</li>
+<li><strong>Workers</strong> (subagentes ou sessões paralelas, contexto descartável): recebem uma spec fechada, implementam, rodam o gate, devolvem um <em>relatório compacto</em> (fator 9!) — não o diff inteiro, que estouraria o contexto do orquestrador.</li>
+<li><strong>Consolidador</strong> (o orquestrador de chapéu trocado, ou você): merge das branches, resolução de conflito, gate final na integração.</li>
+</ul>
+
+<p>Em tarefas grandes, os workers rodam em <strong>waves</strong> (ondas): wave 1 = fundações compartilhadas (schemas, contratos — sequencial, porque tudo depende delas); wave 2 = features em paralelo sobre a fundação; wave 3 = integração e polimento. É o mesmo raciocínio do grafo de dependências de um build: paraleliza-se o que está no mesmo nível do grafo.</p>
+
+<h3>4.4 Isolamento com Git worktrees</h3>
+
+<div class="box">
+<span class="lbl">Contexto · O que é <code>git worktree</code></span>
+<p><a href="https://git-scm.com/docs/git-worktree.html"><code>git worktree</code></a> mantém árvores de trabalho ligadas ao mesmo repositório. Cada árvore tem working tree, <code>HEAD</code> e índice próprios, mas objetos, refs e partes da configuração continuam compartilhados. Isso isola arquivos; não isola serviços nem semântica. O laboratório centraliza Git com argv tokenizado, stage explícito e paths resolvidos sob uma pasta temporária marcada como pertencente ao lab.</p>
+</div>
+
+<div class="box net">
+<span class="lbl">Tradução .NET</span>
+<p>É como ter <code>C:\src\projeto-feature-a</code> e <code>C:\src\projeto-feature-b</code> apontando para o mesmo repositório TFS/Git — sem os 4 GB duplicados e sem o risco de os dois estarem na mesma branch por engano. Cada worker tem seu working directory; o merge acontece no git, onde conflito é visível e resolvível, e não no filesystem, onde a última escrita vence silenciosamente.</p>
+</div>
+
+<h3>4.5 Prática guiada · Worktrees descartáveis e conflito semântico (45 min)</h3>
+<p>Não execute esta prática no repositório do curso ou do trabalho. O teste cria um repositório Git real em <code>TemporaryDirectory</code>, grava um marcador de propriedade e só opera abaixo desse root.</p>
+
+<div class="step"><span class="n">1</span><strong>Modele duas unidades sem executá-las no repo principal.</strong> Em rascunho, descreva uma capability <code>stats.py</code> e outra <code>slug.py</code>, cada uma com testes e write set fechado. Depois declare contratos e recursos compartilhados; “não tocar além de <code>stats.py</code>/<code>test_stats.py</code>” protege arquivos, mas não prova independência semântica.
+<p><strong>Resultado esperado:</strong> duas specs com arquivos disjuntos, acompanhadas da análise de contratos e recursos. O lab mostra que interseção vazia de arquivos ainda nega paralelismo quando ambas dependem de <code>api-v1</code>.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Execute a fixture Git segura:</strong>
+<pre><code>uv run python -m unittest \
+  tests.test_workspace.WorkspaceTests.test_real_git_worktrees_merge_cleanly_and_cleanup_safely -v</code></pre>
+<p><strong>Resultado esperado:</strong> o lab inicializa branch <code>main</code> dentro do temp root, configura identidade local, adiciona somente <code>base.txt</code>, cria worktrees <code>producer</code>/<code>consumer</code> e confirma a listagem <code>--porcelain</code>. Nenhum <code>git add -A</code>, branch presumida ou path relativo externo é usado.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Leia o cenário antes de confiar no verde local.</strong>
+<pre><code># worker producer: producer.txt contém amount=120
+# worker consumer: consumer.txt contém limit=110
+# cada branch foi validada contra a base antiga</code></pre>
+<p><strong>Resultado esperado:</strong> os arquivos são disjuntos e os commits locais passam. Ainda assim, ambos dependem do mesmo contrato de quantidade. O relatório do worker deve subir arquivos, decisões, saída real e riscos; “o agente terminou” não é evidência.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Observe a integração:</strong>
+<pre><code>uv run python -m unittest \
+  tests.test_workspace.WorkspaceTests.test_clean_textual_merge_can_fail_semantic_gate -v</code></pre>
+<p><strong>Resultado esperado:</strong> os dois merges reais completam sem conflito textual. O teste lê <code>amount=120</code> e <code>limit=110</code> dos arquivos integrados; o gate global falha por incompatibilidade. Replaneje em waves: contrato primeiro, produtor/consumidor depois, integração por último.</p></div>
+
+<div class="step"><span class="n">5</span><strong>Prove o cleanup seguro:</strong>
+<pre><code>uv run python -m unittest \
+  tests.test_workspace.WorkspaceTests.test_dirty_worktree_cleanup_is_refused -v</code></pre>
+<p><strong>Resultado esperado:</strong> uma worktree com arquivo não rastreado não é removida. O lab não usa <code>--force</code>; valida marcador, root e status antes de remover somente fixtures próprias.</p></div>
+
+<div class="box warn">
+<span class="lbl">Multi-sessão com tmux — quando você verá isso</span>
+<p><strong>tmux</strong> é um multiplexador de terminal: uma tela dividida em painéis, cada um com um shell persistente que sobrevive à desconexão (equivalente mental: várias janelas do Windows Terminal que continuam rodando quando você fecha o notebook). Times que rodam 4+ agentes usam tmux para observá-los lado a lado. Não é pré-requisito do curso — dois terminais comuns bastaram aqui — mas você vai esbarrar no nome em todo post sobre "agent farm". Se quiser experimentar: <code>tmux</code>, <kbd class="kbd">Ctrl-b %</kbd> divide vertical, <kbd class="kbd">Ctrl-b setas</kbd> navega, <code>tmux attach</code> reconecta.</p>
+</div>
+
+<h3>4.6 Resolução de conflito entre features</h3>
+<p>Quando as specs <em>não</em> conseguem ser disjuntas (duas features precisam mexer no mesmo <code>router.py</code>), você tem três estratégias, em ordem de preferência:</p>
+<ol>
+<li><strong>Re-decompor:</strong> extrair a fundação compartilhada para uma wave anterior e manter as partes seguintes independentes quando isso reduzir risco total.</li>
+<li><strong>Contrato primeiro:</strong> estabilizar assinatura/schema e testes de compatibilidade na wave 1; mudanças aditivas reduzem algumas colisões, mas ainda exigem gate global.</li>
+<li><strong>Integrar sequencialmente:</strong> mergear uma unidade, atualizar a base da seguinte, resolver com ambas as specs e executar toda a suíte. O agente pode ajudar a propor resolução; o orquestrador revisa sem assumir que merge textual preservou semântica.</li>
+</ol>
+
+<div class="box ok">
+<span class="lbl">Síntese do bloco 4</span>
+<ul>
+<li>Paralelize quando o DAG, os contratos, os recursos e os read/write sets demonstrarem independência suficiente; use waves para fundações compartilhadas.</li>
+<li>Orquestrador decompõe e julga (contexto limpo); workers implementam (contexto descartável); relatórios compactos sobem.</li>
+<li>Worktrees isolam diretórios de trabalho, não banco, cache, porta, dependência, refs compartilhadas nem comportamento.</li>
+<li>Gate roda por worker E na integração — conflito semântico não aparece no git.</li>
+<li>Lei de Amdahl com agentes: o sequencial que limita tudo é a SUA revisão. Waves: fundação → paralelo → integração.</li>
+</ul>
+</div>
+</section>
+<!-- ============================================ BLOCO 5 -->
+<section id="b5">
+<h2>Bloco 5 · Mini-projeto: seu kit SDD e a spec do Capstone</h2>
+<p class="clock">00:00–00:45 construir as três skills + contract.md · 00:45–01:15 validador mecânico do kit · 01:15–01:45 especificar o Capstone com o kit · 01:45–02:00 revisão dos entregáveis</p>
+
+<h3>5.1 O que você vai construir</h3>
+<p>O mini-projeto amarra os quatro blocos: três Agent Skills portáteis, contrato canônico versionado, schema 2020-12, parser semântico, dois adapters e uma fatia do Capstone com handoff. A estrutura completa já existe no <code>lab/</code>; seu trabalho é entendê-la, quebrá-la de propósito e explicar por que cada gate decide o que decide.</p>
+
+<div class="step"><span class="n">1</span><strong>Escreva o <code>contract.md</code> — a definição mecânica de "pronto".</strong> Crie <code>docs/spec/contract.md</code> no repo de estudos. Ele é curto e brutal:
+<pre><code># Contrato de pronto (Definition of Done)
+
+Uma etapa de plano SÓ está concluída quando:
+1. Ruff format/lint, mypy estrito e unittest saem com código 0.
+2. Nenhum arquivo fora da lista declarada da etapa foi modificado
+   (`git status --porcelain` mostra apenas os arquivos esperados).
+3. O comportamento novo tem pelo menos um teste que FALHA sem a
+   mudança e PASSA com ela.
+4. A spec correspondente continua verdadeira (mudou comportamento
+   => mudou spec no mesmo commit).
+5. O commit segue o padrão do repo: inglês, imperativo, escopo curto.
+
+O que viola qualquer item volta como NÃO CONCLUÍDO, sem negociação.</code></pre>
+<p><strong>Resultado esperado:</strong> note que os itens 1–2 são verificáveis por máquina e os itens 3–5 por revisão rápida. Essa mistura é intencional — é a rubrica do harness (bloco 2, guardrail 5).</p></div>
+
+<div class="step"><span class="n">2</span><strong>Construa as três skills.</strong> Você já sabe criar skill (M00 bloco 2). A estrutura das três é a mesma; o que muda é o contrato de saída. Peça ao agente para criar e revise contra os blocos 1 e 2:
+<pre><code>Crie três skills no diretório portátil skills/:
+
+1. prd-writer — dado um problema descrito em linguagem natural,
+   produz prd.md com: Problema, Requisitos funcionais (RFn,
+   verificáveis), Requisitos não-funcionais (RNFn, com número:
+   latência, custo, segurança), Não-objetivos (mínimo 3), e
+   Critérios de aceitação (cada RF com comando/teste que o prova).
+   A skill DEVE recusar requisito não-verificável, respondendo
+   qual pergunta precisa ser respondida para torná-lo verificável.
+
+2. spec-writer — dado um prd.md, produz spec.md com: Decisões
+   técnicas (cada uma com alternativa rejeitada e porquê),
+   Contratos/Schemas, Restrições de camada, Estratégia de erro,
+   e Rastreabilidade (tabela RF -> seção da spec).
+
+3. plan-writer — dado prd.md + spec.md, produz plan.md com etapas
+   atômicas: objetivo, arquivos tocados (lista fechada), comando
+   de verificação, saída esperada. Nenhuma etapa > 30 min de
+   trabalho. A última etapa é sempre "rodar contract.md inteiro".</code></pre>
+<p><strong>Resultado esperado:</strong> três pastas em <code>skills/</code>, cada uma com <code>SKILL.md</code> válido segundo a <a href="https://agentskills.io/specification">Agent Skills Specification</a>. Configuração específica de produto, quando necessária, fica em adapter; não duplique validação de requisito dentro dele.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Compare o validador didático com o núcleo do lab.</strong> O exemplo abaixo ensina a ideia mínima; ele não é a implementação aprovada. O núcleo real combina <code>contracts/feature-contract.schema.json</code>, <code>contract.py</code>, rastreabilidade e casos negativos. JSON Schema valida estrutura expressável; invariantes de domínio continuam no parser/testes.
+
+<div class="box">
+<span class="lbl">Contexto · Python antes do M02 — o que você precisa saber para LER este arquivo</span>
+<ul>
+<li><code>from pathlib import Path</code> — importa a classe <code>Path</code>, o equivalente moderno de <code>System.IO.Path</code>+<code>FileInfo</code> juntos; <code>/</code> concatena caminhos (operador sobrecarregado, como <code>+</code> em strings C#).</li>
+<li><code>def nome(param: tipo) -> retorno:</code> — declaração de função com <em>type hints</em>: a assinatura C# <code>Retorno Nome(Tipo param)</code> reordenada. Os dois-pontos + indentação substituem as chaves.</li>
+<li><code>list[str]</code>, <code>dict[str, list[str]]</code> — <code>List&lt;string&gt;</code> e <code>Dictionary&lt;string, List&lt;string&gt;&gt;</code>.</li>
+<li><code>f"texto {variavel}"</code> — string interpolada; o <code>$"texto {variavel}"</code> do C# com a letra na frente.</li>
+<li><code>raise SystemExit(1)</code> — encerra o processo com exit code 1; <code>Environment.Exit(1)</code>.</li>
+<li><code>if __name__ == "__main__":</code> — idioma para "só execute isto se o arquivo for rodado diretamente" (não importado); o papel do <code>Main()</code>. O M02 explica o porquê estranho disso.</li>
+</ul>
+</div>
+
+<pre><code># tools/sdd_check.py
+"""Valida a estrutura mecânica dos artefatos SDD de uma feature.
+
+Uso:  uv run python tools/sdd_check.py docs/spec/001-changelog
+Exit: 0 = estrutura conforme; 1 = violação (mensagem indica qual).
+"""
+
+import sys
+from pathlib import Path
+
+# Seções obrigatórias por artefato. Alterar isto É alterar o processo:
+# faça via PR, nunca no meio de uma tarefa.
+REQUIRED: dict[str, list[str]] = {
+    "prd.md": [
+        "## Problema",
+        "## Requisitos funcionais",
+        "## Requisitos não-funcionais",
+        "## Não-objetivos",
+    ],
+    "spec.md": [
+        "## Decisões técnicas",
+        "## Contratos",
+        "## Restrições de camada",
+        "## Estratégia de erro",
+        "## Rastreabilidade",
+    ],
+    "plan.md": [
+        "## Etapas",
+        "verificação:",   # cada etapa declara seu comando de verificação
+        "esperado:",      # ... e a saída esperada
+    ],
+}
+
+
+def check_feature_dir(feature_dir: Path) -> list[str]:
+    """Devolve a lista de violações encontradas (vazia = conforme)."""
+    problems: list[str] = []
+    for file_name, sections in REQUIRED.items():
+        artifact = feature_dir / file_name
+        if not artifact.is_file():
+            problems.append(f"{file_name}: arquivo ausente em {feature_dir}")
+            continue
+        content = artifact.read_text(encoding="utf-8")
+        for section in sections:
+            if section not in content:
+                problems.append(f"{file_name}: seção obrigatória ausente: '{section}'")
+    return problems
+
+
+def main() -> None:
+    if len(sys.argv) != 2:
+        print("uso: uv run python tools/sdd_check.py <pasta-da-feature>")
+        raise SystemExit(2)
+
+    feature_dir = Path(sys.argv[1])
+    if not feature_dir.is_dir():
+        print(f"pasta não encontrada: {feature_dir}")
+        raise SystemExit(2)
+
+    problems = check_feature_dir(feature_dir)
+    if problems:
+        print(f"SDD CHECK FALHOU — {len(problems)} violação(ões):")
+        for p in problems:
+            print(f"  - {p}")
+        raise SystemExit(1)
+
+    print(f"SDD CHECK OK: {feature_dir} está estruturalmente conforme.")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+<p>Verifique e rode:</p>
+<pre><code>uv run mypy --strict tools/sdd_check.py
+uv run python tools/sdd_check.py docs/spec/001-changelog</code></pre>
+<p><strong>Resultado esperado:</strong> o exemplo evidencia uma limitação: conferir títulos não prova clareza, trace nem segurança de path. Rode a suíte real e compare as violações. Não ajuste uma spec só para satisfazer string matching; altere conscientemente contrato e oráculo quando a regra do processo mudar.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Valide a primeira fatia do Capstone.</strong> Inspecione <code>fixtures/capstone/</code> e rode:
+<pre><code>uv run python -m unittest tests.test_speckit_capstone -v
+uv run python -m sdd_lab adapters-demo examples/feature.valid.json</code></pre>
+<p><strong>Resultado esperado:</strong> a fatia liga intent → RF/RN → decisão → tarefa → teste; o handoff contém última verificação, próxima ação e pendências. Os adapters Agent Skills e harness genérico exibem o mesmo fingerprint SHA-256 do contrato canônico. O M04 ampliará design/ADRs; módulos posteriores implementam segurança, retrieval e operação deliberadamente fora desta fatia.</p></div>
+
+<div class="box warn">
+<span class="lbl">Workflow baixado é supply chain</span>
+<p>Templates, extensões e workflows podem executar processos com os privilégios do usuário. A documentação de <a href="https://github.github.com/spec-kit/reference/workflows.html">workflows do Spec Kit</a> alerta que não há capability sandbox e que <code>requires</code> é precondição declarativa, não contenção. O lab calcula SHA-256 do conteúdo revisado e libera apenas comandos allowlisted; qualquer byte alterado exige nova revisão. Isso ainda não substitui sandbox de SO, identidade ou proveniência de build.</p>
+</div>
+
+<div class="box net">
+<span class="lbl">Tradução .NET — o kit SDD é o seu tooling de sempre, com outro consumidor</span>
+<p>Nada do que você acabou de montar é estranho ao seu mundo, e vale nomear as equivalências antes do exercício, porque é o que te permite defender o método numa reunião:</p>
+<table>
+<thead><tr><th>Peça do kit</th><th>Equivalente que você já usa</th></tr></thead>
+<tbody>
+<tr><td><code>contract.md</code> (definition of done)</td><td>a <em>Definition of Done</em> do board + a política de branch que bloqueia o merge</td></tr>
+<tr><td>skills <code>prd/spec/plan-writer</code></td><td><em>templates</em> de item de trabalho e de RFC, e os <em>scaffolds</em> (<code>dotnet new</code>) que padronizam o começo</td></tr>
+<tr><td><code>tools/sdd_check.py</code></td><td>um analyzer/regra de build que reprova quando o artefato não segue o padrão</td></tr>
+<tr><td><code>docs/spec/NNN-feature/</code></td><td>a pasta de especificação por feature, versionada junto do código</td></tr>
+</tbody>
+</table>
+<p>A diferença — e é ela que muda o retorno do investimento — é o <strong>consumidor</strong>: template de RFC que ninguém lê é burocracia; o mesmo template lido integralmente por quem vai escrever o código é <em>alavanca</em>. Foi a economia que mudou, não a prática.</p>
+</div>
+
+<h3>5.2 Exercício sozinho (sem pistas até pedir)</h3>
+<p>Escolha uma capability pequena e não confidencial que você conhece do mundo .NET; recrie-a em fixture Python descartável. Produza intent, requisitos, design, plano, trace e casos negativos. Depois descreva o equivalente .NET — <code>ProcessStartInfo.ArgumentList</code>, Roslyn Analyzers, build e xUnit — sem trocar a linguagem canônica da prática. Meça tempo até feedback, iterações, retrabalho, escapes e tempo de revisão. Uma execução não prova ganho organizacional; ela cria baseline para repetições comparáveis.</p>
+
+<h3>5.3 Peça do produto</h3>
+<p><strong>Entrega para o Capstone:</strong> <code>docs/spec/</code> completo (contract, kit funcionando, PRD do produto, spec+plan da fatia 1) — é a fundação de tudo que os módulos M03+ constroem. Sem esta peça, o Capstone vira exatamente o chat-driven development que este módulo aposentou.</p>
+
+<!-- ============================================ CHECKPOINT -->
+<h2>Checkpoint M01</h2>
+<div class="box ok">
+<span class="lbl">Avaliação sem consulta — diga "Checkpoint M01" no chat</span>
+<p>Responda por cenário, uma questão por vez. A aprovação exige 80% nas questões, 100% dos controles de segurança e demonstração dos resultados reais do lab. Texto de LLM sem gate não conta como evidência.</p>
+<ul class="check">
+<li><strong>P1.</strong> No caso apresentado, diferencie problema, outcome, requisito, decisão técnica, tarefa e evidência.</li>
+<li><strong>P2.</strong> Classifique uma divergência entre spec, teste e produção em um dos quatro estados e diga qual evidência ainda falta.</li>
+<li><strong>P3.</strong> Explique por que exit code zero não prova atendimento do requisito e desenhe um controle negativo para o gate.</li>
+<li><strong>P4.</strong> Identifique a vulnerabilidade ao interpolar saída de agente em um shell step e proponha execução com menor privilégio.</li>
+<li><strong>P5.</strong> Modele <code>RUNNING → PAUSED → RUNNING</code> sem repetir efeito externo após retomada.</li>
+<li><strong>P6.</strong> Decida se duas tarefas podem executar em paralelo considerando arquivos, contrato, banco, lockfile e dependências.</li>
+<li><strong>P7.</strong> Explique por que merges Git limpos podem produzir falha semântica e em que wave o contrato compartilhado deve ser estabilizado.</li>
+<li><strong>P8.</strong> Compare o kit portátil com Spec Kit e 12-Factor Agents sem transformar implementação ou practitioner guidance em norma.</li>
+</ul>
+<h4>Entregáveis verificados (mostrar rodando)</h4>
+<ol>
+<li><code>validate</code> aceita a fixture válida e retorna 20 com diagnósticos na inválida sem mutá-la.</li>
+<li>Ruff, mypy estrito e 27 testes passam; o type error e o mutante conhecido falham como planejado.</li>
+<li><code>evidence/run.json</code> contém argv, versão real, duração, código e saída UTF-8.</li>
+<li>Pause/resume preserva <code>effect_id</code>; orçamento esgotado produz escalonamento/handoff.</li>
+<li>Fixture Git demonstra merges textualmente limpos, falha 120/110 e recusa cleanup dirty.</li>
+<li>Três skills e dois adapters compartilham o mesmo contrato; Capstone possui trace e handoff reproduzível.</li>
+</ol>
+</div>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>Intenção, requisitos, decisões, tarefas e evidência precisam sobreviver ao chat.<br>
+Spec, código, testes e produção são confrontados; drift pode existir em qualquer lado.<br>
+Controle forte combina oráculo, caso negativo, política e evidência — não apenas exit code.<br>
+Workflow retomável externaliza estado e torna efeitos idempotentes.<br>
+12-Factor Agents é lente de practitioner, não norma.<br>
+Paralelismo exige independência de arquivos, contratos, recursos e dependências.<br>
+Worktrees isolam diretórios; somente o gate global detecta certas incompatibilidades.<br>
+O método é portável entre Python, .NET e harnesses, mas Python 3.14 é a prática canônica do curso.</p>
+</div>
+
+</section>
+
+<!-- ============================================ DIAGNÓSTICO -->
+<section id="diagnostico">
+<h2>Diagnóstico rápido</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>O agente ignora regras combinadas há 20 mensagens.</td><td>A regra mora no chat e não há evidência quando é violada.</td><td>Mover para <code>AGENTS.md</code>/spec e, se inegociável, criar policy, teste ou aprovação; retomar do handoff.</td></tr>
+<tr><td>O código passa nos testes mas viola a arquitetura.</td><td>A spec não declara restrições de camada; teste não cobre arquitetura.</td><td>Declarar restrições na spec e acrescentar teste arquitetural — tema aprofundado no M10.</td></tr>
+<tr><td>O agente "aproveitou para melhorar" código que ninguém pediu.</td><td>PRD sem não-objetivos; etapa do plano sem lista fechada de arquivos.</td><td>Não-objetivos explícitos + item 2 do <code>contract.md</code> (Git limpo fora da lista).</td></tr>
+<tr><td>Uma correção reaparece como regressão na sessão seguinte.</td><td>Contrato, código, testes e handoff ficaram divergentes.</td><td>Classificar drift, corrigir a fonte real e reconciliar artefatos no mesmo change set; adicionar regressão executável.</td></tr>
+<tr><td>Agente em loop tentando consertar o mesmo teste.</td><td>Feedback cru ou incompleto e ausência de orçamento de iteração.</td><td>Devolver erro compacto e acionável; limitar tentativas e escalar para decisão humana.</td></tr>
+<tr><td>Merges de workers conflitam com frequência.</td><td>Write sets sobrepostos, contrato instável, recurso oculto compartilhado ou dependência ausente no DAG.</td><td>Re-decompor em waves; estabilizar contrato; declarar recursos e executar gates de worker e integração.</td></tr>
+<tr><td>Check verde em cada worktree, vermelho na integração.</td><td>Conflito semântico: dependências, convenções ou contratos implícitos divergentes.</td><td>Executar gate global; estabilizar schemas e contratos compartilhados na wave sequencial anterior.</td></tr>
+<tr><td>Spec de 30 páginas que ninguém — nem o agente — segue.</td><td>Spec-romance: volume esconde ambiguidade e estoura contexto.</td><td>Usar spec proporcional ao risco, fatias verticais e referências buscáveis sob demanda.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="fontes">
+<h2>Fontes e política de atualização</h2>
+<p>Fontes de alto risco são datadas e precisam ser revalidadas antes de alterar comandos ou afirmar capacidades. A classificação abaixo evita transformar escolha de produto em padrão universal.</p>
+<table>
+<thead><tr><th>Classe</th><th>Fonte primária</th><th>Uso correto</th></tr></thead>
+<tbody>
+<tr><td>Especificação formal</td><td><a href="https://json-schema.org/draft/2020-12">JSON Schema Draft 2020-12</a></td><td>estrutura de contratos; não cobre autorização nem toda semântica</td></tr>
+<tr><td>Especificação de interoperabilidade</td><td><a href="https://agentskills.io/specification">Agent Skills</a></td><td>skill portátil; campos experimentais exigem cautela</td></tr>
+<tr><td>Manual oficial</td><td><a href="https://git-scm.com/docs/git-worktree.html">Git worktree</a> e <a href="https://docs.python.org/3/library/subprocess.html">Python subprocess</a></td><td>semântica, comandos e segurança do processo</td></tr>
+<tr><td>Documentação de implementação</td><td><a href="https://github.github.com/spec-kit/">Spec Kit</a>, <a href="https://docs.astral.sh/ruff/configuration/">Ruff</a>, <a href="https://mypy.readthedocs.io/en/stable/">mypy</a>, <a href="https://docs.pytest.org/en/stable/reference/exit-codes.html">pytest</a> e <a href="https://docs.astral.sh/uv/">uv</a></td><td>verificar versão e comportamento; não generalizar produto</td></tr>
+<tr><td>Processo e supply chain</td><td><a href="https://csrc.nist.gov/pubs/sp/800/218/final">NIST SSDF 1.1</a> e <a href="https://slsa.dev/spec/v1.2/">SLSA 1.2</a></td><td>práticas seguras e proveniência; lockfile sozinho não basta</td></tr>
+<tr><td>Practitioner guidance</td><td><a href="https://github.com/humanlayer/12-factor-agents">12-Factor Agents</a></td><td>heurísticas com evidência e contrapontos; não norma</td></tr>
+</tbody>
+</table>
+<div class="danger"><strong>Janela de revalidação.</strong> Reconfirme documentação de produto, comandos, versões e integrações no máximo a cada 90 dias ou antes de qualquer regeneração. Especificações estáveis também devem ser verificadas quando houver revisão publicada.</div>
+<p class="small">Rastreabilidade editorial e técnica: consulte <code>RASTREABILIDADE.md</code>. Última revisão estrutural e didática: 15/08/2026; fontes técnicas verificadas em 14/08/2026.</p>
+</section>
+
+</main>
+</body>
+</html>

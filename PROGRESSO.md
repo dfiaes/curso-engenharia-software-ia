@@ -7,16 +7,16 @@ Método completo em [`docs/como-estudar.md`](docs/como-estudar.md).
 ## Estado atual
 
 - **Módulo:** M00 · Ferramental
-- **Bloco:** 1 de 3
-- **Última sessão:** 2026-08-10
-- **Próximo passo:** Completar bloco 2 de M00 (primitivas e índices de contexto)
-- **Travado em:** dinâmica do curso e navegação dos arquivos markdown
+- **Bloco:** 3 de 5
+- **Última sessão:** 2026-08-11
+- **Próximo passo:** estudar `modulos/M00-ferramental/bloco-4-mcp-e-hooks.html`, montar o servidor MCP, instalar os dois hooks e rodar os 4 experimentos
+- **Travado em:** —
 
 ## Placar
 
 | Módulo | Blocos | Checkpoint | Data |
 |---|---|---|---|
-| M00 Ferramental: as 5 primitivas | 1/3 | ☐ | 2026-08-10 |
+| M00 Ferramental: as 5 primitivas | 3/5 | ☐ | 2026-08-11 |
 | M01 Workflow IA-driven: SDD + Harness | 0/5 | ☐ | |
 | M02 Python vindo de C# | 0/6 | ☐ | |
 | M03 FastAPI, Postgres, Docker, CI | 0/8 | ☐ | |
@@ -31,7 +31,7 @@ Método completo em [`docs/como-estudar.md`](docs/como-estudar.md).
 | M12 Produção: segurança, billing, SRE com IA | 0/9 | ☐ | |
 | M13 Capstone | 0/20 | ☐ | |
 
-**Total:** 1 / 109 blocos (~218h)
+**Total:** 3 / 135 blocos (270h)
 **ADRs escritos:** 0 / 25
 **Posts publicados:** 0 / 14
 
@@ -50,6 +50,21 @@ Método completo em [`docs/como-estudar.md`](docs/como-estudar.md).
 ---
 
 ## Diário
+
+### 2026-08-11 · M00 · bloco 3
+**Fiz:** construí o subagente `cacador-de-gap` e rodei no projeto Polímero (.NET legado). Errei o caminho primeiro — coloquei em pasta, como skill; subagente é arquivo solto em `.claude/agents/nome.md`.
+**Entendi:** a linha `tools:` é fronteira de capacidade, não configuração. **Com** a lista restrita, ele pediu permissão só para Read/Grep/Glob. **Sem** a linha, herdou tudo — pediu autorização para ferramentas além das três, inclusive escrita e shell. Confirmado na prática: omitir `tools:` = privilégio total.
+**Também vi:** o agente principal sem restrição rodou 10 comandos de shell e escreveu um relatório de 376 linhas em disco. O subagente restrito não conseguiria — e isso é o comportamento correto quando o material lido é de terceiro.
+**Travei em:** o subagente não era reconhecido. Causa: convenção de pasta trocada.
+**Próximo passo:** bloco 4 — MCP e hooks.
+
+### 2026-08-10 · M00 · bloco 2
+**Fiz:** critiquei o `CLAUDE.md`; construí a skill `revisor-dotnet-para-python`; criei `pratica-1.py` como caso de teste proposital; rodei v1, analisei a falha, escrevi a v2.
+**Entendi:** instrução em prompt é pedido, não garantia. A v1 mandava "não reescreva" e o agente reescreveu tudo. O que fez a v2 funcionar: dar destino positivo para a ajuda, limite contável, repetir a restrição no final do arquivo, e — o mais forte — mostrar um exemplo do formato certo em vez de proibir o errado.
+**Também entendi:** instrução incondicional ("elogie o que estiver bom") em contexto onde a condição não existe **força o modelo a inventar**. Tornei condicional.
+**Travei em:** transformar as quatro observações em texto de skill. Destravou com direção sobre mecanismos, não com resposta pronta.
+**Resultado da v2:** 4/4 — sem código corrigido, sem elogio fabricado, sem o erro do `range()`, e suficiente para eu corrigir sozinho.
+**Próximo passo:** construir `.claude/agents/cacador-de-gap.md` e rodar nos projetos .NET próprios.
 
 ### Modelo (copie a cada bloco)
 
@@ -80,7 +95,9 @@ Método completo em [`docs/como-estudar.md`](docs/como-estudar.md).
 
 O que você errou na recuperação ativa e ainda não recuperou. Esvaziar é o objetivo.
 
-- [ ] Importância de ler os arquivos README dos módulos **antes** de iniciar os blocos
+- [ ] **Mecanismo mais forte para fazer o modelo obedecer** — respondi "negrito / instrução mandatória"; isso era a v1 que falhou. Certo: **mostrar um exemplo do formato correto**. O modelo imita formato melhor do que obedece regra. (bloco 2)
+- [ ] **Custo de externalizar** — respondi "não vejo custo". Certo: só ajuda se o agente **decidir buscar** na hora certa. É o modo de falha do RAG. (bloco 1)
+- [ ] **Por que `description` é a linha mais importante** — sabia o quê, não o porquê. É o **gatilho**: o modelo compara a tarefa contra ela para decidir carregar. (bloco 2) Importância de ler os arquivos README dos módulos **antes** de iniciar os blocos
 - [ ] Dinâmica de navegação entre `CLAUDE.md` → `docs/como-estudar.md` → `modulos/MXX/README.md`
 - [ ] Conceito de isolamento de contexto: trade-off entre espaço (tokens) e coerência
 

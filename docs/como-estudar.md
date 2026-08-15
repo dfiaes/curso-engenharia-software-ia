@@ -161,7 +161,7 @@ Ao fim de cada fase, eu te entrevisto como um tech lead entrevistaria: 30 minuto
 | Diga | Eu faço |
 |---|---|
 | `Voltei` | leio o PROGRESSO, resumo em 5 linhas, aqueço 15 min |
-| `Módulo X: explique Y` | teoria curta, analogia .NET, exemplo mínimo, pergunta de volta |
+| `Módulo X: explique Y` | explicação direta em Python, exemplo mínimo, sem pergunta socrática |
 | `Estou travado` | uma pista. Você pede o próximo degrau se precisar |
 | `Me dá a resposta` | entrego, sem sermão |
 | `Módulo X: revise meu código` | revisão de tech lead — aponto, não reescrevo |

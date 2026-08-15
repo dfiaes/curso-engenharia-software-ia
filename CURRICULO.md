@@ -1,10 +1,10 @@
-# Currículo — Engenheiro de IA full-stack (ênfase backend)
+# Currículo — Engenharia de Software e IA em Python
 
-**Aluno:** Denisson · **Origem:** sênior .NET · **Destino:** engenheiro de IA de produção
-**Carga total:** ~218h em 14 módulos · **Unidade de estudo:** bloco de 2h
-**Ritmo irregular:** semana de 4h = 2 blocos · semana de 20h = 10 blocos · previsão realista: **5 a 7 meses**
+**Aluno:** Denisson · **Origem:** engenharia de software sênior · **Destino:** engenheiro de software e sistemas de IA em produção
+**Carga total:** 304h em 15 módulos + 4 laboratórios transversais · **Unidade de estudo:** bloco de 2h
+**Ritmo irregular:** semana de 4h = 2 blocos · semana de 20h = 10 blocos · previsão realista: **7 a 10 meses**
 
-> **v3** — reestruturado após análise da grade do MBA da FullCycle e das três aulas abertas. O que mudou está em [`docs/comparativo-fullcycle.md`](docs/comparativo-fullcycle.md).
+> **v4 em estruturação** — núcleo ampliado para 128 blocos e 24 blocos transversais, totalizando 152 blocos/304h. O M02A teve o escopo aprovado em G0; sua implementação está em produção. Plano e status: [`docs/PLANO-ESTRUTURACAO-CURSO-2026.md`](docs/PLANO-ESTRUTURACAO-CURSO-2026.md) e [`docs/STATUS-IMPLEMENTACAO-CURSO.md`](docs/STATUS-IMPLEMENTACAO-CURSO.md).
 
 ---
 
@@ -18,7 +18,7 @@ Existem duas coisas diferentes acontecendo ao mesmo tempo, e confundi-las é o e
 | Onde | **M00 – M04** | **M05 – M13** |
 | Resultado | você entrega mais rápido | você constrói a próxima geração de produto |
 
-**Dominar Claude Code não é dominar engenharia de software com IA.** É metade. Este currículo tem as duas, nessa ordem, porque a primeira acelera o aprendizado da segunda.
+Dominar Claude Code, OpenCode, Codex ou qualquer outro harness não é dominar engenharia de software com IA. É a camada de superfície. Este currículo ensina a mecânica dos **harnesses de agente, engenharia de contexto, contratos e protocolos abertos** para que o conhecimento sobreviva à troca de ferramenta, framework, modelo ou provedor. As duas transformações existem nessa ordem porque a primeira acelera o aprendizado da segunda.
 
 A hierarquia completa de conceitos — LLM, prompt, tool, MCP, RAG, agent loop, agent, workflow, memory, harness, eval, observability — está em [`docs/mapa-conceitual.md`](docs/mapa-conceitual.md). **Leia junto com o M00.** É a defesa contra a sopa de siglas, e tem as três simplificações mais comuns do mercado corrigidas.
 
@@ -28,9 +28,10 @@ A hierarquia completa de conceitos — LLM, prompt, tool, MCP, RAG, agent loop, 
 
 | # | Módulo | Blocos | Entrega para o produto final |
 |---|--------|--------|------------------------------|
-| M00 | Ferramental de IA: as cinco primitivas | 3 | `CLAUDE.md`, skills e subagentes do repo |
+| M00 | Harness engineering e trabalho seguro com IA | 5 | instruções portáteis, skill, delegate, MCP e ação invocável |
 | M01 | **Workflow IA-driven: SDD e Harness Engineering** | 5 | O método com que você constrói tudo depois |
-| M02 | Python para quem vem de C# | 6 | Base de código tipada e testada |
+| M02 | Python 3.14 para engenharia profissional | 8 | Pacote instalável, tipado, concorrente e testado |
+| M02A | Engenharia de Software Sênior em 2026 | 15 | `work-intake`, decisões e evidência Python-first |
 | M03 | FastAPI, Postgres, Docker, CI | 8 | Esqueleto da API do produto |
 | M04 | **Design Docs com IA** | 4 | PRD, C4, ADRs e guidelines do produto |
 | M05 | LLM na prática: contrato, custo, gateway, cache | 7 | Camada de LLM do produto |
@@ -42,6 +43,10 @@ A hierarquia completa de conceitos — LLM, prompt, tool, MCP, RAG, agent loop, 
 | M11 | Fundamentos de ML/DL e modelos locais | 8 | Entendimento de custo, latência e limites |
 | M12 | Produção: segurança, multi-tenant, billing, SRE com IA | 9 | Produto vendável |
 | M13 | **Capstone** — o produto | 20 | Lançamento |
+| LT01 | Runtime, Linux e redes | 6 | Diagnóstico operacional da API |
+| LT02 | Sistemas distribuídos, dados e mensageria | 6 | Jobs recuperáveis sem efeitos duplicados |
+| LT03 | Cloud-native, IaC, GitOps e plataforma | 6 | Deploy declarativo com rollback |
+| LT04 | Qualidade avançada, supply chain e governança de IA | 6 | Dossiê verificável de release |
 
 **Os quatro módulos em negrito são os que o mercado mais valoriza e menos gente sabe.** M01 é produtividade real; M06 é o principal sinal de contratação em IA; M10 é o que quase nenhum curso cobre; M13 é a prova.
 
@@ -51,7 +56,7 @@ A hierarquia completa de conceitos — LLM, prompt, tool, MCP, RAG, agent loop, 
 
 ```
 1. Por que isso importa          (5 min de leitura)
-2. Conceito, com analogia .NET   (15 min)
+2. Conceito em Python; ponte com experiência anterior quando útil (15 min)
 3. Mini-projeto guiado           (1 a 2 blocos) — você digita, eu reviso
 4. Exercício sozinho             (1 bloco) — sem pista até você pedir
 5. Peça do produto final         (1 bloco) — vai para /capstone
@@ -64,11 +69,21 @@ O método de estudo — como começar, como retomar, como testar retenção — 
 
 # FASE 0 — Pilotar a IA
 
-## M00 · Ferramental de IA: as cinco primitivas · 3 blocos
+## M00 · Harness engineering e trabalho seguro com IA · 5 blocos
 
-Material completo em [`modulos/M00-ferramental/README.md`](modulos/M00-ferramental/README.md).
+**Material completo:** [`modulos/M00-ferramental/M00.html`](modulos/M00-ferramental/M00.html) — abra no navegador.
 
-**Resumo:** context engineering, workflow vs. agente, e as cinco primitivas (`CLAUDE.md`, skill, subagente, MCP, hook) com a regra **Skill = como fazer · MCP = acesso a · Subagente = delegar para**.
+Cinco blocos progressivos, todos com prática:
+
+| Bloco | Tema | Você constrói |
+|---|---|---|
+| 1 | modelo, harness, workflow, agente e task contract | contrato de uma tarefa real |
+| 2 | instruções, Agent Skills e seleção de contexto | núcleo portátil + adapters mínimos |
+| 3 | tools, delegates, permissões e conteúdo não confiável | policy executável de menor privilégio |
+| 4 | skills, interfaces slash, hooks e MCP | skill portátil, ação `finish-study-block` e capability MCP |
+| 5 | loop operacional, avaliação e checkpoint | scorecard, handoff e ADR de harness |
+
+Heurística inicial: **skill empacota conhecimento/procedimento; MCP conecta capabilities; delegate separa trabalho/contexto; slash é apenas uma interface de invocação do host**. Nas bordas, decida por autoridade, ciclo de vida e evidência.
 
 ---
 
@@ -100,34 +115,62 @@ Material completo em [`modulos/M00-ferramental/README.md`](modulos/M00-ferrament
 
 # FASE 1 — Base de engenharia
 
-## M02 · Python para quem vem de C# · 6 blocos
+## M02 · Python 3.14 para engenharia profissional · 8 blocos
 
-**Por que:** Python é a língua franca da IA em 2026. Mas Python escrito por dev C# sem orientação vira C# feio. O objetivo não é "aprender Python" — é escrever Python que um sênior de Python aprovaria.
+**Especificação:** [`docs/especificacoes/M02-ESPECIFICACAO.md`](docs/especificacoes/M02-ESPECIFICACAO.md) — G0–G6 verificados em 15/08/2026.
 
-**Conceitos (sempre em par com o equivalente .NET)**
+**Por que:** a transição sênior exige mais que sintaxe e analogias com C#. O aluno precisa entender runtime, imports, distribuição, typing gradual, trust boundaries, concorrência estruturada, paralelismo, recursos, diagnóstico e testes como um sistema coerente. Python é a implementação canônica; .NET é ponte comparativa, não molde.
 
-| Python | .NET | Pegadinha |
-|---|---|---|
-| `uv` | NuGet + SDK | resolve dependência **e** versão do Python |
-| type hints + `mypy --strict` | tipos do compilador | não são checados em runtime — só na CI |
-| Pydantic v2 | DTO + FluentValidation | valida **em runtime**, na fronteira |
-| `async`/`await` + `asyncio` | `Task`/`await` | **não há `Task.Run`**: um event loop só, e uma chamada bloqueante trava tudo |
-| `dataclass` / `NamedTuple` | `record` | |
-| `typing.Protocol` | interfaces | duck typing estrutural, sem declaração |
-| context manager (`with`) | `IDisposable`/`using` | |
-| gerador / `yield` | `IEnumerable`/`yield return` | |
-| `pytest` + fixtures | xUnit + DI de teste | fixtures são bem mais poderosas |
-| GIL | — | sem paralelismo real de CPU em threads; use processos |
+**Blocos:**
 
-**O erro que vai te custar caro:** código bloqueante dentro de rota async. A diferença entre 10 req/s e 500 req/s. Vamos medir, não só falar.
+1. projeto, ambientes, dependências, build e distribuição;
+2. modelo de objetos, imports, recursos e exceções;
+3. typing gradual, Protocols, genéricos e narrowing;
+4. Pydantic e contratos de trust boundary;
+5. `asyncio`, TaskGroup, cancelamento, timeout e backpressure;
+6. threads, processos, subinterpreters e free-threading;
+7. Python idiomático com logging, encoding, profiling e operação;
+8. testes unitários/integração/propriedade/mutação, CLI e entrega.
 
-**Mini-projeto:** CLI que lê um CSV bagunçado, valida com Pydantic, normaliza e emite resumo. Tipado, testado, `ruff` e `mypy` limpos.
+**Mini-projeto:** `csv-cleaner` Python 3.14 instalável por wheel, tipado, validado e testado. O núcleo não depende de internet; portabilidade Linux, CPython 3.14t, servidor local de diagnóstico e instalação limpa foram verificados.
 
-**Exercício:** versão async que consulta uma API para cada linha — primeiro errado (sequencial), medir; depois com `asyncio.gather`, medir de novo. Você vai ver o número.
+**Peça do produto:** pacote `core/` com domínio e ports sem dependência de framework web ou provedor de IA.
 
-**Peça do produto:** o pacote `core/` com modelos Pydantic base e configuração tipada.
+**Checkpoint:** executar gate completo, instalar o wheel fora do checkout, reproduzir duas falhas semeadas e defender uma decisão entre asyncio, thread, processo e interpreter com evidência do próprio ambiente.
 
-**Checkpoint:** explicar por que `time.sleep(1)` dentro de uma rota `async def` derruba a vazão da API inteira, e mostrar o benchmark que prova.
+---
+
+## M02A · Engenharia de Software Sênior em 2026 · 15 blocos
+
+**Especificação:** [`docs/especificacoes/M02A-ESPECIFICACAO.md`](docs/especificacoes/M02A-ESPECIFICACAO.md) — G0 aprovado em 15/08/2026; G1 em produção; G2–G6 pendentes.
+
+**Por que:** experiência em uma plataforma não substitui uma base atualizada de engenharia. Este módulo ensina julgamento, mudança segura e prova reproduzível antes de o curso entrar em web, sistemas distribuídos e sistemas de IA especializados.
+
+**Decisão de linguagem:** Python 3.14 é a implementação canônica. .NET 10 aparece somente em um corte vertical comparativo para explicitar diferenças de runtime, tipos, DI, cancelamento e distribuição; não constitui uma segunda trilha nem pré-requisito.
+
+**Blocos:**
+
+1. papel sênior, produto, risco, sistema sociotécnico e evidência;
+2. requisitos, atributos de qualidade, ADR/RFC e C4;
+3. modularidade, acoplamento, domínio e arquitetura hexagonal;
+4. contratos, compatibilidade, versionamento e interoperabilidade;
+5. dados, transações, idempotência, índices e evolução de schema;
+6. runtime, concorrência estruturada, cancelamento e backpressure;
+7. tempo, falhas parciais, consistência e limites de sistemas distribuídos;
+8. estratégia de testes, propriedades, mutação e testabilidade;
+9. secure SDLC, threat modeling, privacidade e trust boundaries de IA;
+10. OpenTelemetry, SLI/SLO, incidentes, runbooks e postmortems;
+11. complexidade, estruturas de dados, performance, capacidade, cache e custo;
+12. Git, modernização incremental de legado, entrega, flags e rollback;
+13. Python sênior aplicado a um produto instalável e operável;
+14. ponte comparativa .NET → Python, sem falsa equivalência;
+15. engenharia AI-native, evals, revisão, governança e liderança técnica.
+
+**Mini-projeto:** `work-intake`, monólito modular local de triagem assistida por IA. Uma política determinística decide; um `Advisor` agnóstico, offline e substituível apenas recomenda. SQLite, fila local limitada, schemas versionados, telemetria e evidence manifest permitem provocar e diagnosticar falhas sem antecipar FastAPI, PostgreSQL, Docker, broker ou cloud.
+
+**Peça do produto:** padrão reutilizável de domínio/ports/adapters, contratos, ADRs, threat model, SLO, runbook e gate de evidência para os módulos seguintes.
+
+**Checkpoint:** reconstruir o artefato Python, executar corpus e falhas negativas, demonstrar transação/isolamento/backpressure/cancelamento, trocar o advisor sem alterar domínio/política, reverter uma policy defeituosa e defender quais garantias continuam locais. O corte .NET compara somente a capability contratual.
 
 ---
 
@@ -152,6 +195,20 @@ Material completo em [`modulos/M00-ferramental/README.md`](modulos/M00-ferrament
 **Peça do produto:** esqueleto do backend do Capstone, no ar, vazio mas deployado.
 
 **Checkpoint:** derrubar o Postgres e mostrar que a API degrada com erro claro em vez de travar; explicar cada linha do Dockerfile.
+
+---
+
+## LT01 · Runtime, Linux e redes · 6 blocos
+
+**Especificação:** [`docs/especificacoes/LT01-ESPECIFICACAO.md`](docs/especificacoes/LT01-ESPECIFICACAO.md) — G0 aprovado.
+
+**Por que:** um sênior de produção precisa explicar o que acontece abaixo do framework. Este laboratório conecta Python e FastAPI a processos, recursos do sistema operacional, DNS, TCP, TLS e comportamento real de conexões.
+
+**Conceitos:** processos, threads, sinais, file descriptors, filesystem e permissões; DNS e estabelecimento de conexão; TCP, TLS, HTTP/1.1, HTTP/2 e HTTP/3; pools, timeouts, cancelamento, limites e saturação; diagnóstico orientado por logs, métricas, traces e ferramentas do sistema.
+
+**Laboratório:** receber uma API propositalmente degradada, reproduzir falhas de DNS, pool, timeout e esgotamento de recursos, formar hipóteses e corrigir a causa com evidência.
+
+**Checkpoint:** diagnosticar um incidente inédito sem tentativa aleatória e explicar o caminho completo da requisição do cliente ao processo Python.
 
 ---
 
@@ -216,6 +273,20 @@ Material completo em [`modulos/M00-ferramental/README.md`](modulos/M00-ferrament
 **Peça do produto:** `services/llm/` do Capstone.
 
 **Checkpoint:** dado um volume de 10.000 requests/mês, calcular o custo mensal e apresentar duas otimizações com o impacto em R$ de cada uma.
+
+---
+
+## LT02 · Sistemas distribuídos, dados e mensageria · 6 blocos
+
+**Especificação:** [`docs/especificacoes/LT02-ESPECIFICACAO.md`](docs/especificacoes/LT02-ESPECIFICACAO.md) — G0 aprovado.
+
+**Por que:** chamadas de IA são lentas, caras e sujeitas a falhas parciais. Sem filas, backpressure, idempotência durável e recuperação, um sistema que funciona em uma instância quebra quando recebe carga real.
+
+**Conceitos:** consistência, CAP e PACELC; produtor-consumidor, filas e streams; at-least-once e deduplicação; outbox/inbox, sagas e compensação; particionamento, replicação, backup, PITR e retenção; retry storms e limites de concorrência.
+
+**Laboratório:** implementar jobs de IA recuperáveis em múltiplos workers, interromper processos durante efeitos externos e provar que a retomada não duplica operações.
+
+**Checkpoint:** defender as garantias de entrega, consistência e recuperação com testes de concorrência e falha.
 
 ---
 
@@ -390,6 +461,20 @@ Material completo em [`modulos/M00-ferramental/README.md`](modulos/M00-ferrament
 
 ---
 
+## LT03 · Cloud-native, IaC, GitOps e plataforma · 6 blocos
+
+**Especificação:** [`docs/especificacoes/LT03-ESPECIFICACAO.md`](docs/especificacoes/LT03-ESPECIFICACAO.md) — G0 aprovado.
+
+**Por que:** publicar uma demo em PaaS não ensina a operar workloads críticos. O laboratório apresenta o modelo declarativo e as abstrações que o mercado usa para executar serviços e inferência com segurança e repetibilidade.
+
+**Conceitos:** OCI e Kubernetes; workloads, scheduling, networking, storage, configuração e secrets; requests/limits, probes, autoscaling e disruption; infraestrutura como código; GitOps, progressive delivery, rollback e platform engineering.
+
+**Laboratório:** promover o Capstone entre ambientes por configuração declarativa, provocar uma regressão, observar o impacto e executar rollback verificável.
+
+**Checkpoint:** explicar e demonstrar como configuração, artefato, infraestrutura, identidade e telemetria percorrem o caminho até produção.
+
+---
+
 # FASE 4 — Produção, teoria e produto
 
 ## M11 · Fundamentos de ML/DL e modelos locais · 8 blocos
@@ -421,6 +506,8 @@ Material completo em [`modulos/M00-ferramental/README.md`](modulos/M00-ferrament
 ---
 
 ## M12 · Produção: segurança, multi-tenant, billing, SRE com IA · 9 blocos
+
+**Especificação de regeneração:** [`docs/especificacoes/M12-ESPECIFICACAO.md`](docs/especificacoes/M12-ESPECIFICACAO.md) — G0 aprovado; o HTML atual permanece bloqueado até G1–G6.
 
 **Por que:** transformar projeto em produto. É o módulo que permite cobrar dinheiro.
 
@@ -454,7 +541,23 @@ Material completo em [`modulos/M00-ferramental/README.md`](modulos/M00-ferrament
 
 ---
 
+## LT04 · Qualidade avançada, supply chain e governança de IA · 6 blocos
+
+**Especificação:** [`docs/especificacoes/LT04-ESPECIFICACAO.md`](docs/especificacoes/LT04-ESPECIFICACAO.md) — G0 aprovado.
+
+**Por que:** qualidade em IA não termina em unit tests e evals offline. Um release precisa de compatibilidade, segurança de artefato, testes sob carga, estratégia de exposição gradual e decisão explícita de risco.
+
+**Conceitos:** contract, property-based, mutation, concurrency, load e chaos testing; shadow, canary e rollback; SBOM, proveniência, assinatura e SLSA; threat modeling; model/data/prompt cards; lineage, drift, human evaluation e risk register.
+
+**Laboratório:** produzir um pacote de release com artefato verificável, SBOM, resultados de eval, riscos aceitos, estratégia de rollout e decisão go/no-go.
+
+**Checkpoint:** conduzir uma release readiness review e rejeitar o próprio release quando a evidência não sustentar produção.
+
+---
+
 ## M13 · Capstone — lançar o produto · 20+ blocos
+
+**Especificação de regeneração:** [`docs/especificacoes/M13-ESPECIFICACAO.md`](docs/especificacoes/M13-ESPECIFICACAO.md) — G0 aprovado; o HTML atual permanece bloqueado até G1–G6.
 
 Detalhado em [`docs/projeto-final.md`](docs/projeto-final.md).
 
@@ -464,7 +567,7 @@ Não é "terminar o código". É: produto no ar, landing page, primeiro usuário
 
 ## Trilhas paralelas (rodam o curso inteiro, 30 min por vez)
 
-> **Elas não entram nos 109 blocos.** São fatias de 30 min encaixadas fora do bloco de estudo — a caminho do trabalho, no almoço, antes de dormir. Se você contá-las, a carga real fica em torno de 260h. O placar mede só o currículo.
+> **Elas não entram nos 152 blocos/304h.** São fatias de 30 min encaixadas fora do bloco de estudo. O placar mede somente o currículo verificável.
 
 ### ADR — Architecture Decision Record
 Toda decisão não-óbvia vira `docs/adr/NNNN-titulo.md`: contexto, opções, decisão, consequências. Fixa o aprendizado, produz prova de raciocínio arquitetural, e vira material bruto para system design em entrevista sem "estudar para a prova". **Meta: 25 ADRs.**
@@ -490,15 +593,9 @@ Extraído da FullCycle, e concordo com eles: no seu objetivo de triplicar renda,
 ### Cursos pagos — quando valem
 📘 **Reforço opcional, nunca pré-requisito.** Onde vale: M07/M08/M10 (RAG, agentes, LangGraph — o ecossistema muda rápido e curso bom acelera). Onde **não** vale: fundamentos de Python (você passa batido), system design genérico (a maioria é de anos atrás e não cobre banco vetorial nem streaming), "IA do zero". Peça critérios de triagem antes de comprar.
 
-### .NET — alavanca de curto prazo, não destino
+### Experiência anterior — ponte mental, não trilha
 
-Sua carreira está indo para Python e o ecossistema de IA. Isso está decidido e o currículo inteiro reflete essa decisão — nenhum módulo é ensinado em C#.
-
-Dito isso, uma nota factual que vale registrar e não perseguir: em abril de 2026 a Microsoft lançou o **Agent Framework 1.0** em GA, sucessor do Semantic Kernel e do AutoGen, com C# e Python de primeira classe, workflows em grafo, MCP e A2A. Ou seja, o mundo .NET tem um caminho legítimo para agentes.
-
-**O que fazer com essa informação:** nada agora. Se em algum momento você quiser converter aprendizado em capital político no emprego atual — uma demonstração, uma prova de conceito que te dê visibilidade — existe um atalho de ~2 blocos: portar o agente do M08 para C# usando esse framework. Não é conteúdo do curso, não entra no placar, e o valor pedagógico é secundário (reimplementar em outra API mostra o que era conceito e o que era sintaxe).
-
-Fora isso, .NET é o que paga sua conta enquanto você faz a transição. Não é o que você está construindo.
+O curso inteiro é ensinado e exercitado prioritariamente em Python. Conceitos conhecidos de outras plataformas podem ser citados para reduzir a carga cognitiva. A única prática .NET normativa é o corte comparativo limitado do M02A; APIs, frameworks e atualizações .NET não formam uma trilha própria, não substituem a implementação Python e não fazem parte do capstone.
 
 ### Trading — segundo plano
 Em espera por decisão sua. Continua valendo: protocolo demo com tamanho real, critérios objetivos de saída, journaling, Profit Factor. **Ponto de reencontro:** o journaling estruturado é dataset perfeito para o M06.

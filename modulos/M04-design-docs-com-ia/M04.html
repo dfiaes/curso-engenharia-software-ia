@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M04 · Design Docs com IA</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>M04 · Design Docs com IA</h1>
+<p class="meta"><span class="badge">MÓDULO 04</span> &nbsp; 4 blocos de 2h · pré-requisito: M03 · <strong>documentação deixou de ser burocracia e virou insumo de execução</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Documentação sempre foi a coisa que todo mundo concorda que é importante e ninguém faz. O que mudou em 2026 é o <em>consumidor</em>: existe agora um leitor que lê tudo, toda vez, literalmente — e age com base no que leu. Isso inverte a economia da documentação: escrever doc deixou de ser custo de manutenção e virou <strong>insumo direto de produtividade</strong>. Ao final deste módulo você vai (1) saber qual formato serve para quê, sem inventar templates; (2) desenhar arquitetura em C4 com Mermaid versionado no git; (3) escrever ADRs que sobrevivem a contraditório; (4) automatizar a <em>manutenção</em> das docs — a parte que sempre falha. E tem um bônus de peso: <strong>o seu Capstone gera documentação</strong>. Este módulo é onde você define o gabarito do que ele deve produzir. Não dá para construir um bom gerador de docs sem saber o que é uma boa doc.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não é aula de "escreva mais documentação". Doc a mais é tão nociva quanto doc a menos — cada página que existe é uma página que pode envelhecer, mentir e envenenar o contexto do agente. O critério do módulo inteiro é <strong>densidade de decisão por página</strong>: doc que registra decisão e restrição vale ouro; doc que descreve o que o código já diz é dívida com aparência de organização.</p>
+</div>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><strong>Bloco 1</strong> — Taxonomia: qual documento serve para quê, e docs como contexto de agente <em>(mapa)</em></li>
+<li><strong>Bloco 2</strong> — Diagrama como código: C4 e Mermaid, os cinco tipos que importam <em>(arquitetura visual)</em></li>
+<li><strong>Bloco 3</strong> — ADR e postmortem: registrar decisão e registrar falha <em>(governança)</em></li>
+<li><strong>Bloco 4</strong> — Manutenção automatizada: doc drift, linter e o agente que cobra no PR <em>(entrega)</em></li>
+</ol>
+</div>
+<!-- ============================================ BLOCO 1 -->
+<h2>Bloco 1 · Taxonomia: qual documento serve para quê</h2>
+<div class="clock">00:00–00:25 a inversão econômica da documentação &nbsp;|&nbsp; 00:25–01:05 o mapa dos formatos e o eixo Diátaxis &nbsp;|&nbsp; 01:05–01:35 docs como contexto: o que entra na janela &nbsp;|&nbsp; 01:35–02:00 prática: auditoria de docs</div>
+
+<h3>Por que isso importa</h3>
+<p>Você conhece o ciclo: alguém escreve um documento de 30 páginas no Confluence, ele é lido uma vez na reunião de kickoff, envelhece em três sprints, e a partir daí quem precisa da informação pergunta no Teams para o dev que estava lá. O documento não foi inútil por ser documento — foi inútil porque <strong>o custo de lê-lo era maior que o custo de perguntar</strong>. Essa era a economia real, e ela explica dez anos da sua vida profissional.</p>
+
+<p>Agora um segundo consumidor entrou na equação, com uma função de custo diferente:</p>
+
+<table>
+<thead><tr><th></th><th>Leitor humano</th><th>Leitor agente</th></tr></thead>
+<tbody>
+<tr><td>Custo de ler 30 páginas</td><td>alto — vai pular, escanear, perguntar ao colega</td><td>baixo — lê tudo, sempre, em segundos</td></tr>
+<tr><td>Custo de perguntar ao colega</td><td>baixo (e social)</td><td><strong>impossível</strong> — não tem colega</td></tr>
+<tr><td>Reação a doc desatualizada</td><td>desconfia ("isso aqui está velho")</td><td><strong>obedece com confiança</strong></td></tr>
+<tr><td>Reação a doc ausente</td><td>pergunta</td><td>inventa uma premissa plausível</td></tr>
+<tr><td>Memória entre sessões</td><td>lembra do projeto</td><td>zero (M00 bloco 1)</td></tr>
+</tbody>
+</table>
+
+<p>Leia a coluna da direita como especificação de requisito. Ela diz três coisas: doc <strong>ausente</strong> vira invenção; doc <strong>desatualizada</strong> vira erro confiante (pior que a ausente, porque não dispara desconfiança); e doc <strong>correta</strong> se paga toda vez que uma sessão nova começa. Essa é a inversão econômica: documentação virou o único mecanismo de memória de longo prazo de um colaborador que trabalha muito rápido e esquece tudo entre um dia e outro.</p>
+
+<div class="box net">
+<span class="lbl">Tradução .NET</span>
+<p>O paralelo mais próximo que você já viveu é o <strong>XML doc comment que alimenta o IntelliSense</strong>: o comentário deixa de ser prosa decorativa e passa a ser insumo funcional de ferramenta — quando está errado, o dev é ativamente enganado pelo tooltip. Agora imagine isso valendo para a arquitetura inteira do sistema, e para um "dev" que aceita o tooltip sem questionar. O segundo paralelo é o <code>.editorconfig</code>: um arquivo de texto, versionado, que muda o comportamento de todo mundo que abre o repositório, sem reunião. Doc de agente é isso em escala: <strong>configuração executável em prosa</strong>. E o destino físico muda junto — sai do Confluence/SharePoint e entra em <code>docs/</code>, versionado no mesmo commit do código que descreve. Doc fora do repositório é doc que o agente não lê e que o PR não obriga a atualizar.</p>
+</div>
+
+<h3>O mapa dos formatos</h3>
+<p>Existe uma sopa de siglas aqui e a maioria dos times inventa templates por não conhecer os que já existem. A tabela abaixo é o mapa completo — decore as cinco categorias, não os quinze nomes:</p>
+
+<table>
+<thead><tr><th>Categoria</th><th>Documentos</th><th>Pergunta que responde</th><th>Vida útil</th></tr></thead>
+<tbody>
+<tr><td><strong>Produto</strong></td><td>PRD, user story, epic (TRD/FRD em empresas mais formais)</td><td>o quê e por quê, para quem</td><td>longa; muda com o produto</td></tr>
+<tr><td><strong>Decisão</strong></td><td><strong>ADR</strong> (MADR), RFC</td><td>por que escolhemos X em vez de Y</td><td><strong>eterna</strong> — é registro histórico, nunca se edita o passado</td></tr>
+<tr><td><strong>Guidelines</strong></td><td><code>CLAUDE.md</code>/<code>AGENTS.md</code>, coding standards, contributing, testing policy</td><td>como se trabalha aqui</td><td>viva; muda por convenção</td></tr>
+<tr><td><strong>Arquitetura</strong></td><td>High Level Design, Feature Design Doc, <strong>C4</strong></td><td>como o sistema é montado</td><td>média; morre rápido se não for gerada</td></tr>
+<tr><td><strong>Operação</strong></td><td>runbook, playbook, <strong>postmortem</strong></td><td>o que fazer quando quebrar / o que aprendemos</td><td>runbook: viva. postmortem: eterna</td></tr>
+</tbody>
+</table>
+
+<div class="box">
+<span class="lbl">Contexto · Diátaxis — o eixo que resolve 80% das dúvidas de "onde escrevo isso?"</span>
+<p><strong>Diátaxis</strong> (diataxis.fr) é um framework de documentação que separa o material em quatro tipos por dois eixos: <em>estudo × trabalho</em> e <em>prático × teórico</em>. Dá <strong>tutorial</strong> (aprender fazendo — este material aqui), <strong>how-to</strong> (resolver uma tarefa específica — o runbook), <strong>reference</strong> (consultar o fato exato — OpenAPI, schema) e <strong>explanation</strong> (entender o porquê — ADR, design doc). A utilidade prática: quando um documento está confuso, quase sempre é porque misturou dois tipos — o tutorial que vira referência no meio, o how-to que tenta explicar a teoria. Separe e os dois ficam bons. Para agentes, o tipo mais valioso é <em>reference</em> (fatos exatos, baratos de verificar) seguido de <em>explanation</em> (o porquê, que impede o agente de "otimizar" uma decisão deliberada).</p>
+</div>
+
+<div class="box fund">
+<span class="lbl">Fundamento de engenharia · Escrever é pensar — e por que isso não é papo motivacional</span>
+<p>A frase de sempre é "writing is thinking", e ela costuma ser dita de um jeito vago. A versão útil, mecânica:</p>
+<ul>
+<li><strong>Prosa não aceita hand-waving.</strong> Numa conversa você diz "aí a gente sincroniza os dois lados" e todo mundo assente. Ao escrever, você é forçado a dizer <em>quem</em> sincroniza, <em>quando</em>, e <em>o que acontece se falhar no meio</em>. A ambiguidade que sobrevive à reunião morre no parágrafo. É por isso que a Amazon trocou slides por memorandos de 6 páginas: slide permite bullet vago; frase completa não.</li>
+<li><strong>Escrever é o teste de compreensão mais barato que existe.</strong> Se você não consegue escrever a decisão em cinco frases, você não a entendeu — descobriu isso por R$ 0, em vez de descobrir depois de duas semanas de implementação.</li>
+<li><strong>O leitor certo é o "você daqui a um ano" — e agora também o agente de amanhã.</strong> Ambos chegam sem o contexto que está óbvio na sua cabeça hoje. Escreva o pressuposto que parece bobo demais para escrever; é sempre ele que falta.</li>
+<li><strong>Corolário para a era da IA:</strong> pedir ao agente para escrever o documento por você e aceitar sem ler <em>pula justamente a parte que gera o valor</em>. O uso correto é inverso: você escreve o esqueleto do raciocínio (as decisões, as restrições, os não-objetivos) e o agente expande, formata, procura inconsistência e escreve as partes mecânicas. Pensamento é seu; datilografia é dele.</li>
+</ul>
+</div>
+
+<h3>Docs como contexto: o que entra na janela do agente</h3>
+<p>Aqui o M04 encontra o M00 bloco 1 e o M01 bloco 2. Nem toda documentação deve estar no contexto o tempo todo — janela é recurso escasso e caro (fator 3 do 12-Factor Agents, M01). A regra de três camadas que o curso adota:</p>
+
+<ol>
+<li><strong>Sempre carregado (o "system prompt do repositório"):</strong> <code>CLAUDE.md</code>/<code>AGENTS.md</code> — convenções, comandos, restrições invioláveis. Alvo: <strong>menos de 200 linhas</strong>. Se cresceu além disso, você está usando o arquivo errado; extraia para docs específicas e deixe ponteiros.</li>
+<li><strong>Carregado por tarefa (just-in-time):</strong> a spec da feature (M01), o ADR da área tocada, o C4 do container em questão. O agente busca quando precisa — e só acha se os nomes de arquivo forem previsíveis (por isso a convenção <code>NNN-nome/</code> do M01).</li>
+<li><strong>Nunca carregado, mas indispensável:</strong> histórico completo de ADRs, postmortems antigos, docs de produto. Vivem no repositório para consulta humana e para busca do agente — não entram por padrão.</li>
+</ol>
+
+<div class="box">
+<span class="lbl">Contexto · <code>AGENTS.md</code> — a convergência de 2026</span>
+<p>Em 2025–2026 o ecossistema convergiu para <strong><code>AGENTS.md</code></strong> como nome padrão do arquivo de instruções do repositório para agentes de código — um markdown na raiz com comandos de build/teste, convenções, estilo e restrições. Vários agentes o leem nativamente; o Claude Code usa <code>CLAUDE.md</code> com o mesmo papel. Padrão prático e agnóstico para o seu repositório: mantenha o conteúdo em <code>AGENTS.md</code> e faça o <code>CLAUDE.md</code> apontar para ele (uma linha: <code>Siga AGENTS.md</code>) — assim você não duplica regra, e trocar de harness (OpenCode, Codex, Cursor) custa zero. Um detalhe que o seu M00 já provou: a <em>description</em>/primeira seção é o que mais pesa; comece pelas restrições invioláveis, não pela descrição do projeto.</p>
+</div>
+
+<p>Um <code>AGENTS.md</code> que funciona é curto e ordenado por gravidade — invariantes primeiro, contexto depois:</p>
+<pre><code># AGENTS.md — Cartógrafo
+
+## Invariantes (violar = PR reprovado)
+- Toda tarefa termina com `bash check.sh` em código 0.
+- Nenhuma alteração fora dos arquivos declarados na etapa do plan.md.
+- Dinheiro em centavos (int) ou Decimal. Nunca float.
+- Segredo nunca em código, imagem ou log. Só em variável de ambiente.
+- Comportamento mudou => spec e doc mudam no MESMO commit.
+
+## Comandos
+- instalar: `uv sync --frozen`   · testes: `uv run pytest -q`
+- gate completo: `bash check.sh` · migração: `uv run alembic upgrade head`
+
+## Convenções
+- Python 3.12+, tipado, `mypy --strict`. Pydantic na fronteira, dataclass dentro.
+- Camadas: api -> services -> repositories -> core (cobrado por `lint-imports`).
+- Commits em inglês, imperativo: `M05: add per-request cost counter`.
+
+## Onde procurar contexto (NÃO carregue tudo; busque sob demanda)
+- decisões: docs/adr/            · arquitetura: capstone/docs/architecture.md
+- specs de feature: docs/spec/NNN-nome/   · o que o produto gera: capstone/docs/output-spec.md
+
+## Hierarquia da verdade
+teste que roda > código > doc gerada > doc escrita à mão.
+Se doc e código divergem, o código é a verdade e a doc é o bug.</code></pre>
+
+<div class="box warn">
+<span class="lbl">Context poisoning — o modo de falha específico deste módulo</span>
+<p>Doc desatualizada não é neutra, é <strong>ativamente danosa</strong>: o agente a trata como verdade e produz código coerente com um sistema que não existe mais. Pior, o erro é difícil de diagnosticar — o código "faz sentido", passa em review superficial, e só quebra na integração. A hierarquia de confiabilidade que você deve ensinar ao agente explicitamente (e que vale para você também): <strong>teste que roda &gt; código &gt; doc gerada &gt; doc escrita à mão</strong>. Quando doc e código divergem, o código é a verdade e a doc é o bug — e o bloco 4 automatiza essa cobrança.</p>
+</div>
+
+<h3>Prática guiada · Auditoria de docs (30 min)</h3>
+<p>Você vai avaliar a documentação que já existe — a do seu repositório de estudos e a do seu trabalho — com um critério objetivo em vez de sensação.</p>
+
+<div class="step"><span class="n">1</span><strong>Classifique o que existe.</strong> No <code>tutor-ia/</code>, liste os documentos (<code>ls docs/ *.md</code>) e monte uma tabela de 3 colunas: arquivo → categoria (das 5 da taxonomia) → última mudança real de conteúdo (<code>git log -1 --format=%ad -- caminho</code>).</p>
+<p><strong>Resultado esperado:</strong> uma tabela de ~8 linhas. Você vai descobrir que a maioria dos seus docs é da categoria "Produto/Guidelines" e que <strong>não existe nenhum ADR</strong> ainda (o placar do PROGRESSO.md diz 0/25) — o bloco 3 resolve isso.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Meça a densidade de decisão.</strong> Escolha o maior documento do seu <em>trabalho</em> (um design doc, um documento de arquitetura corporativo) e conte: quantos parágrafos registram uma <strong>decisão com justificativa ou uma restrição</strong>, e quantos descrevem o que o código/sistema faz?</p>
+<p><strong>Resultado esperado:</strong> tipicamente 10–20% de decisão e o resto de descrição. A parte descritiva é a que envelhece e mente; a parte de decisão é a que não pode ser recuperada do código nem por você nem pelo agente — <em>é impossível ler um código e saber o que foi considerado e rejeitado</em>. Guarde essa proporção: é o argumento para escrever menos e melhor.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Enxugue o seu <code>CLAUDE.md</code>.</strong> Conte as linhas (<code>wc -l CLAUDE.md</code>). Se passar de 200, identifique o que é <em>regra inviolável</em> (fica) e o que é <em>contexto de referência</em> (sai para <code>docs/</code> com um ponteiro).</p>
+<p><strong>Resultado esperado:</strong> um <code>CLAUDE.md</code> mais curto e mais duro, e a percepção de que boa parte do que estava lá era prosa que o agente lê em toda tarefa sem precisar. Se você já criou o <code>AGENTS.md</code>, faça o <code>CLAUDE.md</code> virar ponteiro. Commit: <code>M04: trim agent instructions to invariants only</code>.</p></div>
+
+<div class="box ok">
+<span class="lbl">Síntese do bloco 1</span>
+<ul>
+<li>A economia mudou: existe um leitor que lê tudo, obedece e não tem colega para perguntar. Doc ausente vira invenção; doc velha vira erro confiante.</li>
+<li>Cinco categorias: produto, decisão, guidelines, arquitetura, operação. Decisão e postmortem são eternos; arquitetura morre se não for gerada.</li>
+<li>Diátaxis separa tutorial/how-to/reference/explanation — doc confusa quase sempre misturou dois.</li>
+<li>Três camadas de contexto: sempre carregado (&lt;200 linhas), just-in-time por tarefa, e arquivo consultável.</li>
+<li>Hierarquia da verdade: teste &gt; código &gt; doc gerada &gt; doc escrita à mão.</li>
+<li>Densidade de decisão é o critério de qualidade: registre o que não dá para recuperar lendo o código.</li>
+</ul>
+</div>
+<!-- ============================================ BLOCO 2 -->
+<h2>Bloco 2 · Diagrama como código: C4 e Mermaid</h2>
+<div class="clock">00:00–00:25 níveis de abstração e o C4 &nbsp;|&nbsp; 00:25–01:00 Mermaid: os cinco diagramas que importam &nbsp;|&nbsp; 01:00–01:40 prática: C4 do Capstone &nbsp;|&nbsp; 01:40–02:00 diagrama gerado vs. desenhado</div>
+
+<h3>Por que isso importa</h3>
+<p>Todo sistema tem um diagrama de arquitetura. Ele está num PowerPoint de 2021, tem uma caixa chamada "Integrações" e ninguém sabe se ainda é verdade. O problema nunca foi desenhar — foi <strong>manter</strong>. Diagrama em ferramenta gráfica morre por três motivos mecânicos: não versiona (não dá para revisar num PR nem ver o diff), não é lido por agente (é imagem), e atualizar exige abrir outra ferramenta — atrito suficiente para nunca acontecer. Diagrama como <em>texto</em> resolve os três de uma vez.</p>
+
+<div class="box">
+<span class="lbl">Contexto · O que é Mermaid</span>
+<p><strong>Mermaid</strong> é uma linguagem de marcação para diagramas: você escreve texto (<code>A --&gt; B</code>) e uma biblioteca JavaScript renderiza SVG. O que a tornou padrão de fato é o suporte nativo em <strong>GitHub, GitLab, Azure DevOps e Obsidian</strong>: um bloco de código marcado como <code>mermaid</code> dentro de um <code>.md</code> aparece renderizado direto no navegador, sem plugin nem build. Consequências que interessam: o diagrama vive no mesmo commit do código, aparece no diff do PR em texto legível, e é lido/escrito por agentes com a mesma facilidade que qualquer código. Para renderizar localmente ou em CI: <code>mermaid-cli</code> (<code>npx @mermaid-js/mermaid-cli -i arquivo.mmd -o out.svg</code>).</p>
+</div>
+
+<div class="box net">
+<span class="lbl">Tradução .NET</span>
+<p>Substitui Visio/draw.io/Lucidchart pelo equivalente do que você já faz com infraestrutura: assim como IaC (Bicep/Terraform) matou o "servidor configurado à mão que ninguém sabe reproduzir", diagrama-como-código mata o "diagrama bonito que ninguém atualiza". E há um paralelo ainda mais direto no seu mundo: o Visual Studio gerava <em>class diagrams</em> a partir do código — sempre corretos, porque derivados. A regra que sai disso vale para o módulo inteiro e para o Capstone: <strong>o que pode ser derivado do código deve ser gerado; o que não pode ser derivado deve ser escrito à mão e revisado</strong>. Diagrama de classes: gere. Diagrama de contexto de negócio: escreva — nenhum parser sabe que aquele sistema externo é do time de compliance.</p>
+</div>
+
+<h3>C4: quatro níveis de zoom, não quatro diagramas obrigatórios</h3>
+<p>O <strong>C4 Model</strong> (Simon Brown) resolve o problema mais comum de diagrama de arquitetura: misturar níveis de abstração na mesma figura — a caixa "Kafka" ao lado da caixa "Cliente pessoa física" ao lado da classe <code>OrderValidator</code>. O C4 propõe uma hierarquia de zoom, como um mapa: você olha o país, depois o estado, depois a cidade, depois a rua.</p>
+
+<figure>
+<svg viewBox="0 0 740 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Os quatro níveis do C4">
+<g font-family="system-ui,sans-serif" font-size="12">
+<rect x="30" y="16" width="680" height="52" rx="8" fill="#fdf2ed" stroke="#b8532a" stroke-width="1.5"/>
+<text x="46" y="38" font-weight="700" fill="#b8532a">L1 · CONTEXTO</text>
+<text x="190" y="38" fill="#1c1b19">seu sistema como UMA caixa + usuários + sistemas externos</text>
+<text x="190" y="56" fill="#6b6862" font-size="11">público: qualquer pessoa, inclusive não-técnica · sempre vale a pena ter</text>
+
+<rect x="30" y="76" width="680" height="52" rx="8" fill="#eef1f8" stroke="#5b6ea8" stroke-width="1.5"/>
+<text x="46" y="98" font-weight="700" fill="#5b6ea8">L2 · CONTAINERS</text>
+<text x="190" y="98" fill="#1c1b19">unidades executáveis/implantáveis: API, worker, SPA, banco, fila</text>
+<text x="190" y="116" fill="#6b6862" font-size="11">público: qualquer dev · o mais útil no dia a dia — é o mapa do deploy</text>
+
+<rect x="30" y="136" width="680" height="52" rx="8" fill="#fdf8e8" stroke="#8a6d1f" stroke-width="1.5"/>
+<text x="46" y="158" font-weight="700" fill="#8a6d1f">L3 · COMPONENTES</text>
+<text x="190" y="158" fill="#1c1b19">blocos DENTRO de um container: routers, services, repositories</text>
+<text x="190" y="176" fill="#6b6862" font-size="11">público: quem mexe naquele container · só para os containers complexos</text>
+
+<rect x="30" y="196" width="680" height="52" rx="8" fill="#eef5f0" stroke="#3d6b4a" stroke-width="1.5"/>
+<text x="46" y="218" font-weight="700" fill="#3d6b4a">L4 · CÓDIGO</text>
+<text x="190" y="218" fill="#1c1b19">classes, funções, schemas — GERE, nunca desenhe à mão</text>
+<text x="190" y="236" fill="#6b6862" font-size="11">público: o compilador e o agente · o próprio Simon Brown desaconselha manter à mão</text>
+</g>
+</svg>
+<figcaption>C4: níveis de zoom. Na prática, 90% do valor está em L1 e L2 — e L4 é território do seu Capstone (gerado a partir do código).</figcaption>
+</figure>
+
+<div class="box fund">
+<span class="lbl">Fundamento de engenharia · Abstração e níveis — o vício que o C4 corrige</span>
+<p>Abstração não é "esconder detalhe", é <strong>escolher qual detalhe importa para a pergunta que está sendo feita</strong>. Um diagrama só funciona se todos os elementos nele estiverem no mesmo nível e servirem à mesma pergunta. Três consequências que valem além do C4:</p>
+<ul>
+<li><strong>Um diagrama, uma pergunta.</strong> "Como o dinheiro entra?" e "como o deploy acontece?" são dois diagramas, mesmo que as caixas se repitam. Diagrama que responde a tudo não responde a nada.</li>
+<li><strong>Sete elementos é o teto prático.</strong> Passou disso, ou você misturou níveis ou precisa de um nível acima agrupando. O mesmo limite que vale para uma tela, uma API e um menu.</li>
+<li><strong>Legenda não é opcional.</strong> Se a cor/forma significa algo, diga o que significa — a metade dos diagramas corporativos usa cor decorativa, e o leitor gasta energia procurando um padrão inexistente.</li>
+<li><strong>Isto é o mesmo raciocínio do M03 bloco 4:</strong> camadas de código são níveis de abstração impostos por import; níveis de C4 são a mesma disciplina aplicada à figura. Quando o diagrama fica confuso, quase sempre a arquitetura também está — o diagrama é sintoma, não causa.</li>
+</ul>
+</div>
+
+<h3>Mermaid: os cinco diagramas que você realmente vai usar</h3>
+<p>Mermaid tem dezenas de tipos; cinco cobrem tudo que este curso e o Capstone precisam. Para cada um: quando usar e a sintaxe mínima.</p>
+
+<h4>1. <code>flowchart</code> — fluxo de decisão e pipelines</h4>
+<pre><code class="language-text">```mermaid
+flowchart LR
+    A[Repositório .NET] --> B{Já indexado?}
+    B -- não --> C[Clonar e varrer arquivos]
+    B -- sim --> D[Ler índice do cache]
+    C --> E[Parse determinístico<br/>tree-sitter]
+    E --> F[(Postgres:<br/>grafo + pgvector)]
+    D --> F
+    F --> G[Agente investigador]
+```</code></pre>
+<p>O mais versátil e o que você mais vai escrever. <code>LR</code> = left-right, <code>TD</code> = top-down. Formas comunicam tipo: <code>[texto]</code> processo, <code>{texto}</code> decisão, <code>[(texto)]</code> banco, <code>([texto])</code> início/fim.</p>
+
+<h4>2. <code>sequenceDiagram</code> — quem chama quem, em que ordem</h4>
+<pre><code class="language-text">```mermaid
+sequenceDiagram
+    autonumber
+    participant U as Usuário
+    participant API as FastAPI
+    participant GW as LLM Gateway
+    participant DB as Postgres
+
+    U->>API: POST /analises {repo_url}
+    API->>DB: INSERT analise (status=pending)
+    API-->>U: 202 Accepted {id}
+    API->>GW: gerar resumo (async)
+    GW-->>API: resultado + tokens
+    API->>DB: UPDATE analise (status=done, custo)
+    Note over API,DB: transação curta:<br/>LLM fora dela (M03 b2)
+```</code></pre>
+<p>Insubstituível para <strong>fluxo assíncrono, timeout e ordem de operações</strong> — exatamente onde a prosa falha. <code>-&gt;&gt;</code> chamada, <code>--&gt;&gt;</code> resposta, <code>autonumber</code> numera as setas (ótimo para referenciar "passo 4" no texto).</p>
+
+<h4>3. <code>erDiagram</code> — modelo de dados</h4>
+<pre><code class="language-text">```mermaid
+erDiagram
+    TENANT ||--o{ PROJECT : possui
+    PROJECT ||--o{ ANALYSIS : gera
+    ANALYSIS ||--o{ FINDING : contem
+    PROJECT {
+        bigint id PK
+        bigint tenant_id FK
+        text repo_url
+        jsonb meta
+    }
+```</code></pre>
+<p>A cardinalidade é o valor aqui: <code>||--o{</code> = um-para-muitos (obrigatório→opcional). Serve para revisar modelagem <em>antes</em> da migration — e o agente lê isso melhor do que lê seu DDL espalhado.</p>
+
+<h4>4. <code>stateDiagram-v2</code> — máquina de estados</h4>
+<pre><code class="language-text">```mermaid
+stateDiagram-v2
+    [*] --> pending
+    pending --> running: worker pega da fila
+    running --> awaiting_review: achou risco alto
+    running --> done: sem intervenção
+    awaiting_review --> done: humano aprova
+    awaiting_review --> failed: humano rejeita
+    running --> failed: erro irrecuperável
+    failed --> pending: retry manual
+    done --> [*]
+```</code></pre>
+<p>Você vai usar muito no M10 (LangGraph é literalmente uma máquina de estados) e no M12 (estados de assinatura/cobrança). Regra: se uma coluna do seu banco se chama <code>status</code>, ela merece um <code>stateDiagram</code> — e as transições que <em>não</em> existem no diagrama devem ser proibidas no código.</p>
+
+<h4>5. <code>C4Context</code> / <code>C4Container</code> — a arquitetura</h4>
+<pre><code class="language-text">```mermaid
+C4Container
+    title Containers — Cartógrafo (Capstone)
+
+    Person(dev, "Dev / consultor", "Analisa um sistema legado")
+    System_Ext(repo, "Repositório Git", "Código .NET do cliente")
+    System_Ext(llm, "Provedor LLM", "Anthropic / OpenAI via gateway")
+
+    Container_Boundary(c1, "Cartógrafo") {
+        Container(api, "API", "Python/FastAPI", "REST + auth + billing")
+        Container(worker, "Worker de ingestão", "Python", "Clone, parse, indexação")
+        Container(mcp, "Servidor MCP", "Python/FastMCP", "Expõe o índice ao editor")
+        ContainerDb(db, "Postgres", "pgvector + AGE", "Grafo, embeddings, tenants")
+    }
+
+    Rel(dev, api, "Cria análise", "HTTPS")
+    Rel(api, db, "Lê/escreve", "asyncpg")
+    Rel(worker, repo, "Clona", "git")
+    Rel(worker, db, "Grava grafo e vetores")
+    Rel(worker, llm, "Resume e classifica", "HTTPS")
+    Rel(dev, mcp, "Pergunta de dentro do editor", "stdio")
+```</code></pre>
+
+<div class="box warn">
+<span class="lbl">Cuidado com o C4 do Mermaid — e a alternativa</span>
+<p>O suporte a C4 no Mermaid é oficialmente <strong>experimental</strong>: a documentação avisa que sintaxe e propriedades podem mudar, e faltam recursos (sprites, tags, links, legendas). Pior: <strong>o layout é manual</strong> — a posição depende da ordem das declarações, então diagramas médios saem embolados. Duas saídas honestas: (1) usar <code>C4Context</code>/<code>C4Container</code> mesmo assim, aceitando o visual imperfeito em troca de ficar tudo em Mermaid (o que este curso faz — vale mais estar no repo e renderizar no GitHub do que ser bonito); (2) escrever em <strong>Structurizr DSL</strong> (a ferramenta do próprio autor do C4, com layout automático e um modelo único que gera todos os níveis) e exportar. Para o Capstone, Mermaid basta. Se o diagrama ficar ilegível, é sinal de que ele tem elementos demais — volte ao teto de sete.</p>
+</div>
+
+<h3>Prática guiada · O C4 do Capstone (40 min)</h3>
+<p>Você vai produzir os diagramas que ficam em <code>capstone/docs/architecture.md</code> — e que o M13 vai cobrar.</p>
+
+<div class="step"><span class="n">1</span><strong>Escreva o L1 (contexto) à mão, sem IA.</strong> Uma caixa "Cartógrafo", os atores (dev/consultor, e o cliente dono do repositório se você quiser distinguir) e os sistemas externos (Git host, provedor de LLM, gateway de pagamento). Use <code>C4Context</code>.</p>
+<p><strong>Resultado esperado:</strong> ≤ 7 elementos, e você vai travar em pelo menos uma pergunta de produto ("o consultor analisa o repo do cliente, ou o cliente aponta o próprio repo?"). <strong>Travar aqui é o objetivo</strong>: essa dúvida é de produto, não de desenho, e ela vira uma linha no PRD (M01). Anote-a.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Gere o L2 (containers) com o agente, a partir do que já existe.</strong> Você já tem o esqueleto no ar (M03 bloco 8):
+<pre><code>Leia capstone/backend/ (estrutura de pastas, docker-compose.yml, fly.toml)
+e docs/spec/capstone/spec.md. Gere um diagrama Mermaid C4Container
+refletindo o que EXISTE hoje, e marque com o sufixo "(planejado)" no
+título de cada container que está na spec mas ainda não foi construído.
+Não invente containers.</code></pre>
+<p><strong>Resultado esperado:</strong> um diagrama onde API + Postgres estão reais e worker/MCP/gateway aparecem como planejados. Essa distinção "é × será" é o que salva o diagrama de virar ficção — e é uma instrução que você vai repetir sempre que pedir arquitetura a um agente.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Faça o sequenceDiagram do fluxo mais crítico:</strong> criar análise → responder 202 → processar em background → atualizar status. Inclua o caminho de falha (o LLM estourou timeout) — <em>diagrama que só mostra o caminho feliz é propaganda</em>.</p>
+<p><strong>Resultado esperado:</strong> um diagrama com pelo menos um <code>alt</code>/<code>Note</code> marcando o caminho de erro, e a percepção de onde falta decisão no seu desenho (o que acontece com a análise que falhou? retry automático? cobra o cliente?). Cada dúvida dessas é uma linha de spec ou um ADR.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Renderize e commite:</strong> junte os três em <code>capstone/docs/architecture.md</code> com um parágrafo de contexto antes de cada um (diagrama sem texto é rorschach), faça push e <strong>abra o arquivo no GitHub</strong>.</p>
+<p><strong>Resultado esperado:</strong> os três diagramas renderizados no navegador, direto do markdown, sem build. Se algum não renderizar, o GitHub mostra o erro de sintaxe na posição — corrija (erro comum: parênteses ou vírgula dentro de rótulo de nó sem aspas). Commit: <code>M04: add C4 and sequence diagrams for capstone</code>.</p></div>
+
+<div class="box ok">
+<span class="lbl">Síntese do bloco 2</span>
+<ul>
+<li>Diagrama morre por atrito de manutenção; como texto no repo ele versiona, entra no diff do PR e é lido por agente.</li>
+<li>C4 = níveis de zoom. L1 e L2 dão 90% do valor; L4 se GERA a partir do código (é o seu Capstone).</li>
+<li>Um diagrama, uma pergunta, ≤ 7 elementos, legenda quando a cor significa algo.</li>
+<li>Cinco tipos bastam: flowchart, sequence, ER, state, C4. Status no banco pede stateDiagram — e transição fora do diagrama deve ser proibida no código.</li>
+<li>C4 no Mermaid é experimental e de layout manual: aceite o visual imperfeito ou vá de Structurizr.</li>
+<li>Ao pedir arquitetura a um agente, exija a distinção "existe hoje × planejado". Sem isso o diagrama vira ficção.</li>
+</ul>
+</div>
+<!-- ============================================ BLOCO 3 -->
+<h2>Bloco 3 · ADR e postmortem: registrar decisão e registrar falha</h2>
+<div class="clock">00:00–00:30 o que é ADR e por que ele é imutável &nbsp;|&nbsp; 00:30–01:00 quando NÃO escrever ADR &nbsp;|&nbsp; 01:00–01:30 postmortem blameless &nbsp;|&nbsp; 01:30–02:00 prática: seu primeiro ADR real</div>
+
+<h3>Por que isso importa</h3>
+<p>Existe uma classe de informação que <strong>não pode ser recuperada lendo o código</strong>, por nenhum humano e por nenhum agente, por melhor que sejam: <em>o que foi considerado e rejeitado, e por quê</em>. O código mostra que você usou Postgres; não mostra que você avaliou Mongo, que a decisão foi por causa de uma exigência de transação que o time de compliance impôs, e que ela se torna revisável se essa exigência cair. Sem esse registro, três coisas acontecem, todas caras: a decisão é reaberta a cada seis meses pelo próximo dev; ninguém sabe se ainda é válida quando o contexto muda; e — novidade de 2026 — <strong>o agente "otimiza" a decisão deliberada</strong>, porque ele só vê o resultado e não a restrição que o produziu.</p>
+
+<div class="box">
+<span class="lbl">Contexto · ADR, MADR e RFC</span>
+<p><strong>ADR (Architecture Decision Record)</strong> é um arquivo curto de markdown que registra UMA decisão arquitetural: contexto, opções, escolha, consequências. Um por decisão, numerado sequencialmente (<code>docs/adr/0007-usar-pgvector.md</code>), acumulando um histórico navegável — o "log de commits das decisões". <strong>MADR</strong> (Markdown ADR, versão 4.0 desde 2024) é o template mais adotado, com front matter YAML e seções padronizadas. <strong>RFC</strong> é o parente maior: documento de proposta que circula para comentário <em>antes</em> da decisão, usado quando a mudança é grande e envolve várias pessoas. Fluxo comum em empresa: RFC para debater → ADR para registrar o que ficou decidido. No seu caso (aluno solo), você escreve só ADRs — e a meta do currículo é 25 deles.</p>
+</div>
+
+<div class="box net">
+<span class="lbl">Tradução .NET</span>
+<p>Você já viveu o substituto ruim disso: a <strong>ata de reunião de arquitetura</strong> num anexo do Outlook, ou o comentário <code>// NÃO trocar por X, quebra o job noturno — ver chamado 4471</code> perdido no meio de uma classe. O ADR é a versão estruturada e encontrável dos dois. E tem um paralelo formal exato que você conhece: um ADR é para arquitetura o que um <strong>registro de mudança em sistema regulado</strong> é para compliance — imutável, datado, com justificativa e rastreabilidade. A diferença é que aqui ele custa 15 minutos e cabe num PR.</p>
+</div>
+
+<h3>Anatomia: o template do repositório, e por que cada seção existe</h3>
+<p>O seu repositório já tem <code>docs/adr/0000-template.md</code>. Ele é uma variação enxuta do MADR, adaptada ao curso. Cada seção paga o seu espaço:</p>
+
+<table>
+<thead><tr><th>Seção</th><th>Existe para</th><th>O erro típico</th></tr></thead>
+<tbody>
+<tr><td><strong>Título</strong> (<code>NNNN-verbo-objeto</code>)</td><td>ser encontrável por busca daqui a um ano</td><td>título vago ("banco de dados") em vez de decisão ("usar pgvector em vez de Pinecone")</td></tr>
+<tr><td><strong>Status</strong> (proposta / aceita / substituída por NNNN)</td><td>dizer se ainda vale — sem apagar o histórico</td><td>editar o ADR velho quando muda de ideia. <strong>Nunca:</strong> escreve-se um NOVO ADR e marca-se o antigo como substituído</td></tr>
+<tr><td><strong>Contexto</strong></td><td>capturar as restrições do momento (prazo, custo, conhecimento, política)</td><td>escrever só a restrição técnica e omitir a política/prazo — que costuma ser a razão real</td></tr>
+<tr><td><strong>Opções consideradas</strong></td><td>provar que houve escolha, e dar o ponto de partida para reabrir</td><td>listar uma opção só (então não foi decisão, foi default) ou opções-palha que ninguém considerou de verdade</td></tr>
+<tr><td><strong>Decisão</strong> ("escolhi X <em>porque</em>")</td><td>a única linha que não pode faltar</td><td>"escolhi X" sem o porquê — isso é anotação, não ADR</td></tr>
+<tr><td><strong>Consequências</strong> (ganhei / aceitei como custo / o que me faria mudar)</td><td>honestidade: toda decisão tem preço; e o gatilho de revisão</td><td>listar só vantagens. ADR sem custo declarado é peça de marketing</td></tr>
+<tr><td><strong>Notas de produção</strong> (as 3 perguntas de sênior)</td><td>forçar concorrência, falha externa e rollback em toda decisão</td><td>pular — e descobrir na produção</td></tr>
+</tbody>
+</table>
+
+<p>Duas propriedades do ADR que costumam ser mal entendidas e valem destaque:</p>
+<ul>
+<li><strong>É imutável.</strong> ADR registra o que se decidiu <em>naquele contexto</em>. Mudou de ideia? Novo ADR, com <code>Substitui ADR-0007</code>, e o 0007 vira <code>substituída por ADR-0019</code>. O valor está justamente na sequência histórica — ela mostra a evolução do raciocínio do sistema. Editar o passado destrói exatamente o que se quer preservar.</li>
+<li><strong>É curto.</strong> Uma a duas páginas. Um ADR de dez páginas é um design doc mal etiquetado; separe: o design doc explica <em>como funciona</em>, o ADR registra <em>por que escolhemos assim</em>.</li>
+</ul>
+
+<p>O esqueleto de um ADR bom cabe numa tela — este é o formato que a prática do bloco vai preencher:</p>
+<pre><code># ADR 0001 — Postgres único para vetor e grafo
+
+- **Data:** 2026-08-14   · **Módulo:** M04   · **Status:** aceita
+
+## Contexto
+O Cartógrafo precisa de busca semântica (embeddings de código) E de
+travessia de grafo (chamadas, referências, dependências). Restrições
+reais: fundador solo, orçamento de infra próximo de zero no lançamento,
+e requisito de venda de "processamento local no cliente" — quanto menos
+peças para instalar, melhor.
+
+## Opções consideradas
+### A — Pinecone/Qdrant + Neo4j
+- A favor: cada peça é a melhor da categoria; escala melhor em volume alto.
+- Contra: três bancos para operar, backupear e instalar no cliente; dois
+  contratos de nuvem; custo fixo antes do primeiro cliente pagante.
+### B — Postgres + pgvector, sem grafo (relacional puro)
+- A favor: uma peça só, familiar.
+- Contra: consulta transitiva ("o que quebra se eu mudar isto?") vira CTE
+  recursiva ilegível e lenta — é a pergunta que MAIS vende o produto.
+### C — Postgres + pgvector + Apache AGE  (escolhida)
+- A favor: uma peça; transação abrangendo grafo e vetor; roda no cliente
+  com um container; RLS multi-tenant vale para tudo (M12).
+- Contra: AGE é menos maduro que Neo4j; Cypher parcial; menos gente sabe.
+
+## Decisão
+Escolhi **C** porque o gargalo do produto no primeiro ano é custo
+operacional e facilidade de instalação no cliente, não escala de vetores.
+Uma peça a menos vale mais que 20% de performance de busca.
+
+## Consequências
+**Ganhei:** operação de um banco só; transação única; instalação local trivial.
+**Perdi / aceitei como custo:** teto de escala menor; Cypher limitado no AGE;
+dependência de Postgres gerenciado que aceite extensões.
+**O que me faria mudar de ideia:** passar de ~5M de vetores por tenant, ou
+a primeira consulta de grafo que o AGE não expressar em tempo aceitável.
+
+## Notas de produção
+1. Concorrência: pool de 10; ingestão em worker separado, fora do request.
+2. Falha externa: banco fora = API responde 503 com detail claro (M03 b5).
+3. Versionamento: extensão fixada na imagem; migração de índice em
+   release_command, com downgrade escrito.</code></pre>
+
+<h3>Quando NÃO escrever ADR</h3>
+<p>Esta é a parte que a maioria dos times erra — adota ADR, escreve 40 no primeiro mês, ninguém lê, o hábito morre. O critério é <strong>custo de reverter</strong>:</p>
+
+<table>
+<thead><tr><th>Merece ADR</th><th>Não merece</th></tr></thead>
+<tbody>
+<tr><td>Escolha de banco, fila, provedor de LLM</td><td>Escolha de biblioteca de datas</td></tr>
+<tr><td>Fronteira de serviço, modelo de multi-tenancy</td><td>Nome de variável, estrutura de pasta interna</td></tr>
+<tr><td>Formato de contrato público / versionamento de API</td><td>Ordem dos parâmetros de uma função privada</td></tr>
+<tr><td>Estratégia de autenticação, de billing, de retenção de dados</td><td>Qual biblioteca de HTTP client (se são intercambiáveis)</td></tr>
+<tr><td><em>Rejeitar</em> algo óbvio ("por que NÃO usamos framework de agentes")</td><td>Aplicar o padrão default do time sem exceção</td></tr>
+</tbody>
+</table>
+
+<p>Teste de bolso: <strong>se reverter a decisão custa mais de uma semana de trabalho ou envolve migração de dado, é ADR.</strong> E há uma categoria subvalorizada — a última linha da tabela: registrar por que você <em>não</em> fez o óbvio. É o ADR que mais economiza tempo depois, porque a pergunta "por que vocês não usam X?" volta sempre; e, na era dos agentes, é ele que impede o assistente de "corrigir" sua escolha deliberada na próxima refatoração.</p>
+
+<div class="box warn">
+<span class="lbl">ADR gerado por IA — o uso certo e o errado</span>
+<p><strong>Errado:</strong> "escreva um ADR sobre usar Postgres". Sai um texto genérico, com prós e contras de blog, sem NENHUMA das suas restrições reais — e como ele parece um ADR, ninguém percebe que está vazio. <strong>Certo:</strong> você escreve as três coisas que só você sabe (o contexto real, as opções que estavam de fato na mesa, a razão da escolha, em bullets crus) e pede: <em>"transforme em ADR no formato do template, aponte inconsistências no meu raciocínio, e liste as consequências negativas que eu não mencionei"</em>. O valor do agente aqui é <strong>contraditório e completude</strong>, não redação. A pergunta que rende mais: <em>"que consequência negativa dessa decisão eu não listei?"</em></p>
+</div>
+
+<h3>Postmortem blameless: o ADR da falha</h3>
+<p>Se o ADR registra a decisão, o <strong>postmortem</strong> registra o que aconteceu quando a realidade discordou. A prática vem da cultura de SRE do Google, e a palavra <em>blameless</em> é o mecanismo central, não um enfeite de RH: <strong>quando a análise busca culpado, as pessoas escondem informação, e você perde a causa real</strong>. O sistema falhou porque permitia aquela ação — não porque o Fulano a executou. A pergunta certa nunca é "quem fez?", é "o que no sistema tornou isso possível, e o que impede que se repita?".</p>
+
+<p>A estrutura mínima de um postmortem útil:</p>
+<pre><code># Postmortem — <título do impacto, não da causa>
+
+- Data / duração / severidade
+- Impacto: quantos usuários, quais operações, quanto dinheiro ou tempo
+
+## Linha do tempo (UTC)
+14:02  deploy da v231 (release_command rodou a migration X)
+14:07  p95 sobe de 120ms para 3s — alerta não disparou (limiar em 5s)
+14:23  cliente abre chamado
+14:31  primeiro engenheiro olha o dashboard
+14:48  rollback para v230; latência normaliza em 2min
+
+## Causa raiz (técnica)
+A migration criou índice sem CONCURRENTLY e travou a tabela sob carga.
+
+## Fatores contribuintes
+- Limiar de alerta de latência calibrado para outra ordem de grandeza
+- Migration não foi testada com volume de produção
+- 24 minutos entre o sintoma e alguém olhar: não havia dono de plantão
+
+## O que funcionou
+- Rollback levou 2 minutos e foi ensaiado antes (M03 bloco 7)
+
+## Ações (com dono e prazo — a única parte que muda o futuro)
+- [ ] CI recusa migration com CREATE INDEX sem CONCURRENTLY — @denisson, 20/08
+- [ ] Alerta de p95 > 500ms por 3min — @denisson, 18/08
+- [ ] Rodar migrations contra dump de produção no staging — @denisson, 30/08</code></pre>
+
+<div class="box net">
+<span class="lbl">Tradução .NET</span>
+<p>Você já escreveu a versão corporativa disso: o <strong>RCA / relatório de incidente</strong> do processo de ITIL, com campo "responsável pelo erro" e um plano de ação que ninguém acompanhou. As diferenças são três e todas mecânicas: (1) <em>blameless</em> — não existe campo de culpado, porque ele é o que faz as pessoas omitirem o passo constrangedor da linha do tempo, que é justamente onde está a informação; (2) o documento mora no <strong>repositório</strong>, não num sistema de chamados, para ser lido junto com o código (e por agentes); (3) a saída obrigatória são <strong>ações com dono e prazo</strong>, e o postmortem só fecha quando elas fecham — o equivalente a tratar o plano de ação como issue, não como parágrafo.</p>
+</div>
+
+<p>Três detalhes que separam postmortem útil de teatro corporativo: <strong>linha do tempo com horário</strong> (é ela que revela o tempo de detecção, quase sempre o maior vilão); <strong>"o que funcionou"</strong> (senão o documento vira flagelação e ninguém quer escrever o próximo); e <strong>ações com dono e prazo</strong> — postmortem sem ação rastreável é redação. Note também que os "fatores contribuintes" são plural de propósito: incidente real quase nunca tem causa única, e insistir numa causa raiz singular é o jeito mais rápido de consertar a coisa errada.</p>
+
+<div class="box fund">
+<span class="lbl">Fundamento de engenharia · Cultura de falha, e por que ela vale mais com agentes</span>
+<ul>
+<li><strong>Human error é sintoma, não causa.</strong> Toda vez que a conclusão de uma análise é "o dev não devia ter feito isso", a análise parou cedo demais. A pergunta seguinte é: por que o sistema deixou? Onde estava o guardrail? (M01 bloco 2 — regra inegociável vira exit code.)</li>
+<li><strong>Segurança psicológica é infraestrutura.</strong> Time que pune erro produz relatório limpo e sistema podre. É o mesmo princípio de <em>fail fast</em> aplicado a pessoas: você quer que o problema apareça cedo e barulhento.</li>
+<li><strong>Com agentes, o volume de ações cresce e a atribuição fica difusa.</strong> "Quem fez" perde o pouco sentido que tinha — o agente executou, o prompt pediu, o guardrail deixou. Sobra a única pergunta que sempre serviu: <em>que mecanismo permitiu?</em> Postmortem de incidente com IA no meio é onde você vai descobrir que faltava aprovação humana (M12), limite de custo (M05) ou eval de regressão (M06).</li>
+</ul>
+</div>
+
+<h3>Prática guiada · Seu primeiro ADR real (35 min)</h3>
+
+<div class="step"><span class="n">1</span><strong>Escreva o ADR-0001 do Capstone, sobre uma decisão que você JÁ tomou:</strong> "usar Postgres com pgvector e AGE em vez de banco vetorial dedicado + banco de grafo". Preencha o template do repositório <strong>à mão</strong>, em bullets crus, sem IA. Nas opções, inclua as reais: Pinecone/Qdrant + Neo4j; só pgvector sem grafo; a escolhida.</p>
+<p><strong>Resultado esperado:</strong> <code>docs/adr/0001-postgres-unico-para-vetor-e-grafo.md</code> com a seção "Consequências" doendo — porque as tem: pgvector escala pior que vetorial dedicado em bilhões de vetores; AGE é menos maduro que Neo4j; você aceita isso em troca de operar UM banco. <strong>Se você não conseguiu escrever nenhum custo, a decisão não foi analisada.</strong></p></div>
+
+<div class="step"><span class="n">2</span><strong>Passe o contraditório no agente:</strong>
+<pre><code>Leia docs/adr/0001-*.md. Faça três coisas, nesta ordem:
+1) liste consequências negativas que eu NÃO mencionei;
+2) aponte onde meu "porque" é fraco ou circular;
+3) descreva o cenário concreto em que esta decisão se torna errada
+   (e diga se ele já está no meu "o que me faria mudar de ideia").
+Não reescreva o ADR.</code></pre>
+<p><strong>Resultado esperado:</strong> pelo menos duas consequências que você não tinha visto (candidatas: dificuldade de escalar leitura de vetores e OLTP no mesmo banco; extensões limitando a escolha de Postgres gerenciado). Incorpore as que forem verdadeiras — <em>você</em> decide quais, o agente não decide nada aqui.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Escreva o postmortem de um incidente real do seu trabalho</strong>, no formato acima, blameless. Um que você viveu e ainda lembra da linha do tempo. Anonimize nomes se for publicar; mantenha os horários.</p>
+<p><strong>Resultado esperado:</strong> um documento honesto de uma página com pelo menos três "fatores contribuintes" e três ações com prazo. Depois peça ao agente: <em>"critique este postmortem: onde ele culpa pessoa em vez de sistema, onde a causa raiz parou raso, e que ação está vaga demais para ser verificada?"</em>. É desconfortável — e é o exercício mais útil do módulo, porque a mesma lente vai avaliar o seu produto no M12.</p></div>
+
+<div class="box ok">
+<span class="lbl">Síntese do bloco 3</span>
+<ul>
+<li>ADR registra o que o código nunca pode contar: o que foi rejeitado e por quê — e impede o agente de "otimizar" decisão deliberada.</li>
+<li>Imutável: mudou de ideia, escreve outro e marca o antigo como substituído. O histórico é o produto.</li>
+<li>Critério: custo de reverter. Semana de trabalho ou migração de dado = ADR. E registre também os "por que NÃO fizemos o óbvio".</li>
+<li>"Escolhi X porque…" + consequências negativas declaradas. Sem custo listado, não houve análise.</li>
+<li>Postmortem: linha do tempo com horários, fatores contribuintes no plural, o que funcionou, e ações com dono e prazo.</li>
+<li>Blameless é mecanismo, não gentileza: culpa esconde informação. Com agentes, a única pergunta que resta é "que mecanismo permitiu?".</li>
+</ul>
+</div>
+<!-- ============================================ BLOCO 4 -->
+<h2>Bloco 4 · Manutenção automatizada: doc drift, linter e o agente que cobra no PR</h2>
+<div class="clock">00:00–00:20 doc drift: o problema real &nbsp;|&nbsp; 00:20–01:05 o linter de docs, linha a linha &nbsp;|&nbsp; 01:05–01:40 o agente revisor de PR &nbsp;|&nbsp; 01:40–02:00 mini-projeto e entrega</div>
+
+<h3>Por que isso importa</h3>
+<p>Gerar documentação nunca foi o problema — com IA, gerar ficou trivial. O problema é o <strong>segundo mês</strong>: o código andou, a doc não, e agora ela mente com a autoridade de um documento oficial. Isso tem nome, <strong>doc drift</strong>, e é o mecanismo pelo qual toda iniciativa de documentação morre. A solução é a mesma do M01 bloco 2, transposta: <em>se a regra é inegociável, ela vira mecanismo com exit code</em>. Você não vai pedir educadamente para o time (ou para o agente) atualizar a doc; você vai fazer o CI reprovar.</p>
+
+<div class="box net">
+<span class="lbl">Tradução .NET</span>
+<p>Você já usou a versão fraca disso: o <code>&lt;GenerateDocumentationFile&gt;</code> com warning CS1591 para membro público sem XML doc. Funcionava porque era <em>mecânico</em> — e falhava porque só cobrava <em>existência</em>, não <em>veracidade</em> (todo mundo escrevia <code>/// &lt;summary&gt;Gets the name.&lt;/summary&gt;</code> para calar o compilador). O que muda agora é que existe uma ferramenta capaz de julgar veracidade: um agente lendo o diff e a doc lado a lado. A arquitetura deste bloco é essa combinação: <strong>o linter determinístico cobra o que é verificável mecanicamente; o agente cobra o que exige semântica</strong> — e nunca o contrário, porque LLM para contar seções é caro, lento e não-determinístico.</p>
+</div>
+
+<h3>As quatro classes de doc drift (e quem cobra cada uma)</h3>
+<table>
+<thead><tr><th>Classe</th><th>Exemplo</th><th>Quem detecta</th></tr></thead>
+<tbody>
+<tr><td><strong>Referência quebrada</strong></td><td>doc cita <code>services/parser.py</code> que foi renomeado</td><td>linter (determinístico, barato)</td></tr>
+<tr><td><strong>Estrutura violada</strong></td><td>ADR sem seção "Decisão"; diagrama Mermaid com sintaxe inválida</td><td>linter</td></tr>
+<tr><td><strong>Obsolescência por idade</strong></td><td>doc do módulo X não muda há 6 meses, mas o código de X mudou 40 vezes</td><td>linter (heurística via git)</td></tr>
+<tr><td><strong>Contradição semântica</strong></td><td>doc diz "o worker processa em lote de 100"; o código agora usa 500</td><td><strong>agente</strong> (só ele lê os dois e compara)</td></tr>
+</tbody>
+</table>
+<p>As três primeiras são 80% dos casos e custam microssegundos. A quarta é a mais perigosa e a única que justifica gastar tokens.</p>
+
+<h3>O linter de docs</h3>
+<p>Código completo, tipado, sem dependência externa além da stdlib. Salve como <code>tools/doc_lint.py</code>:</p>
+
+<pre><code># tools/doc_lint.py
+"""Linter determinístico de documentação.
+
+Verifica, sem LLM:
+  1. referências a arquivos do repositório que não existem mais;
+  2. estrutura obrigatória dos ADRs;
+  3. blocos mermaid com cerca fechada e tipo de diagrama conhecido;
+  4. obsolescência: doc parada enquanto o código que ela descreve andou.
+
+Uso:  uv run python tools/doc_lint.py [--raiz .]
+Exit: 0 = limpo | 1 = violações encontradas
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import subprocess
+from dataclasses import dataclass
+from pathlib import Path
+
+# --- configuração do processo (mudar isto É mudar a política; faça via PR) ---
+
+ADR_SECOES_OBRIGATORIAS: tuple[str, ...] = (
+    "## Contexto",
+    "## Opções consideradas",
+    "## Decisão",
+    "## Consequências",
+)
+ADR_STATUS_VALIDOS: tuple[str, ...] = ("proposta", "aceita", "substituída por")
+
+MERMAID_TIPOS_CONHECIDOS: tuple[str, ...] = (
+    "flowchart", "graph", "sequenceDiagram", "classDiagram", "erDiagram",
+    "stateDiagram-v2", "C4Context", "C4Container", "C4Component",
+    "C4Dynamic", "C4Deployment", "gantt", "journey", "mindmap",
+)
+
+# doc que descreve código: se o código andou N+ commits e a doc zero, alerta
+LIMITE_COMMITS_SEM_DOC = 15
+
+# regex de caminho de arquivo citado em prosa ou crase: src/app/x.py, docs/y.md
+RE_CAMINHO = re.compile(r"[`(\s](((?:src|app|tools|capstone|docs|tests)/[\w./-]+\.\w{1,5}))[`)\s,.]")
+RE_MERMAID = re.compile(r"^```mermaid\s*$(.*?)^```\s*$", re.MULTILINE | re.DOTALL)
+
+
+@dataclass(frozen=True, slots=True)
+class Violacao:
+    arquivo: Path
+    regra: str
+    detalhe: str
+
+    def __str__(self) -> str:
+        return f"{self.arquivo}: [{self.regra}] {self.detalhe}"
+
+
+def _git(*args: str, cwd: Path) -> str:
+    """Roda git e devolve stdout (string vazia se o comando falhar)."""
+    resultado = subprocess.run(
+        ["git", *args], cwd=cwd, capture_output=True, text=True, check=False
+    )
+    return resultado.stdout.strip() if resultado.returncode == 0 else ""
+
+
+def checar_referencias(doc: Path, raiz: Path) -> list[Violacao]:
+    """Regra 1: todo caminho de arquivo citado na doc precisa existir."""
+    texto = doc.read_text(encoding="utf-8")
+    problemas: list[Violacao] = []
+    for match in RE_CAMINHO.finditer(texto):
+        caminho = match.group(1)
+        if not (raiz / caminho).exists():
+            problemas.append(
+                Violacao(doc, "ref-quebrada", f"cita '{caminho}', que não existe")
+            )
+    return problemas
+
+
+def checar_adr(doc: Path) -> list[Violacao]:
+    """Regra 2: ADR precisa das seções obrigatórias e de status válido."""
+    if doc.parent.name != "adr" or doc.name.startswith("0000-"):
+        return []
+    texto = doc.read_text(encoding="utf-8")
+    problemas = [
+        Violacao(doc, "adr-estrutura", f"seção obrigatória ausente: '{secao}'")
+        for secao in ADR_SECOES_OBRIGATORIAS
+        if secao not in texto
+    ]
+    if not any(status in texto.lower() for status in ADR_STATUS_VALIDOS):
+        problemas.append(
+            Violacao(doc, "adr-status", f"status ausente ou inválido (use {ADR_STATUS_VALIDOS})")
+        )
+    # a linha que importa: decisão sem justificativa é anotação
+    if "## Decisão" in texto:
+        corpo = texto.split("## Decisão", 1)[1].split("##", 1)[0]
+        if "porque" not in corpo.lower() and "por que" not in corpo.lower():
+            problemas.append(
+                Violacao(doc, "adr-sem-porque", "seção Decisão não contém um 'porque'")
+            )
+    return problemas
+
+
+def checar_mermaid(doc: Path) -> list[Violacao]:
+    """Regra 3: bloco mermaid precisa declarar um tipo de diagrama conhecido."""
+    texto = doc.read_text(encoding="utf-8")
+    problemas: list[Violacao] = []
+    if texto.count("```mermaid") != len(RE_MERMAID.findall(texto)):
+        problemas.append(Violacao(doc, "mermaid-cerca", "bloco ```mermaid sem fechamento"))
+    for i, bloco in enumerate(RE_MERMAID.findall(texto), start=1):
+        primeira = next((l.strip() for l in bloco.splitlines() if l.strip()), "")
+        if not primeira.startswith(MERMAID_TIPOS_CONHECIDOS):
+            problemas.append(
+                Violacao(doc, "mermaid-tipo", f"bloco {i}: tipo desconhecido em '{primeira[:40]}'")
+            )
+    return problemas
+
+
+def checar_obsolescencia(doc: Path, raiz: Path, codigo: str) -> list[Violacao]:
+    """Regra 4: doc parada enquanto o código que ela descreve andou muito.
+
+    'codigo' é o diretório que a doc documenta (convenção: front matter
+    `documenta: src/app/services` ou o diretório irmão da doc).
+    """
+    ultimo_doc = _git("log", "-1", "--format=%H", "--", str(doc), cwd=raiz)
+    if not ultimo_doc:
+        return []
+    commits_depois = _git(
+        "rev-list", "--count", f"{ultimo_doc}..HEAD", "--", codigo, cwd=raiz
+    )
+    if commits_depois.isdigit() and int(commits_depois) >= LIMITE_COMMITS_SEM_DOC:
+        return [
+            Violacao(
+                doc,
+                "obsoleta",
+                f"'{codigo}' mudou em {commits_depois} commits desde a última "
+                f"atualização desta doc (limite: {LIMITE_COMMITS_SEM_DOC})",
+            )
+        ]
+    return []
+
+
+def _documenta(doc: Path) -> str | None:
+    """Lê o front matter YAML procurando a chave 'documenta:'."""
+    texto = doc.read_text(encoding="utf-8")
+    if not texto.startswith("---"):
+        return None
+    frente = texto.split("---", 2)[1]
+    for linha in frente.splitlines():
+        if linha.strip().startswith("documenta:"):
+            return linha.split(":", 1)[1].strip()
+    return None
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Linter de documentação")
+    parser.add_argument("--raiz", type=Path, default=Path("."))
+    args = parser.parse_args()
+    raiz: Path = args.raiz.resolve()
+
+    docs = sorted(p for p in raiz.rglob("*.md") if ".venv" not in p.parts)
+    violacoes: list[Violacao] = []
+    for doc in docs:
+        violacoes += checar_referencias(doc, raiz)
+        violacoes += checar_adr(doc)
+        violacoes += checar_mermaid(doc)
+        if (alvo := _documenta(doc)) is not None:
+            violacoes += checar_obsolescencia(doc, raiz, alvo)
+
+    print(f"doc_lint: {len(docs)} documentos analisados")
+    for v in violacoes:
+        print(f"  {v}")
+    if violacoes:
+        print(f"DOC LINT FALHOU — {len(violacoes)} violação(ões)")
+        raise SystemExit(1)
+    print("DOC LINT OK")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+
+<div class="box">
+<span class="lbl">Contexto · Python novo neste código (você viu o resto no M02)</span>
+<ul>
+<li><code>from __future__ import annotations</code> — faz as anotações de tipo serem avaliadas preguiçosamente; evita erro ao usar <code>Path | None</code> em versões mais antigas e acelera import. Idioma padrão em ferramentas.</li>
+<li><code>subprocess.run([...], capture_output=True, text=True, check=False)</code> — o <code>Process.Start</code> do C# com redirect de stdout. <code>check=False</code> = não levanta exceção em exit code ≠ 0 (queremos tratar nós mesmos).</li>
+<li><code>tuple[str, ...]</code> — tupla imutável de tamanho variável. Para constante de configuração, tupla &gt; lista (não dá para alguém dar <code>append</code> por engano).</li>
+<li><code>str.startswith(tupla)</code> — aceita várias opções de uma vez; equivale a um <code>Any(x =&gt; s.StartsWith(x))</code>.</li>
+<li><code>if (alvo := _documenta(doc)) is not None:</code> — o operador <em>walrus</em> <code>:=</code> atribui dentro da condição, como <code>if (var x = F()) != null</code> em C#.</li>
+<li><code>Path.rglob("*.md")</code> — busca recursiva; <code>Directory.EnumerateFiles(..., SearchOption.AllDirectories)</code>.</li>
+</ul>
+</div>
+
+<h3>O agente revisor de PR — a camada semântica</h3>
+<p>O linter não sabe que "lote de 100" virou 500. Isso exige ler o diff e a doc juntos. A implementação é uma <em>skill</em> (M00 bloco 2) + um job de CI (M03 bloco 7) — e o ponto de design importante: <strong>o agente não escreve a doc, ele acusa a divergência</strong>. Escrever mudança de doc sem revisão humana é como deixar o agente commitar direto na main.</p>
+
+<pre><code># .github/workflows/doc-drift.yml
+name: doc-drift
+on: pull_request
+
+jobs:
+  lint-deterministico:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }        # precisa do histórico para a regra de obsolescência
+      - uses: astral-sh/setup-uv@v4
+      - run: uv run python tools/doc_lint.py
+
+  revisao-semantica:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write              # para comentar no PR
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Gerar diff da PR
+        run: git diff origin/${{ github.base_ref }}...HEAD -- '*.py' > /tmp/diff.patch
+      - name: Perguntar ao agente
+        run: |
+          # o comando exato depende do harness (claude/codex/opencode);
+          # o que importa é o CONTRATO do prompt, abaixo.
+          cat prompts/doc-drift.md /tmp/diff.patch | seu-agente-cli --output /tmp/parecer.md
+      - name: Comentar no PR
+        run: gh pr comment ${{ github.event.number }} --body-file /tmp/parecer.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}</code></pre>
+
+<p>E o prompt, que é o artefato de verdade (versionado, como manda o fator 2 do M01) — <code>prompts/doc-drift.md</code>:</p>
+<pre><code>Você é um revisor de documentação. Recebe um diff de código e tem
+acesso ao diretório docs/.
+
+Tarefa: encontrar afirmações em docs/ que o diff torna FALSAS.
+
+Regras:
+- Reporte apenas contradições factuais verificáveis (número, nome de
+  arquivo, endpoint, comportamento descrito). NÃO reporte estilo,
+  oportunidades de melhoria, nem doc ausente.
+- Para cada achado: arquivo:linha da doc, a frase que ficou falsa, e
+  a linha do diff que a contradiz.
+- Se nada ficou falso, responda exatamente: "Sem divergências."
+- Máximo de 5 achados, ordenados por gravidade.
+- NÃO edite nenhum arquivo.</code></pre>
+
+<div class="box warn">
+<span class="lbl">Por que essas restrições no prompt</span>
+<p>Cada linha ali existe por um modo de falha: sem "apenas contradições factuais", o agente vira gerador de sugestões e o time aprende a ignorar o comentário (a morte de todo bot de PR); sem "máximo de 5", ele lista 30 achados e vira ruído; sem "responda exatamente 'Sem divergências'", você não consegue detectar mecanicamente o caso limpo; sem "não edite", ele começa a mexer nos seus arquivos. <strong>Um bot de PR barulhento é pior que nenhum</strong>: ele treina as pessoas a clicar em "resolve" sem ler — e aí quando o achado é real ninguém vê.</p>
+</div>
+
+<h3>Mini-projeto guiado · A suíte de docs do Capstone (45 min)</h3>
+<p>Aqui as quatro partes do módulo viram entrega — e o gabarito do que o seu produto deve gerar.</p>
+
+<div class="step"><span class="n">1</span><strong>Monte a estrutura</strong> em <code>capstone/docs/</code>: <code>prd.md</code> (do M01, promovido a documento de produto completo), <code>architecture.md</code> (os diagramas do bloco 2), <code>adr/</code> (com o 0001 do bloco 3), <code>runbook.md</code> (o que fazer quando a ingestão falha — você já sabe os modos de falha do M03) e <code>AGENTS.md</code> na raiz.</p>
+<p>O front matter que liga a doc ao código que ela descreve — é ele que ativa a regra de obsolescência:</p>
+<pre><code>---
+titulo: Arquitetura do Cartógrafo
+documenta: capstone/backend/src/app
+revisado_em: 2026-08-14
+---
+
+# Arquitetura
+
+Contexto em um parágrafo antes de cada diagrama. Diagrama sem texto é
+rorschach: cada leitor enxerga uma arquitetura diferente.
+
+## L1 · Contexto
+```mermaid
+C4Context
+...
+```</code></pre>
+<p>E o runbook, que é o documento que mais salva madrugada — formato "sintoma → o que fazer", nunca prosa:</p>
+<pre><code># Runbook — ingestão de repositório
+
+## Sintoma: análise presa em `running` há mais de 30 min
+1. `flyctl logs -a cartografo | grep <analysis_id>`
+2. Se última linha for `cloning`: repo grande demais (limite: 2 GB).
+   Ação: marcar como `failed` com motivo `repo_too_large`; NÃO cobrar.
+   `uv run python -m app.ops fail-analysis <id> --reason repo_too_large`
+3. Se última linha for `llm_call`: provedor pendurado.
+   Ação: verificar status do provedor; o fallback deveria ter agido (M05).
+   Se não agiu, é bug — abrir issue com o trace id.
+4. Em qualquer caso: a análise é idempotente, reprocessar é seguro.
+   `uv run python -m app.ops retry-analysis <id>`
+
+## Sintoma: fila crescendo, workers ociosos
+...</code></pre>
+<p><strong>Resultado esperado:</strong> cinco documentos, nenhum com mais de duas páginas, cada um com front matter YAML declarando <code>documenta:</code> quando descreve um diretório de código. Repare no runbook: cada passo é um <strong>comando executável</strong>, não uma instrução para pensar — às 3h da manhã ninguém pensa bem.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Instale o linter e prove que ele morde:</strong> salve o <code>tools/doc_lint.py</code>, rode <code>uv run mypy --strict tools/doc_lint.py</code> e depois <code>uv run python tools/doc_lint.py</code>.</p>
+<p><strong>Resultado esperado:</strong> mypy silencioso; o linter provavelmente ACUSA na primeira execução (o ADR sem "porque", ou uma referência a arquivo que você renomeou). Conserte, e então quebre de propósito: cite <code>src/app/inexistente.py</code> num doc e veja <code>[ref-quebrada]</code> com exit code 1. Adicione a linha ao <code>check.sh</code> do M01.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Ligue no CI</strong> (job <code>lint-deterministico</code> acima) e abra um PR que renomeia um arquivo citado na doc <em>sem</em> atualizar a doc.</p>
+<p><strong>Resultado esperado:</strong> check vermelho no PR, com a mensagem apontando o documento e o caminho. Esse é o momento em que documentação deixa de depender de disciplina.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Defina o gabarito de saída do produto.</strong> Crie <code>capstone/docs/output-spec.md</code>: exatamente quais artefatos o Cartógrafo entrega ao analisar um repositório (ex.: <code>ARCHITECTURE.md</code> com C4 L1+L2 gerados, <code>DEPENDENCIES.md</code> com o grafo em Mermaid, <code>RISKS.md</code> com top-10 priorizado, <code>adr/</code> com ADRs <em>candidatos</em> inferidos do código), e o critério de aceitação de cada um.</p>
+<p><strong>Resultado esperado:</strong> um documento que o M13 vai usar como definição de pronto do produto. Detalhe importante que sai deste módulo: o produto gera <strong>C4 nível 2/3 e diagrama de dependências</strong> (derivável do código — regra do bloco 2), mas <strong>não inventa ADR retroativo como se fosse fato</strong> — ele pode propor "decisões aparentes" para o humano confirmar. Escrever isso agora te salva de construir um gerador de mentiras convincentes.</p></div>
+
+<h3>Exercício sozinho (sem pistas até pedir)</h3>
+<p>Implemente a <strong>quinta regra</strong> do linter: <em>cobertura de ADR</em>. Toda pasta de primeiro nível em <code>capstone/backend/src/app/</code> que exista há mais de N commits deve ser mencionada em pelo menos um ADR ou no <code>architecture.md</code> — senão, há uma parte do sistema sobre a qual não existe nenhuma decisão registrada. Cuidado com o falso positivo (nem toda pasta merece ADR): a regra deve ter uma allowlist explícita, e o material do bloco 3 te diz qual é o critério para entrar nela.</p>
+
+<h3>Peça do produto</h3>
+<p><strong>Entrega para o Capstone:</strong> <code>capstone/docs/</code> completo (PRD, architecture com C4, ADRs, runbook, output-spec) + <code>tools/doc_lint.py</code> + o workflow de doc drift. Duplamente estratégico: é a documentação <em>do</em> produto e é o <strong>gabarito do que o produto gera</strong> — o M13 valida a saída do Cartógrafo contra o <code>output-spec.md</code> que você escreveu hoje.</p>
+
+<!-- ============================================ DIAGNÓSTICO -->
+<h2>Tabela de Diagnóstico</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>O agente implementa contra uma arquitetura que não existe mais.</td><td>Context poisoning: doc desatualizada lida como verdade.</td><td>Doc drift no CI (bloco 4) + hierarquia da verdade explícita no AGENTS.md: teste &gt; código &gt; doc.</td></tr>
+<tr><td>Diagrama Mermaid não renderiza no GitHub (aparece o texto cru).</td><td>Cerca errada (```` ```mermaid ````), tipo de diagrama com typo, ou parêntese/vírgula em rótulo sem aspas.</td><td>Regra 3 do <code>doc_lint.py</code> pega os dois primeiros; para rótulo, use <code>A["texto (com parêntese)"]</code>.</td></tr>
+<tr><td>Diagrama C4 sai embolado, caixas sobrepostas.</td><td>Layout do C4 no Mermaid é manual e depende da ordem das declarações; ou elementos demais.</td><td>Reordene as declarações; corte para ≤7 elementos; se persistir, quebre em dois diagramas ou use Structurizr.</td></tr>
+<tr><td>Ninguém lê os ADRs (inclusive você).</td><td>ADRs demais, sobre decisões triviais — o sinal se perdeu no volume.</td><td>Critério de custo de reversão (bloco 3). Marque como <em>substituídos</em> os obsoletos; um índice em <code>docs/adr/README.md</code> ajuda.</td></tr>
+<tr><td>O ADR gerado por IA parece bom mas é genérico.</td><td>Você pediu o documento inteiro em vez de dar contexto real e pedir contraditório.</td><td>Bullets crus seus → agente expande e critica. A pergunta que rende: "que consequência negativa eu não listei?".</td></tr>
+<tr><td>Bot de doc drift comenta 20 coisas por PR e todo mundo ignora.</td><td>Prompt sem restrição de escopo/quantidade — virou gerador de sugestões.</td><td>Só contradições factuais, máximo 5, resposta exata quando limpo. Bot barulhento é pior que nenhum.</td></tr>
+<tr><td>Doc drift acusa arquivo inexistente que existe.</td><td>Regex de caminho capturando exemplo hipotético no texto, ou path relativo a outra raiz.</td><td>Escreva caminhos hipotéticos sem extensão real ou em bloco de código dedicado; ajuste <code>RE_CAMINHO</code>.</td></tr>
+<tr><td>A regra de obsolescência dispara em toda doc.</td><td><code>fetch-depth: 0</code> ausente no CI (git sem histórico) ou <code>documenta:</code> apontando para diretório grande demais.</td><td>Histórico completo no checkout; aponte <code>documenta:</code> para o subdiretório específico que a doc descreve.</td></tr>
+<tr><td><code>CLAUDE.md</code>/<code>AGENTS.md</code> gigante e o agente ignora regras dele.</td><td>Excesso de prosa: a regra importante diluiu no meio de contexto de referência.</td><td>&lt;200 linhas, só invariantes; o resto vira doc linkada. E o que for inegociável vira guardrail (M01 b2).</td></tr>
+<tr><td>Duas fontes divergentes: <code>CLAUDE.md</code> e <code>AGENTS.md</code>.</td><td>Duplicação de conteúdo entre arquivos de harnesses diferentes.</td><td>Um é a fonte, o outro é ponteiro de uma linha. Nunca copie regra entre os dois.</td></tr>
+</tbody>
+</table>
+
+<!-- ============================================ CHECKPOINT -->
+<h2>Checkpoint M04</h2>
+<div class="box ok">
+<span class="lbl">Avaliação sem consulta — diga "Checkpoint M04" no chat</span>
+<p>Uma pergunta por vez, sem consulta. Aviso do CLAUDE.md: <strong>na P2 eu vou tentar derrubar o seu ADR</strong> — defenda ou reconheça que errou; ambos valem.</p>
+<ul class="check">
+<li><strong>P1.</strong> Explique a inversão econômica da documentação com os dois consumidores: por que doc desatualizada é PIOR que doc ausente para um agente, e por que era o contrário para humanos?</li>
+<li><strong>P2.</strong> Defenda o seu ADR-0001 (Postgres único para vetor e grafo). Vou atacar com: escalabilidade de vetores, maturidade do AGE frente ao Neo4j, e acoplamento de cargas OLTP+vetorial no mesmo banco. Responda com o "o que me faria mudar de ideia".</li>
+<li><strong>P3.</strong> Por que um ADR nunca é editado quando você muda de ideia, e qual é o mecanismo correto? O que se perde ao editar?</li>
+<li><strong>P4.</strong> Dê o critério objetivo de "isto merece ADR" e classifique quatro decisões que você tomou nos M01–M03 (uma delas deve ser um "por que NÃO fizemos o óbvio").</li>
+<li><strong>P5.</strong> C4: qual é a diferença entre um container e um componente, e por que o nível 4 deve ser gerado e não desenhado? Onde isso conecta com o seu Capstone?</li>
+<li><strong>P6.</strong> As quatro classes de doc drift: quais são, e por que apenas UMA justifica gastar tokens de LLM? O que aconteceria se você usasse o agente para todas?</li>
+<li><strong>P7.</strong> Mostre o <code>doc_lint.py</code> reprovando um ADR sem "porque" e explique por que essa regra específica é a mais valiosa das quatro.</li>
+<li><strong>P8.</strong> Postmortem: por que "fatores contribuintes" no plural em vez de causa raiz única, e por que a seção "o que funcionou" não é enfeite? Cite um fator contribuinte do incidente que você escreveu.</li>
+</ul>
+<h4>Entregáveis verificados (mostrar rodando)</h4>
+<ol>
+<li><code>capstone/docs/</code>: PRD, <code>architecture.md</code> com C4 L1+L2 e sequence com caminho de erro (renderizando no GitHub), <code>runbook.md</code>, <code>output-spec.md</code>.</li>
+<li><code>docs/adr/0001-*.md</code> completo, com consequências negativas reais e o contraditório do agente incorporado.</li>
+<li>Postmortem blameless de incidente real, com linha do tempo, fatores contribuintes e ações com prazo.</li>
+<li><code>tools/doc_lint.py</code>: <code>mypy --strict</code> limpo, integrado ao <code>check.sh</code>, e demonstração de reprovação (ref quebrada + ADR sem porque).</li>
+<li>Workflow <code>doc-drift.yml</code> no CI, com um PR reprovado por doc desatualizada.</li>
+<li><code>AGENTS.md</code> com menos de 200 linhas e <code>CLAUDE.md</code> como ponteiro.</li>
+</ol>
+</div>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>Existe agora um leitor que lê tudo e obedece. Doc virou insumo, não burocracia.<br>
+Doc ausente vira invenção; doc velha vira erro confiante. A velha é a pior.<br>
+Registre o que o código não conta: o que foi rejeitado e por quê.<br>
+ADR é imutável, curto, e tem custo declarado. Sem "porque", é anotação.<br>
+Diagrama como texto no repo; C4 por níveis; o que dá para derivar, gere.<br>
+Um diagrama, uma pergunta, sete elementos.<br>
+Doc drift se combate com exit code: linter para o mecânico, agente só para a semântica.<br>
+Postmortem: linha do tempo, plural nas causas, ações com dono — e nenhum nome no banco dos réus.</p>
+</div>
+
+</div>
+</body>
+</html>
