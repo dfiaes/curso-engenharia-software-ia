@@ -71,6 +71,22 @@
 | G5 · Produção | APROVADO NO ESCOPO | menor privilégio, path, allowlist e falhas cobertos; MCP remoto é M09/M12 |
 | G6 · Editorial | PARCIAL | parser e métricas aprovados; revisão visual/links HTTP ainda pendentes |
 
+## Revisão didática de 20/08/2026
+
+Esta revisão registra autoria e compreensão; ela não altera a aprovação dos gates acima nem transforma práticas do aluno em evidência executada.
+
+| ID | Mudança aplicada no HTML | Evidência editorial | Estado |
+|---|---|---|---|
+| DID-M00-001 | exemplo de uma correção que atravessa cliente, harness, modelo, tool, ambiente e processo | seção 1.1 separa causas por camada antes de propor troca de modelo | APLICADO |
+| DID-M00-002 | fluxo trabalhado de instrução de repositório, skill e descoberta, com diagnóstico | seção 2.1 liga arquivo, tarefa, sintoma, evidência e correção | APLICADO |
+| DID-M00-003 | leitura inline de chamadas Python, argumentos nomeados, coleção imutável, path, decorador, anotações e comandos PowerShell | seções 2.4, 3.4, 4.4 e 5.4 | APLICADO |
+| DID-M00-004 | cenário de conteúdo hostil e distinção entre instrução, capability, aprovação e identidade | seção 3.1 e caso negativo do laboratório | APLICADO |
+| DID-M00-005 | trace host → schema → função → resposta para MCP e explicação do adapter Python | seções 4.3–4.4 | APLICADO |
+| DID-M00-006 | diagnóstico adicional para instruções e execução do gate | seções 2.1 e 5.4 | APLICADO |
+| DID-M00-007 | panorama datado de prática vigente, com limite metodológico e ferramentas separadas do núcleo | seção 1.5 e fonte industrial Octoverse 2025 | APLICADO |
+
+Documento de auditoria: `docs/auditorias/M00-DIDATICA-2026-08.md`.
+
 ## Execução registrada
 
 ```text

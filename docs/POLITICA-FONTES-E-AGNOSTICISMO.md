@@ -99,3 +99,13 @@ O curso não terá um “framework oficial de IA”. Haverá uma arquitetura ofi
 - [ ] O módulo informa versão e data para APIs/protocolos mutáveis?
 - [ ] O exercício testa troca de adapter ou degradação da dependência?
 
+## 9. Evidência de prática vigente
+
+Dados de mercado ajudam a decidir quais exemplos de ferramentas e fluxos merecem aparecer no curso. Eles não definem os fundamentos nem autorizam uma recomendação universal.
+
+- usar pesquisa com método e população declarados, relatório público de ecossistema, telemetria agregada ou estudo acadêmico/industrial reprodutível;
+- registrar data de coleta/publicação, população, método e limite de generalização;
+- tratar catálogo de fornecedor e contagem de repositórios como sinais parciais, nunca como medida de empregabilidade, qualidade, segurança ou custo;
+- cruzar o sinal de adoção com documentação oficial antes de ensinar comportamento do produto;
+- separar o que é prática generalizável do adapter citado como exemplo;
+- revalidar em até 90 dias qualquer ranking, versão, preço, quota, suporte ou declaração de adoção.

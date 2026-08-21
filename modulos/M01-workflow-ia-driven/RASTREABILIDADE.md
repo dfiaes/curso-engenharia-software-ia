@@ -87,6 +87,18 @@ O M01 foi confrontado com cinco níveis de domínio: conceito, decisão/trade-of
 
 Regra editorial: aprofundamentos acima pertencem ao módulo indicado e devem referenciar o M01, não duplicar seu conteúdo. A auditoria ampla está registrada em `docs/AUDITORIA-APROFUNDAMENTO-M01-M13.md`.
 
+## Revisão didática de 20/08/2026
+
+| ID | Mudança aplicada no HTML | Evidência editorial | Estado |
+|---|---|---|---|
+| DID-M01-001 | caso único percorre intenção, requisito, spec, plano, código e evidência; o mesmo caso demonstra classificação de drift | seção 1.1 | APLICADO |
+| DID-M01-002 | linguagem sobre limite de contexto trocada por sinais verificáveis e decisões de diagnóstico | seção 2.2 | APLICADO |
+| DID-M01-003 | tabela 12-Factor passa a orientar decisão por estado, efeito e contrato, sem exigir memorização de números | seção 3.2 | APLICADO |
+| DID-M01-004 | panorama de prática vigente liga SDD, gates, worktrees e supply chain a sinal industrial datado, com limite metodológico | seção 1.4 e fontes | APLICADO |
+| DID-M01-005 | paralelismo é definido por independência de tarefa, contrato e recurso, não por uma alegação sobre o host | seção 4.1 | APLICADO |
+
+Auditoria de suporte: `docs/auditorias/M01-DIDATICA-2026-08.md`. A revisão não altera os resultados dos 22 cenários, o laboratório ou a aprovação G0–G6.
+
 ## Execução registrada
 
 ```text

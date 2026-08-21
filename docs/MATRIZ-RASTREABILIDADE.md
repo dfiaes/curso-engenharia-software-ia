@@ -74,17 +74,19 @@ Esta matriz liga resultados de aprendizagem a conteúdo, prática, evidência e 
 
 ### M00 · Rastreabilidade detalhada aprovada em G0
 
-O detalhe por competência, cenário e gate está em `modulos/M00-ferramental/RASTREABILIDADE.md`. Em 14/08/2026, G0–G5 estão aprovados no escopo; G6 é parcial. O laboratório registra 18 testes verdes em Python 3.14.7, Ruff e mypy, incluindo cliente MCP v2 oficial in-memory; revisão visual permanece pendente porque a política do navegador bloqueou `file://`.
+O detalhe por competência, cenário e gate está em `modulos/M00-ferramental/RASTREABILIDADE.md`. Em 14/08/2026, G0–G5 estão aprovados no escopo; G6 é parcial. O laboratório registra 18 testes verdes em Python 3.14.7, Ruff e mypy, incluindo cliente MCP v2 oficial in-memory; revisão visual permanece pendente porque a política do navegador bloqueou `file://`. Em 20/08/2026, a revisão didática passou a registrar contexto técnico, leitura de Python pré-M02, diagnósticos e panorama de prática vigente em trilha editorial própria; ela não promoveu o gate.
 
 ### M01 · Rastreabilidade detalhada em produção
 
-A especificação em `docs/especificacoes/M01-ESPECIFICACAO.md` define 27 competências e 22 cenários. O lab passou em Python 3.14.7, Ruff, mypy estrito e 27 testes, incluindo Git real descartável, falhas semeadas e Capstone rastreado. O HTML regenerado possui 9.049 palavras e novo checkpoint. G0–G6 estão aprovados.
+A especificação em `docs/especificacoes/M01-ESPECIFICACAO.md` define 27 competências e 22 cenários. O lab passou em Python 3.14.7, Ruff, mypy estrito e 27 testes, incluindo Git real descartável, falhas semeadas e Capstone rastreado. O HTML regenerado possui 9.049 palavras e novo checkpoint. G0–G6 estão aprovados. Em 20/08/2026, a revisão didática adicionou caso trabalhado de SDD, diagnóstico observável de degradação de contexto e panorama de prática vigente; o gate permanece aprovado, pois a mudança não altera a evidência técnica.
 
 ### M02 · Rastreabilidade detalhada verificada
 
 O detalhe está em `modulos/M02-python-para-dev-dotnet/RASTREABILIDADE.md`: 43 competências e 38 cenários, todos verificados. O HTML foi regenerado em oito blocos/16h com vinte fontes primárias. Em Windows, Ruff, mypy strict, build/inspeção e instalação limpa do wheel passaram; os 51 testes foram aprovados tanto no CPython 3.14.7 padrão quanto no 3.14t com GIL desativado, e `pydantic-core` preservou esse modo. No WSL2/Ubuntu, os 51 testes e a CLI passaram em CPython 3.14.7, com saída UTF-8/LF. `csv-cleaner==0.1.0` importa `python_senior_lab` de `site-packages`. Desktop, viewport real de 390 px e impressão integral em 52 páginas foram inspecionados; G0–G6 estão aprovados.
 
-### M02A · Rastreabilidade detalhada aprovada em G0
+Em 20/08/2026, a revisão didática acrescentou panorama de prática vigente, leitura guiada de `asyncio` e free-threading, correção de imports nos exemplos e contexto seguro de instalação. A revisão não alterou a evidência técnica nem a aprovação G0–G6.
+
+### M02A · G0 v1.1 aprovado; G1/G2 em produção
 
 Especificação: [`docs/especificacoes/M02A-ESPECIFICACAO.md`](especificacoes/M02A-ESPECIFICACAO.md)
 
@@ -92,9 +94,9 @@ Python 3.14 é canônico; .NET 10 é somente um corte comparativo. O laboratóri
 
 | ID detalhado | Resultado observável | Bloco | Evidência principal | Aceitação | Estado |
 |---|---|---|---|---|---|
-| ES26-001..004 | decidir por produto, risco e evidência | B01 | intent + risk register | M02A-AT-001,043 | ESPECIFICADO |
-| ES26-005..008 | rastrear requisitos, qualidade, ADR e C4 | B02 | requirements + architecture | M02A-AT-001,004,005 | ESPECIFICADO |
-| ES26-009..012 | controlar modularidade e dependências | B03 | architecture rules | M02A-AT-002,003 | ESPECIFICADO |
+| ES26-001..004 | decidir por produto, risco e evidência | B01 | intent + stakeholders + risk register + claim ledger | M02A-AT-046..050 | EM PRODUÇÃO — HTML produzido; AT-047/049 executados |
+| ES26-005..008 | rastrear requisitos, qualidade, ADR e C4 | B02 | requirements + quality scenarios + ADR + architecture manifest | M02A-AT-001,004,005,051..054 | EM PRODUÇÃO — HTML produzido; AT-001/005 parciais |
+| ES26-009..012 | controlar modularidade e dependências | B03 | architecture rules + contract suite | M02A-AT-002,003,055..060 | EM PRODUÇÃO — slice executa AT-002/003/057/058; AT-055/060 parciais |
 | ES26-013..016 | evoluir contratos interoperáveis | B04 | schemas + corpus golden | M02A-AT-006..011 | ESPECIFICADO |
 | ES26-017..020 | provar transação, isolamento e índice | B05 | migrations + query plan | M02A-AT-012..017 | ESPECIFICADO |
 | ES26-021..024 | controlar concorrência e backpressure | B06 | bounded batch + fault tests | M02A-AT-018..022 | ESPECIFICADO |
@@ -108,7 +110,7 @@ Python 3.14 é canônico; .NET 10 é somente um corte comparativo. O laboratóri
 | ES26-053..056 | transferir sem falsa equivalência .NET | B14 | differential corpus + publish | M02A-AT-006,010,011,022,040 | ESPECIFICADO |
 | ES26-057..060 | governar IA e liderar decisão | B15 | advisor contract + defense | M02A-AT-023..028,031 | ESPECIFICADO |
 
-Detalhe completo: [`modulos/M02A-engenharia-software-senior/RASTREABILIDADE.md`](../modulos/M02A-engenharia-software-senior/RASTREABILIDADE.md). Nenhum aceite está verificado antes de G1–G6.
+Detalhe completo: [`modulos/M02A-engenharia-software-senior/RASTREABILIDADE.md`](../modulos/M02A-engenharia-software-senior/RASTREABILIDADE.md). Cenários podem receber evidência individual durante a produção, mas o módulo não é promovido a `VERIFICADO` antes de G0–G6 completos.
 
 ### M12 · Rastreabilidade detalhada aprovada em G0
 

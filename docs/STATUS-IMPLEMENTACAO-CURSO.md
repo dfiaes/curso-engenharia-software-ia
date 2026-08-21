@@ -17,6 +17,7 @@ Este é o placar editorial e técnico do curso. O progresso de aprendizagem do a
 | M00 | REGENERADO / EM REVISÃO; G0–G5 aprovados no escopo, G6 parcial |
 | M01 | VERIFICADO; G0–G6 aprovados, 27 testes e apresentação alinhada ao M00 |
 | M02 | VERIFICADO; G0–G6, 38 cenários e 51 testes em Windows/3.14t/Linux aprovados |
+| M02A | G0 v1.1 APROVADO; G1 EM PRODUÇÃO; primeiro slice de G2 aprovado, módulo ainda incompleto |
 | M12 | EM PRODUÇÃO; G1/G4 aprovados; G2/G3/G5 bloqueantes e G6 parcial |
 | M13 | EM PRODUÇÃO; baseline auditado e rastreabilidade criada; HTML ainda bloqueado |
 | LT01–LT04 | G0 aprovado; material e laboratórios ainda não produzidos |
@@ -40,7 +41,7 @@ Este é o placar editorial e técnico do curso. O progresso de aprendizagem do a
 | M00 | 10h | EM REVISÃO (G0–G5 OK) | revisar visualmente a correção de interfaces slash e fechar G6 | P0 |
 | M01 | 10h | VERIFICADO (G0–G6) | manter fontes de alto risco versionadas | P0 concluído |
 | M02 | 16h | VERIFICADO (G0–G6) | revalidar por mudança relevante | P0 concluído |
-| M02A | 30h | G0 APROVADO / G1 EM PRODUÇÃO | produzir material e laboratório Python 3.14; .NET 10 somente como ponte comparativa | P0 |
+| M02A | 30h | G0 v1.1 APROVADO / G1 EM PRODUÇÃO / G2 PARCIAL | produzir B03 e ampliar os ATs ainda pendentes; .NET 10 somente no corte comparativo posterior | P0 |
 | M03 | 16h | EM REVISÃO | aprofundar contratos API e preparar encaixe do LT01 | P1 |
 | M04 | 8h | EM REVISÃO | validar fontes, práticas e fitness functions | P2 |
 | M05 | 14h | EM REVISÃO | neutralizar exemplos e preparar encaixe do LT02 | P1 |
@@ -111,7 +112,7 @@ Este é o placar editorial e técnico do curso. O progresso de aprendizagem do a
 
 **Nova prioridade — M00 → M01 → M02 → fundamentos sênior 2026.** M01 e M02 estão verificados; o M00 mantém G6 parcial. O M02A foi especificado como módulo Python-first, com .NET apenas como ponte comparativa, e entrou em produção. M12/M13 mantêm seus bloqueios registrados e serão retomados depois deste ciclo prioritário.
 
-**Unidade ativa:** fechar a correção focal do M00 sobre slash como interface de invocação e produzir/regenerar o M02A em G1–G6 sob o padrão composto de qualidade. O G0 do M02A foi aprovado com 15 blocos/30h, 60 competências, 45 cenários, produto local `work-intake`, Python 3.14 canônico e fronteiras explícitas com M03/LT01–LT04. A futura plataforma integrada está somente em descoberta; PRD/arquitetura dependem da revisão do código e entrevista.
+**Unidade ativa:** produzir/regenerar o M02A em G1–G6 sob o padrão composto de qualidade. O G0 v1.1 do M02A foi aprovado com 15 blocos/30h, 60 competências, 60 cenários, produto local `work-intake`, Python 3.14 canônico e fronteiras explícitas com M03/LT01–LT04. A correção de conteúdo do M00 sobre slash foi concluída, mantendo apenas G6 visual parcial. A futura plataforma integrada está somente em descoberta; PRD/arquitetura dependem da revisão do código e entrevista.
 
 O M01 está verificado em G0–G6: 27 testes/22 cenários, HTML com 9.167 palavras visíveis, 14 fontes distintas e apresentação padronizada pelo M00. Header, mapa, seções, callouts, diagnóstico e fechamento por fontes foram revisados em localhost, sem overflow horizontal.
 
@@ -129,6 +130,17 @@ Depois de verificar o M02A: auditar M03–M11 pela prioridade registrada; então
 | carga inviável em ritmo irregular | médio | blocos fechados, retomada explícita e trilhas não bloqueantes |
 
 ## Changelog
+
+### 20/08/2026
+
+- contrato de voz editorial e compreensão sem empobrecimento registrado em `CLAUDE.md` e no padrão técnico-didático: contexto antes de ferramenta, definição de terminologia no primeiro uso, mecanismo, decisão, limite, exemplo ou diagnóstico; não há teto de extensão para material necessário;
+- política de fontes passou a exigir que panorama de prática vigente use sinal datado, método, população, limites e separação entre fundamento e adapter; adoção não é recomendação arquitetural;
+- primeiro lote da revisão didática aplicado ao M00: exemplos trabalhados por camada, propósito operacional de instruções e skills, explicação inline da sintaxe Python pré-M02, cenário de segurança, trace MCP, diagnóstico de execução e panorama de mercado baseado no Octoverse 2025;
+- auditoria `docs/auditorias/M00-DIDATICA-2026-08.md` e registro na rastreabilidade M00 criados; HTML estático permanece balanceado, âncoras resolvidas e a suíte local foi reexecutada com 18 testes aprovados. G6 continua parcial e nenhum gate técnico foi promovido.
+- segundo lote da revisão didática aplicado ao M01: caso de SDD atravessa intenção, requisito, spec, plano, código e evidência; degradação de contexto agora exige sinais observáveis; 12-Factor é instrumento de decisão; paralelismo é delimitado por contrato e recursos; panorama industrial datado foi incluído;
+- auditoria `docs/auditorias/M01-DIDATICA-2026-08.md` e rastreabilidade M01 atualizadas; HTML continua balanceado, com âncoras resolvidas e sem conectivos proibidos. Os 27 testes do laboratório foram reexecutados e aprovados; G0–G6 permanecem aprovados sem reclassificação.
+- terceiro lote da revisão didática aplicado ao M02: panorama industrial datado para Python/packaging/qualidade, leitura guiada de `asyncio` e probe de free-threading, imports completos nos exemplos e contexto seguro antes de instalação remota;
+- auditoria `docs/auditorias/M02-DIDATICA-2026-08.md` e rastreabilidade M02 atualizadas; HTML permanece balanceado, com âncoras resolvidas e sem conectivos proibidos. A suíte do laboratório foi reexecutada com 51 testes aprovados; G0–G6 permanecem aprovados sem reclassificação.
 
 ### 15/08/2026
 
@@ -173,7 +185,7 @@ Depois de verificar o M02A: auditar M03–M11 pela prioridade registrada; então
 - rastreabilidade M13 criada para vinte blocos, seis lotes e trinta cenários CAP-*; próximo lote R2.2-A cobre release contract e baseline reproduzível.
 - R2.2-A produzido: release contract, risk register, trace CSV e scaffold Python 3.14; Ruff/mypy e 6 testes passam, PostgreSQL permanece bloqueado sem Docker;
 - nova prioridade registrada em `docs/PRIORIDADE-M00-M02-ENG-SENIOR-2026.md`: M00 → M01 → M02 → M02A;
-- G0 do M02A aprovado em 15/08/2026: 15 blocos/30h, 60 competências, 45 cenários, Python 3.14 canônico, .NET 10 como ponte limitada e produto `work-intake`; currículo-base consolidado em 152 blocos/304h.
+- G0 do M02A revisado para v1.1 em 15/08/2026: 15 blocos/30h, 60 competências e 60 cenários — quinze aceitações próprias para B01–B03 —, Python 3.14 canônico, .NET 10 como ponte limitada e produto `work-intake`; currículo-base consolidado em 152 blocos/304h.
 - M02A planejado com 15 blocos/30h para engenharia de software sênior, Python 3.14, .NET 10 e sistemas com IA; após a ampliação aprovada do M02, a projeção curricular passa a 304h.
 - M00 auditado e regenerado com núcleo agnóstico, Agent Skills, MCP 2026-07-28 e adapters Codex/Claude Code/Copilot;
 - lab M00 aprovado em Python 3.14.7: Ruff, mypy estrito e 18 testes, incluindo cliente MCP v2 in-memory; HTML com 4.037 palavras e 13 fontes externas distintas;
@@ -192,3 +204,6 @@ Depois de verificar o M02A: auditar M03–M11 pela prioridade registrada; então
 - correção focal do M00 restaurou slash como interface não portátil, separada de skill, prompt, comando embutido, MCP e ACP; o contrato portátil `finish-study-block`, seus adapters e cinco novos cenários foram registrados;
 - M00 passou a 4.595 palavras visíveis, 70 ocorrências de `code` e 18 destinos externos distintos; Ruff, mypy e 18 testes continuam verdes, mas G6 permanece parcial porque a política do navegador bloqueou a inspeção de `file://`;
 - iniciativa da futura plataforma integrada registrada somente em descoberta: o acervo atual não possui aplicação integrada e PRD/arquitetura ficam condicionados à revisão do código e entrevista do aluno.
+- M02A G0 revisado para v1.1 após auditoria independente: quinze oráculos próprios foram adicionados para B01–B03, elevando a baseline a 60 competências e 60 cenários; AT-005 passou a afirmar somente propriedades verificáveis do manifesto;
+- HTML inicial do M02A produzido para B01–B02: 4.564 palavras visíveis, 31 ocorrências de `code`, 14 fontes externas distintas, links internos íntegros e estrutura balanceada; QA visual/impressão permanece pendente;
+- primeiro slice Python do `work-intake` aprovado pelo orquestrador em modo locked/offline: Ruff format/lint, mypy strict em 29 arquivos, 34 testes e wheel inspecionado; G2 permanece parcial porque o laboratório e o módulo ainda não cobrem todos os 60 cenários.

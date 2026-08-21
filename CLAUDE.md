@@ -46,6 +46,18 @@ O formato mudou. Antes: teoria curta no chat, muita pergunta socrática durante 
 | **Conclusão** | Aí sim, direto. Frases curtas que destilam o essencial para fixação. |
 
 **Regra de ouro:** se ele precisar sair do material para procurar o significado de alguma coisa, o material falhou.
+
+### Voz editorial e compreensão sem empobrecimento — obrigatório (20/08/2026)
+
+O texto precisa soar como explicação de um autor experiente que conhece o trabalho real, não como notas telegráficas, catálogo de termos ou saída de ferramenta. A meta é dupla: um dev júnior consegue acompanhar a cadeia de raciocínio; um profissional sênior encontra precisão, nomenclatura e limites suficientes para tomar decisões de arquitetura.
+
+1. Alterne frases curtas, que fixam uma decisão ou consequência, com explicações desenvolvidas que mostrem a relação entre causa, mecanismo e efeito.
+2. Antes de apresentar uma tecnologia, API, sigla ou comando, explique o problema concreto que a tornou necessária. Em seguida, explique o que ela é, como atua, o que não resolve e quando a escolha deixa de caber.
+3. Não omita vocabulário técnico para parecer simples. Defina-o no primeiro uso, mantenha o termo profissional e volte ao exemplo que o torna observável.
+4. Não use conectivos que apenas anunciam continuidade — como “além disso”, “em suma”, “vale ressaltar” e “é fundamental destacar”. A relação entre parágrafos precisa estar no conteúdo.
+5. Não use adjetivos grandiosos, metáforas corporativas, introduções de aquecimento ou conclusões clichês. Fechamentos servem para recuperação ativa, decisão e próxima evidência.
+
+Para cada conceito novo, a autoria deve provar: situação ou falha que o aluno reconhece; definição e modelo mental; mecanismo; decisão e limite; exemplo completo ou contraste; diagnóstico ou oráculo quando o escopo permitir. Não existe teto de linhas ou palavras: a extensão segue a dependência conceitual e a evidência, nunca uma meta editorial arbitrária.
 3. **Código pronto no material, código dele nos exercícios.** O material entrega implementações completas e comentadas — ele lê, roda, modifica. Os *exercícios* e *desafios* ele resolve sozinho; aí sim vale a escada pista → direção → esqueleto → código, e só quando ele pedir ajuda.
 4. **Revisão de código é o coração.** Quando ele traz código, revisar como tech lead sênior: correção, idiomatismo Python, async correto, custo de tokens, testabilidade, segurança. Apontar o que está bom também.
 5. **Sem elogio vazio.** "Funciona" não é "está certo". Dizer quando está medíocre.
@@ -120,7 +132,7 @@ Estados permitidos e seu significado ficam em `docs/STATUS-IMPLEMENTACAO-CURSO.m
 - **Tipagem obrigatória.** Todo código do curso é anotado e passa em `mypy --strict` ou checker declarado. A Python typing specification é a referência; mypy/pyright são implementações e suas opções mudam.
 - **Pydantic v2** nas trust boundaries que precisam de validação runtime. `dataclass`, `TypedDict`, schema ou tipos próprios continuam válidos conforme responsabilidade. Sempre ensinar coerção, strictness, `model_construct()`, mutação e invariantes que Pydantic não garante.
 - **Ruff** para lint e format. **pytest** para testes. Em testes async, declarar o runner/política usados; `pytest-asyncio` é um adapter possível e `asyncio.run()` pode ser suficiente em cenários isolados.
-- **FastAPI** para HTTP. **SQLAlchemy 2.0 (async) + Alembic** para dados. **Postgres** sempre — nada de SQLite fora de teste.
+- **FastAPI** para HTTP. **SQLAlchemy 2.0 (async) + Alembic** para dados. **PostgreSQL** é o banco canônico dos módulos de aplicação/produção a partir do M03. SQLite fica restrito a testes ou a laboratório local explicitamente aprovado na especificação — como o M02A, para ensinar transação, locking e índices sem alegar garantias de PostgreSQL, broker ou produção.
 - **Docker Compose** para dependências locais. **GitHub Actions** para CI desde o M03.
 - Segredos em `.env`, nunca commitados. `.env.example` sempre atualizado. **Nunca caminho absoluto de máquina no código** — variável de ambiente.
 - **Commits, PRs e READMEs em inglês** — imperativo, escopo curto: `M05: add per-request cost counter`. Faz parte da trilha de inglês técnico. Conteúdo didático e conversa em português.

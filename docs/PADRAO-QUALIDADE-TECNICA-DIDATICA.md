@@ -68,6 +68,34 @@ Cada bloco deve permitir estudo independente e retomada após pausa. A sequênci
 - Checkpoint mede explicação, decisão, execução, diagnóstico e transferência; múltipla escolha isolada não aprova competência prática.
 - A avaliação informa critérios e oráculos antecipadamente, mas não entrega a solução da tarefa independente.
 
+### 3.3 Contrato de voz editorial e contexto técnico
+
+O material é escrito para leitura autônoma por uma pessoa que pode ter menos experiência, sem reduzir a precisão necessária para a formação sênior. Simplificar a linguagem não autoriza apagar nomenclatura, trade-off, falha ou limite. O termo técnico permanece; sua função é explicada no ponto em que passa a ser necessário.
+
+Para toda tecnologia, sigla, API, ferramenta ou construção de linguagem introduzida no bloco, a revisão procura esta cadeia:
+
+1. **situação:** qual tarefa, falha ou custo torna o conceito necessário;
+2. **definição:** o que ele é, em linguagem direta;
+3. **mecanismo:** o que acontece entre entrada, estado, processamento e efeito;
+4. **decisão:** quando ele ajuda, quando não ajuda e qual alternativa importa;
+5. **observação:** exemplo trabalhado, contraste ou diagnóstico que torne a explicação verificável.
+
+A prosa alterna frases curtas de fixação e períodos desenvolvidos quando uma relação causal precisa ser construída. Não usar conectivos vazios, adjetivação grandiosa, metáforas corporativas, abertura protocolar ou encerramento clichê. Cada parágrafo deve acrescentar contexto, decisão, consequência ou evidência. Tamanho de texto não é critério de corte: o material pode crescer o necessário para respeitar as dependências conceituais, desde que não repita conteúdo ou esconda ausência de prática.
+
+### 3.4 Panorama de prática vigente no mercado
+
+O curso mostra como os fundamentos aparecem em ferramentas e fluxos que têm adoção observável. Esse panorama orienta estudo e transferência; não escolhe a arquitetura do aluno por popularidade, nem transforma uma pesquisa de mercado em autoridade técnica.
+
+Quando o tema tiver impacto no trabalho atual, o módulo inclui uma seção curta e datada com:
+
+1. o sinal de mercado e sua fonte, método, população e data;
+2. a prática profissional que o sinal torna relevante;
+3. duas ou mais ferramentas, frameworks ou padrões que materializam a prática, separados entre núcleo, padrão aberto e adapter;
+4. limites do dado — por exemplo, repositórios públicos não representam vagas, empresas brasileiras, custo ou adequação ao domínio;
+5. uma decisão didática: o que o aluno precisa dominar primeiro e o que ficará apenas como exemplo de ecossistema.
+
+Relatórios de comunidades, pesquisas com desenvolvedores, dados públicos de ecossistemas e estudos com método publicado podem sustentar a seção como fonte industrial. A documentação oficial continua a fonte do comportamento de cada produto; especificações e papers continuam a fonte do fundamento. Dados de adoção, versões, preços, APIs e catálogos de produto são de alto risco e exigem revalidação em até 90 dias.
+
 ## 4. Material como referência
 
 O HTML precisa funcionar simultaneamente como aula e consulta:
@@ -109,6 +137,9 @@ Antes de marcar um bloco como produzido:
 
 - [ ] pré-requisitos, objetivos e saída observável estão explícitos;
 - [ ] conceitos e termos novos são ensinados antes do uso;
+- [ ] cada conceito novo apresenta situação, definição, mecanismo, decisão/limite e observação proporcional ao escopo;
+- [ ] a voz alterna ritmo sem virar texto telegráfico, e não usa conectivos vazios ou clichês de fechamento;
+- [ ] quando relevante, há panorama de prática vigente datado, com sinal de mercado, limite metodológico e separação entre fundamento e produto;
 - [ ] existe exemplo completo executável ou justificativa de não aplicabilidade;
 - [ ] o resultado publicado veio de execução ou está rotulado como variável;
 - [ ] há contraste/anti-padrão e diagnóstico de falha relevante;

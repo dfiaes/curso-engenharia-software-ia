@@ -1,16 +1,16 @@
 # M02A — Engenharia de Software Sênior em 2026
 
-> Especificação normativa de produção · versão 1.0 · 15/08/2026  
+> Especificação normativa de produção · versão 1.1 · 15/08/2026
 > Estado: **G0 aprovado; G1 em produção**
 
 ## 1. Decisão curricular
 
 O M02A é a ponte entre a fluência em Python do M02 e a construção de sistemas em produção. Ele atualiza o profissional experiente vindo de .NET sem transformar o curso em treinamento de plataforma.
 
-- **Python 3.14 é a linguagem e implementação canônica.** Todo conceito deve ser explicado e provado primeiro em Python.
+- **Python 3.14 é a linguagem e implementação canônica.** Todo claim técnico executável deve ser demonstrado primeiro em Python; claims organizacionais e profissionais são sustentados por artefato, dado, argumento e limitação, pois uma linguagem não os “prova”.
 - **.NET 10 é uma ponte comparativa limitada.** Um único corte vertical exercita o mesmo contrato e a mesma política para tornar diferenças de runtime, tipos, DI, cancelamento e distribuição observáveis. A parte .NET não é pré-requisito nem produto equivalente.
 - Arquitetura, contratos, telemetria e evidências são agnósticos de fornecedor.
-- IA é componente não confiável e substituível. Nenhum provedor, modelo ou SDK fechado é requisito do módulo.
+- No `work-intake`, IA é tratada por decisão arquitetural como componente não confiável e substituível. Isso não é apresentado como propriedade universal de todo sistema; nenhum provedor, modelo ou SDK fechado é requisito do módulo.
 - O módulo entrega material de estudo, laboratório executável, falhas semeadas, avaliação e evidência; não apenas uma lista de tópicos.
 
 ### 1.1 Resultado profissional
@@ -112,7 +112,7 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 ### B01 — Papel sênior, produto, risco e evidência
 
 - `ES26-001`: distinguir output, outcome, impacto e restrição.
-- `ES26-002`: priorizar risco por probabilidade, impacto e reversibilidade.
+- `ES26-002`: priorizar risco por objetivo, incerteza/evidência, impacto, detectabilidade, horizonte e reversibilidade, sem transformar escala ordinal em probabilidade.
 - `ES26-003`: tratar desenvolvimento como sistema sociotécnico.
 - `ES26-004`: converter alegação em claim → método → evidência → limitação.
 - Prática: escrever intent, mapa de stakeholders e registro inicial de riscos.
@@ -131,6 +131,7 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 - `ES26-010`: usar SOLID como heurística, não dogma.
 - `ES26-011`: delimitar domínio, aplicação, portas e adapters.
 - `ES26-012`: reconhecer quando abstração custa mais que a mudança esperada.
+- Vocabulário obrigatório: information hiding, ubiquitous language, bounded context, invariante, entity/value object, aggregate como possível limite de consistência e composition root. Bounded context não implica microserviço; `Protocol` não prova substituição comportamental.
 - Prática: arquitetura hexagonal mínima e gate de dependências.
 
 ### B04 — Contratos, compatibilidade e interoperabilidade
@@ -237,7 +238,7 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 - `M02A-AT-002`: import de adapter pelo domínio é rejeitado.
 - `M02A-AT-003`: ciclo entre módulos é detectado.
 - `M02A-AT-004`: ADR substituído preserva histórico e sucessor.
-- `M02A-AT-005`: C4 e código concordam sobre processos e dependências.
+- `M02A-AT-005`: manifesto arquitetural estruturado referencia apenas IDs/paths existentes; processos esperados existem e relações estáticas declaradas não contradizem o grafo de imports. O gate não alega provar completude do diagrama.
 
 ### Contratos e interoperabilidade
 
@@ -297,19 +298,37 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 - `M02A-AT-044`: SLI/SLO é calculado do workload e aciona decisão operacional declarada.
 - `M02A-AT-045`: runbook é exercitado para overload, DB locked, provider indisponível e rollback.
 
+### Papel sênior, requisitos e modularidade
+
+- `M02A-AT-046`: atividade ou volume não é aceito como outcome sem cadeia causal, contramétrica e limitação.
+- `M02A-AT-047`: risco sem objetivo, owner, base de evidência ou trigger de revisão falha no gate.
+- `M02A-AT-048`: mudança de reversibilidade ou confiança reordena a priorização e preserva a justificativa anterior.
+- `M02A-AT-049`: claim sem dado/artefato bruto, digest, método ou limitação é rejeitado.
+- `M02A-AT-050`: conflito entre produto, operação e pessoa afetada produz decisão e residual explícitos, não maioria fictícia.
+- `M02A-AT-051`: requisito ambíguo, não verificável ou solução disfarçada é rejeitado com reason code.
+- `M02A-AT-052`: cenário de atributo de qualidade incompleto falha indicando qual dos seis elementos está ausente.
+- `M02A-AT-053`: mudança de requisito marca ADR, cenário, modelo arquitetural ou teste impactado como stale.
+- `M02A-AT-054`: alternativa rejeitada sem trade-off ou evidência explícitos invalida o ADR.
+- `M02A-AT-055`: fake e adapter alternativo passam a mesma suíte comportamental.
+- `M02A-AT-056`: adapter que fortalece precondição ou altera semântica falha no contract test.
+- `M02A-AT-057`: domínio permanece importável e testável sem adapters instalados.
+- `M02A-AT-058`: composition root é o único ponto autorizado a ligar implementações concretas.
+- `M02A-AT-059`: abstração sem segunda variação, risco ou mudança prevista exige ADR ou é removida.
+- `M02A-AT-060`: mudança de política altera domínio/testes esperados sem exigir modificação de CLI ou advisor fake.
+
 ## 7. Gates de qualidade
 
 | Gate | Saída verificável | Estado |
 |---|---|---|
-| G0 — design | escopo, 60 competências, 45 ATs, fontes, limites e rubrica | **APROVADO** |
+| G0 — design | escopo, 60 competências, 60 ATs, fontes, limites e rubrica | **APROVADO** |
 | G1 — material | HTML no padrão M00, 15 blocos, exercícios, fontes e acessibilidade | EM PRODUÇÃO |
-| G2 — Python | Ruff, mypy strict, pytest/Hypothesis, wheel | PENDENTE |
-| G3 — ponte .NET e contratos | locked restore, analyzers, publish, v1/v2 e differential corpus | PENDENTE |
-| G4 — resiliência/segurança/dados | architecture rules, adversariais, tenant, transação e bounded queue | PENDENTE |
-| G5 — operação/distribuição | telemetry, SLI/SLO, runbook, clean install e evidência | PENDENTE |
-| G6 — certificação | Windows/Linux/CI, todos os ATs, QA a 390 px/desktop/impressão e revisão final | PENDENTE |
+| G2 — execução | Python: Ruff, mypy strict, pytest/Hypothesis e wheel; ponte .NET: restore locked, analyzers, test e publish; corpus v1/v2 executado | PENDENTE |
+| G3 — avaliação | 60 ATs, checkpoint por cenário, casos negativos, demonstração e rubrica corrigível | PENDENTE |
+| G4 — portabilidade | invariantes/adapters separados, Python canônico, corte .NET limitado e corpus diferencial sem falsa equivalência | PENDENTE |
+| G5 — produção | architecture rules, adversariais, tenant, transação, bounded queue, telemetria, SLI/SLO, runbook, clean install e evidência | PENDENTE |
+| G6 — editorial/certificação | QA HTML a 390 px/desktop/impressão, links/fontes/acessibilidade e matriz Windows/Linux/CI sem P0 aberto | PENDENTE |
 
-Entrada local única planejada: `python tools/gate.py all`. Ela deve preservar stdout, stderr e exit code das ferramentas nativas.
+Entrada local única planejada: `uv run --locked --offline python tools/gate.py all`. Ela deve preservar stdout, stderr e exit code das ferramentas nativas. O modo offline pressupõe que o restore inicial já materializou o cache; execuções parciais podem chamar ferramentas específicas, mas não substituem o gate agregado.
 
 ## 8. Rubrica
 
@@ -334,7 +353,10 @@ O SWEBOK é índice de cobertura, não fonte única. Normas/especificações tê
 |---|---|---|---|
 | corpo profissional | [IEEE SWEBOK v4.0a](https://www.computer.org/education/bodies-of-knowledge/software-engineering) | mapa de requisitos, design, construção, teste, operação e prática | nova edição |
 | arquitetura/qualidade | [ISO/IEC/IEEE 42010:2022](https://www.iso.org/standard/74393.html); [ISO/IEC 25010:2023](https://www.iso.org/standard/78176.html); [SEI ADD](https://www.sei.cmu.edu/library/attribute-driven-design-method-collection/) | concerns, viewpoints, atributos e trade-offs | anual |
+| requisitos | [ISO/IEC/IEEE 29148:2018](https://www.iso.org/standard/72089.html) | necessidade, requisito e rastreabilidade; edição em revisão em 2026 | alto durante revisão |
 | documentação | [C4 Model](https://c4model.com/); [ADR de Nygard/Fowler](https://martinfowler.com/bliki/ArchitectureDecisionRecord.html) | comunicação leve e histórico de decisão | anual |
+| risco/evidência | [ISO 31000:2018](https://www.iso.org/standard/65694.html); [OMG SACM 2.0](https://www.omg.org/spec/SACM/2.0/) | incerteza ligada a objetivos e subconjunto didático claim–evidência | nova edição |
+| modularidade/domínio | [Parnas 1972](https://doi.org/10.1145/361598.361623); [Liskov/Wing 1994](https://www.cs.columbia.edu/~wing/publications/LiskovWing94.pdf); [PEP 544](https://peps.python.org/pep-0544/); [Python import system](https://docs.python.org/3.14/reference/import.html); [Cockburn 2005](https://alistair.cockburn.us/hexagonal-architecture); [DDD Reference](https://www.domainlanguage.com/ddd/reference/) | information hiding, subtipagem comportamental, Protocol, imports, ports/adapters e modelo de domínio | por release do Python; demais anual |
 | contratos | [JSON Schema 2020-12](https://json-schema.org/draft/2020-12); [OpenAPI](https://spec.openapis.org/oas/); [AsyncAPI](https://www.asyncapi.com/docs/reference/specification/latest); [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html); [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html); [CloudEvents](https://cloudevents.io/) | contrato, evolução, erros e envelopes | 90 dias quando ativo |
 | Python | [Python 3.14 Language Reference](https://docs.python.org/3.14/reference/); [Python typing specification](https://typing.python.org/en/latest/spec/) | semântica e typing gradual | por release |
 | ponte .NET | [ECMA-334](https://ecma-international.org/publications-and-standards/standards/ecma-334/); [ECMA-335](https://docs.ecma-international.org/ecma-335/Ecma-335-part-i-iv.pdf); documentação .NET 10 aplicável | comparação de linguagem/runtime | por release |
@@ -370,4 +392,4 @@ A defesa final deve também declarar quais garantias são apenas locais e quais 
 
 ## 12. Decisão G0
 
-**APROVADO em 15/08/2026.** A especificação resolve o conflito curricular: o curso continua Python-first; .NET é somente lente de transferência. A produção pode iniciar pelo esqueleto do módulo, pelos contratos e pelo bloco B01, mantendo G1 em andamento e G2–G6 fechados até evidência real.
+**APROVADO em 15/08/2026; detalhe B01–B03 revisado na versão 1.1.** A especificação resolve o conflito curricular: o curso continua Python-first; .NET é somente lente de transferência. A baseline passa a 60 ATs para que papel sênior, requisitos e modularidade tenham oráculos próprios. A produção pode avançar pelo esqueleto, contratos e B01, mantendo G1 em andamento e G2–G6 fechados até evidência real.

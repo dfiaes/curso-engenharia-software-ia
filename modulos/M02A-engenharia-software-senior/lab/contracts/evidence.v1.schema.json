@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curso.local/m02a/evidence.v1.schema.json",
+  "title": "Work Intake execution evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "started_at",
+    "duration_ms",
+    "runtime",
+    "input_sha256",
+    "output_sha256",
+    "policy_version",
+    "budget",
+    "adapter",
+    "outcome",
+    "reused"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "duration_ms": {"type": "number", "minimum": 0},
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation", "python", "work_intake", "pydantic"],
+      "properties": {
+        "implementation": {"type": "string"},
+        "python": {"type": "string"},
+        "work_intake": {"type": "string"},
+        "pydantic": {"type": "string"}
+      }
+    },
+    "input_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "output_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "policy_version": {"type": "string"},
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request", "advisor_call_limit", "advisor_calls"],
+      "properties": {
+        "request": {"type": "string", "pattern": "^(0|[1-9][0-9]{0,8})(\\.[0-9]{1,2})?$"},
+        "advisor_call_limit": {"const": 1},
+        "advisor_calls": {"type": "integer", "minimum": 0, "maximum": 1}
+      }
+    },
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "digest", "status"],
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": "string"},
+        "digest": {"type": ["string", "null"]},
+        "status": {"enum": ["available", "fallback"]}
+      }
+    },
+    "outcome": {"enum": ["accept", "review", "reject"]},
+    "reused": {"type": "boolean"}
+  }
+}

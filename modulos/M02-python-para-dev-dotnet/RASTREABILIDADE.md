@@ -202,6 +202,18 @@ Não contam como evidência: saída copiada do material, benchmark sem ambiente/
 - **Saída para M10/LT02:** cancelamento, backpressure e concorrência estruturada, sem confundi-los com durabilidade distribuída;
 - **Limite com M02A:** este módulo consolida Python profissional; M02A amplia arquitetura, dados, segurança, entrega e liderança em sistema maior.
 
+## Revisão didática de 20/08/2026
+
+| ID | Mudança aplicada no HTML | Evidência editorial | Estado |
+|---|---|---|---|
+| DID-M02-001 | panorama de prática vigente liga Python, packaging, gates e concorrência a um sinal industrial datado, com limite metodológico | bloco 1 e fonte Octoverse 2025 | APLICADO |
+| DID-M02-002 | trecho de `asyncio` ganhou leitura de sintaxe e lifecycle por ownership | bloco 5.2 | APLICADO |
+| DID-M02-003 | probe de free-threading explica build, execução e formato de retorno antes da interpretação | bloco 6.1 | APLICADO |
+| DID-M02-004 | exemplos pytest e Hypothesis receberam o import de `Decimal` que utilizam | blocos 8.1 e 8.3 | APLICADO |
+| DID-M02-005 | instalação do uv passou a declarar a alteração de ambiente e a necessidade de inspeção da fonte oficial | prática 1.3 | APLICADO |
+
+Auditoria de suporte: `docs/auditorias/M02-DIDATICA-2026-08.md`. A revisão não modifica os 38 cenários, a execução do laboratório ou as decisões G0–G6.
+
 ## Próxima promoção permitida
 
 G0–G6 estão aprovados por especificação, material, execução, avaliação, portabilidade, casos negativos e inspeção editorial/visual revisados. O módulo só deverá voltar a revisão por mudança relevante de fonte, runtime, dependência, contrato ou material.

@@ -96,6 +96,10 @@ svg{max-width:100%;height:auto}
 <h3>1.1 Por que isso importa</h3>
 <p>Você já viveu a cena no M00: pediu uma coisa ao agente, ele fez outra, você corrigiu no chat, ele corrigiu — e de quebra desfez uma parte boa que ele mesmo tinha escrito dois turnos antes. Esse ciclo tem nome: <strong>desenvolvimento chat-driven</strong>. Ele falha de forma previsível, e entender <em>por que</em> falha é o que justifica todo este módulo.</p>
 
+<h4>Exemplo trabalhado: a mesma mudança vista por seis artefatos</h4>
+<p>Uma equipe quer gerar um changelog semanal a partir do histórico Git. A <strong>intenção</strong> é reduzir trabalho manual na retomada de estudo. O <strong>requisito</strong> diz que cada linha deve conter data, hash curto e mensagem, sem publicar nada. A <strong>spec</strong> escolhe leitura local do Git, UTF-8 e uma mensagem clara quando não houver repositório. O <strong>plano</strong> separa parser, formatação e teste, declarando arquivos e comandos. O <strong>código</strong> implementa essas decisões. A <strong>evidência</strong> registra que o teste passou e qual versão do runtime o executou.</p>
+<p>Agora mude uma regra: a semana passa a começar no domingo. Se o requisito muda e o código ainda agrupa de segunda a domingo, há <code>spec_stale</code> ou implementação atrasada a classificar. Se o contrato continua exigindo segunda a domingo, mas o teste de comportamento falha, há indício de <code>code_incorrect</code>. Se tickets, telemetria e intenção divergem, a resposta correta é <code>decision_required</code>, não uma “correção” inventada pelo agente. SDD existe para expor esse caminho de decisão.</p>
+
 <p>O desenvolvimento chat-driven falha por três mecanismos que você já conhece do M00:</p>
 
 <ul>
@@ -203,6 +207,16 @@ svg{max-width:100%;height:auto}
 
 <p>Vale conhecer o Spec Kit para comparar decisões concretas. Neste curso você constrói um kit pequeno porque isso expõe contratos, políticas e gates que ferramentas prontas ocultam. O kit usa <a href="https://agentskills.io/specification">Agent Skills</a>, contrato canônico e adapters mínimos. Regras de domínio vivem uma vez no núcleo; cada produto apenas traduz entrada e apresentação.</p>
 
+<h4>Panorama de prática vigente</h4>
+<p>O <a href="https://github.blog/news-insights/octoverse/octoverse-a-new-developer-joins-github-every-second-as-ai-leads-typescript-to-1/">Octoverse 2025 do GitHub</a> identificou mais de 1,1 milhão de repositórios públicos que importam SDKs de LLM, com crescimento anual de 178% na sua medição. Esse número não mede vagas, empresas privadas, qualidade de código ou adoção no Brasil. Ele mostra por que contratos revisáveis, gates e handoffs não podem ficar restritos a projetos experimentais: fluxos assistidos já produzem mudanças que precisam passar pelo mesmo processo de engenharia.</p>
+<table><thead><tr><th>Prática atual</th><th>Exemplos de ferramentas ou formatos</th><th>Invariante ensinado no M01</th></tr></thead><tbody>
+<tr><td>intenção e tarefas persistidas fora do chat</td><td>Markdown versionado, Spec Kit, ADRs e Agent Skills</td><td>requisito → decisão → tarefa → teste</td></tr>
+<tr><td>feedback mecânico antes da integração</td><td>Ruff, mypy, unittest/pytest, CI e code review</td><td>gate com oráculo, caso negativo e evidência</td></tr>
+<tr><td>execução paralela de mudanças isoladas</td><td>Git worktree, branches, runners e workers por wave</td><td>read/write sets, contratos e gate global</td></tr>
+<tr><td>automação de terceiro dentro do fluxo</td><td>templates, workflows, actions e extensões</td><td>inspeção, hash/allowlist e menor privilégio</td></tr>
+</tbody></table>
+<p>Spec Kit é o adapter didático deste módulo. O aluno aprende o contrato primeiro para poder adotar, substituir ou remover a ferramenta sem reaprender a raciocinar sobre mudança.</p>
+
 <h3>1.5 Anti-padrões de spec — os quatro jeitos de fazer SDD errado</h3>
 <table>
 <thead><tr><th>Anti-padrão</th><th>Como se parece</th><th>Por que falha</th><th>Conserto</th></tr></thead>
@@ -301,7 +315,7 @@ comando de verificação da etapa e me mostre a saída. Pare.</code></pre>
 
 <ul>
 <li><strong>Context rot (apodrecimento de contexto).</strong> A janela enche com histórico de edições, saídas de comando e versões antigas de código. O sinal (a instrução original, a spec) dilui no ruído. O modelo passa a dar mais peso ao que está perto do fim da janela — as próprias ações recentes — e menos ao objetivo. Sintoma clássico: refatorar código que já estava pronto.</li>
-<li><strong>Context anxiety.</strong> Quando o agente percebe (pelo harness ou por heurística própria) que o contexto está acabando, ele muda de comportamento: encurta caminhos, pula verificações, tenta "terminar de qualquer jeito antes de esquecer". É observável e documentado — e a mitigação não é prompt, é <strong>unidade de trabalho menor</strong>.</li>
+<li><strong>Degradação perto do limite de contexto.</strong> Não atribua uma intenção ao modelo a partir de uma resposta curta. Procure sinais: compactação registrada pelo harness, requisito antigo ausente da entrada, passos que crescem sem gate, checks omitidos ou retomada sem estado confirmado. O tratamento começa por unidade de trabalho menor, estado externalizado e medição; um prompt pedindo “não esqueça” não torna o diagnóstico confiável.</li>
 <li><strong>Falhas correlacionadas.</strong> Pedir ao mesmo modelo — ou a outro modelo semelhante — que verifique texto gerado não cria independência por si só. Priorize parser, type checker, teste com oráculo forte, controle negativo e revisão humana orientada por risco. Um segundo agente pode ampliar perspectivas, mas sua independência precisa ser demonstrada, não presumida.</li>
 <li><strong>Acúmulo de erro composto.</strong> Como ilustração matemática — não como taxa medida de agentes — vinte passos independentes com 95% de sucesso cada dariam <code>0,95²⁰ ≈ 36%</code> de sucesso integral. Na prática as falhas não são independentes, o que reforça a necessidade de medir e criar gates entre estados.</li>
 </ul>
@@ -429,7 +443,7 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 </div>
 
 <h3>3.2 Os doze fatores, um a um</h3>
-<p>A tabela abaixo usa os nomes originais (em inglês, como o mercado cita) — decore os números dos que mais usar; em entrevista e em discussão técnica, "isso viola o fator 8" é linguagem corrente.</p>
+<p>A tabela mantém os nomes originais em inglês porque são o vocabulário da fonte. Não trate os números como prova de senioridade. Use cada linha para perguntar qual estado, efeito, contrato ou decisão o sistema precisa tornar explícito.</p>
 
 <table>
 <thead><tr><th>#</th><th>Fator</th><th>O que significa</th><th>Tradução .NET / prática</th></tr></thead>
@@ -506,7 +520,7 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 <p class="clock">00:00–00:20 quando paralelizar (e quando não) · 00:20–00:50 arquitetura orquestrador-workers · 00:50–01:35 prática: worktrees + duas features em paralelo · 01:35–02:00 consolidação e conflitos</p>
 
 <h3>4.1 Por que isso importa</h3>
-<p>Um agente trabalha em uma coisa por vez. Você, sênior, sabe que a produtividade real de um tech lead não vem de digitar mais rápido — vem de <strong>manter várias frentes andando com segurança</strong>. Paralelizar agentes é isso: enquanto o worker A implementa a feature de auth, o worker B escreve os testes do billing e o C atualiza a documentação. Mas paralelismo mal feito é pior que sequencial: dois agentes no mesmo diretório se atropelam, e você gasta a tarde resolvendo a colisão. Este bloco te dá o padrão seguro.</p>
+<p>Um host pode executar uma ou várias unidades de trabalho, mas isolamento de processo não prova independência. O ganho aparece quando tarefas, contratos e recursos deixam de competir entre si. Enquanto o worker A implementa uma mudança de autenticação, o B escreve testes de billing e o C atualiza documentação, alguém ainda precisa manter a base estável, integrar e julgar o resultado. Paralelismo mal modelado aumenta colisões e retrabalho. Este bloco constrói o critério para decidir quando a execução simultânea ajuda.</p>
 
 <div class="box fund">
 <span class="lbl">Fundamento de engenharia · Concorrência — a reciclagem que decide se isso funciona</span>
@@ -839,10 +853,11 @@ O método é portável entre Python, .NET e harnesses, mas Python 3.14 é a prá
 <tr><td>Documentação de implementação</td><td><a href="https://github.github.com/spec-kit/">Spec Kit</a>, <a href="https://docs.astral.sh/ruff/configuration/">Ruff</a>, <a href="https://mypy.readthedocs.io/en/stable/">mypy</a>, <a href="https://docs.pytest.org/en/stable/reference/exit-codes.html">pytest</a> e <a href="https://docs.astral.sh/uv/">uv</a></td><td>verificar versão e comportamento; não generalizar produto</td></tr>
 <tr><td>Processo e supply chain</td><td><a href="https://csrc.nist.gov/pubs/sp/800/218/final">NIST SSDF 1.1</a> e <a href="https://slsa.dev/spec/v1.2/">SLSA 1.2</a></td><td>práticas seguras e proveniência; lockfile sozinho não basta</td></tr>
 <tr><td>Practitioner guidance</td><td><a href="https://github.com/humanlayer/12-factor-agents">12-Factor Agents</a></td><td>heurísticas com evidência e contrapontos; não norma</td></tr>
+<tr><td>Fonte industrial</td><td><a href="https://github.blog/news-insights/octoverse/octoverse-a-new-developer-joins-github-every-second-as-ai-leads-typescript-to-1/">GitHub Octoverse 2025</a></td><td>sinal de atividade pública em repositórios com SDKs de LLM; não mede vagas, adoção privada ou adequação de ferramenta</td></tr>
 </tbody>
 </table>
 <div class="danger"><strong>Janela de revalidação.</strong> Reconfirme documentação de produto, comandos, versões e integrações no máximo a cada 90 dias ou antes de qualquer regeneração. Especificações estáveis também devem ser verificadas quando houver revisão publicada.</div>
-<p class="small">Rastreabilidade editorial e técnica: consulte <code>RASTREABILIDADE.md</code>. Última revisão estrutural e didática: 15/08/2026; fontes técnicas verificadas em 14/08/2026.</p>
+<p class="small">Rastreabilidade editorial e técnica: consulte <code>RASTREABILIDADE.md</code>. Revisão de autoria: 20/08/2026; fontes técnicas verificadas em 14/08/2026; panorama industrial revalidar até 18/11/2026.</p>
 </section>
 
 </main>

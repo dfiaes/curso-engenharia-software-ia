@@ -89,6 +89,15 @@ figure{margin:28px 0;text-align:center;overflow-x:auto}figcaption{font-size:.9re
 <p>Um <strong>virtual environment</strong> fornece prefixo e diretório de instalação isolados para os pacotes do projeto. Dependendo da plataforma e da ferramenta, o executável pode ser cópia, link ou launcher; o contrato importante é <code>sys.prefix</code>/site-packages isolado, não “uma cópia completa do Python”. O uv normalmente gerencia <code>.venv/</code> ao lado do projeto. Você ainda precisa saber qual interpretador executou o processo: confirme com <code>sys.executable</code> e <code>sys.prefix</code>, e nunca versione o ambiente.</p>
 </div>
 
+<h4>Panorama de prática vigente</h4>
+<p>O <a href="https://github.blog/news-insights/octoverse/what-the-fastest-growing-tools-reveal-about-how-software-is-being-built/">Octoverse 2025 do GitHub</a> observou que quase metade dos novos projetos de IA públicos analisados em agosto de 2025 usava Python como linguagem principal. O mesmo recorte destacou ferramentas de packaging e projeto, como <code>uv</code>, entre projetos de crescimento acelerado. O dado descreve atividade em repositórios públicos do GitHub; não mede vagas, empresas privadas, Brasil, qualidade de arquitetura ou a melhor ferramenta para todo time.</p>
+<table><thead><tr><th>Prática que aparece no mercado</th><th>Exemplos de ferramentas</th><th>Fundamento que o M02 exige dominar</th></tr></thead><tbody>
+<tr><td>projeto Python reproduzível</td><td><code>pyproject.toml</code>, lockfiles, uv, pip, Hatch, PDM e Poetry</td><td>metadata, resolução, ambiente, wheel e instalação limpa</td></tr>
+<tr><td>código assistido por IA com feedback rápido</td><td>Ruff, mypy/pyright, pytest, Hypothesis e CI</td><td>checker não substitui oráculo; negativo e propriedade revelam falsos verdes</td></tr>
+<tr><td>aplicação de IA e I/O concorrente</td><td><code>asyncio</code>, clients async, filas e workers</td><td>ownership, cancelamento, timeout e backpressure antes de throughput</td></tr>
+</tbody></table>
+<p>O laboratório usa uv, Ruff, mypy, Pydantic e pytest porque deixam essas decisões observáveis. Eles não são a definição de Python profissional. Trocar um adapter não elimina a necessidade de explicar o artefato entregue, a fronteira validada e a evidência produzida.</p>
+
 <h3>1.2 Anatomia de um projeto instalável</h3>
 <pre><code>meu-projeto/
 ├── pyproject.toml      # o .csproj: nome, versão, dependências, config das ferramentas
@@ -139,7 +148,7 @@ strict = true                      # o curso inteiro roda assim
 
 <h3>1.3 Prática guiada · Do projeto ao wheel instalado</h3>
 
-<div class="step"><span class="n">1</span><strong>Instale o uv</strong> (uma vez por máquina). Windows (PowerShell):
+<div class="step"><span class="n">1</span><strong>Instale o uv</strong> (uma vez por máquina). Instalação altera o ambiente da máquina e baixa um script remoto; abra a documentação oficial, confira origem e versão antes de executar. Windows (PowerShell):
 <pre><code>powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</code></pre>
 <p><strong>Resultado esperado:</strong> <code>uv --version</code> responde. Registre a versão real na evidência; não compare com uma versão impressa no material. Se o comando não for encontrado, valide o PATH conforme a documentação do instalador.</p></div>
 
@@ -589,6 +598,8 @@ async def process_all(items: list[str]) -> list[str]:
 if __name__ == "__main__":
     print(asyncio.run(process_all(["brl", "usd"])))</code></pre>
 
+<p>Leia o fluxo antes de decorar a sintaxe. <code>async def</code> declara uma função assíncrona; chamá-la cria uma corrotina, ainda sem executar o corpo. <code>await asyncio.sleep(0)</code> cria um ponto cooperativo: esta Task devolve o controle ao loop e pode retomar depois. <code>TaskGroup()</code> delimita o lifetime das Tasks criadas em seu bloco; se o bloco termina, elas já concluíram ou falharam segundo a política do grupo. A compreensão <code>[group.create_task(...) for item in items]</code> cria uma Task nomeada para cada item e guarda as referências. Por fim, <code>task.result()</code> lê o valor de uma Task já concluída, e <code>asyncio.run(...)</code> cria e fecha o loop para um programa de linha de comando. O vínculo entre essas linhas é ownership: toda execução iniciada tem quem a aguarde, cancele e inspecione.</p>
+
 <div class="box warn">
 <span class="lbl">Três diferenças que merecem teste na transição de .NET</span>
 <ol>
@@ -644,6 +655,7 @@ def runtime_capabilities() -> dict[str, object]:
         "free_threaded_build": is_free_threaded_build,
         "gil_enabled_now": is_gil_enabled,
     }</code></pre>
+<p>Este é um probe, não uma recomendação automática. <code>runtime_capabilities()</code> é uma função sem argumentos que devolve um dicionário: as chaves são textos, e os valores podem ter tipos diferentes, por isso a anotação usa <code>dict[str, object]</code>. A primeira pergunta é sobre o build: ele foi compilado com suporte a free-threading? A segunda é sobre esta execução: o GIL está efetivamente ligado agora? Registrar as duas respostas evita concluir que uma flag de instalação prova o comportamento de uma extensão carregada depois.</p>
 <p>Registre as duas dimensões. Ter suporte no build não prova que o GIL permaneça desabilitado durante toda a execução. A capability é dado de observação, não feature flag presumida.</p>
 
 <h3>6.2 Quatro executores, quatro custos</h3>
@@ -827,7 +839,9 @@ class ResumoCategoria:
 <h3>8.1 Pytest: comportamento antes da implementação</h3>
 <p>Funções e classes de teste são convenções de coleta, e <code>assert</code> é reescrito durante importação/coleta para oferecer diagnóstico rico. Isso não torna a suíte boa por si: o oráculo deve distinguir comportamento correto de uma implementação plausível, mas errada.</p>
 
-<pre><code>import pytest
+<pre><code>from decimal import Decimal
+
+import pytest
 from python_senior_lab.parsing import parse_decimal
 
 
@@ -892,7 +906,9 @@ def test_ingestao_reporta_linha_invalida(csv_sujo: Path, config_estrita: Config)
 
 <h3>8.3 Property tests, controle negativo e defeitos de IA</h3>
 <p>Exemplos verificam casos conhecidos; propriedades relacionam muitas entradas e saídas. Para o parser, uma propriedade útil é: toda transação aceita, serializada e lida novamente preserva moeda e valor decimal. Outra: linhas rejeitadas nunca aparecem no CSV limpo. Hypothesis gera e minimiza contraexemplos; fixe perfil, versões e seed apenas quando investigar reprodução.</p>
-<pre><code>from hypothesis import given, strategies as st
+<pre><code>from decimal import Decimal
+
+from hypothesis import given, strategies as st
 
 
 @given(st.decimals(allow_nan=False, allow_infinity=False, places=2))
@@ -1028,6 +1044,7 @@ Distribuição só está entregue quando o wheel funciona fora do source tree.</
 <li><a href="https://docs.pydantic.dev/latest/concepts/strict_mode/">Pydantic strict mode</a></li>
 <li><a href="https://docs.pytest.org/en/stable/how-to/fixtures.html">pytest fixtures</a></li>
 <li><a href="https://hypothesis.readthedocs.io/en/latest/">Hypothesis documentation</a></li>
+<li><a href="https://github.blog/news-insights/octoverse/what-the-fastest-growing-tools-reveal-about-how-software-is-being-built/">GitHub Octoverse 2025</a> — fonte industrial para o panorama de prática vigente; mede repositórios públicos, não vagas, adoção privada ou adequação de ferramenta.</li>
 </ol>
 <p class="small">Rastreabilidade detalhada: especificação M02, 43 competências e 38 cenários de aceitação. Data-base editorial: 15/08/2026.</p>
 </section>
