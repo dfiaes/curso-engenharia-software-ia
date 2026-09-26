@@ -13,11 +13,14 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "portal" / "course-source.json"
+STUDY_ROUTE_SOURCE = ROOT / "portal" / "study-route-source.json"
 MANIFEST = ROOT / "portal" / "course-manifest.json"
+STUDY_ROUTE_MANIFEST = ROOT / "portal" / "study-route-manifest.json"
 TEMPLATE = ROOT / "portal" / "index.template.html"
 OUTPUT = ROOT / "index.html"
 EXPECTED_UNITS = 19
 EXPECTED_BLOCKS = 152
+EXPECTED_STUDY_STAGES = 10
 
 
 class HeadingParser(HTMLParser):
@@ -146,14 +149,83 @@ def build_manifest() -> dict[str, Any]:
     }
 
 
-def render(manifest: dict[str, Any]) -> str:
+def build_study_route_manifest(course_manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    route = json.loads(STUDY_ROUTE_SOURCE.read_text(encoding="utf-8"))
+    manifest = course_manifest or build_manifest()
+    known_units = {unit["code"] for unit in manifest["units"]}
+    if not isinstance(route.get("version"), str) or not route["version"].strip():
+        raise ValueError("curated route needs a version")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", route.get("curatedAt", "")):
+        raise ValueError("curated route needs an ISO curation date")
+    stages = route.get("stages")
+    if not isinstance(stages, list) or len(stages) != EXPECTED_STUDY_STAGES:
+        raise ValueError(f"expected {EXPECTED_STUDY_STAGES} curated stages")
+
+    seen_ids: set[str] = set()
+    for stage in stages:
+        stage_id = stage.get("id", "")
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", stage_id) or stage_id in seen_ids:
+            raise ValueError(f"invalid or duplicate curated stage id: {stage_id!r}")
+        seen_ids.add(stage_id)
+        for field in ("title", "summary", "synthesis", "outcome"):
+            if not isinstance(stage.get(field), str) or not stage[field].strip():
+                raise ValueError(f"{stage_id}: missing {field}")
+        resources = stage.get("resources")
+        if not isinstance(resources, list) or not resources:
+            raise ValueError(f"{stage_id}: resources are required")
+        if not any(resource.get("role") == "essential" for resource in resources):
+            raise ValueError(f"{stage_id}: at least one essential resource is required")
+        local_references = stage.get("localReferences", [])
+        if not isinstance(local_references, list):
+            raise ValueError(f"{stage_id}: local references must be a list")
+        for resource in resources:
+            for field in ("title", "organization", "scope", "url", "type", "role"):
+                if not isinstance(resource.get(field), str) or not resource[field].strip():
+                    raise ValueError(f"{stage_id}: resource missing {field}")
+            if not re.fullmatch(r"https://[^\s]+", resource["url"]):
+                raise ValueError(f"{stage_id}: resource URL must use HTTPS: {resource['url']}")
+            if resource["role"] not in {"essential", "deepening"}:
+                raise ValueError(f"{stage_id}: invalid resource role {resource['role']}")
+        for code in local_references:
+            if code not in known_units:
+                raise ValueError(f"{stage_id}: unknown local reference {code}")
+            if code == "M11":
+                raise ValueError("M11 is optional and cannot appear in the core study route")
+
+    optional_tracks = route.get("optionalTracks")
+    if not isinstance(optional_tracks, list) or not optional_tracks:
+        raise ValueError("optional tracks must remain discoverable")
+    for item in optional_tracks:
+        for field in ("id", "title", "summary"):
+            if not isinstance(item.get(field), str) or not item[field].strip():
+                raise ValueError(f"optional track missing {field}")
+        if item.get("unitCode") and item["unitCode"] not in known_units:
+            raise ValueError(f"unknown optional unit: {item['unitCode']}")
+        if not item.get("unitCode") and not item.get("url"):
+            raise ValueError(f"optional track needs a unitCode or local URL: {item['id']}")
+        if item.get("url"):
+            local_path = item["url"].split("#", 1)[0]
+            target = (ROOT / local_path).resolve()
+            if Path(local_path).is_absolute() or ".." in Path(local_path).parts or not target.is_relative_to(ROOT) or not target.is_file():
+                raise ValueError(f"optional resource must be an existing repository-relative file: {item['url']}")
+
+    return route
+
+
+def render(manifest: dict[str, Any], route_manifest: dict[str, Any] | None = None) -> str:
     template = TEMPLATE.read_text(encoding="utf-8")
-    payload = json.dumps(manifest, ensure_ascii=False, separators=(",", ":"))
-    payload = payload.replace("</", "<\/")
-    marker = "__COURSE_MANIFEST__"
-    if template.count(marker) != 1:
-        raise ValueError("portal template must contain exactly one manifest marker")
-    return template.replace(marker, payload)
+    route_manifest = route_manifest or build_study_route_manifest(manifest)
+    payloads = {
+        "__COURSE_MANIFEST__": manifest,
+        "__STUDY_ROUTE_MANIFEST__": route_manifest,
+    }
+    rendered = template
+    for marker, data in payloads.items():
+        if rendered.count(marker) != 1:
+            raise ValueError(f"portal template must contain exactly one {marker} marker")
+        payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+        rendered = rendered.replace(marker, payload.replace("</", "<\\/"))
+    return rendered
 
 
 def main() -> int:
@@ -161,13 +233,17 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="validate generated files without rewriting")
     args = parser.parse_args()
     manifest = build_manifest()
+    route_manifest = build_study_route_manifest(manifest)
     manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
-    output_text = render(manifest)
+    route_manifest_text = json.dumps(route_manifest, ensure_ascii=False, indent=2) + "\n"
+    output_text = render(manifest, route_manifest)
 
     if args.check:
         errors: list[str] = []
         if not MANIFEST.is_file() or MANIFEST.read_text(encoding="utf-8") != manifest_text:
             errors.append("portal/course-manifest.json is stale; run tools/build_course_portal.py")
+        if not STUDY_ROUTE_MANIFEST.is_file() or STUDY_ROUTE_MANIFEST.read_text(encoding="utf-8") != route_manifest_text:
+            errors.append("portal/study-route-manifest.json is stale; run tools/build_course_portal.py")
         if not OUTPUT.is_file() or OUTPUT.read_text(encoding="utf-8") != output_text:
             errors.append("index.html is stale; run tools/build_course_portal.py")
         if errors:
@@ -175,11 +251,13 @@ def main() -> int:
             return 1
     else:
         MANIFEST.write_text(manifest_text, encoding="utf-8")
+        STUDY_ROUTE_MANIFEST.write_text(route_manifest_text, encoding="utf-8")
         OUTPUT.write_text(output_text, encoding="utf-8")
 
     print(
         f"Portal manifest: {manifest['totalUnits']} units / "
-        f"{manifest['totalBlocks']} blocks; {'valid' if args.check else 'generated'}."
+        f"{manifest['totalBlocks']} blocks; {len(route_manifest['stages'])} curated stages; "
+        f"{'valid' if args.check else 'generated'}."
     )
     return 0
 

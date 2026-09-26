@@ -3,22 +3,14 @@
 
   const manifestNode = document.getElementById("course-manifest");
   const manifest = JSON.parse(manifestNode.textContent);
+  const routeManifestNode = document.getElementById("study-route-manifest");
+  const routeManifest = JSON.parse(routeManifestNode.textContent);
   const Progress = window.CourseProgress;
   const STORAGE_KEY = "tutor-ia.course-progress.v1";
   const MAX_IMPORT_BYTES = 1024 * 1024;
   const unitByCode = new Map(manifest.units.map((unit) => [unit.code, unit]));
   const blockById = new Map(manifest.units.flatMap((unit) => unit.blocks.map((block) => [block.id, { unit, block }])));
-  const EXTERNAL_ROUTE = [
-    { id: "1", title: "Python e primeiros testes", summary: "Fundamentos para ler, escrever e testar programas.", outcome: "Um programa pequeno que lê um arquivo, valida entradas e testa um caso normal e uma falha.", resources: [["CS50P · Harvard", "https://cs50.harvard.edu/python/"], ["Tutorial oficial de Python", "https://docs.python.org/3/tutorial/"], ["pytest · primeiros testes", "https://docs.pytest.org/en/stable/getting-started.html"]] },
-    { id: "2", title: "Git e engenharia de software", summary: "Versionamento e práticas para manter software ao longo do tempo.", outcome: "Descreva uma decisão técnica e faça uma mudança pequena com diff e teste legíveis.", resources: [["Pro Git · capítulos 1–3", "https://git-scm.com/book/en/v2"], ["Software Engineering at Google", "https://abseil.io/resources/swe-book/html/toc.html"], ["pytest · primeiros testes", "https://docs.pytest.org/en/stable/getting-started.html"]] },
-    { id: "3", title: "HTTP, APIs e banco relacional", summary: "Como a Web funciona, como descrever contratos e persistir dados.", outcome: "Modele duas entidades relacionadas e descreva endpoints e erros esperados.", resources: [["Como a Web funciona · MDN", "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works"], ["Visão geral de HTTP · MDN", "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview"], ["Aprenda OpenAPI", "https://learn.openapis.org/"], ["Tutorial do PostgreSQL", "https://www.postgresql.org/docs/current/tutorial.html"]] },
-    { id: "4", title: "Serviço Python e entrega", summary: "Construa uma API local; container e CI são extensões, não bloqueios.", outcome: "Execute uma API testável localmente; não é necessário publicar em nuvem.", resources: [["Tutorial do FastAPI", "https://fastapi.tiangolo.com/tutorial/"], ["Docker Get Started", "https://docs.docker.com/get-started/"], ["GitHub Actions · quickstart", "https://docs.github.com/en/actions/get-started/quickstart"]] },
-    { id: "5", title: "Aplicações com modelos de linguagem", summary: "Prompts, chamadas de ferramentas e escolha entre fluxo simples e agente.", outcome: "Desenhe o fluxo, permissões e validação; justifique quando uma chamada direta basta.", resources: [["Prompt engineering · OpenAI", "https://developers.openai.com/api/docs/guides/prompt-engineering"], ["Prompt engineering · Anthropic", "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"], ["Building effective agents · Anthropic", "https://www.anthropic.com/engineering/building-effective-agents"], ["Using tools · OpenAI", "https://developers.openai.com/api/docs/guides/tools"]] },
-    { id: "6", title: "Avaliação e RAG", summary: "Avalie respostas com critérios e entenda o papel da recuperação de fontes.", outcome: "Monte perguntas com respostas e fontes esperadas; localize falhas de busca, evidência ou resposta.", resources: [["Demystifying evals · Anthropic", "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents"], ["Artigo original de RAG · NeurIPS", "https://arxiv.org/abs/2005.11401"], ["Contextual Retrieval · Anthropic", "https://www.anthropic.com/engineering/contextual-retrieval"]] },
-    { id: "7", title: "Contexto, agentes e protocolos", summary: "Organize contexto e exponha ferramentas por contratos interoperáveis.", outcome: "Exponha uma operação local de baixo risco com entrada, saída, erros e permissões documentados.", resources: [["Effective context engineering · Anthropic", "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"], ["MCP Python SDK · Get started", "https://py.sdk.modelcontextprotocol.io/get-started/"], ["Especificação MCP", "https://modelcontextprotocol.io/specification/2026-07-28"], ["A2A · leitura complementar", "https://a2a-protocol.org/en/docs"]] },
-    { id: "8", title: "Observabilidade, segurança e operação", summary: "Entenda sinais operacionais, incidentes e riscos específicos de aplicações com IA.", outcome: "Documente um cenário de falha, como detectá-lo, recuperar-se e limitar seu impacto.", resources: [["OpenTelemetry · Python", "https://opentelemetry.io/docs/languages/python/getting-started/"], ["Google SRE · livro", "https://sre.google/sre-book/table-of-contents/"], ["OWASP GenAI Top 10 2026", "https://genai.owasp.org/resource/owasp-genai-llm-top-10/"]] },
-    { id: "9", title: "Projeto integrado · Cartógrafo local", summary: "Una API, documentos autorizados, recuperação de fontes, testes e operação.", outcome: "Entregue contrato, serviço testado, perguntas de avaliação, trace/falha e instruções locais.", resources: [["Enunciado do Capstone local", "docs/projeto-final.md"]] },
-  ];
+  const STUDY_ROUTE = routeManifest.stages;
   let storageAvailable = true;
   let activeFilter = "all";
   let state = loadState();
@@ -51,10 +43,10 @@
       localStorage.setItem(probe, "1");
       localStorage.removeItem(probe);
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? Progress.sanitize(JSON.parse(raw), manifest) : Progress.emptyState(manifest.courseVersion);
+      return raw ? Progress.sanitize(JSON.parse(raw), manifest, routeManifest) : Progress.emptyState(manifest.courseVersion, routeManifest);
     } catch (error) {
       storageAvailable = false;
-      return Progress.emptyState(manifest.courseVersion);
+      return Progress.emptyState(manifest.courseVersion, routeManifest);
     }
   }
 
@@ -81,6 +73,9 @@
   function parseRoute() {
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (!parts.length) return { view: "inicio" };
+    if (parts[0] === "roteiro") {
+      return { view: "roteiro", stage: STUDY_ROUTE.find((stage) => stage.id === parts[1]) || null };
+    }
     const namedViews = new Set(["inicio", "curriculo", "roteiro", "unidades", "progresso"]);
     if (namedViews.has(parts[0])) return { view: parts[0] };
     const unit = unitByCode.get(parts[0].toUpperCase());
@@ -100,12 +95,27 @@
     location.hash = routeFor(unit, block);
   }
 
+  function navigateToStudyStage(stage) {
+    if (!stage) return;
+    state.studyRoute.lastVisited = stage.id;
+    saveState();
+    location.hash = `#/roteiro/${stage.id}`;
+  }
+
   function handleRoute() {
     const route = parseRoute();
     setView(route.view);
     closeMobileMenu();
     if (route.view === "estudar") showStudy(route.unit, route.block);
     else {
+      if (route.view === "roteiro" && route.stage) {
+        if (state.studyRoute.lastVisited !== route.stage.id) {
+          state.studyRoute.lastVisited = route.stage.id;
+          saveState();
+        }
+        const target = document.getElementById(`route-stage-${route.stage.id}`);
+        if (target) target.scrollIntoView({ block: "start" });
+      }
       renderProgressEverywhere();
       if (route.view === "unidades") renderCatalog();
       dom.main.focus({ preventScroll: true });
@@ -145,16 +155,21 @@
   }
 
   function renderHome() {
-    const next = Progress.nextBlock(manifest, state);
+    const next = Progress.nextStudyStage(routeManifest, state);
+    const summary = Progress.studyRouteStats(routeManifest, state);
     const button = document.getElementById("continue-button");
-    button.textContent = state.lastVisited ? `Continuar em ${next.unit.code}` : "Começar pelo M00";
-    button.onclick = () => navigateTo(next.unit, next.block);
-    const startIndex = Math.max(0, manifest.units.indexOf(next.unit));
-    const visible = [...manifest.units.slice(startIndex, startIndex + 4), ...manifest.units.slice(0, Math.max(0, 4 - (manifest.units.length - startIndex)))].slice(0, 4);
-    document.getElementById("home-unit-strip").innerHTML = visible.map((unit) => {
-      const status = Progress.unitStatus(unit, state);
-      const done = unit.blocks.filter((block) => state.blocks[block.id] === "completed").length;
-      return `<a class="mini-unit" href="${firstRoute(unit)}"><span class="eyebrow">${unit.code} · ${statusLabel(status)}</span><strong>${escapeHtml(unit.title)}</strong><small>${done} de ${unit.blocks.length} blocos concluídos</small></a>`;
+    const nextIndex = routeManifest.stages.findIndex((stage) => stage.id === next.id);
+    button.textContent = summary.completedStages === summary.totalStages
+      ? "Revisar etapa final"
+      : (state.studyRoute.lastVisited || summary.completedStages > 0)
+        ? `Continuar: etapa ${nextIndex + 1}`
+        : "Começar etapa 1";
+    button.onclick = () => navigateToStudyStage(next);
+    const visible = routeManifest.stages.slice(nextIndex, nextIndex + 3);
+    document.getElementById("home-unit-strip").innerHTML = visible.map((stage) => {
+      const index = routeManifest.stages.indexOf(stage) + 1;
+      const complete = state.studyRoute.completed[stage.id] === true;
+      return `<a class="mini-unit" href="#/roteiro/${stage.id}" data-open-route-stage="${stage.id}"><span class="eyebrow">Etapa ${index} · ${complete ? "Concluída" : stage.id === next.id ? "Próxima" : "A seguir"}</span><strong>${escapeHtml(stage.title)}</strong><small>${escapeHtml(stage.summary)}</small></a>`;
     }).join("");
   }
 
@@ -163,26 +178,66 @@
   }
 
   function renderExternalRoute() {
-    document.getElementById("external-route-list").innerHTML = EXTERNAL_ROUTE.map((step) => `
-      <article class="route-stage${state.externalRoute[step.id] ? " completed" : ""}" data-route-card="${step.id}">
-        <div class="route-stage-head"><span class="route-stage-number">${step.id.padStart(2, "0")}</span><div><h2>${escapeHtml(step.title)}</h2><p>${escapeHtml(step.summary)}</p></div></div>
-        <p class="route-outcome"><strong>Para consolidar:</strong> ${escapeHtml(step.outcome)}</p>
-        <ul class="route-resources">${step.resources.map(([label, href]) => `<li><a href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(label)} ↗</a></li>`).join("")}</ul>
-        <label class="route-complete"><input type="checkbox" data-route-step="${step.id}" ${state.externalRoute[step.id] ? "checked" : ""}><span>Marcar etapa ${step.id} como concluída</span></label>
-      </article>`).join("");
+    document.getElementById("external-route-list").innerHTML = routeManifest.stages.map((stage, index) => {
+      const completed = state.studyRoute.completed[stage.id] === true;
+      const resources = (role) => stage.resources.filter((resource) => resource.role === role).map((resource) => `
+        <li><a href="${escapeHtml(resource.url)}" target="_blank" rel="noopener noreferrer" data-open-route-stage="${stage.id}">
+          <strong>${escapeHtml(resource.title)}</strong>
+          <span>${escapeHtml(resource.organization)} · ${escapeHtml(resource.scope)}</span>
+          <small>${resourceTypeLabel(resource.type)}</small>
+        </a></li>`).join("");
+      const localReferences = stage.localReferences.map((code) => {
+        const unit = unitByCode.get(code);
+        return unit ? `<a href="${firstRoute(unit)}">${escapeHtml(unit.code)} · ${escapeHtml(unit.title)}</a>` : "";
+      }).filter(Boolean).join("");
+      return `
+        <article class="route-stage${completed ? " completed" : ""}" id="route-stage-${stage.id}" data-route-card="${stage.id}">
+          <div class="route-stage-head"><span class="route-stage-number">${String(index + 1).padStart(2, "0")}</span><div><h2><a href="#/roteiro/${stage.id}" data-open-route-stage="${stage.id}">${escapeHtml(stage.title)}</a></h2><p>${escapeHtml(stage.summary)}</p></div></div>
+          <p class="route-synthesis">${escapeHtml(stage.synthesis)}</p>
+          <h3>Leitura essencial</h3><ul class="route-resources">${resources("essential")}</ul>
+          ${stage.resources.some((resource) => resource.role === "deepening") ? `<details class="route-deepening"><summary>Aprofundar (${stage.resources.filter((resource) => resource.role === "deepening").length})</summary><ul class="route-resources">${resources("deepening")}</ul></details>` : ""}
+          ${localReferences ? `<p class="route-local-reference"><strong>Acervo local relacionado:</strong> ${localReferences}</p>` : ""}
+          <p class="route-outcome"><strong>Consolidação opcional:</strong> ${escapeHtml(stage.outcome)}</p>
+          <label class="route-complete"><input type="checkbox" data-route-step="${stage.id}" ${completed ? "checked" : ""}><span>Marcar etapa ${index + 1} como concluída</span></label>
+        </article>`;
+    }).join("");
+    document.getElementById("optional-track-list").innerHTML = routeManifest.optionalTracks.map((track) => {
+      const unit = track.unitCode && unitByCode.get(track.unitCode);
+      const href = unit ? firstRoute(unit) : track.url;
+      return `<article class="optional-track"><h3><a href="${escapeHtml(href)}">${escapeHtml(track.title)}</a></h3><p>${escapeHtml(track.summary)}</p></article>`;
+    }).join("");
+    document.getElementById("route-curated-at").textContent = routeManifest.curatedAt;
     updateExternalRouteProgress();
   }
 
+  function resourceTypeLabel(type) {
+    return ({
+      normative: "Especificação / padrão",
+      official: "Documentação oficial",
+      vendor: "Documentação específica do produto",
+      practitioner: "Artigo practitioner · estudo de caso",
+      research: "Pesquisa original",
+      course: "Curso aberto",
+      canonical: "Referência canônica",
+    })[type] || "Fonte de referência";
+  }
+
   function updateExternalRouteProgress() {
-    const completed = EXTERNAL_ROUTE.filter((step) => state.externalRoute[step.id] === true).length;
-    document.getElementById("route-progress-label").textContent = `${completed} de ${EXTERNAL_ROUTE.length} etapas concluídas`;
-    document.getElementById("route-progress-bar").style.width = `${Math.round((completed / EXTERNAL_ROUTE.length) * 100)}%`;
-    for (const step of EXTERNAL_ROUTE) {
-      const card = document.querySelector(`[data-route-card="${step.id}"]`);
+    const summary = Progress.studyRouteStats(routeManifest, state);
+    document.getElementById("route-progress-label").textContent = `${summary.completedStages} de ${summary.totalStages} etapas concluídas`;
+    document.getElementById("route-progress-bar").style.width = `${summary.percent}%`;
+    const legacyCount = Object.values(state.legacyExternalRoute).filter(Boolean).length;
+    const legacyNote = document.getElementById("legacy-route-note");
+    if (legacyNote) {
+      legacyNote.hidden = legacyCount === 0;
+      legacyNote.textContent = legacyCount ? `O progresso do roteiro anterior (${legacyCount} de 9 etapas marcadas) foi mantido como histórico; nenhuma marcação foi transferida para esta trilha.` : "";
+    }
+    for (const stage of routeManifest.stages) {
+      const card = document.querySelector(`[data-route-card="${stage.id}"]`);
       if (!card) continue;
-      card.classList.toggle("completed", state.externalRoute[step.id] === true);
+      card.classList.toggle("completed", state.studyRoute.completed[stage.id] === true);
       const checkbox = card.querySelector("[data-route-step]");
-      if (checkbox) checkbox.checked = state.externalRoute[step.id] === true;
+      if (checkbox) checkbox.checked = state.studyRoute.completed[stage.id] === true;
     }
   }
 
@@ -206,14 +261,20 @@
   }
 
   function renderProgressView() {
-    const summary = Progress.stats(manifest, state);
+    const summary = Progress.studyRouteStats(routeManifest, state);
     const percent = `${summary.percent}%`;
     document.getElementById("progress-percent").textContent = percent;
     document.getElementById("progress-dial").style.background = `conic-gradient(var(--teal) ${summary.percent}%, #e3e9f0 ${summary.percent}%)`;
     document.getElementById("wide-progress-bar").style.width = percent;
-    document.getElementById("progress-heading").textContent = summary.completedBlocks === manifest.totalBlocks ? "Prévia concluída." : summary.completedBlocks ? `${summary.completedBlocks} blocos concluídos.` : "Você ainda não iniciou o percurso.";
-    document.getElementById("progress-description").textContent = summary.completedBlocks === manifest.totalBlocks ? "Os laboratórios e checkpoints continuam disponíveis como aprofundamento opcional." : `${manifest.totalBlocks - summary.completedBlocks} blocos de leitura restantes; laboratórios e checkpoints não entram nessa conta.`;
+    document.getElementById("progress-heading").textContent = summary.completedStages === summary.totalStages
+      ? "Trilha curada concluída."
+      : summary.completedStages
+        ? `${summary.completedStages} de ${summary.totalStages} etapas marcadas.`
+        : "Você ainda não iniciou a trilha curada.";
+    document.getElementById("progress-description").textContent = `${summary.totalStages - summary.completedStages} etapas restantes. O progresso dos 19 módulos locais é exibido separadamente abaixo.`;
     document.getElementById("storage-warning").hidden = storageAvailable;
+    const localSummary = Progress.stats(manifest, state);
+    document.getElementById("local-progress-label").textContent = `${localSummary.completedBlocks} de ${manifest.totalBlocks} blocos marcados`;
     document.getElementById("progress-units").innerHTML = manifest.units.map((unit) => {
       const done = unit.blocks.filter((block) => state.blocks[block.id] === "completed").length;
       return `<article class="progress-unit"><span class="progress-unit-code">${unit.code}</span><div><h3>${escapeHtml(unit.title)}</h3><small>${done} de ${unit.blocks.length} blocos · ${statusLabel(Progress.unitStatus(unit, state))}</small></div><meter min="0" max="${unit.blocks.length}" value="${done}">${done} de ${unit.blocks.length}</meter></article>`;
@@ -221,16 +282,16 @@
   }
 
   function renderProgressEverywhere() {
-    const summary = Progress.stats(manifest, state);
+    const summary = Progress.studyRouteStats(routeManifest, state);
+    const localSummary = Progress.stats(manifest, state);
     const percent = `${summary.percent}%`;
-    document.getElementById("header-progress-label").textContent = `${summary.completedBlocks} de ${manifest.totalBlocks}`;
+    document.getElementById("header-progress-label").textContent = `${summary.completedStages} de ${summary.totalStages} etapas`;
     document.getElementById("header-progress-bar").style.width = percent;
     document.getElementById("home-progress-percent").textContent = percent;
-    document.getElementById("home-blocks-done").textContent = `${summary.completedBlocks} / ${manifest.totalBlocks}`;
-    document.getElementById("home-units-done").textContent = `${summary.completedUnits} / ${manifest.totalUnits}`;
-    document.getElementById("home-in-progress").textContent = String(summary.inProgressBlocks);
-    const last = state.lastVisited && blockById.get(state.lastVisited.block);
-    document.getElementById("home-last-visited").textContent = last ? `${last.unit.code} · bloco ${last.block.number}` : "Ainda não iniciada";
+    document.getElementById("home-route-done").textContent = `${summary.completedStages} / ${summary.totalStages}`;
+    document.getElementById("home-blocks-done").textContent = `${localSummary.completedBlocks} / ${manifest.totalBlocks}`;
+    const last = STUDY_ROUTE.find((stage) => stage.id === state.studyRoute.lastVisited);
+    document.getElementById("home-route-last").textContent = last ? last.title : "Ainda não iniciada";
     renderHome();
     renderProgressView();
     updateExternalRouteProgress();
@@ -318,7 +379,7 @@
     if (!file) return;
     if (file.size > MAX_IMPORT_BYTES) throw new Error("O arquivo ultrapassa o limite de 1 MB.");
     const parsed = JSON.parse(await file.text());
-    const imported = Progress.sanitize(parsed, manifest);
+    const imported = Progress.sanitize(parsed, manifest, routeManifest);
     state = imported;
     saveState();
     showMessage("Progresso importado com sucesso.");
@@ -349,6 +410,14 @@
   }
 
   document.addEventListener("click", (event) => {
+    const routeStageLink = event.target.closest("[data-open-route-stage]");
+    if (routeStageLink) {
+      const stage = STUDY_ROUTE.find((item) => item.id === routeStageLink.dataset.openRouteStage);
+      if (stage && state.studyRoute.lastVisited !== stage.id) {
+        state.studyRoute.lastVisited = stage.id;
+        saveState();
+      }
+    }
     const unitButton = event.target.closest("[data-open-unit]");
     if (unitButton) { const unit = unitByCode.get(unitButton.dataset.openUnit); navigateTo(unit, unit.blocks[0]); }
     const blockButton = event.target.closest("[data-open-block]");
@@ -366,8 +435,10 @@
   document.addEventListener("change", (event) => {
     const routeStep = event.target.closest("[data-route-step]");
     if (routeStep) {
-      state.externalRoute[routeStep.dataset.routeStep] = routeStep.checked;
-      if (!routeStep.checked) delete state.externalRoute[routeStep.dataset.routeStep];
+      const stageId = routeStep.dataset.routeStep;
+      state.studyRoute.lastVisited = stageId;
+      state.studyRoute.completed[stageId] = routeStep.checked;
+      if (!routeStep.checked) delete state.studyRoute.completed[stageId];
       saveState();
       return;
     }
@@ -395,8 +466,8 @@
     event.target.value = "";
   });
   document.getElementById("reset-progress").addEventListener("click", () => {
-    if (!confirm("Limpar o progresso dos blocos e do roteiro externo neste navegador?")) return;
-    state = Progress.emptyState(manifest.courseVersion);
+    if (!confirm("Limpar o progresso da trilha curada, do acervo local e do roteiro antigo neste navegador?")) return;
+    state = Progress.emptyState(manifest.courseVersion, routeManifest);
     saveState();
     showMessage("Progresso limpo.");
   });

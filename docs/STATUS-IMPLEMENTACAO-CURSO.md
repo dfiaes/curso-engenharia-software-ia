@@ -8,6 +8,8 @@ Este é o único placar e fila operacional. Material existente não significa ve
 
 O portal [`index.html`](../index.html) reúne as 19 unidades e os 152 blocos do principal para leitura e acompanhamento local. O rótulo `PRÉVIA_EDITORIAL` significa cobertura navegável, não `VERIFICADO`: laboratórios, checkpoints, integrações e G0–G6 continuam com os estados e bloqueios abaixo. Progresso salvo pelo portal pertence ao navegador do aluno e não altera este placar nem `PROGRESSO.md`.
 
+**Nova entrada de estudo:** a decisão aprovada é priorizar uma trilha curada de dez etapas baseada em fontes públicas e sínteses originais. T1 implementou o manifesto, a trilha principal no portal e progresso separado. A sequência ensina primeiro agentes de programação (prática em Codex e OpenCode; comparação de Claude Code e Cursor), depois Python e apps com LLMs. Os módulos existentes permanecem como acervo secundário; M11 e ML01–ML07 ficam fora do percurso principal. Este trabalho não altera a fila, os gates ou o estado de certificação v4. A decomposição, dependências e retomada por sessão estão em [`PLANO-IMPLEMENTACAO-TRILHA-CURADA.md`](PLANO-IMPLEMENTACAO-TRILHA-CURADA.md); T2 é o próximo cartão elegível e atualizará o guia, README e currículo.
+
 ## Decisões vigentes
 
 - Conhecimento profundo e alta didática são prioridade; laboratório mínimo suficiente, sem complexidade ornamental.
