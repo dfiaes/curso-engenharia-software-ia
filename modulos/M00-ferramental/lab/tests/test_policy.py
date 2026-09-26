@@ -22,9 +22,7 @@ class PolicyTests(unittest.TestCase):
         ).code
 
     def test_read_inside_workspace_is_allowed(self) -> None:
-        request = TaskRequest(
-            frozenset({Capability.READ}), True, self.workspace / "src" / "app.py"
-        )
+        request = TaskRequest(frozenset({Capability.READ}), True, self.workspace / "src" / "app.py")
         self.assertEqual("ALLOW_READ", self.decide(request))
 
     def test_path_escape_is_denied(self) -> None:
@@ -62,4 +60,3 @@ class PolicyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

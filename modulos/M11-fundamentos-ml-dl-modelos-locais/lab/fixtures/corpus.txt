@@ -1,0 +1,357 @@
+"""Corpus local do lab M11 B04: codigo Python versionado para treino char-level.
+
+Origem: escrito para este laboratorio (padroes comuns de codigo Python).
+Uso: lab/treinar.py le este arquivo, divide 90/10 e treina o GPT minimo.
+Nenhum download, rede ou peso externo.
+"""
+
+
+def calcular_total(itens: list[float], desconto: float = 0.0) -> float:
+    total = 0.0
+    for valor in itens:
+        if valor < 0.0:
+            raise ValueError("valor negativo nao entra no total")
+        total += valor
+    return total * (1.0 - desconto)
+
+
+def aplicar_desconto(preco: float, percentual: float) -> float:
+    if not 0.0 <= percentual <= 100.0:
+        raise ValueError("percentual fora da faixa")
+    return preco - preco * percentual / 100.0
+
+
+class Carrinho:
+    def __init__(self) -> None:
+        self.itens: list[tuple[str, float, int]] = []
+
+    def adicionar(self, nome: str, preco: float, quantidade: int = 1) -> None:
+        if quantidade < 1:
+            raise ValueError("quantidade minima e 1")
+        self.itens.append((nome, preco, quantidade))
+
+    def remover(self, nome: str) -> bool:
+        for i, (n, _, _) in enumerate(self.itens):
+            if n == nome:
+                del self.itens[i]
+                return True
+        return False
+
+    def total(self) -> float:
+        return sum(preco * qtd for _, preco, qtd in self.itens)
+
+    def contar(self) -> int:
+        return len(self.itens)
+
+
+class Pedido:
+    PENDENTE = "pendente"
+    PAGO = "pago"
+    ENVIADO = "enviado"
+    ENTREGUE = "entregue"
+
+    def __init__(self, numero: int, cliente: str) -> None:
+        self.numero = numero
+        self.cliente = cliente
+        self.estado = Pedido.PENDENTE
+        self.carrinho = Carrinho()
+
+    def pagar(self) -> None:
+        if self.estado != Pedido.PENDENTE:
+            raise ValueError("pedido nao esta pendente")
+        self.estado = Pedido.PAGO
+
+    def enviar(self) -> None:
+        if self.estado != Pedido.PAGO:
+            raise ValueError("pedido nao esta pago")
+        self.estado = Pedido.ENVIADO
+
+    def entregar(self) -> None:
+        if self.estado != Pedido.ENVIADO:
+            raise ValueError("pedido nao esta enviado")
+        self.estado = Pedido.ENTREGUE
+
+    def resumo(self) -> str:
+        return f"pedido {self.numero} de {self.cliente}: {self.estado}"
+
+
+def buscar_pedido(pedidos: list[Pedido], numero: int) -> Pedido | None:
+    for pedido in pedidos:
+        if pedido.numero == numero:
+            return pedido
+    return None
+
+
+def pedidos_por_estado(pedidos: list[Pedido], estado: str) -> list[Pedido]:
+    return [p for p in pedidos if p.estado == estado]
+
+
+def receita_total(pedidos: list[Pedido]) -> float:
+    return sum(p.carrinho.total() for p in pedidos if p.estado != Pedido.PENDENTE)
+
+
+class Cliente:
+    def __init__(self, nome: str, email: str) -> None:
+        self.nome = nome
+        self.email = email
+        self.pedidos: list[Pedido] = []
+
+    def novo_pedido(self, numero: int) -> Pedido:
+        pedido = Pedido(numero, self.nome)
+        self.pedidos.append(pedido)
+        return pedido
+
+    def total_gasto(self) -> float:
+        return sum(p.carrinho.total() for p in self.pedidos)
+
+
+def validar_email(email: str) -> bool:
+    if "@" not in email:
+        return False
+    usuario, _, dominio = email.partition("@")
+    if not usuario or "." not in dominio:
+        return False
+    return True
+
+
+def formatar_moeda(valor: float) -> str:
+    return f"R$ {valor:.2f}".replace(".", ",")
+
+
+def ler_int(texto: str, padrao: int = 0) -> int:
+    try:
+        return int(texto.strip())
+    except ValueError:
+        return padrao
+
+
+def media(valores: list[float]) -> float:
+    if not valores:
+        raise ValueError("lista vazia nao tem media")
+    return sum(valores) / len(valores)
+
+
+def mediana(valores: list[float]) -> float:
+    if not valores:
+        raise ValueError("lista vazia nao tem mediana")
+    ordenados = sorted(valores)
+    meio = len(ordenados) // 2
+    if len(ordenados) % 2 == 1:
+        return ordenados[meio]
+    return (ordenados[meio - 1] + ordenados[meio]) / 2.0
+
+
+def normalizar(nomes: list[str]) -> list[str]:
+    vistos: set[str] = set()
+    saida: list[str] = []
+    for nome in nomes:
+        chave = nome.strip().lower()
+        if chave and chave not in vistos:
+            vistos.add(chave)
+            saida.append(nome.strip())
+    return saida
+
+
+class Estoque:
+    def __init__(self) -> None:
+        self.quantidades: dict[str, int] = {}
+
+    def entrada(self, produto: str, quantidade: int) -> None:
+        if quantidade < 0:
+            raise ValueError("quantidade negativa na entrada")
+        self.quantidades[produto] = self.quantidades.get(produto, 0) + quantidade
+
+    def saida(self, produto: str, quantidade: int) -> bool:
+        disponivel = self.quantidades.get(produto, 0)
+        if disponivel < quantidade:
+            return False
+        self.quantidades[produto] = disponivel - quantidade
+        return True
+
+    def saldo(self, produto: str) -> int:
+        return self.quantidades.get(produto, 0)
+
+    def zerados(self) -> list[str]:
+        return [p for p, q in self.quantidades.items() if q == 0]
+
+
+def juros_compostos(capital: float, taxa: float, periodos: int) -> float:
+    montante = capital
+    for _ in range(periodos):
+        montante *= 1.0 + taxa
+    return montante
+
+
+def parcela(valor: float, vezes: int) -> float:
+    if vezes < 1:
+        raise ValueError("parcelas minimas: 1")
+    return round(valor / vezes, 2)
+
+
+class Fatura:
+    def __init__(self, cliente: str, vencimento: str) -> None:
+        self.cliente = cliente
+        self.vencimento = vencimento
+        self.lancamentos: list[float] = []
+        self.paga = False
+
+    def lancar(self, valor: float) -> None:
+        if self.paga:
+            raise ValueError("fatura paga nao recebe lancamento")
+        self.lancamentos.append(valor)
+
+    def total(self) -> float:
+        return sum(self.lancamentos)
+
+    def pagar(self) -> float:
+        self.paga = True
+        return self.total()
+
+
+def filtrar_altos(valores: list[float], corte: float) -> list[float]:
+    return [v for v in valores if v >= corte]
+
+
+def agrupar_por_inicial(nomes: list[str]) -> dict[str, list[str]]:
+    grupos: dict[str, list[str]] = {}
+    for nome in nomes:
+        chave = nome[:1].upper() if nome else "#"
+        grupos.setdefault(chave, []).append(nome)
+    return grupos
+
+
+class Servico:
+    def __init__(self, nome: str, taxa_hora: float) -> None:
+        self.nome = nome
+        self.taxa_hora = taxa_hora
+        self.horas: float = 0.0
+
+    def apontar(self, horas: float) -> None:
+        if horas < 0.0:
+            raise ValueError("horas negativas")
+        self.horas += horas
+
+    def custo(self) -> float:
+        return self.horas * self.taxa_hora
+
+
+def relatorio_servicos(servicos: list[Servico]) -> str:
+    linhas = [f"{s.nome}: {s.horas:.1f}h = {formatar_moeda(s.custo())}" for s in servicos]
+    total = sum(s.custo() for s in servicos)
+    linhas.append(f"total: {formatar_moeda(total)}")
+    return "\n".join(linhas)
+
+
+class Tarefa:
+    def __init__(self, titulo: str) -> None:
+        self.titulo = titulo
+        self.concluida = False
+
+    def concluir(self) -> None:
+        self.concluida = True
+
+    def reabrir(self) -> None:
+        self.concluida = False
+
+
+class Projeto:
+    def __init__(self, nome: str) -> None:
+        self.nome = nome
+        self.tarefas: list[Tarefa] = []
+
+    def adicionar(self, titulo: str) -> Tarefa:
+        tarefa = Tarefa(titulo)
+        self.tarefas.append(tarefa)
+        return tarefa
+
+    def progresso(self) -> float:
+        if not self.tarefas:
+            return 0.0
+        feitas = sum(1 for t in self.tarefas if t.concluida)
+        return feitas / len(self.tarefas)
+
+    def pendentes(self) -> list[Tarefa]:
+        return [t for t in self.tarefas if not t.concluida]
+
+
+def carregar_config(caminho: str) -> dict[str, str]:
+    config: dict[str, str] = {}
+    with open(caminho, encoding="utf-8") as f:
+        for linha in f:
+            linha = linha.strip()
+            if not linha or linha.startswith("#") or "=" not in linha:
+                continue
+            chave, _, valor = linha.partition("=")
+            config[chave.strip()] = valor.strip()
+    return config
+
+
+def salvar_relatorio(caminho: str, linhas: list[str]) -> int:
+    with open(caminho, "w", encoding="utf-8") as f:
+        for linha in linhas:
+            f.write(linha + "\n")
+    return len(linhas)
+
+
+class Sessao:
+    def __init__(self, usuario: str) -> None:
+        self.usuario = usuario
+        self.ativa = True
+
+    def encerrar(self) -> None:
+        self.ativa = False
+
+    def renovar(self, usuario: str) -> None:
+        self.usuario = usuario
+        self.ativa = True
+
+
+def resumo_sessao(sessao: Sessao) -> str:
+    estado = "ativa" if sessao.ativa else "encerrada"
+    return f"sessao de {sessao.usuario}: {estado}"
+
+
+class Fila:
+    def __init__(self) -> None:
+        self._itens: list[str] = []
+
+    def enfileirar(self, item: str) -> None:
+        self._itens.append(item)
+
+    def desenfileirar(self) -> str | None:
+        if not self._itens:
+            return None
+        return self._itens.pop(0)
+
+    def tamanho(self) -> int:
+        return len(self._itens)
+
+    def vazia(self) -> bool:
+        return not self._itens
+
+
+class Pilha:
+    def __init__(self) -> None:
+        self._itens: list[str] = []
+
+    def empilhar(self, item: str) -> None:
+        self._itens.append(item)
+
+    def desempilhar(self) -> str | None:
+        if not self._itens:
+            return None
+        return self._itens.pop()
+
+    def topo(self) -> str | None:
+        if not self._itens:
+            return None
+        return self._itens[-1]
+
+
+def processar_fila(fila: Fila, acao: str) -> list[str]:
+    saidas: list[str] = []
+    while not fila.vazia():
+        item = fila.desenfileirar()
+        if item is not None:
+            saidas.append(f"{acao}: {item}")
+    return saidas

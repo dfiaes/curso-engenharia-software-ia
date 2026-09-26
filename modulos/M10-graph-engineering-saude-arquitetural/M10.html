@@ -30,12 +30,14 @@ h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercas
 p,li{margin:0 0 14px}
 ul,ol{padding-left:22px}
 a{color:var(--accent)}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
 code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
   padding:2px 5px;border-radius:4px}
 pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
   padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
 pre code{background:none;padding:0}
 table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+@media screen and (max-width:640px){table{display:block;overflow-x:auto}}
 th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
 th{background:var(--code-bg);font-weight:600}
 blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
@@ -70,6 +72,8 @@ svg{max-width:100%;height:auto}
 hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 .kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
   border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
 .step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
 .step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
   width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
@@ -84,6 +88,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="wrap">
 
 <h1>M10 · Graph engineering e saúde arquitetural</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Em produção: B01–B10 em revisão didática; laboratório local sem dependências externas e gates G1–G6 pendentes de revisão do orquestrador. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final. LangGraph, AGE e modelos reais são trilha externa ao lab.</p></aside>
 <p class="meta"><span class="badge">MÓDULO 10</span> &nbsp; 10 blocos de 2h · pré-requisito: M09 · <strong>o que nenhum outro curso cobre — e o que transforma o seu produto</strong></p>
 
 <div class="box">
@@ -107,22 +112,21 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="toc">
 <strong>Roteiro</strong>
 <ol>
-<li><strong>Bloco 1</strong> — A dualidade, e por que aquelas três perguntas exigem grafo <em>(fundamento)</em></li>
-<li><strong>Bloco 2</strong> — LangGraph: estado tipado, nós, arestas condicionais <em>(execução)</em></li>
-<li><strong>Bloco 3</strong> — Persistência: checkpoint, threads, retomada e time travel <em>(durabilidade)</em></li>
-<li><strong>Bloco 4</strong> — Human-in-the-loop: <code>interrupt()</code> e a armadilha da reexecução <em>(controle)</em></li>
-<li><strong>Bloco 5</strong> — Modelagem do grafo de conhecimento e extração determinística <em>(conhecimento)</em></li>
-<li><strong>Bloco 6</strong> — Apache AGE e Cypher: o grafo dentro do Postgres <em>(armazenamento)</em></li>
-<li><strong>Bloco 7</strong> — GraphRAG: busca local, global e o custo real <em>(recuperação)</em></li>
-<li><strong>Bloco 8</strong> — Grafo como memória e fatos com validade <em>(memória)</em></li>
-<li><strong>Bloco 9</strong> — Saúde arquitetural: I, A e a distância da sequência principal <em>(medida)</em></li>
-<li><strong>Bloco 10</strong> — Mini-projeto: as três perguntas respondidas · Diagnóstico · Checkpoint <em>(entrega)</em></li>
+<li><a href="#b01"><strong>Bloco 1</strong> — A dualidade, e por que aquelas três perguntas exigem grafo</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Execução: estado, reducers e roteamento</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Persistência: checkpoint, threads e retomada</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Human-in-the-loop e a armadilha da reexecução</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Grafo de conhecimento e extração determinística</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Persistência do grafo e Cypher</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — GraphRAG: busca local, global e o custo real</a></li>
+<li><a href="#b08"><strong>Bloco 8</strong> — Grafo como memória e fatos com validade</a></li>
+<li><a href="#b09"><strong>Bloco 9</strong> — Saúde arquitetural: I, A e a distância</a></li>
+<li><a href="#b10"><strong>Bloco 10</strong> — As três perguntas respondidas</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado M10</strong> — prática executável reunida, retomável por etapa</a></li>
 </ol>
 </div>
 <!-- ============================================ BLOCO 1 -->
-<h2>Bloco 1 · A dualidade, e por que aquelas três perguntas exigem grafo</h2>
-<div class="clock">00:00–00:30 o que o vetor nunca alcança &nbsp;|&nbsp; 00:30–01:05 grafos: o vocabulário mínimo &nbsp;|&nbsp; 01:05–01:35 as duas disciplinas lado a lado &nbsp;|&nbsp; 01:35–02:00 prática: modelar a pergunta</div>
-
+<h2 id="b01">Bloco 1 · A dualidade, e por que aquelas três perguntas exigem grafo</h2>
 <h3>Por que isso importa</h3>
 <p>Abra o seu <code>docs/tres-perguntas-para-o-grafo.md</code>. As perguntas provavelmente se parecem com estas:</p>
 <blockquote>
@@ -146,8 +150,8 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 </table>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Você já usou grafo de código sem chamá-lo assim, e provavelmente todo dia: <strong>"Find All References" e "Call Hierarchy" do Visual Studio</strong> são travessias de grafo. O Roslyn constrói exatamente esse grafo — símbolos como nós, referências como arestas — e é por isso que o "Rename" do Visual Studio é seguro enquanto um "buscar e substituir" não é. O NDepend, que você talvez tenha visto em auditoria de arquitetura, é o mesmo grafo com métricas em cima (e é literalmente a ferramenta que popularizou as métricas do bloco 9 no mundo .NET). A pergunta que este módulo responde é: <em>por que o seu produto de IA não tem isso, se o IDE tem há vinte anos?</em> Resposta: porque a onda de RAG fez todo mundo tratar código como texto. Código é texto <strong>e</strong> estrutura — e a estrutura é a parte que dá resposta exata.</p>
+<span class="lbl">O IDE já faz isso há vinte anos</span>
+<p>"Localizar referências" e "hierarquia de chamadas" de qualquer IDE são travessias de grafo: símbolos como nós, referências como arestas — e é por isso que renomear por refactoring é seguro enquanto "buscar e substituir" não é. A pergunta que este módulo responde: <em>por que o produto de IA não tem isso?</em> Resposta: porque a onda de RAG fez todo mundo tratar código como texto. Código é texto <strong>e</strong> estrutura — e a estrutura é a parte que dá resposta exata.</p>
 </div>
 
 <div class="box fund">
@@ -173,7 +177,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <tr><td>O grafo é</td><td>escrito por você, uma vez</td><td>extraído dos dados, e cresce</td></tr>
 <tr><td>Percorre-se</td><td>uma vez por execução, do início ao fim</td><td>a cada consulta, de um ponto qualquer</td></tr>
 <tr><td>O que se ganha</td><td>previsibilidade, retomada, ponto de intervenção</td><td>respostas que exigem relação</td></tr>
-<tr><td>Analogia .NET</td><td>máquina de estados / saga</td><td>o grafo de símbolos do Roslyn</td></tr>
+<tr><td>Analogia</td><td>máquina de estados / saga</td><td>grafo de símbolos do IDE</td></tr>
 </tbody>
 </table>
 <p>A confusão frequente — e vale saber desfazer — é achar que "usar LangGraph" te dá grafo de conhecimento, ou que "ter um Neo4j" te dá orquestração. São ortogonais: você pode ter um sem o outro, e o Capstone precisa dos dois por razões diferentes.</p>
@@ -187,30 +191,11 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <li><strong>Corpus sem estrutura</strong> (texto solto, transcrições) → extrair grafo por LLM é caro e ruidoso (bloco 5). Código é o caso feliz porque a estrutura já está lá, explícita e determinística.</li>
 </ul>
 
-<h3>Prática guiada · Modelar a pergunta antes de modelar o grafo (30 min)</h3>
-<div class="step"><span class="n">1</span><strong>Reescreva as suas três perguntas como travessias.</strong> Para cada uma, responda: qual é o <em>nó de partida</em>? quais <em>tipos de aresta</em> percorrer? em que <em>direção</em>? até que <em>profundidade</em>? o que é a <em>resposta</em> — um conjunto de nós, um caminho, uma contagem?</p>
-<p><strong>Resultado esperado:</strong> algo como — <em>"o que quebra se eu mudar CalcularJuros"</em>: parte do nó <code>Metodo{nome:"CalcularJuros"}</code>, percorre <code>CHAMA</code> e <code>IMPLEMENTA</code> <em>no sentido inverso</em> (quem aponta para ele), profundidade 1 para impacto direto e ilimitada para impacto transitivo, resposta = conjunto de nós com o caminho até cada um. <strong>Escrever isso já é 80% do trabalho de modelagem</strong> — o esquema do bloco 5 sai daqui, não de um diagrama bonito.</p></div>
+<h3>Leitura aplicada · Pergunta como travessia</h3>
+<p>Reescrever as três perguntas como travessias, provar o custo da alternativa em SQL e classificar perguntas reais é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, depois do bloco 10. O percurso: nó de partida, tipos de aresta, direção, profundidade e forma da resposta por pergunta (80% da modelagem); CTE recursiva de 20+ linhas como argumento documentado; e a distribuição busca/grafo/SQL/híbrido que especifica o roteador.</p>
 
-<div class="step"><span class="n">2</span><strong>Prove o custo da alternativa em SQL.</strong> Escreva (não precisa rodar) a CTE recursiva que responderia "quais telas dependem indiretamente desta tabela" sobre uma tabela relacional de referências.</p>
-<p><strong>Resultado esperado:</strong> uma consulta de 20+ linhas, difícil de ler, com controle manual de profundidade e de ciclo (senão ela não termina). Guarde-a: é o argumento do ADR do bloco 6, e é a resposta honesta para "por que não faz com JOIN?" — <em>dá para fazer, e é isto aqui</em>.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Classifique 10 perguntas reais</strong> que um usuário faria ao Cartógrafo em: busca, grafo, SQL ou híbrido.</p>
-<p><strong>Resultado esperado:</strong> tipicamente 4 busca, 3 grafo, 1 SQL, 2 híbrido. Essa distribuição é a especificação do <strong>roteador</strong> do M07 bloco 5 — que hoje manda tudo para a busca. No bloco 10 você liga a rota do grafo, e é aí que as três perguntas passam.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 1</span>
-<ul>
-<li>As três perguntas do M07 não falham por recuperação ruim — falham por <strong>representação</strong>: a resposta está na relação, não no documento.</li>
-<li>Vocabulário mínimo: nó, aresta dirigida e rotulada, grau (= acoplamento), travessia BFS/DFS O(V+E), alcançabilidade, DAG e ciclo, comunidades.</li>
-<li>Duas disciplinas ortogonais: grafo de <em>execução</em> (você escreve; dá durabilidade) e de <em>conhecimento</em> (você extrai; dá respostas relacionais).</li>
-<li>Grafo não é resposta para pergunta conceitual, agregação ou relação rasa — e extrair grafo de texto solto é caro. Código é o caso feliz.</li>
-<li>Modele a <em>pergunta</em> como travessia antes de modelar o esquema. O IDE faz isso há vinte anos: Find All References é travessia.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 2 -->
-<h2>Bloco 2 · LangGraph: estado tipado, nós, arestas condicionais</h2>
-<div class="clock">00:00–00:25 o que o LangGraph é (e não é) &nbsp;|&nbsp; 00:25–01:05 estado, reducers e nós &nbsp;|&nbsp; 01:05–01:40 roteamento: arestas condicionais, Command e Send &nbsp;|&nbsp; 01:40–02:00 prática: o pipeline do Capstone</div>
-
+<h2 id="b02">Bloco 2 · Execução: estado, reducers e roteamento</h2>
 <h3>Por que isso importa</h3>
 <p>No M08 você escreveu o loop do agente à mão — e foi a coisa certa a fazer, porque agora você sabe exatamente o que um framework faria por você. O ADR-0003 registrou o gatilho de revisão: <em>execução que precisa sobreviver a restart</em>. O pipeline de ingestão do Capstone (clonar → parsear → indexar → construir grafo → analisar → revisar → relatar) roda por horas sobre milhares de arquivos e <strong>falha no meio, sempre</strong> — rede, rate limit, OOM, deploy. Reprocessar do zero custa dinheiro real em chamadas já pagas. É exatamente o problema que o LangGraph resolve bem.</p>
 
@@ -220,14 +205,14 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 </div>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É <strong>Durable Functions</strong> (ou Hangfire com continuações, ou uma saga com coordenador) escrito de forma declarativa. O paralelo é quase termo a termo: o <em>orchestrator function</em> vira o grafo; as <em>activity functions</em> viram os nós; o <em>event sourcing</em> que permite ao Durable Functions retomar depois de um crash vira o <em>checkpointer</em>; e o <code>WaitForExternalEvent</code> vira o <code>interrupt()</code> do bloco 4. Inclusive a restrição mais famosa do Durable Functions reaparece aqui, e por motivo idêntico: <strong>o código pode ser reexecutado, então precisa ser determinístico e idempotente</strong> (bloco 3). Se você já sofreu com "não use <code>DateTime.Now</code> dentro do orchestrator", você já entendeu metade deste módulo.</p>
+<span class="lbl">Orquestrador durável, declarativo</span>
+<p>O padrão: função orquestradora, atividades como nós e log de eventos permitindo retomar depois de crash — com espera por evento externo virando pausa retomável (bloco 4). E a restrição central reaparece por motivo idêntico: <strong>o código pode ser reexecutado, então precisa ser determinístico e idempotente</strong> (bloco 3). Nada de relógio ou aleatoriedade dentro de nó.</p>
 </div>
 
 <h3>O estado é o coração — e o reducer é a decisão sutil</h3>
 <p>Diferente do seu loop do M08, onde o estado era uma lista de mensagens, aqui o estado é um <strong>objeto tipado declarado por você</strong>. Cada nó devolve um <em>pedaço</em> do estado, e o runtime funde esse pedaço no estado global. Como funde é definido pelo <strong>reducer</strong> de cada campo:</p>
 
-<pre><code># capstone/orchestration/state.py
+<pre><code># state.py (exemplo com framework — trilha externa; o laboratório implementa o núcleo sem deps)
 """Estado do pipeline de ingestão. Tipado, com reducers explícitos."""
 
 from __future__ import annotations
@@ -269,11 +254,11 @@ class EstadoIngestao(TypedDict):
 
 <div class="box warn">
 <span class="lbl">O reducer default sobrescreve — e é a causa nº 1 de bug em execução paralela</span>
-<p>Se dois nós rodam em paralelo e ambos devolvem <code>{"analisados": [...]}</code> com o reducer default, <strong>um sobrescreve o outro silenciosamente</strong> e você perde metade do trabalho — sem erro, sem log. Com <code>Annotated[list[...], operator.add]</code>, os dois são concatenados. Regra prática: <em>todo campo que mais de um nó escreve precisa de reducer explícito</em>. É o mesmo raciocínio de <code>Interlocked.Add</code> versus <code>x = x + 1</code> em código concorrente (M02 bloco 4) — e falha do mesmo jeito: perde atualização, de forma não determinística.</p>
+<p>Se dois nós rodam em paralelo e ambos devolvem <code>{"analisados": [...]}</code> com o reducer default, <strong>um sobrescreve o outro silenciosamente</strong> e você perde metade do trabalho — sem erro, sem log. Com <code>Annotated[list[...], operator.add]</code>, os dois são concatenados. Regra prática: <em>todo campo que mais de um nó escreve precisa de reducer explícito</em>. É o mesmo raciocínio de incremento atômico versus ler-somar-gravar em código concorrente (M02 bloco 4) — e falha do mesmo jeito: perde atualização, de forma não determinística.</p>
 </div>
 
 <h3>Nós: funções normais, tipadas, testáveis</h3>
-<pre><code># capstone/orchestration/nodes.py
+<pre><code># nodes.py (exemplo com framework — trilha externa)
 """Cada nó é uma função pura-ish: recebe estado, devolve o pedaço que mudou."""
 
 from __future__ import annotations
@@ -282,7 +267,7 @@ from langgraph.types import Command, Send
 
 from app.services.ingest import clonar, listar_arquivos, parsear_arquivo
 from app.services.graph import construir_grafo
-from capstone.orchestration.state import ArquivoAnalisado, EstadoIngestao
+from orchestration.state import ArquivoAnalisado, EstadoIngestao
 
 
 async def no_clone(estado: EstadoIngestao) -> dict[str, object]:
@@ -312,12 +297,12 @@ async def no_analisar_arquivo(estado: EstadoIngestao) -> dict[str, object]:
 <p>Repare que nós são funções comuns: <code>async def</code>, tipadas, sem herdar de nada. Isso significa que <strong>você as testa isoladamente com pytest</strong>, sem subir o grafo — a mesma disciplina do M02 bloco 6. O grafo testa a <em>orquestração</em>; os nós testam a <em>lógica</em>.</p>
 
 <h3>Roteamento: arestas fixas, condicionais, <code>Command</code> e <code>Send</code></h3>
-<pre><code># capstone/orchestration/graph.py
+<pre><code># graph.py (exemplo com framework — trilha externa)
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 
-from capstone.orchestration.nodes import *
-from capstone.orchestration.state import EstadoIngestao
+from orchestration.nodes import *
+from orchestration.state import EstadoIngestao
 
 
 def decidir_revisao(estado: EstadoIngestao) -> str:
@@ -379,33 +364,11 @@ def construir() -> StateGraph:
 <p><code>Send</code> dá paralelismo real, e traz de volta tudo do M02 bloco 4 e do M05 bloco 4: <strong>limite de concorrência</strong> (400 chamadas simultâneas ao provedor = 429 em cascata; configure o limite do grafo e/ou um semáforo dentro do nó), <strong>reducers de acúmulo</strong> em todo campo que os nós paralelos escrevem, e <strong>falha parcial</strong> — o que acontece se 3 dos 400 falharem? A resposta padrão do curso: nó captura a exceção, devolve o erro no campo <code>erros</code> (com reducer de acúmulo) e a execução continua; o consolidador decide se o volume de falhas invalida o resultado. Deixar a exceção subir mata o grafo inteiro por causa de um arquivo com encoding estranho.</p>
 </div>
 
-<h3>Prática guiada · O pipeline do Capstone (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Instale e desenhe primeiro:</strong> <code>uv add langgraph langgraph-checkpoint-postgres</code>. Antes de codar, desenhe o pipeline em Mermaid <code>stateDiagram-v2</code> (M04 bloco 2) — os 8 nós, as arestas condicionais e o ponto de revisão humana.</p>
-<p><strong>Resultado esperado:</strong> o diagrama em <code>capstone/docs/architecture.md</code>. Ele é a especificação do código e — detalhe que se paga — o LangGraph consegue gerar o diagrama do grafo compilado (<code>graph.get_graph().draw_mermaid()</code>), então você pode <strong>comparar o desenhado com o construído</strong> e pegar divergência.</p></div>
+<h3>Leitura aplicada · Topologia antes da lógica</h3>
+<p>Desenhar o pipeline, implementar estado e nós com reducers, ligar os reais e provocar falha parcial é o exercício deste bloco — o roteiro executável com motor local fica no <code>Laboratório guiado M10</code>, depois do bloco 10 (LangGraph real é trilha externa). O percurso: diagrama comparado com o construído; topologia validada com nós "burros" antes de lógica; custo acumulado correto no fan-out com teste do reducer; e erro virando campo do estado, nunca exceção que mata o grafo.</p>
 
-<div class="step"><span class="n">2</span><strong>Implemente estado e nós</strong> com reducers explícitos em tudo que mais de um nó escreve. Comece com nós "burros" (que só imprimem e devolvem a fase seguinte) para validar a topologia antes de plugar a lógica real.</p>
-<p><strong>Resultado esperado:</strong> <code>uv run python -m capstone.orchestration.graph</code> percorrendo os 8 nós em ordem e imprimindo a fase. Topologia validada em 5 minutos, antes de qualquer chamada paga.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Ligue os nós reais</strong> (clone, parse e indexação já existem do M07) e rode sobre um repositório pequeno de verdade, com <code>Send</code> no fan-out limitado a 5 concorrentes.</p>
-<p><strong>Resultado esperado:</strong> o pipeline completo com <code>custo_total_usd</code> acumulado corretamente pelos nós paralelos. <strong>Teste o reducer:</strong> troque temporariamente <code>Annotated[list, operator.add]</code> pelo default e observe os resultados sumindo — é a demonstração da caixa de aviso, e ela vacina.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Provoque falha parcial:</strong> injete um arquivo que quebra o parser e confirme que o pipeline continua, registrando o erro.</p>
-<p><strong>Resultado esperado:</strong> execução completa com <code>erros: ["arquivo X: …"]</code> e o relatório final mencionando a cobertura parcial. Se o grafo morreu, o tratamento de erro está no lugar errado — e num pipeline de 3 horas isso é a diferença entre entregar 99% e entregar nada.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 2</span>
-<ul>
-<li>LangGraph = Durable Functions declarativo: grafo de estados com snapshot por passo. O gatilho do ADR-0003 disparou.</li>
-<li>Estado tipado com <strong>reducers explícitos</strong>: o default sobrescreve, e em paralelo isso perde trabalho silenciosamente.</li>
-<li>Nós são funções normais, testáveis isoladamente. O grafo testa orquestração; os nós, lógica.</li>
-<li>Quatro controles: aresta fixa, condicional, <code>Command</code> (atualiza + roteia) e <code>Send</code> (map-reduce paralelo).</li>
-<li>Paralelismo traz de volta limite de concorrência, acúmulo e falha parcial — erro vira campo do estado, não exceção que mata o grafo.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 3 -->
-<h2>Bloco 3 · Persistência: checkpoint, threads, retomada e time travel</h2>
-<div class="clock">00:00–00:30 o modelo: thread, checkpoint, snapshot &nbsp;|&nbsp; 00:30–01:05 modos de durabilidade e o custo de cada um &nbsp;|&nbsp; 01:05–01:40 determinismo e idempotência: as regras &nbsp;|&nbsp; 01:40–02:00 prática: matar o processo</div>
-
+<h2 id="b03">Bloco 3 · Persistência: checkpoint, threads, retomada e time travel</h2>
 <h3>Por que isso importa</h3>
 <p>Este é o bloco que justifica o framework. Tudo o que você viu no bloco 2 dava para escrever à mão em algumas centenas de linhas; <strong>persistência correta, não</strong>. E o checkpoint do módulo é literalmente o que o currículo cobra: <em>matar o processo no meio de uma execução e mostrar que ela retoma do último ponto sem repetir chamadas pagas</em>.</p>
 
@@ -420,14 +383,14 @@ def construir() -> StateGraph:
 </tbody>
 </table>
 
-<pre><code># capstone/orchestration/runner.py
+<pre><code># runner.py (exemplo com framework — trilha externa)
 """Compila o grafo com checkpointer em Postgres e executa por thread."""
 
 from __future__ import annotations
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
-from capstone.orchestration.graph import construir
+from orchestration.graph import construir
 from app.core.settings import settings
 
 
@@ -507,48 +470,25 @@ await app.ainvoke(None, config=config)</code></pre>
 
 <div class="box">
 <span class="lbl">Contexto · E se eu não quiser LangGraph? Temporal e as alternativas</span>
-<p><strong>Temporal</strong> é a referência de <em>durable execution</em> fora do mundo de IA: um serviço que executa workflows com garantia de retomada, timers duráveis, retry por atividade e visibilidade — usado em sistemas financeiros. É mais robusto e mais pesado (é infraestrutura a operar, não uma biblioteca). Outras vias: <strong>fila com estado no banco</strong> (você já sabe fazer, e para pipelines simples é suficiente — o custo é reimplementar retomada e HITL), <strong>Prefect/Dagster</strong> (orientados a dados, ótimos para ETL, menos naturais para ramificação por decisão de LLM) e <strong>Durable Functions/Hangfire</strong> se o produto fosse .NET. O critério para o Capstone: LangGraph ganha por ser biblioteca (nada a operar), por integrar HITL e streaming de progresso nativamente, e por o grafo de execução ser exatamente o modelo mental do fluxo. Registre isso num ADR — inclusive porque a decisão inversa (Temporal) é defensável se o produto crescer para workflows de dias.</p>
+<p><strong>Temporal</strong> é a referência de <em>durable execution</em> fora do mundo de IA: um serviço que executa workflows com garantia de retomada, timers duráveis, retry por atividade e visibilidade — usado em sistemas financeiros. É mais robusto e mais pesado (é infraestrutura a operar, não uma biblioteca). Outras vias: <strong>fila com estado no banco</strong> (suficiente para pipelines simples — o custo é reimplementar retomada e HITL) e <strong>Prefect/Dagster</strong> (orientados a dados, ótimos para ETL, menos naturais para ramificação por decisão de LLM). O critério: biblioteca com HITL e progresso nativos (nada a operar) contra serviço dedicado quando os workflows durarem dias. Registre num ADR — a decisão inversa (Temporal) é defensável se o produto crescer para workflows de dias.</p>
 </div>
 
-<h3>Prática guiada · Matar o processo e retomar (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Ligue o <code>PostgresSaver</code></strong> no pipeline do bloco 2, com <code>durability="sync"</code> e <code>thread_id</code> estável. Rode a ingestão de um repositório médio até o fim.</p>
-<p><strong>Resultado esperado:</strong> além do resultado, as tabelas de checkpoint criadas no seu Postgres. Dê uma olhada nelas (<code>\dt</code> no psql) — ver o mecanismo desmistifica. Conte os checkpoints gravados: <code>SELECT count(*) FROM checkpoints WHERE thread_id = '…'</code>.</p></div>
+<h3>Leitura aplicada · Morte e retomada com números</h3>
+<p>Ligar o checkpointer, instrumentar custo, matar no meio e fazer time travel é o exercício deste bloco — o roteiro executável com kill simulado fica no <code>Laboratório guiado M10</code>, depois do bloco 10 (PostgresSaver real é trilha externa com Docker). O percurso: tabelas de checkpoint inspecionadas; contagem de referência; segunda parte com menos chamadas que execução completa (soma ≈ única, nunca 2x); e A/B de modelo sem repetir preparação. A prova do módulo em forma local: efeito uma vez, retomada do ponto.</p>
 
-<div class="step"><span class="n">2</span><strong>Instrumente o custo</strong> para tornar a prova visível: some <code>custo_total_usd</code> e registre em <code>llm_calls</code> (M05) quantas chamadas de LLM cada execução fez.</p>
-<p><strong>Resultado esperado:</strong> um número de referência — ex.: "ingestão completa = 180 chamadas, US$ 0,42".</p></div>
-
-<div class="step"><span class="n">3</span><strong>O experimento do checkpoint.</strong> Rode de novo num repositório novo e <strong>mate o processo</strong> (<kbd class="kbd">Ctrl-C</kbd> duas vezes, ou <code>kill -9</code>) no meio da fase de análise. Depois chame <code>retomar()</code> com o mesmo <code>thread_id</code>.</p>
-<p><strong>Resultado esperado — e é isto que o checkpoint do módulo cobra:</strong> a execução <em>continua do ponto</em>, não do começo. Prove com números: a segunda parte fez <strong>menos chamadas de LLM</strong> que uma execução completa, e a soma das duas ≈ o total de uma execução única. Se a soma for ~2x, você tem um nó não idempotente reprocessando trabalho — encontre-o com o histórico de checkpoints e conserte.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Time travel na prática:</strong> liste o histórico, volte ao checkpoint anterior à análise, altere o estado para usar o alias <code>rapido</code> (M05 bloco 6) e reexecute dali. Compare custo e qualidade com os evals do M06.</p>
-<p><strong>Resultado esperado:</strong> um A/B de modelo <em>sem repetir clone, parse e indexação</em>. Anote a economia — é o argumento de que time travel não é curiosidade, é infraestrutura de experimentação.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 3</span>
-<ul>
-<li>Checkpointer + <code>thread_id</code> estável = retomada. <code>thread_id</code> derivável da entrada, uma por unidade de trabalho.</li>
-<li>Durabilidade: <code>exit</code> (rápido, perde tudo), <code>async</code> (meio-termo), <code>sync</code> (não perde — use quando repetir custa dinheiro).</li>
-<li>Retomada reexecuta o nó desde o começo: <strong>nó precisa ser idempotente e determinístico</strong>, e o estado, serializável.</li>
-<li>Granularidade de nó é escolha de custo: quebre onde o trabalho já feito é caro demais para repetir.</li>
-<li>Time travel serve para depurar, corrigir sem reprocessar e experimentar — A/B pagando a preparação uma vez.</li>
-<li>A prova do módulo: matar o processo e retomar fazendo <em>menos</em> chamadas pagas.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 4 -->
-<h2>Bloco 4 · Human-in-the-loop: <code>interrupt()</code> e a armadilha da reexecução</h2>
-<div class="clock">00:00–00:25 por que HITL é infraestrutura, não boa intenção &nbsp;|&nbsp; 00:25–01:00 interrupt e resume &nbsp;|&nbsp; 01:00–01:35 as cinco regras que evitam bug &nbsp;|&nbsp; 01:35–02:00 prática: revisão humana no pipeline</div>
-
+<h2 id="b04">Bloco 4 · Human-in-the-loop: <code>interrupt()</code> e a armadilha da reexecução</h2>
 <h3>Por que isso importa</h3>
 <p>Você já tem o gancho de HITL desde o M08 bloco 5 (a allowlist que pausa o loop) e a promessa do M12 de transformá-lo em camada de política. Este bloco entrega o mecanismo <em>durável</em>: pausar a execução, devolver o controle, e retomar <strong>horas ou dias depois, possivelmente em outro processo</strong> — porque o humano não responde em 30 segundos e nenhuma conexão HTTP espera por ele.</p>
 <p>No Capstone o caso é concreto: a análise encontrou 12 riscos altos num sistema de pagamentos. Antes de gerar o relatório que vai para o cliente, um humano confirma, edita ou descarta. Sem persistência, isso obriga a manter o processo vivo esperando; com <code>interrupt()</code>, o estado dorme no Postgres e acorda quando a resposta chegar.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É o <code>WaitForExternalEvent</code> do Durable Functions — ou, na versão que você certamente já construiu: o <strong>passo de aprovação no pipeline de release</strong>, e o registro em tabela com status <code>aguardando_aprovacao</code> que um endpoint depois atualiza. A diferença é a ergonomia: em vez de você quebrar o fluxo em duas funções, persistir o estado à mão e reconstruir o contexto no retorno, você escreve <code>resposta = interrupt(payload)</code> no meio do nó, como se fosse uma chamada bloqueante — e o runtime cuida de congelar e descongelar. <strong>O preço dessa ergonomia é a regra da reexecução</strong>, abaixo, e ela merece atenção porque não tem equivalente óbvio no seu mundo.</p>
+<span class="lbl">Pausa que sobrevive ao processo</span>
+<p>O padrão conhecido: passo de aprovação com registro em tabela e endpoint que retoma depois. A ergonomia do mecanismo é escrever a pausa no meio do nó, como chamada bloqueante — e o runtime congela e descongela. <strong>O preço é a regra da reexecução</strong>, abaixo: o nó roda de novo desde o começo na retomada.</p>
 </div>
 
 <h3>O mecanismo</h3>
-<pre><code># capstone/orchestration/nodes.py (continuação)
+<pre><code># nodes.py, continuação (exemplo com framework — trilha externa)
 from langgraph.types import interrupt
 
 
@@ -623,34 +563,11 @@ await app.ainvoke(
 </ul>
 </div>
 
-<h3>Prática guiada · Revisão humana no pipeline (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Implemente o nó <code>revisao_humana</code></strong> com <code>interrupt()</code>, ligado pela aresta condicional do bloco 2 (só pausa se houver achado de risco alto).</p>
-<p><strong>Resultado esperado:</strong> rodando sobre um repositório sem riscos altos, o pipeline vai direto ao relatório; com riscos, ele para e devolve o payload. A ramificação é o detalhe que evita o pior HITL possível: o que pausa sempre.</p></div>
+<h3>Leitura aplicada · Aprovação que dorme no banco</h3>
+<p>Implementar o nó de revisão, expor por HTTP com auditoria, provar a durabilidade reiniciando o processo e provocar a reexecução é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, depois do bloco 10. O percurso: ramificação que evita pausar sempre; ciclo por HTTP com estado de espera; retomada em processo que nunca viu o início; e efeito antes da pausa acontecendo duas vezes — movido para depois, uma vez.</p>
 
-<div class="step"><span class="n">2</span><strong>Exponha na API (M03):</strong> <code>GET /analises/{id}/pendencia</code> devolve o payload; <code>POST /analises/{id}/decisao</code> retoma com <code>Command(resume=...)</code>. Grave <code>revisor</code>, <code>decidido_em</code> e o payload exato numa tabela de auditoria.</p>
-<p><strong>Resultado esperado:</strong> o ciclo completo por HTTP, com a análise em <code>awaiting_review</code> no banco — que é justamente um dos estados do <code>stateDiagram</code> que você desenhou no M04 bloco 2. Os dois modelos agora batem.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Prove a durabilidade da pausa:</strong> pause a execução, <strong>reinicie o processo da API</strong>, e só então envie a decisão.</p>
-<p><strong>Resultado esperado:</strong> a execução retoma normalmente em um processo que nunca viu o início do trabalho. Este é o teste que separa HITL de verdade de <code>await</code> disfarçado.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Provoque a armadilha da reexecução:</strong> coloque um <code>print("notificando…")</code> (ou melhor, um insert numa tabela) <em>antes</em> do <code>interrupt()</code> e observe quantas vezes ele acontece.</p>
-<p><strong>Resultado esperado:</strong> duas vezes — uma na pausa, outra na retomada. Mova o efeito para depois do <code>interrupt()</code> e confirme que passa a acontecer uma vez. <strong>Cinco minutos aqui evitam um incidente de notificação duplicada em produção</strong>, que é o bug mais comum de HITL.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 4</span>
-<ul>
-<li><code>interrupt()</code> + checkpointer = pausa durável: o estado dorme no banco e acorda em outro processo, dias depois.</li>
-<li><strong>O nó reexecuta desde o começo na retomada</strong> — nada de efeito colateral não idempotente antes da pausa.</li>
-<li>Cinco regras: sem try/except genérico, sem reordenar interrupts, sem <code>while True</code> (use aresta condicional), sem efeito antes, e sempre com expiração.</li>
-<li>Quatro padrões: aprovar/rejeitar, editar estado, revisar ferramenta, fornecer informação.</li>
-<li>Mesmo padrão do MRTR (MCP) e do <code>INPUT_REQUIRED</code> (A2A): trabalho longo que precisa de entrada externa sem conexão aberta.</li>
-<li>Registre quem aprovou, quando e o quê. E monitore a taxa de rejeição: zero por meses é diagnóstico, não sucesso.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 5 -->
-<h2>Bloco 5 · Modelagem do grafo de conhecimento e extração determinística</h2>
-<div class="clock">00:00–00:30 ontologia mínima viável &nbsp;|&nbsp; 00:30–01:05 o esquema do Cartógrafo &nbsp;|&nbsp; 01:05–01:40 extração: determinística × por LLM &nbsp;|&nbsp; 01:40–02:00 prática: extrair o grafo</div>
-
+<h2 id="b05">Bloco 5 · Modelagem do grafo de conhecimento e extração determinística</h2>
 <h3>Por que isso importa</h3>
 <p>Aqui começa a Parte 2, e a primeira decisão é a que mais determina o resultado: <strong>o que vira nó, o que vira aresta e o que vira propriedade</strong>. Modelagem excessiva produz um grafo bonito que ninguém consulta; modelagem escassa produz um grafo que não responde as perguntas. E há uma segunda decisão, de custo: <strong>quem extrai o grafo — código ou LLM?</strong> A resposta certa para o seu domínio economiza milhares de dólares e elimina uma classe inteira de alucinação.</p>
 
@@ -698,8 +615,8 @@ ARESTAS  (dirigidas, com propriedades quando útil)
 </ul>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Este esquema é, essencialmente, o <strong>modelo semântico do Roslyn</strong> reduzido ao que interessa: <code>INamedTypeSymbol</code>, <code>IMethodSymbol</code>, e as relações que o "Find All References" percorre. Se o seu corpus é C# e você tem o projeto compilável, <strong>o próprio Roslyn é o melhor extrator possível</strong> — ele resolve sobrecarga, genéricos e herança com precisão que nenhum parser sintático alcança, porque tem o compilador atrás. O trade-off é que ele exige o projeto <em>compilando</em>, com todas as dependências restauradas — o que num legado real nem sempre acontece. Daí a arquitetura de plugin do <code>projeto-final.md</code>: <em>tree-sitter</em> como extrator universal (funciona em qualquer arquivo, mesmo quebrado, com menos precisão) e Roslyn como extrator premium para quem tem build funcionando.</p>
+<span class="lbl">Parser tolerante primeiro</span>
+<p>Extração ideal resolveria sobrecarga, genéricos e herança com precisão de compilador — mas exige projeto compilando com dependências restauradas, o que em legado real nem sempre acontece. Daí a arquitetura em plugin: <strong>parser tolerante como extrator universal</strong> (funciona em qualquer arquivo, mesmo quebrado, com menos precisão) e extrator semântico premium para quem tem build funcionando.</p>
 </div>
 
 <h3>Extração: determinística × por LLM</h3>
@@ -723,7 +640,7 @@ ARESTAS  (dirigidas, com propriedades quando útil)
 <li><strong>Resumir comunidades</strong> — o passo caro do GraphRAG (bloco 7), e você vai medir se ele se paga.</li>
 </ol>
 
-<pre><code># app/services/graph/extract.py
+<pre><code># extract.py (exemplo com parser externo — trilha externa; o laboratório usa ast da stdlib)
 """Extração determinística do grafo. Sem LLM — por decisão de arquitetura."""
 
 from __future__ import annotations
@@ -793,34 +710,11 @@ def extrair_arquivo(caminho: str, fonte: str, parser: Parser) -> GrafoExtraido:
 </ul>
 </div>
 
-<h3>Prática guiada · Extrair o grafo do legado (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Instale e valide o parser:</strong> <code>uv add tree-sitter tree-sitter-c-sharp networkx</code>. Escreva um teste que parseia um arquivo C# pequeno <em>cuja resposta você conhece</em> e verifica: 1 tipo, 3 métodos, 2 chamadas nas linhas certas.</p>
-<p><strong>Resultado esperado:</strong> teste verde, rodando em milissegundos, sem chamar API nenhuma. Este é o teste que garante que o grafo não é ficção — e ele entra no CI.</p></div>
+<h3>Leitura aplicada · Parser contra LLM, com números</h3>
+<p>Validar o parser em arquivo conhecido, extrair o corpus com censo, comparar com extração por LLM e usar LLM só onde ganha é o exercício deste bloco — o roteiro executável com AST da stdlib fica no <code>Laboratório guiado M10</code>, depois do bloco 10 (tree-sitter é trilha externa). O percurso: teste verde em milissegundos sem API; taxa de não resolução anotada como teto de cobertura; tabela parser × LLM em custo e acertos sustentando a regra de ouro; e não-resolvidos desambiguados com confiança menor que 1.</p>
 
-<div class="step"><span class="n">2</span><strong>Extraia o repositório inteiro</strong> e imprima o censo: nós por tipo, arestas por tipo, e o tamanho da lista <code>nao_resolvidos</code>.</p>
-<p><strong>Resultado esperado:</strong> algo como <em>"1.204 tipos, 8.930 métodos, 21.400 chamadas resolvidas, 1.850 não resolvidas (8%)"</em>. <strong>Anote a taxa de não resolução</strong>: é a métrica de qualidade do extrator e o teto de cobertura das suas respostas. Se passar de ~15%, investigue o padrão (costuma ser um idioma específico do código, como um mediator ou um service locator).</p></div>
-
-<div class="step"><span class="n">3</span><strong>Compare com a alternativa por LLM</strong> em 20 arquivos: peça ao modelo (structured output do M05 bloco 2) para extrair tipos, métodos e chamadas, e confronte com o parser.</p>
-<p><strong>Resultado esperado:</strong> o parser ganha em precisão e é ordens de grandeza mais barato; o LLM <em>ocasionalmente</em> acerta uma relação implícita que o parser perdeu. Meça os dois lados: custo em US$ e acertos/erros. <strong>Esta tabela é o dado que sustenta a regra de ouro</strong> — e é o que você mostra quando alguém propuser "extrair o grafo com IA".</p></div>
-
-<div class="step"><span class="n">4</span><strong>Use o LLM onde ele ganha:</strong> mande os 20 primeiros <code>nao_resolvidos</code> (com o contexto de 10 linhas ao redor) para desambiguação, com structured output devolvendo <code>alvo_provavel</code> e <code>confianca</code>.</p>
-<p><strong>Resultado esperado:</strong> parte das chamadas resolvida, gravada com <code>confianca &lt; 1.0</code>. Compare o custo disso com o custo de extrair tudo por LLM — costuma ser 2% do valor, para o ganho que importa. É a alavanca nº 5 do M05 bloco 7 ("isto precisa mesmo de um LLM?") aplicada com cirurgia.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 5</span>
-<ul>
-<li>Modele a partir das <strong>perguntas</strong>, não do domínio. Nó = ponto de partida/contagem; aresta = o que se percorre; o resto é propriedade.</li>
-<li><code>EntryPoint</code> existe porque "código morto" é alcançabilidade a partir dele — exemplo puro de esquema dirigido por pergunta.</li>
-<li>Regra de ouro: <strong>o determinístico fica determinístico</strong>. ~95% do grafo sai do parser; o LLM entra em desambiguação, rotulagem e resumo de comunidade.</li>
-<li>tree-sitter é tolerante a erro e multi-linguagem (viabiliza o plugin do M13); Roslyn é mais preciso quando o projeto compila.</li>
-<li>networkx em memória para algoritmos; banco para durabilidade e multi-tenant.</li>
-<li>Identidade estável (fqn) é o alicerce da ingestão incremental; e confiança é propriedade da aresta, exposta na resposta.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 6 -->
-<h2>Bloco 6 · Apache AGE e Cypher: o grafo dentro do Postgres</h2>
-<div class="clock">00:00–00:25 a decisão: AGE, Neo4j ou tabela? &nbsp;|&nbsp; 00:25–01:05 instalar e o essencial de Cypher &nbsp;|&nbsp; 01:05–01:40 as três perguntas em Cypher &nbsp;|&nbsp; 01:40–02:00 prática: persistir e consultar</div>
-
+<h2 id="b06">Bloco 6 · Apache AGE e Cypher: o grafo dentro do Postgres</h2>
 <h3>Por que isso importa</h3>
 <p>O grafo em memória do bloco 5 morre com o processo. Persistir é o que permite consultar de outro serviço, isolar por tenant, e responder pergunta de usuário em milissegundos sem reprocessar o repositório. A decisão de <em>onde</em> persistir já foi tomada no ADR-0001 (M04 bloco 3) — Postgres único, com pgvector e AGE — e este bloco é onde ela se paga ou se prova errada.</p>
 
@@ -882,8 +776,8 @@ $$) AS (chamador agtype, linha agtype);</code></pre>
 </table>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Cypher está para grafo como SQL está para tabela — e a curva de aprendizado é curta justamente porque a estrutura é a mesma: <code>MATCH</code> é o <code>FROM</code>+<code>JOIN</code>, <code>WHERE</code> é <code>WHERE</code>, <code>RETURN</code> é <code>SELECT</code>. A diferença que importa é o <code>*1..5</code>: em SQL, "siga esta relação de 1 a 5 níveis" exige CTE recursiva com controle manual de ciclo e de profundidade (a consulta de 20 linhas que você escreveu no bloco 1); em Cypher são cinco caracteres. <strong>É exatamente a mesma economia que o LINQ trouxe sobre string de SQL concatenada</strong>: a intenção fica no código, o motor cuida da mecânica.</p>
+<span class="lbl">Cinco caracteres contra vinte linhas</span>
+<p>Cypher está para grafo como SQL está para tabela: <code>MATCH</code>, <code>WHERE</code>, <code>RETURN</code> com a mesma estrutura. A diferença que importa é o <code>*1..5</code>: "siga esta relação de 1 a 5 níveis" sem CTE recursiva com controle manual de ciclo e profundidade. A intenção fica no código, o motor cuida da mecânica.</p>
 </div>
 
 <h3>As três perguntas, em Cypher</h3>
@@ -976,34 +870,11 @@ async def impacto(session: AsyncSession, tenant_id: int, repo_id: int,
 <p>Você reparou — e é um cheiro legítimo. O AGE não aceita parâmetro do driver dentro do bloco <code>$$ ... $$</code> com a mesma naturalidade do SQL comum, o que empurra para interpolação. <strong>Isso é superfície de injeção</strong>, e o tratamento é o de sempre: o nome do grafo vem do runtime (nunca de entrada externa) e todo valor interpolado passa por uma função de escape/validação estrita — <code>fqn</code> casando com um regex de identificador, profundidade sendo <code>int</code> validado, e nada de string livre do usuário. Se o seu driver expuser passagem de parâmetro para o Cypher, use. Documente a decisão: é exatamente o tipo de detalhe que uma revisão de segurança vai perguntar.</p>
 </div>
 
-<h3>Prática guiada · Persistir e consultar (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Suba o AGE:</strong> use a imagem <code>apache/age</code> no seu <code>docker-compose.yml</code> (ou instale a extensão no Postgres existente) e crie a migration Alembic com <code>CREATE EXTENSION age</code>.</p>
-<p><strong>Resultado esperado:</strong> <code>SELECT * FROM ag_catalog.ag_graph;</code> respondendo. Se der "função não existe", é a armadilha 1 — o <code>LOAD</code> não rodou naquela conexão.</p></div>
+<h3>Leitura aplicada · Travessia que se confere</h3>
+<p>Subir o banco de grafo, persistir em lotes, responder as três perguntas e testar o gatilho do ADR é o exercício deste bloco — com execução real contra PostgreSQL/AGE exigindo Docker (etapa externa marcada como bloqueada sem ele). O percurso: lote de 500 contra um-a-um; respostas em milissegundos conferidas à mão contra referências conhecidas, com precisão e recall anotados; e gatilho testado com registro nos dois desfechos. O laboratório local prova a mesma mecânica em memória; o SQL de referência vive em <code>lab/sql/reference.sql</code>.</p>
 
-<div class="step"><span class="n">2</span><strong>Persista o grafo</strong> extraído no bloco 5, em lotes, e meça: tempo de escrita e tamanho ocupado.</p>
-<p><strong>Resultado esperado:</strong> tempo aceitável e uma lição sobre lote — inserir 30 mil nós um a um leva minutos; em lotes de 500, segundos. Anote os dois números se testar os dois; é a mesma lição de <code>INSERT</code> em lote do M03.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Responda as três perguntas</strong> em Cypher e <strong>confira à mão</strong> uma delas num método que você conhece.</p>
-<p><strong>Resultado esperado:</strong> as respostas saem em milissegundos. E a verificação manual é obrigatória: liste os chamadores que o grafo encontrou e compare com o "Find All References" do Visual Studio no mesmo método. <strong>Anote a taxa de acerto</strong> — precisão e recall do grafo são as métricas deste bloco, e vão para o eval no bloco 10.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Teste o gatilho do ADR-0001:</strong> rode a consulta 3 (código morto) com <code>*0..10</code> num grafo grande e meça o tempo.</p>
-<p><strong>Resultado esperado:</strong> ou ela responde em tempo aceitável (o ADR se sustenta) ou ela demora/estoura — e aí você tem a evidência concreta que o gatilho pedia. <strong>Nos dois casos, registre no ADR</strong>: decisão confirmada com dado, ou reaberta com dado. O plano B, que você já conhece do bloco 5: carregar o subgrafo em networkx e resolver lá, o que costuma resolver o caso "tudo alcançável" muito melhor.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 6</span>
-<ul>
-<li>AGE põe grafo dentro do Postgres: uma peça a menos, transação única com pgvector e tabelas — o ADR-0001 em ação.</li>
-<li>Duas armadilhas: <code>LOAD 'age'</code> + <code>search_path</code> por conexão (listener no engine), e RLS que não cobre o grafo → <strong>um grafo por tenant+repo</strong>, nomeado pelo runtime.</li>
-<li>Cypher = SQL para grafo; o que justifica tudo é <code>*1..N</code> (profundidade variável) contra a CTE recursiva.</li>
-<li>Limite a profundidade sempre; "código morto" é <strong>candidato</strong> com confiança declarada; Cypher no AGE é parcial — plano B é networkx.</li>
-<li>Interpolação em Cypher é superfície de injeção: escopo do runtime, validação estrita dos valores, decisão documentada.</li>
-<li>Valide o grafo contra o "Find All References" do IDE. Precisão e recall do grafo são métricas, não fé.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 7 -->
-<h2>Bloco 7 · GraphRAG: busca local, global e o custo real</h2>
-<div class="clock">00:00–00:30 o que GraphRAG resolve que o RAG não resolve &nbsp;|&nbsp; 00:30–01:05 local × global e comunidades &nbsp;|&nbsp; 01:05–01:40 o custo, e a alternativa preguiçosa &nbsp;|&nbsp; 01:40–02:00 prática: híbrido vetor + grafo</div>
-
+<h2 id="b07">Bloco 7 · GraphRAG: busca local, global e o custo real</h2>
 <h3>Por que isso importa</h3>
 <p>Você já tem os dois lados: busca híbrida (M07) e grafo (blocos 5–6). <strong>GraphRAG</strong> é o nome que o campo deu para usá-los juntos — e há mais de uma forma de fazer isso, com custos que diferem em ordens de grandeza. Este bloco te dá o mapa para escolher, e a honestidade sobre a conta que quase nenhum material apresenta.</p>
 
@@ -1018,8 +889,8 @@ async def impacto(session: AsyncSession, tenant_id: int, repo_id: int,
 <p>A distinção <em>local × global</em> é a chave do bloco. Pergunta <strong>local</strong> tem resposta concentrada em poucos lugares ("onde está a validação de CPF?") — busca por similaridade é ótima nisso. Pergunta <strong>global</strong> exige olhar o conjunto ("que padrões arquiteturais problemáticos este sistema repete?") — e aí a busca por similaridade é estruturalmente incapaz: ela traz os 5 trechos mais parecidos com a pergunta, não uma visão do todo.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É a diferença entre <code>SELECT ... WHERE id = 42</code> e <code>SELECT categoria, count(*) ... GROUP BY categoria</code>. A primeira busca um registro; a segunda produz uma visão agregada que <em>não existe</em> em nenhuma linha. Pedir a segunda a um índice de similaridade é como pedir um relatório gerencial a um <code>WHERE</code> com <code>LIMIT 5</code>: ele devolve cinco linhas plausíveis e você conclui coisa errada sobre o todo. GraphRAG global é, essencialmente, <strong>pré-agregação</strong> — você calcula os "GROUP BY" possíveis na ingestão (os resumos de comunidade) para poder respondê-los na consulta.</p>
+<span class="lbl">Registro × visão agregada</span>
+<p>É a diferença entre buscar um registro por chave e produzir uma visão que <em>não existe</em> em nenhuma linha (contagem por categoria, por exemplo). Pedir a segunda a um índice de similaridade devolve linhas plausíveis e conclusão errada sobre o todo. GraphRAG global é essencialmente <strong>pré-agregação</strong> — os "agrupamentos" possíveis calculados na ingestão para responder na consulta.</p>
 </div>
 
 <h3>Como o GraphRAG global funciona</h3>
@@ -1051,8 +922,8 @@ async def impacto(session: AsyncSession, tenant_id: int, repo_id: int,
 
 <p>O padrão 3 merece detalhe, porque é o que você vai construir e é o que resolve o caso mais frequente: o usuário pergunta <em>"o que depende do cálculo de juros?"</em> sem saber que a classe se chama <code>FinanceiroLegadoHelper</code>. Vetor acha o ponto de entrada (o que o grafo sozinho não faz, porque não tem semântica); grafo expande a partir dele (o que o vetor sozinho não faz). <strong>Cada um cobre exatamente a fraqueza do outro</strong> — a mesma lógica do híbrido léxico+vetorial do M07 bloco 4, agora num eixo diferente.</p>
 
-<pre><code># app/services/retrieval/graphrag.py
-"""Híbrido vetor -> grafo: o padrão que mais funciona no Cartógrafo."""
+<pre><code># graphrag.py (exemplo de leitura; a cópia executável vive no laboratório)
+"""Híbrido vetor -> grafo: âncora semântica, expansão estrutural."""
 
 from __future__ import annotations
 
@@ -1103,34 +974,11 @@ async def recuperar(pergunta: str, escopo: Escopo, saltos: int = 2) -> ContextoG
 </ul>
 </div>
 
-<h3>Prática guiada · O híbrido vetor + grafo (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Implemente <code>recuperar()</code></strong> e ligue-o à rota "estrutura" do roteador do M07 bloco 5 — aquela que hoje responde "não implementado".</p>
-<p><strong>Resultado esperado:</strong> a pergunta <em>"o que depende do cálculo de juros?"</em> agora percorre: busca semântica acha <code>FinanceiroLegadoHelper.CalcularJuros</code>, grafo expande, resposta cita chamadores com o caminho. <strong>Compare com a resposta do M07 puro</strong> na mesma pergunta — é a demonstração do módulo em uma tela.</p></div>
+<h3>Leitura aplicada · Conta antes do resumo</h3>
+<p>Ligar a rota estrutura, detectar comunidades, fazer a conta dos resumos e implementar a pergunta global preguiçosa é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, depois do bloco 10. O percurso: âncora semântica com expansão orçada contra RAG puro; comunidades divergindo das pastas como achado gratuito; conta de resumos contra receita decidindo ingestão vs. consulta em ADR; e síntese com custo controlado citando módulos.</p>
 
-<div class="step"><span class="n">2</span><strong>Detecte comunidades</strong> no grafo em memória (networkx tem os algoritmos prontos) e olhe o resultado com olhos de arquiteto.</p>
-<p><strong>Resultado esperado:</strong> N comunidades, e — o achado que costuma surpreender — <strong>elas não batem com a estrutura de pastas</strong>. Classes de "módulos" diferentes que conversam demais aparecem juntas. Isso <em>é</em> um insight de arquitetura, obtido sem nenhum token: são as fronteiras reais do sistema contra as declaradas. Guarde para o bloco 9 e para o relatório do produto.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Faça a conta antes de resumir.</strong> Estime o custo de gerar um resumo por comunidade com o alias <code>rapido</code>: nº de comunidades × tokens médios × preço (M05 bloco 7).</p>
-<p><strong>Resultado esperado:</strong> um número. Compare com o preço que você pretende cobrar por análise. <strong>Se o resumo de comunidades come mais de ~10% da receita da análise, ele não entra na ingestão</strong> — vira computação sob demanda, resumindo só as comunidades que a pergunta tocar. Registre a decisão num ADR; é o gatilho do fundamento acima.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Implemente a versão preguiçosa da pergunta global:</strong> "quais são os principais riscos deste sistema?" → identificar as comunidades relevantes por grau e por densidade de achados → resumir <em>só essas</em> (top 5) → reduzir num resultado final.</p>
-<p><strong>Resultado esperado:</strong> uma resposta de síntese com custo controlado e citando os módulos. Meça o custo e compare com a hipótese de ter resumido tudo na ingestão. <strong>Esse par de números é o entregável intelectual do bloco</strong> — e é exatamente o tipo de decisão de arquitetura com dado que o checkpoint cobra.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 7</span>
-<ul>
-<li>Duas falhas do RAG: relacional (resolvida por travessia) e <strong>global/síntese</strong> (resolvida por comunidades e resumo hierárquico).</li>
-<li>GraphRAG completo é caro: extração e resumo por LLM proporcionais ao corpus. A versão preguiçosa custa ~0,1% da indexação e adia o LLM para a consulta.</li>
-<li>Quatro padrões: vetorial, grafo, <strong>híbrido vetor→grafo</strong> (o que mais funciona) e global por comunidade.</li>
-<li>No híbrido: vetor acha a âncora, grafo expande com orçamento, e o caminho vai na resposta como evidência verificável.</li>
-<li>Pré-computar × sob demanda é decisão de margem: custo de ingestão é fixo por repositório; de consulta, variável e precificável.</li>
-<li>Comunidades que não batem com as pastas já são um achado de arquitetura — de graça.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 8 -->
-<h2>Bloco 8 · Grafo como memória e fatos com validade</h2>
-<div class="clock">00:00–00:25 por que grafo é a estrutura certa para memória &nbsp;|&nbsp; 00:25–01:00 grafo temporal: fatos que expiram &nbsp;|&nbsp; 01:00–01:35 invalidação por commit &nbsp;|&nbsp; 01:35–02:00 prática: memória que não mente</div>
-
+<h2 id="b08">Bloco 8 · Grafo como memória e fatos com validade</h2>
 <h3>Por que isso importa</h3>
 <p>No M08 bloco 6 você construiu a tabela <code>fatos_agente</code> e estabeleceu a regra: <strong>fato durável precisa de evidência e de gatilho de invalidação</strong>. Aquilo foi a versão relacional, deliberadamente simples. Agora que existe grafo, vale a pergunta: a memória do agente ganha alguma coisa sendo grafo? A resposta é sim, por dois motivos concretos — e um deles resolve um problema que a versão relacional não resolve bem.</p>
 
@@ -1142,8 +990,8 @@ async def recuperar(pergunta: str, escopo: Escopo, saltos: int = 2) -> ContextoG
 </ul>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Você já construiu isso: é <strong>cache com invalidação por dependência</strong>. O <code>IMemoryCache</code> com <code>CancellationChangeToken</code>, ou o <code>SqlDependency</code> que invalida a chave quando a tabela muda, ou — o melhor paralelo — o <strong>cache incremental do MSBuild</strong>: ele sabe que o output depende destes inputs, e quando um input muda, o que dependia dele é recompilado. A memória do agente é exatamente isso, com "fato" no lugar de "artefato de build" e "commit" no lugar de "timestamp de arquivo". A diferença cruel: servir artefato de build velho dá erro de compilação; servir fato velho dá <em>afirmação confiante e errada</em>, que ninguém percebe.</p>
+<span class="lbl">Invalidação por dependência</span>
+<p>O padrão é <strong>cache com invalidação por dependência</strong>: sabe-se de quais inputs cada output depende, e quando um input muda, o que dependia dele é refeito. A memória do agente é isso, com "fato" no lugar de "artefato" e "commit" no lugar de "timestamp". A diferença cruel: servir artefato velho dá erro visível; servir fato velho dá <em>afirmação confiante e errada</em>, que ninguém percebe.</p>
 </div>
 
 <h3>Grafo temporal: fatos com validade</h3>
@@ -1260,41 +1108,18 @@ notas_registrar()           →  grava fatos novos com evidência e valido_de</c
 <h3>Onde parar: memória não é banco de tudo</h3>
 <p>A tentação, agora que existe infraestrutura, é registrar tudo. O critério do M08 bloco 6 continua valendo e fica mais fácil de aplicar com o esquema estruturado: <strong>se você não consegue preencher <code>sujeito/predicado/objeto</code> + <code>evidencia</code> + <code>valido_de</code>, não é fato — é observação</strong>, e observação morre com a execução. Exemplos que <em>não</em> entram: "a busca devolveu 12 resultados", "o arquivo tem 400 linhas" (isso é propriedade do nó, não fato de memória), "o usuário perguntou sobre pagamentos" (isso é histórico episódico, outra tabela, outro propósito).</p>
 
-<h3>Prática guiada · Memória que não mente (30 min)</h3>
-<div class="step"><span class="n">1</span><strong>Migre a tabela do M08</strong> para o esquema temporal (Alembic, com <code>downgrade</code> escrito — M03 bloco 2) e faça o agente ler <code>fatos_vigentes()</code> como contexto inicial.</p>
-<p><strong>Resultado esperado:</strong> a mesma pergunta feita duas vezes — a segunda visivelmente mais rápida e barata, porque o agente lê os fatos em vez de redescobrir. Meça as duas (passos, custo) e anote a diferença: é o retorno do investimento em memória.</p></div>
+<h3>Leitura aplicada · Validade que se testa</h3>
+<p>Migrar para o esquema temporal, provocar a invalidação, testar a honestidade e consultar o passado é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, depois do bloco 10. O percurso: segunda pergunta igual mais barata pela memória; intervalo fechado com o fato sumindo dos vigentes sem sair da tabela; resposta carregando commit e idade com aviso em desatualização; e consulta histórica correta como recurso de produto.</p>
 
-<div class="step"><span class="n">2</span><strong>Provoque a invalidação:</strong> altere um dos arquivos citados na evidência de um fato, rode a ingestão incremental e confira que o intervalo foi fechado.</p>
-<p><strong>Resultado esperado:</strong> <code>valido_ate</code> preenchido com o commit novo, e o fato <em>sumindo</em> de <code>fatos_vigentes()</code> — mas continuando na tabela. Rode a pergunta de novo: o agente redescobre e grava um fato novo com <code>valido_de</code> = commit atual. <strong>Você acabou de ver memória com ciclo de vida completo.</strong></p></div>
-
-<div class="step"><span class="n">3</span><strong>Teste a honestidade:</strong> faça o endpoint de resposta incluir o commit de referência e a idade da análise.</p>
-<p><strong>Resultado esperado:</strong> toda resposta carregando <em>"baseado no commit a1b2c3d, analisado há 4h"</em>. Simule desatualização (aponte para um commit antigo) e confirme que o aviso aparece. É barato, e é o que separa ferramenta confiável de ferramenta que aparenta onisciência.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Consulte o passado:</strong> escreva a query que responde "como era a lista de chamadores de X no commit anterior?" usando os dois eixos de tempo.</p>
-<p><strong>Resultado esperado:</strong> uma resposta histórica correta — e a percepção de que você acabou de ganhar um recurso de produto de graça ("o que mudou na arquitetura entre estas duas versões?"), que é exatamente o tipo de pergunta que justifica um assessment recorrente em vez de único. Anote em <code>gaps-e-projetos.md</code>.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 8</span>
-<ul>
-<li>Grafo é a estrutura certa para memória por três razões: fato é relação, invalidação em cascata é travessia, e proveniência é subgrafo.</li>
-<li>Dois eixos de tempo: quando o fato valeu (commits) e quando soubemos (execução). Guardar os dois permite não mentir, responder sobre o passado e auditar.</li>
-<li><strong>Nunca delete: feche o intervalo.</strong> Terceiro módulo com o mesmo padrão (ADR, dataset, fato) — é fundamento.</li>
-<li>Invalidação na granularidade do <strong>símbolo</strong>, disparada pela ingestão incremental, e idempotente (o pipeline retoma por replay).</li>
-<li>Sua memória é réplica atrasada: declare o commit de referência em toda resposta.</li>
-<li>Sem sujeito/predicado/objeto + evidência + validade, não é fato — é observação, e morre com a execução.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 9 -->
-<h2>Bloco 9 · Saúde arquitetural: I, A e a distância da sequência principal</h2>
-<div class="clock">00:00–00:30 acoplamento aferente e eferente &nbsp;|&nbsp; 00:30–01:05 instabilidade, abstratividade e a sequência principal &nbsp;|&nbsp; 01:05–01:40 as duas zonas e o cálculo em código &nbsp;|&nbsp; 01:40–02:00 prática: medir o legado</div>
-
+<h2 id="b09">Bloco 9 · Saúde arquitetural: I, A e a distância da sequência principal</h2>
 <h3>Por que isso importa</h3>
 <p>Este bloco é o que transforma o Capstone de "gerador de documentação" em <strong>ferramenta de diagnóstico com número</strong>. A diferença comercial é grande: <em>"este módulo parece acoplado"</em> é opinião de consultor; <em>"o módulo Faturamento está na zona de dor, com distância 0,74 da sequência principal, e 23 componentes dependem dele"</em> é diagnóstico defensável, comparável entre sistemas e acompanhável ao longo do tempo.</p>
 <p>E há um bônus pedagógico: você já tem o grafo. <strong>Todas as métricas deste bloco são grau de vértice e propriedade de nó</strong> — nenhuma exige nada além do que os blocos 5 e 6 construíram. Foi por isso que a Parte 3 vem depois da Parte 2.</p>
 
 <div class="box">
 <span class="lbl">Contexto · De onde vêm essas métricas</span>
-<p>São as <strong>métricas de acoplamento de componentes</strong> formuladas por Robert C. Martin (o "Uncle Bob") ainda nos anos 90 e consolidadas em <em>Clean Architecture</em>. Não são invenção recente nem moda de IA — são o instrumental clássico de análise de dependências, e é justamente por serem estáveis há três décadas que valem a pena. No seu mundo, a ferramenta que as popularizou é o <strong>NDepend</strong> (e o Visual Studio tem uma versão simplificada em "Code Metrics"); em Java, o JDepend fez o mesmo. Se você já viu um gráfico de bolhas com uma linha diagonal atravessando, você já viu a sequência principal.</p>
+<p>São <strong>métricas de acoplamento de componentes</strong> formuladas por Robert C. Martin ainda nos anos 90 e consolidadas em <em>Clean Architecture</em>. Não são invenção recente nem moda de IA — são o instrumental clássico de análise de dependências, estável há três décadas. Se você já viu um gráfico de bolhas com uma linha diagonal atravessando, já viu a sequência principal.</p>
 </div>
 
 <h3>Acoplamento aferente e eferente</h3>
@@ -1386,7 +1211,7 @@ notas_registrar()           →  grava fatos novos com evidência e valido_de</c
 <ol>
 <li><strong>Elas dependem inteiramente de onde você desenha a fronteira do componente.</strong> Namespace? Projeto? Pasta? Comunidade detectada (bloco 7)? Cada escolha dá números diferentes. Declare a fronteira usada no relatório — e ofereça mais de uma visão, porque comparar "por pasta" com "por comunidade" revela a divergência entre estrutura declarada e real.</li>
 <li><strong>D alto não é bug automático.</strong> Um componente utilitário estável e concreto (uma biblioteca de datas, sem interface) fica na zona de dor e está <em>certo</em> — ninguém precisa substituí-lo. A métrica <strong>levanta a pergunta</strong>; o julgamento é humano. Ferramenta que apresenta D como veredito perde a confiança do arquiteto na primeira reunião.</li>
-<li><strong>A abstratividade é a mais frágil de medir.</strong> Em C# você conta <code>interface</code> e <code>abstract</code> com precisão; em linguagens dinâmicas o conceito mal existe. Se o seu parser não distingue, <strong>não invente o número</strong> — reporte só I e Ca/Ce, e diga que A não está disponível para aquela linguagem.</li>
+<li><strong>A abstratividade é a mais frágil de medir.</strong> Contar interfaces e classes abstratas exige parser que distinga; em linguagem dinâmica o conceito mal existe. Se o parser não distingue, <strong>não invente o número</strong> — reporte só I e Ca/Ce, e diga que A não está disponível para aquele caso.</li>
 </ol>
 </div>
 
@@ -1489,61 +1314,44 @@ def ciclos_entre_componentes(g: nx.MultiDiGraph,
 </ul>
 </div>
 
-<h3>Prática guiada · Medir o legado (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Implemente <code>metricas.py</code></strong> e rode sobre o grafo do sistema legado, usando o namespace de topo como fronteira de componente.</p>
-<p><strong>Resultado esperado:</strong> uma tabela ordenada por distância. <strong>Olhe os três primeiros e confira contra a sua intuição</strong> — você conhece esse sistema. Se o módulo que todo mundo teme aparecer no topo, a métrica está funcionando; se aparecer algo inesperado, investigue (pode ser fronteira mal escolhida, ou um achado real).</p></div>
+<h3>Leitura aplicada · Número que defende refatoração</h3>
+<p>Implementar as métricas, comparar fronteiras, achar ciclos e expor via resource é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, depois do bloco 10. O percurso: tabela por distância conferida contra a intuição do sistema; divergência pasta × comunidade como insight; aresta de menor impacto para quebrar cada ciclo; e assistente respondendo zona de dor dentro do editor. Exposição via protocolo é trilha do M09.</p>
 
-<div class="step"><span class="n">2</span><strong>Compare duas fronteiras:</strong> rode com <code>componente_de</code> por pasta e depois por comunidade detectada (bloco 7).</p>
-<p><strong>Resultado esperado:</strong> números diferentes, e a divergência é informação. Componentes que só existem como pasta (mas cujas classes vivem em comunidades diferentes) são organização fictícia. Esse insight sozinho já é conteúdo de relatório de assessment.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Ache os ciclos</strong> entre componentes e ordene por tamanho.</p>
-<p><strong>Resultado esperado:</strong> tipicamente 2 a 8 ciclos num legado real. Para cada um, aponte a aresta que, removida, quebra o ciclo com menor impacto (menor número de referências) — essa é a <em>sugestão de refatoração guiada por métrica</em> que o currículo pede, e é acionável de verdade.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Implemente o resource MCP</strong> <code>repo://{repo}/metricas</code> (M09 bloco 4 o expôs como stub) devolvendo o JSON das métricas, e gere o gráfico da sequência principal em SVG para o relatório.</p>
-<p><strong>Resultado esperado:</strong> o assistente de código consegue responder "quais módulos estão na zona de dor?" dentro do editor, e o relatório do produto tem o gráfico com cada componente plotado. <strong>O stub do M09 deixa de ser stub</strong> — e o produto ganha a peça que o diferencia comercialmente.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 9</span>
-<ul>
-<li>Ca (quem depende de mim) e Ce (de quem eu dependo) são in-degree e out-degree agregados por componente.</li>
-<li><strong>I = Ce/(Ca+Ce)</strong> é facilidade de mudança, não defeito. SDP: dependa na direção da estabilidade.</li>
-<li><strong>A</strong> = fração abstrata. SAP: seja tão abstrato quanto é estável. <strong>D = |A+I−1|</strong> mede o desvio.</li>
-<li>Zona de dor (estável+concreto) é o alvo nº 1; zona de inutilidade é código morto sofisticado.</li>
-<li>Três honestidades: a fronteira do componente muda tudo, D alto não é bug automático, e A pode não ser mensurável na linguagem.</li>
-<li>Métrica é instrumento, não meta (Goodhart). Tendência vale mais que valor; ciclos são o achado mais acionável; comunidades sugerem fronteiras de extração.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 10 -->
-<h2>Bloco 10 · Mini-projeto: as três perguntas respondidas</h2>
-<div class="clock">00:00–01:00 integrar orquestrador, grafo e métricas &nbsp;|&nbsp; 01:00–01:35 virar os casos de eval &nbsp;|&nbsp; 01:35–02:00 diagnóstico e preparação do checkpoint</div>
-
+<h2 id="b10">Bloco 10 · Mini-projeto: as três perguntas respondidas</h2>
 <h3>O que você vai entregar</h3>
 <p>Três peças do Capstone de uma vez — <code>orchestration/</code>, <code>graph/</code> e <code>metrics/</code> — que correspondem às versões <strong>v4, v5 e v6</strong> da tabela de evolução do produto (<code>projeto-final.md</code>): grafo de conhecimento com métricas, workflow durável com checkpoint e HITL, e memória com fatos duráveis. E a prova de que funcionou não é "está bonito": é <strong>um eval que estava vermelho ficando verde</strong>.</p>
 
-<div class="step"><span class="n">1</span><strong>Ligue o pipeline completo.</strong> O grafo do bloco 2 agora tem os nós reais: clone → parse (tree-sitter) → indexar (pgvector, M07) → <strong>construir grafo</strong> (bloco 5) → <strong>calcular métricas</strong> (bloco 9) → analisar arquivos (<code>Send</code>, paralelo) → consolidar → <strong>revisão humana</strong> se houver risco alto (bloco 4) → relatório.</p>
-<p><strong>Resultado esperado:</strong> uma execução completa sobre o legado, com <code>PostgresSaver</code>, <code>durability="sync"</code> e <code>thread_id</code> estável. Registre no PROGRESSO.md: tempo total, custo, nº de checkpoints, nº de arquivos, nº de nós e arestas do grafo.</p></div>
+<h3>Leitura aplicada · Eval vermelho ficando verde</h3>
+<p>Ligar o pipeline, ligar a rota do grafo, virar os casos, adicionar graders e gerar o relatório é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, abaixo. O percurso: execução completa com thread estável e contagem de efeitos; distribuição de rotas com as estruturais na rota nova; casos "impossíveis" passando com taxa documentada (reflexão vira confiança baixa declarada, não fingimento); graders de caminho e reprodutibilidade no CI; e relatório reconciliado com o gabarito — atualizando um dos dois quando divergem. A aplicação ao Capstone é trilha opcional com especificação própria.</p>
 
-<div class="step"><span class="n">2</span><strong>Ligue a rota do grafo no roteador</strong> (M07 bloco 5 / M08 bloco 2), que até agora respondia "não implementado" para perguntas estruturais. Agora ela vai para o híbrido vetor→grafo do bloco 7.</p>
-<p><strong>Resultado esperado:</strong> as perguntas de estrutura deixam de cair na busca semântica. Rode as 40 consultas do dataset do M07 e confira a distribuição de rotas — as 5 estruturais devem ir para a rota nova.</p></div>
+<!-- ============================================ LABORATÓRIO GUIADO -->
+<h2 id="lab-guiado">Laboratório guiado M10</h2>
+<p>A prática do módulo, reunida e executável sem dependências externas — workflow com checkpoint em arquivo, grafo extraído por AST, memória temporal e métricas. Pode atravessar várias sessões: cada etapa termina retomável. Lint, tipos e testes são oráculos do programa; o checkpoint vem depois, separado. LangGraph, AGE e modelos reais são trilha externa.</p>
 
-<div class="step"><span class="n">3</span><strong>Vire os casos de eval — este é o momento do módulo.</strong> Abra <code>evals/datasets/07-retrieval.jsonl</code> e <code>agente_impacto</code> (M08), encontre os casos marcados <code>esperado_falhar: true</code> e <strong>remova a marca</strong>. Rode a suíte.</p>
-<p><strong>Resultado esperado:</strong> os casos que falhavam por construção agora passam. Se algum continuar falhando, o diagnóstico é específico e útil: (a) o parser não capturou a relação (uso por reflexão — esperado, e a resposta correta é declarar confiança baixa, não fingir); (b) o roteador não classificou como estrutural (conserte a regra); (c) a travessia está com profundidade insuficiente. <strong>Documente a taxa final: quantos dos casos "impossíveis" o grafo resolveu.</strong> Esse número é o resultado central do M10 e vai para o seu post público.</p></div>
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigido: Python 3.14 e <code>uv</code>. Nunca edite a referência em <code>modulos/M10-graph-engineering-saude-arquitetural/lab/</code>:</p>
+<pre><code>cd modulos/M10-graph-engineering-saude-arquitetural/lab
+python3 create_working_copy.py
+cd /tmp/m10-xxxx   # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>Resultado esperado:</strong> ambiente sincronizado. A cópia pode ser descartada e refeita; nada fora dela é tocado.</p>
 
-<div class="step"><span class="n">4</span><strong>Adicione os graders determinísticos do grafo</strong> ao runner do M06: <em>o caminho retornado existe no grafo?</em> (verificação estrutural, sem LLM), <em>os chamadores listados batem com a verdade conhecida?</em> (precisão/recall contra 10 símbolos que você mapeou à mão), <em>as métricas são reproduzíveis?</em> (rodar duas vezes dá o mesmo resultado).</p>
-<p><strong>Resultado esperado:</strong> uma categoria <code>grafo</code> no CI com baseline. Note que estes são graders do degrau 1 (M06 bloco 3) — baratos, exatos, sem juiz. É a "verdade verificável" do <code>projeto-final.md</code> na sua forma mais pura.</p></div>
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Workflow e reducers (blocos 1–2).</strong> Rode <code>uv run pytest -q tests/test_workflow.py -k "executa or thread or fanout"</code>.
+<p><strong>Resultado esperado:</strong> checkpoint por passo, thread desconhecida sem herança, add somando e default perdendo.</p></div>
+<div class="step"><span class="n">2</span><strong>Kill, HITL e grafo (blocos 3–6).</strong> Rode o restante de <code>tests/test_workflow.py</code> e <code>tests/test_graph.py</code>.
+<p><strong>Resultado esperado:</strong> efeito uma vez após kill, pausa retomada em outra instância, impacto com rota, mortos candidatos, híbrido com orçamento.</p></div>
+<div class="step"><span class="n">3</span><strong>Métricas e memória (blocos 7–9).</strong> Rode <code>uv run pytest -q tests/test_metrics.py</code>.
+<p><strong>Resultado esperado:</strong> zona de dor apontada, ciclo detectado, A indefinido não inventado, validade com idempotência, 3 perguntas com evidência.</p></div>
+<div class="step"><span class="n">4</span><strong>Validação técnica.</strong> <code>uv run ruff check .</code>, <code>uv run ruff format --check .</code>, <code>uv run mypy src tests</code>, suíte completa.
+<p><strong>Resultado esperado:</strong> tudo verde. Qualquer vermelho é defeito do programa.</p></div>
 
-<div class="step"><span class="n">5</span><strong>Gere o relatório de assessment</strong> — o entregável comercial: arquitetura em C4 (M04), grafo de dependências em Mermaid, tabela de métricas com o gráfico da sequência principal, ciclos detectados com sugestão de quebra, candidatos a código morto <em>marcados como candidatos</em>, e top-10 riscos priorizados.</p>
-<p><strong>Resultado esperado:</strong> um markdown que você mostraria a um cliente pagante, validado contra o <code>capstone/docs/output-spec.md</code> que você escreveu no M04 bloco 4. <strong>Se o output-spec pedia algo que o produto ainda não gera, atualize um dos dois</strong> — e essa reconciliação é o exercício.</p></div>
-
-<h3>Exercício sozinho (sem pistas até pedir)</h3>
-<p><strong>Parte A — a prova de durabilidade.</strong> Rode a ingestão de um repositório grande, mate o processo no meio da fase de análise, retome, e apresente a evidência com números: chamadas de LLM da primeira parte + da segunda ≈ chamadas de uma execução única (e não o dobro). Se der o dobro, encontre o nó não idempotente usando o histórico de checkpoints.</p>
-<p><strong>Parte B — a pergunta de nível 3.</strong> Responda, com o grafo: <em>"se eu for extrair um microsserviço deste monólito, qual é a fronteira de menor acoplamento?"</em>. Combine comunidades (bloco 7) com Ca/Ce (bloco 9): para cada comunidade candidata, calcule quantas arestas seriam cortadas e quais. Apresente as três melhores candidatas com o número de dependências a romper e quais tabelas ficariam compartilhadas. <strong>Esta é a pergunta que faz o produto valer preço de consultoria</strong> — e note que a resposta é 100% determinística, sem nenhum token gasto.</p>
-
-<h3>Peça do produto</h3>
-<p><strong>Entrega para o Capstone:</strong> <code>orchestration/</code> (grafo LangGraph com checkpoint em Postgres, HITL durável e retomada comprovada), <code>graph/</code> (extração determinística com tree-sitter, persistência em AGE com um grafo por tenant, travessias das três perguntas, memória temporal com invalidação por commit) e <code>metrics/</code> (Ca, Ce, I, A, D, zonas, ciclos, e o resource MCP do M09 deixando de ser stub). Mais os casos de eval virados e o relatório de assessment.</p>
+<h3>Limpeza e retomada</h3>
+<p>Apague a cópia se quiser. Para retomar, crie uma nova e volte à etapa: cada uma só precisa da cópia sincronizada.</p>
 
 <!-- ============================================ DIAGNÓSTICO -->
-<h2>Tabela de Diagnóstico</h2>
+<h2 id="diagnostico-m10">Tabela de Diagnóstico</h2>
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
@@ -1565,7 +1373,7 @@ def ciclos_entre_componentes(g: nx.MultiDiGraph,
 </table>
 
 <!-- ============================================ CHECKPOINT -->
-<h2>Checkpoint M10</h2>
+<h2 id="checkpoint-m10">Checkpoint M10</h2>
 <div class="box ok">
 <span class="lbl">Avaliação sem consulta — diga "Checkpoint M10" no chat</span>
 <p>A P1 é a prova principal do módulo, e é prática: <strong>mate o processo e prove a retomada com números</strong>.</p>
@@ -1583,18 +1391,26 @@ def ciclos_entre_componentes(g: nx.MultiDiGraph,
 </ul>
 <h4>Entregáveis verificados (mostrar rodando)</h4>
 <ol>
-<li>Pipeline LangGraph completo com <code>PostgresSaver</code>, execução paralela por <code>Send</code> e falha parcial tratada.</li>
-<li><strong>Retomada comprovada</strong> após kill, com a contagem de chamadas de LLM provando que não repetiu trabalho.</li>
-<li>HITL durável: pausa, restart do processo, decisão por endpoint, retomada — com auditoria de quem/quando/o quê.</li>
-<li>Grafo extraído com tree-sitter (censo de nós/arestas e taxa de não resolução) e persistido em AGE, um grafo por tenant.</li>
-<li>As três perguntas respondidas em Cypher, validadas contra o "Find All References" do IDE.</li>
-<li>Híbrido vetor→grafo na rota estrutural do roteador, com caminhos como evidência.</li>
-<li>Memória temporal com invalidação por commit disparando na ingestão incremental.</li>
-<li>Métricas I/A/D por componente, ciclos detectados, gráfico da sequência principal e o resource MCP <code>repo://{repo}/metricas</code> funcionando.</li>
-<li><strong>Casos <code>esperado_falhar</code> do M07 e do M08 virados</strong>, com a taxa documentada, e a categoria <code>grafo</code> no CI.</li>
-<li>Relatório de assessment validado contra o <code>output-spec.md</code> do M04.</li>
+<li>Gates verdes: <code>ruff</code>, <code>format</code>, <code>mypy --strict</code>, <code>pytest</code> do lab.</li>
+<li>Kill simulado com efeito uma vez; HITL pausando e retomando em outra instância; fan-out com reducer somando.</li>
+<li>Grafo extraído com censo e fqn estável; 3 perguntas com distância, rota e candidatos.</li>
+<li>Híbrido com orçamento; memória com validade e invalidação idempotente.</li>
+<li>Métricas I/A/D com zonas e ciclos; A indefinido reportado, não inventado.</li>
 </ol>
 </div>
+
+<h2 id="fontes-m10">Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://docs.langchain.com/">LangGraph docs</a></td><td>execução e checkpoint (blocos 2–4)</td><td>oficial</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://blog.cleancoder.com/">Martin — Clean Architecture (métricas)</a></td><td>I/A/D e sequência principal (bloco 9)</td><td>canônica</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://age.apache.org/">Apache AGE docs</a></td><td>grafo no Postgres (bloco 6)</td><td>oficial</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://microsoft.github.io/graphrag/">Microsoft — GraphRAG</a></td><td>local/global e custo (bloco 7)</td><td>fornecedor</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/ast.html">Python — ast</a></td><td>extração determinística (bloco 5)</td><td>normativa</td><td>14/09/2026</td></tr>
+</tbody>
+</table>
+<p>Versões de framework, extensão e modelo são informação de alto risco: revalidar em até 90 dias. SQL de persistência exige PostgreSQL com AGE (Docker); sem ele, a execução fica bloqueada.</p>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

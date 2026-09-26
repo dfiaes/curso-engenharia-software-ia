@@ -63,4 +63,3 @@ def evaluate(
     if request.capabilities == frozenset({Capability.READ}):
         return Decision(True, "ALLOW_READ", "leitura limitada ao workspace")
     return Decision(True, "ALLOW", "requisição satisfaz a policy declarada")
-

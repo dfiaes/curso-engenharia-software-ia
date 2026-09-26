@@ -188,6 +188,20 @@ class SQLiteEvaluationRepository:
             ).fetchone()
         return row is not None
 
+    def idempotency_query_plan(self, tenant_id: str, key: str) -> tuple[str, ...]:
+        """Expõe o plano da consulta crítica para um teste de regressão local."""
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                EXPLAIN QUERY PLAN
+                SELECT request_id
+                  FROM work_requests
+                 WHERE tenant_id = ? AND idempotency_key = ?
+                """,
+                (tenant_id, key),
+            ).fetchall()
+        return tuple(str(row["detail"]) for row in rows)
+
     def row_counts(self) -> dict[str, int]:
         counts: dict[str, int] = {}
         with self._connect() as connection:

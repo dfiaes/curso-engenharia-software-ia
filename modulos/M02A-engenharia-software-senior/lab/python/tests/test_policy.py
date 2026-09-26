@@ -73,19 +73,50 @@ class TimedOutAdvisor:
         raise TimeoutError("deadline excedido")
 
 
+class StrengtheningAdvisor:
+    """Tem a forma de Advisor, mas introduz precondição que o contrato não permite."""
+
+    @property
+    def identity(self) -> AdvisorIdentity:
+        return AdvisorIdentity(adapter="strengthening-test", version="1.0")
+
+    def advise(self, request: WorkRequest) -> Advisory:
+        del request
+        raise AdvisorError("somente solicitações pré-aprovadas são aceitas")
+
+
 def _request(lab_root: Path) -> WorkRequest:
     return parse_work_request_json(
         (lab_root / "fixtures/golden/request-v1.json").read_text(encoding="utf-8")
     )
 
 
+def _assert_advisor_contract(advisor: object, request: WorkRequest) -> Advisory:
+    """Define a pós-condição comum do corpus golden para qualquer Advisor local."""
+    assert isinstance(advisor, (FakeAdvisor, RecordReplayAdvisor, StrengtheningAdvisor))
+    advisory = advisor.advise(request)
+    assert advisory == Advisory(
+        category=AdvisoryCategory.DELIVERY,
+        risk=Risk.LOW,
+        confidence=Decimal("0.9"),
+        signals=("routine_delivery",),
+    )
+    return advisory
+
+
 def test_fake_and_replay_obey_same_advisory_contract(lab_root: Path) -> None:
     request = _request(lab_root)
-    fake = FakeAdvisor().advise(request)
-    replay = RecordReplayAdvisor(
-        lab_root / "fixtures/provider-recordings/golden-advisories.v1.json"
-    ).advise(request)
+    fake = _assert_advisor_contract(FakeAdvisor(), request)
+    replay = _assert_advisor_contract(
+        RecordReplayAdvisor(lab_root / "fixtures/provider-recordings/golden-advisories.v1.json"),
+        request,
+    )
     assert fake == replay
+
+
+def test_contract_suite_rejects_adapter_that_strengthens_precondition(lab_root: Path) -> None:
+    with pytest.raises(AdvisorError, match="pré-aprovadas"):
+        _assert_advisor_contract(StrengtheningAdvisor(), _request(lab_root))
 
 
 def test_malformed_recording_is_rejected_before_it_reaches_policy(lab_root: Path) -> None:

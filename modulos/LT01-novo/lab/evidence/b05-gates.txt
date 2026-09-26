@@ -1,0 +1,84 @@
+LT01-B05-L — evidencia de gates (folha B05-L, bloco B05)
+Data (UTC): 2026-09-20 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir: modulos/LT01-novo/lab/ · HTML/spec/trace/STATUS/PROGRESSO intocados.
+
+COMANDOS (tails reais)
+- uv sync → "Resolved 13 packages" / "Checked 11 packages" (mypy 1.20.2, pytest 9.1.1, ruff 0.16.8); venv 3.14.7.
+- uv run ruff check . → FALHA com 2 erros, ambos RUF002 no verbatim (ver DIVERGENCIAS):
+  carga_tempo.py:35 (docstring lei_little, "×") e memoria_rss.py:16
+  (docstring rss_bytes, "×"); todo o resto limpo, incluindo os 4 testes novos.
+- uv run ruff format --check . → "32 files already formatted" (verbatim e testes 100% limpos, sem excludes).
+- uv run mypy → "Success: no issues found in 31 source files" (strict, 3 modulos novos + 4 testes novos cobertos).
+- uv run pytest → "138 passed, 1 skipped in 40.23s" (suite inteira B01–B05; +27 testes B05; 1 skip = BLOCKED-TLS pre-existente, sem skip novo; load 2.5→7.9 no relogio).
+  Flaky pre-existente visto 1x sob distress e verde no re-run imediato:
+  corrida intermediaria marcou 1 failed em test_at001_bloqueio (B01,
+  intocado por esta folha) com 137 passed; at001 isolado em seguida
+  4 passed em 0.62s e a suite integral seguinte 138 passed, 1 skipped
+  em 40.25s — 2 integrais verdes + 1 isolada verde apos o evento.
+- B05 isolado: 27 passed em 0.34s (at040 6, at041 9, at042 5, at050 7).
+
+NUMEROS MEDIDOS (exemplo variavel, medicao local desta maquina)
+- Dois relogios, sleep(0.05): cpu_s = 0.00002 s, parede_s = 0.05502 s
+  (espera domina a parede, CPU poupada — I/O-bound; razao cpu/parede ~0.0004 < 1/2).
+- Conta calibrada por tempo (0.05 s de loop): cpu_s > parede_s / 2 (andam juntos — CPU-bound).
+- Vazao 100/2.0 s = 50.0 conclusoes/s; Little 21.0 x 0.0955 s = 2.005 de concorrencia media.
+- Joelho simulado (semente 20260920, N = 200/degrau): ofertas [10, 20, 40],
+  vazoes [9.8, 19.5, 21.0] → joelho no degrau 2 (21.0 < 40 x 0.9);
+  p95 degrau 3 > 2x p95 degrau 2; concorrencia cresce degrau a degrau.
+- Resumo seedado (semente 20260707, N = 500): p50 = 0.06360 s,
+  p95 = 0.09550 s, maximo = 0.09995 s, contagem = 500.0.
+- Breakdown AT-042: local 0.02 s + upstream 0.8 s = total ~0.82 s
+  (upstream/total > 0.9 — causa externa, sintoma local).
+- Guarda (teto 16, explosao N = 200 series /pedido/{id}): contagem 16,
+  recusadas 184; apos remover 1 serie explosiva: contagem 15, recusadas 184
+  (contador cumulativo, sem expulsar existentes); serie template /pedido/{id}
+  readmitida → 16; p95/p50 do diagnostico preservados.
+- RSS vivo: base 18152947712 B, apos bytearray(8 MB) 26373783552 B
+  (crescimento +8220835840 B; 1 MB → +956301312 B — fator ~1024x, ver LIMITES).
+
+DIVERGENCIAS DO VERBATIM
+- Nenhuma nos 3 modulos B05: byte-identicos aos <pre> executaveis 1/2/3 da
+  secao B05 do LT01.html (conferencia por diff programatico apos
+  html.unescape: carga_tempo.py 1831 B, memoria_rss.py 1618 B,
+  percentis_cardinalidade.py 2721 B).
+- RUF002 x2 é DIVERGENCIA FERRAMENTA x CONTRATO, sem acomodacao (regra vigente:
+  sem ignores em pyproject; corrigir codigo+HTML em vez de acomodar):
+  ruff check . falha em carga_tempo.py:35 e memoria_rss.py:16 porque as
+  docstrings congeladas usam "×" (MULTIPLICATION SIGN). Nenhum ignore foi
+  adicionado (pyproject recebeu só name/version/description B05 e os 3
+  modulos na lista files do mypy; zero per-file-ignores novos; format sem
+  excludes). Correcao pertence a revisao futura do HTML (trocar "×" por
+  "x"/"vezes" nas 2 docstrings), nao a este lab. Testes proprios 100%
+  limpos (ruff + format + mypy strict sem ignores).
+
+LIMITES
+- So stdlib (time; os/resource; threading; random so nos testes); nenhuma
+  rede, nenhum servidor de teste no B05 (trabalho injetado, amostras em
+  memoria, series simuladas).
+- Relogio monotonico com margem larga: espera >= atraso pedido, teto
+  2.0–5.0 s (fator ~10–100x sobre o atraso), sem assert de tempo exato;
+  razao cpu/parede com limiar 1/2 (I/O-bound medido ~0.0004, folga > 1000x).
+- RSS segue a semantica Linux contratada (ru_maxrss x 1024): no macOS o
+  ru_maxrss ja vem em bytes, logo o ABSOLUTO sai inflado ~1024x (medido:
+  +8.2 GB para 8 MB alocados). Os vereditos operam sobre CRESCIMENTO
+  RELATIVO com tolerancia (todas as leituras na mesma escala), e os testes
+  vivos asserem so pico >= base; leak/cache/baseline usam numeros injetados
+  porque ru_maxrss e pico e nunca decresce (terceira leitura nao volta).
+- Percentis deterministicos em dados fixos (1..100: p0 = 1, p50 = 50,
+  p95 = 95, p100 = 100); latencias seedadas sao exemplo variavel com
+  semente/amostra declaradas aqui e nos testes.
+- Registro concorrente da guarda: smoke com join (timeout 5.0 s), contagens
+  deterministicas independente de intercalamento (16 retidas, 184 recusadas).
+- Esta folha nao tocou HTML/spec/trace/STATUS/PROGRESSO (lab: 3 modulos +
+  4 testes + pyproject files/name/version/description + README B05 +
+  esta evidencia).
+
+GATE CANDIDATO
+- LT01-B05-L NAO APTO a G2 ainda: 3 contratos verbatim byte-identicos +
+  pyproject (3.14/uv/ruff E,F,I,B,UP,SIM,RUF,ASYNC/mypy strict 31 arquivos/
+  pytest strict) + README + 4 oraculos (AT-040 6 testes, AT-041 9 testes,
+  AT-042 5 testes, AT-050 7 testes, 0 skip) + suite verde integral
+  (138 passed, 1 skipped BLOCKED-TLS pre-existente) + numeros acima —
+  POREM ruff check . vermelho pelos 2 RUF002 do verbatim. APTO a G2 apos
+  revisao do HTML trocar "×" por "x"/"vezes" nas docstrings de lei_little
+  e rss_bytes (reexecutar ruff + diff verbatim apos a revisao).

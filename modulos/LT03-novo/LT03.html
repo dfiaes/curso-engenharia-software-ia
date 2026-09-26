@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LT03 · Cloud-native, IaC, GitOps e plataforma</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+@media screen and (max-width:640px){table{display:block;overflow-x:auto}}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media screen and (max-width:640px){table{display:block;overflow-x:auto}}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>LT03 · Cloud-native, IaC, GitOps e plataforma</h1>
+<p class="meta">
+  <span class="badge">Trilha LT03</span>
+  6 blocos / 12h · <strong>Pré-requisitos:</strong> M03, M04, LT01, LT02 e M10<br>
+  <em>Do artefato OCI ao ambiente reconciliado: declarar, distribuir e operar sem virar refém de um provedor.</em>
+</p>
+
+<div class="box">
+<p><strong>O que muda ao final desta trilha.</strong> Até aqui você construiu serviços que funcionam: o M03 deu a API, o LT01 deu o runtime observado, o LT02 deu os workers com fila. Mas houve um momento em que a explicação parou em <em>"funciona na minha máquina"</em>, <em>"o deploy trocou a versão sozinho"</em> ou <em>"alguém mexeu no cluster à mão e ninguém sabe o que vale"</em>: por que a imagem que rodou ontem não é a mesma que roda hoje, por que o container roda como root, por que o SIGTERM mata requisição no meio, por que a conta de cloud surpreende, por que edição manual no cluster nunca é fonte da verdade. Esta trilha leva o serviço Python do artefato OCI a um ambiente declarativo, reconciliado e operável — imagem imutável, workloads declarados, infraestrutura versionada, Git como fonte da verdade, rollout por evidência — e para exatamente aí: sem formar administrador de um provedor, sem construir control plane, sem transformar rollback em mágica. Ao final você terá <strong>distribuído uma imagem OCI reproduzível identificada por digest e executada como non-root</strong>, <strong>reconciliado estado desejado via Git</strong> e <strong>promovido canary com abort por métrica</strong>. Núcleo validável no <code>lab/</code> com só stdlib; onde Docker, registry ou cluster estiverem ausentes, os oráculos externos nascem BLOCKED com registro, nunca com simulação.</p>
+</div>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+  <li><a href="#b01"><strong>Bloco 1 ·</strong> Cloud, failure domains e artefatos OCI</a></li>
+  <li><a href="#b02"><strong>Bloco 2 ·</strong> APIs declarativas, workloads, rede e configuração</a></li>
+  <li><a href="#b03"><strong>Bloco 3 ·</strong> Probes, recursos, scheduling, disrupção e autoscaling</a></li>
+  <li><a href="#b04"><strong>Bloco 4 ·</strong> IaC, estado, módulos, drift e lifecycle seguro</a></li>
+  <li><a href="#b05"><strong>Bloco 5 ·</strong> GitOps, reconciliação, promoção e configuração por ambiente</a></li>
+  <li><a href="#b06"><strong>Bloco 6 ·</strong> Progressive delivery, rollback e incidente de plataforma</a></li>
+  <li><a href="#lab-guiado">Laboratório guiado LT03</a> — roteiro executável das folhas B01-L a B06-L</li>
+  <li>Diagnósticos: <a href="#diagnostico-b01">B01</a> · <a href="#diagnostico-b02">B02</a> · <a href="#diagnostico-b03">B03</a> · <a href="#diagnostico-b04">B04</a> · <a href="#diagnostico-b05">B05</a> · <a href="#diagnostico-b06">B06</a></li>
+  <li>Checkpoints: <a href="#checkpoint-b01">B01</a> · <a href="#checkpoint-b02">B02</a> · <a href="#checkpoint-b03">B03</a> · <a href="#checkpoint-b04">B04</a> · <a href="#checkpoint-b05">B05</a> · <a href="#checkpoint-b06">B06</a></li>
+  <li>Fontes: <a href="#fontes-b01">B01</a> · <a href="#fontes-b02">B02</a> · <a href="#fontes-b03">B03</a> · <a href="#fontes-b04">B04</a> · <a href="#fontes-b05">B05</a> · <a href="#fontes-b06">B06</a></li>
+</ol>
+</div>
+
+<div class="box">
+<p><strong>Como este documento está organizado.</strong> Os <strong>Blocos 1 a 6 estão completos</strong> abaixo: teoria N1–N4, exemplos trabalhados rotulados, diagnóstico, checkpoint com rubrica e fontes por bloco. O <code>Laboratório guiado LT03</code> concentra os roteiros executáveis das folhas B01-L a B06-L. Nenhum número deste documento é evidência medida: valores numéricos são <strong>exemplo variável</strong>, e a medição real pertence ao <code>lab/</code> e à trilha externa com Docker.</p>
+</div>
+
+<div class="box warn">
+<p><strong>Nota de plataforma, honesta desde a primeira página.</strong> Os mecanismos deste bloco — camadas OCI, digest, registry, PID 1 do container, SIGTERM com grace — são descritos sobre <strong>Linux com runtime de containers</strong>. A validação estática do Dockerfile e o teste de sinal e grace executam localmente com só stdlib; o build, a publicação e a execução da imagem exigem Docker e registry, e onde estiverem ausentes os oráculos correspondentes nascem BLOCKED com registro. Nada aqui finge equivalência: laboratório local prova contrato, trilha externa prova artefato.</p>
+</div>
+
+<h2 id="b01">Bloco 1 · Cloud, failure domains e artefatos OCI</h2>
+<h3>Orientação: o que este bloco entrega</h3>
+
+<div class="box">
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "subi para a nuvem" por responsabilidade localizada, custo nomeado e artefato identificado. Sete resultados saem daqui (LT03-B01-C01..07; matriz PLAT-01, PY-03, FIN-01):</p>
+<ul>
+<li>distinguir IaaS, PaaS e SaaS pela responsabilidade compartilhada — o que o provedor opera, o que continua sendo seu (base do AT-003);</li>
+<li>explicar região, zona, nó e failure domain, e o que elasticidade promete contra o que capacidade entrega;</li>
+<li>separar compute, rede, block e object storage, serviço gerenciado, egress e quotas — cada termo com definição, mecanismo e limite;</li>
+<li>ler custo fixo contra variável e decidir portabilidade contra menor denominador comum com saída explícita;</li>
+<li>explicar a imagem OCI como empacotamento — camadas, config, manifest, digest como identidade, tag como apelido mutável (base do AT-001);</li>
+<li>projetar imagem Python mínima executada como non-root, com build reproduzível versionado e sem segredo (LT03-AT-001);</li>
+<li>ler as duas referências executáveis — <code>lab/validar_dockerfile.py</code>, <code>lab/drenagem_grace.py</code> — sabendo o que cada nome prova, incluindo SIGTERM com grace e drenagem de tráfego (LT03-AT-002). A execução pertence à folha B01-L, no <code>Laboratório guiado LT03</code>.</li>
+</ul>
+<p><strong>Pré-requisitos.</strong> M03 (serviço com ciclo de vida), LT01 Bloco 1 (processo, sinais, shutdown gracioso) e LT02 (fila e workers). Cada termo novo — digest, camada, registry, failure domain, egress — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
+<p><strong>Saída observável.</strong> Ao fim da leitura, você explica por que a imagem que rodou ontem pode não ser a de hoje, diagnostica container como root e shutdown que perde requisição, e lê o contrato dos dois scripts do <code>lab/</code> sem precisar executá-los aqui.</p>
+<p><strong>Ponte com o LT01-B01.</strong> O LT01-B01 ensinou o shutdown cooperativo do processo: fechar a entrada, concluir ou cancelar no prazo, sair com o exit code. Este bloco coloca esse mesmo processo dentro de um container, onde o SIGTERM vem do runtime e o grace period é contratado com o orquestrador — e acrescenta a drenagem: o endpoint deixa de receber tráfego novo antes de qualquer outra coisa. Nada do LT01 é reensinado; o vocabulário de lá é usado, não pressuposto como experiência além do curso.</p>
+</div>
+
+<h3>N1 · Cloud: responsabilidade, failure domains, custo</h3>
+
+<p><strong>Cloud</strong> é acesso por rede a recursos computacionais compartilhados, provisionados sob demanda e medidos por uso. Três ideias separam "servidor alugado" de cloud: o provisionamento é por chamada (não por chamado), a capacidade é elástica dentro de limites (não infinita) e tudo é medido — cada unidade consumida tem preço. A definição canônica de características e modelos é a da fonte normativa do bloco.</p>
+
+<p><strong>Responsabilidade compartilhada</strong> é a linha que diz quem opera o quê. <strong>IaaS</strong> (infraestrutura como serviço) entrega compute, rede e storage crus: o provedor opera o físico e a virtualização; sistema operacional, runtime e aplicação continuam seus. <strong>PaaS</strong> (plataforma como serviço) sobe a linha: o provedor opera runtime, banco gerenciado, fila gerenciada; você opera código, dado e configuração. <strong>SaaS</strong> (software como serviço) entrega o aplicativo pronto: você opera identidade, dado e uso. Cada degrau troca controle por operação delegada — e cada delegação tem preço, limite e saída, que precisam constar na decisão (AT-003).</p>
+
+<table>
+<thead><tr><th>Termo</th><th>Definição e mecanismo</th><th>Limite</th></tr></thead>
+<tbody>
+<tr><td><strong>Região / zona</strong></td><td>Região é um conjunto geográfico de zonas; zona é um ou mais datacenters com energia e rede independentes. Replicar entre zonas sobrevive à perda de uma; replicar entre regiões sobrevive à perda de uma geografia.</td><td>Cada travessia cobra latência e egress. Zona não protege contra erro de configuração replicado em todas elas.</td></tr>
+<tr><td><strong>Failure domain</strong></td><td>Unidade que falha junta: nó, rack, zona, região, ou uma dependência compartilhada (um banco único, um DNS). Desenhar é listar o que falha junto e provar que o crítico não mora no mesmo domínio.</td><td>Domínio ignorado é incidente agendado: duas réplicas no mesmo nó não são alta disponibilidade.</td></tr>
+<tr><td><strong>Egress</strong></td><td>Tráfego que sai da rede do provedor em direção a outra rede ou à internet, medido e cobrado por volume. Entrada costuma ser gratuita; saída, nunca.</td><td>Arquitetura que cruza fronteira de rede a cada requisição converte latência em fatura. Egress entra na decisão de serviço gerenciado.</td></tr>
+<tr><td><strong>Quota</strong></td><td>Teto administrativo de consumo: CPUs, endereços, taxa de chamadas. Protege o provedor e, de tabela, você de si mesmo.</td><td>Quota estourada em pico é indisponibilidade com outro nome. Escala planejada inclui pedir aumento antes.</td></tr>
+<tr><td><strong>Elasticidade / capacidade</strong></td><td>Elasticidade é variar recursos sob demanda; capacidade é o teto físico e contratual do momento. Escalar é pedir; atender depende de haver.</td><td>Elasticidade não é instantaneidade: subir réplica leva tempo de imagem, inicialização e aquecimento (ponte com o Bloco 3).</td></tr>
+</tbody>
+</table>
+
+<p><strong>Custo fixo contra variável.</strong> Fixo é o que você paga parado: reserva, disco provisionado, endereço, controle. Variável é o que acompanha o uso: CPU-hora, egress, requisições, armazenamento medido. O erro clássico é desenhar como se tudo fosse variável (e descobrir o fixo na fatura) ou como se tudo fosse fixo (e pagar pico o mês inteiro). <strong>Portabilidade contra menor denominador comum:</strong> cada serviço gerenciado adotado acelera hoje e cobra saída amanhã — formato proprietário, egress de extração, reescrita. A decisão honesta registra responsabilidade, egress e saída por escrito; é a tabela de decisão do AT-003.</p>
+
+<div class="box warn">
+<p><span class="lbl">Contraste</span><strong>"Está na nuvem, então é elástico e portável" — não.</strong> Cloud dá o mecanismo de elasticidade, não a garantia: quota, tempo de inicialização, dependência saturada e custo continuam decidindo o que acontece no pico. E cada serviço gerenciado é uma aposta de permanência: quanto mais específico do provedor, maior o custo de saída. O sintoma que denuncia o erro é conhecido: a fatura cresce junto com o tráfego enquanto a latência não melhora, e ninguém sabe dizer o que cada parte custa nem como sair. O oráculo AT-003 cobra os dois lados: failure domains listados e responsabilidade, egress e saída explícitos.</p>
+</div>
+
+<h3>N2 · A imagem OCI como empacotamento</h3>
+
+<p><strong>Imagem OCI</strong> é um empacotamento padronizado de tudo que o processo precisa para rodar: filesystem, config de execução e o ponteiro imutável que a identifica. Quatro peças compõem o pacote: <strong>camadas</strong> (layers), <strong>config</strong>, <strong>manifest</strong> e <strong>digest</strong>. A distribuição (registry) é a prateleira; o <strong>índice</strong> (index) é a lista que permite várias variantes — por arquitetura — sob um mesmo nome.</p>
+
+<table>
+<thead><tr><th>Peça</th><th>Definição e mecanismo</th><th>Limite</th></tr></thead>
+<tbody>
+<tr><td><strong>Camada (layer)</strong></td><td>Um tarball de diferenças do filesystem, empilhado sobre as anteriores. Cada instrução de build acrescenta uma camada; camadas idênticas entre imagens são armazenadas e transferidas uma vez.</td><td>Camada nunca é removida por instrução posterior: arquivo "apagado" depois continua no histórico e no tamanho. Segredo copiado numa camada é segredo publicado, mesmo que removido adiante.</td></tr>
+<tr><td><strong>Config</strong></td><td>O documento que diz como executar: arquitetura, sistema, comando padrão, usuário, variáveis, portas declaradas. É parte endereçável da imagem, com digest próprio.</td><td>Config declara intenção, não impõe: usuário declarado pode ser sobrescrito na execução; a prova está no runtime, não no documento.</td></tr>
+<tr><td><strong>Manifest</strong></td><td>A lista assinável: referencia a config e cada camada pelos seus digests, mais anotações. Inspecionar o manifest é ler a composição exata sem baixar o conteúdo.</td><td>Manifest descreve uma arquitetura; o multi-arch mora um nível acima, no índice.</td></tr>
+<tr><td><strong>Digest</strong></td><td>O hash do conteúdo (na forma <code>sha256:…</code>): a identidade da imagem. Mesmo byte, mesmo digest; byte distinto, digest distinto. Referenciar por digest é apontar para conteúdo exato.</td><td>Digest é ilegível por humanos: identifica, não explica. Versão legível e trilha de promoção moram ao lado, nunca no lugar.</td></tr>
+<tr><td><strong>Tag</strong></td><td>Um apelido mutável que aponta para um digest: um nome legível que pode ser movido para outro conteúdo a qualquer momento.</td><td>Tag move; digest não. Runtime que resolve tag no deploy pode rodar conteúdo distinto do testado. Promoção e rollback referenciam digest (regra 3 da especificação).</td></tr>
+<tr><td><strong>Registry / distribuição</strong></td><td>O serviço que guarda e serve blobs e manifests pelo protocolo de distribuição: publica, lista tags, resolve digest, controla acesso.</td><td>Registry é dependência de deploy: indisponível, nada novo sobe. Tag mutável no registry é o mecanismo do incidente "ontem funcionava".</td></tr>
+</tbody>
+</table>
+
+<p><strong>PID 1, usuário, filesystem e multi-arch.</strong> Dentro do container, o processo principal é o PID 1: pai dos órfãos, destinatário do SIGTERM do runtime (ponte com o LT01-B01 e com a seção N4). O <strong>usuário</strong> de execução decide o dano alcançável: root no container compartilha o kernel com o host — container não é VM nem fronteira absoluta (regra 2). O <strong>filesystem</strong> da imagem é a soma das camadas, gravável por padrão; declarar raiz read-only move escrita para volumes explícitos. <strong>Multi-arch</strong> é o índice apontando uma imagem por arquitetura: o mesmo nome, o digest certo por máquina.</p>
+
+<div class="box fund">
+<p><strong>Fundamento de engenharia · Identidade é conteúdo; nome é conveniência.</strong> O digest responde "o quê exatamente"; a tag responde "como chamamos hoje". Todo o resto da trilha depende dessa separação: promoção move o mesmo digest entre ambientes, rollback volta ao digest anterior, auditoria cita digest. Cada vez que este bloco exigir digest pinado, é essa troca que está em jogo: legibilidade agora contra reprodutibilidade depois. Tag sem digest registrato é apelido sem identidade.</p>
+</div>
+
+<h3>N3 · Imagem Python mínima, non-root, reproduzível</h3>
+
+<p>A imagem do serviço desta trilha segue cinco decisões, cada uma com mecanismo e verificação na folha B01-L:</p>
+
+<ol>
+<li><strong>Base mínima.</strong> Partir da variante enxuta do runtime (forma esbelta da distribuição), nunca da imagem completa com toolchain. Menos pacote é menos superfície: cada binário ausente é uma vulnerabilidade a menos e um pull mais curto. A verificação local é heurística (nome da variante); o tamanho real é medido na trilha externa.</li>
+<li><strong>Build em estágios.</strong> Um estágio monta — instala dependências, compila o necessário — e o estágio final carrega só o artefato: código, ambiente virtual, nada de compilador. O mecanismo é o das camadas: o que fica no estágio descartado não entra em camada alguma da imagem final.</li>
+<li><strong>Dependências bloqueadas.</strong> Versões exatas registradas em lockfile: o mesmo manifesto resolve o mesmo conjunto hoje e daqui a meses. Sem lock, rebuild é sorteio silencioso.</li>
+<li><strong>Usuário non-root.</strong> Criar usuário sem privilégio e declarar o <code>USER</code> antes do comando: o processo nunca tem root, nem por acidente de sobrescrita parcial. Verificação estática na folha (último <code>USER</code> declarado); prova no runtime externo.</li>
+<li><strong>Dockerfile versionado, sem segredo.</strong> O Dockerfile mora no Git, revisado como código: base pinada por digest, sem credencial em instrução alguma, sem arquivo de segredo copiado. Camada com segredo é vazamento permanente, mesmo removida depois.</li>
+</ol>
+
+<div class="box warn">
+<p><span class="lbl">Decisão</span><strong>Root por preguiça, segredo na camada, base flutuante: os três defeitos catalogados da imagem.</strong> Container como root converte qualquer escape em controle amplo; segredo em camada converte registry em cofre aberto; base sem digest converte rebuild em roleta. Nenhum dos três aparece como erro no build — todos passam verdes. Por isso a validação é estática e prévia: o oráculo AT-001 lê o Dockerfile antes de qualquer build e recusa os três.</p>
+</div>
+
+<h3>N4 · SIGTERM no container: grace, drenagem, saída</h3>
+
+<p>No container, o SIGTERM chega pelo runtime ao PID 1, e o <strong>grace period</strong> é o tempo contratado entre esse pedido e o SIGKILL imposto. O mecanismo é o do LT01-B01, com uma etapa a mais na frente — a <strong>drenagem</strong>:</p>
+
+<ol>
+<li><strong>Drenar: parar de receber tráfego novo.</strong> O endpoint sai do balanceamento antes de qualquer outra coisa: nenhuma requisição nova é aceita após o sinal. Shutdown que aceita trabalho novo durante o grace é defeito catalogado — cada aceita é uma futura vítima do SIGKILL.</li>
+<li><strong>Encerrar ou cancelar o trabalho em curso.</strong> Requisições breves concluem; trabalho longo recebe cancelamento cooperativo e libera recursos. Handler que ignora cancelamento desperdiça o grace inteiro.</li>
+<li><strong>Sair com o exit code contratado, dentro do prazo.</strong> Descarregar, fechar, devolver o código limpo. Morte por SIGKILL registra a morte, não a saída.</li>
+</ol>
+
+<p><strong>Timeline de shutdown (exemplo variável, não evidência).</strong> Instante zero: o runtime entrega SIGTERM ao PID 1. O serviço fecha a entrada para tráfego novo e marca o deadline interno — por exemplo, grace de algumas dezenas de segundos contratado com o orquestrador. Requisições breves concluem nos primeiros segundos; o trabalho longo recebe cancelamento e libera recursos; no fim do prazo, o processo sai com o exit code esperado. A folha B01-L registra a timeline real localmente; a prova sob orquestrador real pertence à trilha externa.</p>
+
+<p><strong>Build reproduzível e seus limites honestos.</strong> Reproduzível significa: mesmo Dockerfile versionado, mesmo lockfile, mesma base pinada por digest produzem o mesmo digest de imagem. O que a folha local prova: contrato do Dockerfile (AT-001) e comportamento de sinal e grace (AT-002). O que só a trilha externa prova: build, publicação, inspeção de manifest e camadas, execução pelo digest, tamanho e cold start medidos. Onde Docker estiver ausente, esses oráculos nascem BLOCKED com registro — nunca simulados, nunca com número hardcoded.</p>
+
+<h3>Exemplos trabalhados</h3>
+<p><strong>Estatuto do código.</strong> Os dois blocos abaixo são <strong>referência executável</strong>: o contrato que a folha B01-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivos flat em <code>lab/</code>, só stdlib. Leitura aqui; execução no <code>Laboratório guiado LT03</code>. Nenhum trecho deste bloco executa Docker: a referência local valida contrato e comportamento; build, publicação e execução pertencem à trilha externa BLOCKED sem Docker. Todo número de saída é exemplo variável até a medição da folha L.</p>
+
+<p><strong>Referência executável 1 — <code>lab/validar_dockerfile.py</code>.</strong> Lê o texto do Dockerfile e publica o veredito estático: usuário final non-root, base mínima, digest pinado na base final, ausência de tag mutável solta e ausência de segredo (oráculo LT03-AT-001). Só stdlib (<code>re</code>):</p>
+<pre><code>"""Validacao estatica de Dockerfile: non-root, base minima, digest pinado.
+
+Referencia executavel do Bloco 1.
+Implementacao verbatim na folha B01-L. So STDLIB (re).
+Nao executa Docker: le texto, publica veredito.
+"""
+
+from __future__ import annotations
+
+import re
+
+PADRAO_INSTRUCAO = re.compile(r"^\s*([A-Za-z]+)\s+(.*?)\s*$")
+PADRAO_SECRETO = re.compile(r"(senha|secret|token|api[_-]?key|passwd)", re.IGNORECASE)
+VARIANTES_MINIMAS = ("slim", "alpine", "distroless")
+
+
+def instrucoes(texto: str) -&gt; list[tuple[str, str]]:
+    """Cada linha valida vira (INSTRUCAO, argumentos); ignora vazias e comentarios."""
+    saidas: list[tuple[str, str]] = []
+    for linha in texto.splitlines():
+        sem_comentario = linha.split("#", 1)[0]
+        if not sem_comentario.strip():
+            continue
+        casa = PADRAO_INSTRUCAO.match(sem_comentario)
+        if casa:
+            saidas.append((casa.group(1).upper(), casa.group(2).strip()))
+    return saidas
+
+
+def usuario_final(texto: str) -&gt; str | None:
+    """Ultimo USER declarado; None se ausente (roda como root)."""
+    usuarios = [args.split()[0] for nome, args in instrucoes(texto) if nome == "USER"]
+    return usuarios[-1] if usuarios else None
+
+
+def bases(texto: str) -&gt; list[str]:
+    """Toda imagem apos cada FROM, na ordem de declaracao."""
+    return [args.split()[0] for nome, args in instrucoes(texto) if nome == "FROM"]
+
+
+def digest_pinado_na_base_final(texto: str) -&gt; bool:
+    """A ultima base referencia conteudo exato via '@sha256:'."""
+    lista = bases(texto)
+    return bool(lista) and "@sha256:" in lista[-1]
+
+
+def base_minima(texto: str) -&gt; bool:
+    """Heuristica local: a base final nomeia variante enxuta.
+
+    Nao mede tamanho; o tamanho real e medido na trilha externa.
+    """
+    lista = bases(texto)
+    return bool(lista) and any(v in lista[-1].lower() for v in VARIANTES_MINIMAS)
+
+
+def expoe_segredo(texto: str) -&gt; bool:
+    """True se ARG/ENV carrega nome de segredo ou COPY traz arquivo sensivel."""
+    for nome, args in instrucoes(texto):
+        if nome in ("ARG", "ENV") and PADRAO_SECRETO.search(args):
+            return True
+        if nome == "COPY" and PADRAO_SECRETO.search(args):
+            return True
+    return False
+
+
+def relatorio(texto: str) -&gt; dict[str, object]:
+    """Junta as verificacoes; 'aprovada' exige todas as condicoes."""
+    usuario = usuario_final(texto)
+    vereditos: dict[str, object] = {
+        "usuario_final": usuario,
+        "nao_root": usuario is not None and usuario != "root" and usuario != "0",
+        "bases": bases(texto),
+        "digest_pinado": digest_pinado_na_base_final(texto),
+        "base_minima": base_minima(texto),
+        "expoe_segredo": expoe_segredo(texto),
+    }
+    vereditos["aprovada"] = bool(
+        vereditos["nao_root"]
+        and vereditos["digest_pinado"]
+        and vereditos["base_minima"]
+        and not vereditos["expoe_segredo"]
+    )
+    return vereditos
+</code></pre>
+
+<p><strong>Referência executável 2 — <code>lab/drenagem_grace.py</code>.</strong> Registra handlers de SIGTERM/SIGINT, drena o tráfego (fecha a entrada antes de tocar no trabalho em curso), conclui ou cancela dentro do prazo e publica a timeline com o exit code (oráculo LT03-AT-002). Só stdlib (<code>asyncio</code>, <code>signal</code>, <code>time</code>); handlers com semântica POSIX:</p>
+<pre><code>"""Drenagem e grace: fechar a entrada, concluir ou cancelar, sair no prazo.
+
+Referencia executavel do Bloco 1.
+Implementacao verbatim na folha B01-L. So STDLIB (asyncio, signal, time).
+Ponte com o LT01-B01: mesmo shutdown cooperativo, com a drenagem a frente.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import signal
+import time
+from collections.abc import Callable
+
+CODIGO_SAIDA_LIMPA = 0
+
+
+class ServicoDrenavel:
+    """Guarda o estado da drenagem: entrada aberta ou fechada."""
+
+    def __init__(self) -&gt; None:
+        self.aceitando = True
+        self.concluidas = 0
+        self.canceladas = 0
+
+    def fechar_entrada(self) -&gt; None:
+        """Passo 1: nenhum trafego novo depois do sinal."""
+        self.aceitando = False
+
+    async def atender(self, duracao: float) -&gt; str:
+        """Trabalho cooperativo: responde a cancelamento."""
+        if not self.aceitando:
+            raise RuntimeError("entrada fechada: trafego novo recusado")
+        try:
+            await asyncio.sleep(duracao)
+        except asyncio.CancelledError:
+            self.canceladas += 1
+            raise
+        self.concluidas += 1
+        return "concluida"
+
+
+async def drenar(
+    servico: ServicoDrenavel,
+    em_curso: set[asyncio.Task[object]],
+    prazo: float,
+) -&gt; dict[str, float]:
+    """Fecha a entrada, aguarda ate o prazo, cancela o restante, publica a timeline."""
+    inicio = time.monotonic()
+    servico.fechar_entrada()
+    _, pendentes = await asyncio.wait(em_curso, timeout=prazo)
+    for tarefa in pendentes:
+        tarefa.cancel()
+    await asyncio.gather(*pendentes, return_exceptions=True)
+    return {
+        "concluidas": float(servico.concluidas),
+        "canceladas": float(servico.canceladas),
+        "relógio_s": time.monotonic() - inicio,
+        "codigo_saida": float(CODIGO_SAIDA_LIMPA),
+    }
+
+
+def instalar_handlers(
+    loop: asyncio.AbstractEventLoop,
+    ao_sinal: Callable[[], None],
+) -&gt; None:
+    """SIGTERM e SIGINT pedem drenagem; SIGKILL nao passa por aqui."""
+    for numero in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(numero, ao_sinal)
+</code></pre>
+
+<p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> O relatório aprova o Dockerfile que declara usuário sem privilégio, base enxuta pinada por digest e nenhuma instrução com segredo; qualquer ausência reprova com o campo nomeado. A drenagem fecha a entrada no instante do sinal, publica concluídas e canceladas com o relógio do grace, e devolve o código limpo dentro do prazo. Formatos ilustrativos. A folha L executa os oráculos e registra os números observados; nenhum valor aqui é prova.</p>
+
+<div class="box">
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B01-L constrói em <code>lab/</code>.</strong> <code>lab/validar_dockerfile.py</code> com este contrato verbatim e o oráculo LT03-AT-001 (Dockerfile non-root, base mínima, digest pinado, sem segredo; casos negativos com cada defeito isolado). <code>lab/drenagem_grace.py</code> com este contrato verbatim e o oráculo LT03-AT-002 (sob carga local, o sinal fecha a entrada, conclui ou cancela dentro do grace e publica a timeline). A folha L também publica a tabela de decisão de portabilidade, custo e responsabilidade (AT-003). O build, a publicação, a inspeção de manifest e camadas e a execução pelo digest pertencem à trilha externa com Docker — BLOCKED com registro onde Docker estiver ausente, nunca simulados. Os roteiros de execução moram no <code>Laboratório guiado LT03</code>, ao final da trilha — nenhum passo de construção ou execução vive neste bloco.</p>
+</div>
+
+<div class="box ok">
+<p><span class="lbl">Síntese</span><strong>Bloco 1 em seis frases.</strong></p>
+<ul>
+<li>Cloud é recurso sob demanda medido por uso; IaaS, PaaS e SaaS dividem a operação pela linha da responsabilidade compartilhada.</li>
+<li>Failure domain é o que falha junto; réplicas no mesmo domínio não são alta disponibilidade, e egress e quota entram no desenho.</li>
+<li>Imagem OCI é empacotamento padronizado: camadas empilhadas, config de execução, manifest que lista, digest que identifica.</li>
+<li>Tag é apelido mutável; promoção e rollback referenciam o digest imutável, nunca o nome legível.</li>
+<li>Imagem Python séria é mínima, em estágios, com dependências bloqueadas, non-root, versionada e sem segredo em camada alguma.</li>
+<li>No container, o SIGTERM chega ao PID 1: drenar o tráfego primeiro, concluir ou cancelar no grace e sair com o exit code contratado.</li>
+</ul>
+</div>
+
+<h3 id="diagnostico-b01">Tabela de Diagnóstico B01</h3>
+
+<p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
+
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>A imagem que roda hoje não é a testada ontem, sem mudança de código</td><td>Deploy resolve tag mutável: o apelido foi movido para outro digest entre o teste e a execução (LT03-AT-001).</td><td>Pinar por digest em promoção e evidência; tratar tag como conveniência de leitura, nunca como identidade.</td></tr>
+<tr><td>Processo do container roda como root</td><td><code>USER</code> ausente ou declarado antes de instrução que o anula; verificação só visual, sem oráculo (LT03-AT-001).</td><td>Declarar usuário sem privilégio por último antes do comando e confirmar com o relatório estático da folha B01-L.</td></tr>
+<tr><td>Imagem grande, pull lento, superfície ampla</td><td>Base completa com toolchain e estágio único: compilador e intermediários embarcam em camadas finais.</td><td>Base enxuta, build em estágios, só o artefato no estágio final; medir tamanho e cold start na trilha externa.</td></tr>
+<tr><td>Segredo válido vaza após publicação da imagem</td><td>Credencial em instrução ou arquivo copiado: camada guarda o segredo para sempre, mesmo removido adiante.</td><td>Segredo fora do build (montado na execução); recusar Dockerfile com padrão de segredo no relatório estático.</td></tr>
+<tr><td>Rebuild do mesmo commit gera digest distinto</td><td>Base flutuante ou dependência sem lock: entradas distintas produzem conteúdo distinto.</td><td>Base pinada por digest, dependências bloqueadas, Dockerfile versionado; explicar o rebuild controlado.</td></tr>
+<tr><td>Deploy novo mata requisições no meio; a maioria passa, a cauda morre</td><td>Shutdown sem drenagem: a entrada continua aceitando após o SIGTERM, ou o handler inexiste (LT03-AT-002, ponte LT01-B01).</td><td>Fechar a entrada como passo 1, concluir ou cancelar no grace, publicar a timeline com concluídas e canceladas.</td></tr>
+<tr><td>Grace period escorre sem que nada termine; o SIGKILL faz o trabalho sujo</td><td>Trabalho que ignora cancelamento: o prazo inteiro é desperdiçado aguardando o incancelável.</td><td>Tornar o trabalho cancelável e medir de novo contra o deadline interno da folha B01-L.</td></tr>
+<tr><td>Fatura surpreende enquanto a latência não melhora</td><td>Egress e custo fixo fora da decisão: travessia de fronteira por requisição e reserva parada pagas sem registro (AT-003).</td><td>Registrar responsabilidade, egress e saída por serviço na tabela de decisão; rever antes de adotar gerenciado.</td></tr>
+</tbody>
+</table>
+
+<h3 id="checkpoint-b01">Checkpoint B01 — cloud, OCI e drenagem (LT03-AT-001..003)</h3>
+
+<div class="box ok">
+<p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Não há nota global; cada resposta vale 0–2 pela rubrica própria. Números citados são exemplo variável, não evidência.</p>
+<ol class="check">
+<li><strong>Explicação (LT03-AT-001).</strong> A mesma tag produziu comportamento distinto em dois deploys seguidos, sem mudança de código. O que a tag identifica contra o que o digest identifica, e qual referência a promoção deveria ter usado? <em>Rubrica (0–2): 2 = deriva apelido mutável contra identidade de conteúdo, e prescreve digest pinado em promoção e evidência; 1 = distingue sem o mecanismo da mutabilidade, ou prescreve sem citar digest; 0 = atribui a cache ou rede. Obrigatório para pontuar: declarar que tag move e digest não.</em></li>
+<li><strong>Decisão (LT03-AT-001).</strong> Um Dockerfile parte de imagem completa, roda como root e embute credencial para "agilizar o build". Aceite ou recuse cada escolha com o mecanismo, e prescreva a alternativa. <em>Rubrica (0–2): 2 = recusa as três — superfície e pull, dano alcançável, vazamento permanente em camada — e prescreve base enxuta, non-root e segredo fora do build; 1 = recusa parcial ou prescreve genérico; 0 = aprova qualquer das três. Obrigatório para pontuar: declarar que camada com segredo é vazamento permanente.</em></li>
+<li><strong>Explicação (LT03-AT-002).</strong> SIGTERM chega ao PID 1 do container e parte das requisições morre no meio. Ordene drenagem, conclusão ou cancelamento, e saída — e explique por que a entrada fecha primeiro. <em>Rubrica (0–2): 2 = ordena drenar → concluir/cancelar no prazo → sair com o exit code, e declara que cada aceita após o sinal é futura vítima do SIGKILL; 1 = ordena certo sem o mecanismo da vítima, ou omite o exit code; 0 = ordem trocada (trabalho antes da entrada). Obrigatório para pontuar: a entrada fechada como passo 1.</em></li>
+<li><strong>Transferência (LT03-AT-001/002).</strong> Caso A: rebuild do mesmo commit gera digest distinto. Caso B: grace escorre sem que nada termine e o SIGKILL encerra. Diga a causa provável de cada caso e o conserto. <em>Rubrica (0–2): 2 = diagnostica entradas flutuantes (base sem digest, dependência sem lock) com pinagem e lock, e trabalho incancelável com cancelamento cooperativo medido no prazo; 1 = acerta um caso e genérico no outro; 0 = propõe tag fixa como conserto do caso A ou SIGKILL-first no caso B. Obrigatório para pontuar: pinar base por digest E tornar o trabalho cancelável.</em></li>
+<li><strong>Decisão (AT-003).</strong> Um serviço gerenciado promete eliminar operação de fila e banco. Liste o que a decisão precisa registrar antes da adoção, e explique o custo de omitir cada item. <em>Rubrica (0–2): 2 = exige responsabilidade, failure domains, egress e saída explícitos, com o custo de cada omissão (operação órfã, fatura surpresa, aprisionamento); 1 = lista parcial sem os custos; 0 = aprova pelo marketing do gerenciado. Obrigatório para pontuar: declarar responsabilidade, egress e saída por escrito.</em></li>
+</ol>
+</div>
+
+<h3 id="fontes-b01">Fontes do Bloco 1</h3>
+<ul>
+<li>SRC-LT03-01 — NIST SP 800-145 — normativa — características e modelos de cloud. URLs na especificação §7. Consulta: 14/08/2026. Risco: baixo.</li>
+<li>SRC-LT03-02 — CNCF Cloud Native Definition — canônica — modelo cloud-native. URLs na especificação §7. Risco: médio; revalidar em até 90 dias.</li>
+<li>SRC-LT03-03 — OCI Image Specification — normativa — imagem, manifest, camadas e digest. URLs na especificação §7. Versão: 1.1.1 na data-base. Risco: médio; revalidar em até 90 dias.</li>
+<li>SRC-LT03-04 — OCI Runtime Specification — normativa — bundle e processo do runtime. URLs na especificação §7. Versão: 1.3.0 na data-base. Risco: médio.</li>
+<li>SRC-LT03-05 — OCI Distribution Specification — normativa — registry e distribuição. URLs na especificação §7. Versão: 1.1 na data-base. Risco: médio.</li>
+<li>SRC-LT03-19 — FinOps Framework — practitioner guidance rotulada — custo, accountability e decisão; sustenta o AT-003, não define conceito. URLs na especificação §7. Risco: médio.</li>
+<li>Grace period, ordem da drenagem e PID 1 em container — comportamento de runtime e construção desta trilha; medidos na folha B01-L e na trilha externa. Risco: médio; revalidar em até 90 dias.</li>
+<li>Timelines e tamanhos citados no bloco — exemplo variável, não evidência; os números observados nascem na folha B01-L e na trilha externa. Risco: baixo.</li>
+</ul>
+<hr>
+
+<h2 id="b02">Bloco 2 · APIs declarativas, workloads, rede e configuração</h2>
+<h3>Orientação: o que este bloco entrega</h3>
+
+<div class="box">
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca manifesto copiado por estado declarado que converge: oito resultados (LT03-B02-C01..08; matriz PLAT-01, SEC-03, OPS-01):</p>
+<ul>
+<li>explicar control loop e desired contra observed state — o que foi pedido contra o que existe (base do AT-010);</li>
+<li>escolher workload pelo ciclo de vida — Deployment, StatefulSet, DaemonSet, Job, CronJob — cada um com caso e limite;</li>
+<li>ligar Pod, labels, selectors e owner references sem produzir selector sem endpoints (LT03-AT-011);</li>
+<li>expor só a API por Service, DNS e Gateway ou Ingress, com a mesma identidade de seleção do workload;</li>
+<li>separar ConfigMap de Secret, com segredo fora de manifesto, de env literal e de evidência (ponte com AT-014 e regra de escopo);</li>
+<li>distinguir volume efêmero de persistência real, e namespace, ServiceAccount, RBAC mínimo, security context e Pod Security Standards (LT03-AT-012);</li>
+<li>ler NetworkPolicy default-deny com allowlist e a dependência do CNI, com testes positivos e negativos (LT03-AT-013);</li>
+<li>ler as duas referências executáveis — <code>lab/validar_manifesto.py</code>, <code>lab/simular_rollout.py</code> — sabendo o que cada nome prova: probes presentes, recursos declarados, segredo ausente em env e rollout que só avança sobre readiness (AT-010..014 e ponte com o Bloco 3). A execução pertence à folha B02-L, no <code>Laboratório guiado LT03</code>.</li>
+</ul>
+<p><strong>Pré-requisitos.</strong> Bloco 1 (digest como identidade, non-root, segredo fora da imagem) e LT02 (API contra worker, ciclos de vida distintos). Cada termo novo — Pod, selector, ServiceAccount, NetworkPolicy, probe, request, limit, QoS, HPA — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib, sem PyYAML. Nenhuma outra stack é pressuposta.</p>
+<p><strong>Saída observável.</strong> Ao fim da leitura, você escolhe o workload pelo ciclo de vida, diagnostica selector sem endpoints e permissão ampla, e lê o contrato dos dois scripts do <code>lab/</code> sem precisar executá-los aqui.</p>
+<p><strong>Ponte com o Bloco 1 e o Bloco 3.</strong> O Bloco 1 provou identidade por digest e processo non-root; este bloco declara o resto do estado desejado em manifestos. Probes, recursos e HPA nascem aqui como contrato de manifesto e ganham medição e sintonia fina no Bloco 3 — a semântica de decisão já é exigível agora, o número sintonizado pertence a depois.</p>
+</div>
+
+<h3>N1 · API declarativa: pedir estado, reconciliar realidade</h3>
+
+<p><strong>API declarativa</strong> é a interface onde você descreve o estado desejado e o sistema trabalha até a realidade coincidir com ele. O <strong>desired state</strong> é o documento versionado: quantas réplicas, qual imagem por digest, quais portas, quais montagens. O <strong>observed state</strong> é o que existe de fato: Pods rodando, endpoints publicados, conditions registradas. Entre os dois opera o <strong>control loop</strong>: observar, comparar, agir, repetir. Aplicar o manifesto não executa uma sequência; registra uma intenção que controladores perseguem continuamente (oráculo AT-010: o estado observado converge ao manifesto).</p>
+
+<table>
+<thead><tr><th>Termo</th><th>Definição e mecanismo</th><th>Limite</th></tr></thead>
+<tbody>
+<tr><td><strong>Pod</strong></td><td>A menor unidade executável: um ou mais containers que compartilham rede, parte do storage e o mesmo ciclo de vida de máquina. É efêmero por desenho: nasce, serve, morre, é substituído.</td><td>Ninguém declara Pod isolado para serviço durável; sem controlador, morte é desaparecimento sem reposição.</td></tr>
+<tr><td><strong>Label / selector</strong></td><td>Label é o par chave-valor colado no objeto; selector é a consulta que seleciona o conjunto. Service encontra Pods por selector; controlador conta os seus pelo mesmo mecanismo.</td><td>Selector que não casa com label alguma produz zero endpoints: serviço no ar, tráfego em lugar nenhum (AT-011).</td></tr>
+<tr><td><strong>Owner reference</strong></td><td>O vínculo de posse entre controlador e objeto gerenciado: diz quem criou quem e quem limpa quem na exclusão.</td><td>Objeto órfão acumula; objeto com dono trocado é disputado por dois controladores.</td></tr>
+<tr><td><strong>Namespace</strong></td><td>Fronteira de nomes e de política dentro do mesmo cluster: separa ambientes e equipes por nome, quota e permissão.</td><td>Namespace não é isolamento de rede nem de kernel; quem promete isolamento precisa de NetworkPolicy, quota e contexto de segurança junto.</td></tr>
+<tr><td><strong>Condition / evento</strong></td><td>O relato do controlador sobre o objeto: pronto, disponível, progredindo, com motivo e mensagem. Evento conta a história; condition resume o veredito.</td><td>Mensagem descreve sintoma no vocabulário do controlador; diagnóstico exige ler condition contra manifesto, nunca só a última linha do log.</td></tr>
+</tbody>
+</table>
+
+<h3>N2 · Workloads pelo ciclo de vida, rede e configuração</h3>
+
+<p>O erro de entrada é tratar todo workload como réplica genérica. Cada controlador promete um ciclo de vida distinto; a escolha começa pela pergunta sobre término, identidade e lugar:</p>
+
+<table>
+<thead><tr><th>Workload</th><th>Caso que resolve</th><th>Limite que decide</th></tr></thead>
+<tbody>
+<tr><td><strong>Deployment</strong></td><td>API sem estado com réplicas intercambiáveis: troca versão por rollout, repõe falha, escala por número. É o workload da API desta trilha.</td><td>Réplicas são gêmeas: qualquer dado que precise sobreviver ao Pod não mora aqui (ponte com AT-014).</td></tr>
+<tr><td><strong>StatefulSet</strong></td><td>Réplicas com identidade estável — nome ordinal, rede estável, storage próprio por réplica — para estado que acompanha o membro.</td><td>Identidade cobra ordem e lentidão de escala; usar para API sem estado é pagar coordenação sem receber nada.</td></tr>
+<tr><td><strong>DaemonSet</strong></td><td>Um agente por nó elegível: coleta, proxy local, varredura. Nasce com o nó, morre com o nó.</td><td>Um por nó é multiplicação automática de custo; fora de agente de nó, é réplica sem motivo.</td></tr>
+<tr><td><strong>Job</strong></td><td>Tarefa que termina: migração, lote, verificação. Sucesso é conclusão contada, não presença contínua.</td><td>Job que nunca termina é serviço disfarçado; serviço que deveria terminar e fica preso é Job sem deadline nem backoff pensado.</td></tr>
+<tr><td><strong>CronJob</strong></td><td>Job sob agenda: cada horário cria um Job filho com o mesmo contrato de conclusão.</td><td>Agenda não é fila: sobreposição de execuções exige política de concorrência e histórico limitado, ou o cluster acumula filhos.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Rede: expor só a API.</strong> O <strong>Service</strong> é o nome estável diante de Pods instáveis: seleciona por selector, publica endpoints e oferece DNS interno pelo nome. O worker desta trilha não recebe Service externo: é alcançado pela fila, não pela rede. <strong>Gateway ou Ingress</strong> é a porta de entrada do cluster: recebe tráfego externo e roteia ao Service interno por regra declarada. A cadeia de seleção é única — regra aponta ao Service, Service seleciona Pods por selector, endpoints publicam quem está pronto — e cada elo quebrado tem sintoma próprio no diagnóstico.</p>
+
+<p><strong>Configuração: ConfigMap contra Secret.</strong> <strong>ConfigMap</strong> carrega dado não sensível: flags, nomes, timeouts legíveis. <strong>Secret</strong> carrega referência sensível — e referência não é cofre: o conteúdo viaja em base legível por quem lê o objeto, mora no estado e aparece em evidência descuidada. Por isso este bloco congela a regra que o validador cobra: nenhum segredo literal em variável de ambiente de manifesto; segredo chega por referência montada na execução, nunca copiado no documento versionado. Config ausente ou chave trocada é falha catalogada: o Pod nasce e morre pedindo o que ninguém entregou.</p>
+
+<p><strong>Persistência: efêmero contra durável.</strong> O filesystem do container é efêmero: reinício limpa, recriação apaga, escala espalha. <strong>Volume</strong> é o disco declarado fora do ciclo do container; <strong>persistência real</strong> é o volume cuja vida supera o Pod — com classe, reclaim e backup pensados. O oráculo AT-014 cobra a distinção: dado que precisa sobreviver não reside apenas no container, e reinício nunca é confundido com leitura de durabilidade.</p>
+
+<p><strong>Identidade e permissão: ServiceAccount com RBAC mínimo.</strong> Todo Pod fala com a API do cluster sob uma <strong>ServiceAccount</strong>; o <strong>RBAC</strong> diz quais verbos sobre quais recursos em qual escopo essa conta pode executar. Mínimo significa exatamente o necessário: a conta da API não carrega os verbos do worker, e o worker não carrega credencial nem permissão da API (aceitação do bloco e AT-012). <strong>Security context</strong> declara usuário, grupo, filesystem read-only e capacidades descartadas; os <strong>Pod Security Standards</strong> convertem essas declarações em patamares exigíveis por namespace. Conta ampla é defeito silencioso: tudo funciona até o dia em que funciona demais.</p>
+
+<div class="box warn">
+<p><span class="lbl">Contraste</span><strong>"Apliquei, então está isolado e autorizado" — não.</strong> Aplicar registra intenção; isolamento e autorização vêm de objetos próprios que precisam existir e casar: NetworkPolicy que seleciona os Pods certos, RBAC preso à conta certa, selector que encontra label real. O sintoma que denuncia a ilusão é conhecido: o manifesto aplica limpo, o tráfego atravessa onde não deveria, a conta alcança o que nunca usa, e o diagnóstico começa pelo objeto que ninguém escreveu. Os oráculos AT-011..014 cobram os quatro vínculos: endpoints publicados, verbos mínimos, testes de rede positivos e negativos, dado fora do container.</p>
+</div>
+
+<p><strong>Rede como política: default-deny e allowlist.</strong> <strong>NetworkPolicy</strong> filtra tráfego entre Pods nas camadas de endereço e porta: por padrão, tudo passa; com default-deny no namespace, nada passa exceto o declarado na allowlist. A regra honesta desta trilha nega tudo e libera o estrito: API recebe da porta de entrada, worker fala com fila e banco, banco só ouve o worker — e DNS precisa constar, porque negar o nome derruba tudo antes de qualquer teste de aplicação. E o limite arquitetural: a política só vale onde o <strong>CNI</strong> a implementa; em plugin que ignora a API, manifesto correto é carta sem carteiro (AT-013 registra a dependência).</p>
+
+<h3>N3 · Probes, recursos e escala: a semântica que o manifesto contrata</h3>
+
+<p><strong>Probe</strong> é a pergunta periódica que o runtime faz ao container, e cada tipo produz somente a reação pretendida — uma nunca substitui a outra (regra da especificação):</p>
+
+<table>
+<thead><tr><th>Probe</th><th>Pergunta e reação contratada</th><th>Defeito catalogado</th></tr></thead>
+<tbody>
+<tr><td><strong>Startup</strong></td><td>"Terminaste de inicializar?" Enquanto falha, as demais ficam suspensas: protege subida lenta contra veredito precoce.</td><td>Ausente em inicialização longa, as outras probes condenam um processo que ainda estava nascendo.</td></tr>
+<tr><td><strong>Readiness</strong></td><td>"Aceitas tráfego?" Falha remove o Pod dos endpoints sem matar o processo: controla tráfego, nunca reinicia.</td><td>Readiness que chama dependência externa tira do ar quem está saudável por culpa do vizinho; confundir com liveness cria restart loop onde bastava drenar tráfego.</td></tr>
+<tr><td><strong>Liveness</strong></td><td>"Estás vivo ou travado?" Falha reinicia o container: o último recurso contra deadlock interno.</td><td>Liveness que consulta banco, fila ou DNS converte lentidão alheia em suicídio próprio — o defeito mais caro deste bloco.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Recursos: pedir para agendar, limitar para conter.</strong> <strong>Request</strong> é a reserva que o agendador usa para escolher o nó: sem request medido, o Pod cabe em qualquer lugar e em lugar nenhum com garantia. <strong>Limit</strong> é o teto imposto na execução: CPU além do limite é estrangulada (throttle), memória além do limite mata o container (OOMKill). Valores sem medição são hipótese — a regra da especificação — e a prova pertence ao Bloco 3; aqui o contrato exige presença declarada e coerência: request sustenta o agendamento, limit contém o dano, e a combinação dos dois define a <strong>QoS</strong> (qualidade de serviço): garantida quando pedido e teto coincidem por container, intermediária quando só parte garante, oportunista quando nada é declarado. Limite arbitrário copiado de outro serviço é hipótese vestida de decisão.</p>
+
+<p><strong>HPA com limites honestos.</strong> O <strong>HPA</strong> é um control loop atrasado: lê métrica, compara com o alvo, ajusta réplicas, espera o efeito — e cada passo leva tempo de imagem, inicialização e aquecimento. Depende de requests declarados para calcular utilização; sem request, a porcentagem-alvo não tem denominador. Não cria capacidade instantânea, oscila sem estabilização e jamais corrige dependência saturada: escalar a API contra banco esgotado multiplica a pressão sobre o gargalo (ponte com o AT de upstream do Bloco 3). Números de réplicas, alvos e janelas citados neste bloco são exemplo variável; a curva carga contra réplicas com SLO preservado é medida no Bloco 3.</p>
+
+<div class="box fund">
+<p><strong>Fundamento de engenharia · Declarar é contratar reação.</strong> Cada campo do manifesto contrata uma reação do sistema: selector contrata endpoints, probe contrata tráfego ou reinício, request contrata agendamento, limit contrata contenção, política contrata bloqueio. Manifesto incompleto não é manifesto simples — é contrato em branco que o cluster preenche com padrão silencioso. O validador da folha B02-L existe por isso: recusa o branco antes que o silêncio vire incidente.</p>
+</div>
+
+<h3>N4 · Falha e diagnóstico: o catálogo do estado declarado</h3>
+
+<p>Cada falha abaixo tem oráculo nomeado na folha B02-L: manifesto que reproduz, veredito do validador ou da simulação, e conserto que fecha o vínculo.</p>
+
+<h3>Exemplos trabalhados</h3>
+<p><strong>Estatuto do código.</strong> Os dois blocos abaixo são <strong>referência executável</strong>: o contrato que a folha B02-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivos flat em <code>lab/</code>, só stdlib, sem PyYAML: manifestos entram como dicts Python puros (ou pelo parse mínimo próprio), nunca por dependência externa. Leitura aqui; execução no <code>Laboratório guiado LT03</code>. Nenhum trecho deste bloco toca cluster real: a referência local valida contrato e simula rollout; o apply, a convergência observada e os testes de rede pertencem à trilha externa com Docker e cluster — BLOCKED com registro onde estiverem ausentes. Todo número de saída é exemplo variável até a medição da folha L.</p>
+
+<p><strong>Referência executável 1 — <code>lab/validar_manifesto.py</code>.</strong> Recebe manifestos como dicts puros no formato de mapeamento com chaves de texto (nomes de recurso, container, env e probes legíveis em português ou no vocabulário da API declarativa) e publica o veredito estático: probes presentes por container, recursos declarados por container, nenhum segredo literal em env, selector que encontra labels, conta com verbos mínimos e dado durável fora do container (oráculos LT03-AT-010..014). Só stdlib (<code>re</code>):</p>
+<pre><code>"""Validacao estatica de manifestos declarativos: probes, recursos, segredo.
+
+Referencia executavel do Bloco 2.
+Implementacao verbatim na folha B02-L. So STDLIB (re).
+Manifestos entram como dicts Python puros; sem PyYAML, sem rede, sem cluster.
+"""
+
+from __future__ import annotations
+
+import re
+
+PADRAO_SECRETO = re.compile(r"(senha|secret|token|password|passwd|pwd|api[_-]?key)", re.IGNORECASE)
+
+
+def conteineres(manifesto: dict[str, object]) -&gt; list[dict[str, object]]:
+    """Extrai a lista de containers do manifesto, ou lista vazia."""
+    especificacao = manifesto.get("especificacao")
+    if not isinstance(especificacao, dict):
+        return []
+    lista = especificacao.get("conteineres")
+    if not isinstance(lista, list):
+        return []
+    return [item for item in lista if isinstance(item, dict)]
+
+
+def probes_presentes(container: dict[str, object]) -&gt; dict[str, bool]:
+    """True por probe presente: inicializacao, prontidao, vivacidade."""
+    sondas = container.get("sondas")
+    nomes: set[str] = set()
+    if isinstance(sondas, dict):
+        for chave in sondas:
+            nomes.add(str(chave))
+    return {
+        "inicializacao": "inicializacao" in nomes,
+        "prontidao": "prontidao" in nomes,
+        "vivacidade": "vivacidade" in nomes,
+    }
+
+
+def recursos_declarados(container: dict[str, object]) -&gt; bool:
+    """True quando pedido e teto existem para CPU e memoria."""
+    recursos = container.get("recursos")
+    if not isinstance(recursos, dict):
+        return False
+    pedido = recursos.get("pedido")
+    teto = recursos.get("teto")
+    if not isinstance(pedido, dict) or not isinstance(teto, dict):
+        return False
+    tem_pedido = pedido.get("cpu") and pedido.get("memoria")
+    tem_teto = teto.get("cpu") and teto.get("memoria")
+    return bool(tem_pedido and tem_teto)
+
+
+def expoe_segredo_em_env(container: dict[str, object]) -&gt; bool:
+    """True se alguma variavel de ambiente carrega nome ou valor de segredo."""
+    ambiente = container.get("env")
+    if not isinstance(ambiente, list):
+        return False
+    for entrada in ambiente:
+        if not isinstance(entrada, dict):
+            continue
+        nome = str(entrada.get("nome", ""))
+        valor = str(entrada.get("valor", ""))
+        if PADRAO_SECRETO.search(nome) or PADRAO_SECRETO.search(valor):
+            return True
+        if "segredo_literal" in entrada:
+            return True
+    return False
+
+
+def seletor_encontra_labels(seletor: dict[str, str], labels: dict[str, str]) -&gt; bool:
+    """True quando todo par do seletor existe identico nas labels."""
+    for chave, valor in seletor.items():
+        if labels.get(chave) != valor:
+            return False
+    return bool(seletor)
+
+
+def relatorio(manifestos: list[dict[str, object]]) -&gt; dict[str, object]:
+    """Junta as verificacoes; 'aprovado' exige todas as condicoes."""
+    violacoes: list[str] = []
+    for manifesto in manifestos:
+        nome = str(manifesto.get("nome", "sem-nome"))
+        for container in conteineres(manifesto):
+            sondas = probes_presentes(container)
+            if not (sondas["prontidao"] and sondas["vivacidade"]):
+                violacoes.append(nome + ": probe obrigatoria ausente")
+            if not recursos_declarados(container):
+                violacoes.append(nome + ": recursos nao declarados")
+            if expoe_segredo_em_env(container):
+                violacoes.append(nome + ": segredo em env")
+    veredito: dict[str, object] = {"violacoes": violacoes}
+    veredito["aprovado"] = not violacoes
+    return veredito
+</code></pre>
+
+<p><strong>Referência executável 2 — <code>lab/simular_rollout.py</code>.</strong> Simula a troca de versão por rollout com trava de readiness: nova réplica só recebe tráfego quando pronta, réplica antiga só sai quando a nova assume, e falha de readiness aborta antes de 100% (oráculos LT03-AT-010 e ponte com canary do Bloco 6). Só stdlib, determinístico, sem relógio de parede:</p>
+<pre><code>"""Simulacao deterministica de rollout com trava de readiness.
+
+Referencia executavel do Bloco 2.
+Implementacao verbatim na folha B02-L. So STDLIB.
+Sem cluster, sem rede, sem tempo real: passos logicos sobre dicts puros.
+"""
+
+from __future__ import annotations
+
+
+def passo(
+    prontas_total: int,
+    removidas: int,
+    desejadas: int,
+    max_indisponiveis: int,
+) -&gt; dict[str, int]:
+    """Quantas replicas antigas podem sair neste passo logico.
+
+    Cada nova pronta libera uma remocao; max_indisponiveis autoriza
+    a margem inicial. Sem nenhuma pronta, nada sai: a trava de
+    readiness e absoluta.
+    """
+    if not prontas_total &gt;= 1:
+        return {"prontas_total": prontas_total, "removiveis": 0}
+    margem = prontas_total - removidas + max_indisponiveis
+    if not margem &gt;= 1:
+        return {"prontas_total": prontas_total, "removiveis": 0}
+    restantes = desejadas - removidas
+    if not restantes &gt;= 1:
+        return {"prontas_total": prontas_total, "removiveis": 0}
+    return {"prontas_total": prontas_total, "removiveis": min(margem, restantes)}
+
+
+def simular(
+    desejadas: int,
+    sequencia_prontidao: list[bool],
+    max_indisponiveis: int,
+) -&gt; dict[str, object]:
+    """Avanca a troca versao antiga contra nova; aborta se a nova nao fica pronta."""
+    prontas_total = 0
+    removidas = 0
+    linha: list[str] = []
+    for sinal in sequencia_prontidao:
+        if sinal:
+            prontas_total += 1
+        veredito = passo(prontas_total, removidas, desejadas, max_indisponiveis)
+        removidas += veredito["removiveis"]
+        linha.append("prontas=" + str(prontas_total) + ",removidas=" + str(removidas))
+        if removidas &gt;= desejadas:
+            break
+    veredito_final: dict[str, object] = {"linha": linha, "removidas": removidas}
+    veredito_final["concluiu"] = removidas &gt;= desejadas
+    return veredito_final
+</code></pre>
+
+<p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> O relatório aprova o manifesto cujos containers declaram probes de prontidão e vivacidade, pedido e teto de CPU e memória e nenhuma variável com nome ou valor de segredo; qualquer ausência reprova com a violação nomeada. A simulação conclui quando cada réplica nova fica pronta antes da antiga sair, e aborta com a versão antiga preservada quando a prontidão falha — o número de passos varia com a sequência, e só a execução da folha L registra o observado. Formatos ilustrativos.</p>
+
+<div class="box">
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B02-L constrói em <code>lab/</code>.</strong> <code>lab/validar_manifesto.py</code> com este contrato verbatim e os oráculos LT03-AT-010..014 (selector que encontra labels, probes presentes, recursos declarados, segredo ausente em env, conta mínima, dado durável fora do container; casos negativos com cada defeito isolado). <code>lab/simular_rollout.py</code> com este contrato verbatim e o oráculo de rollout travado por readiness (avanço só sobre pronta, aborto antes de 100% com a versão antiga preservada). O apply real, a convergência observada e os testes de rede positivos e negativos pertencem à trilha externa com Docker e cluster — BLOCKED com registro onde estiverem ausentes, nunca simulados. Os roteiros de execução moram no <code>Laboratório guiado LT03</code>, ao final da trilha — nenhum passo de construção ou execução vive neste bloco.</p>
+</div>
+
+<div class="box ok">
+<p><span class="lbl">Síntese</span><strong>Bloco 2 em seis frases.</strong></p>
+<ul>
+<li>API declarativa registra intenção versionada; o control loop persegue a convergência entre desejado e observado.</li>
+<li>Workload se escolhe pelo ciclo de vida: Deployment para API sem estado, StatefulSet para identidade, DaemonSet para agente de nó, Job para término, CronJob para agenda.</li>
+<li>Selector que não casa é serviço mudo: endpoints vazios, tráfego em lugar nenhum.</li>
+<li>Segredo literal em env é vazamento versionado; configuração sensível chega por referência na execução.</li>
+<li>Readiness tira do tráfego, liveness reinicia, startup protege o nascimento — e liveness jamais consulta dependência externa.</li>
+<li>Request agenda, limit contém, HPA persegue com atraso: sem medição, todo número é hipótese com exemplo variável.</li>
+</ul>
+</div>
+
+<h3 id="diagnostico-b02">Tabela de Diagnóstico B02</h3>
+
+<p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
+
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Manifesto aplica limpo e nada converge; réplicas nunca aparecem</td><td>Estado desejado inválido ou controlador sem objeto correspondente: intenção registrada, reconciliação sem alvo (LT03-AT-010).</td><td>Ler conditions e eventos do objeto contra o manifesto; corrigir o documento e reaplicar a intenção, nunca remendar o estado vivo.</td></tr>
+<tr><td>Service no ar, zero endpoints, tráfego em lugar nenhum</td><td>Selector sem labels correspondentes: a consulta não casa com Pod algum (LT03-AT-011).</td><td>Conferir cada par do selector contra as labels do workload; confirmar com o veredito do validador da folha B02-L.</td></tr>
+<tr><td>Pod nasce e morre pedindo configuração que ninguém entregou</td><td>ConfigMap ou chave ausente, nome trocado entre manifesto e referência.</td><td>Versionar config junto do manifesto; recusar deploy com referência não resolvida no relatório estático.</td></tr>
+<tr><td>Credencial válida aparece em evidência, log ou diff versionado</td><td>Segredo literal em env ou manifesto: referência sensível copiada no documento (ponte AT-014 e regra de escopo).</td><td>Segredo por referência montada na execução; recusar manifesto com padrão de segredo no validador.</td></tr>
+<tr><td>Conta executa o que nunca usa; worker alcança permissão da API</td><td>ServiceAccount ampla com RBAC genérico: verbos e recursos além do necessário (LT03-AT-012).</td><td>Contas distintas por workload com verbos mínimos auditados; confirmar com a matriz de permissões da folha B02-L.</td></tr>
+<tr><td>Comunicação legítima falha após ativar a política; até DNS some</td><td>Default-deny sem allowlist do DNS ou da porta real: a negação cobre o essencial junto (LT03-AT-013).</td><td>Declarar DNS e cada fluxo legítimo na allowlist; manter testes positivos e negativos que quebram junto com a política.</td></tr>
+<tr><td>Reinício apaga o que deveria durar; dado some com o Pod</td><td>Volume efêmero assumido persistente: dado mora no ciclo do container (LT03-AT-014).</td><td>Declarar persistência fora do Pod com classe e reclaim; provar com reinício que preserva leitura.</td></tr>
+<tr><td>Lentidão do vizinho reinicia quem está saudável; restart loop sem deadlock</td><td>Liveness que consulta dependência externa: falha alheia vira reinício próprio (ponte Bloco 3).</td><td>Liveness só sobre estado interno; dependência externa pertence à readiness, nunca ao reinício.</td></tr>
+<tr><td>Rollout trava no meio ou avança sobre réplica despreparada</td><td>Readiness ausente ou indisponibilidade máxima permissiva demais: a troca anda sem prova (simulador da folha B02-L).</td><td>Travar avanço em readiness e conter indisponibilidade; abortar antes de 100% com a versão antiga preservada.</td></tr>
+</tbody>
+</table>
+
+<h3 id="checkpoint-b02">Checkpoint B02 — workloads, RBAC e rede (LT03-AT-010..014)</h3>
+
+<div class="box ok">
+<p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Não há nota global; cada resposta vale 0–2 pela rubrica própria. Números citados são exemplo variável, não evidência.</p>
+<ol class="check">
+<li><strong>Decisão (LT03-AT-010).</strong> API sem estado, consumidor de fila com backlog, agente de coleta por nó e migração que termina: atribua Deployment, Job ou CronJob, DaemonSet e StatefulSet a cada caso e justifique pelo ciclo de vida. <em>Rubrica (0–2): 2 = atribui os cinco pelo término, identidade e lugar, e declara o limite de cada escolha; 1 = atribui certo sem os limites, ou troca um caso; 0 = trata todo workload como réplica genérica. Obrigatório para pontuar: declarar que Deployment é para réplicas intercambiáveis sem estado.</em></li>
+<li><strong>Diagnóstico (LT03-AT-011).</strong> Service aplica limpo, sem erro, e publica zero endpoints. Diga a causa provável, onde conferir e o conserto. <em>Rubrica (0–2): 2 = diagnostica selector sem labels correspondentes, manda conferir cada par contra o workload e prescreve correção no manifesto com o veredito do validador; 1 = acerta a causa sem o procedimento de conferência; 0 = atribui a rede ou DNS. Obrigatório para pontuar: declarar que selector que não casa produz zero endpoints.</em></li>
+<li><strong>Decisão (LT03-AT-012/014).</strong> O worker precisa da fila e do banco; a API precisa da porta de entrada. Desenhe contas, permissões e segredos: quem pode o quê, onde o segredo mora e onde jamais aparece. <em>Rubrica (0–2): 2 = exige contas distintas com verbos mínimos, segredo por referência na execução e ausência em manifesto, env e evidência, com o custo de cada violação; 1 = separa parcial ou omite um custo; 0 = aprova conta compartilhada ou segredo em env. Obrigatório para pontuar: declarar contas distintas e segredo fora do documento versionado.</em></li>
+<li><strong>Explicação (LT03-AT-013).</strong> Namespace com default-deny: liste o que precisa constar na allowlist para API, worker, banco e DNS, e explique o que quebra se o DNS ficar de fora — incluindo o limite do CNI. <em>Rubrica (0–2): 2 = lista fluxos mínimos com DNS explícito, explica que sem nome nada resolve antes da aplicação, e declara que a política só vale onde o CNI a implementa; 1 = lista sem DNS ou sem o limite do CNI; 0 = descreve allowlist como lista de IPs fixos. Obrigatório para pontuar: declarar DNS na allowlist E a dependência do CNI.</em></li>
+<li><strong>Transferência (AT-010..014 e ponte Bloco 3).</strong> Caso A: reinício limpa o dado que deveria durar. Caso B: liveness consulta o banco e o banco lentifica. Diga a causa de cada caso, o conserto e qual campo do manifesto o validador acusaria. <em>Rubrica (0–2): 2 = diagnostica efêmero assumido persistente com volume durável fora do Pod, e liveness com dependência externa com liveness só interna e dependência na readiness, citando os campos cobrados; 1 = acerta um caso e genérico no outro; 0 = propõe limite maior como conserto de ambos. Obrigatório para pontuar: dado fora do container E liveness sem dependência externa.</em></li>
+</ol>
+</div>
+
+<h3 id="fontes-b02">Fontes do Bloco 2</h3>
+<ul>
+<li>SRC-LT03-06 — Kubernetes releases — normativa — baseline e version skew. URLs na especificação §7. Versão: 1.36.2 na data-base. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-07 — Kubernetes workload controllers — normativa — APIs declarativas e ciclos de vida. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-12 — Kubernetes NetworkPolicy — normativa — isolamento e allowlist. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-13 — Kubernetes RBAC good practices — normativa — least privilege. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-08 — Kubernetes probes — normativa — semântica de startup, readiness e liveness; sustenta a ponte com o Bloco 3. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-09 — Kubernetes resource management — normativa — requests, limits e QoS; sustenta a ponte com o Bloco 3. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-11 — Kubernetes HPA — normativa — control loop de escala e limites honestos; sustenta a ponte com o Bloco 3. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>Contratos dos dois scripts e timelines citadas — construção desta trilha; medidos na folha B02-L e na trilha externa. Risco: médio; revalidar em até 90 dias.</li>
+<li>Números citados no bloco — exemplo variável, não evidência; os números observados nascem na folha B02-L e na trilha externa. Risco: baixo.</li>
+</ul>
+<hr>
+
+<h2 id="b03">Bloco 3 · Probes, recursos, scheduling, disrupção e autoscaling</h2>
+<h3>Orientação: o que este bloco entrega</h3>
+
+<div class="box">
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca número copiado por capacidade medida: nove resultados (LT03-B03-C01..09; matriz PLAT-01, SRE-01, OBS-01):</p>
+<ul>
+<li>distinguir startup, readiness e liveness pela reação contratada — suspender, drenar, reiniciar — sem substituição entre elas (LT03-AT-020);</li>
+<li>encadear preStop, grace e draining de endpoints para terminar sem truncar requisição (LT03-AT-023);</li>
+<li>ler requests, limits, throttling, OOMKill e QoS, com pedido recalculado por medição, nunca copiado (LT03-AT-021);</li>
+<li>desenhar scheduling com spread e taints, e disrupção voluntária contida por PDB dentro do seu escopo (LT03-AT-022);</li>
+<li>operar o HPA como control loop atrasado que estabiliza sem thrash e jamais amplifica dependência saturada (LT03-AT-024/025);</li>
+<li>ler a referência executável — <code>lab/sinais_escala.py</code> — sabendo o que cada nome prova. A execução pertence à folha B03-L, no <code>Laboratório guiado LT03</code>.</li>
+</ul>
+<p><strong>Pré-requisitos.</strong> Bloco 2 (contrato de manifesto, selector, RBAC) e B01-L (drenagem e grace). Cada termo novo — throttle, OOMKill, QoS, PDB, HPA — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
+<p><strong>Saída observável.</strong> Ao fim da leitura, você prescreve a probe pela reação desejada, recalcula pedido por medição e nega escala contra gargalo saturado — e lê o contrato do <code>lab/</code> sem precisar executá-lo aqui.</p>
+</div>
+
+<h3>N1 · Probes: a pergunta certa com a reação certa</h3>
+
+<p><strong>Probe</strong> é a pergunta periódica do runtime ao container — e cada tipo contrata exatamente uma reação (regra 4 da especificação). <strong>Startup</strong> ("terminaste de inicializar?") suspende as demais enquanto falha: protege subida lenta contra veredito precoce. <strong>Readiness</strong> ("aceitas tráfego?") remove o Pod dos endpoints sem matar o processo. <strong>Liveness</strong> ("estás vivo ou travado?") reinicia o container: último recurso contra deadlock interno.</p>
+
+<p>Dois defeitos catalogados decidem o AT-020: <strong>liveness que consulta dependência externa</strong> converte lentidão alheia em suicídio próprio — o mais caro deste bloco; <strong>readiness que chama dependência crítica</strong> tira do ar quem está saudável por culpa do vizinho. Dependência externa pertence à readiness, nunca ao reinício; e probe que custa mais que o handler é monitoramento que virou carga.</p>
+
+<p><strong>preStop, grace e draining.</strong> O <strong>preStop</strong> é o gancho executado antes do SIGTERM: avisa a dependência, fecha a entrada, inicia a drenagem. O <strong>grace period</strong> é o prazo contratado entre SIGTERM e SIGKILL (ponte B01-L). <strong>Draining</strong> é retirar os endpoints antes de tocar no trabalho: nenhuma requisição nova após o sinal; in-flight conclui ou cancela no prazo (AT-023). Pod que termina sem request truncado é pod que drenou primeiro.</p>
+
+<h3>N2 · Recursos: pedir para agendar, limitar para conter</h3>
+
+<p><strong>Request</strong> é a reserva que o agendador usa para escolher o nó; <strong>limit</strong> é o teto imposto na execução via cgroups. CPU além do limite é <strong>throttling</strong> — estrangulamento que alonga a cauda sem matar; memória além do limite é <strong>OOMKill</strong> — morte do container. <strong>Ephemeral storage</strong> segue a mesma lógica, com despejo em vez de morte elegante. Valores sem medição são hipótese (regra 5): o pedido nasce da medição do steady state mais margem, nunca de outro serviço.</p>
+
+<p>A combinação define a <strong>QoS</strong>: <strong>garantida</strong> quando pedido e teto coincidem (última a sofrer sob pressão), <strong>intermediária</strong> quando só parte é garantida, <strong>oportunista</strong> quando nada é declarado (primeira a morrer). Limite arbitrário copiado é hipótese vestida de decisão — e request ausente é pior: sem pedido, o HPA perde o denominador da porcentagem-alvo.</p>
+
+<h3>N3 · Scheduling, disrupção e o loop atrasado do HPA</h3>
+
+<p><strong>Scheduling</strong> escolhe o nó por recursos, afinidade e restrições: <strong>affinity e spread</strong> espalham réplicas entre nós e zonas; <strong>taints</strong> repelem o que não foi tolerado. Réplicas que cabem num nó só não são alta disponibilidade. <strong>PDB</strong> limita disrupções voluntárias — drain, upgrade — ao mínimo contratado. O limite honesto: PDB não protege contra crash, delete direto ou falta de capacidade (regra 6).</p>
+
+<p>O <strong>HPA</strong> é um control loop atrasado: lê a métrica, compara ao alvo, ajusta réplicas, espera imagem, inicialização e aquecimento. A regra é teto de atuais vezes métrica sobre alvo, presa entre capacidade mínima e máxima: dentro da faixa, sem thrash; fora, presa ao contrato. Não cria capacidade instantânea, oscila sem estabilização — e jamais corrige dependência saturada: escalar contra upstream esgotado multiplica a pressão sobre o gargalo, então a escala é negada (AT-025). Capacidade mínima, queue age e cold start entram no desenho; scale-to-zero é trade-off: custo zero parado contra primeira requisição fria.</p>
+
+<h3>N4 · Falha e diagnóstico: o catálogo da capacidade</h3>
+
+<p>Cada falha abaixo tem oráculo nomeado na folha B03-L: função que reproduz, veredito calculado e conserto que fecha o vínculo. O drain que encontra PDB impossível é negado antes da mutação; a escala que amplificaria o gargalo sequer é emitida.</p>
+
+<h3>Exemplos trabalhados</h3>
+<p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B03-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib (<code>math</code>). Leitura aqui; execução no <code>Laboratório guiado LT03</code>. Nenhum trecho toca cluster real: a referência local calcula reações, QoS e réplicas como dados; throttle, OOM e curva carga contra réplicas pertencem à trilha externa — BLOCKED com registro onde estiverem ausentes. Todo número de saída é exemplo variável até a medição da folha L.</p>
+
+<p><strong>Referência executável — <code>lab/sinais_escala.py</code>.</strong> Publica reações de probes, segurança da liveness, classe de QoS, pedido por medição, regra do HPA com estabilização, permissão de disrupção, spread, conclusão no prazo e trava contra gargalo (oráculos LT03-AT-020..025). Só stdlib, determinístico, sem relógio de parede:</p>
+<pre><code>"""Probes, recursos, disrupcao e autoscaling como dados: sem cluster, sem rede.
+
+Referencia executavel do Bloco 3.
+Implementacao verbatim na folha B03-L. So STDLIB (math).
+Oraculos LT03-AT-020..025 sobre dicts puros e aritmetica deterministica.
+"""
+
+from __future__ import annotations
+
+import math
+
+REACOES: dict[str, str] = {
+    "inicializacao": "suspende-as-demais",
+    "prontidao": "remove-dos-endpoints",
+    "vivacidade": "reinicia-container",
+}
+
+
+def reacao(tipo: str) -&gt; str:
+    """Reacao contratada de cada probe; tipo desconhecido e defeito."""
+    return REACOES.get(tipo, "tipo-desconhecido")
+
+
+def vivacidade_segura(usa_dependencia_externa: bool) -&gt; bool:
+    """Liveness so observa estado interno; externa converte lentidao em suicidio."""
+    return not usa_dependencia_externa
+
+
+def classificar_qos(pedido: dict[str, bool], teto: dict[str, bool]) -&gt; str:
+    """Garantida (pedido==teto), intermediaria (pedido parcial), oportunista (nada)."""
+    chaves = ("cpu", "memoria")
+    iguais = sum(1 for c in chaves if pedido.get(c) and teto.get(c))
+    pedidos = sum(1 for c in chaves if pedido.get(c))
+    if iguais == 2:
+        return "garantida"
+    if pedidos &gt;= 1:
+        return "intermediaria"
+    return "oportunista"
+
+
+def pedido_por_medicao(medicao: float, margem: float) -&gt; float:
+    """Request recalculado por medida, nunca copiado de outro servico (AT-021)."""
+    return medicao * (1.0 + margem)
+
+
+def replicas_desejadas(atuais: int, metrica: float, alvo: float) -&gt; int:
+    """Regra do HPA: teto de atuais*(metrica/alvo); sem request nao ha denominador."""
+    if atuais &lt; 1 or alvo &lt;= 0.0:
+        return 1
+    return max(1, math.ceil(atuais * metrica / alvo))
+
+
+def estabilizar(desejadas: int, minimo: int, maximo: int) -&gt; int:
+    """Prende a saida do loop na capacidade contratada: sem thrash fora da faixa."""
+    return min(max(desejadas, minimo), maximo)
+
+
+def disrupcao_permitida(replicas: int, removendo: int, minimo_pdb: int) -&gt; bool:
+    """PDB limita disrupcao voluntaria: sobra apos remocao respeita o minimo."""
+    return replicas - removendo &gt;= minimo_pdb
+
+
+def espalhadas_ok(distribuicao: list[int]) -&gt; bool:
+    """Mais de uma replica no mesmo no nao e alta disponibilidade (AT-022)."""
+    total = sum(distribuicao)
+    if total &lt;= 1:
+        return True
+    ocupados = sum(1 for n in distribuicao if n &gt;= 1)
+    return ocupados &gt;= 2
+
+
+def concluir_no_prazo(duracoes: list[float], prazo: float) -&gt; dict[str, int]:
+    """Shutdown sob carga sem relogio: conclui o que cabe, cancela o resto."""
+    concluidas = sum(1 for d in duracoes if d &lt;= prazo)
+    return {"concluidas": concluidas, "canceladas": len(duracoes) - concluidas}
+
+
+def escala_permitida(upstream_saturado: bool) -&gt; bool:
+    """Upstream saturado nega escala: autoscaling nao amplifica o gargalo."""
+    return not upstream_saturado
+</code></pre>
+
+<p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> A reação troca tráfego por reinício conforme o tipo, e tipo desconhecido é defeito; liveness com dependência externa é recusada. QoS sai da comparação pedido contra teto; pedido nasce de medição com margem. O HPA calcula teto da razão e prende na faixa; disrupção só passa com sobra acima do mínimo; réplicas concentradas num nó são acusadas. Formatos ilustrativos; a folha L executa os oráculos.</p>
+
+<div class="box">
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B03-L constrói em <code>lab/</code>.</strong> <code>lab/sinais_escala.py</code> com este contrato verbatim e os oráculos LT03-AT-020..025 (4 arquivos de teste: probes, recursos, disrupção/shutdown, HPA/upstream). Throttle, OOMKill e curva carga contra réplicas com p95 pertencem à trilha externa com cluster — BLOCKED com registro onde estiverem ausentes. Os roteiros moram no <code>Laboratório guiado LT03</code>.</p>
+</div>
+
+<div class="box ok">
+<p><span class="lbl">Síntese</span><strong>Bloco 3 em seis frases.</strong></p>
+<ul>
+<li>Cada probe contrata uma reação: startup suspende, readiness drena, liveness reinicia — uma nunca substitui a outra.</li>
+<li>Liveness jamais consulta dependência externa; dependência pertence à readiness, nunca ao reinício.</li>
+<li>Request agenda, limit contém; throttle alonga a cauda, OOMKill mata; QoS sai da comparação entre os dois.</li>
+<li>Pedido nasce de medição com margem; valor sem medição é hipótese, limite copiado é decisão alheia.</li>
+<li>PDB contém disrupção voluntária no mínimo; spread prova que réplicas não moram no mesmo nó.</li>
+<li>HPA é loop atrasado preso à faixa — e contra upstream saturado a escala é negada, não emitida.</li>
+</ul>
+</div>
+
+<h3 id="diagnostico-b03">Tabela de Diagnóstico B03</h3>
+
+<p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
+
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Lentidão do vizinho reinicia quem está saudável; restart loop sem deadlock</td><td>Liveness consulta dependência externa: falha alheia vira reinício próprio (LT03-AT-020).</td><td>Liveness só sobre estado interno; dependência externa pertence à readiness (<code>vivacidade_segura</code> acusa).</td></tr>
+<tr><td>Cauda alonga sem morte; CPU presa no teto sob carga</td><td>Throttling por limit apertado sem medição: contenção confundida com falta de réplicas (LT03-AT-021).</td><td>Medir steady state, recalcular pedido com margem (<code>pedido_por_medicao</code>) e rever o teto.</td></tr>
+<tr><td>Drain trava: PDB impossível bloqueia upgrade e rollback de nó</td><td>Mínimo maior que a sobra: disrupção voluntária negada pelo próprio contrato (LT03-AT-022).</td><td>Revisar mínimo contra capacidade real; <code>disrupcao_permitida</code> nega antes da mutação.</td></tr>
+<tr><td>Réplicas sobem e o gargalo piora; HPA oscila sem estabilizar</td><td>Escala contra upstream saturado, sem faixa de estabilização (LT03-AT-024/025).</td><td>Negar escala com gargalo saturado (<code>escala_permitida</code>) e prender a saída na faixa (<code>estabilizar</code>).</td></tr>
+</tbody>
+</table>
+
+<h3 id="checkpoint-b03">Checkpoint B03 — probes, recursos e autoscaling (LT03-AT-020..025)</h3>
+
+<div class="box ok">
+<p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
+<ol class="check">
+<li><strong>Explicação (LT03-AT-020).</strong> Um serviço reinicia em loop sempre que o banco lentifica, sem deadlock interno. Diga a causa, a reação contratada de cada probe e o conserto. <em>Rubrica (0–2): 2 = diagnostica liveness com dependência externa, ordena suspender → drenar → reiniciar e prescreve liveness só interna; 1 = acerta a causa sem ordenar as três; 0 = propõe aumentar o limit. Obrigatório para pontuar: declarar que liveness jamais consulta dependência externa.</em></li>
+<li><strong>Decisão (LT03-AT-021/022).</strong> Caso A: cauda alongada com CPU no teto. Caso B: drain negado com PDB impossível. Diga causa e conserto de cada um, com a função que acusaria. <em>Rubrica (0–2): 2 = diagnostica throttle por limite sem medida com pedido recalculado, e PDB acima da sobra com revisão do mínimo; 1 = acerta um caso; 0 = propõe escalar réplicas para ambos. Obrigatório para pontuar: pedido por medição E disrupção negada antes da mutação.</em></li>
+<li><strong>Transferência (LT03-AT-024/025).</strong> O HPA sobe réplicas contra fila crescente cujo consumidor é um banco saturado. A escala deve ser emitida? Justifique com o loop, a faixa e o gargalo. <em>Rubrica (0–2): 2 = nega a escala — loop atrasado não cria capacidade instantânea nem corrige dependência — e prescreve limite contra o gargalo com saída presa à faixa; 1 = nega sem o mecanismo do loop; 0 = aprova a escala. Obrigatório para pontuar: declarar que autoscaling não amplifica dependência saturada.</em></li>
+</ol>
+</div>
+
+<h3 id="fontes-b03">Fontes do Bloco 3</h3>
+<ul>
+<li>SRC-LT03-08 — Kubernetes probes — normativa — startup, readiness e liveness. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-09 — Kubernetes resource management — normativa — requests, limits, QoS. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-10 — Kubernetes disruptions — normativa — PDB e failure domains. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-11 — Kubernetes HPA — normativa — control loop de escala. URLs na especificação §7. Risco: alto; revalidar em até 90 dias.</li>
+<li>Contrato de <code>lab/sinais_escala.py</code> e números citados — construção desta trilha; medidos na folha B03-L e na trilha externa. Risco: médio.</li>
+<li>Números citados no bloco — exemplo variável, não evidência; os observados nascem na folha B03-L e na trilha externa. Risco: baixo.</li>
+</ul>
+<hr>
+
+<h2 id="b04">Bloco 4 · IaC, estado, módulos, drift e lifecycle seguro</h2>
+<h3>Orientação: o que este bloco entrega</h3>
+
+<div class="box">
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca clique e script solto por infraestrutura versionada com lifecycle seguro: oito resultados (LT03-B04-C01..08; matriz PLAT-02, SEC-03):</p>
+<ul>
+<li>separar declarativo de procedural: intenção versionada contra sequência de passos (base do AT-030);</li>
+<li>ler resource graph, provider, módulo, input, output e dependency lock — o que existe, de onde vem, em que versão;</li>
+<li>operar plan, apply e destroy com plano revisável: mudança destrutiva lida antes de executada (LT03-AT-030);</li>
+<li>tratar state como dado sensível com backend e locking, e segredo fora de state, output e evidência (LT03-AT-033);</li>
+<li>detectar drift, importar preexistente e mover endereço sem recriar — reconciliação intencional, nunca silenciosa (LT03-AT-031/032);</li>
+<li>ler a referência executável — <code>lab/estado_iac.py</code> — sem exigir binário de IaC. A execução pertence à folha B04-L, no <code>Laboratório guiado LT03</code>.</li>
+</ul>
+<p><strong>Pré-requisitos.</strong> Bloco 2 (estado desejado contra observado) e Bloco 1 (segredo fora de camada e de documento). Cada termo novo — state, drift, import, move, blast radius — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
+<p><strong>Saída observável.</strong> Ao fim da leitura, você revisa um plano, decide um drift, adota sem recriar e recusa destroy fora do sandbox — e lê o contrato do <code>lab/</code> sem precisar executá-lo aqui.</p>
+</div>
+
+<h3>N1 · Declarativo contra procedural: o plano antes da mutação</h3>
+
+<p><strong>IaC declarativa</strong> registra o estado final desejado da infraestrutura; o motor calcula o caminho. <strong>Procedural</strong> registra os passos; repetir é rezar pela mesma ordem no mesmo mundo. A diferença decide o oráculo AT-030: após um apply, o segundo <strong>plan</strong> não contém mudança inesperada — converge para zero. <strong>Plan não é prova</strong> de segurança nem disponibilidade (regra 8): é a proposta legível antes da mutação, onde mudança destrutiva é lida, não descoberta.</p>
+
+<p>O <strong>resource graph</strong> é o mapa de dependências entre recursos: quem precede quem, o que cai junto. <strong>Provider</strong> é o adapter que traduz intenção em chamadas; <strong>módulo</strong> é o pacote reutilizável com <strong>input e output</strong> explícitos; <strong>dependency lock</strong> congela provider em versão exata. Provider flutuante é rebuild sorteado na infraestrutura — o mesmo defeito da base sem digest do Bloco 1, um nível acima.</p>
+
+<h3>N2 · State, drift, import e move: a memória que decide</h3>
+
+<p>O <strong>state</strong> é a memória do último apply: que endereços existem, com que valores. Sem ele, todo plan é palpite; com ele corrompido ou concorrido, dois applies disputam o mesmo mundo — por isso <strong>backend remoto com locking</strong>: um escritor por vez, histórico protegido. E state é <strong>dado sensível</strong>: carrega valores reais, às vezes segredos — acesso mínimo, nunca em log ou evidência (AT-033).</p>
+
+<p><strong>Drift</strong> é a diferença entre o arquivado e o real: alguém mexeu fora da IaC. Detectar é listar; decidir é registrar — reverter pela IaC ou adotar intencionalmente. <strong>Import</strong> adota o preexistente sob um endereço sem recriar; <strong>move</strong> reendereça sem recriar (AT-032). Rename que força replace é o defeito catalogado: o endereço novo nasce, o antigo morre, o dado junto se ninguém pensou. <strong>Separação de ambientes</strong> e <strong>blast radius</strong> fecham a seção: cada ambiente com state próprio, cada mudança com raio conhecido — e <strong>target fora do sandbox é recusado antes da ação</strong> (AT-034).</p>
+
+<h3>N3 · Lifecycle seguro e segredos: o que nunca entra no documento</h3>
+
+<p><strong>Lifecycle seguro</strong> é a disciplina dos quatro verbos: plan revisável salvo, apply intencional, refresh que atualiza a leitura sem culpar o documento, destroy guardado por nome e contexto absolutos do sandbox. Scripts validam contexto, nome e diretório antes de destroy; restore idempotente; nenhuma ação alcança outros clusters ou recursos do host.</p>
+
+<p><strong>Segredos e credenciais curtas:</strong> segredo nunca mora em state legível, output, variável literal ou evidência — chega por referência, com vida curta, no momento da execução. <strong>Policy e checks</strong> convertem regra em barreira automática: o proibido falha antes da mutação, não no postmortem. Target usado como rotina é defeito catalogado: atalho de hoje é incidente de escopo de amanhã.</p>
+
+<h3>N4 · Falha e diagnóstico: o catálogo do estado</h3>
+
+<p>Cada falha abaixo tem oráculo nomeado na folha B04-L: dado que reproduz, veredito calculado e conserto que fecha o vínculo. A tentativa contra contexto não autorizado é bloqueada antes de qualquer mutação.</p>
+
+<h3>Exemplos trabalhados</h3>
+<p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B04-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib (<code>re</code>). Manifests entram como dados (dicts), sem binário de IaC. Leitura aqui; execução no <code>Laboratório guiado LT03</code>. O provisionamento real com OpenTofu pertence à trilha externa — BLOCKED com registro onde o binário estiver ausente. Todo número de saída é exemplo variável até a medição da folha L.</p>
+
+<p><strong>Referência executável — <code>lab/estado_iac.py</code>.</strong> Calcula plano como diff, convergência pós-apply, drift, import e move sem recriação, presença de segredo e guarda de destroy (oráculos LT03-AT-030..034). Só stdlib, determinístico:</p>
+<pre><code>"""IaC como dados: plano, drift, import/move e guarda de destroy, sem binario.
+
+Referencia executavel do Bloco 4.
+Implementacao verbatim na folha B04-L. So STDLIB (re).
+Manifests como dados; oraculos LT03-AT-030..034 sem terraform/OpenTofu real.
+"""
+
+from __future__ import annotations
+
+import re
+
+PADRAO_SECRETO = re.compile(r"(senha|secret|token|password|api[_-]?key)", re.IGNORECASE)
+SANDBOX_AUTORIZADO = "course-lt03"
+
+
+def plano(desejado: dict[str, str], observado: dict[str, str]) -&gt; dict[str, list[str]]:
+    """Diff declarado contra observado: criar, atualizar, destruir por endereco."""
+    criar = sorted(e for e in desejado if e not in observado)
+    destruir = sorted(e for e in observado if e not in desejado)
+    atualizar = sorted(e for e in desejado if e in observado and desejado[e] != observado[e])
+    return {"criar": criar, "atualizar": atualizar, "destruir": destruir}
+
+
+def vazio(resultado: dict[str, list[str]]) -&gt; bool:
+    """Plano vazio converge: segundo plan apos apply nao contem mudanca."""
+    return not resultado["criar"] and not resultado["atualizar"] and not resultado["destruir"]
+
+
+def aplicar(desejado: dict[str, str], observado: dict[str, str]) -&gt; dict[str, str]:
+    """Apply intencional: observado passa a igualar o desejado versionado."""
+    novo = dict(observado)
+    mudancas = plano(desejado, observado)
+    for endereco in mudancas["destruir"]:
+        del novo[endereco]
+    novo.update(desejado)
+    return novo
+
+
+def detectar_drift(estado_arquivo: dict[str, str], real: dict[str, str]) -&gt; list[str]:
+    """Enderecos cujo real divergiu do estado arquivado, em ordem."""
+    return sorted(e for e in estado_arquivo if real.get(e) != estado_arquivo[e])
+
+
+def importar(estado: dict[str, str], endereco: str, id_externo: str) -&gt; dict[str, str]:
+    """Adota recurso preexistente sem recriar: registra o id sob o endereco."""
+    novo = dict(estado)
+    novo[endereco] = id_externo
+    return novo
+
+
+def mover(estado: dict[str, str], origem: str, destino: str) -&gt; dict[str, str]:
+    """Reendereca sem recriar: mesmo valor, nova chave, origem removida."""
+    novo = dict(estado)
+    novo[destino] = novo.pop(origem)
+    return novo
+
+
+def contem_segredo(objeto: dict[str, str]) -&gt; bool:
+    """True se chave ou valor carrega segredo: state e dado sensivel (AT-033)."""
+    for chave, valor in objeto.items():
+        if PADRAO_SECRETO.search(chave) or PADRAO_SECRETO.search(valor):
+            return True
+    return False
+
+
+def destruir_permitido(alvo: str, sandbox: str = SANDBOX_AUTORIZADO) -&gt; bool:
+    """Destroy so no sandbox autorizado: resto recusado antes da acao (AT-034)."""
+    return alvo == sandbox
+</code></pre>
+
+<p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> O plano lista criar, atualizar e destruir por endereço; vazio após apply é convergência. Drift nomeia o endereço divergente para decisão registrada; import e move preservam o valor sob o endereço certo. Segredo em chave ou valor é acusado; destroy fora do <code>course-lt03</code> é recusado. Formatos ilustrativos; a folha L executa os oráculos.</p>
+
+<div class="box">
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B04-L constrói em <code>lab/</code>.</strong> <code>lab/estado_iac.py</code> com este contrato verbatim e os oráculos LT03-AT-030..034 (2 arquivos de teste: plano/drift/import-move, segredo/guarda). O <code>tofu plan/apply/destroy</code> real pertence à trilha externa — BLOCKED com registro onde o binário estiver ausente. Os roteiros moram no <code>Laboratório guiado LT03</code>.</p>
+</div>
+
+<div class="box ok">
+<p><span class="lbl">Síntese</span><strong>Bloco 4 em seis frases.</strong></p>
+<ul>
+<li>Declarativo registra o fim desejado; plan propõe, apply intenciona, destroy pede guarda.</li>
+<li>Segundo plan vazio após apply é convergência; plan nunca foi prova de segurança.</li>
+<li>State é memória sensível: backend com locking, acesso mínimo, segredo fora de evidência.</li>
+<li>Drift se detecta e se decide por escrito; import adota e move reendereça, ambos sem recriar.</li>
+<li>Segredo chega por referência curta na execução, nunca copiado no documento.</li>
+<li>Fora do sandbox autorizado, destroy é recusado antes de qualquer ação.</li>
+</ul>
+</div>
+
+<h3 id="diagnostico-b04">Tabela de Diagnóstico B04</h3>
+
+<p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
+
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Segundo plan ainda propõe mudança após apply limpo</td><td>Recurso fora do documento ou valor calculado à revelia: convergência nunca alcançada (LT03-AT-030).</td><td>Ler o diff endereço a endereço; trazer o real para o documento ou o documento para o real, e repetir até o vazio.</td></tr>
+<tr><td>Dois applies simultâneos corrompem o state</td><td>Backend sem locking: dois escritores disputam a mesma memória (ponte AT-033).</td><td>Backend remoto com lock; um escritor por vez; state versionado e protegido.</td></tr>
+<tr><td>Credencial válida aparece em output ou evidência</td><td>Segredo em state, output ou variável literal: sensível copiado no legível (LT03-AT-033).</td><td>Referência curta na execução; <code>contem_segredo</code> acusa antes de publicar.</td></tr>
+<tr><td>Destroy mira o ambiente errado; rename recria com perda</td><td>Contexto não validado; endereço novo sem move (LT03-AT-032/034).</td><td>Guarda por nome absoluto (<code>destruir_permitido</code>); <code>mover</code> antes de renomear.</td></tr>
+</tbody>
+</table>
+
+<h3 id="checkpoint-b04">Checkpoint B04 — estado, drift e lifecycle (LT03-AT-030..034)</h3>
+
+<div class="box ok">
+<p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
+<ol class="check">
+<li><strong>Explicação (LT03-AT-030).</strong> Após um apply verde, o segundo plan ainda lista destruições. O que isso prova, onde olhar e qual o estado final exigido? <em>Rubrica (0–2): 2 = declara não-convergência, manda ler o diff por endereço e exige segundo plan vazio; 1 = declara sem o procedimento; 0 = propõe novo apply às cegas. Obrigatório para pontuar: declarar que plan convergido é vazio.</em></li>
+<li><strong>Decisão (LT03-AT-031/032).</strong> Um recurso crítico existe fora da IaC; outro precisa trocar de endereço sem perder o dado. Prescreva import e move com o que cada um preserva. <em>Rubrica (0–2): 2 = prescreve adoção sob endereço sem recriar e reendereçamento com valor preservado, com decisão de drift registrada; 1 = prescreve parcial; 0 = propõe recriar ambos. Obrigatório para pontuar: declarar sem recriação indevida nos dois.</em></li>
+<li><strong>Transferência (LT03-AT-033/034).</strong> Caso A: segredo em output versionado. Caso B: destroy contra contexto errado. Diga o que barra cada caso e quando a barreira atua. <em>Rubrica (0–2): 2 = barra com state sensível e acesso mínimo atuando antes de publicar, e guarda de sandbox atuando antes da ação; 1 = acerta um caso; 0 = confia em revisão manual posterior. Obrigatório para pontuar: segredo fora de evidência E recusa antes da mutação.</em></li>
+</ol>
+</div>
+
+<h3 id="fontes-b04">Fontes do Bloco 4</h3>
+<ul>
+<li>SRC-LT03-14 — OpenTofu documentation — normativa — linguagem, state e lifecycle. URLs na especificação §7. Versão: 1.11 na data-base. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-15 — OpenTofu provisioning workflow — normativa — plan, apply e destroy. URLs na especificação §7. Versão: 1.11 na data-base. Risco: alto; revalidar em até 90 dias.</li>
+<li>Contrato de <code>lab/estado_iac.py</code> e números citados — construção desta trilha; medidos na folha B04-L e na trilha externa. Risco: médio.</li>
+<li>Números citados no bloco — exemplo variável, não evidência; os observados nascem na folha B04-L e na trilha externa. Risco: baixo.</li>
+</ul>
+<hr>
+
+<h2 id="b05">Bloco 5 · GitOps, reconciliação, promoção e configuração por ambiente</h2>
+<h3>Orientação: o que este bloco entrega</h3>
+
+<div class="box">
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca push no cluster por fonte da verdade puxada e reconciliada: oito resultados (LT03-B05-C01..08; matriz PLAT-03, GOV-01):</p>
+<ul>
+<li>enunciar os princípios OpenGitOps: estado declarativo, versionado, puxado e continuamente reconciliado (base do AT-040);</li>
+<li>separar source, build artifact e environment config — o que é código, o que é pacote, o que é por ambiente;</li>
+<li>reconciliar overlay por commit com revisão e digest registrados, sem push direto no cluster (LT03-AT-040);</li>
+<li>reverter edição manual ou contê-la em break-glass com motivo e TTL (LT03-AT-041);</li>
+<li>falhar visível com config inválida preservando o último saudável, e promover o mesmo digest entre ambientes (LT03-AT-042/043);</li>
+<li>ler a referência executável — <code>lab/reconciliar_gitops.py</code> — sem exigir cluster. A execução pertence à folha B05-L, no <code>Laboratório guiado LT03</code>.</li>
+</ul>
+<p><strong>Pré-requisitos.</strong> Bloco 2 (estado desejado contra observado) e Bloco 4 (convergência de plano e decisão de drift). Cada termo novo — reconciliação, overlay, break-glass, promoção — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
+<p><strong>Saída observável.</strong> Ao fim da leitura, você explica por que CI com push não é GitOps, reverte drift manual e promove por digest — e lê o contrato do <code>lab/</code> sem precisar executá-lo aqui.</p>
+</div>
+
+<h3>N1 · OpenGitOps: o Git como fonte da verdade puxada</h3>
+
+<p><strong>GitOps</strong> é operar pelo Git como única fonte da verdade, com quatro princípios (regra 9 da especificação): estado <strong>declarativo</strong> (o quê, não o como), <strong>versionado e imutável</strong> (histórico que não se reescreve), <strong>puxado</strong> (o cluster busca; nada empurra de fora para dentro) e <strong>continuamente reconciliado</strong> (o controlador persegue o declarado sem parar). CI que faz push no cluster não satisfaz sozinho esses princípios: empurra sem reconciliar, e o que não é reconciliado diverge em silêncio.</p>
+
+<p>A separação que sustenta tudo: <strong>source</strong> é o código versionado; <strong>build artifact</strong> é a imagem imutável identificada por digest (Bloco 1); <strong>environment config</strong> é o que varia por ambiente — réplicas, endpoints, flags. Promoção move o <strong>mesmo digest</strong> entre ambientes, trocando só a config (AT-043). Branch contra diretório contra repositório é decisão de ownership: cada escolha diz quem aprova o quê, e duas automações editando o mesmo campo é o defeito catalogado da briga de controladores.</p>
+
+<h3>N2 · Reconciliação, drift e break-glass: o loop que não perdoa manual</h3>
+
+<p><strong>Reconciliação</strong> é o control loop do GitOps: ler o declarado no Git, comparar ao observado, convergir, registrar revisão e digest no status (AT-040). Mudança sem commit não persiste: o <strong>drift manual</strong> — patch à mão no cluster — é revertido pelo reconciler, e o evento entra na trilha de auditoria (AT-041).</p>
+
+<p>A exceção é o <strong>break-glass</strong>: quebrar o vidro em incidente, com motivo registrado, escopo mínimo e <strong>TTL que expira</strong> — passado o prazo, a reversão volta a valer. Vidro quebrado sem motivo, sem prazo ou sem reversão posterior é edição manual com outro nome. <strong>Config inválida falha de modo visível</strong> sem apagar o último saudável quando assim configurado (AT-042): commit ruim é commit visível, nunca sumiço silencioso do que funcionava.</p>
+
+<h3>N3 · Promoção e segredos: identidade que atravessa, segredo que não versiona</h3>
+
+<p><strong>Promoção por digest</strong> é a prova de identidade da trilha inteira: dev, homolog e prod rodam o mesmo conteúdo exato, citado pelo hash, com diff revisável antes de cada passo. Overlays sem copy/paste aplicam a diferença por ambiente sobre a base comum — mesma base, patches declarados, nada duplicado para divergir.</p>
+
+<p><strong>Segredos criptografados ou externos:</strong> guardar secret em Git é fora de escopo desta trilha — segredo versionado é segredo publicado. O declarado no Git é referência (onde buscar, com que permissão); o valor chega na execução por cofre ou controlador externo. Ownership fecha a seção: cada campo tem um dono automatizado, e campo sem dono é campo em disputa.</p>
+
+<h3>N4 · Falha e diagnóstico: o catálogo da reconciliação</h3>
+
+<p>Cada falha abaixo tem oráculo nomeado na folha B05-L: dado que reproduz, veredito calculado e conserto que restaura a fonte da verdade. Comando manual de incidente vira commit, expira ou é revertido — nunca permanece como sombra.</p>
+
+<h3>Exemplos trabalhados</h3>
+<p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B05-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib. Leitura aqui; execução no <code>Laboratório guiado LT03</code>. O bootstrap do adapter e a reconciliação real pertencem à trilha externa com cluster — BLOCKED com registro onde estiver ausente. Todo número de saída é exemplo variável até a medição da folha L.</p>
+
+<p><strong>Referência executável — <code>lab/reconciliar_gitops.py</code>.</strong> Reconcilia commit com revisão e digest, reverte edição manual com TTL de break-glass, preserva o saudável contra config inválida e promove o mesmo digest (oráculos LT03-AT-040..043). Só stdlib, determinístico:</p>
+<pre><code>"""GitOps como dados: reconciliacao, drift manual, config e promocao, sem cluster.
+
+Referencia executavel do Bloco 5.
+Implementacao verbatim na folha B05-L. So STDLIB.
+Oraculos LT03-AT-040..043 sobre dicts puros; Flux real na trilha externa.
+"""
+
+from __future__ import annotations
+
+
+def reconciliar(desejado: dict[str, str], observado: dict[str, str]) -&gt; dict[str, object]:
+    """Commit converge: observado iguala o Git; status registra revisao e digest."""
+    novo = dict(observado)
+    novo.update(desejado)
+    convergiu = all(novo.get(e) == desejado[e] for e in desejado)
+    return {
+        "observado": novo,
+        "convergiu": convergiu,
+        "revisao": desejado.get("revisao", "sem-revisao"),
+        "digest": desejado.get("digest", "sem-digest"),
+    }
+
+
+def reverter_manual(
+    desejado: dict[str, str], observado: dict[str, str], break_glass: bool
+) -&gt; dict[str, str]:
+    """Edicao manual revertida; excecao break-glass expira por TTL (AT-041)."""
+    if break_glass:
+        return dict(observado)
+    resultado = dict(observado)
+    resultado.update(desejado)
+    return resultado
+
+
+def break_glass_expirado(emitido_em: float, ttl: float, agora: float) -&gt; bool:
+    """Excecao com motivo e prazo: apos o TTL, a reversao volta a valer."""
+    return agora - emitido_em &gt; ttl
+
+
+def aplicar_config(saudavel: dict[str, str], proposta: dict[str, str]) -&gt; dict[str, str]:
+    """Config invalida falha visivel e preserva o ultimo saudavel (AT-042)."""
+    if not proposta.get("valida"):
+        return dict(saudavel)
+    return dict(proposta)
+
+
+def promover(digest: str, ambientes: list[str]) -&gt; dict[str, str]:
+    """Promocao preserva identidade: mesmo digest atravessa ambientes (AT-043)."""
+    return {ambiente: digest for ambiente in ambientes}
+</code></pre>
+
+<p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> A reconciliação iguala o observado ao Git com revisão e digest no status; manual sem vidro é revertido, com vidro expira por TTL. Config sem marca de válida preserva o saudável; promoção replica o mesmo digest por ambiente. Formatos ilustrativos; a folha L executa os oráculos.</p>
+
+<div class="box">
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B05-L constrói em <code>lab/</code>.</strong> <code>lab/reconciliar_gitops.py</code> com este contrato verbatim e os oráculos LT03-AT-040..043 (2 arquivos de teste: reconciliação/drift-break-glass, config inválida/promoção). O adapter Flux real pertence à trilha externa — BLOCKED com registro onde o cluster estiver ausente. Os roteiros moram no <code>Laboratório guiado LT03</code>.</p>
+</div>
+
+<div class="box ok">
+<p><span class="lbl">Síntese</span><strong>Bloco 5 em seis frases.</strong></p>
+<ul>
+<li>GitOps é declarado, versionado, puxado e reconciliado — CI com push não basta.</li>
+<li>Source, artifact e environment config têm dono e lugar distintos; promoção move digest, não tag.</li>
+<li>Mudança sem commit não persiste: manual é revertido ou expira como break-glass.</li>
+<li>Commit ruim falha visível e preserva o último saudável.</li>
+<li>Overlays aplicam diferença sem copy/paste; campo sem dono é campo em disputa.</li>
+<li>Segredo no Git é segredo publicado: no documento só referência, valor só na execução.</li>
+</ul>
+</div>
+
+<h3 id="diagnostico-b05">Tabela de Diagnóstico B05</h3>
+
+<p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
+
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Patch manual some minutos depois sem aviso a ninguém</td><td>Reconciliação atuando: observado voltou ao declarado no Git (LT03-AT-041).</td><td>Virar commit revisado ou abrir break-glass com motivo e TTL; nunca remendar o vivo.</td></tr>
+<tr><td>Commit aplicado e nada converge; status sem revisão</td><td>Controlador sem acesso à source ou dependência fora de ordem (ponte AT-040).</td><td>Devolver acesso, ordenar dependências e ler o status contra a revisão declarada.</td></tr>
+<tr><td>Produção roda conteúdo distinto do homologado</td><td>Promoção por tag mutável: o apelido moveu entre ambientes (LT03-AT-043).</td><td>Promover por digest (<code>promover</code> replica o mesmo hash); tag só como leitura.</td></tr>
+<tr><td>Duas automações brigam pelo mesmo campo em loop</td><td>Ownership duplicado: dois donos escrevendo o mesmo campo (limite da seção N3).</td><td>Um campo, um dono; remover o escritor excedente e registrar a decisão.</td></tr>
+</tbody>
+</table>
+
+<h3 id="checkpoint-b05">Checkpoint B05 — reconciliação e promoção (LT03-AT-040..043)</h3>
+
+<div class="box ok">
+<p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
+<ol class="check">
+<li><strong>Explicação (LT03-AT-040/041).</strong> Uma correção urgente aplicada à mão no cluster some após minutos. Explique pelo loop, diga o destino correto da correção e a exceção legítima. <em>Rubrica (0–2): 2 = declara reversão pelo reconciler, prescreve commit revisado e admite break-glass com motivo e TTL; 1 = declara sem a exceção; 0 = propõe desabilitar a reconciliação. Obrigatório para pontuar: mudança sem commit não persiste.</em></li>
+<li><strong>Decisão (LT03-AT-042/043).</strong> Caso A: commit com config inválida. Caso B: promoção entre três ambientes. Prescreva o comportamento de cada um. <em>Rubrica (0–2): 2 = exige falha visível preservando o saudável e promoção do mesmo digest com diff revisável; 1 = acerta um caso; 0 = aprova tag mutável na promoção. Obrigatório para pontuar: mesmo digest atravessando ambientes.</em></li>
+<li><strong>Transferência (regra 9 e N3).</strong> Um pipeline empurra manifestos ao cluster a cada merge e se declara GitOps. Refute ou confirme com os quatro princípios e o problema do push. <em>Rubrica (0–2): 2 = refuta — falta puxado e reconciliado continuamente — e declara que push sem reconciliação diverge em silêncio; 1 = refuta sem os quatro princípios; 0 = confirma pelo merge. Obrigatório para pontuar: CI com push sozinho não é GitOps.</em></li>
+</ol>
+</div>
+
+<h3 id="fontes-b05">Fontes do Bloco 5</h3>
+<ul>
+<li>SRC-LT03-16 — OpenGitOps Principles — canônica — fundamento vendor-neutral. URLs na especificação §7. Versão: 1.0.0 na data-base. Risco: baixo.</li>
+<li>SRC-LT03-17 — Flux core concepts — adapter rotulado — reconciliação de referência. URLs na especificação §7. Versão: 2.8.8 baseline. Risco: alto; revalidar em até 90 dias.</li>
+<li>Contrato de <code>lab/reconciliar_gitops.py</code> e números citados — construção desta trilha; medidos na folha B05-L e na trilha externa. Risco: médio.</li>
+<li>Números citados no bloco — exemplo variável, não evidência; os observados nascem na folha B05-L e na trilha externa. Risco: baixo.</li>
+</ul>
+<hr>
+
+<h2 id="b06">Bloco 6 · Progressive delivery, rollback e incidente de plataforma</h2>
+<h3>Orientação: o que este bloco entrega</h3>
+
+<div class="box">
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca deploy total por promoção graduada com decisão por dados: nove resultados (LT03-B06-C01..09; matriz PLAT-03, SRE-01, SRE-02, SEN-01):</p>
+<ul>
+<li>separar rolling, blue/green e canary pelo que cada estratégia expõe e preserva;</li>
+<li>desenhar análise por erro, latência e métrica de negócio, com janela, threshold e veredito inconclusivo que nunca vira sucesso (LT03-AT-050/051/052);</li>
+<li>abortar automaticamente a regressiva antes de 100% com o stable preservado no SLO;</li>
+<li>decidir rollback contra roll-forward sabendo que workload não reverte schema, dado ou efeito externo (LT03-AT-053);</li>
+<li>diagnosticar por camada — aplicação, manifesto, controlador, nó, rede, dependência — e restaurar reconciliação e lab (LT03-AT-060/061);</li>
+<li>ler a referência executável — <code>lab/analisar_canary.py</code> — sem exigir tráfego real. A execução pertence à folha B06-L, no <code>Laboratório guiado LT03</code>.</li>
+</ul>
+<p><strong>Pré-requisitos.</strong> Blocos 2 a 5 (rollout travado, plano convergido, reconciliação, digest como identidade) e M12 (SLO). Cada termo novo — canary, threshold, roll-forward, expand/migrate/contract — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
+<p><strong>Saída observável.</strong> Ao fim da leitura, você desenha etapas com análise, aborta por threshold, bloqueia rollback incompatível e localiza incidente por camada — e lê o contrato do <code>lab/</code> sem precisar executá-lo aqui.</p>
+</div>
+
+<h3>N1 · Estratégias: o que cada entrega expõe</h3>
+
+<p><strong>Rolling</strong> troca réplicas aos poucos sob a trava de readiness (folha B02-L): barato, sem duplicar capacidade, mas mistura versões durante a janela. <strong>Blue/green</strong> sobe o ambiente novo inteiro ao lado, vira o tráfego de uma vez e mantém o antigo para volta rápida: dobra custo temporário em troca de corte limpo. <strong>Canary</strong> expõe a nova versão a percentuais graduais com análise entre etapas: representatividade crescente com blast radius contido.</p>
+
+<p><strong>Segmentação e representatividade:</strong> canary só prova o que o tráfego segmentado representa — percentual irrisório ou público enviesado é teatro de análise. <strong>Pause e approval</strong> seguram a promoção para decisão humana; <strong>auto-promotion e abort</strong> movem sozinhos pelo veredito calculado. Versão ruim não alcança 100%: a trava é o threshold, não a esperança.</p>
+
+<h3>N2 · Análise: erro, latência e o inconclusivo que cala</h3>
+
+<p><strong>Análise</strong> compara stable contra canary em janela fixa: taxa de erro, p95 e métrica de negócio, cada uma com <strong>threshold</strong> declarado. Canary além do threshold aborta; dentro, promove; <strong>sem amostra mínima, o veredito é inconclusivo</strong> — e inconclusivo nunca é convertido silenciosamente em sucesso (AT-052). Métricas calculadas de tráfego real do lab, nunca hardcoded: número sem tráfego é cenário, não evidência.</p>
+
+<p><strong>Rollback contra roll-forward:</strong> rollback de aplicação não reverte automaticamente schema, mensagem, dado ou efeito externo (regra 10). Com migração no caminho, a volta exige <strong>compatibilidade expand/migrate/contract</strong> provada nas duas direções — ou o rollback é bloqueado e o caminho é seguir adiante (AT-053). <strong>Feature flags</strong> separam deploy de exposição: código novo parado, comportamento novo aceso por chave — rollback vira desligar, sem novo deploy.</p>
+
+<h3>N3 · Incidente: localizar por camada, restaurar por contrato</h3>
+
+<p><strong>Diagnóstico por camada</strong> diante do inédito: eventos e conditions primeiro, depois logs, métricas e traces — aplicação, manifesto, controlador, nó, rede, dependência, nesta ordem, até o sinal acender (AT-060). Cada camada tem sintoma próprio; pular ordem é trocar investigação por adivinhação.</p>
+
+<p><strong>Restauração</strong> fecha o ciclo: SLO de volta, Git representando o desejado, controladores saudáveis, faults desligados, recursos de sandbox removíveis (AT-061). Postmortem registra timeline, decisão e compatibilidade — incidente sem registro é ensaio para repetição.</p>
+
+<h3>N4 · Falha e diagnóstico: o catálogo da entrega</h3>
+
+<p>Cada falha abaixo tem oráculo nomeado na folha B06-L: métrica que reproduz, veredito calculado e conserto que fecha o vínculo. A decisão deriva de dados calculados; rollback nunca corrompe contrato.</p>
+
+<h3>Exemplos trabalhados</h3>
+<p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B06-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib. Métricas entram como números locais calculados; tráfego real pertence à trilha externa — BLOCKED com registro onde ausente. Todo número de saída é exemplo variável até a medição da folha L.</p>
+
+<p><strong>Referência executável — <code>lab/analisar_canary.py</code>.</strong> Decide promover, abortar ou declarar inconclusiva; verifica compatibilidade de rollback; localiza camada; restaura o lab (oráculos LT03-AT-050..053, 060, 061). Só stdlib, determinístico:</p>
+<pre><code>"""Canary como dados: analise por metrica, abort/promocao e rollback, sem trafego.
+
+Referencia executavel do Bloco 6.
+Implementacao verbatim na folha B06-L. So STDLIB.
+Oraculos LT03-AT-050..053, 060, 061 sobre dicts puros e aritmetica local.
+"""
+
+from __future__ import annotations
+
+
+def analisar(
+    erro_stable: float,
+    erro_canary: float,
+    p95_stable: float,
+    p95_canary: float,
+    limiar_erro: float,
+    limiar_p95: float,
+    amostras: int,
+    minimo_amostras: int,
+) -&gt; str:
+    """Promove, aborta ou declara inconclusiva; inconclusiva nunca vira sucesso."""
+    if amostras &lt; minimo_amostras:
+        return "inconclusiva"
+    if erro_canary &gt; erro_stable + limiar_erro or p95_canary &gt; p95_stable + limiar_p95:
+        return "abortar"
+    return "promover"
+
+
+def rollback_compativel(novo_le_antigo: bool, antigo_le_novo: bool) -&gt; bool:
+    """Rollback de workload nao reverte schema: exige leitura cruzada provada."""
+    return novo_le_antigo and antigo_le_novo
+
+
+def localizar_camada(sinais: dict[str, bool]) -&gt; str:
+    """Primeira camada com sinal aceso, na ordem aplicacao a dependencia."""
+    for camada in ("aplicacao", "manifesto", "controlador", "no", "rede", "dependencia"):
+        if sinais.get(camada):
+            return camada
+    return "indeterminada"
+
+
+def restaurar(falhas_ativas: list[str]) -&gt; dict[str, object]:
+    """Lab restaurado: sem falhas, reconciliacao ligada, sandbox removivel."""
+    return {
+        "falhas_ativas": [f for f in falhas_ativas if f],
+        "reconciliacao": not falhas_ativas,
+        "removivel": not falhas_ativas,
+    }
+</code></pre>
+
+<p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> Saudável promove, regressiva em erro ou latência aborta, amostra curta cala em inconclusiva. Rollback exige leitura cruzada nas duas direções; camada acesa em ordem decide o diagnóstico; lab sem falhas religa reconciliação e libera remoção. Formatos ilustrativos; a folha L executa os oráculos.</p>
+
+<div class="box">
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B06-L constrói em <code>lab/</code>.</strong> <code>lab/analisar_canary.py</code> com este contrato verbatim e os oráculos LT03-AT-050..053, 060, 061 (2 arquivos de teste: canary saudável/regressiva/inconclusiva, rollback/incidente/restauração). O tráfego real e o incidente com cluster pertencem à trilha externa — BLOCKED com registro onde ausentes. Os roteiros moram no <code>Laboratório guiado LT03</code>.</p>
+</div>
+
+<div class="box ok">
+<p><span class="lbl">Síntese</span><strong>Bloco 6 em seis frases.</strong></p>
+<ul>
+<li>Estratégia se escolhe pelo exposto: rolling mistura, blue/green duplica, canary gradua com análise.</li>
+<li>Análise compara stable contra canary em janela, por erro, latência e negócio, cada uma com threshold.</li>
+<li>Regressiva aborta antes de 100%; inconclusiva cala — nunca vira sucesso silencioso.</li>
+<li>Rollback não reverte schema: sem leitura cruzada provada, a volta é bloqueada.</li>
+<li>Incidente se localiza por camada em ordem, de aplicação a dependência.</li>
+<li>Restauração devolve SLO, Git, controladores e sandbox removível — com postmortem escrito.</li>
+</ul>
+</div>
+
+<h3 id="diagnostico-b06">Tabela de Diagnóstico B06</h3>
+
+<p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
+
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Versão ruim alcança 100% sem que ninguém decida</td><td>Etapas sem análise ou threshold decorativo: promoção por tempo, não por dado (LT03-AT-051).</td><td>Threshold por métrica com abort automático (<code>analisar</code> aborta além do limite).</td></tr>
+<tr><td>Análise aprova com tráfego irrisório no horário morto</td><td>Amostra abaixo do mínimo convertida em sucesso (LT03-AT-052).</td><td>Veredito inconclusivo abaixo do mínimo; promoção exige amostra, não silêncio.</td></tr>
+<tr><td>Rollback volta o código e quebra a leitura do dado</td><td>Schema migrou sem compatibilidade cruzada: workload voltou, contrato não (LT03-AT-053).</td><td>Provar leitura nas duas direções (<code>rollback_compativel</code>) ou seguir adiante.</td></tr>
+<tr><td>Incidente atravessa turnos sem causa localizada</td><td>Diagnóstico fora de ordem, pulando camadas (LT03-AT-060).</td><td>Ordem fixa com sinais (<code>localizar_camada</code>); restaurar por contrato (<code>restaurar</code>).</td></tr>
+</tbody>
+</table>
+
+<h3 id="checkpoint-b06">Checkpoint B06 — rollout, rollback e incidente (LT03-AT-050..053, 060..061)</h3>
+
+<div class="box ok">
+<p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
+<ol class="check">
+<li><strong>Decisão (LT03-AT-050/051/052).</strong> Canary com erro e p95 dentro dos thresholds mas amostra abaixo do mínimo: promova, aborte ou segure? Justifique com janela, threshold e amostra. <em>Rubrica (0–2): 2 = segura em inconclusiva, declara que sem amostra não há veredito e veda sucesso silencioso; 1 = segura sem o mecanismo; 0 = promove pelo threshold parcial. Obrigatório para pontuar: inconclusiva nunca vira sucesso.</em></li>
+<li><strong>Transferência (LT03-AT-053).</strong> Versão com migração de schema precisa voltar. Quando o rollback é permitido e quando é bloqueado? <em>Rubrica (0–2): 2 = permite só com leitura cruzada provada nas duas direções, senão bloqueia e prescreve roll-forward; 1 = permite parcial; 0 = volta o workload e reza pelo dado. Obrigatório para pontuar: rollback não reverte schema sozinho.</em></li>
+<li><strong>Diagnóstico (LT03-AT-060/061).</strong> Latência estoura após promoção parcial, sem erro novo. Ordene as camadas de investigação e diga o que fecha a restauração. <em>Rubrica (0–2): 2 = ordena aplicação → manifesto → controlador → nó → rede → dependência e fecha com SLO, Git, controladores e sandbox removível; 1 = ordena parcial; 0 = começa pelo rollback às cegas. Obrigatório para pontuar: ordem por camada E restauração por contrato.</em></li>
+</ol>
+</div>
+
+<h3 id="fontes-b06">Fontes do Bloco 6</h3>
+<ul>
+<li>SRC-LT03-18 — Argo Rollouts canary e analysis — adapter rotulado — progressive delivery de referência. URLs na especificação §7. Versão: 1.9.1 na data-base. Risco: alto; revalidar em até 90 dias.</li>
+<li>SRC-LT03-20 — Google SRE, Canarying Releases — practitioner guidance rotulada — desenho de análise e rollout; não define conceito. URLs na especificação §7. Risco: baixo.</li>
+<li>Contrato de <code>lab/analisar_canary.py</code> e números citados — construção desta trilha; medidos na folha B06-L e na trilha externa. Risco: médio.</li>
+<li>Números citados no bloco — exemplo variável, não evidência; os observados nascem na folha B06-L e na trilha externa. Risco: baixo.</li>
+</ul>
+<hr>
+
+<h2 id="lab-guiado">Laboratório guiado LT03</h2>
+<p><strong>Resultado observável.</strong> <code>uv run pytest -q</code> verde na cópia de trabalho (81 passed, AT-001–003, 010–014, 020–025, 030–034, 040–043, 050–053, 060–061; Docker/registry/cluster ausentes = BLOCKED registrado). <strong>Limite.</strong> Só stdlib, sem rede/Docker; build/push/run, converge observado e tráfego real nunca simulados.</p>
+<p><strong>Pré-requisitos.</strong> Blocos 1–6 lidos; <code>uv</code> com CPython 3.14.</p>
+<p><strong>Cópia de trabalho descartável</strong> (a referência não é tocada):</p>
+<pre><code>cd modulos/LT03-novo/lab
+cp -r . "$(python3 -c 'import tempfile; print(tempfile.mkdtemp(prefix="lt03-b01-"))')"
+cd &lt;diretorio-impresso&gt;
+uv sync</code></pre>
+<p><strong>Mapa:</strong> <code>validar_dockerfile.py</code> (AT-001), <code>drenagem_grace.py</code> (AT-002); <code>validar_manifesto.py</code> + <code>simular_rollout.py</code> (AT-010–014); <code>sinais_escala.py</code> (AT-020–025); <code>estado_iac.py</code> (AT-030–034); <code>reconciliar_gitops.py</code> (AT-040–043); <code>analisar_canary.py</code> (AT-050–053, 060–061); <code>tests/</code> com os oráculos; <code>evidence/</code> com saídas reais.</p>
+<p><strong>Passos</strong> (observe → diagnostique):</p>
+<ol>
+<li><strong>Dockerfile:</strong> <code>uv run pytest -q tests/test_at001_dockerfile.py</code> — observe non-root, base mínima, digest pinado e segredo ausente.</li>
+<li><strong>Drenagem:</strong> <code>uv run pytest -q tests/test_at002_drenagem.py</code> — observe concluir/cancelar no prazo com exit code.</li>
+<li><strong>Decisão:</strong> <code>uv run pytest -q tests/test_at003_decisao.py</code> — observe a tabela de portabilidade/custo/responsabilidade.</li>
+<li><strong>Gates:</strong> <code>uv run ruff check .</code>, <code>uv run ruff format --check .</code>, <code>uv run mypy</code>, <code>uv run pytest -q</code> — os quatro verdes.</li>
+<li><strong>Manifestos:</strong> <code>uv run pytest -q tests/test_at010_apply.py tests/test_at011_selector.py tests/test_at012_rbac.py tests/test_at013_networkpolicy.py tests/test_at014_storage.py</code> — observe apply convergente, RBAC mínimo, allowlist e efêmero vs durável.</li>
+<li><strong>Capacidade:</strong> <code>uv run pytest -q tests/test_at020_probes.py tests/test_at021_recursos.py tests/test_at022_disrupcao.py tests/test_at024_hpa.py</code> — observe reação por probe, QoS, PDB/spread e HPA com trava de gargalo.</li>
+<li><strong>IaC:</strong> <code>uv run pytest -q tests/test_at030_plano.py tests/test_at033_guard.py</code> — observe plan vazio pós-apply, drift, import/move e destroy guardado.</li>
+<li><strong>GitOps:</strong> <code>uv run pytest -q tests/test_at040_gitops.py tests/test_at042_promocao.py</code> — observe convergência com digest, reversão de manual e promoção idêntica.</li>
+<li><strong>Canary:</strong> <code>uv run pytest -q tests/test_at050_canary.py tests/test_at053_incidente.py</code> — observe promover/abortar/inconclusiva, rollback compatível e restauração.</li>
+</ol>
+<p><strong>Limpeza segura.</strong> Apague só o diretório temporário da cópia. Nunca apague <code>lab/</code> nem paths fora dele.</p>
+
+</div>
+</body>
+</html>

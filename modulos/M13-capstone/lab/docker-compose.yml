@@ -1,0 +1,26 @@
+# Trilha Docker Compose do baseline — BLOCKED neste lote (docker indisponível no
+# ambiente, verificado em 20/09/2026). Arquivo documenta o alvo de integração;
+# nada daqui foi executado. Ver RASTREABILIDADE.md (B02 → BLOCKED ambiental).
+services:
+  api:
+    build: ..
+    command: uv run python -m capstone_lab.api
+    environment:
+      DATABASE_URL: postgresql://cartografo:cartografo@db:5432/cartografo
+    depends_on: [db]
+  worker:
+    build: ..
+    command: uv run python -m capstone_lab.worker
+    environment:
+      DATABASE_URL: postgresql://cartografo:cartografo@db:5432/cartografo
+    depends_on: [db]
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: cartografo
+      POSTGRES_PASSWORD: cartografo
+      POSTGRES_DB: cartografo
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

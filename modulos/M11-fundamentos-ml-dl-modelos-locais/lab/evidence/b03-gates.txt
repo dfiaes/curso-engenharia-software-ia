@@ -1,0 +1,64 @@
+M11-B03-L — evidência de execução real dos gates (orquestrador, 14/09/2026)
+Raiz: modulos/M11-fundamentos-ml-dl-modelos-locais/lab (pré-validado no
+scratch /tmp/m11-b03-l e re-executado verbatim no repo; resultados idênticos).
+Números rotulados "medido" valem para este ambiente; não são promessa.
+
+AMBIENTE
+  Python 3.14.7 · torch 2.9.1 (cuda False) · ruff 0.16.7 · mypy 1.20.2 ·
+  pytest 9.1.1 (mesmos do B02-L); docker ausente (PG BLOCKED); GPU ausente.
+
+SINCRONIZAÇÃO
+  $ uv sync
+  Resolved 38 packages (lock intacto; torch==2.9.1 já pinado, nada a mudar)
+
+GATES
+  $ uv run ruff check .
+  All checks passed!
+  $ uv run ruff format --check .
+  17 files already formatted
+  $ uv run mypy
+  Success: no issues found in 16 source files
+  (pyproject `files` estendido com os 3 módulos; ver divergências D1/D5)
+  $ uv run pytest -q
+  34 passed, 2 warnings in 2.09s
+  (23 B01+B02 intactos e verdes + 11 B03: 4 atenção AT-008/009,
+  3 custo AT-010, 4 multihead AT-011)
+
+SAÍDAS DOS CONTRATOS (execução real, CPU, torch 2.9.1, semente 1337)
+  $ uv run python atencao.py
+  formas iguais; erro maximo = 0.00e+00
+  $ uv run python multihead.py
+  saida: (4, 32, 128)
+  parametros: 65536
+  $ uv run python custo_quadratico.py
+   tokens |  tempo(ms) |  celulas T*T |  razao
+      128 |       0.08 |        16384 |     --
+      256 |       0.14 |        65536 |  1.74x
+      512 |       0.25 |       262144 |  1.79x
+     1024 |       0.85 |      1048576 |  3.39x
+
+DIVERGÊNCIAS DO VERBATIM (decididas pelo orquestrador, com registro)
+  D1. mypy-strict exigiu 3 anotações (no-any-return): `saida` em
+  `forward`/`comparar_com_sdpa` (atencao.py) e em `forward`
+  (multihead.py). Comportamento idêntico; HTML do Bloco 3 emendado nos
+  mesmos 3 pontos. `custo_quadratico.py` passou verbatim, zero retoque.
+  D2. Trailing newline nos 3 arquivos (exigido pelo format; sem efeito).
+  D3. Negativo por tolerância (atol=1e-12) é vácuo com saídas
+  bit-idênticas (allclose PASSA); negativo honesto troca a máscara
+  (causal vs não-causal difere em 1.95). Bloco 3 registra erro 0.0
+  medido (melhor que a casa de 1e-7 do exemplo variável).
+  D4. "~4× por dobra" confirmado onde a computação domina (512→1024:
+  3.39× aqui, ~3.2× no scratch); em T≤512 o overhead domina
+  (1.74×/1.79× aqui). Banda [1.0×, 8.0×] + salto final + ponta a ponta
+  contam a história honesta. Teoria e spec emendadas com a nuance.
+  D5. pyproject `files` do mypy estendido (sem ele os módulos novos não
+  eram checados). Sem mudança de dependências.
+
+CLEANUP
+  Nenhum resíduo em /tmp após os testes; scratch removido após integração.
+
+LIMITE
+  pct_incerto.sql segue BLOCKED sem Docker. Números de erro/tempo valem
+  para CPU + torch 2.9.1 + sementes fixas; em GPU/outro torch o erro
+  pode ir à casa de 1e-7 (limiar < 1e-6 cobre ambos). AT-008 prova o
+  mecanismo (vazamento do futuro), não o treino até ln(vocab).

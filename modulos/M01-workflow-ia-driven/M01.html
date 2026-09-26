@@ -53,12 +53,20 @@ svg{max-width:100%;height:auto}
 .small{font-size:.9rem;color:var(--muted)}
 @media(max-width:760px){main{padding:18px 14px 60px}header{padding:24px 20px}nav ol{columns:1}table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}.clock{overflow-x:auto}p,li,td,th{overflow-wrap:anywhere}}
 @media print{body{background:#fff;font-size:11pt}main{max-width:none;padding:0}header,.practice,.expected,.danger,.bridge,.box,.step,figure,pre,table{break-inside:avoid}a{color:inherit}h2{break-before:page}}
+
+/* Navegação de leitura e retomada, revisão 2026-09-12. */
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
 </style>
 </head>
 <body><main>
 <header>
 <div class="meta"><span class="badge">MÓDULO 01</span> · 5 blocos · 10 horas · pré-requisito: M00 · versão editorial 15/08/2026</div>
 <h1>M01 · SDD, harness e execução paralela segura</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Baseline técnico verificado em agosto. Revisão didática de setembro aplicada; revalidação editorial G6 pendente. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário ou o link de uma seção para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
 <p class="lead">No M00 você separou modelo, cliente, instruções, ferramentas e policy. Agora aprenderá a transformar uma intenção em mudança pequena, rastreável e verificável. A IA executa dentro do contrato; ela não se torna a autoridade do processo.</p>
 <p><strong>Saída:</strong> um fluxo de Specification-Driven Development que preserva decisões fora do chat, um harness que produz evidência e bloqueia falhas conhecidas, uma máquina de estados retomável e critérios seguros para delegar e integrar trabalho paralelo.</p>
 </header>
@@ -69,11 +77,12 @@ svg{max-width:100%;height:auto}
 <li><a href="#b3">Estado e controle</a></li>
 <li><a href="#b4">Paralelismo e integração</a></li>
 <li><a href="#b5">Kit SDD e Capstone</a></li>
+<li><a href="#lab">Laboratório guiado M01</a></li>
 <li><a href="#fontes">Fontes e atualização</a></li>
 </ol></nav>
 
 <section>
-<h3>Antes de começar: o contrato pedagógico</h3>
+<h3 id="sec-antes-de-comecar-o-contrato-pedagogico">Antes de começar: o contrato pedagógico <a class="section-link" href="#sec-antes-de-comecar-o-contrato-pedagogico" aria-label="Link para esta seção">#</a></h3>
 <p>O módulo separa cada tema em três níveis para preservar conhecimento transferível entre ferramentas:</p>
 <ol>
 <li><strong>invariante:</strong> o problema de engenharia que continua existindo quando o produto muda;</li>
@@ -91,9 +100,9 @@ svg{max-width:100%;height:auto}
 <!-- ============================================ BLOCO 1 -->
 <section id="b1">
 <h2>Bloco 1 · Da intenção ao contrato: SDD e drift bidirecional</h2>
-<p class="clock">00:00–00:25 por que o chat-driven falha · 00:25–01:00 os três níveis de artefato · 01:00–01:40 Spec Kit e o ciclo completo · 01:40–02:00 prática: sua primeira spec</p>
 
-<h3>1.1 Por que isso importa</h3>
+
+<h3 id="sec-1-1-por-que-isso-importa">1.1 Por que isso importa <a class="section-link" href="#sec-1-1-por-que-isso-importa" aria-label="Link para esta seção">#</a></h3>
 <p>Você já viveu a cena no M00: pediu uma coisa ao agente, ele fez outra, você corrigiu no chat, ele corrigiu — e de quebra desfez uma parte boa que ele mesmo tinha escrito dois turnos antes. Esse ciclo tem nome: <strong>desenvolvimento chat-driven</strong>. Ele falha de forma previsível, e entender <em>por que</em> falha é o que justifica todo este módulo.</p>
 
 <h4>Exemplo trabalhado: a mesma mudança vista por seis artefatos</h4>
@@ -110,10 +119,7 @@ svg{max-width:100%;height:auto}
 
 <p><strong>Specification-Driven Development (SDD)</strong> externaliza intenção, requisitos, decisões, tarefas e evidências em artefatos versionados. Isso não torna a especificação infalível. Código legado, testes, migrações, telemetria e comportamento observado podem conter conhecimento que a documentação perdeu. O trabalho profissional é confrontar essas fontes, localizar a divergência e reconciliar contrato, implementação e evidência no mesmo change set.</p>
 
-<div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Você já conhece peças semelhantes: OpenAPI contract-first, testes xUnit que cristalizam comportamento, ADRs e Definition of Done. Em Python, <code>dataclass</code>, parser tipado e JSON Schema cumprem parte do papel de DTOs/records e validação de fronteira; não substituem invariantes semânticos. Um agente também pode ignorar, truncar ou interpretar mal um documento. Por isso, a spec só ganha força quando requisitos possuem exemplo, contraexemplo, oráculo e rastreabilidade até um gate.</p>
-</div>
+<div class="box"><span class="lbl">Referência do conceito</span><p>Uma especificação declara comportamento e limites. JSON Schema descreve a forma dos dados; o parser valida a entrada; testes verificam resultados e falhas. Um documento pode ser ignorado ou interpretado incorretamente. Por isso, cada requisito precisa de exemplo, contraexemplo, oráculo e ligação com a evidência produzida.</p></div>
 
 <div class="box fund">
 <span class="lbl">Fundamento de engenharia · Requisitos — a reciclagem que a IA tornou urgente</span>
@@ -126,7 +132,7 @@ svg{max-width:100%;height:auto}
 </ul>
 </div>
 
-<h3>1.2 Os três níveis de artefato</h3>
+<h3 id="sec-1-2-os-tres-niveis-de-artefato">1.2 Os três níveis de artefato <a class="section-link" href="#sec-1-2-os-tres-niveis-de-artefato" aria-label="Link para esta seção">#</a></h3>
 <p>SDD maduro separa a especificação em três documentos encadeados, cada um respondendo uma pergunta diferente. A separação não é estética: cada documento muda por um motivo diferente, num ritmo diferente, e mistura-los é o que faz "a spec" virar um monólito que ninguém atualiza.</p>
 
 <ol>
@@ -188,7 +194,7 @@ svg{max-width:100%;height:auto}
 <p>Quando comportamento e documentação divergem, não escolha a spec nem o código por reflexo. Classifique: <code>consistent</code>, <code>spec_stale</code>, <code>code_incorrect</code> ou <code>decision_required</code>. Mitigue primeiro um incidente urgente; depois atualize contrato, implementação, testes e registro de decisão juntos. Se evidência operacional e intenção não bastarem, pare sem mutar e peça a decisão de produto.</p>
 </div>
 
-<h3>1.3 O ciclo: pesquisar → planejar → implementar → verificar</h3>
+<h3 id="sec-1-3-o-ciclo-pesquisar-planejar-implementar-verificar">1.3 O ciclo: pesquisar → planejar → implementar → verificar <a class="section-link" href="#sec-1-3-o-ciclo-pesquisar-planejar-implementar-verificar" aria-label="Link para esta seção">#</a></h3>
 <p>SDD não é só "escrever documentos antes". É um ciclo com quatro fases, e a primeira é a que quase todo mundo pula:</p>
 
 <ol>
@@ -198,7 +204,7 @@ svg{max-width:100%;height:auto}
 <li><strong>Verificar.</strong> Mecanicamente (testes, type check, lint — o harness do bloco 2) e semanticamente (o diff faz o que a spec pede? — revisão sua). Divergência encontrada volta para o passo 2, não para um remendo no chat.</li>
 </ol>
 
-<h3>1.4 Ferramental: GitHub Spec Kit — e por que você vai construir o seu</h3>
+<h3 id="sec-1-4-ferramental-github-spec-kit-e-por-que-voce-vai-construir-o-seu">1.4 Ferramental: GitHub Spec Kit — e por que você vai construir o seu <a class="section-link" href="#sec-1-4-ferramental-github-spec-kit-e-por-que-voce-vai-construir-o-seu" aria-label="Link para esta seção">#</a></h3>
 
 <div class="box">
 <span class="lbl">Contexto · O que é o GitHub Spec Kit</span>
@@ -217,7 +223,7 @@ svg{max-width:100%;height:auto}
 </tbody></table>
 <p>Spec Kit é o adapter didático deste módulo. O aluno aprende o contrato primeiro para poder adotar, substituir ou remover a ferramenta sem reaprender a raciocinar sobre mudança.</p>
 
-<h3>1.5 Anti-padrões de spec — os quatro jeitos de fazer SDD errado</h3>
+<h3 id="sec-1-5-anti-padroes-de-spec-os-quatro-jeitos-de-fazer-sdd-errado">1.5 Anti-padrões de spec — os quatro jeitos de fazer SDD errado <a class="section-link" href="#sec-1-5-anti-padroes-de-spec-os-quatro-jeitos-de-fazer-sdd-errado" aria-label="Link para esta seção">#</a></h3>
 <table>
 <thead><tr><th>Anti-padrão</th><th>Como se parece</th><th>Por que falha</th><th>Conserto</th></tr></thead>
 <tbody>
@@ -228,52 +234,9 @@ svg{max-width:100%;height:auto}
 </tbody>
 </table>
 
-<h3>1.6 Prática guiada · Sua primeira spec executada (40 min)</h3>
-<p>Você vai especificar e executar uma feature minúscula. Use exclusivamente a fixture em <code>modulos/M01-workflow-ia-driven/lab</code>; não faça commits nem experimente worktrees no repositório principal do curso.</p>
-
-<div class="step"><span class="n">1</span><strong>Crie a estrutura de spec.</strong> No terminal, na raiz do repo:
-<pre><code>uv run python -m sdd_lab validate examples/feature.valid.json
-uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
-<p><strong>Resultado esperado:</strong> o primeiro comando imprime <code>VALID CAP-001</code>. O segundo retorna código 20 e lista oito diagnósticos — requisito vago, não-objetivo ausente, path inseguro, string de shell e rastreabilidade quebrada entre eles. O arquivo inválido permanece byte a byte igual.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Escreva o intent/requisitos à mão numa cópia descartável</strong> — sem IA nesta primeira vez; você precisa sentir o que é difícil antes de delegar. Não salve no repositório principal:
-<pre><code># PRD · Gerador de changelog do repositório de estudos
-
-## Problema
-O PROGRESSO.md registra o diário, mas não existe visão resumida
-do que mudou no repositório por semana. Quero um resumo por semana
-gerado a partir do histórico do git.
-
-## Requisitos funcionais
-- RF1: dado o histórico git do repo, gerar `CHANGELOG-STUDY.md`
-  agrupando commits por semana (segunda a domingo).
-- RF2: cada linha mostra data, hash curto e mensagem do commit.
-- RF3: semanas sem commit não aparecem.
-
-## Requisitos não-funcionais
-- RNF1: rodar em &lt; 5 s num repo com até 1.000 commits.
-- RNF2: nenhuma dependência fora da biblioteca padrão do Python.
-
-## Não-objetivos
-- NÃO categorizar commits (feat/fix). Mensagem crua basta.
-- NÃO publicar em lugar nenhum. Arquivo local só.
-- NÃO reescrever histórico nem tocar em nada além do arquivo gerado.</code></pre>
-<p><strong>Resultado esperado:</strong> um PRD de meia página em que <em>cada</em> requisito é verificável (dá para testar RF3 mecanicamente) e os não-objetivos cortam as "iniciativas" óbvias que um agente teria.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Peça a spec técnica e o plano ao agente — e revise.</strong> Em qualquer harness compatível:
-<pre><code>Leia docs/spec/001-changelog/prd.md. Escreva spec.md (decisões
-técnicas: como obter commits, estrutura do script, tratamento de
-erro) e plan.md (etapas atômicas; cada etapa com comando de
-verificação e saída esperada) na mesma pasta. Não escreva código.</code></pre>
-<p><strong>Resultado esperado:</strong> dois arquivos novos na fixture. Leia-os integralmente. Procure: a spec inventou dependência externa? O plano tem etapa sem gate, timeout ou write set? Se faltou decisão, registre a pergunta; não deixe o agente preencher produto por adivinhação.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Execute o plano, uma etapa por vez.</strong>
-<pre><code>Execute a etapa 1 do docs/spec/001-changelog/plan.md. Rode o
-comando de verificação da etapa e me mostre a saída. Pare.</code></pre>
-<p><strong>Resultado esperado:</strong> o agente faz <em>só</em> a etapa 1 e mostra a verificação passando. O "Pare." no final não é grosseria — é fluxo de controle (você vai formalizar isso no bloco 3, fator 8). Repita para as demais etapas.</p></div>
-
-<div class="step"><span class="n">5</span><strong>Provoque drift bidirecional.</strong> Mude a regra: semanas devem ir de domingo a sábado. Edite o requisito na fixture e peça: <em>"Compare contrato, implementação, testes e evidência. Classifique a divergência antes de propor mudança."</em>
-<p><strong>Resultado esperado:</strong> o agente identifica a divergência e apresenta evidências antes de alterar. Se a produção confirma o novo comportamento, classifica <code>spec_stale</code>; se contrato aceita mas o teste comportamental falha, <code>code_incorrect</code>; se os sinais divergem, <code>decision_required</code>. Nenhuma classificação autoriza mutação automática.</p></div>
+<h3 id="sec-1-6-o-que-o-laboratorio-tornara-observavel">1.6 O que o laboratório tornará observável <a class="section-link" href="#sec-1-6-o-que-o-laboratorio-tornara-observavel" aria-label="Link para esta seção">#</a></h3>
+<p>O experimento final usa uma feature pequena de changelog para atravessar intenção, requisitos, não-objetivos, tarefas, gates e evidência. A fixture válida mostra um contrato completo. A inválida contém requisito vago, não-objetivo ausente, path inseguro, string de shell e rastreabilidade quebrada. O ponto não é decorar diagnósticos: é entender por que o parser recusa ambiguidade sem reescrever a entrada em silêncio.</p>
+<div class="practice"><strong>Mapa para a prática final.</strong> Você criará e validará a cópia do contrato; observará os quatro estados de drift; executará um runner por argv; e verá a integração Git falhar semanticamente apesar do merge limpo. Todo comando e arquivo aparecem apenas no laboratório ao fim do módulo.</div>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 1</span>
@@ -289,9 +252,9 @@ comando de verificação da etapa e me mostre a saída. Pare.</code></pre>
 <!-- ============================================ BLOCO 2 -->
 <section id="b2">
 <h2>Bloco 2 · Harness Engineering: guardrails mecânicos, não pedidos educados</h2>
-<p class="clock">00:00–00:25 prompt vs. contexto vs. harness · 00:25–00:55 por que agente degrada em tarefa longa · 00:55–01:35 os cinco guardrails mecânicos · 01:35–02:00 prática: harness mínimo</p>
 
-<h3>2.1 Por que isso importa</h3>
+
+<h3 id="sec-2-1-por-que-isso-importa">2.1 Por que isso importa <a class="section-link" href="#sec-2-1-por-que-isso-importa" aria-label="Link para esta seção">#</a></h3>
 <p>No M00 (bloco 2) você aprendeu na pele que <strong>instrução em prompt é pedido, não garantia</strong>: sua skill v1 mandava "não reescreva o código" e o agente reescreveu tudo. A v2 melhorou com técnica de prompt — mas prompt melhor continua sendo probabilidade melhor, não certeza. Harness Engineering é o passo seguinte: <strong>tirar as regras inegociáveis do prompt e colocá-las em mecanismos que não dependem de obediência</strong>.</p>
 
 <p>A separação dos três níveis, que você vai usar o curso inteiro:</p>
@@ -305,12 +268,9 @@ comando de verificação da etapa e me mostre a saída. Pare.</code></pre>
 </tbody>
 </table>
 
-<div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Você conhece essa escada do mundo corporativo. Prompt engineering é o <em>code review comment</em>: "por favor, não use <code>DateTime.Now</code> direto". Context engineering é o <em>onboarding doc</em> que o dev novo lê. Harness engineering é o <strong>Roslyn Analyzer com severidade Error</strong> + <code>&lt;TreatWarningsAsErrors&gt;true&lt;/TreatWarningsAsErrors&gt;</code> no <code>.csproj</code> + o gate de build no Azure DevOps que <strong>recusa o merge</strong>. A empresa madura não pede educadamente que o dev não quebre o build — ela torna impossível mergear com build quebrado. Com agentes é idêntico, só que o "dev" comete erros mais rápido e em maior volume.</p>
-</div>
+<div class="box"><span class="lbl">Referência do conceito</span><p>Uma instrução pede um comportamento; contexto fornece informação para escolhê-lo; um gate executa uma verificação e pode impedir o avanço. Pedir que o agente preserve o contrato é diferente de executar um teste que falha quando o contrato muda. O harness liga essas peças e define o que fazer quando a verificação falha.</p></div>
 
-<h3>2.2 Por que o agente degrada em tarefa longa</h3>
+<h3 id="sec-2-2-por-que-o-agente-degrada-em-tarefa-longa">2.2 Por que o agente degrada em tarefa longa <a class="section-link" href="#sec-2-2-por-que-o-agente-degrada-em-tarefa-longa" aria-label="Link para esta seção">#</a></h3>
 <p>Para desenhar o harness certo, você precisa do modelo mental correto do <em>modo de falha</em>. Agente em tarefa longa degrada por mecanismos conhecidos:</p>
 
 <ul>
@@ -329,7 +289,7 @@ comando de verificação da etapa e me mostre a saída. Pare.</code></pre>
 </ul>
 </div>
 
-<h3>2.3 Os cinco guardrails mecânicos</h3>
+<h3 id="sec-2-3-os-cinco-guardrails-mecanicos">2.3 Os cinco guardrails mecânicos <a class="section-link" href="#sec-2-3-os-cinco-guardrails-mecanicos" aria-label="Link para esta seção">#</a></h3>
 <p>O harness completo tem cinco camadas. A regra que as une: <strong>se uma propriedade é inegociável, ela precisa de controle executável, caso negativo e evidência</strong>. Exit code é um sinal de protocolo; sozinho, não prova que o oráculo representa a necessidade real.</p>
 
 <div class="box">
@@ -342,7 +302,7 @@ comando de verificação da etapa e me mostre a saída. Pare.</code></pre>
 <li><strong>Unidades de trabalho pequenas e verificáveis.</strong> Janela maior não corrige contexto irrelevante, truncamento ou objetivo mal definido. Cada etapa deve terminar em estado verificável e retomável; divida quando evidência, revisão ou rollback deixarem de ser locais.</li>
 <li><strong>Estado externalizado, sessão substituível.</strong> Progresso confirmado mora em spec, checkpoint, diff, testes e evidência. Teste ácido: uma nova sessão consegue retomar do último estado confirmado sem repetir efeito? Conversa pode ajudar na exploração, mas não deve ser o único ledger operacional.</li>
 <li><strong>Fronteiras de permissão.</strong> Declare capabilities mínimas, paths, comandos e aprovações por tarefa. O nome do campo varia entre produtos; a policy efetiva precisa ser testada. Para o lab, produção é inacessível e qualquer escape de root é negado.</li>
-<li><strong>Verificação independente.</strong> Quem avalia não pode ser quem fez: suíte de testes escrita <em>antes</em> (ou revisada por você), revisor com contexto limpo (subagente revisor, como o seu <code>revisor-dotnet-para-python</code>), e — no limite — você, lendo o diff. Rubrica objetiva: a definição de "pronto" está no <code>contract.md</code> do bloco 5, não na opinião do executor.</li>
+<li><strong>Verificação independente.</strong> Quem avalia não pode ser quem fez: suíte de testes escrita <em>antes</em> (ou revisada por você), revisor com contexto limpo (subagente revisor, com critérios de revisão Python explícitos), e — no limite — você, lendo o diff. Rubrica objetiva: a definição de "pronto" está no <code>contract.md</code> do bloco 5, não na opinião do executor.</li>
 </ol>
 
 <figure>
@@ -386,37 +346,15 @@ comando de verificação da etapa e me mostre a saída. Pare.</code></pre>
 <p>Pegue qualquer instrução do <code>AGENTS.md</code> e pergunte: <em>"que evidência aparece se isto for ignorado?"</em> Se a resposta é "nenhuma", transforme-a em policy, schema, teste ou aprovação — ou registre conscientemente que continua sendo orientação probabilística.</p>
 </div>
 
-<h3>2.4 Prática guiada · Runner seguro e controles negativos (25 min)</h3>
-<p>O laboratório já contém o harness executável. Você vai inspecionar antes de rodar, executar o caminho feliz e provar que quatro falhas reais são bloqueadas. O M02 aprofundará a linguagem; aqui observe contrato, processo e evidência.</p>
+<h3 id="sec-2-4-leitura-aplicada-runner-caso-negativo-e-evidencia">2.4 Leitura aplicada · runner, caso negativo e evidência <a class="section-link" href="#sec-2-4-leitura-aplicada-runner-caso-negativo-e-evidencia" aria-label="Link para esta seção">#</a></h3>
+<p>O runner executável fica no laboratório final. Aqui fixe a sequência causal: a policy aceita apenas executáveis e diretórios permitidos; o runner usa lista de argumentos e <code>shell=False</code>; a evidência persiste argv, versão, duração, saída e exit code. O M02 aprofundará a linguagem; neste módulo, a questão é onde a autoridade de executar termina.</p>
 
 <div class="box">
-<span class="lbl">Ponte .NET → Python</span>
-<p><code>uv</code> gerencia ambiente e lock; Ruff cobre lint/format; mypy verifica os type hints sem transformar Python em C#; <code>unittest</code> é o framework padrão usado aqui. A analogia útil é <code>ProcessStartInfo.ArgumentList</code> ↔ <code>subprocess.run([...], shell=False)</code>. Assim como Roslyn, build e xUnit cobrem dimensões diferentes, nenhum gate isolado prova adequação do produto.</p>
+<span class="lbl">Responsabilidades das ferramentas</span>
+<p><code>uv</code> gerencia ambiente e lock; Ruff verifica formatação e padrões de código; mypy analisa anotações de tipo; <code>unittest</code> executa os testes. O runner passa argumentos separados com <code>subprocess.run([...], shell=False)</code>, sem pedir ao shell para interpretar uma string. Cada ferramenta observa uma dimensão; nenhuma delas sozinha prova adequação do produto.</p>
 </div>
 
-<div class="step"><span class="n">1</span><strong>Prepare o ambiente reproduzível.</strong>
-<pre><code>cd modulos/M01-workflow-ia-driven/lab
-uv sync --python 3.14 --extra dev</code></pre>
-<p><strong>Resultado esperado:</strong> uv seleciona Python 3.14 e sincroniza o lockfile. Leia <code>pyproject.toml</code> e <code>uv.lock</code>; lock melhora repetibilidade, mas proveniência e integridade de build são controles adicionais, estudados com SLSA.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Execute os gates canônicos, sem wrapper de shell.</strong>
-<pre><code>uv run ruff format --check .
-uv run ruff check .
-uv run mypy --strict src tests
-uv run python -m unittest discover -s tests -v</code></pre>
-<p><strong>Resultado esperado:</strong> 33 arquivos formatados, Ruff verde, mypy sem issues em 21 arquivos e 27 testes aprovados. Saídas e quantidades podem crescer com o lab; a verdade é a execução presente, nunca este número copiado.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Prove que o gate morde.</strong>
-<pre><code>uv run mypy fixtures/gates/type_error/broken.py
-uv run python -m unittest tests.test_negative_control -v
-uv run python -m unittest tests.test_runner -v</code></pre>
-<p><strong>Resultado esperado:</strong> mypy cita <code>broken.py:2</code>; o controle negativo prova que um mutante conhecido é rejeitado; o runner retorna 124 no timeout e 126 para shell/path não autorizados. Um oráculo que deixa o mutante sobreviver reprova o gate.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Inspecione o runner e a evidência.</strong>
-<pre><code>uv run python -m sdd_lab check examples/feature.valid.json \
-  --evidence evidence/run.json
-uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
-<p><strong>Resultado esperado:</strong> <code>run.json</code> contém argv tokenizado, Python 3.14.7, timestamps, duração, código e saída UTF-8. A fixture inválida retorna 20. O runner rejeita scripts de shell até revisão; isso reduz superfície, mas não é sandbox de sistema operacional.</p></div>
+<div class="expected"><strong>O que você observará no laboratório.</strong> O contrato válido passa; a fixture inválida retorna código 20 sem mutação; mypy localiza o erro de tipo semeado; o controle negativo elimina um mutante; timeout retorna 124; shell, path e executável não autorizados retornam 126. O arquivo de evidência registra o que ocorreu. Não existe passo de adivinhação entre esses resultados.</div>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 2</span>
@@ -432,9 +370,9 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 <!-- ============================================ BLOCO 3 -->
 <section id="b3">
 <h2>Bloco 3 · Estado, controle e 12-Factor Agents sob crítica</h2>
-<p class="clock">00:00–00:15 origem e tese central · 00:15–01:20 os doze fatores, um a um · 01:20–01:45 os quatro que mais importam para você · 01:45–02:00 prática: auditoria de conformidade</p>
 
-<h3>3.1 Por que isso importa e como ler o guia</h3>
+
+<h3 id="sec-3-1-por-que-isso-importa-e-como-ler-o-guia">3.1 Por que isso importa e como ler o guia <a class="section-link" href="#sec-3-1-por-que-isso-importa-e-como-ler-o-guia" aria-label="Link para esta seção">#</a></h3>
 <p>Os blocos 1 e 2 deram método e controles. Agora você estudará estado, efeitos, retomada e supervisão. O <strong>12-Factor Agents</strong>, da HumanLayer, é um guia de practitioner útil para organizar perguntas — não uma norma, certificação nem consenso universal. Cada fator será aceito somente quando houver artefato, teste ou telemetria que o sustente, e você registrará contrapontos.</p>
 
 <div class="box">
@@ -442,13 +380,13 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 <p>O repositório foi publicado por Dex Horthy/HumanLayer em 2025 e reúne experiência prática. Sua tese — combinar software determinístico com passos probabilísticos estreitos — é consistente com o laboratório, mas continua sendo uma posição de engenharia a testar no contexto. “Stateless” aqui não significa “sem estado”: significa estado explícito e externalizado. O chamado fator 13, pre-fetch, aparece apenas como <em>honorable mention</em>; pré-carregar dependência conhecida e pequena pode ajudar, enquanto descoberta incerta deve permanecer sob demanda para reduzir custo e ruído.</p>
 </div>
 
-<h3>3.2 Os doze fatores, um a um</h3>
+<h3 id="sec-3-2-os-doze-fatores-um-a-um">3.2 Os doze fatores, um a um <a class="section-link" href="#sec-3-2-os-doze-fatores-um-a-um" aria-label="Link para esta seção">#</a></h3>
 <p>A tabela mantém os nomes originais em inglês porque são o vocabulário da fonte. Não trate os números como prova de senioridade. Use cada linha para perguntar qual estado, efeito, contrato ou decisão o sistema precisa tornar explícito.</p>
 
 <table>
-<thead><tr><th>#</th><th>Fator</th><th>O que significa</th><th>Tradução .NET / prática</th></tr></thead>
+<thead><tr><th>#</th><th>Fator</th><th>O que significa</th><th>Aplicação no workflow</th></tr></thead>
 <tbody>
-<tr><td><strong>1</strong></td><td><strong>Natural Language to Tool Calls</strong></td><td>O superpoder real do LLM é converter linguagem natural em chamadas estruturadas ("cancele a assinatura do João" → <code>{"tool":"cancel_subscription","user_id":42}</code>). Use-o para <em>traduzir intenção</em>; deixe código executar.</td><td>O LLM é o <em>model binder</em> do ASP.NET: transforma entrada crua em objeto tipado. O controller (seu código) é quem age.</td></tr>
+<tr><td><strong>1</strong></td><td><strong>Natural Language to Tool Calls</strong></td><td>O superpoder real do LLM é converter linguagem natural em chamadas estruturadas ("cancele a assinatura do João" → <code>{"tool":"cancel_subscription","user_id":42}</code>). Use-o para <em>traduzir intenção</em>; deixe código executar.</td><td>O modelo propõe uma chamada estruturada; validação, política e código determinístico decidem se ela pode ser executada.</td></tr>
 <tr><td><strong>2</strong></td><td><strong>Own your prompts</strong></td><td>Prompts são código de primeira classe: no seu repositório, versionados, revisáveis, testáveis. Nunca escondidos dentro de abstração de framework que você não controla.</td><td>Como SQL crítico: você não deixa o ORM gerar a query do relatório mais importante sem poder inspecioná-la. Prompt em <code>prompts/*.md</code> com git blame.</td></tr>
 <tr><td><strong>3</strong></td><td><strong>Own your context window</strong></td><td>Você decide o que entra na janela, em que formato e em que ordem — em vez de anexar o histórico inteiro cegamente. Contexto é o recurso mais caro e mais escasso do sistema.</td><td>É a projeção do EF: <code>Select(x =&gt; new {...})</code> em vez de arrastar a entidade inteira com navegações. Buscar tudo "por garantia" é o mesmo erro nos dois mundos.</td></tr>
 <tr><td><strong>4</strong></td><td><strong>Tools are just structured outputs</strong></td><td>Desmistificação: "tool call" não é o modelo executando nada — é o modelo <em>emitindo JSON</em> que o SEU código valida e executa (ou recusa). A fronteira entre decidir e agir é sua.</td><td>O modelo devolve um DTO; seu código é o handler. Igual a MediatR: o request não se executa sozinho.</td></tr>
@@ -475,13 +413,9 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 </ul>
 </div>
 
-<div class="box net">
-<span class="lbl">Tradução .NET — os doze fatores como arquitetura que você já defendeu</span>
-<p>Se a lista pareceu abstrata, releia-a como a descrição de um <strong>worker service bem construído</strong>, que é algo que você já entregou: configuração e prompts versionados no repositório (2), payload enxuto em vez de arrastar a entidade inteira (3), DTO tipado em vez de <code>dynamic</code> (1 e 4), um estado só em vez de reconciliar dois (5), <code>Durable</code>/Hangfire para pausar e retomar (6), passo de aprovação no pipeline (7), <em>você</em> escrevendo o <code>while</code> e os <code>if</code> (8), ProblemDetails em vez de stack trace (9), SRP (10), múltiplos bindings de gatilho — HTTP, fila, timer (11), e reducer/event sourcing (12).</p>
-<p>A conclusão que vale levar para uma conversa técnica: <strong>o manifesto não pede que você aprenda arquitetura nova — pede que você não abandone a que já sabe só porque tem um LLM no meio</strong>. Metade dos sistemas de IA que falham em produção falha por ter jogado fora o worker service e colocado um loop autônomo no lugar.</p>
-</div>
+<div class="box"><span class="lbl">Referência do conceito</span><p>Os fatores orientam responsabilidades de um workflow: entradas estruturadas, prompts versionados, estado explícito, interrupção e retomada, aprovação de efeitos, controle de fluxo e erros acionáveis. Use a tabela para localizar qual responsabilidade falta no seu sistema. O guia não substitui a demonstração de que cada controle funciona.</p></div>
 
-<h3>3.3 Os quatro fatores que mais importam para você agora</h3>
+<h3 id="sec-3-3-os-quatro-fatores-que-mais-importam-para-voce-agora">3.3 Os quatro fatores que mais importam para você agora <a class="section-link" href="#sec-3-3-os-quatro-fatores-que-mais-importam-para-voce-agora" aria-label="Link para esta seção">#</a></h3>
 <p>Doze é lista demais para reter de uma vez. Os quatro que vão trabalhar já nesta fase do curso:</p>
 <ul>
 <li><strong>Fator 2 (own your prompts)</strong> — você já pratica: suas skills do M00 são prompts versionados no repo. Mantenha o padrão quando aparecerem frameworks oferecendo abstração "mágica" (M08 volta nisso).</li>
@@ -490,19 +424,8 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 <li><strong>Fator 10 (small, focused agents)</strong> — seus subagentes do M00 bloco 3 já seguem isso; o bloco 4 deste módulo escala o princípio para paralelismo.</li>
 </ul>
 
-<h3>3.4 Prática guiada · Auditoria de conformidade (30 min)</h3>
-<p>Nada fixa princípio como procurar violação. Você vai auditar dois "sistemas" que já tem:</p>
-
-<div class="step"><span class="n">1</span><strong>Audite seu fluxo do M00.</strong> Abra o <code>cacador-de-gap</code> (subagente) e a skill <code>revisor-dotnet-para-python</code>. Para cada um, responda por escrito (no <code>PROGRESSO.md</code> ou num rascunho): quais fatores ele <em>cumpre</em> e qual ele <em>viola ou ignora</em>? Exija evidência; não marque conformidade por impressão.
-<p><strong>Resultado esperado:</strong> uma lista honesta com pelo menos 3 conformidades e 2 violações identificadas. Se você não achou violação nenhuma, está auditando com carinho demais.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Audite um harness.</strong> Investigue a documentação e um experimento local: como mede/trunca contexto, o que persiste após interrupção e como erros de ferramenta retornam? Não aceite autorrelato do modelo como prova.
-<p><strong>Resultado esperado:</strong> uma resposta que você agora sabe avaliar criticamente — compactação automática de contexto (fator 3 parcialmente fora do seu controle: anote o trade-off), retomada de sessão (<code>--resume</code>/equivalente), e erros como mensagens de tool result. Compare com a tabela e anote onde o harness decide <em>por</em> você.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Reescreva uma violação.</strong> Escolha a pior violação encontrada no passo 1 e corrija-a no artefato correspondente (na skill, no contrato ou no <code>AGENTS.md</code>). Depois execute:
-<pre><code>uv run python -m unittest tests.test_workflow -v</code></pre>
-<p>O teste pausa, persiste, carrega em nova instância e retoma sem repetir o mesmo <code>effect_id</code>. Outra prova esgota o orçamento e chega a <code>ESCALATED</code> com razão de handoff.</p>
-<p><strong>Resultado esperado:</strong> um commit com mensagem em inglês no padrão do repo, ex.: <code>M01: compact tool errors in cacador-de-gap output</code>.</p></div>
+<h3 id="sec-3-4-o-que-torna-um-workflow-auditavel">3.4 O que torna um workflow auditável <a class="section-link" href="#sec-3-4-o-que-torna-um-workflow-auditavel" aria-label="Link para esta seção">#</a></h3>
+<p>Um workflow auditável não recebe “conforme” por impressão. O laboratório final executará a transição pause → resume em uma instância nova e verificará que o mesmo <code>effect_id</code> não volta a produzir efeito. Também mostrará o orçamento chegando a <code>ESCALATED</code> com razão de handoff. Esses dois casos ligam os fatores de estado externalizado e controle de fluxo a uma evidência que não depende da memória da conversa.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 3</span>
@@ -517,9 +440,9 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 <!-- ============================================ BLOCO 4 -->
 <section id="b4">
 <h2>Bloco 4 · Decomposição, worktrees e integração por waves</h2>
-<p class="clock">00:00–00:20 quando paralelizar (e quando não) · 00:20–00:50 arquitetura orquestrador-workers · 00:50–01:35 prática: worktrees + duas features em paralelo · 01:35–02:00 consolidação e conflitos</p>
 
-<h3>4.1 Por que isso importa</h3>
+
+<h3 id="sec-4-1-por-que-isso-importa">4.1 Por que isso importa <a class="section-link" href="#sec-4-1-por-que-isso-importa" aria-label="Link para esta seção">#</a></h3>
 <p>Um host pode executar uma ou várias unidades de trabalho, mas isolamento de processo não prova independência. O ganho aparece quando tarefas, contratos e recursos deixam de competir entre si. Enquanto o worker A implementa uma mudança de autenticação, o B escreve testes de billing e o C atualiza documentação, alguém ainda precisa manter a base estável, integrar e julgar o resultado. Paralelismo mal modelado aumenta colisões e retrabalho. Este bloco constrói o critério para decidir quando a execução simultânea ajuda.</p>
 
 <div class="box fund">
@@ -533,7 +456,7 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 </ul>
 </div>
 
-<h3>4.2 Quando paralelizar — o checklist honesto</h3>
+<h3 id="sec-4-2-quando-paralelizar-o-checklist-honesto">4.2 Quando paralelizar — o checklist honesto <a class="section-link" href="#sec-4-2-quando-paralelizar-o-checklist-honesto" aria-label="Link para esta seção">#</a></h3>
 <p>Paralelize quando <strong>todas</strong> estas condições valem:</p>
 <ul>
 <li><strong>As tarefas não compartilham estado relevante.</strong> Write sets disjuntos são necessários em muitos casos, mas não bastam. Compare também read sets, contratos públicos, schema, lockfile, banco, cache, porta, fila, rate limit e dependências entre tarefas.</li>
@@ -542,7 +465,7 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 <li><strong>O custo compensa.</strong> Paralelizar duas tarefas de 10 minutos é overhead puro. Paralelize blocos de ≥ 30–60 min de trabalho de agente.</li>
 </ul>
 
-<h3>4.3 Arquitetura orquestrador-workers</h3>
+<h3 id="sec-4-3-arquitetura-orquestrador-workers">4.3 Arquitetura orquestrador-workers <a class="section-link" href="#sec-4-3-arquitetura-orquestrador-workers" aria-label="Link para esta seção">#</a></h3>
 <p>Um padrão frequente de orquestração tem três papéis. Produtos podem automatizá-los de formas diferentes; o contrato não depende dessa automação:</p>
 
 <ul>
@@ -553,51 +476,25 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 
 <p>Em tarefas grandes, os workers rodam em <strong>waves</strong> (ondas): wave 1 = fundações compartilhadas (schemas, contratos — sequencial, porque tudo depende delas); wave 2 = features em paralelo sobre a fundação; wave 3 = integração e polimento. É o mesmo raciocínio do grafo de dependências de um build: paraleliza-se o que está no mesmo nível do grafo.</p>
 
-<h3>4.4 Isolamento com Git worktrees</h3>
+<h3 id="sec-4-4-isolamento-com-git-worktrees">4.4 Isolamento com Git worktrees <a class="section-link" href="#sec-4-4-isolamento-com-git-worktrees" aria-label="Link para esta seção">#</a></h3>
 
 <div class="box">
 <span class="lbl">Contexto · O que é <code>git worktree</code></span>
 <p><a href="https://git-scm.com/docs/git-worktree.html"><code>git worktree</code></a> mantém árvores de trabalho ligadas ao mesmo repositório. Cada árvore tem working tree, <code>HEAD</code> e índice próprios, mas objetos, refs e partes da configuração continuam compartilhados. Isso isola arquivos; não isola serviços nem semântica. O laboratório centraliza Git com argv tokenizado, stage explícito e paths resolvidos sob uma pasta temporária marcada como pertencente ao lab.</p>
 </div>
 
-<div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É como ter <code>C:\src\projeto-feature-a</code> e <code>C:\src\projeto-feature-b</code> apontando para o mesmo repositório TFS/Git — sem os 4 GB duplicados e sem o risco de os dois estarem na mesma branch por engano. Cada worker tem seu working directory; o merge acontece no git, onde conflito é visível e resolvível, e não no filesystem, onde a última escrita vence silenciosamente.</p>
-</div>
+<div class="box"><span class="lbl">Referência do conceito</span><p>Worktrees oferecem diretórios de trabalho distintos ligados ao mesmo repositório Git. Cada tarefa edita sua própria cópia; a integração ocorre por merge e testes. Banco, portas e outros recursos externos continuam compartilhados se o projeto não os isolar explicitamente.</p></div>
 
-<h3>4.5 Prática guiada · Worktrees descartáveis e conflito semântico (45 min)</h3>
-<p>Não execute esta prática no repositório do curso ou do trabalho. O teste cria um repositório Git real em <code>TemporaryDirectory</code>, grava um marcador de propriedade e só opera abaixo desse root.</p>
-
-<div class="step"><span class="n">1</span><strong>Modele duas unidades sem executá-las no repo principal.</strong> Em rascunho, descreva uma capability <code>stats.py</code> e outra <code>slug.py</code>, cada uma com testes e write set fechado. Depois declare contratos e recursos compartilhados; “não tocar além de <code>stats.py</code>/<code>test_stats.py</code>” protege arquivos, mas não prova independência semântica.
-<p><strong>Resultado esperado:</strong> duas specs com arquivos disjuntos, acompanhadas da análise de contratos e recursos. O lab mostra que interseção vazia de arquivos ainda nega paralelismo quando ambas dependem de <code>api-v1</code>.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Execute a fixture Git segura:</strong>
-<pre><code>uv run python -m unittest \
-  tests.test_workspace.WorkspaceTests.test_real_git_worktrees_merge_cleanly_and_cleanup_safely -v</code></pre>
-<p><strong>Resultado esperado:</strong> o lab inicializa branch <code>main</code> dentro do temp root, configura identidade local, adiciona somente <code>base.txt</code>, cria worktrees <code>producer</code>/<code>consumer</code> e confirma a listagem <code>--porcelain</code>. Nenhum <code>git add -A</code>, branch presumida ou path relativo externo é usado.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Leia o cenário antes de confiar no verde local.</strong>
-<pre><code># worker producer: producer.txt contém amount=120
-# worker consumer: consumer.txt contém limit=110
-# cada branch foi validada contra a base antiga</code></pre>
-<p><strong>Resultado esperado:</strong> os arquivos são disjuntos e os commits locais passam. Ainda assim, ambos dependem do mesmo contrato de quantidade. O relatório do worker deve subir arquivos, decisões, saída real e riscos; “o agente terminou” não é evidência.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Observe a integração:</strong>
-<pre><code>uv run python -m unittest \
-  tests.test_workspace.WorkspaceTests.test_clean_textual_merge_can_fail_semantic_gate -v</code></pre>
-<p><strong>Resultado esperado:</strong> os dois merges reais completam sem conflito textual. O teste lê <code>amount=120</code> e <code>limit=110</code> dos arquivos integrados; o gate global falha por incompatibilidade. Replaneje em waves: contrato primeiro, produtor/consumidor depois, integração por último.</p></div>
-
-<div class="step"><span class="n">5</span><strong>Prove o cleanup seguro:</strong>
-<pre><code>uv run python -m unittest \
-  tests.test_workspace.WorkspaceTests.test_dirty_worktree_cleanup_is_refused -v</code></pre>
-<p><strong>Resultado esperado:</strong> uma worktree com arquivo não rastreado não é removida. O lab não usa <code>--force</code>; valida marcador, root e status antes de remover somente fixtures próprias.</p></div>
+<h3 id="sec-4-5-o-cenario-que-o-laboratorio-executara">4.5 O cenário que o laboratório executará <a class="section-link" href="#sec-4-5-o-cenario-que-o-laboratorio-executara" aria-label="Link para esta seção">#</a></h3>
+<p>O laboratório cria um repositório Git real somente dentro de um diretório temporário marcado como próprio. Duas worktrees alteram arquivos diferentes: uma produz <code>amount=120</code>; outra consome <code>limit=110</code>. Os merges são textualmente limpos. O gate global lê os dois valores e falha porque o contrato compartilhado é incompatível. O cleanup também recusa uma worktree suja. Assim você observa as três distinções relevantes: isolamento de diretório, integração textual e compatibilidade semântica.</p>
+<div class="expected"><strong>Limite.</strong> Worktree não isola banco, porta, cache, lockfile ou contrato. O experimento prova a segurança do sandbox Git do laboratório; não prova que qualquer paralelismo de produção é seguro.</div>
 
 <div class="box warn">
 <span class="lbl">Multi-sessão com tmux — quando você verá isso</span>
 <p><strong>tmux</strong> é um multiplexador de terminal: uma tela dividida em painéis, cada um com um shell persistente que sobrevive à desconexão (equivalente mental: várias janelas do Windows Terminal que continuam rodando quando você fecha o notebook). Times que rodam 4+ agentes usam tmux para observá-los lado a lado. Não é pré-requisito do curso — dois terminais comuns bastaram aqui — mas você vai esbarrar no nome em todo post sobre "agent farm". Se quiser experimentar: <code>tmux</code>, <kbd class="kbd">Ctrl-b %</kbd> divide vertical, <kbd class="kbd">Ctrl-b setas</kbd> navega, <code>tmux attach</code> reconecta.</p>
 </div>
 
-<h3>4.6 Resolução de conflito entre features</h3>
+<h3 id="sec-4-6-resolucao-de-conflito-entre-features">4.6 Resolução de conflito entre features <a class="section-link" href="#sec-4-6-resolucao-de-conflito-entre-features" aria-label="Link para esta seção">#</a></h3>
 <p>Quando as specs <em>não</em> conseguem ser disjuntas (duas features precisam mexer no mesmo <code>router.py</code>), você tem três estratégias, em ordem de preferência:</p>
 <ol>
 <li><strong>Re-decompor:</strong> extrair a fundação compartilhada para uma wave anterior e manter as partes seguintes independentes quando isso reduzir risco total.</li>
@@ -619,12 +516,13 @@ uv run python -m sdd_lab validate examples/feature.invalid.json</code></pre>
 <!-- ============================================ BLOCO 5 -->
 <section id="b5">
 <h2>Bloco 5 · Mini-projeto: seu kit SDD e a spec do Capstone</h2>
-<p class="clock">00:00–00:45 construir as três skills + contract.md · 00:45–01:15 validador mecânico do kit · 01:15–01:45 especificar o Capstone com o kit · 01:45–02:00 revisão dos entregáveis</p>
 
-<h3>5.1 O que você vai construir</h3>
-<p>O mini-projeto amarra os quatro blocos: três Agent Skills portáteis, contrato canônico versionado, schema 2020-12, parser semântico, dois adapters e uma fatia do Capstone com handoff. A estrutura completa já existe no <code>lab/</code>; seu trabalho é entendê-la, quebrá-la de propósito e explicar por que cada gate decide o que decide.</p>
 
-<div class="step"><span class="n">1</span><strong>Escreva o <code>contract.md</code> — a definição mecânica de "pronto".</strong> Crie <code>docs/spec/contract.md</code> no repo de estudos. Ele é curto e brutal:
+<h3 id="sec-5-1-artefatos-que-o-laboratorio-final-integra">5.1 Artefatos que o laboratório final integra <a class="section-link" href="#sec-5-1-artefatos-que-o-laboratorio-final-integra" aria-label="Link para esta seção">#</a></h3>
+<p>O mini-projeto reúne três Agent Skills portáteis, contrato canônico versionado, schema 2020-12, parser semântico, dois adapters e uma fatia do Capstone com handoff. Leia os artefatos abaixo como referência de formato e limite. Não execute nem crie arquivos nesta seção: o laboratório final concentra a cópia de trabalho, os comandos e as saídas observáveis.</p>
+<div class="box warn"><span class="lbl">Referência, não prática intermediária</span><p>Os blocos seguintes mostram a forma dos artefatos e os limites do validador. Eles não são uma lista de tarefas. Quando terminar o bloco 5, siga diretamente para <a href="#lab">Laboratório guiado M01</a>.</p></div>
+
+<div class="box"><span class="lbl">Artefato de referência · contract.md</span><p>Uma definição mecânica de “pronto” pode declarar:</p>
 <pre><code># Contrato de pronto (Definition of Done)
 
 Uma etapa de plano SÓ está concluída quando:
@@ -640,7 +538,7 @@ Uma etapa de plano SÓ está concluída quando:
 O que viola qualquer item volta como NÃO CONCLUÍDO, sem negociação.</code></pre>
 <p><strong>Resultado esperado:</strong> note que os itens 1–2 são verificáveis por máquina e os itens 3–5 por revisão rápida. Essa mistura é intencional — é a rubrica do harness (bloco 2, guardrail 5).</p></div>
 
-<div class="step"><span class="n">2</span><strong>Construa as três skills.</strong> Você já sabe criar skill (M00 bloco 2). A estrutura das três é a mesma; o que muda é o contrato de saída. Peça ao agente para criar e revise contra os blocos 1 e 2:
+<div class="box"><span class="lbl">Artefato de referência · três skills</span><p>A estrutura das três skills é a mesma; muda o contrato de saída.</p>
 <pre><code>Crie três skills no diretório portátil skills/:
 
 1. prd-writer — dado um problema descrito em linguagem natural,
@@ -662,15 +560,16 @@ O que viola qualquer item volta como NÃO CONCLUÍDO, sem negociação.</code></
    trabalho. A última etapa é sempre "rodar contract.md inteiro".</code></pre>
 <p><strong>Resultado esperado:</strong> três pastas em <code>skills/</code>, cada uma com <code>SKILL.md</code> válido segundo a <a href="https://agentskills.io/specification">Agent Skills Specification</a>. Configuração específica de produto, quando necessária, fica em adapter; não duplique validação de requisito dentro dele.</p></div>
 
-<div class="step"><span class="n">3</span><strong>Compare o validador didático com o núcleo do lab.</strong> O exemplo abaixo ensina a ideia mínima; ele não é a implementação aprovada. O núcleo real combina <code>contracts/feature-contract.schema.json</code>, <code>contract.py</code>, rastreabilidade e casos negativos. JSON Schema valida estrutura expressável; invariantes de domínio continuam no parser/testes.
+<div class="box"><span class="lbl">Exemplo conceitual · validador mínimo</span><p>O exemplo ensina a ideia mínima; ele não é a implementação aprovada. O núcleo real combina <code>contracts/feature-contract.schema.json</code>, <code>contract.py</code>, rastreabilidade e casos negativos. JSON Schema valida estrutura expressável; invariantes de domínio continuam no parser e nos testes.</p>
 
 <div class="box">
 <span class="lbl">Contexto · Python antes do M02 — o que você precisa saber para LER este arquivo</span>
+<p>Esta explicação local acompanha o exemplo. Para uma consulta mais ampla sobre argumentos, funções, dicionários, caminhos, JSON, terminal, ambiente e Git, abra a <a href="../apoio/entrada.html">ponte opcional de entrada</a>. Ela não substitui a explicação do mecanismo neste módulo nem exige leitura prévia.</p>
 <ul>
-<li><code>from pathlib import Path</code> — importa a classe <code>Path</code>, o equivalente moderno de <code>System.IO.Path</code>+<code>FileInfo</code> juntos; <code>/</code> concatena caminhos (operador sobrecarregado, como <code>+</code> em strings C#).</li>
-<li><code>def nome(param: tipo) -> retorno:</code> — declaração de função com <em>type hints</em>: a assinatura C# <code>Retorno Nome(Tipo param)</code> reordenada. Os dois-pontos + indentação substituem as chaves.</li>
+<li><code>from pathlib import Path</code> importa o tipo que representa caminhos. O operador <code>/</code> combina partes do caminho respeitando a plataforma; ele não lê o arquivo.</li>
+<li><code>def nome(param: tipo) -&gt; retorno:</code> declara uma função; as anotações indicam os tipos do parâmetro e do retorno. Dois-pontos e indentação delimitam o corpo.</li>
 <li><code>list[str]</code>, <code>dict[str, list[str]]</code> — <code>List&lt;string&gt;</code> e <code>Dictionary&lt;string, List&lt;string&gt;&gt;</code>.</li>
-<li><code>f"texto {variavel}"</code> — string interpolada; o <code>$"texto {variavel}"</code> do C# com a letra na frente.</li>
+<li><code>f"texto {variavel}"</code> cria uma string interpolada: a expressão entre chaves é avaliada e seu resultado entra no texto.</li>
 <li><code>raise SystemExit(1)</code> — encerra o processo com exit code 1; <code>Environment.Exit(1)</code>.</li>
 <li><code>if __name__ == "__main__":</code> — idioma para "só execute isto se o arquivo for rodado diretamente" (não importado); o papel do <code>Main()</code>. O M02 explica o porquê estranho disso.</li>
 </ul>
@@ -747,12 +646,12 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()</code></pre>
-<p>Verifique e rode:</p>
+<p>O laboratório final executa o núcleo real em vez deste exemplo:</p>
 <pre><code>uv run mypy --strict tools/sdd_check.py
 uv run python tools/sdd_check.py docs/spec/001-changelog</code></pre>
 <p><strong>Resultado esperado:</strong> o exemplo evidencia uma limitação: conferir títulos não prova clareza, trace nem segurança de path. Rode a suíte real e compare as violações. Não ajuste uma spec só para satisfazer string matching; altere conscientemente contrato e oráculo quando a regra do processo mudar.</p></div>
 
-<div class="step"><span class="n">4</span><strong>Valide a primeira fatia do Capstone.</strong> Inspecione <code>fixtures/capstone/</code> e rode:
+<div class="box"><span class="lbl">Artefato de referência · fatia do Capstone</span><p>A fatia contém intent, requisitos, design, plano, trace e handoff:</p>
 <pre><code>uv run python -m unittest tests.test_speckit_capstone -v
 uv run python -m sdd_lab adapters-demo examples/feature.valid.json</code></pre>
 <p><strong>Resultado esperado:</strong> a fatia liga intent → RF/RN → decisão → tarefa → teste; o handoff contém última verificação, próxima ação e pendências. Os adapters Agent Skills e harness genérico exibem o mesmo fingerprint SHA-256 do contrato canônico. O M04 ampliará design/ADRs; módulos posteriores implementam segurança, retrieval e operação deliberadamente fora desta fatia.</p></div>
@@ -762,26 +661,114 @@ uv run python -m sdd_lab adapters-demo examples/feature.valid.json</code></pre>
 <p>Templates, extensões e workflows podem executar processos com os privilégios do usuário. A documentação de <a href="https://github.github.com/spec-kit/reference/workflows.html">workflows do Spec Kit</a> alerta que não há capability sandbox e que <code>requires</code> é precondição declarativa, não contenção. O lab calcula SHA-256 do conteúdo revisado e libera apenas comandos allowlisted; qualquer byte alterado exige nova revisão. Isso ainda não substitui sandbox de SO, identidade ou proveniência de build.</p>
 </div>
 
-<div class="box net">
-<span class="lbl">Tradução .NET — o kit SDD é o seu tooling de sempre, com outro consumidor</span>
-<p>Nada do que você acabou de montar é estranho ao seu mundo, e vale nomear as equivalências antes do exercício, porque é o que te permite defender o método numa reunião:</p>
-<table>
-<thead><tr><th>Peça do kit</th><th>Equivalente que você já usa</th></tr></thead>
-<tbody>
-<tr><td><code>contract.md</code> (definition of done)</td><td>a <em>Definition of Done</em> do board + a política de branch que bloqueia o merge</td></tr>
-<tr><td>skills <code>prd/spec/plan-writer</code></td><td><em>templates</em> de item de trabalho e de RFC, e os <em>scaffolds</em> (<code>dotnet new</code>) que padronizam o começo</td></tr>
-<tr><td><code>tools/sdd_check.py</code></td><td>um analyzer/regra de build que reprova quando o artefato não segue o padrão</td></tr>
-<tr><td><code>docs/spec/NNN-feature/</code></td><td>a pasta de especificação por feature, versionada junto do código</td></tr>
-</tbody>
-</table>
-<p>A diferença — e é ela que muda o retorno do investimento — é o <strong>consumidor</strong>: template de RFC que ninguém lê é burocracia; o mesmo template lido integralmente por quem vai escrever o código é <em>alavanca</em>. Foi a economia que mudou, não a prática.</p>
-</div>
+<div class="box"><span class="lbl">Referência do conceito</span><p>O kit separa quatro responsabilidades: <code>contract.md</code> declara o aceite; as skills orientam a escrita de requisitos e planos; o runner executa verificações; a pasta da feature reúne decisões e evidências. Um template só ajuda se o conteúdo preenchido for revisado e conectado ao comportamento real.</p></div>
 
-<h3>5.2 Exercício sozinho (sem pistas até pedir)</h3>
-<p>Escolha uma capability pequena e não confidencial que você conhece do mundo .NET; recrie-a em fixture Python descartável. Produza intent, requisitos, design, plano, trace e casos negativos. Depois descreva o equivalente .NET — <code>ProcessStartInfo.ArgumentList</code>, Roslyn Analyzers, build e xUnit — sem trocar a linguagem canônica da prática. Meça tempo até feedback, iterações, retrabalho, escapes e tempo de revisão. Uma execução não prova ganho organizacional; ela cria baseline para repetições comparáveis.</p>
+<h3 id="sec-5-2-extensao-apos-o-checkpoint">5.2 Extensão após o checkpoint <a class="section-link" href="#sec-5-2-extensao-apos-o-checkpoint" aria-label="Link para esta seção">#</a></h3>
+<p>Depois do checkpoint, você pode aplicar o kit a uma capability pequena e não confidencial em uma fixture descartável. Produza intent, requisitos, design, plano, trace e casos negativos. Compare com <code>ProcessStartInfo.ArgumentList</code>, Roslyn Analyzers, build e xUnit sem trocar a linguagem canônica. Uma execução cria baseline; não mede produtividade organizacional.</p>
 
-<h3>5.3 Peça do produto</h3>
+<h3 id="sec-5-3-peca-do-produto">5.3 Peça do produto <a class="section-link" href="#sec-5-3-peca-do-produto" aria-label="Link para esta seção">#</a></h3>
 <p><strong>Entrega para o Capstone:</strong> <code>docs/spec/</code> completo (contract, kit funcionando, PRD do produto, spec+plan da fatia 1) — é a fundação de tudo que os módulos M03+ constroem. Sem esta peça, o Capstone vira exatamente o chat-driven development que este módulo aposentou.</p>
+
+<section id="lab">
+<h2>Laboratório guiado M01 · contrato, drift, runner e integração segura</h2>
+
+<p>Este experimento reúne o módulo inteiro em uma cadeia. Você reconstrói a classificação de drift, valida uma spec boa e outra ruim, observa o runner persistir evidência e executa a suíte que cria worktrees somente no sandbox temporário. O código final continua versionado em <code>lab/</code>; sua cópia de trabalho é descartável.</p>
+<div class="box ok"><span class="lbl">Contrato da prática</span><p>Você não será avaliado enquanto executa. Cada teste ou comando tem uma observação esperada. Quando um caso falha, a falha é parte do experimento: ela prova que o gate bloqueou uma entrada, estado ou integração que não deveria avançar.</p></div>
+
+<h3 id="sec-0-crie-a-copia-de-trabalho">0. Crie a cópia de trabalho <a class="section-link" href="#sec-0-crie-a-copia-de-trabalho" aria-label="Link para esta seção">#</a></h3>
+<p>Abra PowerShell na raiz do curso. O script copia o laboratório para a pasta temporária, ignora ambientes e caches, grava um marcador e limpa apenas <code>drift.py</code>. O restante permanece como infraestrutura de execução e referência direta.</p>
+<pre><code>Set-Location .\modulos\M01-workflow-ia-driven\lab
+$workdir = python .\create_working_copy.py
+Set-Location $workdir
+Get-Content -Raw -LiteralPath .\.course-lab-workspace</code></pre>
+<div class="expected"><strong>Observe.</strong> O último comando mostra <code>M01</code>. Esse é o único diretório que a prática usa. Git criado pelos testes também ficará abaixo de diretórios temporários pertencentes à suíte.</div>
+
+<h3 id="sec-1-monte-o-ambiente-reproduzivel">1. Monte o ambiente reproduzível <a class="section-link" href="#sec-1-monte-o-ambiente-reproduzivel" aria-label="Link para esta seção">#</a></h3>
+<p><code>uv sync</code> instala as versões declaradas pelo projeto e lockfile. <code>PYTHONPATH</code> torna o pacote em <code>src/</code> visível naquela sessão do PowerShell. Nenhum dos dois comandos executa um agente ou toca o repositório do curso.</p>
+<pre><code>uv sync --python 3.14 --extra dev
+$env:PYTHONPATH = "src"</code></pre>
+
+<h3 id="sec-2-reconstrua-a-classificacao-de-drift">2. Reconstrua a classificação de drift <a class="section-link" href="#sec-2-reconstrua-a-classificacao-de-drift" aria-label="Link para esta seção">#</a></h3>
+<p>Copie este arquivo para <code>src/sdd_lab/drift.py</code>. A decisão não altera spec, código ou testes. Ela apenas classifica a evidência: consistente, spec antiga, código incorreto ou decisão humana necessária.</p>
+<pre><code>"""Classificação conservadora de drift: evidência antes de mutação."""
+
+from dataclasses import dataclass
+from enum import StrEnum
+
+
+class DriftState(StrEnum):
+    CONSISTENT = "consistent"
+    SPEC_STALE = "spec_stale"
+    CODE_INCORRECT = "code_incorrect"
+    DECISION_REQUIRED = "decision_required"
+
+
+@dataclass(frozen=True)
+class DriftEvidence:
+    spec_accepts_observed: bool
+    tests_accept_observed: bool
+    production_supports_observed: bool | None
+    detail: str
+
+
+@dataclass(frozen=True)
+class DriftReport:
+    state: DriftState
+    evidence: DriftEvidence
+    mutation_allowed: bool = False
+
+
+def classify_drift(evidence: DriftEvidence) -&gt; DriftReport:
+    if evidence.spec_accepts_observed and evidence.tests_accept_observed:
+        state = DriftState.CONSISTENT
+    elif (
+        not evidence.spec_accepts_observed
+        and evidence.tests_accept_observed
+        and evidence.production_supports_observed is True
+    ):
+        state = DriftState.SPEC_STALE
+    elif evidence.spec_accepts_observed and not evidence.tests_accept_observed:
+        state = DriftState.CODE_INCORRECT
+    else:
+        state = DriftState.DECISION_REQUIRED
+    return DriftReport(state=state, evidence=evidence)</code></pre>
+<p><code>StrEnum</code> define estados nomeados que continuam se comportando como strings. <code>bool | None</code> distingue “produção contradiz” de “produção não foi observada”. O valor padrão <code>mutation_allowed=False</code> é a fronteira importante: classificar não autoriza mudar o sistema.</p>
+<pre><code>uv run python -m unittest tests.test_drift -v</code></pre>
+<div class="expected"><strong>Observe.</strong> Os quatro cenários passam e nenhuma transição libera mutação automática. Se a importação falhar, confirme que você colou o arquivo em <code>src/sdd_lab/drift.py</code> e que <code>PYTHONPATH</code> ainda vale nesta janela.</div>
+
+<h3 id="sec-3-observe-contrato-e-runner-pelo-caminho-feliz-e-negativo">3. Observe contrato e runner pelo caminho feliz e negativo <a class="section-link" href="#sec-3-observe-contrato-e-runner-pelo-caminho-feliz-e-negativo" aria-label="Link para esta seção">#</a></h3>
+<p>O parser e o runner já estão completos na cópia. Primeiro leia <code>contract.py</code>: ele liga requisito a tarefa, exige exemplo e contraexemplo e recusa argv em string. Depois leia <code>runner.py</code>: ele limita executável, diretório, timeout, encoding e tamanho de saída. Execute os comandos na ordem abaixo.</p>
+<pre><code>uv run python -m sdd_lab validate examples/feature.valid.json
+uv run python -m sdd_lab validate examples/feature.invalid.json
+uv run python -m sdd_lab check examples/feature.valid.json --evidence evidence/run.json
+Get-Content -Raw -LiteralPath .\evidence\run.json</code></pre>
+<div class="expected"><strong>Observe.</strong> A fixture válida imprime <code>VALID CAP-001</code>. A inválida termina com código 20 e relata requisito vago, ausência de não-objetivo, path inseguro e shell string, sem alterar o arquivo. O <code>check</code> gera evidência com argv, versão, duração, saída UTF-8 e exit code. A duração muda a cada execução; não é um número de aceite.</div>
+
+<h3 id="sec-4-faca-os-gates-mostrarem-o-que-bloqueiam">4. Faça os gates mostrarem o que bloqueiam <a class="section-link" href="#sec-4-faca-os-gates-mostrarem-o-que-bloqueiam" aria-label="Link para esta seção">#</a></h3>
+<p>Estes casos são definidos pelo laboratório. Você só precisa observar a relação entre entrada, oráculo e fronteira. Não altere teste, fixture ou policy para fazê-los “passar”.</p>
+<pre><code>uv run mypy fixtures/gates/type_error/broken.py
+uv run python -m unittest tests.test_negative_control -v
+uv run python -m unittest tests.test_runner -v
+uv run python -m unittest tests.test_workflow -v</code></pre>
+<div class="expected"><strong>Observe.</strong> Mypy indica o erro de tipo semeado. O controle negativo elimina um mutante conhecido. O runner produz 124 no timeout e 126 para shell, path ou executável fora da policy. O workflow pausa, é recriado e retoma sem repetir <code>effect_id</code>; orçamento esgotado chega a <code>ESCALATED</code> com handoff.</div>
+
+<h3 id="sec-5-execute-a-integracao-git-sem-tocar-seu-repositorio">5. Execute a integração Git sem tocar seu repositório <a class="section-link" href="#sec-5-execute-a-integracao-git-sem-tocar-seu-repositorio" aria-label="Link para esta seção">#</a></h3>
+<p>O teste cria um repositório e worktrees reais dentro de <code>TemporaryDirectory</code>. Ele usa argv tokenizado, marca a posse, recusa limpeza de worktree suja e não usa <code>git add -A</code> ou remoção forçada. Git instalado é pré-requisito deste cenário; não há substituto simulado.</p>
+<pre><code>uv run python -m unittest tests.test_workspace -v
+uv run python -m unittest discover -s tests -v
+uv run ruff format --check .
+uv run ruff check .
+uv run mypy --strict src tests</code></pre>
+<div class="expected"><strong>Observe.</strong> Duas branches podem ter merge textual limpo e ainda falhar no gate global quando <code>amount=120</code> encontra <code>limit=110</code>. A suíte completa termina com 27 testes <code>OK</code> na baseline registrada. Ruff e mypy verificam dimensões diferentes do mesmo código.</div>
+
+<table><thead><tr><th>Sintoma</th><th>Primeira evidência</th><th>Correção segura</th></tr></thead><tbody>
+<tr><td><code>ModuleNotFoundError: sdd_lab</code></td><td><code>Get-Location</code> e <code>$env:PYTHONPATH</code></td><td>permaneça na cópia de trabalho e defina <code>PYTHONPATH=src</code> na sessão atual</td></tr>
+<tr><td><code>uv sync</code> pede rede</td><td>mensagem completa do uv e lockfile</td><td>registre o bloqueio; não substitua o lock nem use <code>pip</code> como atalho</td></tr>
+<tr><td>teste Git falha por ausência de Git</td><td><code>git --version</code></td><td>instale ou disponibilize Git antes de alegar que o cenário foi executado; não use skip</td></tr>
+<tr><td>merge textual passa, gate falha</td><td>valores integrados e assert do teste</td><td>estabilize o contrato na wave anterior; não trate merge limpo como prova semântica</td></tr>
+</tbody></table>
+<p>Para reiniciar, volte ao diretório de referência e rode <code>python .\create_working_copy.py</code> novamente. Ele sempre produz outra cópia. O checkpoint abaixo é a única parte que avalia sua explicação e transferência.</p>
+</section>
 
 <!-- ============================================ CHECKPOINT -->
 <h2>Checkpoint M01</h2>
@@ -818,7 +805,7 @@ Workflow retomável externaliza estado e torna efeitos idempotentes.<br>
 12-Factor Agents é lente de practitioner, não norma.<br>
 Paralelismo exige independência de arquivos, contratos, recursos e dependências.<br>
 Worktrees isolam diretórios; somente o gate global detecta certas incompatibilidades.<br>
-O método é portável entre Python, .NET e harnesses, mas Python 3.14 é a prática canônica do curso.</p>
+Os contratos podem ser aplicados em diferentes ambientes e harnesses. A prática deste curso é Python 3.14.</p>
 </div>
 
 </section>

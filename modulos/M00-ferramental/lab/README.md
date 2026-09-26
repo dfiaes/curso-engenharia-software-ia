@@ -1,58 +1,54 @@
-# Lab M00 — contrato de harness, contexto e menor privilégio
+# Laboratório M00 — referência executável
 
-Este laboratório não chama nenhum modelo. Ele verifica as partes que não devem depender de um modelo: contrato de trabalho, seleção de contexto, escopo de path, capabilities e allowlist de comandos.
+O roteiro de aprendizagem está em [`../M00.html#lab`](../M00.html#lab). Este README identifica os comandos, o diretório de execução e o limite entre cópia descartável e referência versionada. Os comandos abaixo são instruções; este documento não afirma que o laboratório foi executado nesta tarefa.
 
-## Execução sem instalar dependências
+## Cópia e diretório de trabalho
 
-No diretório `lab/`:
+No PowerShell, a partir da raiz do curso:
 
 ```powershell
+Set-Location .\modulos\M00-ferramental\lab
+$workdir = python .\create_working_copy.py
+Set-Location $workdir
+Get-Content -Raw -LiteralPath .\.course-lab-workspace
+```
+
+O marcador deve conter `M00`. O script cria uma pasta nova sob `%TEMP%\tutor-ia-codex-labs\`, ignora ambientes e caches, e no modo guiado esvazia somente `src/harness_lab/contract.py`, `context.py` e `policy.py`. Não execute a reconstrução na referência. Para consultar o código completo sem esvaziá-lo, rode `python .\create_working_copy.py --reference` no diretório `modulos/M00-ferramental/lab`.
+
+## Ambiente e verificações
+
+Todos os comandos seguintes usam como cwd a cópia impressa em `$workdir`. O projeto requer Python 3.14. `dev` instala Ruff, mypy, pytest e pytest-asyncio; `mcp` instala o adapter opcional. A sincronização usa o `uv.lock` incluído na cópia:
+
+```powershell
+uv sync --locked --python 3.14 --extra dev --extra mcp
 $env:PYTHONPATH = "src"
-python -m unittest discover -s tests -v
-python -m harness_lab validate examples/harness.safe.json
-python -m harness_lab context-demo
-python -m harness_lab policy-demo --workspace .
-```
-
-Resultado mínimo:
-
-```text
-Ran 18 tests
-OK
-VALID examples/harness.safe.json
-ALLOW_READ
-DENY_UNTRUSTED_CAPABILITY
-DENY_PATH_ESCAPE
-```
-
-O número exato de milissegundos não é critério. Códigos de decisão, testes e ausência de exceção são.
-
-## Gate opcional de qualidade
-
-```powershell
-uv sync --extra dev
-uv run ruff check .
-uv run mypy
+uv run python -m harness_lab validate examples/harness.safe.json
+uv run python -m harness_lab context-demo
+uv run python -m harness_lab policy-demo --workspace .
 uv run python -m unittest discover -s tests -v
+uv run ruff check .
+uv run mypy --strict src tests
 ```
 
-## MCP opcional, testado por camadas
+O arquivo `pyproject.toml` também configura mypy com `strict = true` e `files = ["src", "tests"]`; o comando explícito mantém claros o escopo e o nível da verificação. Se `uv sync` pedir rede por uma dependência que não está em cache, registre a mensagem e retome quando o ambiente estiver disponível. Não troque versões nem use `pip` para esconder o bloqueio. Diagnósticos por sintoma e a ordem cumulativa da reconstrução estão no laboratório guiado.
 
-Primeiro teste `course_progress()` como função Python. Só depois instale o adapter:
+## Retomada e limpeza segura
+
+Para recomeçar, volte ao diretório de referência e execute novamente o script; cada chamada cria um novo diretório. A cópia anterior pode permanecer em `%TEMP%` enquanto for útil. Para removê-la, confirme primeiro que `$workdir` resolve para uma subpasta de `%TEMP%\tutor-ia-codex-labs\` e que `.course-lab-workspace` contém `M00`; remova somente essa cópia marcada:
 
 ```powershell
-uv sync --extra mcp
-uv run mcp dev examples/mcp_progress_server.py
+$allowed = (Resolve-Path -LiteralPath (Join-Path $env:TEMP 'tutor-ia-codex-labs')).Path
+$target = (Resolve-Path -LiteralPath $workdir).Path
+$marker = Join-Path $target '.course-lab-workspace'
+$isOwnedCopy = $target.StartsWith(
+    $allowed + [IO.Path]::DirectorySeparatorChar,
+    [StringComparison]::OrdinalIgnoreCase
+) -and (Get-Content -Raw -LiteralPath $marker).Trim() -eq 'M00'
+if ($isOwnedCopy) {
+    Remove-Item -LiteralPath $target -Recurse
+} else {
+    throw 'Recusa de limpeza: o caminho não é uma cópia marcada do M00.'
+}
 ```
 
-No Inspector, chame `course_progress` com o caminho de um `PROGRESSO.md` descartável. O exemplo usa o MCP Python SDK v2 (`mcp>=2,<3`) e a API documentada em 14/08/2026. Consulte a documentação antes de executar no futuro: MCP tem alto risco de obsolescência.
-
-## Experimentos obrigatórios
-
-1. Retire `AGENTS.md` de `instruction_files` e explique a falha.
-2. Troque `trusted_input` para `false` e peça `write`; observe a negação.
-3. Use `../fora.txt` como alvo; observe `DENY_PATH_ESCAPE`.
-4. Reduza `context_budget` para menos do que o item obrigatório; observe a exceção explícita.
-5. Acrescente um comando como string única em vez de lista de argumentos; a validação deve rejeitar porque isso incentiva shell implícito.
-
-Não “conserte” um teste negativo afrouxando a policy. Explique qual requisito mudou e altere contrato, implementação e teste juntos.
+Não substitua `$workdir` por um caminho digitado de outra origem. A limpeza é opcional e não toca na referência do curso ou em arquivos pessoais.

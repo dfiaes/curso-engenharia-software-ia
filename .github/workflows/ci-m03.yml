@@ -1,0 +1,91 @@
+# Gate do laboratório M03. A integração PostgreSQL é obrigatória neste
+# workflow: sem Docker acessível, o preflight falha antes de pytest.
+name: ci-m03
+
+on:
+  push:
+    paths:
+      - ".github/workflows/ci-m03.yml"
+      - "tools/run_course_lab.py"
+      - "docs/planejamento-v4/ambientes.json"
+      - "modulos/M03-fastapi-postgres-docker-ci/**"
+  pull_request:
+    paths:
+      - ".github/workflows/ci-m03.yml"
+      - "tools/run_course_lab.py"
+      - "docs/planejamento-v4/ambientes.json"
+      - "modulos/M03-fastapi-postgres-docker-ci/**"
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: M03 quality and offline tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.14"
+      - name: Record command context
+        run: |
+          python --version
+          uv --version
+          git rev-parse HEAD
+      - name: Verify lock and run local gates
+        working-directory: modulos/M03-fastapi-postgres-docker-ci/lab
+        run: |
+          uv lock --check --offline
+          uv sync --frozen
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run mypy src tests
+          output="$(uv run pytest -q -m "not postgres" 2>&1)" || {
+            printf '%s\n' "$output"
+            exit 1
+          }
+          printf '%s\n' "$output"
+          if printf '%s\n' "$output" | grep -Eq '(^|[,[:space:]])[0-9]+ skipped([,[:space:]]|$)'; then
+            echo "BLOCKED: offline pytest reported skipped tests" >&2
+            exit 1
+          fi
+
+  postgres:
+    name: M03 real PostgreSQL integration
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.14"
+      - name: Require reachable Docker Engine
+        run: docker info --format '{{.ServerVersion}}'
+      - name: Run real PostgreSQL integration tests
+        run: python tools/run_course_lab.py --unit M03-fastapi-postgres-docker-ci --mode integration
+
+  build-image:
+    name: Build local image on main (no publish)
+    needs: [quality, postgres]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: modulos/M03-fastapi-postgres-docker-ci/lab
+          push: false
+          load: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}

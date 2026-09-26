@@ -1,74 +1,51 @@
-# Formação: Engenharia de Software e IA em Python
+# Software and AI Engineering with Python
 
-Repositório de estudo de **Denisson** — da experiência sênior em software corporativo para engenharia de software e sistemas de IA em produção.
-**15 módulos + 4 laboratórios transversais · 152 blocos de 2h · 304h · 7 a 10 meses** em ritmo irregular.
-Linguagem canônica: **Python**. .NET aparece como ponte mental e em um único corte comparativo do M02A; nunca como trilha paralela ou parte do capstone.
+A course for learners from different software backgrounds. Python 3.14 is the canonical language; no knowledge of another stack is required. Lessons explain new concepts before using them.
 
-## Comece aqui, nesta ordem
+**Main course: 15 modules + 4 transversal labs, 152 content blocks. Optional ML appendix: 7 planned units, 48 blocks.** The appendix covers tabular data, training, validation and MLOps; it never blocks the main course or the learner. The former 304-hour estimate applies to the original scope only. Blocks organize topics, not study sessions. Teaching material is in Portuguese; there is no mandatory schedule.
 
-1. **[`docs/como-estudar.md`](docs/como-estudar.md)** — o método. Como começar, como retomar depois de uma pausa, como testar o que ficou. Leia antes de qualquer conteúdo técnico.
-2. **[`docs/mapa-conceitual.md`](docs/mapa-conceitual.md)** — a hierarquia LLM → prompt → tool → MCP → RAG → agente → workflow → harness → eval. A defesa contra a sopa de siglas.
-3. [`docs/projeto-final.md`](docs/projeto-final.md) — o que você vai construir e por quê.
-4. [`CURRICULO.md`](CURRICULO.md) — o mapa completo.
-5. [`docs/PLANO-ESTRUTURACAO-CURSO-2026.md`](docs/PLANO-ESTRUTURACAO-CURSO-2026.md) — como a versão 4.0 será concluída.
-6. [`modulos/M00-ferramental/README.md`](modulos/M00-ferramental/README.md) — e comece. Hoje.
+## Find your material
 
-## Mapa do repositório
+- [Course map](CURRICULO.md): modules, prerequisites and intended outcomes.
+- [Implementation status](docs/STATUS-IMPLEMENTACAO-CURSO.md): what is ready, incomplete or blocked. Existing HTML does not imply verified material.
+- [M00](modulos/M00-ferramental/M00.html): entry module; visual review remains open.
+- [Concept map](docs/mapa-conceitual.md): vocabulary reference when useful.
+- [Capstone](docs/projeto-final.md): the product connecting the modules.
 
-```
-CLAUDE.md                    constituição — como me ensinar. Leia e edite.
-CURRICULO.md                 os 15 módulos, com carga, mini-projetos e checkpoints
-PROGRESSO.md                 seu diário. Atualize ao fim de cada bloco de 2h.
-docs/
-  como-estudar.md            ← o método. Leia primeiro.
-  projeto-final.md           as 3 opções de capstone, a recomendação e a arquitetura
-  gaps-e-projetos.md         o que dá dinheiro durante o curso e o que dá depois
-  ideias-fora-da-caixinha.md 12 produtos que quase ninguém está olhando
-  comparativo-fullcycle.md   o que extraí do MBA da FullCycle e onde diferimos
-  PLANO-ESTRUTURACAO-CURSO-2026.md plano da versão 4.0 e gates de qualidade
-  MATRIZ-RASTREABILIDADE.md   competência → prática → evidência → fonte → status
-  POLITICA-FONTES-E-AGNOSTICISMO.md padrões para fontes e portabilidade
-  STATUS-IMPLEMENTACAO-CURSO.md placar editorial/técnico (não é o diário do aluno)
-  adr/                       seus Architecture Decision Records (meta: 25)
-modulos/
-  M00-ferramental/           ← comece aqui
-  M01..M13/                  módulos numerados da trilha
-  M02A-engenharia-software-senior/ fundamentos sênior Python-first
-capstone/                    o produto, construído a partir do M03
-.claude/
-  skills/                    suas skills (incluindo a `tutor-ia`)
-  agents/                    seus subagentes
-```
+Use the contents and section links to read, consult an example or resume where you stopped. Guided labs are collected at the end of each module and can span several sessions. Assessments are separate; they demonstrate competence without locking access to reading. Notes and the [personal study log](PROGRESSO.md) are optional aids.
 
-## Como falar comigo
+## Contribute to the course
 
-| Diga | Eu faço |
+Read [AGENTS.md](AGENTS.md) before changing a module. Each document has one maintained responsibility:
+
+| Responsibility | Canonical location |
 |---|---|
-| `Voltei` | leio o PROGRESSO, resumo em 5 linhas, aqueço 15 min |
-| `Módulo X: explique Y` | explicação direta em Python, com ponte mental opcional quando útil |
-| `Módulo X: revise meu código` | revisão de tech lead — aponto, não reescrevo |
-| `Estou travado` | uma pista. Você pede o próximo degrau se precisar |
-| `Me dá a resposta` | entrego, sem sermão |
-| `Checkpoint módulo X` | avaliação sem consulta. **Posso reprovar** |
-| `Revisão em espiral` | bloco de revisão dos 3 últimos módulos |
-| `Defesa técnica fase N` | entrevista de 30 min, com contraditório |
-| `Variação difícil` | versão mais dura do exercício que saiu fácil |
+| Permanent authoring and tutoring rules | [CLAUDE.md](CLAUDE.md) |
+| Technical and teaching quality; authoring workflow | [Quality standard](docs/PADRAO-QUALIDADE-TECNICA-DIDATICA.md) |
+| Sources, versions and neutrality | [Source policy](docs/POLITICA-FONTES-E-AGNOSTICISMO.md) |
+| Curriculum and boundaries | [CURRICULO.md](CURRICULO.md) |
+| Active work, blockers, migration backlog and decisions | [Implementation status](docs/STATUS-IMPLEMENTACAO-CURSO.md) |
+| Competency-to-evidence map | [Traceability matrix](docs/MATRIZ-RASTREABILIDADE.md) |
+| Detailed module scope | `docs/especificacoes/` |
+| Module evidence and gate decisions | `modulos/*/RASTREABILIDADE.md`, `docs/auditorias/` and lab evidence |
+| Actual learning history | [PROGRESSO.md](PROGRESSO.md); never update during editorial work |
 
-## As regras que eu sigo
+## Work on one bounded task
 
-Estão no `CLAUDE.md`. As três que mais importam:
+Read the active task in the status, then obtain its packet:
 
-- **Python é canônico.** Experiência anterior é usada como ponte apenas quando reduz a carga cognitiva.
-- **Nunca entrego a solução do exercício sem você pedir.** Pista → direção → esqueleto → código.
-- **Sem elogio vazio.** "Funciona" não é "está certo".
-
-## Regra do bloco de 2h
-
-```
-00:00–00:10  reentrada (última entrada do PROGRESSO + 3 últimos commits)
-00:10–00:25  recuperação ativa, sem consultar nada
-00:25–01:45  trabalho, uma coisa só
-01:45–02:00  fechamento: commit + 3 linhas + próximo passo específico
+```text
+python3 tools/backlog_tasks.py --task FIX-01 --prompt
+python3 tools/backlog_tasks.py --task ML03-B05-L --bundle
+python3 tools/validate_backlog.py
 ```
 
-O fechamento é inegociável, mesmo no bloco que rendeu pouco. É a ponte para o próximo.
+The [backlog](docs/BACKLOG-OPERACIONAL-V4.md) and [depth specification](docs/especificacoes/FORMACAO-SOFTWARE-IA-ML-ESPECIFICACAO.md) define detailed instructions, examples, failure cases and review criteria. Main-course and optional-appendix release graphs are separate. Prefer a small lab that proves the concept; do not equate infrastructure size with depth.
+
+Historical reports are in [the archive](docs/historico/README.md). Do not load that directory or the entire task catalog as default context; retrieve only a cited record when needed. Current curriculum, status and traceability documents supersede the archived snapshots.
+
+Keep curriculum, evidence and learner history separate. Consolidate new decisions into the relevant canonical document instead of creating another overlapping plan. Retain audit records that support gate decisions, executable fixtures, and personal work.
+
+## Editorial checks
+
+Run `python3 tools/check_course.py` from the repository root (or `python tools/check_course.py` on Windows). It checks active Markdown/HTML links, anchors and structural errors. Use `--include-history` to inspect the archive too; links to archived documents are checked in both modes. It does not execute module labs, validate external sources, or certify accessibility and teaching quality.

@@ -1,0 +1,876 @@
+{
+  "schema_version": 1,
+  "updated_on": "2026-09-25",
+  "scope": "principal: M00–M13 and LT01–LT04; ML01–ML07 procedure only, not blockers",
+  "host_observation": {
+    "os": "macOS 27.0.0 arm64",
+    "cpu": "16 logical processors; Apple arm64",
+    "default_python3": "3.9.6",
+    "python314_command": "python3.14 -> 3.14.7",
+    "uv": "0.12.7",
+    "docker": "unavailable: command not found",
+    "uv_cache": {
+      "path": "~/.cache/uv",
+      "exists": true,
+      "default_access": "blocked: uv failed to open cache metadata with Operation not permitted",
+      "override_used_for_lock_checks": "/private/tmp/ops03-uv-cache"
+    },
+    "other_caches": {
+      "pip": "absent",
+      "huggingface": "present, 3 entries observed; not inspected/downloaded",
+      "torch": "absent"
+    },
+    "environments": "all 19 discovered principal lab projects already have .venv using Python 3.14.7"
+  },
+  "sources": [
+    {
+      "url": "https://docs.astral.sh/uv/concepts/projects/sync/",
+      "claim": "locked/no-sync behavior; sync and offline execution",
+      "type": "official uv documentation",
+      "consulted_on": "2026-09-25",
+      "version_ref": "live docs; page dated 2026-08-05"
+    },
+    {
+      "url": "https://docs.astral.sh/uv/concepts/projects/dependencies/",
+      "claim": "optional extras versus dependency groups",
+      "type": "official uv documentation",
+      "consulted_on": "2026-09-25",
+      "version_ref": "live docs; page date not used as a product version"
+    }
+  ],
+  "negative_controls": [
+    {
+      "case": "M01 missing mcp extra",
+      "command": "UV_CACHE_DIR=/private/tmp/ops03-uv-cache uv sync --locked --offline --dry-run --extra mcp",
+      "cwd": "modulos/M01-workflow-ia-driven/lab",
+      "result": "observed exit 2: Extra mcp is not defined; --dry-run, no install",
+      "exit_code": 2
+    },
+    {
+      "case": "M12 mypy without explicit targets",
+      "command": "MYPY_CACHE_DIR=/private/tmp/ops03-mypy-cache ./.venv/bin/mypy --no-incremental",
+      "cwd": "modulos/M12-producao-seguranca-sre-billing/lab",
+      "result": "observed exit 2: configured package m12_lab lacks py.typed; documented mypy --strict src succeeds for 10 source files",
+      "exit_code": 2
+    },
+    {
+      "case": "wheel build without Python 3.14",
+      "command": "UV_CACHE_DIR=/private/tmp/ops03-uv-cache uv build --python 3.9 --no-build-isolation --out-dir /private/tmp/ops03-wheel-negative",
+      "cwd": "modulos/M02A-engenharia-software-senior/lab",
+      "result": "inconclusive: build stopped before interpreter-compatibility proof because hatchling is unavailable in Python 3.9; no package installation attempted. pyproject declares requires-python >=3.14; existing wheel evidence is from Python 3.14.7",
+      "exit_code": 2
+    },
+    {
+      "case": "missing principal lab check",
+      "command": "find modulos -maxdepth 2 -type d -name lab",
+      "cwd": ".",
+      "result": "observed: no missing principal lab; all 19 lab directories, pyprojects, locks, and Python 3.14.7 environments exist. M02A lab README is absent, while its module-level README exists",
+      "exit_code": 0
+    },
+    {
+      "case": "Docker unavailable",
+      "command": "docker --version",
+      "cwd": ".",
+      "result": "observed exit 127: command not found; PostgreSQL/Compose integration was not run",
+      "exit_code": 127
+    }
+  ],
+  "optional_ml_procedure": {
+    "status": "specified, not produced; independent of the principal",
+    "steps": [
+      "load only the selected ML task card/specification",
+      "inspect its pyproject/lock and official upstream CPU/GPU install guidance",
+      "record Python/uv/hardware and cache state before changes",
+      "choose CPU baseline unless the card explicitly requires a supported GPU path",
+      "bootstrap with a locked sync when network is available; then run checks offline from the existing environment",
+      "do not download model weights unless required by the selected card and clearly scoped",
+      "mark missing hardware/dependencies BLOCKED rather than skipping or using mock outputs"
+    ],
+    "execution": "not performed in OPS-03"
+  },
+  "units": [
+    {
+      "unit": "LT01-novo",
+      "cwd": "modulos/LT01-novo/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/LT01-novo/lab/pyproject.toml",
+      "lockfile": "modulos/LT01-novo/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/LT01-novo/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": null,
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "LT02-novo",
+      "cwd": "modulos/LT02-novo/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/LT02-novo/lab/pyproject.toml",
+      "lockfile": "modulos/LT02-novo/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/LT02-novo/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": null,
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "LT03-novo",
+      "cwd": "modulos/LT03-novo/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/LT03-novo/lab/pyproject.toml",
+      "lockfile": "modulos/LT03-novo/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/LT03-novo/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": null,
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "LT04-novo",
+      "cwd": "modulos/LT04-novo/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/LT04-novo/lab/pyproject.toml",
+      "lockfile": "modulos/LT04-novo/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/LT04-novo/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": null,
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M00-ferramental",
+      "cwd": "modulos/M00-ferramental/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M00-ferramental/lab/pyproject.toml",
+      "lockfile": "modulos/M00-ferramental/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M00-ferramental/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked --extra dev",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline --extra dev",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {
+        "mcp": [
+          "uv sync --locked --offline --extra dev --extra mcp"
+        ]
+      },
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": [
+        "Core tools require the dev extra; MCP adapter is a separate optional extra."
+      ]
+    },
+    {
+      "unit": "M01-workflow-ia-driven",
+      "cwd": "modulos/M01-workflow-ia-driven/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M01-workflow-ia-driven/lab/pyproject.toml",
+      "lockfile": "modulos/M01-workflow-ia-driven/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M01-workflow-ia-driven/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked --extra dev",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline --extra dev",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": [
+        "Core dev extra exists; mcp extra is not declared and must not be requested for this lab."
+      ]
+    },
+    {
+      "unit": "M02-python-para-dev-dotnet",
+      "cwd": "modulos/M02-python-para-dev-dotnet/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M02-python-para-dev-dotnet/lab/pyproject.toml",
+      "lockfile": "modulos/M02-python-para-dev-dotnet/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M02-python-para-dev-dotnet/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy --strict src tests",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M02A-engenharia-software-senior",
+      "cwd": "modulos/M02A-engenharia-software-senior/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M02A-engenharia-software-senior/lab/pyproject.toml",
+      "lockfile": "modulos/M02A-engenharia-software-senior/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M02A-engenharia-software-senior/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline python tools/gate.py all (inclui mypy --strict python/src python/tests tools e validação do wheel)",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": [
+        "Lab directory/project exists but has no lab/README.md; unit README is at module root. No creation was within this card’s authorized README scope."
+      ]
+    },
+    {
+      "unit": "M03-fastapi-postgres-docker-ci",
+      "cwd": "modulos/M03-fastapi-postgres-docker-ci/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M03-fastapi-postgres-docker-ci/lab/pyproject.toml",
+      "lockfile": "modulos/M03-fastapi-postgres-docker-ci/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M03-fastapi-postgres-docker-ci/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M04-design-docs-com-ia",
+      "cwd": "modulos/M04-design-docs-com-ia/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M04-design-docs-com-ia/lab/pyproject.toml",
+      "lockfile": "modulos/M04-design-docs-com-ia/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M04-design-docs-com-ia/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M05-llm-pratica-gateway-cache",
+      "cwd": "modulos/M05-llm-pratica-gateway-cache/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M05-llm-pratica-gateway-cache/lab/pyproject.toml",
+      "lockfile": "modulos/M05-llm-pratica-gateway-cache/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M05-llm-pratica-gateway-cache/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M06-evals-observabilidade",
+      "cwd": "modulos/M06-evals-observabilidade/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M06-evals-observabilidade/lab/pyproject.toml",
+      "lockfile": "modulos/M06-evals-observabilidade/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M06-evals-observabilidade/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M07-rag-de-verdade",
+      "cwd": "modulos/M07-rag-de-verdade/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M07-rag-de-verdade/lab/pyproject.toml",
+      "lockfile": "modulos/M07-rag-de-verdade/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M07-rag-de-verdade/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M08-agentes-e-context-engineering",
+      "cwd": "modulos/M08-agentes-e-context-engineering/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M08-agentes-e-context-engineering/lab/pyproject.toml",
+      "lockfile": "modulos/M08-agentes-e-context-engineering/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M08-agentes-e-context-engineering/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M09-protocolos-mcp-e-a2a",
+      "cwd": "modulos/M09-protocolos-mcp-e-a2a/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M09-protocolos-mcp-e-a2a/lab/pyproject.toml",
+      "lockfile": "modulos/M09-protocolos-mcp-e-a2a/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M09-protocolos-mcp-e-a2a/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M10-graph-engineering-saude-arquitetural",
+      "cwd": "modulos/M10-graph-engineering-saude-arquitetural/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M10-graph-engineering-saude-arquitetural/lab/pyproject.toml",
+      "lockfile": "modulos/M10-graph-engineering-saude-arquitetural/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M10-graph-engineering-saude-arquitetural/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    },
+    {
+      "unit": "M11-fundamentos-ml-dl-modelos-locais",
+      "cwd": "modulos/M11-fundamentos-ml-dl-modelos-locais/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M11-fundamentos-ml-dl-modelos-locais/lab/pyproject.toml",
+      "lockfile": "modulos/M11-fundamentos-ml-dl-modelos-locais/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M11-fundamentos-ml-dl-modelos-locais/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": null,
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": [
+        "Existing environment observed with torch 2.9.1 CPU; CUDA unavailable. No model download or dependency installation performed."
+      ]
+    },
+    {
+      "unit": "M12-producao-seguranca-sre-billing",
+      "cwd": "modulos/M12-producao-seguranca-sre-billing/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M12-producao-seguranca-sre-billing/lab/pyproject.toml",
+      "lockfile": "modulos/M12-producao-seguranca-sre-billing/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M12-producao-seguranca-sre-billing/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {
+        "postgres": [
+          "uv sync --locked --offline --group postgres",
+          "uv run --locked --offline pytest -m postgres"
+        ]
+      },
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy --strict src",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": [
+        "PostgreSQL test group is optional; Docker is absent in the current host, so that integration was not executed."
+      ]
+    },
+    {
+      "unit": "M13-capstone",
+      "cwd": "modulos/M13-capstone/lab",
+      "python_requirement": ">=3.14",
+      "pyproject": "modulos/M13-capstone/lab/pyproject.toml",
+      "lockfile": "modulos/M13-capstone/lab/uv.lock",
+      "lock_check": {
+        "command": "uv lock --check --offline",
+        "result": "PASS: lockfile matches metadata; no package installation",
+        "executed_on": "2026-09-25"
+      },
+      "existing_environment": {
+        "path": "modulos/M13-capstone/lab/.venv",
+        "python": "3.14.7",
+        "observed": true
+      },
+      "bootstrap": {
+        "clean_environment_command": "uv sync --locked",
+        "network": "may be required on a clean environment to fetch missing dependencies; this command was not executed",
+        "offline_only_if_cache_complete": "uv sync --locked --offline",
+        "execution_after_environment_exists": "uv run --locked --offline <tool command>",
+        "note": "offline sync/run uses only locally available artifacts; offline was not treated as proof that an uncached dependency can be installed"
+      },
+      "optional_dependencies": {},
+      "commands": {
+        "lint": "uv run --locked --offline ruff check .",
+        "format_check": "uv run --locked --offline ruff format --check .",
+        "type_check": "uv run --locked --offline mypy",
+        "tests": "uv run --locked --offline pytest -q",
+        "build": "uv build --out-dir <diretorio-temporario>",
+        "execution_state": "templates only; no suite run for this inventory"
+      },
+      "prerequisites": [
+        "Python 3.14",
+        "uv",
+        "CPU-only local execution"
+      ],
+      "notes": []
+    }
+  ],
+  "boundary_checks": [
+    {
+      "case": "Python 3.9 incompatível com projeto >=3.14",
+      "command": "UV_CACHE_DIR=/private/tmp/ops03-review-uv-cache uv sync --locked --offline --dry-run --python 3.9",
+      "cwd": "modulos/M02A-engenharia-software-senior/lab",
+      "result": "observed exit 2 before sync: Python 3.9.6 incompatible with requires-python >=3.14; dry-run, no install",
+      "exit_code": 2
+    },
+    {
+      "case": "lab de M02A e README local",
+      "command": "Python Path.exists() para lab/, lab/README.md e README.md do módulo",
+      "cwd": ".",
+      "result": "lab/ presente; lab/README.md ausente; README.md do módulo presente. Diretório de lab ausente não pôde ser exercitado no checkout; não contado como negativo executado.",
+      "status": "not_exercised"
+    },
+    {
+      "case": "acesso ao cache uv padrão",
+      "command": "uv lock --check --offline usando UV_CACHE_DIR temporário",
+      "cwd": "19 labs listados em units",
+      "result": "cache padrão existente mas leitura bloqueada por permissão; override temporário viabilizou validação sem instalar dependências.",
+      "status": "environment_boundary"
+    }
+  ]
+}

@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ponte de entrada · Python, arquivos e terminal</title>
+<style>
+:root{color-scheme:light;--ink:#172033;--muted:#566176;--paper:#fbfaf7;--card:#fff;--line:#d9dde5;--blue:#2457a6;--teal:#087f72;--amber:#805000;--code:#101827;--codeink:#e8edf6;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:940px;margin:auto;padding:28px 24px 72px}
+header{padding:30px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(135deg,#eef4ff,#f1fbf8)}
+h1{font-size:clamp(2rem,5vw,3rem);line-height:1.08;margin:.2rem 0 1rem}
+h2{font-size:1.65rem;margin-top:3rem;padding-top:.75rem;border-top:2px solid var(--ink)}
+h3{font-size:1.15rem;margin-top:2rem}
+p,li{max-width:78ch}
+a{color:var(--blue);text-underline-offset:2px}
+code,kbd{font:.92em var(--mono);background:#edf0f5;padding:.12em .32em;border-radius:4px}
+pre{overflow:auto;max-width:100%;background:var(--code);color:var(--codeink);padding:18px;border-radius:10px;font:.84rem/1.55 var(--mono);tab-size:4}
+pre code{background:none;padding:0;white-space:pre}
+nav,.note,.result,.caution{margin:1.2rem 0;padding:16px 18px;background:var(--card);border:1px solid var(--line);border-radius:10px}
+.note{border-left:4px solid var(--blue)}.result{border-left:4px solid var(--teal)}.caution{border-left:4px solid var(--amber)}
+.meta{color:var(--muted);font-weight:650}.lead{font-size:1.12rem}
+table{width:100%;border-collapse:collapse;margin:1rem 0;background:var(--card)}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:#eef1f6}
+:focus-visible{outline:3px solid #2457a6;outline-offset:3px}
+@media(max-width:600px){main{padding:16px 14px 48px}header{padding:22px 18px}table{display:block;overflow-x:auto;white-space:normal}pre{font-size:.78rem;padding:14px}}
+@media print{body{background:#fff;font-size:11pt}main{max-width:none;padding:0}header,nav,.note,.result,.caution{background:#fff;break-inside:avoid}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#fff;color:#111;border:1px solid #888}a{color:#111;text-decoration:underline}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="meta">Material de consulta · Python 3.14 · sem pré-teste</p>
+  <h1>Ponte de entrada: ler código, arquivos e comandos</h1>
+  <p class="lead">M00 e M01 usam pequenos trechos de Python antes de M02 ensinar a linguagem com profundidade. Esta página explica o vocabulário mínimo para acompanhar esses trechos. Você pode consultá-la quando um termo aparecer; não precisa lê-la antes, executar tudo ou demonstrar que sabe o conteúdo.</p>
+  <p>O percurso fica em suas mãos. Um link para esta ponte explica a sintaxe comum, mas cada módulo continua responsável por explicar suas próprias decisões e mecanismos.</p>
+</header>
+
+<nav aria-label="Nesta página">
+  <strong>Acesse diretamente a parte de que precisa</strong>
+  <ul>
+    <li><a href="#terminal">Terminal, comando e retorno</a></li>
+    <li><a href="#exemplo">Um programa completo</a></li>
+    <li><a href="#pecas">Variáveis, funções, listas, dicionários e caminhos</a></li>
+    <li><a href="#json">JSON e erros de leitura</a></li>
+    <li><a href="#ambiente">Variáveis de ambiente</a></li>
+    <li><a href="#git">Git e snapshots</a></li>
+    <li><a href="#diagnostico">Diagnóstico rápido</a></li>
+    <li><a href="#fontes">Referências oficiais</a></li>
+  </ul>
+</nav>
+
+<section id="terminal">
+  <h2>Terminal, comando e retorno</h2>
+  <p>O terminal recebe comandos e mostra texto produzido por programas. O <strong>shell</strong> é o programa que interpreta o que você digita; no roteiro do curso, o shell canônico é Windows PowerShell. O shell inicia outro processo, como o interpretador Python, e entrega a ele os argumentos.</p>
+  <pre><code>py -3.14 .\ler_resumo.py .\relatorio.json</code></pre>
+  <p>Neste comando, <code>py</code> inicia Python, <code>-3.14</code> seleciona essa versão no launcher do Windows, <code>.\ler_resumo.py</code> identifica o arquivo do programa e <code>.\relatorio.json</code> é um dado que o programa vai ler. O ponto inicial significa “a pasta atual”. Se o launcher <code>py</code> não estiver instalado, use o comando <code>python</code> configurado para Python 3.14.</p>
+  <p>A <strong>pasta atual</strong> (working directory) é o diretório no qual o shell está posicionado. Ela influencia caminhos relativos como <code>.\relatorio.json</code>. Em PowerShell, <code>Get-Location</code> mostra essa pasta.</p>
+  <p>Um processo escreve mensagens normais em <code>stdout</code> e diagnósticos em <code>stderr</code>. Quando termina, ele também devolve um número chamado <strong>código de saída</strong>: por convenção, zero significa que a operação terminou como esperado; valor diferente de zero sinaliza que não terminou normalmente. O código não explica o motivo sozinho — a mensagem de erro completa esse diagnóstico.</p>
+</section>
+
+<section id="exemplo">
+  <h2>Um programa completo</h2>
+  <p>Este pequeno utilitário recebe um caminho, lê um objeto JSON e imprime um resumo. Só usa a biblioteca padrão incluída com Python. O arquivo mostrado no primeiro bloco é entrada de exemplo; o segundo é o programa.</p>
+
+  <h3>Arquivo de dados: <code>relatorio.json</code></h3>
+  <pre><code>{
+  "projeto": "Cartografo",
+  "etapas": ["API", "avaliacao"]
+}</code></pre>
+
+  <h3>Programa: <code>ler_resumo.py</code></h3>
+  <pre><code>import json
+import sys
+from pathlib import Path
+from typing import Any
+
+
+def carregar_objeto(caminho: Path) -&gt; dict[str, Any]:
+    """Lê UTF-8 e exige um objeto JSON na raiz do arquivo."""
+    try:
+        valor: Any = json.loads(caminho.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as erro:
+        raise ValueError(f"não foi possível ler {caminho}: {erro}") from erro
+
+    if not isinstance(valor, dict):
+        raise ValueError("a raiz do JSON precisa ser um objeto")
+    return valor
+
+
+def texto_obrigatorio(dados: dict[str, Any], chave: str) -&gt; str:
+    """Obtém um campo textual e rejeita ausência ou conteúdo em branco."""
+    valor = dados.get(chave)
+    if not isinstance(valor, str) or not valor.strip():
+        raise ValueError(f"o campo {chave!r} precisa conter texto")
+    return valor
+
+
+def main(argumentos: list[str]) -&gt; int:
+    if len(argumentos) != 2:
+        print("uso: py -3.14 .\\ler_resumo.py .\\relatorio.json", file=sys.stderr)
+        return 2
+
+    caminho = Path(argumentos[1])
+    try:
+        dados = carregar_objeto(caminho)
+        projeto = texto_obrigatorio(dados, "projeto")
+        etapas = dados.get("etapas", [])
+        if not isinstance(etapas, list) or not all(isinstance(item, str) for item in etapas):
+            raise ValueError("etapas precisa ser uma lista de textos")
+    except ValueError as erro:
+        print(f"erro: {erro}", file=sys.stderr)
+        return 2
+
+    print(f"Projeto: {projeto}")
+    for etapa in etapas:
+        print(f"- {etapa}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))</code></pre>
+
+  <p>Salve esses dois conteúdos em arquivos com os nomes mostrados, na mesma pasta. A execução abaixo é apenas um exemplo local; este curso não precisa criar um serviço, usar rede ou instalar uma biblioteca adicional para entendê-lo.</p>
+  <pre><code>Get-Location
+py -3.14 .\ler_resumo.py .\relatorio.json</code></pre>
+  <div class="result"><strong>Saída esperada:</strong>
+    <pre><code>Projeto: Cartografo
+- API
+- avaliacao</code></pre>
+    O programa retorna código 0. O nome sai do objeto JSON; cada item de <code>etapas</code> vira uma linha.
+  </div>
+  <p>Se você omitir o caminho ou enviar um JSON inválido, a mensagem vai para <code>stderr</code> e o programa retorna 2. Um valor diferente de zero não é uma prova automática de defeito: aqui ele indica que a entrada não cumpriu o contrato declarado pelo programa.</p>
+</section>
+
+<section id="pecas">
+  <h2>As peças do exemplo</h2>
+  <table>
+    <thead><tr><th>Forma</th><th>Significado aqui</th></tr></thead>
+    <tbody>
+      <tr><td><code>caminho = Path(...)</code></td><td>Uma variável chamada <code>caminho</code> passa a referenciar um objeto que representa a localização de um arquivo. Criar o objeto não lê nem altera o arquivo.</td></tr>
+      <tr><td><code>def carregar_objeto(...):</code></td><td>Define uma função: um bloco nomeado que pode receber valores, executar passos e devolver um resultado. <code>-&gt; dict[str, Any]</code> anota o tipo esperado do retorno; Python não valida essa anotação automaticamente em tempo de execução.</td></tr>
+      <tr><td><code>dados.get("projeto")</code></td><td>Consulta um campo do dicionário. Um <code>dict</code> (dicionário) guarda pares chave/valor, como <code>"projeto"</code> → <code>"Cartografo"</code>. <code>get</code> devolve <code>None</code> se a chave não existir, em vez de lançar <code>KeyError</code>.</td></tr>
+      <tr><td><code>list[str]</code></td><td>Uma lista de textos. Colchetes também acessam posições, mas aqui definem um tipo composto: sequência ordenada, possivelmente vazia. Em JSON, o array correspondente vira uma lista Python.</td></tr>
+      <tr><td><code>if ...:</code> e indentação</td><td>Executa o bloco recuado somente quando a condição é verdadeira. Em Python, a indentação faz parte da estrutura do programa.</td></tr>
+      <tr><td><code>return 2</code></td><td>Devolve um valor à função que chamou <code>main</code>. O código final só muda porque <code>raise SystemExit(...)</code> passa esse valor ao processo Python.</td></tr>
+      <tr><td><code>for etapa in etapas:</code></td><td>Percorre os textos em ordem, atribuindo um item por vez à variável <code>etapa</code>. Não precisa consultar índices para ler uma lista.</td></tr>
+      <tr><td><code>Path(argumentos[1])</code></td><td>O índice 1 seleciona o primeiro argumento depois do nome do programa. Índices começam em zero: <code>argumentos[0]</code> é o próprio nome/caminho do script.</td></tr>
+    </tbody>
+  </table>
+  <p>Os comentários entre aspas logo abaixo de uma função são uma <strong>docstring</strong>: texto de documentação associado ao bloco. Os parênteses chamam uma função; argumentos são os valores enviados. Por exemplo, <code>texto_obrigatorio(dados, "projeto")</code> envia dois argumentos.</p>
+  <p><code>Any</code> indica que o resultado vindo do parser JSON ainda pode ter vários tipos. A validação com <code>isinstance</code> confere em tempo de execução que um valor realmente é um dicionário, lista ou texto. Type hints ajudam ferramentas de análise e pessoas leitoras; sozinhos, não rejeitam dados ruins.</p>
+</section>
+
+<section id="json">
+  <h2>JSON: texto com estrutura</h2>
+  <p>JSON é um formato textual para representar objetos e listas que sistemas diferentes conseguem trocar. No exemplo, chaves são textos e valores são texto ou lista. Dentro de um arquivo JSON:</p>
+  <ul>
+    <li>texto usa aspas duplas: <code>"projeto"</code>;</li>
+    <li>objetos usam chaves <code>{}</code> e arrays usam colchetes <code>[]</code>;</li>
+    <li>os literais são <code>true</code>, <code>false</code> e <code>null</code>; em Python tornam-se <code>True</code>, <code>False</code> e <code>None</code>;</li>
+    <li>comentários e vírgula depois do último item não pertencem à sintaxe padrão JSON.</li>
+  </ul>
+  <p><code>json.loads(texto)</code> converte uma string JSON em valores Python. Objetos viram dicionários, arrays viram listas. <code>json.load(arquivo)</code> cumpre a mesma função lendo um objeto de arquivo; neste exemplo, <code>Path.read_text(encoding="utf-8")</code> lê texto primeiro e torna explícita a codificação.</p>
+  <p>O parser pode rejeitar sintaxe inválida com <code>JSONDecodeError</code>. Já um arquivo ausente ou sem permissão pode causar <code>OSError</code>; bytes que não formam o texto esperado podem causar <code>UnicodeDecodeError</code>. São problemas diferentes, por isso o programa captura e mostra um diagnóstico em vez de fingir que o arquivo estava vazio.</p>
+  <div class="caution"><strong>Limite de confiança.</strong> JSON válido significa apenas que a estrutura pode ser interpretada. Ele não prova que campos existem, que os valores têm o tipo certo ou que o conteúdo é verdadeiro. Depois de analisar sintaxe, o programa ainda verifica o contrato local.</div>
+</section>
+
+<section id="ambiente">
+  <h2>Variáveis de ambiente</h2>
+  <p>O processo pode receber pares de texto chamados <strong>variáveis de ambiente</strong>. Elas são úteis para opções externas ao código, como escolher um perfil local. O processo herda o ambiente do shell que o iniciou; uma variável definida somente na janela atual não é uma configuração global do computador.</p>
+  <pre><code>$env:APP_PROFILE = "local"
+py -3.14 -c "import os; print(os.environ.get('APP_PROFILE', 'nao definido'))"</code></pre>
+  <p><code>os.environ</code> oferece essas entradas como um mapeamento parecido com dicionário. <code>get(chave, padrão)</code> lê a chave ou devolve o padrão se ela faltar. O comando <code>-c</code> pede ao interpretador que execute código curto passado como texto; a resposta esperada é <code>local</code>.</p>
+  <p>O limite importa: variáveis de ambiente não são um cofre. Podem aparecer em ferramentas de diagnóstico ou ser herdadas por processos filhos. O curso não pede que você coloque segredos no exemplo nem que altere o ambiente do sistema.</p>
+</section>
+
+<section id="git">
+  <h2>Git e snapshots</h2>
+  <p>Git registra snapshots versionados do conteúdo e permite comparar o estado atual com um commit. Um <strong>commit</strong> é um snapshot com identidade e metadados; arquivos modificados ainda não fazem parte dele. Isso deixa revisar diferenças antes de decidir se e quando registrar uma nova versão.</p>
+  <pre><code>git status --short
+git diff
+git diff --staged
+git show --stat --oneline HEAD</code></pre>
+  <ul>
+    <li><code>git status --short</code> resume arquivos modificados, preparados e ainda não rastreados.</li>
+    <li><code>git diff</code> mostra mudanças ainda fora da área de preparação.</li>
+    <li><code>git diff --staged</code> mostra o que está preparado para o próximo commit.</li>
+    <li><code>git show ... HEAD</code> resume o commit atual.</li>
+  </ul>
+  <p>Esses comandos são leitura. <code>git add</code> prepara mudanças e <code>git commit</code> cria outro snapshot; nenhum dos dois é exigido para continuar lendo um módulo. O conceito de snapshot também não substitui backup nem isola serviços externos como bancos de dados.</p>
+</section>
+
+<section id="diagnostico">
+  <h2>Diagnóstico rápido</h2>
+  <table>
+    <thead><tr><th>Sintoma</th><th>O que conferir</th></tr></thead>
+    <tbody>
+      <tr><td>“não foi possível encontrar o arquivo”</td><td>Confira a pasta mostrada por <code>Get-Location</code> e o caminho relativo enviado ao programa.</td></tr>
+      <tr><td>“uso: ...” e código 2</td><td>O programa recebeu quantidade de argumentos diferente da esperada. Inclua o caminho do JSON.</td></tr>
+      <tr><td>erro de JSON com linha/coluna</td><td>Confira aspas, vírgulas, chaves e se o arquivo está salvo como JSON, não como comentário ou texto parcial.</td></tr>
+      <tr><td>o campo <code>projeto</code> precisa conter texto</td><td>A sintaxe pode ser válida, mas a chave falta, está vazia ou contém outro tipo. Ajuste o contrato ou os dados de forma deliberada.</td></tr>
+      <tr><td>o terminal não reconhece <code>py</code></td><td>Confira se o launcher existe com <code>py -3.14 --version</code>; use o comando Python 3.14 disponível no ambiente.</td></tr>
+    </tbody>
+  </table>
+  <p>Erro é uma observação sobre determinada fronteira: localizar o arquivo, interpretar sua sintaxe, validar seu conteúdo ou executar a lógica. Distinguir essas fronteiras evita trocar código quando a causa está no caminho — ou alterar dados para mascarar um contrato incorreto.</p>
+</section>
+
+<section id="retomada">
+  <h2>Como usar esta ponte</h2>
+  <p>Volte diretamente à seção que explica o termo que apareceu. Depois retome o link de M00 ou M01 no mesmo ponto. Esta página é referência opcional; não mede conhecimento, não organiza sessões, não define ritmo e não registra progresso.</p>
+</section>
+
+<section id="fontes">
+  <h2>Referências oficiais</h2>
+  <ul>
+    <li><a href="https://docs.python.org/3.14/library/sys.html#sys.argv">Python 3.14 · <code>sys.argv</code></a> — argumentos entregues ao programa.</li>
+    <li><a href="https://docs.python.org/3.14/library/json.html">Python 3.14 · <code>json</code></a> — conversão e erro de sintaxe JSON.</li>
+    <li><a href="https://docs.python.org/3.14/library/pathlib.html#reading-and-writing-files">Python 3.14 · <code>pathlib</code></a> — representação de caminhos e leitura de texto.</li>
+    <li><a href="https://docs.python.org/3.14/library/os.html#os.environ">Python 3.14 · <code>os.environ</code></a> — ambiente do processo.</li>
+    <li><a href="https://git-scm.com/docs/git-status">Git · <code>status</code></a> e <a href="https://git-scm.com/docs/git-diff">Git · <code>diff</code></a> — estado e comparação de mudanças.</li>
+  </ul>
+  <p>Referências consultadas em 25/09/2026. O conteúdo ensina conceitos estáveis e não depende de API de fornecedor.</p>
+</section>
+</main>
+</body>
+</html>

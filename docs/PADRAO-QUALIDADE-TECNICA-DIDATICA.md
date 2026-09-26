@@ -1,6 +1,6 @@
 # Padrão composto de qualidade técnica e didática
 
-**Versão:** 1.0 · **Data-base:** 15/08/2026 · **Aplicação:** todos os módulos e laboratórios
+**Versão:** 1.1 · **Atualizado em:** 12/09/2026 · **Aplicação:** todos os módulos e laboratórios
 
 ## 1. Autoridade
 
@@ -42,31 +42,48 @@ Requisitos adicionais:
 Cada bloco deve permitir estudo independente e retomada após pausa. A sequência recomendada é:
 
 1. **orientação:** o que será aprendido, pré-requisitos e saída observável;
-2. **ativação curta:** recuperar conhecimentos anteriores necessários;
+2. **contexto disponível:** explicar ou vincular os conhecimentos anteriores necessários, sem questionário de entrada;
 3. **modelo mental:** explicar o porquê antes da API ou comando;
 4. **exemplo trabalhado:** solução completa, raciocínio e resultado real;
 5. **contraste:** alternativa, anti-padrão ou caso quase correto;
-6. **prática guiada:** executar/modificar com checkpoints e diagnóstico;
-7. **prática independente:** tarefa nova com oráculo, sem solução antecipada;
-8. **recuperação e transferência:** explicar sem consulta e aplicar em contexto diferente;
-9. **fechamento:** síntese, evidência produzida e próxima retomada.
+6. **laboratório guiado no final:** montar um experimento coeso em cópia descartável, com procedimento completo, checkpoints de observação e diagnóstico;
+7. **checkpoint separado:** depois do laboratório, avaliar recuperação, decisão, diagnóstico e transferência sem consulta;
+8. **fechamento:** síntese, evidência produzida e próxima retomada.
+
+### 3.5 Contrato de laboratório guiado
+
+O laboratório é a continuação da explicação, não uma prova interrompendo cada bloco. Os exemplos no corpo do HTML podem mostrar mecanismo, contraste ou rastreamento de execução. O roteiro manual fica reunido na seção final `Laboratório guiado MXX`, acessível diretamente; essa posição não impõe a ordem ou duração de cada sessão.
+
+O roteiro obrigatório contém, em ordem: resultado observável e limite; pré-requisitos; criação de cópia de trabalho descartável; mapa dos arquivos; passos cumulativos com **por que → copie → execute → observe → diagnostique**; validação técnica; limpeza segura; referência dos arquivos finais. A cópia nasce em diretório temporário pertencente ao laboratório e não pode limpar paths fornecidos pelo usuário.
+
+Não há exercício avaliativo dentro da prática. Um caso negativo é executado para tornar uma fronteira visível e já traz o resultado esperado. Lint, tipagem e testes funcionam como oráculos do software; o checkpoint posterior, não o laboratório, mede a competência do aluno. O código de referência permanece versionado em `lab/`, e cada bloco copiável do guia precisa corresponder a ele ou ser identificado como pseudocódigo.
 
 ### 3.1 Carga cognitiva e expertise
 
 - Não assumir conhecimento ainda não ensinado; introduzir sigla, ferramenta e sintaxe no ponto de uso.
-- Não reensinar fundamentos que o aluno já domina; usar ponte breve e focal.
+- Declarar pré-requisitos e oferecer links para sua explicação. Não presumir conhecimentos pelo cargo ou pela stack de origem.
 - Integrar explicação e código próximos para evitar atenção dividida.
 - Começar com exemplo trabalhado e retirar suporte progressivamente.
 - Quebrar complexidade por dependências conceituais, não por quantidade arbitrária de texto.
-- Explicitar diferenças Python/.NET somente quando evitarem transferência incorreta.
+- Ensinar em Python, sem tabelas de tradução ou analogias recorrentes com outra stack. Interoperabilidade, quando for o assunto, exige contratos ensinados antes da comparação.
 
 ### 3.2 Fixação e avaliação
 
-- Recuperação ativa deve ocorrer sem consulta antes de releitura extensa.
+- Recuperação ativa e revisão espaçada são recursos disponíveis, sem duração, frequência ou execução obrigatórias durante o estudo.
 - Exercícios devem variar contexto e intercalar competências já estudadas.
 - Cada erro relevante entra em revisão espaçada quando houver estudo real; produção editorial não altera `PROGRESSO.md`.
 - Checkpoint mede explicação, decisão, execução, diagnóstico e transferência; múltipla escolha isolada não aprova competência prática.
 - A avaliação informa critérios e oráculos antecipadamente, mas não entrega a solução da tarefa independente.
+- O checkpoint mantém rigor para registrar domínio; não bloqueia navegação nem exige que toda pessoa estude do mesmo modo. Se solicitado, a ajuda pode entregar solução diretamente sem exigir tentativas ou uma escada de pistas.
+
+### 3.6 Ritmo livre e retomada
+
+- Bloco é unidade editorial, não sessão. Carga horária é estimativa de escopo; não usar relógios de estudo, contagem regressiva, quotas ou prazo de conclusão.
+- Cada seção começa com o problema e termina num ponto reconhecível. Links estáveis permitem continuar dali, mesmo após uma sessão curta.
+- O percurso principal contém mecanismo, decisão, exemplo e limite. Detalhes extensos de consulta ficam identificados como referência, sem esconder conceitos necessários à compreensão.
+- Cada etapa prática declara estado inicial, arquivo, resultado, diagnóstico e estado para retomar. Recursos em execução precisam de encerramento seguro e reinício documentados.
+- Diário, commit, autoavaliação, leitura em voz alta e registro de tempo são opcionais. Nenhum deles condiciona o acesso ao conteúdo.
+- Quando houver feedback espontâneo ou solicitado sobre o material, usar dúvidas, dificuldade de retomada e desempenho observado para melhorar a explicação. Não inventar ganho de aprendizagem nem instalar coleta silenciosa.
 
 ### 3.3 Contrato de voz editorial e contexto técnico
 
@@ -101,6 +118,7 @@ Relatórios de comunidades, pesquisas com desenvolvedores, dados públicos de ec
 O HTML precisa funcionar simultaneamente como aula e consulta:
 
 - sumário com links profundos estáveis para bloco e subseção;
+- prontidão visível: distinguir conteúdo verificado, lote parcial e legado em revisão, com link para a evidência;
 - títulos pesquisáveis, glossário local e referências cruzadas;
 - exemplos completos ligados ao repositório/lab e ao commit/evidência aplicável;
 - tabelas de referência somente quando ajudarem decisão ou consulta;
@@ -136,6 +154,7 @@ Essas fontes orientam decisões didáticas; não justificam percentuais universa
 Antes de marcar um bloco como produzido:
 
 - [ ] pré-requisitos, objetivos e saída observável estão explícitos;
+- [ ] a explicação independe de .NET ou outra stack e o material permite pausa sem ritual obrigatório;
 - [ ] conceitos e termos novos são ensinados antes do uso;
 - [ ] cada conceito novo apresenta situação, definição, mecanismo, decisão/limite e observação proporcional ao escopo;
 - [ ] a voz alterna ritmo sem virar texto telegráfico, e não usa conectivos vazios ou clichês de fechamento;
@@ -143,8 +162,10 @@ Antes de marcar um bloco como produzido:
 - [ ] existe exemplo completo executável ou justificativa de não aplicabilidade;
 - [ ] o resultado publicado veio de execução ou está rotulado como variável;
 - [ ] há contraste/anti-padrão e diagnóstico de falha relevante;
-- [ ] prática guiada e tarefa independente possuem oráculos distintos;
-- [ ] recuperação/transferência avaliam algo além de repetição do exemplo;
+- [ ] exemplos conceituais não exigem execução durante a leitura; a prática manual aparece somente no laboratório final;
+- [ ] laboratório usa cópia de trabalho descartável, passos cumulativos, resultado esperado e diagnóstico sem avaliação do aluno;
+- [ ] código copiável corresponde ao artefato executável ou está rotulado como pseudocódigo;
+- [ ] checkpoint posterior avalia recuperação/transferência além de repetição do exemplo;
 - [ ] claims possuem fonte proporcional e adapters não viram fundamentos;
 - [ ] links profundos, mobile, teclado, acessibilidade e impressão foram verificados;
 - [ ] rastreabilidade e status foram atualizados sem tocar o diário do aluno.
@@ -160,3 +181,15 @@ Ao encontrar uma abordagem melhor:
 5. abrir backlog explícito para módulos anteriores afetados.
 
 “Ficar parecido com o M00” nunca é critério suficiente de aceite.
+
+## 9. Fluxo de implementação e manutenção documental
+
+1. Ler os documentos indicados em `AGENTS.md`, a especificação e a rastreabilidade em escopo; consultar o status para escolher a unidade ativa.
+2. Construir o exemplo/laboratório junto com a explicação. Executar os oráculos antes de publicar saídas; um texto completo com prática ainda inexistente permanece parcial.
+3. Revisar dependências conceituais, repetição, exemplos trabalhados, diagnóstico e transferência. Não usar contagem de palavras ou quantidade de caixas como critério de aprovação.
+4. Verificar links/estrutura com `tools/check_course.py`, correspondência do código copiável com a referência e cobertura do checkpoint. Executar gates técnicos do módulo e revisar visualmente desktop, 390 px e impressão quando houver mudança de apresentação.
+5. Atualizar rastreabilidade, matriz e status na mesma mudança. Se uma alteração invalidar a revisão anterior, registrar revalidação pendente sem apagar a evidência histórica.
+
+`CLAUDE.md` contém regras permanentes; este padrão contém a régua e o fluxo; `CURRICULO.md` contém escopo; `STATUS-IMPLEMENTACAO-CURSO.md` contém a única fila operacional; especificações e rastreabilidade contêm os detalhes locais. Auditorias guardam achados/evidências datados, não prioridades concorrentes. Uma fonte descoberta durante a produção entra na especificação do módulo correspondente.
+
+Remover documento redundante ou fora do escopo somente após identificar seus consumidores, consolidar decisões ainda válidas e corrigir links. Não apagar evidência, fixtures, ADRs ou trabalho do aluno para reduzir a contagem de arquivos. O histórico de estudo não é migrado por uma limpeza editorial.

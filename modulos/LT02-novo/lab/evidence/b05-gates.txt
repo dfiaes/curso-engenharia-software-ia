@@ -1,0 +1,71 @@
+LT02-B05-L — evidencia de gates (folha B05-L, bloco B05)
+Data (UTC): 2026-09-20 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir: modulos/LT02-novo/lab/ · HTML/spec/trace/STATUS/PROGRESSO intocados.
+B01 intacto (18 passed, 1 skipped BLOCKED); B02 intacto (23 passed);
+B03 intacto (11 passed); B04 intacto (8 passed).
+
+COMANDOS (tails reais)
+- uv sync → "Resolved 13 packages in 13ms" / "Checked 11 packages in 0.32ms"
+- uv run ruff check . → 2 erros (ver DIVERGENCIAS); sem ignores.
+- uv run ruff format --check . → "4 files would be reformatted,
+  37 files already formatted" (ver DIVERGENCIAS); sem ignores.
+- uv run mypy → "Success: no issues found in 40 source files"
+  (mypy 1.20.2 strict; inclui os 4 modulos B05 + tests).
+- uv run pytest → "70 passed, 1 skipped in 0.10s" (B01: 18 + 1 skip;
+  B02: 23; B03: 11; B04: 8; B05: 10; 3 execucoes seguidas estaveis)
+
+NUMEROS MEDIDOS (exemplo variavel; semente SEED_B05=20260818)
+- AT-040 (conta orcamento-X, base 100, +50/+50): sequencia soma 200 v2;
+  entrelacado fraco perde uma soma (150 != 200, mesma versao 0 lida 2x);
+  forte aborta com "versao superada para 'orcamento-X'"; releitura
+  converge a 200.
+- AT-041 (atraso_versoes=2, 4 publicacoes): replica serve v2/payload-v2,
+  primario em v4; exigir v4 levanta "replica em v2 exige ao menos v4";
+  exigir v2 (fronteira exata) serve.
+- AT-042 (job-9="reserva-confirmada-v1", job-10): seqs (1,2,3-excluir);
+  restaurar_ate(2) devolve 2 chaves em destino isolado; query confirma
+  job-9 com valor anterior; origem intacta (ler_em ate 3 = None).
+- AT-043 (origem 2 escritas, ponto 2): manifesto linhas 2, checksum
+  sha256 64 hex; verificar ok; restaurar reconstrói 2; base com linha
+  extra e manifesto adulterado (linhas 99) levantam BackupInvalido
+  "diverge do manifesto"; alvo do restore invalido ausente no disco.
+
+DIVERGENCIAS DO VERBATIM (contratos byte-identicos; sem ignores)
+- isolamento_niveis.py, replica_atrasada.py, pitr_journal.py,
+  backup_verificado.py: IDENTICOS aos <pre> 15–18 da secao B05 (indices
+  14–17 do HTML, apos html.unescape). 4/4 byte-identicos.
+- ruff 0.16.8 acusa 2 erros DENTRO do verbatim congelado (nao editado):
+  F841 backup_verificado.py:81 (`chaves` lida e nao usada em
+  `restaurar`); SIM108 pitr_journal.py:75 (`if/excluir/else` em
+  `ler_em` em vez de ternario). Sem ignores no lab.
+- ruff format acusa 4 arquivos verbatim nao-formatados (hunks em
+  backup_verificado.py:38, isolamento_niveis.py:49, pitr_journal.py:69,
+  replica_atrasada.py:51 — quebras de string que o formatador juntaria).
+  Arquivos proprios da folha: 100% formatados. Sem ignores.
+- mypy strict 1.20.2: limpo (40 arquivos, zero erros) — sem ressalva aqui.
+- Escopo (nao e edicao de modulo): pyproject `tool.mypy.files` estendido
+  aditivamente com os 4 modulos (`uv run mypy` puro cobre B01–B05).
+- EMENDA PEDIDA NO HTML (B05, referencias 1–4): remover a leitura nao
+  usada em `BackupVerificado.restaurar` (ou prefixar `_chaves`), adotar o
+  ternario em `JournalPitr.ler_em`, e aplicar `ruff format` aos 4 blocos.
+  Contrato, testes e numeros inalterados.
+
+LIMITES
+- So stdlib nos modulos (sqlite3, dataclasses, hashlib); harness usa
+  tmp_path e inteiros de sequencia. Nada de rede/Docker/broker; sem
+  relogio de parede, sem sleep; lag em versoes, ponto em sequencia.
+- SQLite e padrao local rotulado nos 4 contratos; PostgreSQL real (niveis
+  do servidor, WAL archive, replicacao fisica) = trilha BLOCKED.
+- Replica nao e backup: exclusao valida replicaria; PITR/restore ocorrem
+  em instancia isolada sem tocar a origem; backup invalido falha visivel
+  sem promover evidencia parcial.
+- Numeros sao exemplo variavel com semente/amostra declaradas; HA mantem
+  no ar, DR (backup+PITR) reconstroi — nenhum teste de HA substitui drill.
+
+GATE CANDIDATO
+- LT02-B05-L CANDIDATO a compor G2 (lab) COM RESSALVA: 4 contratos
+  byte-identicos + pyproject (3.14/uv/ruff/mypy strict/pytest strict) +
+  4 oraculos (AT-040/041/042/043, 10 testes) + suite inteira verde
+  (70 passed, 1 skipped BLOCKED herdado do B01), PENDENTE de emenda
+  minima no HTML (F841, SIM108, format nos 4 <pre> B05) ou aceite do
+  orquestrador. Promocao pelo orquestrador.

@@ -1,0 +1,75 @@
+M11-B04-L — evidência de execução real dos gates (orquestrador, 14/09/2026)
+Construção DIRETA pelo orquestrador (Task com rate limit; escritor único,
+ownership lab/, sem conflito). Pré-sondas medidas antes dos testes;
+suite re-executada verbatim. Números "medido" valem para este ambiente.
+
+AMBIENTE
+  Python 3.14.7 · torch 2.9.1 (cuda False) · ruff 0.16.7 · mypy 1.20.2 ·
+  pytest 9.1.1; docker ausente (PG BLOCKED); GPU ausente — CPU baseline.
+  Corpus: lab/fixtures/corpus.txt local (9957 chars, vocab 75, origem no
+  topo do arquivo); nenhuma rede/peso/HF/tiktoken.
+
+GATES
+  $ uv run ruff check .
+  All checks passed! (4 erros intermediários corrigidos com registro:
+  B905+RUF007 zip→pairwise em bpe_mini; B905 zip strict=True em teste;
+  I001 ordem de imports; ver DIVERGÊNCIAS)
+  $ uv run ruff format --check .
+  23 files already formatted (1 arquivo reformatado no caminho: bpe_mini)
+  $ uv run mypy
+  Success: no issues found in 22 source files (2 no-any-return
+  intermediários corrigidos com anotação idêntica à D1 do B03; ver
+  DIVERGÊNCIAS)
+  $ uv run pytest -q
+  45 passed, 2 warnings in 54.97s
+  (34 B01–B03 intactos e verdes + 11 B04: 3 bpe AT-012, 5 gpt AT-013/015,
+  3 treinar AT-014; warnings pré-existentes: NumPy ausente + alvo 201×200)
+
+SAÍDAS DOS CONTRATOS (execução real, CPU, semente 1337)
+  $ uv run python bpe_mini.py
+  1234 -> ['1234']
+  1235 -> ['123', '5']
+  $ uv run python gpt.py
+  (2, 8, 64) 4.110254287719727  (≈ ln(64) = 4.16, prior uniforme)
+  $ uv run python treinar.py  (treino normal, 600 passos)
+  passo 0 | treino 4.421 | valid 4.269
+  passo 200 | treino 2.107 | valid 1.940
+  passo 400 | treino 1.290 | valid 1.588
+  passo 600 | treino 1.141 | valid 1.674
+  (valid caiu até ~1.59 e voltou a subir no fim: overfitting nascente
+  visível até no treino normal)
+  $ demo_overfitting (prefixo 2000 chars, 2400 passos)
+  4.374→0.091 no treino; valid 4.161→1.873→1.319→1.170→1.455→1.141→
+  1.258→1.314→1.124→1.596→1.310→1.381→1.457: treino desce monótono,
+  valid oscila e estaciona ~13× acima — GAP declara overfitting
+  (a valid da demo é MENOR que a do normal: corpus menor é mais fácil;
+  por isso o oráculo usa gap, não valor absoluto)
+
+NÚMEROS QUE OS TESTES FIXAM (margem folgada)
+  AT-012: (['1234'], ['123','5']), determinismo, sem-tabela=4 chars.
+  AT-013: duas gerações T=1.0 com mesma semente DIVERGEM; greedy coincide.
+  AT-015: causal diff-em-t 0.0; ablação sem máscara diff-em-t 0.126
+    (limiar ajustado de 0.5 para 0.05 COM REGISTRO: 4 camadas diluem a
+    perturbação; a discriminação carrega no par 0.0 vs ≠0.0 + allclose).
+  AT-014: normal treino < 2.5 (med 1.141), valid < 3.0 (med 1.674);
+    demo treino < 0.5 (med 0.091), valid > 0.5 e > treino (med 1.457).
+
+DIVERGÊNCIAS (contrato HTML B04 → lab; orquestrador decide e emenda)
+  D1. pairwise: `zip(p, p[1:])` → `itertools.pairwise(p)` (B905+RUF007);
+    idêntico para pares sucessivos. HTML emendado.
+  D2. `ref: list[str] = []` em segmentar (strict); `valor: float` em
+    avaliar; `saida: torch.Tensor` em MLP.forward (no-any-return, mesma
+    classe da D1 do B03). Comportamento idêntico. HTML emendado.
+  D3. Formatação: CORPUS_TOY quebrado em 7 linhas (E501), assinatura
+    treinar_bpe e slice `[:, -ctx :]` no estilo do format. HTML emendado.
+  D4. `zip(..., strict=True)` e threshold 0.05 SÓ em teste (fora do
+    contrato; sem emenda no HTML).
+
+TEMPO: suite B04 ≈ 52s (treino 11.7s + demo 42.1s); total 54.97s.
+Contrato PASSOS/demo mantidos — sem redução silenciosa.
+
+CLEANUP: nenhum resíduo em /tmp; caches só no lab (gitignore cobre).
+
+LIMITE: PG BLOCKED sem Docker; perdas/tempos valem p/ CPU + torch 2.9.1
++ semente 1337; val da demo < val do normal (corpus menor) — oráculo por
+gap, documentado; tiktoken/HF seguem trilha opcional não exercitada.

@@ -1,0 +1,49 @@
+M11-B05-L — evidência de execução real dos gates (orquestrador, 14/09/2026)
+Construção DIRETA (stdlib, contratos fechados do B05-C). Números "medido"
+valem para este ambiente. Suite total com B05: 58 passed em ~56s
+(treino B04 domina; B05 sozinho < 0.1s).
+
+AMBIENTE
+  Python 3.14.7 · ruff 0.16.7 · mypy 1.20.2 · pytest 9.1.1; sem torch,
+  sem modelo, sem rede, sem Docker/GPU neste lote.
+
+GATES
+  $ uv run ruff check .
+  All checks passed! (1 I001 intermediário: ordem de imports)
+  $ uv run ruff format --check .
+  29 files already formatted (1 quebra de linha intermediária)
+  $ uv run mypy
+  Success: no issues found in 28 source files (1 no-any-return
+  intermediário em teste: json.loads anotado)
+  $ uv run pytest -q
+  58 passed, 2 warnings in 55.71s
+  (45 B01–B04 intactos + 13 B05: 5 amostragem AT-016/017,
+  4 template AT-018, 4 abstencao AT-019)
+
+MEDIDOS (stdlib, LOGITS_EXEMPLO de 7 valores)
+  T=0.2: top1 0.817, H 0.476 | T=0.7: 0.562, 0.957
+  T=1.0: 0.481, 1.224 | T=1.5: 0.387, 1.521
+  ordem [0..6] preservada nos 4 T; top-k/top-p renormalizam a 1.0;
+  greedy one-hot no índice 0; T<=0 vira greedy.
+  (Legado dizia H≈0.7 em T=0.2 e top1≈0.35/H≈1.7 em T=1.5: exemplo
+  variável, nunca evidência; o medido aqui difere e está registrado.)
+  template: render com 3 im_start/2 im_end fecha em assistant;
+  puro→base/base-sem-template; próprio→ok;
+  próprio+estranho→template-errado (2ª família via monkeypatch).
+  rubrica: honesto 3.5 (3×0.5+2×1.0) > chutador -5.0 (5×-1.0).
+
+CORREÇÕES HONESTAS COM REGISTRO
+  1. Teste honesto usava "não está no contexto" acentuado: o conjunto
+     do contrato ("nao esta no contexto" sem acento) NÃO o contém e
+     pontuou -1.0 (total 2.0). Normalização do contrato é minúscula+
+     espaço SÓ — fronteira documentada no teste; resposta honesta usa
+     a forma do conjunto. Sem emenda no contrato.
+  2. template-errado exigiu texto COM marcador próprio + estranho
+     (sem marcador próprio, a resposta correta é base-sem-template).
+  Verbatim dos 3 módulos + fixture: zero divergência.
+
+CLEANUP: nenhum resíduo em /tmp.
+
+LIMITE: T=0/greedy local coincide; determinismo bit a bit em API não é
+executável aqui (batching/empates/versão). Cross-family real com
+servidores pertence a B07/B08. PG BLOCKED sem Docker (inalterado).

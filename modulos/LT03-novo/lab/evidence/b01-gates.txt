@@ -1,0 +1,49 @@
+LT03-B01-L — evidencia de gates (folha B01-L, bloco B01)
+Data (UTC): 2026-09-21 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir novo: modulos/LT03-novo/lab/ · HTML/spec/trace/STATUS/PROGRESSO intocados.
+
+COMANDOS (tails reais)
+- uv sync → "Checked 11 packages" (mypy 1.20.2, pytest 9.1.1, ruff 0.16.8); venv 3.14.7.
+- uv run ruff check . → "All checks passed!"
+- uv run ruff format --check . → "6 files already formatted"
+- uv run mypy → "Success: no issues found in 5 source files"
+- uv run pytest → "14 passed in 0.56s" (at001:8, at002:3, at003:3; 0 skip nesta plataforma)
+
+NUMEROS MEDIDOS (exemplo variavel)
+- relatorio(aprovado: slim+digest+appuser) → aprovada True, nao_root True,
+  digest_pinado True, base_minima True, expoe_segredo False
+- drenar misto (breve 0,05 s + longa 30 s, prazo 0,5 s) → concluidas 1.0,
+  canceladas 1.0, relogio_s ~0.50 (< 2x prazo), codigo_saida 0.0
+- drenar breves (2x 0,05 s, prazo 0,5 s) → concluidas 2.0, canceladas 0.0,
+  relogio < 2x prazo; trafego novo apos sinal recusado com RuntimeError
+- Amostras fixas: AT-001 texto (sem tempo); AT-002 breve 0,05 s / longa 30 s /
+  prazo 0,5 s / margem 2x; AT-003 semente 20260814, N = 3 servicos em memoria.
+
+DIVERGENCIAS DO VERBATIM
+- Nenhuma: validar_dockerfile.py (83 linhas) e drenagem_grace.py (69 linhas)
+  sao byte-identicos aos 2 <pre> executaveis da secao B01 do LT03.html
+  (conferencia por diff programatico apos html.unescape, com newline final).
+- Sem ignores/noqa e sem overrides: ruff (E,F,I,B,UP,SIM,RUF,ASYNC, linha 100),
+  mypy strict e pytest strict passam sem supressao. O teste de handlers nao
+  inspeciona tabela privada do loop (B009/attr-defined evitados por desenho,
+  nao por ignore): instala, confirma sem erro e remove em finally.
+
+LIMITES
+- Sem Docker/rede em modulos e testes (stdlib: re; asyncio, signal, time).
+  Build/push/run, inspecao de manifest/camadas, execucao pelo digest, tamanho
+  e cold start = trilha externa BLOCKED com registro onde Docker ausente.
+- Base minima e heuristica local (nome da variante); tamanho real so na trilha
+  externa. Digest pinado = presenca de "@sha256:" na base final.
+- Sinais com semantica POSIX: instalar_handlers registra SIGTERM/SIGINT via
+  add_signal_handler; SIGKILL nao passa por handler (contrato/documentacao).
+  Em win32 o teste de handlers faz skip com BLOCKED registrado.
+- Tarefas em curso precisam ter cruzado o gate de entrada antes do sinal
+  (sleep(0)x2 no teste); trabalho criado apos fechar_entrada e recusado por
+  desenho — cada aceita apos o sinal seria vitima do SIGKILL.
+- Nenhum sinal real enviado ao processo de teste; timeline publicada via
+  time.monotonic com margem 2x contra flake.
+
+GATE CANDIDATO
+- LT03-B01-L APTO a G1 (lab): 2 contratos verbatim + pyproject (3.14/uv/ruff
+  100 E,F,I,B,UP,SIM,RUF,ASYNC/mypy strict/pytest strict) + README + 3 oraculos
+  (AT-001/002/003) + suite verde integral (14/14) nesta plataforma POSIX.

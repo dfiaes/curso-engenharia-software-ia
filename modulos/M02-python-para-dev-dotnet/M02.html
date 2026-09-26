@@ -29,13 +29,21 @@ figure{margin:28px 0;text-align:center;overflow-x:auto}figcaption{font-size:.9re
 .kbd{font:.8rem var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--card)}.step .n{display:inline-block;background:var(--teal);color:#fff;font-weight:700;font-size:.8rem;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}.step>p:last-child{margin:14px -4px 0;padding:12px 14px;border-radius:8px;border-left:5px solid var(--green);background:#f0f8ec}.small{font-size:.9rem;color:var(--muted)}
 @media(max-width:760px){main{padding:18px 14px 60px}header{padding:24px 20px}nav ol{columns:1}header,nav,section,.bloco,.box,.step,.practice,.expected,.danger,.bridge,pre{min-width:0;max-width:100%}table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}.clock,pre{overflow-x:auto}:not(pre)>code{overflow-wrap:anywhere;word-break:break-word}p,li,td,th{overflow-wrap:anywhere}}
 @media print{body{background:#fff;font-size:11pt}main{max-width:none;padding:0}header,.practice,.expected,.danger,.bridge,.box,.step,figure,pre,table{break-inside:avoid}a{color:inherit}h2{break-before:page}}
+
+/* Navegação de leitura e retomada, revisão 2026-09-12. */
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
 </style>
 </head>
 <body><main>
 <header>
 <div class="meta"><span class="badge">MÓDULO 02</span> · 8 blocos · 16 horas · pré-requisito: M01 · versão verificada 15/08/2026</div>
 <h1>M02 · Python 3.14 para engenharia profissional</h1>
-<p class="lead">A meta não é traduzir C# para outra sintaxe. Você vai entender o runtime, os contratos e o sistema de execução suficientes para construir, empacotar, testar, medir e diagnosticar software Python que um time sênior consiga manter.</p>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Baseline técnico verificado em agosto. Texto e checkpoint ajustados em setembro; revalidação editorial G6 pendente. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário ou o link de uma seção para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
+<p class="lead">Você vai entender o runtime, os contratos e o sistema de execução suficientes para construir, empacotar, testar, medir e diagnosticar software Python que um time sênior consiga manter.</p>
 <p><strong>Saída:</strong> um <code>csv-cleaner</code> instalável por wheel, tipado, validado, concorrente e testado; acompanhado de evidência reproduzível, contrato portátil a verificar em Windows/Linux e núcleo de domínio reutilizável pelo Capstone.</p>
 </header>
 
@@ -49,40 +57,26 @@ figure{margin:28px 0;text-align:center;overflow-x:auto}figcaption{font-size:.9re
 <li><a href="#b7">Idiomas e operabilidade</a></li>
 <li><a href="#b8">Testes e entrega</a></li>
 <li><a href="#diagnostico">Diagnóstico rápido</a></li>
+<li><a href="#lab">Laboratório guiado M02</a></li>
 <li><a href="#checkpoint">Checkpoint</a></li>
 <li><a href="#fontes">Fontes e atualização</a></li>
 </ol></nav>
 
 <section>
-<h3>Antes de começar: o contrato pedagógico</h3>
+<h3 id="sec-antes-de-comecar-o-contrato-pedagogico">Antes de começar: o contrato pedagógico <a class="section-link" href="#sec-antes-de-comecar-o-contrato-pedagogico" aria-label="Link para esta seção">#</a></h3>
 <p>Cada assunto será tratado em três níveis: <strong>invariante</strong> da engenharia, <strong>padrão</strong> da linguagem/ecossistema e <strong>adapter</strong> escolhido no laboratório. <code>uv</code>, mypy, Pydantic e pytest são ferramentas; Python, PyPA e a typing specification definem contratos mais amplos.</p>
-<div class="bridge"><strong>Ponte .NET.</strong> A comparação com C# serve para localizar um conceito conhecido. Ela deixa de valer quando runtime, modelo de objetos, packaging, typing ou concorrência possuem semântica diferente. Python é a implementação canônica de todas as práticas.</div>
+<div class="box"><strong>Pré-requisitos e contexto.</strong> O módulo usa terminal, Git básico e os contratos apresentados em M00/M01. A semântica de Python é explicada aqui: não é necessário conhecer outra linguagem para acompanhar as decisões.</div>
 <div class="danger"><strong>Regra de evidência.</strong> Nenhuma previsão como “40× mais rápido” ou “18 testes passam” conta como resultado. Você executará localmente, registrará ambiente e distribuição das medições e provará o oráculo com falha injetada.</div>
 </section>
 <!-- ============================================ BLOCO 1 -->
 <section id="b1">
 <h2>Bloco 1 · <code>uv</code> e o ecossistema: projeto, dependências, versões</h2>
-<p class="clock">00:00–00:25 padrões e ferramentas · 00:25–01:00 anatomia do projeto · 01:00–01:35 lock/build · 01:35–02:00 instalação limpa</p>
 
-<h3>1.1 Padrão Python e ferramenta escolhida não são a mesma coisa</h3>
-<p>O ecossistema Python separa responsabilidades que o SDK do .NET concentra: interpretador, ambiente, metadata, build backend, resolvedor, lock, instalador, runner e registry. <strong><code>uv</code></strong> integra muitas dessas tarefas e é a implementação escolhida pelo curso, mas não define o padrão Python. <code>pyproject.toml</code>, wheel, sdist, entry points e <code>pylock.toml</code> pertencem à camada PyPA/especificações; pip, uv, Hatch, PDM ou Poetry podem consumir subconjuntos diferentes. O raciocínio profissional identifica primeiro o contrato e só depois o comando do adapter.</p>
 
-<div class="box net">
-<span class="lbl">Tradução .NET — o mapa completo de ferramental</span>
-<table>
-<thead><tr><th>.NET</th><th>Python 2026</th><th>Observação</th></tr></thead>
-<tbody>
-<tr><td><code>dotnet</code> SDK (instala runtimes)</td><td><code>uv python install 3.14</code></td><td>uv pode usar Python existente ou baixar uma distribuição gerenciada; não é a única forma válida de instalar CPython</td></tr>
-<tr><td><code>.csproj</code></td><td><code>pyproject.toml</code></td><td>metadados + dependências + configuração de ferramentas, num TOML só</td></tr>
-<tr><td><code>packages.lock.json</code></td><td><code>uv.lock</code></td><td>versões exatas resolvidas; commita no git</td></tr>
-<tr><td><code>dotnet add package X</code></td><td><code>uv add X</code></td><td><code>--dev</code> para dependência de desenvolvimento</td></tr>
-<tr><td><code>dotnet restore</code></td><td><code>uv sync</code></td><td>recria o ambiente exato do lock</td></tr>
-<tr><td><code>dotnet run</code> / <code>dotnet test</code></td><td><code>uv run python app.py</code> / <code>uv run pytest</code></td><td><code>uv run</code> garante que roda DENTRO do ambiente do projeto</td></tr>
-<tr><td>NuGet.org</td><td>PyPI (pypi.org)</td><td>mesmo modelo de registro público</td></tr>
-<tr><td><code>dotnet tool install -g</code></td><td><code>uv tool install X</code></td><td>ferramentas globais isoladas (ex.: <code>ruff</code>)</td></tr>
-</tbody>
-</table>
-</div>
+<h3 id="sec-1-1-padrao-python-e-ferramenta-escolhida-nao-sao-a-mesma-coisa">1.1 Padrão Python e ferramenta escolhida não são a mesma coisa <a class="section-link" href="#sec-1-1-padrao-python-e-ferramenta-escolhida-nao-sao-a-mesma-coisa" aria-label="Link para esta seção">#</a></h3>
+<p>O ecossistema Python separa diferentes responsabilidades: interpretador, ambiente, metadata, build backend, resolvedor, lock, instalador, runner e registry. <strong><code>uv</code></strong> integra muitas dessas tarefas e é a implementação escolhida pelo curso, mas não define o padrão Python. <code>pyproject.toml</code>, wheel, sdist, entry points e <code>pylock.toml</code> pertencem à camada PyPA/especificações; pip, uv, Hatch, PDM ou Poetry podem consumir subconjuntos diferentes. O raciocínio profissional identifica primeiro o contrato e só depois o comando do adapter.</p>
+
+<div class="box"><span class="lbl">Referência do conceito</span><table><thead><tr><th>Responsabilidade</th><th>Artefato ou ferramenta</th><th>Função e limite</th></tr></thead><tbody><tr><td>Interpretador</td><td>CPython 3.14</td><td>Executa o programa; sua versão precisa ser conhecida.</td></tr><tr><td>Definição do projeto</td><td><code>pyproject.toml</code></td><td>Declara metadados, dependências e configuração.</td></tr><tr><td>Resolução reproduzível</td><td><code>uv.lock</code></td><td>Registra dependências resolvidas para a ferramenta utilizada.</td></tr><tr><td>Ambiente</td><td><code>uv sync --locked</code></td><td>Sincroniza o ambiente sem atualizar o lock.</td></tr><tr><td>Execução</td><td><code>uv run</code></td><td>Executa comandos no ambiente do projeto.</td></tr><tr><td>Distribuição</td><td>wheel e PyPI</td><td>Wheel é artefato instalável; PyPI é um índice de distribuições.</td></tr></tbody></table></div>
 
 <div class="box">
 <span class="lbl">Contexto · O que um venv isola — e o que ele não prova</span>
@@ -98,7 +92,7 @@ figure{margin:28px 0;text-align:center;overflow-x:auto}figcaption{font-size:.9re
 </tbody></table>
 <p>O laboratório usa uv, Ruff, mypy, Pydantic e pytest porque deixam essas decisões observáveis. Eles não são a definição de Python profissional. Trocar um adapter não elimina a necessidade de explicar o artefato entregue, a fronteira validada e a evidência produzida.</p>
 
-<h3>1.2 Anatomia de um projeto instalável</h3>
+<h3 id="sec-1-2-anatomia-de-um-projeto-instalavel">1.2 Anatomia de um projeto instalável <a class="section-link" href="#sec-1-2-anatomia-de-um-projeto-instalavel" aria-label="Link para esta seção">#</a></h3>
 <pre><code>meu-projeto/
 ├── pyproject.toml      # o .csproj: nome, versão, dependências, config das ferramentas
 ├── uv.lock             # o lock file: versões exatas (commitado)
@@ -146,28 +140,29 @@ line-length = 100                  # não em dotfiles espalhados
 strict = true                      # o curso inteiro roda assim
 </code></pre>
 
-<h3>1.3 Prática guiada · Do projeto ao wheel instalado</h3>
+<h3 id="sec-1-3-leitura-aplicada-do-projeto-ao-wheel-instalado">1.3 Leitura aplicada · Do projeto ao wheel instalado <a class="section-link" href="#sec-1-3-leitura-aplicada-do-projeto-ao-wheel-instalado" aria-label="Link para esta seção">#</a></h3>
+<p>Esta sequência descreve os estados que o laboratório final reproduz em uma cópia temporária. Leia os comandos como referência de arquitetura; não os execute nesta etapa. O roteiro em <a href="#lab">Laboratório guiado M02</a> fornece o ambiente, a ordem e os oráculos.</p>
 
-<div class="step"><span class="n">1</span><strong>Instale o uv</strong> (uma vez por máquina). Instalação altera o ambiente da máquina e baixa um script remoto; abra a documentação oficial, confira origem e versão antes de executar. Windows (PowerShell):
+<div class="box"><strong>Referência de ambiente — instalação do uv.</strong> A instalação, feita uma vez por máquina, altera o ambiente e baixa um script remoto. A documentação oficial deve informar origem e versão antes de qualquer execução. No Windows, o instalador documenta este comando:
 <pre><code>powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</code></pre>
-<p><strong>Resultado esperado:</strong> <code>uv --version</code> responde. Registre a versão real na evidência; não compare com uma versão impressa no material. Se o comando não for encontrado, valide o PATH conforme a documentação do instalador.</p></div>
+<p><strong>O que este estado prova:</strong> <code>uv --version</code> responde com a versão realmente instalada. A evidência registra esse valor; não se compara com uma versão impressa no material. PATH ausente é um problema do instalador, não do projeto.</p></div>
 
-<div class="step"><span class="n">2</span><strong>Crie o projeto e fixe o Python:</strong>
+<div class="box"><strong>Referência de projeto — package e runtime fixado.</strong> Um projeto inicial criado com uv e fixado em Python 3.14 tem esta forma:
 <pre><code>uv init csv-cleaner --package
 cd csv-cleaner
 uv python pin 3.14</code></pre>
-<p><strong>Resultado esperado:</strong> estrutura com layout <code>src</code> e <code>.python-version</code>. No laboratório do curso, ajuste intencionalmente o import package para <code>python_senior_lab</code> e o entry point para <code>csv-cleaner</code>. Registre <code>uv run python -VV</code>; a saída deve identificar uma versão 3.14 real.</p></div>
+<p><strong>O que este estado prova:</strong> há layout <code>src</code> e arquivo <code>.python-version</code>. No laboratório, o import package é <code>python_senior_lab</code> e o entry point é <code>csv-cleaner</code>; <code>uv run python -VV</code> evidencia um Python 3.14 real.</p></div>
 
-<div class="step"><span class="n">3</span><strong>Adicione dependências e observe o lock:</strong>
+<div class="box"><strong>Referência de resolução — dependências e lock.</strong> A declaração de dependências e a verificação de lock usam esta família de comandos:
 <pre><code>uv add pydantic
 uv add --dev pytest mypy ruff hypothesis
 uv lock --check</code></pre>
-<p><strong>Resultado esperado:</strong> <code>pyproject.toml</code> ganhou as dependências nos grupos certos; <code>uv.lock</code> apareceu com as versões exatas de TUDO (incluindo transitividades). Abra o lock e ache <code>pydantic-core</code> — você não pediu, veio como dependência transitiva, e está pinada. É o restore determinístico que você espera do .NET.</p></div>
+<p><strong>O que este estado prova:</strong> <code>pyproject.toml</code> declara dependências nos grupos corretos e <code>uv.lock</code> registra a resolução completa, inclusive <code>pydantic-core</code> como transitiva. O lock registra a resolução que o ambiente deve reproduzir.</p></div>
 
-<div class="step"><span class="n">4</span><strong>Prove o isolamento:</strong>
+<div class="box"><strong>Referência de isolamento — runner do projeto versus Python global.</strong> Estes dois comandos contrastam o interpretador resolvido pelo projeto com um executável escolhido pelo PATH:
 <pre><code>uv run python -c "import pydantic; print(pydantic.VERSION)"
 python -c "import pydantic"</code></pre>
-<p><strong>Resultado esperado:</strong> o primeiro registra a versão resolvida. O segundo pode falhar ou encontrar outra instalação global; justamente por isso ele não comprova o ambiente do projeto. Nos gates deste laboratório, use <code>uv run</code> e registre <code>sys.executable</code>/<code>sys.prefix</code>.</p></div>
+<p><strong>Leitura do resultado:</strong> o primeiro identifica a versão resolvida. O segundo pode falhar ou alcançar uma instalação global; por isso não prova o ambiente do projeto. Os gates usam <code>uv run</code> e registram <code>sys.executable</code>/<code>sys.prefix</code>.</p></div>
 
 <div class="box warn">
 <span class="lbl">Os erros de ambiente que você VAI cometer (todo mundo comete)</span>
@@ -179,10 +174,10 @@ python -c "import pydantic"</code></pre>
 </ul>
 </div>
 
-<div class="step"><span class="n">5</span><strong>Construa e teste a distribuição real.</strong>
+<div class="box"><strong>Referência de entrega — wheel instalado fora do checkout.</strong> O build e a instalação isolada seguem este padrão:
 <pre><code>uv build
 uv run --isolated --no-project --with ./dist/csv_cleaner-0.1.0-py3-none-any.whl csv-cleaner --help</code></pre>
-<p><strong>Resultado esperado:</strong> <code>dist/</code> contém sdist e wheel; o comando instalado responde fora do checkout. Se o teste só passa com o diretório do projeto em <code>sys.path</code>, você verificou o source tree, não o artefato entregue.</p></div>
+<p><strong>O que este estado prova:</strong> <code>dist/</code> contém sdist e wheel e o comando instalado responde fora do checkout. Se a verificação só passa com o diretório do projeto em <code>sys.path</code>, ela validou o source tree, não o artefato entregue.</p></div>
 
 <div class="box fund">
 <span class="lbl">Fundamento · Reprodutibilidade tem camadas</span>
@@ -203,9 +198,9 @@ uv run --isolated --no-project --with ./dist/csv_cleaner-0.1.0-py3-none-any.whl 
 <!-- ============================================ BLOCO 2 -->
 <section id="b2">
 <h2>Bloco 2 · Objetos, imports, recursos e exceções</h2>
-<p class="clock">00:00–00:30 nomes e objetos · 00:30–01:00 igualdade/hash · 01:00–01:25 imports · 01:25–02:00 recursos e falhas</p>
 
-<h3>2.1 Variável é nome ligado a objeto</h3>
+
+<h3 id="sec-2-1-variavel-e-nome-ligado-a-objeto">2.1 Variável é nome ligado a objeto <a class="section-link" href="#sec-2-1-variavel-e-nome-ligado-a-objeto" aria-label="Link para esta seção">#</a></h3>
 <p>Em Python, uma atribuição normalmente liga um <strong>nome</strong> a um objeto; ela não copia o objeto nem declara um slot com tipo fixo. Dois nomes podem apontar para a mesma lista, e mutar por um nome torna a mudança visível pelo outro. Reatribuir um dos nomes apenas troca seu binding.</p>
 <pre><code>original = ["a"]
 alias = original
@@ -219,7 +214,7 @@ assert alias is not original</code></pre>
 
 <div class="danger"><strong>Default mutável.</strong> Expressões default são avaliadas quando a função é definida, não a cada chamada. <code>def add(x, itens=[])</code> compartilha a mesma lista entre chamadas. Use <code>None</code> como sentinela ou factory em dataclasses/Pydantic.</div>
 
-<h3>2.2 Imutabilidade rasa não é isolamento</h3>
+<h3 id="sec-2-2-imutabilidade-rasa-nao-e-isolamento">2.2 Imutabilidade rasa não é isolamento <a class="section-link" href="#sec-2-2-imutabilidade-rasa-nao-e-isolamento" aria-label="Link para esta seção">#</a></h3>
 <pre><code>from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
@@ -231,7 +226,7 @@ b.ids.append("B")       # permitido: a LISTA interna continua mutável
 # b.ids = []             # bloqueado: o atributo não pode ser religado</code></pre>
 <p><code>frozen=True</code> impede atribuição normal aos campos; <code>slots=True</code> controla layout/atributos e pode reduzir memória. Nenhum deles produz imutabilidade profunda, atomicidade ou segurança entre threads. Se a invariante exige coleção imutável, use por exemplo <code>tuple[str, ...]</code> e teste a fronteira.</p>
 
-<h3>2.3 Import é busca, criação, execução e cache</h3>
+<h3 id="sec-2-3-import-e-busca-criacao-execucao-e-cache">2.3 Import é busca, criação, execução e cache <a class="section-link" href="#sec-2-3-import-e-busca-criacao-execucao-e-cache" aria-label="Link para esta seção">#</a></h3>
 <p>Um arquivo <code>.py</code> é módulo. Um pacote regular contém <code>__init__.py</code>, mas Python também suporta <strong>namespace packages</strong> sem esse arquivo; portanto “toda pasta precisa de <code>__init__.py</code>” é uma regra de projeto possível, não definição da linguagem. Na primeira importação, o sistema procura uma spec, cria o módulo, o coloca em <code>sys.modules</code> e executa seu corpo. Importação possui efeitos e cache.</p>
 <pre><code># errado: módulo de domínio importa CLI para reutilizar constante;
 # CLI importa domínio para executar -> ciclo parcialmente inicializado.
@@ -240,7 +235,7 @@ b.ids.append("B")       # permitido: a LISTA interna continua mutável
 from python_senior_lab.domain import SUPPORTED_CURRENCIES</code></pre>
 <p>Layout <code>src/</code> ajuda a detectar import acidental do checkout, mas só a instalação do wheel em ambiente limpo prova que metadata e arquivos distribuídos estão corretos. Não “conserte” import com <code>sys.path.append()</code>; descubra se o erro é ambiente, instalação, nome do package, ciclo ou artefato incompleto.</p>
 
-<h3>2.4 Recursos e exceções formam um contrato</h3>
+<h3 id="sec-2-4-recursos-e-excecoes-formam-um-contrato">2.4 Recursos e exceções formam um contrato <a class="section-link" href="#sec-2-4-recursos-e-excecoes-formam-um-contrato" aria-label="Link para esta seção">#</a></h3>
 <p><code>with</code> garante a chamada de saída do context manager tanto no sucesso quanto na exceção. O equivalente mental de <code>using</code> ajuda, mas Python permite que <code>__exit__</code> suprima a exceção; faça isso somente quando o contrato realmente considera a falha tratada.</p>
 <pre><code>from collections.abc import Iterator
 from contextlib import contextmanager
@@ -269,42 +264,28 @@ def load_text(path: Path) -> str:
 <!-- ============================================ BLOCO 3 -->
 <section id="b3">
 <h2>Bloco 3 · Typing gradual: hints, <code>Protocol</code>, narrowing e genéricos</h2>
-<p class="clock">00:00–00:25 sistema gradual · 00:25–01:00 vocabulário · 01:00–01:30 Protocol/genéricos · 01:30–02:00 prática e limites</p>
 
-<h3>3.1 Typing é gradual e checker é ferramenta</h3>
+
+<h3 id="sec-3-1-typing-e-gradual-e-checker-e-ferramenta">3.1 Typing é gradual e checker é ferramenta <a class="section-link" href="#sec-3-1-typing-e-gradual-e-checker-e-ferramenta" aria-label="Link para esta seção">#</a></h3>
 <p>Python permanece dinamicamente tipado. Annotations alimentam análise estática, IDEs, geração de schema e introspecção, mas não impõem tipos runtime por padrão. A <strong>typing specification</strong> define a semântica compartilhada; mypy e pyright são implementações com diagnósticos e opções que podem divergir. Este lab fixa mypy e sua configuração para tornar o gate reproduzível, sem chamar uma implementação de “compilador do Python”.</p>
 
-<div class="box net">
-<span class="lbl">Tradução .NET — onde cada verificação acontece</span>
-<table>
-<thead><tr><th>Verificação</th><th>C#</th><th>Python</th></tr></thead>
-<tbody>
-<tr><td>Tipos em "compilação"</td><td>compilador, sempre</td><td><code>mypy</code>/<code>pyright</code>, se você rodar (CI!)</td></tr>
-<tr><td>Annotations em runtime</td><td>metadata e checks do CLR/framework</td><td>annotations existem como metadata, mas Python não as impõe automaticamente</td></tr>
-<tr><td>Validação de dados externos</td><td>FluentValidation/model binding</td><td>Pydantic (bloco 4) é o adapter do laboratório; valida apenas quando chamado</td></tr>
-</tbody>
-</table>
-<p>Use a divisão como heurística, não garantia: um checker analisa o código que consegue ver segundo sua configuração; Pydantic valida somente os caminhos e regras executados. Testes, invariantes de domínio e contratos de persistência continuam necessários.</p>
-</div>
+<div class="box"><span class="lbl">Referência do conceito</span><table><thead><tr><th>Verificação</th><th>Mecanismo Python</th><th>Limite</th></tr></thead><tbody><tr><td>Compatibilidade estática</td><td>mypy ou pyright</td><td>Depende das anotações, código visível e configuração.</td></tr><tr><td>Anotações em execução</td><td>Metadados da definição</td><td>Não impõem validação automaticamente.</td></tr><tr><td>Dados externos</td><td>Pydantic no laboratório</td><td>Valida somente quando o caminho correspondente é executado.</td></tr></tbody></table><p>Testes e invariantes de domínio continuam necessários para verificar comportamento.</p></div>
 
-<h3>3.2 Vocabulário de tipos e narrowing</h3>
-<table>
-<thead><tr><th>C#</th><th>Python 3.14</th><th>Nota</th></tr></thead>
-<tbody>
-<tr><td><code>string</code>, <code>int</code>, <code>double</code>, <code>bool</code></td><td><code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code></td><td><code>int</code> tem precisão arbitrária limitada por memória; formatos externos e extensões nativas ainda têm limites; <code>decimal</code> → <code>decimal.Decimal</code></td></tr>
-<tr><td><code>List&lt;T&gt;</code>, <code>Dictionary&lt;K,V&gt;</code>, <code>HashSet&lt;T&gt;</code></td><td><code>list[T]</code>, <code>dict[K, V]</code>, <code>set[T]</code></td><td>minúsculo, colchetes; tuplas tipadas: <code>tuple[int, str]</code></td></tr>
-<tr><td><code>string?</code> / <code>Nullable&lt;T&gt;</code></td><td><code>str | None</code></td><td>o pipe é o "ou" de tipos; mypy força o check de None como o NRT do C# 8</td></tr>
-<tr><td><code>object</code></td><td><code>object</code></td><td>existe; <code>Any</code> é outra coisa — é "desliga o verificador aqui" (= <code>dynamic</code>). Em strict, quase proibido</td></tr>
-<tr><td><code>void</code></td><td><code>-> None</code></td><td>explícito em strict</td></tr>
-<tr><td><code>Func&lt;int,string&gt;</code></td><td><code>Callable[[int], str]</code></td><td>de <code>collections.abc</code></td></tr>
-<tr><td>genéricos <code>T</code></td><td><code>def primeiro[T](itens: list[T]) -> T:</code></td><td>sintaxe introduzida no 3.12; variance e inferência não são “iguais ao C#”</td></tr>
-<tr><td><code>enum</code></td><td><code>class Cor(StrEnum): AZUL = "azul"</code></td><td><code>StrEnum</code>/<code>IntEnum</code> serializam direto</td></tr>
-<tr><td><code>record Ponto(int X, int Y)</code></td><td><code>@dataclass(frozen=True, slots=True)</code></td><td>bloco 5; para dados externos, Pydantic</td></tr>
-<tr><td><code>interface</code></td><td><code>Protocol</code></td><td>a diferença conceitual mais importante — abaixo</td></tr>
-</tbody>
-</table>
+<h3 id="sec-3-2-vocabulario-de-tipos-e-narrowing">3.2 Vocabulário de tipos e narrowing <a class="section-link" href="#sec-3-2-vocabulario-de-tipos-e-narrowing" aria-label="Link para esta seção">#</a></h3>
+<table><thead><tr><th>Conceito</th><th>Python</th><th>Interpretação</th></tr></thead><tbody>
+<tr><td>Valores básicos</td><td><code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code></td><td>Texto, inteiro, ponto flutuante e booleano. Decimal exato usa <code>decimal.Decimal</code> conforme o domínio.</td></tr>
+<tr><td>Coleções</td><td><code>list[T]</code>, <code>dict[K, V]</code>, <code>set[T]</code></td><td>Sequência mutável, associação chave/valor e conjunto.</td></tr>
+<tr><td>Ausência permitida</td><td><code>str | None</code></td><td>A união admite texto ou ausência; o uso exige distinguir esses casos.</td></tr>
+<tr><td>Valor ainda desconhecido</td><td><code>object</code></td><td>Exige refinar o tipo antes de usar operações específicas; <code>Any</code> permite operações sem essa prova.</td></tr>
+<tr><td>Retorno sem resultado</td><td><code>-&gt; None</code></td><td>A função não entrega um valor útil ao consumidor.</td></tr>
+<tr><td>Função recebida como valor</td><td><code>Callable[[int], str]</code></td><td>Recebe um inteiro e devolve texto; importado de <code>collections.abc</code>.</td></tr>
+<tr><td>Tipo parametrizado</td><td><code>def primeiro[T](itens: list[T]) -&gt; T:</code></td><td>Relaciona o tipo dos itens com o retorno, sem validar valores em runtime.</td></tr>
+<tr><td>Vocabulário finito</td><td><code>StrEnum</code></td><td>Nomeia valores textuais; serialização e compatibilidade precisam de contrato.</td></tr>
+<tr><td>Registro de dados</td><td><code>dataclass</code></td><td>Gera métodos para campos declarados; não é validação de fronteira.</td></tr>
+<tr><td>Contrato estrutural</td><td><code>Protocol</code></td><td>Descreve membros necessários ao consumidor; veja a implementação abaixo.</td></tr>
+</tbody></table>
 
-<h3>3.3 Forma, estado e narrowing explícito</h3>
+<h3 id="sec-3-3-forma-estado-e-narrowing-explicito">3.3 Forma, estado e narrowing explícito <a class="section-link" href="#sec-3-3-forma-estado-e-narrowing-explicito" aria-label="Link para esta seção">#</a></h3>
 <p><code>TypedDict</code> descreve a forma estática de um mapping, mas não cria classe nem valida JSON. <code>Literal</code> restringe valores conhecidos; <code>Self</code> preserva o subtipo em APIs fluentes; <code>Never</code> torna exhaustiveness verificável. Para narrowing, prefira checks que o checker entende. <code>TypeIs</code> refina os ramos verdadeiro e falso quando o tipo retornado é compatível; <code>TypeGuard</code> refina principalmente o ramo verdadeiro e admite transformações mais flexíveis. Um <code>cast</code> não verifica nada em runtime: ele é uma afirmação sua ao checker.</p>
 <pre><code>from typing import Literal, Never, TypedDict, TypeIs
 
@@ -322,18 +303,18 @@ def is_non_empty_text(value: object) -> TypeIs[str]:
 def assert_never(value: Never) -> Never:
     raise AssertionError(f"caso não tratado: {value!r}")</code></pre>
 
-<h3>3.4 Variance é uma propriedade da relação, não decoração</h3>
+<h3 id="sec-3-4-variance-e-uma-propriedade-da-relacao-nao-decoracao">3.4 Variance é uma propriedade da relação, não decoração <a class="section-link" href="#sec-3-4-variance-e-uma-propriedade-da-relacao-nao-decoracao" aria-label="Link para esta seção">#</a></h3>
 <p>Um produtor somente de <code>T</code> pode ser covariante; um consumidor somente de <code>T</code> pode ser contravariante; uma coleção mutável que lê e escreve tende a ser invariante. Copiar a intuição de <code>IEnumerable&lt;out T&gt;</code> para <code>list[T]</code> é inseguro: se <code>list[Dog]</code> servisse como <code>list[Animal]</code>, alguém poderia inserir um <code>Cat</code>. Modele a direção da informação e peça ao checker para rejeitar a substituição plantada.</p>
 
-<h3>3.5 Annotations diferidas no Python 3.14</h3>
+<h3 id="sec-3-5-annotations-diferidas-no-python-3-14">3.5 Annotations diferidas no Python 3.14 <a class="section-link" href="#sec-3-5-annotations-diferidas-no-python-3-14" aria-label="Link para esta seção">#</a></h3>
 <p>Python 3.14 muda a avaliação de annotations e oferece <code>annotationlib</code> para recuperá-las em formatos apropriados. Código de framework não deve depender de avaliar nomes arbitrários por acidente. O laboratório compara <code>__annotations__</code> com <code>annotationlib.get_annotations()</code> e testa uma forward reference sem importar a dependência prematuramente.</p>
 
 <div class="box fund">
 <span class="lbl">Fundamento de engenharia · Tipagem nominal vs. estrutural — recicle a teoria</span>
-<p>Sistemas de tipos podem combinar relações nominais e estruturais. Em C#, interfaces de aplicação são normalmente nominais: o tipo declara <code>: Y</code>. Um Python <code>Protocol</code> permite compatibilidade estrutural: o tipo serve quando expõe os membros com assinaturas compatíveis, sem herança explícita. O consumidor pode declarar o menor contrato de que precisa e adaptar bibliotecas de terceiros; isso reduz acoplamento nominal, mas não elimina a obrigação de provar substituibilidade por testes e semântica.</p>
+<p>Sistemas de tipos podem combinar relações nominais e estruturais. Uma relação nominal depende da identidade declarada do tipo. Um Python <code>Protocol</code> permite compatibilidade estrutural: o tipo serve quando expõe os membros com assinaturas compatíveis, sem herança explícita. O consumidor pode declarar o menor contrato de que precisa e adaptar bibliotecas de terceiros; isso reduz acoplamento nominal, mas não elimina a obrigação de provar substituibilidade por testes e semântica.</p>
 </div>
 
-<h3>3.6 <code>Protocol</code> e substituibilidade estrutural</h3>
+<h3 id="sec-3-6-protocol-e-substituibilidade-estrutural">3.6 <code>Protocol</code> e substituibilidade estrutural <a class="section-link" href="#sec-3-6-protocol-e-substituibilidade-estrutural" aria-label="Link para esta seção">#</a></h3>
 <pre><code>from typing import Protocol
 
 
@@ -357,18 +338,19 @@ alertar(EmailNotificador(), "denisson@exemplo.com")  # mypy: OK — a forma bate
 alertar("uma string", "x")                           # mypy: erro — str não tem .enviar</code></pre>
 <p>O <code>...</code> (reticências) no corpo é literal — é o "sem implementação" do Python, como o <code>;</code> de um método de interface. E o teste decisivo: rode <code>uv run mypy --strict</code> nesse arquivo com a última linha e veja o erro <em>antes</em> de executar — o runtime nunca foi tocado.</p>
 
-<h3>3.7 Onde a analogia com C# quebra</h3>
+<h3 id="sec-3-7-limites-que-o-checker-nao-elimina">3.7 Limites que o checker não elimina <a class="section-link" href="#sec-3-7-limites-que-o-checker-nao-elimina" aria-label="Link para esta seção">#</a></h3>
 <ul>
 <li><strong>Hints não validam runtime.</strong> Uma base com annotations sem checker pode transmitir falsa confiança. O gate declara checker e versão; a trust boundary continua precisando de parsing/validação.</li>
-<li><strong><code>Any</code> é contagioso.</strong> Um <code>Any</code> entra numa expressão, a expressão inteira vira <code>Any</code>, e o mypy silencia dali em diante. É o <code>dynamic</code> do C#: uma gota tinge o copo. Strict mode existe para te obrigar a estancar isso nas fronteiras.</li>
+<li><strong><code>Any</code> reduz a prova estática.</strong> Operações sobre valores anotados com <code>Any</code> podem atravessar a análise sem validação de compatibilidade. Delimite esses valores nas fronteiras e use anotações e validação proporcionais ao risco.</li>
 <li><strong>Sem sobrecarga de método real.</strong> Um nome = uma função. <code>@overload</code> existe só para o verificador; em runtime é a última definição que vale. O idioma pythônico é parâmetro com default ou union: <code>def buscar(chave: int | str) -> ...</code></li>
 <li><strong>Variáveis não têm tipo; valores têm.</strong> <code>x = 1</code> seguido de <code>x = "a"</code> é legal em runtime (mypy reclama). A disciplina vem do verificador, não da linguagem.</li>
 <li><strong>Mutabilidade default.</strong> Não há <code>readonly</code>/<code>init</code>; convenção + <code>Final</code>, <code>frozen=True</code> em dataclass, e o verificador. Prefixo <code>_</code> é o "private por contrato social" — não existe enforcement de acesso.</li>
 </ul>
 
-<h3>3.8 Prática guiada · Caçada de bugs com checker e runtime</h3>
+<h3 id="sec-3-8-leitura-aplicada-o-que-checker-e-runtime-distinguem">3.8 Leitura aplicada · O que checker e runtime distinguem <a class="section-link" href="#sec-3-8-leitura-aplicada-o-que-checker-e-runtime-distinguem" aria-label="Link para esta seção">#</a></h3>
+<p>A fixture de defeitos e os Protocols do projeto mostram a fronteira entre diagnóstico estático e comportamento de valor. O laboratório final executa os gates; aqui, o objetivo é interpretar os sinais antes de vê-los no terminal.</p>
 
-<div class="step"><span class="n">1</span><strong>Use a fixture de typing em <code>fixtures/generated_defects/</code></strong> e compare-a com os Protocols em <code>src/python_senior_lab/ports.py</code>. Os bugs abaixo ilustram o tipo de falha:
+<div class="box"><strong>Cenário de referência — defeitos plantados.</strong> A fixture em <code>fixtures/generated_defects/</code>, comparada aos Protocols de <code>src/python_senior_lab/ports.py</code>, contém estes cinco defeitos:
 <pre><code>from decimal import Decimal
 
 
@@ -397,12 +379,11 @@ def relatorio(dados: dict[str, list[Decimal]]) -> None:
     for nome, valores in dados.items():
         print(nome + ": " + media(valores))  # BUG 5: str + Decimal</code></pre></div>
 
-<div class="step"><span class="n">2</span><strong>Rode o verificador e leia CADA erro:</strong>
+<div class="box"><strong>Oráculo esperado — mypy estrito.</strong> O comando de referência é:
 <pre><code>uv run mypy --strict src tests</code></pre>
-<p><strong>Resultado esperado:</strong> mypy pega os bugs 1, 3 e 5 de imediato (<code>Incompatible return value</code>, <code>has no attribute "uper"</code>, <code>Unsupported operand types</code>). O 2 aparece como incompatibilidade na soma/retorno dependendo da versão. O 4 — divisão por zero em lista vazia — <strong>mypy NÃO pega</strong>: é bug de valor, não de tipo. Anote essa fronteira: type checker elimina uma classe inteira de erros, não todas. Lista vazia é caso de teste (bloco 6), não de tipo.</p></div>
+<p><strong>Leitura do oráculo:</strong> mypy encontra de imediato os bugs 1, 3 e 5 (<code>Incompatible return value</code>, <code>has no attribute "uper"</code>, <code>Unsupported operand types</code>). O 2 aparece como incompatibilidade na soma/retorno conforme a versão. O 4 — divisão por zero em lista vazia — <strong>não</strong> é detectado: é falha de valor, não de tipo. Type checker elimina uma classe de erros; teste cobre a lista vazia.</p></div>
 
-<div class="step"><span class="n">3</span><strong>Conserte até o silêncio.</strong> Corrija os cinco (para o 1: <code>Decimal | None</code> no retorno ou lançar exceção — decida e justifique; para o 4: guarda de lista vazia). Re-rode até <code>Success: no issues found</code>.</p>
-<p><strong>Resultado esperado:</strong> além do sucesso do mypy, você tomou sua primeira decisão de design guiada por tipo: devolver <code>| None</code> empurra o problema para todo chamador (que o strict obriga a tratar); lançar exceção centraliza. Não há resposta única — há trade-off consciente. Commit: <code>M02: fix five planted type bugs in tipos_lab</code>.</p></div>
+<div class="box"><strong>Decisão de design exposta pelo cenário.</strong> O retorno ausente do bug 1 admite duas políticas: <code>Decimal | None</code> torna cada chamador responsável por tratar ausência; uma exceção centraliza a regra. A guarda da lista vazia é uma decisão de domínio. O sinal desejado depois da correção é <code>Success: no issues found</code>, mas esse silêncio não substitui o teste de valor.</p></div>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 3</span>
@@ -418,15 +399,12 @@ def relatorio(dados: dict[str, list[Decimal]]) -> None:
 <!-- ============================================ BLOCO 4 -->
 <section id="b4">
 <h2>Bloco 4 · Pydantic v2 e contratos de trust boundary</h2>
-<p class="clock">00:00–00:20 trust boundary · 00:20–01:00 models/validators · 01:00–01:30 coerção, strict e bypass · 01:30–02:00 prática adversarial</p>
 
-<h3>4.1 Validação runtime começa por uma fronteira explícita</h3>
+
+<h3 id="sec-4-1-validacao-runtime-comeca-por-uma-fronteira-explicita">4.1 Validação runtime começa por uma fronteira explícita <a class="section-link" href="#sec-4-1-validacao-runtime-comeca-por-uma-fronteira-explicita" aria-label="Link para esta seção">#</a></h3>
 <p>JSON de request, linha de CSV, resposta de API externa e saída de LLM chegam em runtime; o checker não observou esses valores. Pydantic é uma implementação forte para transformar dado não confiável em estrutura tipada e erros localizados. Ele não substitui autorização, regra de negócio, consistência entre registros nem prova que todo caminho de construção validou.</p>
 
-<div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Pydantic combina parsing, coerção, validação e serialização de modo parecido com peças de DTO, serializer e validator no .NET. A analogia termina aí: <code>model_construct()</code> cria sem validação, atribuições não são revalidadas por padrão e validadores não conhecem invariantes externas. A afirmação correta é: <strong>uma instância produzida por um caminho de validação satisfez as regras executadas naquele momento</strong>.</p>
-</div>
+<div class="box"><span class="lbl">Referência do conceito</span><p>Pydantic combina parsing, coerção, validação e serialização. <code>model_construct()</code> cria instâncias sem validação; atribuições não são revalidadas por padrão. Uma instância produzida por um caminho de validação satisfez as regras executadas naquele momento; isso não comprova invariantes externas.</p></div>
 
 <div class="box fund">
 <span class="lbl">Fundamento de engenharia · Parse, don't validate — e a fronteira de confiança</span>
@@ -437,7 +415,7 @@ def relatorio(dados: dict[str, list[Decimal]]) -> None:
 </ul>
 </div>
 
-<h3>4.2 O vocabulário do <code>BaseModel</code></h3>
+<h3 id="sec-4-2-o-vocabulario-do-basemodel">4.2 O vocabulário do <code>BaseModel</code> <a class="section-link" href="#sec-4-2-o-vocabulario-do-basemodel" aria-label="Link para esta seção">#</a></h3>
 <pre><code>from datetime import date
 from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -468,7 +446,7 @@ class Transacao(BaseModel):
 
 <div class="box">
 <span class="lbl">Contexto · decoradores — o <code>@</code> em cima das funções</span>
-<p>Um <strong>decorador</strong> (<code>@nome</code>) é uma função que recebe a função/classe abaixo e devolve uma versão modificada — açúcar sintático para <code>sem_pii_obvia = field_validator("descricao")(sem_pii_obvia)</code>. O paralelo .NET mais próximo é o atributo (<code>[Authorize]</code>), mas com uma diferença central: atributo é metadado passivo que outro código lê por reflection; decorador <em>executa e transforma</em> no momento da definição. Você vai vê-los em todo lugar: <code>@app.get(...)</code> no FastAPI, <code>@pytest.fixture</code>, <code>@dataclass</code>. Quando vir <code>@</code>, leia: "esta definição passa por uma transformação antes de existir".</p>
+<p>Um <strong>decorador</strong> (<code>@nome</code>) é uma função que recebe a função/classe abaixo e devolve uma versão modificada — açúcar sintático para <code>sem_pii_obvia = field_validator("descricao")(sem_pii_obvia)</code>. O decorador <em>executa e transforma</em> no momento da definição. Você vai vê-los em todo lugar: <code>@app.get(...)</code> no FastAPI, <code>@pytest.fixture</code>, <code>@dataclass</code>. Quando vir <code>@</code>, leia: "esta definição passa por uma transformação antes de existir".</p>
 </div>
 
 <p>Os três verbos que você vai digitar mil vezes:</p>
@@ -488,9 +466,9 @@ except ValidationError as e:
 # ('data',) date_from_datetime_parsing  Input should be a valid date...
 # ('descricao',) string_too_short       String should have at least 1 character
 # ('valor',) greater_than               Input should be greater than 0</code></pre>
-<p>Compare a estrutura com erros de model binding do ASP.NET. Frameworks como FastAPI podem adaptar esses detalhes para uma resposta HTTP, assunto do M03. Pydantic agrega vários erros quando consegue continuar a validação, mas não prometa que toda falha possível será reportada em uma única passagem.</p>
+<p>Frameworks como FastAPI podem adaptar esses detalhes para uma resposta HTTP, assunto do M03. Pydantic agrega vários erros quando consegue continuar a validação, mas não prometa que toda falha possível será reportada em uma única passagem.</p>
 
-<h3>4.3 Coerção, strictness e caminhos sem validação</h3>
+<h3 id="sec-4-3-coercao-strictness-e-caminhos-sem-validacao">4.3 Coerção, strictness e caminhos sem validação <a class="section-link" href="#sec-4-3-coercao-strictness-e-caminhos-sem-validacao" aria-label="Link para esta seção">#</a></h3>
 <p>Em modo laxo, Pydantic aplica conversões documentadas; em modo estrito, reduz coerções. Tolerância não é automaticamente boa: escolha por proveniência, ambiguidade, compatibilidade e impacto do erro. O exemplo abaixo torna a política explícita:</p>
 <pre><code>class TransacaoEstrita(Transacao):
     model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
@@ -509,7 +487,7 @@ class MutableContract(BaseModel):
     value: int = Field(gt=0)</code></pre>
 <div class="danger"><strong>Limite verificável.</strong> <code>model_construct()</code> pode criar uma instância inválida. Mesmo <code>extra="forbid"</code> possui comportamento diferente nesse caminho. Use-o somente com dado já validado e teste qualquer otimização alegada — em modelos simples, pular validação pode nem ser mais rápido.</div>
 
-<h3>4.4 <code>pydantic-settings</code>: configuração tipada</h3>
+<h3 id="sec-4-4-pydantic-settings-configuracao-tipada">4.4 <code>pydantic-settings</code>: configuração tipada <a class="section-link" href="#sec-4-4-pydantic-settings-configuracao-tipada" aria-label="Link para esta seção">#</a></h3>
 <p>O equivalente do <code>IOptions&lt;T&gt;</code> + user secrets. Configuração vem de variáveis de ambiente e <code>.env</code>, validada na inicialização — o app que sobe com config faltando <em>morre no boot</em>, não às 3h da manhã no primeiro request:</p>
 <pre><code>from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -525,16 +503,16 @@ class Settings(BaseSettings):
 settings = Settings()  # lê ambiente + .env, valida, ou explode AGORA</code></pre>
 <p>(<code>uv add pydantic-settings</code> — é pacote separado. E lembre da convenção do repo: <code>.env</code> no gitignore, <code>.env.example</code> commitado.)</p>
 
-<h3>4.5 Prática guiada · Blindar um payload real (30 min)</h3>
+<h3 id="sec-4-5-leitura-aplicada-blindar-um-payload-externo">4.5 Leitura aplicada · Blindar um payload externo <a class="section-link" href="#sec-4-5-leitura-aplicada-blindar-um-payload-externo" aria-label="Link para esta seção">#</a></h3>
+<p>O laboratório final constrói essa fronteira em <code>models.py</code> e mostra os resultados da CLI. Antes disso, use o cenário para separar cada regra e o risco que ela cobre.</p>
 
-<div class="step"><span class="n">1</span><strong>Modele uma transação externa</strong> em <code>src/python_senior_lab/models.py</code>: identificador, origem, moeda, timestamp e valor decimal. Defina a política de coerção conforme proveniência e risco; dinheiro nasce de texto decimal ou unidade mínima inteira, nunca de float binário.</p>
-<p><strong>Resultado esperado:</strong> o modelo compila e <code>mypy --strict</code> passa. Se você usou <code>float</code> para dinheiro, refaça — e guarde o porquê: float binário não representa 0.1 (você demonstra isso no checkpoint).</p></div>
+<div class="box"><strong>Cenário de contrato.</strong> A transação externa de <code>src/python_senior_lab/models.py</code> contém identificador, origem, moeda, timestamp e valor decimal. Coerção depende de proveniência e risco. Dinheiro chega como texto decimal ou unidade mínima inteira, nunca como <code>float</code> binário.</p>
+<p><strong>Propriedade observável:</strong> o modelo passa em <code>mypy --strict</code>. <code>float</code> não representa 0.1 exatamente; o checkpoint pede que essa limitação seja demonstrada e explicada.</p></div>
 
-<div class="step"><span class="n">2</span><strong>Escreva a bateria de ataques.</strong> No mesmo arquivo, uma lista de 6 payloads: 1 válido e 5 hostis (id sem prefixo; tipo desconhecido; valor negativo; moeda "reais"; campo extra <code>"admin": true</code>). Itere validando cada um e imprimindo OK ou os erros estruturados.</p>
-<p><strong>Resultado esperado ao rodar:</strong> 1 aceito e 5 rejeitados segundo o contrato. Ignorar campos extras pode contribuir para mass assignment somente se camadas posteriores vincularem/usarem esses dados indevidamente; não é uma vulnerabilidade automática. Registre qual controle rejeitou cada payload.</p></div>
+<div class="box"><strong>Superfície adversarial.</strong> O material referencia seis payloads: um válido e cinco hostis — id sem prefixo, tipo desconhecido, valor negativo, moeda <code>"reais"</code> e campo extra <code>"admin": true</code>. A CLI do laboratório deixa visível qual regra aceita ou rejeita cada um.</p>
+<p><strong>Propriedade observável:</strong> um payload é aceito e cinco são rejeitados pelo contrato. Ignorar campos extras só contribui para mass assignment quando camadas posteriores vinculam ou usam esses dados; o campo inesperado não cria vulnerabilidade por si só.</p></div>
 
-<div class="step"><span class="n">3</span><strong>Meça a fronteira.</strong> Adicione <code>strict=True</code>, rode de novo e observe quais dos 6 mudam de resultado.</p>
-<p><strong>Resultado esperado:</strong> se o seu payload "válido" tinha <code>"valor_centavos": "1000"</code> (string numérica), ele passa no laxo e falha no estrito. Você acabou de ver o trade-off de Postel com os próprios olhos. Commit: <code>M02: add payment webhook contract with adversarial tests</code>.</p></div>
+<div class="box"><strong>Contraste de política.</strong> Com <code>strict=True</code>, um payload com <code>"valor_centavos": "1000"</code> deixa de ser aceito: a string numérica passa no modo laxo e falha no estrito. Esse é o trade-off de aceitar representação conveniente contra exigir o tipo exato na fronteira.</p></div>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 4</span>
@@ -550,36 +528,22 @@ settings = Settings()  # lê ambiente + .env, valida, ou explode AGORA</code></p
 <!-- ============================================ BLOCO 5 -->
 <section id="b5">
 <h2>Bloco 5 · <code>asyncio</code> estruturado, cancelamento e backpressure</h2>
-<p class="clock">00:00–00:25 scheduling cooperativo · 00:25–00:55 TaskGroup/cancelamento · 00:55–01:25 limites · 01:25–02:00 experimento local</p>
 
-<h3>5.1 Scheduling cooperativo e ownership</h3>
+
+<h3 id="sec-5-1-scheduling-cooperativo-e-ownership">5.1 Scheduling cooperativo e ownership <a class="section-link" href="#sec-5-1-scheduling-cooperativo-e-ownership" aria-label="Link para esta seção">#</a></h3>
 <p>Uma coroutine só progride quando é aguardada ou transformada em Task. Um event loop executa uma Task de cada vez em sua thread e alterna quando ela aguarda um Future/I/O. Bloqueio síncrono impede outras Tasks <em>daquele loop</em> de avançar; uma aplicação pode ter vários workers, processos, threads ou interpreters. O diagnóstico precisa nomear a fronteira afetada em vez de dizer que “o Python inteiro congelou”.</p>
 
-<p>No .NET, <code>Task</code> é uma abstração de operação assíncrona; nem toda Task “roda no ThreadPool”. No asyncio, Task agenda uma coroutine no loop corrente. Em ambos os ecossistemas, bloquear uma thread crítica reduz capacidade; as mecânicas de scheduler, synchronization context, workers e cancelamento diferem.</p>
 
-<div class="box net">
-<span class="lbl">Tradução .NET — a tabela da verdade</span>
-<table>
-<thead><tr><th>Conceito</th><th>.NET (Task)</th><th>Python (asyncio)</th></tr></thead>
-<tbody>
-<tr><td>Unidade de concorrência</td><td><code>Task</code> representa operação e usa scheduler/contexto</td><td>coroutine é awaitable; Task a agenda no event loop</td></tr>
-<tr><td>Bloquear dentro de async</td><td>ocupa a thread atual e pode causar starvation/deadlock</td><td>impede progresso das outras Tasks no mesmo loop</td></tr>
-<tr><td>Início da execução</td><td>o método executa sincronamente até produzir/aguardar operação incompleta</td><td>chamar <code>async def</code> cria objeto coroutine; Task/await agenda execução</td></tr>
-<tr><td>Rodar em paralelo (I/O)</td><td><code>Task.WhenAll(a, b)</code></td><td><code>await asyncio.gather(a(), b())</code></td></tr>
-<tr><td>Timeout</td><td><code>CancellationTokenSource(delay)</code></td><td><code>async with asyncio.timeout(5):</code></td></tr>
-<tr><td>Trabalho síncrono</td><td><code>Task.Run</code> pode transferir para pool</td><td><code>to_thread</code>/executor transfere chamada; não interrompe automaticamente a função ao cancelar o await</td></tr>
-<tr><td>Deadlock clássico</td><td><code>.Result</code>/<code>.Wait()</code> em contexto sync</td><td><code>asyncio.run()</code> dentro de loop já rodando</td></tr>
-</tbody>
-</table>
-</div>
 
-<p>A regra dos dois mundos, que resolve 90% das decisões:</p>
+<div class="box"><span class="lbl">Referência do conceito</span><table><thead><tr><th>Necessidade</th><th>Mecanismo</th><th>Limite</th></tr></thead><tbody><tr><td>Representar operação</td><td>Objeto coroutine</td><td>A chamada de <code>async def</code> não executa o corpo.</td></tr><tr><td>Concorrência com ownership</td><td><code>TaskGroup</code></td><td>Aguarda as tasks e organiza falhas; não limita sozinho a admissão.</td></tr><tr><td>Timeout</td><td><code>asyncio.timeout</code></td><td>Usa cancelamento; a operação precisa preservar cleanup.</td></tr><tr><td>I/O síncrono</td><td><code>to_thread</code></td><td>Cancelar a espera não encerra automaticamente o código da thread.</td></tr></tbody></table></div>
+
+<p>As decisões dependem do trabalho executado e de seus limites:</p>
 <ul>
 <li><strong>Não bloqueie o loop.</strong> Para API síncrona inevitável, confirme thread safety, imponha limite e use <code>to_thread</code>/executor. Cancelar o await não mata magicamente o trabalho na thread.</li>
 <li><strong>Verifique o contrato da biblioteca:</strong> prefira API async quando o recurso a oferece; para API síncrona, confirme bloqueio, thread safety, propagação de contexto e limite do executor. O nome do pacote sozinho não prova o comportamento.</li>
 </ul>
 
-<h3>5.2 TaskGroup, cancelamento e limites</h3>
+<h3 id="sec-5-2-taskgroup-cancelamento-e-limites">5.2 TaskGroup, cancelamento e limites <a class="section-link" href="#sec-5-2-taskgroup-cancelamento-e-limites" aria-label="Link para esta seção">#</a></h3>
 <pre><code>import asyncio
 
 
@@ -601,9 +565,9 @@ if __name__ == "__main__":
 <p>Leia o fluxo antes de decorar a sintaxe. <code>async def</code> declara uma função assíncrona; chamá-la cria uma corrotina, ainda sem executar o corpo. <code>await asyncio.sleep(0)</code> cria um ponto cooperativo: esta Task devolve o controle ao loop e pode retomar depois. <code>TaskGroup()</code> delimita o lifetime das Tasks criadas em seu bloco; se o bloco termina, elas já concluíram ou falharam segundo a política do grupo. A compreensão <code>[group.create_task(...) for item in items]</code> cria uma Task nomeada para cada item e guarda as referências. Por fim, <code>task.result()</code> lê o valor de uma Task já concluída, e <code>asyncio.run(...)</code> cria e fecha o loop para um programa de linha de comando. O vínculo entre essas linhas é ownership: toda execução iniciada tem quem a aguarde, cancele e inspecione.</p>
 
 <div class="box warn">
-<span class="lbl">Três diferenças que merecem teste na transição de .NET</span>
+<span class="lbl">Três comportamentos que merecem teste</span>
 <ol>
-<li><strong>Corrotina fria:</strong> <code>resultado = buscar_cotacao(client, "USD")</code> sem <code>await</code> não busca nada — devolve um objeto corrotina inerte (o warning <code>coroutine was never awaited</code> é isso). Em C#, chamar método async já dispara; em Python, não.</li>
+<li><strong>Corrotina fria:</strong> <code>resultado = buscar_cotacao(client, "USD")</code> sem <code>await</code> não busca nada — devolve um objeto corrotina inerte (o warning <code>coroutine was never awaited</code> é isso).</li>
 <li><strong>Fire-and-forget sem referência:</strong> <code>asyncio.create_task(foo())</code> sem guardar o retorno pode ser coletado pelo GC no meio da execução. Guarde a referência (ou use <code>TaskGroup</code>, abaixo).</li>
 <li><strong><code>gather</code> vs. exceções:</strong> por padrão, a primeira exceção é propagada ao await; as demais awaitables não são canceladas. <code>TaskGroup</code> cancela siblings quando uma tarefa falha e reúne falhas em <code>ExceptionGroup</code>.</li>
 </ol>
@@ -621,25 +585,25 @@ if __name__ == "__main__":
     return [task.result() for task in tasks]</code></pre>
 <p>Coroutines usam <code>try/finally</code> para liberar recursos. Engolir <code>CancelledError</code> pode quebrar <code>TaskGroup</code> e <code>asyncio.timeout()</code>. Para backpressure, semaphore limita uma região; <code>asyncio.Queue(maxsize=N)</code> também limita quantos itens aguardam e faz o produtor esperar quando o consumidor satura.</p>
 
-<h3>5.3 Prática guiada · Bloqueio, cancelamento e backpressure</h3>
-<p>O laboratório sobe um servidor HTTP local descartável com latência e falha controladas. Não há dependência de internet. Você compara uma rota cooperativa e outra bloqueante, mas o aceite é a propriedade observada — não um multiplicador fixo.</p>
+<h3 id="sec-5-3-leitura-aplicada-bloqueio-cancelamento-e-backpressure">5.3 Leitura aplicada · Bloqueio, cancelamento e backpressure <a class="section-link" href="#sec-5-3-leitura-aplicada-bloqueio-cancelamento-e-backpressure" aria-label="Link para esta seção">#</a></h3>
+<p>O laboratório final usa um servidor HTTP local descartável, com latência e falha controladas. Não há dependência de internet. Os cenários abaixo antecipam as propriedades que os testes observam; não são passos de execução durante a leitura.</p>
 
-<div class="step"><span class="n">1</span><strong>Execute o pipeline local.</strong> Leia <code>src/python_senior_lab/async_pipeline.py</code> e marque quem possui produtor, workers, fila e tasks. A fonte de I/O é determinística e local; M03 introduzirá framework HTTP.</p>
-<p><strong>Resultado esperado:</strong> a fila possui <code>maxsize</code>, o grupo possui lifecycle lexical e cada caminho de falha libera recursos em <code>finally</code>.</p></div>
+<div class="box"><strong>Cenário de ownership.</strong> Em <code>src/python_senior_lab/async_pipeline.py</code>, produtor, workers, fila e Tasks têm responsáveis explícitos. A fonte de I/O é determinística e local; M03 introduz framework HTTP.</p>
+<p><strong>Propriedade observável:</strong> a fila tem <code>maxsize</code>, o grupo tem lifecycle lexical e cada caminho de falha libera recursos em <code>finally</code>.</p></div>
 
-<div class="step"><span class="n">2</span><strong>Injete as quatro falhas.</strong> Force uma exceção em um worker, cancele externamente, expire o timeout e remova o limite da fila. Rode apenas os testes async para observar o oráculo de cada propriedade.</p>
-<p><strong>Resultado esperado:</strong> siblings são cancelados no <code>TaskGroup</code>, <code>CancelledError</code> continua propagado após cleanup, não resta efeito órfão e o caso sem backpressure viola um limite observável.</p></div>
+<div class="box"><strong>Casos negativos.</strong> A suíte contém exceção em worker, cancelamento externo, timeout e remoção do limite da fila. Cada um testa uma propriedade distinta, sem depender de uma medição frágil.</p>
+<p><strong>Propriedade observável:</strong> siblings são cancelados no <code>TaskGroup</code>, <code>CancelledError</code> continua propagado após cleanup, não resta efeito órfão e o cenário sem backpressure viola um limite observável.</p></div>
 
-<div class="step"><span class="n">3</span><strong>Diagnostique starvation sem cronômetro frágil.</strong> Execute <code>tests/integration/test_local_starvation.py</code>. O servidor stdlib sobe em <code>127.0.0.1</code> e porta efêmera: <code>/blocking</code> espera em <code>threading.Event</code> dentro do loop; <code>/cooperative</code> espera em <code>asyncio.Event</code>.</p>
-<p><strong>Resultado esperado:</strong> por ordem causal, o heartbeat não progride enquanto o handler bloqueante segura o loop e progride enquanto a request cooperativa continua pendente. O teste prova starvation naquele loop/thread, sem inventar throughput ou representar multiworker.</p></div>
+<div class="box"><strong>Diagnóstico causal de starvation.</strong> <code>tests/integration/test_local_starvation.py</code> sobe um servidor stdlib em <code>127.0.0.1</code> e porta efêmera. <code>/blocking</code> espera em <code>threading.Event</code> dentro do loop; <code>/cooperative</code> aguarda <code>asyncio.Event</code>.</p>
+<p><strong>Propriedade observável:</strong> o heartbeat não progride enquanto o handler bloqueante segura o loop e progride quando a request cooperativa permanece pendente. O teste prova starvation naquele loop/thread; não inventa throughput nem representa multiworker.</p></div>
 
 </section>
 
 <!-- ============================================ BLOCO 6 -->
 <section id="b6">
 <h2>Bloco 6 · Threads, processos, subinterpreters e free-threading</h2>
-<p class="clock">00:00–00:25 carga e overhead · 00:25–00:55 threads/processos · 00:55–01:25 interpreters/free-threading · 01:25–02:00 benchmark</p>
-<h3>6.1 O GIL é parte da decisão, não a decisão inteira</h3>
+
+<h3 id="sec-6-1-o-gil-e-parte-da-decisao-nao-a-decisao-inteira">6.1 O GIL é parte da decisão, não a decisão inteira <a class="section-link" href="#sec-6-1-o-gil-e-parte-da-decisao-nao-a-decisao-inteira" aria-label="Link para esta seção">#</a></h3>
 
 <div class="callout">
 <strong>CPython padrão e build free-threaded.</strong> No build padrão, o GIL impede execução simultânea de bytecode Python por múltiplas threads no mesmo interpretador, embora I/O e extensões nativas possam liberar o lock. O build free-threaded é suportado no Python 3.14, mas isso não torna código automaticamente seguro ou mais rápido: extensões podem reabilitar o GIL, estado compartilhado ainda exige sincronização e overhead pode dominar a carga.</div>
@@ -658,7 +622,7 @@ def runtime_capabilities() -> dict[str, object]:
 <p>Este é um probe, não uma recomendação automática. <code>runtime_capabilities()</code> é uma função sem argumentos que devolve um dicionário: as chaves são textos, e os valores podem ter tipos diferentes, por isso a anotação usa <code>dict[str, object]</code>. A primeira pergunta é sobre o build: ele foi compilado com suporte a free-threading? A segunda é sobre esta execução: o GIL está efetivamente ligado agora? Registrar as duas respostas evita concluir que uma flag de instalação prova o comportamento de uma extensão carregada depois.</p>
 <p>Registre as duas dimensões. Ter suporte no build não prova que o GIL permaneça desabilitado durante toda a execução. A capability é dado de observação, não feature flag presumida.</p>
 
-<h3>6.2 Quatro executores, quatro custos</h3>
+<h3 id="sec-6-2-quatro-executores-quatro-custos">6.2 Quatro executores, quatro custos <a class="section-link" href="#sec-6-2-quatro-executores-quatro-custos" aria-label="Link para esta seção">#</a></h3>
 <table>
 <thead><tr><th>Opção</th><th>Boa candidata quando</th><th>Custo/risco que precisa entrar na medição</th></tr></thead>
 <tbody>
@@ -669,18 +633,19 @@ def runtime_capabilities() -> dict[str, object]:
 <tr><td>threads em build free-threaded</td><td>carga e dependências foram testadas sem GIL efetivo</td><td>corridas reais, locks, compatibilidade e regressão single-thread</td></tr>
 </tbody>
 </table>
-<div class="bridge"><strong>Ponte .NET que quebra.</strong> <code>Task</code> é uma abstração de operação assíncrona; ela não significa “trabalho sempre no ThreadPool”. Pelo mesmo motivo, coroutine, Task do asyncio, thread e processo não são sinônimos. Compare lifecycle, scheduler, cancellation e ownership antes da sintaxe.</div>
+<div class="box"><strong>Unidades distintas.</strong> Coroutine, Task, thread e processo têm ciclos de vida e custos diferentes. Escolha pela forma de execução, isolamento, cancelamento e responsabilidade pelo encerramento.</div>
 
-<h3>6.3 Capacidade não é um número fora da fronteira do sistema</h3>
+<h3 id="sec-6-3-capacidade-nao-e-um-numero-fora-da-fronteira-do-sistema">6.3 Capacidade não é um número fora da fronteira do sistema <a class="section-link" href="#sec-6-3-capacidade-nao-e-um-numero-fora-da-fronteira-do-sistema" aria-label="Link para esta seção">#</a></h3>
 <p>A Lei de Little, <strong>L = λW</strong>, vale para sistema estável quando as três medidas usam a mesma fronteira e janela. Em um batch fechado de 50 itens, “50 criados” não significa que 50 estão simultaneamente em serviço: parte pode estar na fila. Meça separadamente itens admitidos, executando e aguardando; então use a lei para verificar coerência, não para inventar throughput. Filas bounded, semáforos e rate limits controlam admissão; não eliminam a capacidade necessária.</p>
 
-<h3>6.4 Prática guiada · Decisão por capability e distribuição</h3>
-<div class="practice">
+<h3 id="sec-6-4-leitura-aplicada-decisao-por-capability-e-distribuicao">6.4 Leitura aplicada · Decisão por capability e distribuição <a class="section-link" href="#sec-6-4-leitura-aplicada-decisao-por-capability-e-distribuicao" aria-label="Link para esta seção">#</a></h3>
+<p>O benchmark versionado cobre estas comparações; a leitura define o que precisa ser mantido constante para que o resultado tenha utilidade. Nenhuma execução é exigida antes do laboratório final.</p>
+<div class="box">
 <ol>
-<li>Execute a mesma transformação determinística em loop, thread, processo e, quando disponível, interpreter.</li>
-<li>Registre Python/build/GIL, SO, CPU, tamanho do payload, workers, warm-up e várias amostras.</li>
-<li>Compare mediana e percentis, inclua startup e serialização e valide que todas as variantes produziram o mesmo hash de saída.</li>
-<li>Remova o lock de um contador compartilhado no cenário free-threaded opcional. O teste deve detectar perda/duplicação; corrija com sincronização ou message passing.</li>
+<li>A mesma transformação determinística é comparada em loop, thread, processo e, quando disponível, interpreter.</li>
+<li>A evidência registra Python/build/GIL, SO, CPU, tamanho do payload, workers, warm-up e várias amostras.</li>
+<li>Mediana e percentis incluem startup e serialização; todas as variantes preservam o mesmo hash de saída.</li>
+<li>O cenário free-threaded opcional remove o lock de um contador compartilhado para revelar perda ou duplicação; lock e message passing são os controles comparados.</li>
 </ol>
 </div>
 <div class="expected"><strong>Resultado observável.</strong> <code>compare_cpu_executors()</code> registra input/result hashes, capabilities, amostras e mediana; estratégias ausentes recebem estado e razão. <code>demonstrate_shared_counter()</code> força read→barrier→write, demonstra lost update e prova as correções por lock e message passing. Não há ranking universal.</div>
@@ -689,15 +654,14 @@ def runtime_capabilities() -> dict[str, object]:
 <!-- ============================================ BLOCO 7 -->
 <section id="b7">
 <h2>Bloco 7 · Python idiomático com operabilidade</h2>
-<p class="clock">00:00–00:25 recursos e generators · 00:25–00:55 estruturas e transformação · 00:55–01:25 logging/encoding/erros · 01:25–02:00 medição e refatoração</p>
 
-<h3>7.1 Por que isso importa</h3>
-<p>Tudo até aqui foi infraestrutura. Este bloco é sotaque: os idiomas que fazem um revisor sênior de Python olhar seu código e não perceber que você veio de C#. Não é estética — cada idioma existe por um motivo mecânico (memória, recursos, legibilidade), e a IA que você usa para gerar código produz exatamente esses idiomas; você precisa lê-los com fluência para revisar o que ela escreve. Este é, aliás, o tema da sua skill <code>revisor-dotnet-para-python</code> do M00 — ao final do bloco você vai atualizá-la com o que aprendeu.</p>
 
-<h3>7.2 Context managers: gestão determinística, não equivalência mágica</h3>
+<h3 id="sec-7-1-por-que-isso-importa">7.1 Por que isso importa <a class="section-link" href="#sec-7-1-por-que-isso-importa" aria-label="Link para esta seção">#</a></h3>
+<p>Este bloco conecta escolhas idiomáticas a memória, recursos e legibilidade. A meta é conseguir ler e revisar código Python com precisão, inclusive quando ele foi proposto por IA. O exemplo mostra o mecanismo antes de discutir a alternativa.</p>
+
+<h3 id="sec-7-2-context-managers-gestao-deterministica-nao-equivalencia-magica">7.2 Context managers: gestão determinística, não equivalência mágica <a class="section-link" href="#sec-7-2-context-managers-gestao-deterministica-nao-equivalencia-magica" aria-label="Link para esta seção">#</a></h3>
 <pre><code>from pathlib import Path
 
-# C#: using var reader = new StreamReader(path);
 with open("dados.csv", encoding="utf-8") as f:
     conteudo = f.read()
 # fecha aqui, mesmo com exceção; o protocolo não é idêntico a IDisposable
@@ -705,7 +669,7 @@ with open("dados.csv", encoding="utf-8") as f:
 # vários recursos, um with:
 with open("in.csv") as origem, open("out.csv", "w") as destino:
     destino.write(origem.read())</code></pre>
-<p>A ponte útil: em C#, <code>using</code> opera sobre o contrato de descarte; em Python, o protocolo síncrono usa <code>__enter__</code>/<code>__exit__</code> e o assíncrono usa <code>__aenter__</code>/<code>__aexit__</code>. Ambos buscam cleanup determinístico, mas RAII estrito vincula aquisição ao lifetime do objeto e não é equivalência exata com <code>with</code>. Um context manager também pode ser criado por gerador:</p>
+<p>Em Python, o protocolo síncrono usa <code>__enter__</code>/<code>__exit__</code> e o assíncrono usa <code>__aenter__</code>/<code>__aexit__</code>. Esses protocolos permitem cleanup determinístico. RAII estrito vincula aquisição ao lifetime do objeto e não é equivalência exata com <code>with</code>. Um context manager também pode ser criado por gerador:</p>
 <pre><code>from collections.abc import Iterator
 from contextlib import contextmanager
 import time
@@ -724,7 +688,7 @@ with cronometro("parse do csv"):
     processar_arquivo()</code></pre>
 <p>Você vai usar esse padrão para transação de banco (M03), span de tracing (M06) e orçamento de tokens (M05). A versão assíncrona usa <code>async with</code> e possui contrato próprio de entrada/saída.</p>
 
-<h3>7.3 Geradores: preguiça, ownership e memória</h3>
+<h3 id="sec-7-3-geradores-preguica-ownership-e-memoria">7.3 Geradores: preguiça, ownership e memória <a class="section-link" href="#sec-7-3-geradores-preguica-ownership-e-memoria" aria-label="Link para esta seção">#</a></h3>
 <pre><code>from collections.abc import Iterator
 
 
@@ -741,14 +705,14 @@ def linhas_validas(caminho: str) -> Iterator[str]:
 <li><strong>Preguiça + recurso = armadilha:</strong> se o <code>with</code> do arquivo fechar antes de o consumidor iterar, explode. Consuma dentro do escopo ou desenhe a função para possuir o recurso (como acima).</li>
 </ul>
 
-<h3>7.4 Comprehensions e pattern matching: densidade com limite</h3>
+<h3 id="sec-7-4-comprehensions-e-pattern-matching-densidade-com-limite">7.4 Comprehensions e pattern matching: densidade com limite <a class="section-link" href="#sec-7-4-comprehensions-e-pattern-matching-densidade-com-limite" aria-label="Link para esta seção">#</a></h3>
 <pre><code>valores = [t.valor for t in transacoes if t.categoria == "mercado"]   # Where + Select
 por_id  = {t.id: t for t in transacoes}                               # ToDictionary
 unicos  = {t.categoria for t in transacoes}                           # set: Distinct
 total   = sum(t.valor for t in transacoes)                            # sem colchetes: gerador, zero lista intermediária</code></pre>
 <p>Regra de estilo de revisor: comprehension de UMA cláusula de filtro e UMA transformação. Aninhou dois <code>for</code> e três <code>if</code>? Vira função nomeada — legibilidade é o critério, como você abandonaria uma query LINQ de 8 encadeamentos.</p>
 
-<h3>7.5 Escolher estrutura pela responsabilidade</h3>
+<h3 id="sec-7-5-escolher-estrutura-pela-responsabilidade">7.5 Escolher estrutura pela responsabilidade <a class="section-link" href="#sec-7-5-escolher-estrutura-pela-responsabilidade" aria-label="Link para esta seção">#</a></h3>
 <pre><code>from dataclasses import dataclass, field
 
 
@@ -761,7 +725,7 @@ class ResumoCategoria:
     itens: list[str] = field(default_factory=list)   # NUNCA default mutável direto</code></pre>
 <p>Uma heurística útil é validar dados externos em um modelo de fronteira e representar dados internos com dataclass, mapping, tuple ou classe conforme comportamento e invariantes. Dataclass gera métodos; não valida tipos por si. <code>frozen=True</code> bloqueia atribuição de campos, mas não congela objetos internos, e hash só existe quando a combinação de opções/campos permite. <code>slots=True</code> restringe atributos declarados e pode reduzir memória, mas compatibilidade, herança e mensuração continuam parte da decisão.</p>
 
-<h3>7.6 Pattern matching: despacho pela forma, sem esconder contrato</h3>
+<h3 id="sec-7-6-pattern-matching-despacho-pela-forma-sem-esconder-contrato">7.6 Pattern matching: despacho pela forma, sem esconder contrato <a class="section-link" href="#sec-7-6-pattern-matching-despacho-pela-forma-sem-esconder-contrato" aria-label="Link para esta seção">#</a></h3>
 <pre><code>def rotular(evento: dict[str, object]) -> str:
     match evento:
         case {"tipo": "pagamento", "valor": int(v)} if v > 100_000:
@@ -772,7 +736,7 @@ class ResumoCategoria:
             return f"estorno: {m}"
         case _:
             return "desconhecido"</code></pre>
-<p>É o <code>switch</code> com pattern do C# 9+, com o mesmo espírito (inclusive guards com <code>if</code>). Uso legítimo: despachar sobre a FORMA de dado semi-estruturado — payloads de webhook, mensagens de agente, respostas de LLM (M05/M08 usam bastante). Para dois casos, um <code>if</code> simples continua mais claro.</p>
+<p><code>match</code> seleciona um caso pela estrutura do valor e pode acrescentar uma condição com <code>if</code>. Uso legítimo: despachar sobre a FORMA de dado semi-estruturado — payloads de webhook, mensagens de agente, respostas de LLM (M05/M08 usam bastante). Para dois casos, um <code>if</code> simples continua mais claro.</p>
 
 <div class="box fund">
 <span class="lbl">Fundamento de engenharia · ownership, mutabilidade e semântica de referência</span>
@@ -783,8 +747,9 @@ class ResumoCategoria:
 </ul>
 </div>
 
-<h3>7.7 Prática guiada · Refatorar sem perder operabilidade</h3>
-<div class="step"><span class="n">1</span><strong>Receba o código com sotaque.</strong> Use a fixture de defeito em <code>fixtures/generated_defects/</code>; ela funciona no caso feliz, mas concentra estado e manejo manual de arquivo:
+<h3 id="sec-7-7-leitura-aplicada-refatorar-sem-perder-operabilidade">7.7 Leitura aplicada · Refatorar sem perder operabilidade <a class="section-link" href="#sec-7-7-leitura-aplicada-refatorar-sem-perder-operabilidade" aria-label="Link para esta seção">#</a></h3>
+<p>O defeito abaixo é um contraste para leitura. Ele concentra estado e manejo manual de arquivo; o laboratório final é o único ponto de execução manual deste módulo.</p>
+<div class="box"><strong>Código de referência — implementação com hábitos de outra stack.</strong> A fixture em <code>fixtures/generated_defects/</code> funciona no caso feliz, mas contém estas escolhas:
 <pre><code>class CsvProcessor:
     def __init__(self):
         self.lines = []
@@ -815,10 +780,10 @@ class ResumoCategoria:
             else:
                 totals[cat] = val
         return totals</code></pre></div>
-<div class="step"><span class="n">2</span><strong>Refatore você mesmo</strong> (sem IA — é você quem está treinando o sotaque) aplicando o bloco inteiro: <code>with</code> (ou gerador) para o arquivo; comprehension/gerador no filtro; <code>for parts in ...</code> direto em vez de índice (<code>range(len(...))</code> é a placa de "vim do C#"); <code>dict.get</code>/<code>defaultdict</code> ou <code>Counter</code> na soma; snake_case; type hints completos; e a pergunta de design: essa classe precisa existir, ou são duas funções puras? (Dica: não precisa. Classe sem estado que valha a pena é namespace caro — em Python, módulo já é namespace.)</p>
-<p><strong>Resultado esperado:</strong> o contrato se mantém com menos estado, tipos estritos e testes de arquivo grande. Não existe meta de linhas; legibilidade, memória e comportamento são os oráculos.</p></div>
-<div class="step"><span class="n">3</span><strong>Adicione operabilidade.</strong> Leia e escreva com <code>encoding="utf-8"</code> e política explícita de newline; envie resultado para stdout, diagnóstico para stderr e use exit codes documentados. Inclua um correlation id no log, preserve exception chain com <code>raise ... from exc</code> e registre tempo com <code>perf_counter_ns()</code> e pico de memória com <code>tracemalloc</code>.</p>
-<p><strong>Resultado esperado:</strong> testes por subprocesso separam stdout/stderr, validam bytes UTF-8 e exit code. O caso grande conserva memória compatível com streaming e o erro aponta causa original.</p></div>
+<div class="box"><strong>Leitura da refatoração.</strong> <code>with</code> ou gerador fecha o arquivo; comprehension ou gerador filtra; iteração direta substitui índice; <code>dict.get</code>, <code>defaultdict</code> ou <code>Counter</code> expressa a soma; snake_case e type hints mostram intenção. Como a classe não possui estado que justifique identidade, duas funções puras e um módulo são uma alternativa mais clara.</p>
+<p><strong>Oráculos de qualidade:</strong> contrato preservado, menos estado, tipos estritos e teste de arquivo grande. Não existe meta de linhas; legibilidade, memória e comportamento decidem.</p></div>
+<div class="box"><strong>Leitura da operabilidade.</strong> Encoding UTF-8 e política explícita de newline definem a fronteira de texto; stdout carrega resultado, stderr carrega diagnóstico e exit codes são documentados. Correlation id, <code>raise ... from exc</code>, <code>perf_counter_ns()</code> e <code>tracemalloc</code> mantêm a falha e o custo investigáveis.</p>
+<p><strong>Propriedade observável:</strong> testes por subprocesso separam stdout/stderr, validam bytes UTF-8 e exit code. O caso grande preserva memória compatível com streaming e o erro aponta para a causa original.</p></div>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 7</span>
@@ -834,9 +799,9 @@ class ResumoCategoria:
 <!-- ============================================ BLOCO 8 -->
 <section id="b8">
 <h2>Bloco 8 · Estratégia de testes, CLI e entrega</h2>
-<p class="clock">00:00–00:30 testes por camada · 00:30–01:00 fixtures/propriedades · 01:00–01:30 processo/wheel · 01:30–02:00 mutação/evidência</p>
 
-<h3>8.1 Pytest: comportamento antes da implementação</h3>
+
+<h3 id="sec-8-1-pytest-comportamento-antes-da-implementacao">8.1 Pytest: comportamento antes da implementação <a class="section-link" href="#sec-8-1-pytest-comportamento-antes-da-implementacao" aria-label="Link para esta seção">#</a></h3>
 <p>Funções e classes de teste são convenções de coleta, e <code>assert</code> é reescrito durante importação/coleta para oferecer diagnóstico rico. Isso não torna a suíte boa por si: o oráculo deve distinguir comportamento correto de uma implementação plausível, mas errada.</p>
 
 <pre><code>from decimal import Decimal
@@ -865,7 +830,7 @@ def test_parse_valor_vazio_explode() -> None:
 def test_parse_valor_formatos(bruto: str, esperado: Decimal) -> None:
     assert parse_decimal(bruto) == esperado</code></pre>
 
-<h3>8.2 Fixtures: composição, escopo e teardown</h3>
+<h3 id="sec-8-2-fixtures-composicao-escopo-e-teardown">8.2 Fixtures: composição, escopo e teardown <a class="section-link" href="#sec-8-2-fixtures-composicao-escopo-e-teardown" aria-label="Link para esta seção">#</a></h3>
 <p>A fixture é onde pytest deixa o xUnit para trás. Em vez de construtor/IClassFixture, você declara funções-provedoras e os testes <strong>pedem pelo nome do parâmetro</strong> — injeção por nome, com escopo, teardown e composição:</p>
 
 <pre><code>from collections.abc import Iterator
@@ -904,7 +869,7 @@ def test_ingestao_reporta_linha_invalida(csv_sujo: Path, config_estrita: Config)
 <p>Recicle a pirâmide (muitos unitários rápidos, alguns de integração, poucos E2E) com a correção de 2026: <strong>quando a IA escreve o código, os testes mudam de papel — de rede de segurança para ESPECIFICAÇÃO EXECUTÁVEL</strong>. O agente otimiza para "testes verdes"; se os testes são fracos, ele produz código fraco aprovado. Consequências práticas: (1) teste de caminho triste e borda valem MAIS que o de caminho feliz — é onde a IA erra; (2) cobertura % é métrica de vaidade, mutação de comportamento é o que conta (o teste falharia se o comportamento mudasse?); (3) você escreve/revisa os testes com mais atenção do que o código — é o item 3 do seu <code>contract.md</code> (M01); (4) teste que testa implementação (mock de tudo, assert em chamada interna) quebra a cada refactor da IA e ensina você a ignorá-lo — teste comportamento pela interface pública.</p>
 </div>
 
-<h3>8.3 Property tests, controle negativo e defeitos de IA</h3>
+<h3 id="sec-8-3-property-tests-controle-negativo-e-defeitos-de-ia">8.3 Property tests, controle negativo e defeitos de IA <a class="section-link" href="#sec-8-3-property-tests-controle-negativo-e-defeitos-de-ia" aria-label="Link para esta seção">#</a></h3>
 <p>Exemplos verificam casos conhecidos; propriedades relacionam muitas entradas e saídas. Para o parser, uma propriedade útil é: toda transação aceita, serializada e lida novamente preserva moeda e valor decimal. Outra: linhas rejeitadas nunca aparecem no CSV limpo. Hypothesis gera e minimiza contraexemplos; fixe perfil, versões e seed apenas quando investigar reprodução.</p>
 <pre><code>from decimal import Decimal
 
@@ -917,12 +882,12 @@ def test_decimal_round_trip(value: Decimal) -> None:
     assert parse_decimal(encoded) == value</code></pre>
 <div class="danger"><strong>Teste do teste.</strong> Remova uma regra crítica, troque o sinal de uma comparação ou use uma fixture defeituosa de <code>fixtures/generated_defects/</code>. Se a suíte continuar verde, o oráculo está fraco. O catálogo de defeitos de IA deve ser revisado por tipo, semântica e risco operacional — “parece Python” não é evidência.</div>
 
-<h3>8.4 Mini-projeto guiado · <code>csv-cleaner</code> instalável</h3>
+<h3 id="sec-8-4-arquitetura-de-referencia-csv-cleaner-instalavel">8.4 Arquitetura de referência · <code>csv-cleaner</code> instalável <a class="section-link" href="#sec-8-4-arquitetura-de-referencia-csv-cleaner-instalavel" aria-label="Link para esta seção">#</a></h3>
 <p>Especificação executada: CLI lê CSV UTF-8 com cabeçalho fechado, converte valores monetários para Decimal, aplica contrato Pydantic e invariantes de domínio e grava um CSV normalizado com newline estável. Qualquer linha inválida aborta a escrita de forma atômica, envia diagnóstico para stderr e retorna exit code documentado. A evidência opcional registra hashes, runtime, duração e contagem.</p>
 
-<div class="step"><span class="n">1</span><strong>Escreva a spec primeiro</strong> (<code>docs/spec/004-csv-cleaner/</code> com seu kit do M01 — prd, spec, plan). Inclua nos não-objetivos: NÃO detectar encoding automaticamente (utf-8 fixo), NÃO paralelizar. <strong>Resultado esperado:</strong> <code>sdd_check.py</code> verde.</p></div>
+<div class="box"><span class="lbl">Artefato de referência · spec</span><p>Uma spec para este produto declara UTF-8 fixo e ausência de paralelismo como não-objetivos. O laboratório final executa a implementação já versionada e mostra onde esses limites são aplicados.</p></div>
 
-<div class="step"><span class="n">2</span><strong>Estruture as camadas</strong> — e note que é a estrutura do Capstone em miniatura:
+<div class="box"><span class="lbl">Arquitetura de referência</span><p>As camadas do produto seguem esta separação:</p>
 <pre><code>src/python_senior_lab/
 ├── domain.py          # invariantes sem framework
 ├── parsing.py         # streaming, Decimal, encoding e erros
@@ -933,13 +898,11 @@ def test_decimal_round_trip(value: Decimal) -> None:
 └── cli.py             # argparse, stdout/stderr e exit codes</code></pre>
 <p><strong>Resultado esperado:</strong> domínio/ports não importam framework web nem provedor de IA. O teste de import e a revisão do grafo comprovam a direção; Ruff não é apresentado como detector universal de ciclos.</p></div>
 
-<div class="step"><span class="n">3</span><strong>Implemente com o agente, etapa por etapa do plan</strong> — com o harness do M01 ativo (check.sh + hook). Você revisa cada diff com os olhos do bloco 5: gerador no parser? with no arquivo? factory nos defaults? dinheiro em Decimal?</p>
-<p><strong>Resultado esperado por etapa:</strong> gate verde e diff revisável. Ao final, <code>uv run python -m python_senior_lab.cli --help</code> documenta o contrato; testes por subprocesso validam stdout, stderr e códigos sem depender de sintaxe exclusiva de um shell.</p></div>
+<div class="box"><span class="lbl">Decisões que o laboratório torna observáveis</span><p>O parser usa streaming, <code>Decimal</code>, encoding explícito e escrita atômica. A CLI separa stdout, stderr e exit codes. O modelo Pydantic fica na fronteira. O laboratório final percorre essas peças sem pedir que você adivinhe o próximo diff.</p></div>
 
-<div class="step"><span class="n">4</span><strong>Bateria de testes que valem algo:</strong> parametrize de formatos de valor (inclusive os que devem FALHAR), CSV vazio, CSV só de comentários, categoria com espaços, valor negativo, duplicata exata, arquivo inexistente (mensagem de erro humana, não stack trace).</p>
-<p><strong>Resultado esperado:</strong> <code>uv run pytest -q</code> passa com contagem e duração reais registradas. Remova uma regra do parser e rode de novo: ao menos um teste precisa falhar; restaure a regra e guarde o controle negativo como evidência.</p></div>
+<div class="box"><span class="lbl">Oráculos de referência</span><p>Os testes cobrem formatos de valor, CSV vazio, comentários, categoria, valor negativo, duplicata e arquivo inexistente. O laboratório executa a suíte real e um caso negativo já preparado; ele não pede que você remova regra alguma para descobrir se o oráculo existe.</p></div>
 
-<h3>8.5 Entrega e evidência fora do checkout</h3>
+<h3 id="sec-8-5-entrega-e-evidencia-fora-do-checkout">8.5 Entrega e evidência fora do checkout <a class="section-link" href="#sec-8-5-entrega-e-evidencia-fora-do-checkout" aria-label="Link para esta seção">#</a></h3>
 <p>Construa sdist/wheel, valide arquivos obrigatórios com <code>distribution.inspect_wheel()</code> e instale o wheel em ambiente temporário cujo diretório de trabalho não seja o repositório. Execute o command entry point e confirme em <code>module.__file__</code> que o import veio de <code>site-packages</code>. O cenário assíncrono usa servidor local descartável; nenhum gate obrigatório depende de internet.</p>
 <pre><code>uv sync --python 3.14 --locked
 uv run ruff format --check .
@@ -950,7 +913,7 @@ uv build
 uv run python -m python_senior_lab.cli --help</code></pre>
 <div class="expected"><strong>Resultado observável.</strong> <code>evidence/run.json</code> da CLI registra comando, versões do runtime/adapters, SO, duração, contagem e hashes de entrada/saída. O log dos gates e hashes de wheel/sdist são evidências separadas; resultados reais não pertencem ao texto estático.</div>
 
-<h3>Peça do produto</h3>
+<h3 id="sec-peca-do-produto">Peça do produto <a class="section-link" href="#sec-peca-do-produto" aria-label="Link para esta seção">#</a></h3>
 <p><strong>Entrega para o Capstone:</strong> o núcleo de domínio e os ports tipados permanecem sem framework HTTP e sem SDK de provedor. M03 poderá adaptá-los para API e persistência sem inverter a dependência. A entrega inclui riscos residuais e itens opcionais não executados, em vez de promovê-los silenciosamente.</p>
 
 </section>
@@ -975,16 +938,122 @@ uv run python -m python_senior_lab.cli --help</code></pre>
 </table>
 </section>
 
+<section id="lab">
+<h2>Laboratório guiado M02 · construa e entregue o <code>csv-cleaner</code></h2>
+
+<p>Você vai reconstruir a fronteira de entrada do produto e usar o restante do código de referência para observar parsing, CLI, evidência, testes e build. O experimento não é uma prova. Cada comando confirma uma propriedade do programa, e a cópia temporária pode ser abandonada sem tocar a referência do curso.</p>
+<div class="box ok"><span class="lbl">Resultado do experimento</span><p>Um CSV válido produz saída normalizada e evidência. Um CSV com coluna extra retorna erro de contrato sem produzir resultado válido. Ruff, mypy, pytest e build verificam dimensões diferentes do mesmo produto.</p></div>
+
+<h3 id="sec-0-crie-a-copia-de-trabalho">0. Crie a cópia de trabalho <a class="section-link" href="#sec-0-crie-a-copia-de-trabalho" aria-label="Link para esta seção">#</a></h3>
+<pre><code>Set-Location .\modulos\M02-python-para-dev-dotnet\lab
+$workdir = python .\create_working_copy.py
+Set-Location $workdir
+Get-Content -Raw -LiteralPath .\.course-lab-workspace</code></pre>
+<p>O marcador deve mostrar <code>M02</code>. O script deixa <code>models.py</code> vazio para a reconstrução guiada e preserva o restante como infraestrutura executável. Não use o diretório versionado como área de prática.</p>
+
+<h3 id="sec-1-recrie-o-ambiente-e-a-trust-boundary">1. Recrie o ambiente e a trust boundary <a class="section-link" href="#sec-1-recrie-o-ambiente-e-a-trust-boundary" aria-label="Link para esta seção">#</a></h3>
+<p><code>uv sync --locked</code> reproduz as versões declaradas. Em seguida, cole o código abaixo em <code>src/python_senior_lab/models.py</code>. Pydantic valida quando a boundary chama o modelo; os type hints, sozinhos, não validam CSV ou payload externo.</p>
+<pre><code>uv sync --python 3.14 --locked</code></pre>
+<pre><code>"""Contratos Pydantic nas fronteiras não confiáveis."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from decimal import Decimal
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from python_senior_lab.domain import Transaction
+
+
+class LaxTransactionInput(BaseModel):
+    """Contrato explícito para fontes internas que admitem coerção documentada."""
+
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(min_length=1)
+    amount: Decimal = Field(gt=0)
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    category: str = Field(min_length=1)
+    occurred_at: datetime
+
+    @field_validator("id", "category", "currency", mode="before")
+    @classmethod
+    def strip_text(cls, value: Any) -&gt; Any:
+        return value.strip() if isinstance(value, str) else value
+
+    def to_domain(self) -&gt; Transaction:
+        return Transaction(
+            transaction_id=self.id,
+            amount=self.amount,
+            currency=self.currency,
+            category=self.category,
+            occurred_at=self.occurred_at,
+        )
+
+
+class StrictTransactionInput(BaseModel):
+    """Trust boundary estrita: sem extras, coerção ou mutação inválida posterior."""
+
+    model_config = ConfigDict(extra="forbid", strict=True, validate_assignment=True)
+    id: str = Field(min_length=1)
+    amount: Decimal = Field(gt=0)
+    currency: Literal["BRL", "EUR", "USD"]
+    category: str = Field(min_length=1)
+    occurred_at: datetime
+
+    def to_domain(self) -&gt; Transaction:
+        return Transaction(
+            transaction_id=self.id,
+            amount=self.amount,
+            currency=self.currency,
+            category=self.category,
+            occurred_at=self.occurred_at,
+        )</code></pre>
+<p><code>extra="forbid"</code> recusa campos que o contrato não declara. <code>strict=True</code> muda a política de coerção da boundary estrita. <code>Decimal</code> evita iniciar dinheiro como float binário. A camada de domínio recebe uma <code>Transaction</code> já válida, não um dicionário cru.</p>
+
+<h3 id="sec-2-execute-o-caminho-feliz-e-leia-a-evidencia">2. Execute o caminho feliz e leia a evidência <a class="section-link" href="#sec-2-execute-o-caminho-feliz-e-leia-a-evidencia" aria-label="Link para esta seção">#</a></h3>
+<p>A CLI instalada pelo projeto lê o fixture UTF-8, grava a saída no diretório temporário e registra os fatos da execução. O arquivo <code>evidence/run.json</code> é criado na cópia de trabalho.</p>
+<pre><code>uv run csv-cleaner fixtures/csv/valid.csv output.csv --evidence evidence/run.json
+Get-Content -Raw -LiteralPath .\output.csv
+Get-Content -Raw -LiteralPath .\evidence\run.json</code></pre>
+<div class="expected"><strong>Observe.</strong> A CLI informa no stdout quantas transações normalizou. A evidência contém runtime, versões, duração, hashes e contagem. Hashes e duração variam por execução; contrato de formato e exit code são a referência estável.</div>
+
+<h3 id="sec-3-execute-o-caso-negativo-preparado">3. Execute o caso negativo preparado <a class="section-link" href="#sec-3-execute-o-caso-negativo-preparado" aria-label="Link para esta seção">#</a></h3>
+<p>O fixture inválido adiciona um campo que o contrato não aceita. A saída esperada é uma negação controlada, não stack trace e nem CSV parcialmente gravado.</p>
+<pre><code>uv run csv-cleaner fixtures/csv/invalid_extra.csv invalid-output.csv
+$LASTEXITCODE</code></pre>
+<div class="expected"><strong>Observe.</strong> A CLI escreve diagnóstico no stderr e retorna <code>2</code>. Se existir <code>invalid-output.csv</code> de tentativa anterior, apague somente esse arquivo da cópia de trabalho antes de comparar; a prática não toca o diretório de referência.</div>
+
+<h3 id="sec-4-verifique-qualidade-propriedades-e-distribuicao">4. Verifique qualidade, propriedades e distribuição <a class="section-link" href="#sec-4-verifique-qualidade-propriedades-e-distribuicao" aria-label="Link para esta seção">#</a></h3>
+<p>Os gates abaixo cobrem formato, análise estática, comportamento, propriedades, casos negativos e artefato instalável. Não há uma métrica única que substitua os demais.</p>
+<pre><code>uv run ruff format --check .
+uv run ruff check .
+uv run mypy --strict src tests
+uv run pytest -q
+uv build
+uv run python -m python_senior_lab.cli --help</code></pre>
+<div class="expected"><strong>Observe.</strong> A baseline registrada tem 51 testes aprovados. O número pode crescer; não o trate como meta. O aceite é cada oráculo relevante executar e o wheel ser produzido sem depender do checkout.</div>
+
+<table><thead><tr><th>Sintoma</th><th>Primeira evidência</th><th>Correção segura</th></tr></thead><tbody>
+<tr><td><code>ModuleNotFoundError</code></td><td><code>uv run python -c "import sys; print(sys.executable)"</code></td><td>execute pelo uv dentro da cópia; não misture instalação global e projeto</td></tr>
+<tr><td>valor monetário diverge</td><td>tipo recebido e texto original do CSV</td><td>mantenha dinheiro como <code>Decimal</code> de texto ou unidade mínima inteira; não converta por float</td></tr>
+<tr><td>campo extra passa</td><td>configuração do modelo de fronteira</td><td>verifique <code>extra="forbid"</code> e o modelo realmente chamado pelo parser</td></tr>
+<tr><td>teste assíncrono falha intermitentemente</td><td>ownership de task, cancelamento e limite da fila</td><td>comece pelo teste específico e pelo diagnóstico; não aumente timeout como primeira resposta</td></tr>
+</tbody></table>
+<p>Para reiniciar, retorne à referência e execute <code>python .\create_working_copy.py</code> outra vez. O checkpoint abaixo avalia decisões e explicações depois que o experimento já foi construído.</p>
+</section>
+
 <!-- ============================================ CHECKPOINT -->
 <section id="checkpoint">
 <h2>Checkpoint M02</h2>
 <div class="box ok">
 <span class="lbl">Avaliação sem consulta — diga "Checkpoint M02" no chat</span>
 <ul class="check">
-<li><strong>P1.</strong> Explique, com event loop, cooperação e fila, qual escopo é afetado por <code>time.sleep(1)</code> dentro de <code>async def</code>. Compare com ASP.NET sem afirmar que toda Task roda no ThreadPool. Apresente sua evidência local.</li>
+<li><strong>P1.</strong> Explique, com event loop, cooperação e fila, qual escopo é afetado por <code>time.sleep(1)</code> dentro de <code>async def</code>. Explique a diferença entre bloquear o loop e executar trabalho numa thread. Apresente sua evidência local.</li>
 <li><strong>P2.</strong> mypy e Pydantic: qual protege qual fronteira? Dê um exemplo concreto de bug que só o primeiro pega e um que só o segundo pega.</li>
-<li><strong>P3.</strong> O que significa "corrotina é fria" e qual warning do runtime denuncia o erro correspondente? Como o mesmo código se comportaria em C#?</li>
-<li><strong>P4.</strong> <code>Protocol</code> vs. interface C#: explique nominal vs. estrutural e diga em que situação o Protocol elimina um projeto <code>Abstractions</code> inteiro.</li>
+<li><strong>P3.</strong> O que significa "corrotina é fria" e qual warning do runtime denuncia o erro correspondente? Qual mudança faz a coroutine ser aguardada?</li>
+<li><strong>P4.</strong> Explique compatibilidade nominal e estrutural. Mostre como dois adapters atendem a um <code>Protocol</code> e por que os testes comportamentais continuam necessários.</li>
 <li><strong>P5.</strong> Por que <code>def f(itens=[])</code> é bug e não estilo? O que acontece na segunda chamada, e por quê (semântica de referência)?</li>
 <li><strong>P6.</strong> O que o build free-threaded do 3.14 muda, como detectar GIL efetivo e por que compatibilidade/sincronização ainda precisam de prova?</li>
 <li><strong>P7.</strong> Na era de código gerado por IA, por que teste vira especificação executável? Cite uma propriedade, um caso negativo e um controle de mutação.</li>

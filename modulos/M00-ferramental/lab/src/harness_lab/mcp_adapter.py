@@ -10,8 +10,7 @@ from harness_lab.progress import course_progress as read_course_progress
 mcp = MCPServer(
     "M00 Course Progress",
     instructions=(
-        "Read a progress file under the configured root. "
-        "Never write; return at most 2000 chars."
+        "Read a progress file under the configured root. Never write; return at most 2000 chars."
     ),
 )
 

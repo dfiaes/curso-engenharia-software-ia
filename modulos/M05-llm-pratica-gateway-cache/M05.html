@@ -30,12 +30,14 @@ h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercas
 p,li{margin:0 0 14px}
 ul,ol{padding-left:22px}
 a{color:var(--accent)}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
 code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
   padding:2px 5px;border-radius:4px}
 pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
   padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
 pre code{background:none;padding:0}
 table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+@media screen and (max-width:640px){table{display:block;overflow-x:auto}}
 th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
 th{background:var(--code-bg);font-weight:600}
 blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
@@ -70,6 +72,8 @@ svg{max-width:100%;height:auto}
 hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 .kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
   border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
 .step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
 .step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
   width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
@@ -84,7 +88,8 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="wrap">
 
 <h1>M05 · LLM na prática: contrato, custo, gateway, cache</h1>
-<p class="meta"><span class="badge">MÓDULO 05</span> &nbsp; 7 blocos de 2h · pré-requisito: M04 · <strong>o software em volta do modelo — que é 95% do trabalho</strong></p>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Em produção: B01–B07 em revisão didática; laboratório executável com fakes e gates G1–G6 pendentes de revisão do orquestrador. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final e pode atravessar várias sessões. Chamadas a provedores reais são trilha opcional — o laboratório obrigatório usa fakes locais.</p></aside>
+<p class="meta"><span class="badge">MÓDULO 05</span> &nbsp; 7 blocos de conteúdo · pré-requisito: M04 · <strong>o software em volta do modelo — que é 95% do trabalho</strong></p>
 
 <div class="box">
 <span class="lbl">O que muda ao final deste módulo</span>
@@ -99,19 +104,18 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="toc">
 <strong>Roteiro</strong>
 <ol>
-<li><strong>Bloco 1</strong> — O contrato da chamada: tokens, janela, amostragem e determinismo <em>(fundamento)</em></li>
-<li><strong>Bloco 2</strong> — Structured output: o fim do parsing com regex <em>(contrato de saída)</em></li>
-<li><strong>Bloco 3</strong> — Tool calling: o loop, e por que ferramenta é saída estruturada <em>(controle)</em></li>
-<li><strong>Bloco 4</strong> — Streaming e latência percebida: SSE, backpressure, quando ir assíncrono <em>(experiência)</em></li>
-<li><strong>Bloco 5</strong> — Caching: o maior redutor de custo que existe <em>(dinheiro)</em></li>
-<li><strong>Bloco 6</strong> — AI Gateway: múltiplos provedores, governança e resiliência <em>(arquitetura)</em></li>
-<li><strong>Bloco 7</strong> — FinOps de IA: medir, prever e otimizar custo · Diagnóstico · Checkpoint <em>(entrega)</em></li>
+<li><a href="#b01"><strong>Bloco 1</strong> — O contrato da chamada: tokens, janela, amostragem e determinismo</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Structured output: o fim do parsing com regex</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Tool calling: o loop, e por que ferramenta é saída estruturada</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Streaming e latência percebida: SSE, backpressure, quando ir assíncrono</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Caching: o maior redutor de custo que existe</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — AI Gateway: múltiplos provedores, governança e resiliência</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — FinOps de IA: medir, prever e otimizar custo</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado M05</strong> — prática executável reunida, retomável por etapa</a></li>
 </ol>
 </div>
 <!-- ============================================ BLOCO 1 -->
-<h2>Bloco 1 · O contrato da chamada: tokens, janela, amostragem</h2>
-<div class="clock">00:00–00:30 token: a unidade de tudo &nbsp;|&nbsp; 00:30–01:00 janela de contexto e context rot &nbsp;|&nbsp; 01:00–01:35 amostragem: os parâmetros que importam &nbsp;|&nbsp; 01:35–02:00 prática: medir tokens e temperatura</div>
-
+<h2 id="b01">Bloco 1 · O contrato da chamada: tokens, janela, amostragem</h2>
 <h3>Por que isso importa</h3>
 <p>Toda decisão de engenharia deste módulo — custo, latência, cache, escolha de modelo, tamanho de chunk no M07 — se reduz a <strong>tokens</strong>. É a unidade de cobrança, de limite e de tempo. Um engenheiro que não sabe estimar tokens de cabeça é como um dev de banco que não sabe estimar linhas: vai descobrir o problema na fatura. E os parâmetros de amostragem são a outra metade do contrato: são eles que determinam se a mesma pergunta devolve a mesma resposta — o que decide se você consegue testar o sistema (M06).</p>
 
@@ -121,8 +125,8 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 </div>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Não há equivalente exato — e é justamente por isso que a intuição falha. O mais próximo é pensar em token como a <strong>unidade de cobrança de uma API terceirizada com preço por payload</strong>, tipo um gateway de SMS que cobra por segmento de 160 caracteres: você aprende rápido a contar segmentos antes de mandar. A diferença cruel é que aqui o <em>output</em> também é cobrado (e tipicamente 5x mais caro que o input), e você não controla quantos tokens o modelo vai gerar — só o teto (<code>max_tokens</code>). É como se o provedor de SMS decidisse o tamanho da mensagem de resposta.</p>
+<span class="lbl">Unidade de cobrança com resposta de tamanho alheio</span>
+<p>Pense em token como <strong>unidade de cobrança com preço por payload</strong>: você aprende rápido a contar antes de mandar. A diferença que quebra a intuição é que aqui o <em>output</em> também é cobrado (tipicamente bem mais caro que o input), e você não controla quantos tokens serão gerados — só o teto (<code>max_tokens</code>). Orçar sem medir a saída é chutar metade da conta.</p>
 </div>
 
 <h3>Janela de contexto: o orçamento por chamada</h3>
@@ -178,74 +182,26 @@ resposta.content[0].text</code></pre>
 <p>Erro que quase todo mundo comete ao montar a primeira suíte de testes: assumir que <code>temperature=0</code> devolve sempre exatamente a mesma string. Não devolve. Com temperatura 0 o sorteio vira "pegue o mais provável", mas <strong>a distribuição em si pode variar minimamente</strong> — ordem de operações de ponto flutuante em GPU, batching de outras requisições no servidor, roteamento entre réplicas, atualização silenciosa do modelo. Na prática você tem <em>alta</em> reprodutibilidade, não garantia. Consequências diretas: (1) teste de LLM não compara string exata (M06 mostra os graders certos); (2) <em>a versão do modelo é uma dependência</em> — pinne o identificador completo, nunca um alias tipo "latest", ou seu sistema muda de comportamento sem um único commit seu.</p>
 </div>
 
-<h3>Prática guiada · Sentir os números (35 min)</h3>
+<h3>Leitura aplicada · Sentir os números</h3>
+<p>Medir tokens por idioma, observar temperatura e provocar truncamento é o exercício deste bloco — o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: estimar tokens de três textos equivalentes (português, inglês, código) e comparar com a contagem exata do <code>usage</code>; repetir a mesma pergunta em <code>temperature=0</code> e <code>1</code> para ver repetição contra variedade; e pedir um resumo longo com <code>max_tokens</code> curto para ver o <code>stop_reason</code> virar <code>"max_tokens"</code> no meio da frase. Três reflexos saem daqui: relação entre idiomas (o mesmo conteúdo em português custa consistentemente mais tokens), extração roda em 0, e truncamento é erro explícito — nunca detalhe.</p>
+<p><strong>Trilha live opcional.</strong> Os trechos com SDK de provedor neste módulo (contagem de tokens, temperatura, truncamento) exigem chave de API e chamadas pagas: execute-os somente se tiver conta e orçamento, com os mesmos resultados esperados acima. O laboratório obrigatório prova os mesmos mecanismos com fakes locais.</p>
 
-<div class="step"><span class="n">1</span><strong>Monte o projeto do módulo:</strong>
-<pre><code>uv init llm-lab --package && cd llm-lab
-uv add anthropic pydantic pydantic-settings httpx
-uv add --dev pytest mypy ruff</code></pre>
-<p>Crie <code>.env</code> com <code>APP_ANTHROPIC_API_KEY=...</code> (e o <code>.env.example</code>, como sempre) e um <code>Settings</code> com pydantic-settings — o mesmo padrão do M02 bloco 3. <strong>Resultado esperado:</strong> <code>uv run python -c "from llm_lab.settings import settings; print(settings.anthropic_api_key[:8])"</code> imprime o prefixo da chave. Se estourar erro de validação no boot, ótimo: é o Settings fazendo o trabalho dele.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Meça tokens de verdade — em português, inglês e código.</strong> Crie <code>src/llm_lab/tokens.py</code> que use o endpoint de contagem de tokens da API (não estimativa!) para os três textos equivalentes:
-<pre><code>import anthropic
-
-from llm_lab.settings import settings
-
-client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-
-AMOSTRAS: dict[str, str] = {
-    "pt": "O sistema calcula o valor da fatura considerando descontos progressivos.",
-    "en": "The system computes the invoice amount considering progressive discounts.",
-    "code": "def compute_invoice(items: list[Item], discounts: list[Discount]) -> Decimal:",
-}
-
-
-def contar(texto: str) -> int:
-    resposta = client.messages.count_tokens(
-        model="claude-sonnet-5",
-        messages=[{"role": "user", "content": texto}],
-    )
-    return resposta.input_tokens
-
-
-for nome, texto in AMOSTRAS.items():
-    n = contar(texto)
-    print(f"{nome:5} {n:3} tokens · {len(texto):3} chars · {len(texto)/n:.1f} chars/token")</code></pre>
-<p><strong>Resultado esperado:</strong> algo próximo de <code>pt 21 tokens · 73 chars · 3.5 chars/token</code>, <code>en 15 tokens · 76 chars · 5.1</code>, <code>code 22 tokens · 74 chars · 3.4</code>. O número que importa é a <strong>relação</strong>: o mesmo conteúdo em português custa consistentemente mais tokens que em inglês. Anote — no bloco 7 isso vira uma decisão de arquitetura (prompt de sistema em inglês, conteúdo do usuário em português).</p></div>
-
-<div class="step"><span class="n">3</span><strong>Veja a temperatura com os próprios olhos.</strong> Faça a mesma pergunta 5 vezes com <code>temperature=0</code> e 5 vezes com <code>temperature=1</code>, imprimindo as respostas. Use uma pergunta com espaço para variação ("Dê um nome para um serviço que analisa código legado").</p>
-<p><strong>Resultado esperado:</strong> com 0, as 5 respostas são iguais ou quase; com 1, cinco respostas visivelmente diferentes. Agora repita com uma tarefa de extração ("Extraia o CNPJ deste texto: …") em temperatura 1 — e observe o modelo ocasionalmente inventar formatação ou adicionar comentário. É a demonstração de por que extração roda em 0.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Provoque o truncamento:</strong> peça um resumo longo com <code>max_tokens=50</code> e imprima <code>response.stop_reason</code>.</p>
-<p><strong>Resultado esperado:</strong> a resposta corta no meio de uma frase e <code>stop_reason</code> vem como <code>"max_tokens"</code> (em vez de <code>"end_turn"</code>). <strong>Guarde este reflexo:</strong> todo código de produção que chama LLM deve checar o motivo de parada — no bloco 2 você vai ver que resposta truncada é a causa nº 1 de JSON inválido, e tratar isso como erro explícito evita horas de depuração.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 1</span>
-<ul>
-<li>Token é a unidade de custo, de limite e de tempo. PT ≈ 3–3,5 chars/token; EN ≈ 4; código ≈ 3. Português custa mais caro.</li>
-<li>Janela grande não dispensa engenharia de contexto: custo linear, latência e context rot.</li>
-<li>Amostragem: temperatura 0 para extração/classificação/código; mexa em temperature OU top_p, nunca nos dois.</li>
-<li>Temperatura 0 ≠ determinismo. Pinne a versão do modelo — ela é dependência de produção.</li>
-<li><code>max_tokens</code> sempre definido, e <code>stop_reason</code> sempre verificado: truncamento é erro, não detalhe.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 2 -->
-<h2>Bloco 2 · Structured output: o fim do parsing com regex</h2>
-<div class="clock">00:00–00:25 a evolução: prompt pedindo JSON → schema imposto &nbsp;|&nbsp; 00:25–01:05 Pydantic ↔ JSON Schema na prática &nbsp;|&nbsp; 01:05–01:35 limites: o que o schema NÃO garante &nbsp;|&nbsp; 01:35–02:00 prática: o extrator do Capstone</div>
-
+<h2 id="b02">Bloco 2 · Structured output: o fim do parsing com regex</h2>
 <h3>Por que isso importa</h3>
 <p>Se o modelo devolve prosa, o seu sistema tem um problema de parsing — e parsing de linguagem natural é onde produtos de IA morrem. A história disso tem três fases, e vale conhecer as três porque você vai encontrar código de todas elas: <strong>(1) pedir educadamente</strong> ("responda apenas com JSON") e torcer, com regex para extrair o JSON do meio da prosa e retry quando falha; <strong>(2) tool calling como truque</strong> — declarar uma ferramenta falsa só para forçar o modelo a preencher um schema; <strong>(3) structured output nativo</strong>, onde o provedor <em>restringe a geração</em> para que a saída obedeça ao JSON Schema. Hoje só a fase 3 é aceitável em produção, e ela mudou de estatuto recentemente: na API da Anthropic saiu de beta e virou parâmetro estável (<code>output_config.format</code>), sem header especial.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Structured output é <strong>contract-first aplicado ao modelo</strong>. É o equivalente de gerar o cliente a partir do OpenAPI em vez de fazer <code>JsonDocument.Parse</code> e navegar com <code>TryGetProperty</code> torcendo para o campo existir. O schema é o contrato, e — detalhe que muda tudo — <strong>a restrição acontece na geração, não na validação</strong>: o modelo é impedido de emitir um token que quebre o schema, em vez de ser corrigido depois. A analogia mais próxima é a diferença entre validar entrada com <code>if</code> e ter uma coluna <code>NOT NULL</code> no banco: um verifica, o outro torna impossível.</p>
+<span class="lbl">Contrato imposto na geração, não na validação</span>
+<p>Structured output é <strong>contract-first aplicado ao modelo</strong>: o schema é o contrato, e a restrição acontece na geração — o modelo é impedido de emitir um token que quebre o schema, em vez de ser corrigido depois. A diferença é a mesma entre validar entrada com <code>if</code> e ter uma constraint que torna o estado inválido impossível: um verifica, o outro impede.</p>
 </div>
 
 <h3>Pydantic como fonte única do schema</h3>
 <p>Você já tem a peça certa desde o M02: um <code>BaseModel</code> Pydantic <em>é</em> um JSON Schema (<code>Model.model_json_schema()</code>). Isso te dá um contrato único que serve para: instruir o modelo, validar a resposta, tipar o código e documentar a API. Nunca escreva o JSON Schema à mão.</p>
 
-<pre><code># src/llm_lab/extract.py
-"""Extração estruturada: uma peça do Capstone (analisa um arquivo de código)."""
+<p><em>Exemplo de adapter — trilha live opcional (exige chave de API; o laboratório executável usa fakes).</em></p>
+<pre><code># extract.py (adapter de provedor)
+"""Extração estruturada contra provedor real."""
 
 from __future__ import annotations
 
@@ -300,7 +256,7 @@ PROMPT_SISTEMA = (
 def analisar(codigo: str, caminho: str) -> AnaliseArquivo:
     """Analisa um arquivo e devolve o contrato validado (ou levanta)."""
     resposta = client.messages.create(
-        model="claude-sonnet-5",
+        model="MODELO-VERSIONADO",  # pinne o identificador completo (bloco 1)
         max_tokens=2000,
         temperature=0,
         system=PROMPT_SISTEMA,
@@ -349,35 +305,11 @@ def analisar(codigo: str, caminho: str) -> AnaliseArquivo:
 <p>Cada provedor tem sua sintaxe: na Anthropic é <code>output_config={"format": {"type": "json_schema", "schema": ...}}</code>; na OpenAI, <code>response_format={"type": "json_schema", "json_schema": {...}}</code> com <code>strict: true</code>. <strong>O que é comum é o JSON Schema</strong> — e é por isso que o curso mantém o Pydantic como fonte única: o modelo de dados é seu, o adaptador é fino, e trocar de provedor não reescreve o contrato. Duas ressalvas práticas do JSON Schema em modo estrito, que valem para os dois: <code>additionalProperties: false</code> costuma ser exigido (o Pydantic gera isso quando você usa <code>extra="forbid"</code>), e recursos exóticos (<code>allOf</code> complexo, <code>$ref</code> profundo, <code>oneOf</code> aninhado) podem não ser suportados — schema chato e plano funciona em todo lugar.</p>
 </div>
 
-<h3>Prática guiada · O extrator do Capstone (35 min)</h3>
+<h3>Leitura aplicada · Forma imposta, verdade verificada</h3>
+<p>Implementar o extrator com schema Pydantic, provar que o schema é imposto, forçar a abstenção e testar o contrato como código é o exercício deste bloco — o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: validar a saída contra um arquivo conhecido e julgar quantos achados são verdadeiros (a primeira medida de qualidade, semente do M06); mandar prosa onde se esperava código para ver JSON válido com conteúdo ruim ("forma ≠ verdade" na prática); forçar lista vazia num arquivo trivial para ver abstenção em vez de invenção; e testar o schema offline (campos, enum, rejeição) sem chamar nada. <strong>Trilha live opcional:</strong> os mesmos passos contra provedor real exigem chave e crédito.</p>
 
-<div class="step"><span class="n">1</span><strong>Implemente o <code>extract.py</code> acima</strong> e rode contra um arquivo <code>.cs</code> real do seu trabalho (um que você conheça bem — precisa poder julgar a resposta).</p>
-<p><strong>Resultado esperado:</strong> um objeto <code>AnaliseArquivo</code> impresso, com 1–5 achados. Agora faça o julgamento: quantos achados são <em>verdadeiros</em>? Algum <code>linha_inicial</code> aponta para o lugar errado? Anote a taxa — é a sua primeira medida de qualidade, e ela vira dataset no M06.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Prove que o schema é imposto:</strong> mande um texto que não é código (o README do projeto) e veja o que acontece.</p>
-<p><strong>Resultado esperado:</strong> o JSON continua <em>válido</em> — todos os campos presentes, tipos certos — mas o conteúdo é ruim (o modelo tenta encaixar prosa no formato de análise de código). Essa é a demonstração visceral de "forma ≠ verdade". Conserto correto: adicionar ao schema um campo <code>eh_codigo: bool</code> e ao prompt a instrução de recusar; conserto errado: mais adjetivos no prompt.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Force a abstenção.</strong> Adicione ao <code>Achado</code> a possibilidade de lista vazia e ao prompt: <em>"If the file has no modernization risk, return an empty list. An empty list is a valid and expected answer."</em> Rode contra um arquivo trivial (um DTO de 20 linhas).</p>
-<p><strong>Resultado esperado:</strong> <code>achados: []</code> em vez de três achados inventados sobre um DTO. Compare com o comportamento anterior — a diferença entre um produto que gera confiança e um que gera ruído está inteira nesse detalhe.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Teste o contrato como código.</strong> Escreva <code>tests/test_extract.py</code> com um teste que valida o <em>schema</em> (não a resposta do modelo): que <code>AnaliseArquivo.model_json_schema()</code> tem <code>additionalProperties: false</code>, que <code>risco</code> só aceita os três valores, e que a validação rejeita um payload com risco <code>"altíssimo"</code>.</p>
-<p><strong>Resultado esperado:</strong> testes verdes e rápidos (não chamam a API!). Este é o padrão do curso: <strong>o contrato tem teste unitário; o comportamento do modelo tem eval (M06)</strong>. Confundir os dois produz suítes lentas, caras e instáveis.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 2</span>
-<ul>
-<li>Três fases históricas: pedir JSON → tool calling como truque → schema imposto na geração. Só a terceira serve.</li>
-<li>Pydantic é a fonte única: um modelo gera o schema, valida a resposta, tipa o código e documenta a API.</li>
-<li>Valide mesmo assim: saída de LLM é fronteira de confiança, e você vai trocar de provedor.</li>
-<li>Schema garante forma, nunca verdade. Comemorar "100% JSON válido" é comemorar a linha de partida.</li>
-<li>Descrição de campo é prompt; dê saída válida para "não sei"; limite tamanho no schema, não no texto.</li>
-<li>Contrato tem teste unitário (rápido, offline); comportamento tem eval (M06).</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 3 -->
-<h2>Bloco 3 · Tool calling: o loop, e quem manda nele</h2>
-<div class="clock">00:00–00:25 o que acontece de verdade numa tool call &nbsp;|&nbsp; 00:25–01:05 o loop completo em código &nbsp;|&nbsp; 01:05–01:35 design de ferramenta e erros que ensinam &nbsp;|&nbsp; 01:35–02:00 prática: duas ferramentas reais</div>
-
+<h2 id="b03">Bloco 3 · Tool calling: o loop, e quem manda nele</h2>
 <h3>Por que isso importa</h3>
 <p>"Tool calling" é o mecanismo por trás de tudo que o mercado chama de agente — e é também o conceito mais mal explicado do campo. A confusão custa caro em segurança, então vamos matá-la na primeira frase: <strong>o modelo não executa nada</strong>. Ele emite um pedaço de JSON dizendo "eu chamaria a função X com estes argumentos". Quem executa (ou recusa) é o <em>seu</em> código. Isso é o fator 4 do 12-Factor Agents (M01 bloco 3: <em>tools are just structured outputs</em>), e entender isso literalmente é o que separa quem constrói agente seguro de quem constrói incidente.</p>
 
@@ -417,11 +349,12 @@ def analisar(codigo: str, caminho: str) -> AnaliseArquivo:
 </figure>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Pense no modelo como um <strong>cliente que envia um <code>ICommand</code> serializado</strong> para o seu handler — um MediatR onde o request chega de fora. Você tem o pipeline inteiro no meio: validação, autorização, log de auditoria, rate limit, e a decisão de recusar. Ninguém aceitaria um sistema onde o request de um cliente externo executa direto no domínio sem passar pelo pipeline — e é exatamente isso que fazem os tutoriais de agente que executam <code>eval()</code> no que o modelo devolveu. A definição da ferramenta, por sua vez, é <strong>o contrato OpenAPI que você publica para esse cliente</strong>: nome, descrição, schema de entrada.</p>
+<span class="lbl">Pedido externo, pipeline seu</span>
+<p>Pense no modelo como um <strong>cliente que envia um comando serializado</strong> para o seu handler. Você tem o pipeline inteiro no meio: validação, autorização, log de auditoria, rate limit, e a decisão de recusar. Ninguém aceitaria um sistema onde o request de um cliente externo executa direto no domínio sem passar pelo pipeline — e é exatamente isso que fazem os tutoriais que executam <code>eval()</code> no que o modelo devolveu. A definição da ferramenta é <strong>o contrato que você publica para esse cliente</strong>: nome, descrição, schema de entrada.</p>
 </div>
 
-<h3>O loop completo, em código que roda</h3>
+<h3>O loop completo, em código</h3>
+<p><em>Exemplo de adapter — trilha live opcional (exige chave de API; o loop com teto executável vive no laboratório).</em></p>
 <pre><code># src/llm_lab/tools.py
 """Loop de tool calling explícito — sem framework, para você ver a mecânica."""
 
@@ -467,7 +400,7 @@ def ler_arquivo(entrada: LerArquivoIn) -> str:
 
 def buscar_simbolo(entrada: BuscarSimboloIn) -> str:
     achados: list[str] = []
-    for arquivo in RAIZ.rglob("*.cs"):
+    for arquivo in RAIZ.rglob("*.py"):
         for n, linha in enumerate(arquivo.read_text(errors="replace").splitlines(), 1):
             if entrada.simbolo in linha:
                 achados.append(f"{arquivo.relative_to(RAIZ)}:{n}: {linha.strip()[:120]}")
@@ -498,8 +431,8 @@ DEFINICOES = [
     {
         "name": "buscar_simbolo",
         "description": (
-            "Procura um identificador (classe, método, tabela) em todos os arquivos "
-            ".cs do repositório. Devolve caminho:linha das ocorrências."
+            "Procura um identificador (classe, função, tabela) nos arquivos "
+            "Python do repositório. Devolve caminho:linha das ocorrências."
         ),
         "input_schema": BuscarSimboloIn.model_json_schema(),
     },
@@ -573,34 +506,11 @@ def investigar(pergunta: str, max_passos: int = 8) -> str:
 <p>Confusão comum, agora que os dois existem nativamente: <strong>structured output controla o que o modelo DIZ</strong> (o formato da resposta final); <strong>tool calling controla o que o modelo PEDE</strong> (chamadas intermediárias). Extrair dados de um documento = structured output, uma chamada, sem loop. Investigar um repositório = tool calling, várias chamadas, com loop. E eles se combinam: um agente pode usar ferramentas por vários turnos e, no último, entregar a resposta final em formato estruturado (na API da Anthropic, os dois parâmetros convivem na mesma requisição; nas ferramentas há ainda <code>strict: true</code> para validar os argumentos com rigor de schema). O antipadrão morto: declarar uma ferramenta falsa chamada <code>responder</code> só para conseguir JSON — isso era gambiarra da era pré-structured output.</p>
 </div>
 
-<h3>Prática guiada · Duas ferramentas reais (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Rode o loop contra um repositório .NET de verdade.</strong> Clone um projeto seu em <code>./repo-analisado</code> e pergunte: <em>"Onde está implementada a validação de CPF/CNPJ neste sistema, e quem chama esse código?"</em></p>
-<p><strong>Resultado esperado:</strong> as linhas de <code>[passo N]</code> mostrando a sequência real — tipicamente um <code>buscar_simbolo("CNPJ")</code>, depois um ou dois <code>ler_arquivo(...)</code>, e a resposta final citando arquivo e linha. <strong>Leia a sequência de passos, não só a resposta</strong>: é ali que você vê o modelo raciocinando com as suas ferramentas, e é ali que você descobre qual descrição está ruim.</p></div>
+<h3>Leitura aplicada · O loop sob seu comando</h3>
+<p>Rodar o loop contra um repositório real, sabotar uma descrição, testar o guardrail de caminho e medir o custo do loop é o exercício deste bloco — o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: ler a sequência de passos (é ali que se vê o modelo raciocinando e a descrição ruim); trocar uma descrição por texto vago e observar o modelo errar a ferramenta; pedir explicitamente um arquivo fora da raiz e ver a recusa mecânica seguida de autocorreção; somar input+output de todos os passos para sentir o custo do histórico reenviado. <strong>Trilha live opcional:</strong> contra provedor real, com chave e crédito.</p>
 
-<div class="step"><span class="n">2</span><strong>Sabote a descrição</strong> de <code>buscar_simbolo</code> para algo vago ("faz busca") e repita a mesma pergunta.</p>
-<p><strong>Resultado esperado:</strong> o modelo passa a usar a ferramenta errada, ou tenta ler arquivos no chute, gastando mais passos. Você acabou de medir o valor de uma linha de descrição — e ganhou o argumento para tratar definição de ferramenta como código de produção (versionado, revisado, testado).</p></div>
-
-<div class="step"><span class="n">3</span><strong>Teste o guardrail:</strong> peça explicitamente <em>"leia o arquivo ../../.env"</em>.</p>
-<p><strong>Resultado esperado:</strong> a ferramenta recusa com "ERRO: caminho fora do repositório" e o modelo <em>se corrige</em>, buscando dentro da raiz. Compare com o que aconteceria sem o <code>is_relative_to</code>: você teria acabado de dar leitura arbitrária de disco a um texto vindo da internet.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Meça o custo do loop.</strong> Some <code>response.usage.input_tokens</code> e <code>output_tokens</code> de todos os passos e imprima o total ao final.</p>
-<p><strong>Resultado esperado:</strong> um número que assusta na primeira vez — o histórico inteiro é reenviado a cada passo, então um loop de 6 passos com um arquivo de 8k tokens no meio custa muito mais que 6 chamadas simples. <strong>Guarde esse número:</strong> ele é o argumento do bloco 5 (caching) e a linha de base do bloco 7.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 3</span>
-<ul>
-<li>O modelo não executa nada: emite JSON. Seu código valida, autoriza e executa — ou recusa.</li>
-<li>O loop é seu <code>while</code>: com orçamento de passos, validação Pydantic da entrada e erro devolvido como tool_result acionável.</li>
-<li>Ferramenta é API pública para um leitor literal: nome e descrição são a documentação; poucas e bem escolhidas.</li>
-<li>Sandbox mecânico, não instrução: o modelo vai pedir o que um arquivo malicioso mandar pedir.</li>
-<li>Structured output = o que o modelo diz; tool calling = o que ele pede. Convivem na mesma chamada.</li>
-<li>Custo do loop cresce rápido: o histórico é reenviado a cada passo.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 4 -->
-<h2>Bloco 4 · Streaming e latência percebida</h2>
-<div class="clock">00:00–00:25 as três métricas de latência que importam &nbsp;|&nbsp; 00:25–01:00 SSE ponta a ponta &nbsp;|&nbsp; 01:00–01:30 quando NÃO streamar: o padrão assíncrono &nbsp;|&nbsp; 01:30–02:00 prática: medir TTFT</div>
-
+<h2 id="b04">Bloco 4 · Streaming e latência percebida</h2>
 <h3>Por que isso importa</h3>
 <p>LLM é lento em escala humana: uma resposta de 800 tokens leva vários segundos. Se o seu endpoint espera a resposta completa para devolver, o usuário encara uma tela parada — e o seu servidor segura uma conexão por todo esse tempo. Streaming resolve o primeiro problema; o padrão assíncrono resolve o segundo. Saber <em>qual dos dois</em> aplicar é uma decisão de arquitetura, não de gosto — e ela depende de uma métrica que você provavelmente nunca mediu.</p>
 
@@ -621,11 +531,12 @@ def investigar(pergunta: str, max_passos: int = 8) -> str:
 </div>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>SSE em FastAPI é o equivalente do <code>IAsyncEnumerable&lt;T&gt;</code> devolvido de um endpoint ASP.NET Core (que serializa como JSON streaming) ou do SignalR em modo servidor→cliente, sem o overhead do hub. O detalhe que mais confunde na virada é que o <em>tipo de retorno muda</em>: você não devolve um objeto, devolve um <strong>gerador async</strong> (M02 bloco 5 — <code>yield</code> em função assíncrona). E a consequência de arquitetura é a mesma que você já conhece de long polling: <strong>cada stream aberto é uma conexão ocupada</strong>; no event loop único (M02 bloco 4) isso é barato em memória, mas conta no limite de conexões do proxy e do provedor.</p>
+<span class="lbl">O retorno vira gerador</span>
+<p>Em SSE com FastAPI, o detalhe que mais confunde é que o <em>tipo de retorno muda</em>: você não devolve um objeto, devolve um <strong>gerador async</strong> (M02 bloco 5 — <code>yield</code> em função assíncrona). E a consequência de arquitetura: <strong>cada stream aberto é uma conexão ocupada</strong> — barato em memória no event loop, mas contando no limite de conexões do proxy e do provedor.</p>
 </div>
 
 <h3>Streaming ponta a ponta</h3>
+<p><em>Exemplo de adapter — trilha live opcional (exige chave de API; montagem e backpressure executáveis vivem no laboratório).</em></p>
 <pre><code># src/llm_lab/stream_api.py
 """Endpoint SSE: repassa o stream do modelo para o cliente, com métricas."""
 
@@ -724,37 +635,11 @@ async def perguntar(p: Pergunta) -> StreamingResponse:
 </ul>
 </div>
 
-<h3>Prática guiada · Medir TTFT e ver o buffering (30 min)</h3>
-<div class="step"><span class="n">1</span><strong>Suba o endpoint</strong> (<code>uv add fastapi uvicorn</code>) e consuma com curl:
-<pre><code>uv run uvicorn llm_lab.stream_api:app --port 8000 &
-curl -N -X POST localhost:8000/perguntar \
-  -H 'content-type: application/json' \
-  -d '{"texto":"Explique em 3 parágrafos o que é acoplamento aferente."}'</code></pre>
-<p><strong>Resultado esperado:</strong> texto aparecendo em pedaços na tela (o <code>-N</code> desliga o buffer do curl) e, no fim, a linha de métricas com <code>ttft_ms</code> na casa de centenas e <code>tps</code> entre 20 e 100. Se tudo aparecer de uma vez, é buffering — em algum lugar.</p></div>
+<h3>Leitura aplicada · Latência que se mede</h3>
+<p>Subir o endpoint SSE, provar que o input domina o TTFT, provar que a saída domina o total e simular o cliente que desiste é o exercício deste bloco — o roteiro executável com streams simulados fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: consumir com <code>curl -N</code> e ver texto em pedaços mais a linha de métricas; repetir com contexto grande e ver o TTFT subir com o TPOT estável; pedir resposta curta e ver o total cair proporcional; matar o cliente no meio e ver o gerador cancelado com registro. <strong>Trilha live opcional:</strong> contra provedor real, com chave e crédito.</p>
 
-<div class="step"><span class="n">2</span><strong>Prove que o input domina o TTFT.</strong> Repita a chamada colando 20 mil tokens de contexto antes da pergunta (o conteúdo de vários arquivos serve).</p>
-<p><strong>Resultado esperado:</strong> <code>ttft_ms</code> sobe visivelmente (é preciso processar a entrada antes de gerar), enquanto <code>tps</code> fica parecido. Essa é a evidência de que <strong>prompt grande é caro em latência antes de ser caro em dinheiro</strong> — e a motivação direta do prompt caching, no próximo bloco.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Prove que a saída domina o total.</strong> Mesma pergunta, uma vez pedindo 3 parágrafos e outra pedindo "uma frase" (com <code>max_tokens</code> menor).</p>
-<p><strong>Resultado esperado:</strong> total cai proporcionalmente aos tokens de saída. Anote os dois pares (tokens, ms) — no bloco 7 eles viram a otimização "resposta curta" com impacto calculado em R$ <em>e</em> em ms.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Simule o cliente que desiste:</strong> comece um stream longo e mate o curl com <kbd class="kbd">Ctrl-C</kbd> no meio. Observe o log do uvicorn.</p>
-<p><strong>Resultado esperado:</strong> o gerador é cancelado. Adicione um <code>try/finally</code> em volta do loop registrando "stream cancelado após N tokens" e confirme que ele dispara — em produção essa linha vira métrica de desistência (e de dinheiro jogado fora).</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 4</span>
-<ul>
-<li>Três métricas: TTFT (depende do input), TPOT (você não controla), total (dominado pela saída). Resposta curta é otimização dupla.</li>
-<li>SSE é HTTP simples e unidirecional; em FastAPI, um gerador async com <code>text/event-stream</code>.</li>
-<li>Os quatro assassinos: buffering de proxy, erro depois do 200, cliente que desconecta, e JSON parcial.</li>
-<li>&lt;2s síncrono · 2–30s streaming · &gt;30s assíncrono com 202 + job (e aí vem retomada, prioridade e durabilidade).</li>
-<li>Fila exige backpressure, Little's Law, semáforo alinhado ao rate limit (com jitter) e job idempotente.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 5 -->
-<h2>Bloco 5 · Caching: o maior redutor de custo que existe</h2>
-<div class="clock">00:00–00:25 recicla: teoria de cache &nbsp;|&nbsp; 00:25–01:10 prompt caching: mecânica e regras &nbsp;|&nbsp; 01:10–01:40 as outras três camadas de cache &nbsp;|&nbsp; 01:40–02:00 prática: medir a economia</div>
-
+<h2 id="b05">Bloco 5 · Caching: o maior redutor de custo que existe</h2>
 <h3>Por que isso importa</h3>
 <p>No bloco 3 você mediu o custo de um loop de agente e o número assustou. A causa é estrutural: <strong>o prompt inteiro é reenviado a cada turno</strong> — instruções, definições de ferramentas, todo o histórico. Num loop de 8 passos com um prompt de sistema de 3k tokens e um arquivo de 8k, você paga pelo mesmo conteúdo oito vezes. Prompt caching ataca exatamente isso e é, com folga, a otimização de maior retorno por linha de código do módulo: <strong>leitura de cache custa 10% do preço do token de entrada</strong> — uma redução de 90% na parte reaproveitada.</p>
 
@@ -774,7 +659,7 @@ curl -N -X POST localhost:8000/perguntar \
 <p>O provedor guarda o estado interno de processamento de um <strong>prefixo</strong> do seu prompt. Na chamada seguinte, se o prefixo for byte-a-byte idêntico, ele reaproveita esse estado em vez de reprocessar. Daí saem todas as regras — e todas as pegadinhas.</p>
 
 <div class="box">
-<span class="lbl">Contexto · As regras do prompt caching na API da Anthropic (conferidas em ago/2026)</span>
+<span class="lbl">Contexto · Regras de prompt caching por prefixo (retrato ago/2026, revalidar em 90 dias)</span>
 <ul>
 <li><strong>Ordem do prefixo:</strong> <code>tools → system → messages</code>. Mudou as ferramentas, invalida tudo; mudou o system, invalida system e messages.</li>
 <li><strong>Marcação:</strong> <code>cache_control: {"type": "ephemeral"}</code> no bloco onde o prefixo termina. Até <strong>4 breakpoints</strong> por requisição. Há também o modo automático (marcação no topo da requisição), em que o breakpoint avança sozinho conforme a conversa cresce.</li>
@@ -792,7 +677,7 @@ curl -N -X POST localhost:8000/perguntar \
 
 <p>A consequência para o desenho do prompt é direta — e é a regra que você vai repetir em todo projeto: <strong>estável primeiro, variável depois</strong>.</p>
 
-<pre><code># src/llm_lab/cached.py
+<pre><code># cached.py (adapter de provedor — trilha live opcional)
 """Chamada com prompt caching: prefixo estável marcado, variável no fim."""
 
 from __future__ import annotations
@@ -858,26 +743,15 @@ def relatorio_cache(msg: anthropic.types.Message) -> str:
 </table>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>O cache de resposta é o seu <code>IMemoryCache</code>/Redis de sempre, com dois cuidados novos: a <strong>chave precisa incluir a versão do modelo e os parâmetros de amostragem</strong> (senão você serve resposta do modelo antigo depois do upgrade — bug silencioso clássico), e <strong>a chave precisa incluir o tenant</strong> quando o prompt contém dado do cliente (senão você acabou de construir um vazamento entre tenants — M12). O cache de embeddings é o mais parecido com o que você já faz: é memoização pura de função determinística, guardada numa tabela do Postgres com o hash como chave primária.</p>
+<span class="lbl">Chave de cache sem vazamento</span>
+<p>O cache de resposta é um cache chave-valor comum, com dois cuidados novos: a <strong>chave precisa incluir a versão do modelo e os parâmetros de amostragem</strong> (senão você serve resposta do modelo antigo depois do upgrade — bug silencioso clássico), e <strong>a chave precisa incluir o tenant</strong> quando o prompt contém dado do cliente (senão vira vazamento entre tenants — M12). O cache de embeddings é memoização pura de função determinística, guardada numa tabela com o hash como chave primária.</p>
 </div>
 
-<h3>Prática guiada · Medir a economia de verdade (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Baseline sem cache:</strong> faça 5 perguntas diferentes sobre o MESMO arquivo grande (~8k tokens) sem <code>cache_control</code>, somando os tokens de entrada e o custo.</p>
-<p><strong>Resultado esperado:</strong> ~5 × (8k + instruções) tokens de entrada. Com Sonnet 5 a $2/MTok (ago/2026), algo em torno de US$ 0,09 — anote o número exato.</p></div>
+<h3>Leitura aplicada · Economia que se mede</h3>
+<p>Medir baseline sem cache, repetir com prefixo marcado, quebrar o cache de propósito de três jeitos e implementar o cache de embeddings é o exercício deste bloco — o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: 5 perguntas sobre o mesmo arquivo sem marcação (custo cheio) e com marcação (primeira paga escrita, seguintes leem a 10%); três sabotagens — um caractere no início das instruções, timestamp no começo do system, espera além do TTL — cada uma zerando a leitura e vacinando contra o erro de produção; e memoização de embeddings com a segunda execução em zero chamadas. <strong>Trilha live opcional:</strong> contra provedor real, com chave e crédito; números de preço são retrato datado.</p>
 
-<div class="step"><span class="n">2</span><strong>Agora com <code>cache_control</code></strong> no bloco do arquivo (como no código acima), as mesmas 5 perguntas em sequência.</p>
-<p><strong>Resultado esperado:</strong> a 1ª chamada mostra <code>cache_creation_input_tokens ≈ 8k</code> e custa <em>mais</em> que a baseline (1,25x); as 4 seguintes mostram <code>cache_read_input_tokens ≈ 8k</code> e custam ~10% disso. Economia total na casa de <strong>60–70%</strong> em 5 chamadas — e quanto mais perguntas sobre o mesmo arquivo, melhor a razão. Rode <code>relatorio_cache()</code> em cada uma e cole a saída no PROGRESSO.md.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Quebre o cache de propósito</strong> — três experimentos, um de cada vez: (a) mude UM caractere no início das instruções; (b) coloque o timestamp atual no <em>começo</em> do system; (c) espere 6 minutos entre as chamadas.</p>
-<p><strong>Resultado esperado:</strong> (a) e (b) zeram o <code>cache_read</code> — prefixo é byte-a-byte, e conteúdo variável no começo destrói tudo que vem depois; (c) o TTL de 5 min expirou e você paga escrita de novo. Esses três experimentos vacinam contra os erros que você cometeria em produção.</p></div>
-
-<p>O cache de embeddings, que a prática pede, é curto o suficiente para caber aqui — e você vai reusá-lo o curso inteiro:</p>
-<pre><code># src/llm_lab/embed_cache.py
-"""Memoização de embeddings em Postgres. Texto imutável -> vetor imutável."""
-
-from __future__ import annotations
-
+<p>Memoização de embeddings segue o mesmo molde — exemplo trabalhado (adapter com chamada real, trilha live):</p>
+<pre><code># embed_cache.py (adapter — trilha live opcional)
 import hashlib
 
 import numpy as np
@@ -894,14 +768,12 @@ def _chave(texto: str) -> str:
 
 async def obter_embedding(session: AsyncSession, texto: str) -> list[float]:
     chave = _chave(texto)
-
     linha = await session.execute(
         text("SELECT vetor FROM embeddings_cache WHERE hash_texto = :h"),
         {"h": chave},
     )
     if (achado := linha.scalar_one_or_none()) is not None:
         return np.frombuffer(achado, dtype=np.float32).tolist()   # HIT
-
     vetor = await chamar_api_de_embedding(texto)                  # MISS: paga
     await session.execute(
         text(
@@ -911,31 +783,26 @@ async def obter_embedding(session: AsyncSession, texto: str) -> list[float]:
         {"h": chave, "m": MODELO_EMBED, "v": np.array(vetor, dtype=np.float32).tobytes()},
     )
     return vetor</code></pre>
-<p>Repare no <code>ON CONFLICT DO NOTHING</code>: dois workers podem calcular o mesmo texto ao mesmo tempo (M03 bloco 2 — corrida resolvida por constraint, não por <code>if</code>). E no modelo dentro da chave: trocar de modelo de embedding invalida o cache inteiro <em>por construção</em>, em vez de servir vetores incompatíveis — o bug de migração que o M07 discute.</p>
-
-<div class="step"><span class="n">4</span><strong>Implemente o cache de embeddings</strong> (o de melhor retorno e o mais simples): uma tabela <code>embeddings_cache(hash_texto TEXT PRIMARY KEY, modelo TEXT, vetor BYTEA, criado_em TIMESTAMPTZ)</code> e uma função <code>obter_embedding(texto)</code> que consulta antes de chamar a API.</p>
-<p><strong>Resultado esperado:</strong> rode duas vezes sobre a mesma lista de 100 trechos; a segunda execução deve fazer <strong>zero</strong> chamadas à API e ser ~50x mais rápida. Guarde essa função — o M07 vai reindexar repositórios inteiros e ela é a diferença entre reindexar de graça e reindexar pagando tudo de novo.</p></div>
+<p>Repare no <code>ON CONFLICT DO NOTHING</code>: dois workers podem calcular o mesmo texto ao mesmo tempo — corrida resolvida por constraint (M03 bloco 2), não por <code>if</code>. E no modelo dentro da chave: trocar de modelo de embedding invalida o cache inteiro <em>por construção</em>, em vez de servir vetores incompatíveis.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 5</span>
 <ul>
-<li>O prompt inteiro é reenviado a cada turno. Prompt caching corta 90% da parte reaproveitada (leitura a 0,1x).</li>
+<li>O prompt inteiro é reenviado a cada turno. Prompt caching corta a maior parte da parte reaproveitada (leitura a fração do preço).</li>
 <li>Prefixo: tools → system → messages. Estável primeiro, variável depois. Breakpoint no último bloco estável.</li>
-<li>Cache write custa 1,25x: hit rate baixo pode sair mais caro que não cachear. Faça a conta com <code>cache_read</code>/<code>cache_creation</code>.</li>
-<li>Mínimo de tokens por modelo, TTL de 5 min (renovável) ou 1h a 2x. Prefixo é byte-a-byte.</li>
+<li>Cache write custa mais que chamada simples: hit rate baixo pode sair mais caro que não cachear. Faça a conta com leitura/escrita medidas.</li>
+<li>Mínimo de tokens por modelo, TTL curto renovável ou longo mais caro. Prefixo é byte-a-byte.</li>
 <li>Quatro camadas: prompt, resposta (chave inclui modelo, parâmetros e tenant!), embeddings (sempre) e semântico (cuidado).</li>
 </ul>
 </div>
 <!-- ============================================ BLOCO 6 -->
-<h2>Bloco 6 · AI Gateway: múltiplos provedores, governança e resiliência</h2>
-<div class="clock">00:00–00:25 o problema que o gateway resolve &nbsp;|&nbsp; 00:25–01:05 LiteLLM: proxy, roteamento e fallback &nbsp;|&nbsp; 01:05–01:35 resiliência: timeout, retry, circuit breaker &nbsp;|&nbsp; 01:35–02:00 prática: derrubar o provedor</div>
-
+<h2 id="b06">Bloco 6 · AI Gateway: múltiplos provedores, governança e resiliência</h2>
 <h3>Por que isso importa</h3>
 <p>Até agora seu código chama a API da Anthropic diretamente. Isso funciona até o dia em que uma destas cinco coisas acontece — e todas acontecem: o provedor cai ou fica lento; você precisa de um modelo barato para tarefas simples e um caro para as difíceis; um cliente exige que o dado não saia da infraestrutura dele (Ollama local, M11); você precisa saber quanto cada tenant gastou; ou o preço muda e o concorrente fica 40% mais barato. Um <strong>AI Gateway</strong> é a camada de indireção que transforma esses cinco eventos de "reescrever o sistema" em "mudar uma configuração". É o padrão que todo time grande usa e que quase ninguém no Brasil conhece pelo nome.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É um <strong>API Gateway</strong> (YARP, Ocelot, APIM) com uma diferença de eixo: em vez de rotear por <em>rota</em>, roteia por <strong>custo, capacidade e disponibilidade do modelo</strong>. E é também o seu <strong>Polly</strong> centralizado: timeout, retry com backoff, circuit breaker e fallback deixam de estar espalhados em cada serviço e passam a viver numa camada só, configurada em YAML, aplicável a todos os consumidores. Se você já defendeu numa reunião por que resiliência não pode ser copiada e colada em cada cliente HTTP, já sabe defender o gateway.</p>
+<span class="lbl">Roteamento por custo, resiliência centralizada</span>
+<p>Um AI Gateway roteia por <strong>custo, capacidade e disponibilidade do modelo</strong> em vez de rotear por rota — e centraliza timeout, retry com backoff, circuit breaker e fallback numa camada só, configurável, aplicável a todos os consumidores. Resiliência copiada e colada em cada cliente diverge; centralizada, evolui junto.</p>
 </div>
 
 <h3>O que um gateway entrega</h3>
@@ -1005,7 +872,7 @@ litellm_settings:
 
 <div class="box fund">
 <span class="lbl">Fundamento de engenharia · Resiliência — o que muda quando a dependência é um LLM</span>
-<p>Você conhece o kit (Polly): timeout, retry, backoff, circuit breaker, bulkhead. O que muda com LLM:</p>
+<p>O kit é conhecido — timeout, retry, backoff, circuit breaker, bulkhead. O que muda com LLM:</p>
 <ul>
 <li><strong>Timeout tem que ser generoso E existente.</strong> 5s derruba chamada legítima; "sem timeout" pendura a conexão para sempre. Calibre pelo p99 medido da SUA carga (bloco 4), não por chute — e lembre que streaming muda a conta: o timeout relevante passa a ser o de <em>inatividade</em> entre chunks.</li>
 <li><strong>Retry só em erro transitório, com jitter.</strong> 429 e 5xx: sim. 400 (schema inválido) e 401: nunca — retry de erro determinístico é só gastar dinheiro mais rápido. E jitter é obrigatório: sem ele, N workers falham juntos e voltam juntos (thundering herd).</li>
@@ -1080,33 +947,11 @@ async def pedir[T: BaseModel](
     )</code></pre>
 <p>O campo <code>modelo_usado</code> é o detalhe que separa código de produção de tutorial: com fallback ativo, você <em>precisa</em> saber qual modelo respondeu — para depurar qualidade, para cobrar certo e para o eval do M06 não comparar peras com maçãs. Note também <code>litellm.completion_cost</code>: o gateway conhece a tabela de preços e calcula por chamada, o que alimenta o bloco 7 sem você manter preço hardcoded.</p>
 
-<h3>Prática guiada · Derrubar o provedor e sobreviver (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Instale e configure:</strong> <code>uv add litellm</code>, crie o <code>litellm.config.yaml</code> (comece com dois provedores; se só tiver uma chave de API, use dois modelos do mesmo provedor — o mecanismo é idêntico) e o <code>gateway.py</code> acima.</p>
-<p><strong>Resultado esperado:</strong> <code>await pedir("raciocinio", AnaliseArquivo, ...)</code> devolve o mesmo objeto do bloco 2, agora com telemetria. Confirme que <code>custo_usd</code> vem preenchido e bate com sua conta manual.</p></div>
+<h3>Leitura aplicada · Provedor cai, cliente não percebe</h3>
+<p>Configurar aliases com fallback, forçar a falha do primário, comparar qualidade entre aliases e registrar a decisão em ADR é o exercício deste bloco — o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: mesma chamada devolvendo o objeto do bloco 2 agora com telemetria (<code>modelo_usado</code> preenchido); chave inválida no primário e a chamada <em>sucedendo</em> pelo fallback, com o cooldown tirando o quebrado do pool; tabela rapido × raciocinio em custo, latência e qualidade manual (embrião do M06); e o ADR com a consequência incômoda declarada — o gateway é um ponto único de falha a monitorar. <strong>Trilha live opcional:</strong> com dois provedores (ou dois modelos do mesmo), chaves e crédito.</p>
 
-<div class="step"><span class="n">2</span><strong>Force a falha do primário:</strong> troque a chave do provedor de <code>raciocinio</code> por uma inválida e repita a chamada.</p>
-<p><strong>Resultado esperado:</strong> a chamada <em>sucede</em> — <code>modelo_usado</code> mostra o modelo de fallback. Nos logs do litellm aparecem as tentativas e o fallback. Este é o experimento que o checkpoint cobra: <strong>o cliente não percebeu</strong>. Agora repita 4 vezes seguidas e observe o cooldown: após <code>allowed_fails</code>, o deployment quebrado sai do pool e o gateway nem tenta mais (as chamadas ficam <em>mais rápidas</em> — o circuit breaker economizando latência).</p></div>
-
-<div class="step"><span class="n">3</span><strong>Compare qualidade entre aliases</strong> na mesma tarefa: rode a extração do bloco 2 com <code>rapido</code> e com <code>raciocinio</code> nos mesmos 5 arquivos, registrando custo, latência e a sua avaliação manual dos achados.</p>
-<p><strong>Resultado esperado:</strong> uma tabela de 5 linhas × 3 colunas. Tipicamente o modelo rápido custa 3–5x menos, responde 2–3x mais rápido, e erra mais em nuance (classifica risco errado, perde um achado). <strong>Essa tabela é o embrião do M06</strong> — e a evidência para a decisão de roteamento: talvez classificação de linguagem vá no rápido e análise de risco vá no de raciocínio.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Escreva o ADR.</strong> Com os números na mão, escreva <code>docs/adr/0002-roteamento-por-alias-e-fallback.md</code> no formato do M04: contexto, opções (chamada direta / gateway biblioteca / gateway proxy), decisão com porquê, consequências (dependência nova, latência do proxy, um ponto único a mais de falha) e as três perguntas de produção.</p>
-<p><strong>Resultado esperado:</strong> um ADR com custo declarado — inclusive a consequência incômoda de que o gateway é agora um ponto único de falha que você precisa monitorar. Commit: <code>M05: route LLM calls through gateway aliases with fallback</code>.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 6</span>
-<ul>
-<li>Gateway = indireção que transforma "reescrever" em "reconfigurar": provedor caiu, modelo mudou, cliente exige local, tenant precisa de orçamento.</li>
-<li>Alias semântico no código (<code>rapido</code>/<code>raciocinio</code>), nunca nome de modelo. Nome de modelo em domínio é cheiro.</li>
-<li>Fallback degrada em vez de derrubar — e precisa aparecer na telemetria (<code>modelo_usado</code>), senão você depura no escuro.</li>
-<li>Resiliência com LLM: timeout pelo p99 medido, retry só transitório com jitter e limite baixo (retry custa dinheiro), circuit breaker também contra lentidão, bulkhead entre lote e interativo.</li>
-<li>Fallback por janela ≠ fallback por falha: um sobe de modelo, o outro troca de provedor.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 7 -->
-<h2>Bloco 7 · FinOps de IA: medir, prever e otimizar custo</h2>
-<div class="clock">00:00–00:30 a conta que todo engenheiro de IA sabe fazer &nbsp;|&nbsp; 00:30–01:05 as sete alavancas de otimização &nbsp;|&nbsp; 01:05–01:40 mini-projeto: services/llm/ do Capstone &nbsp;|&nbsp; 01:40–02:00 exercício e entrega</div>
-
+<h2 id="b07">Bloco 7 · FinOps de IA: medir, prever e otimizar custo</h2>
 <h3>Por que isso importa</h3>
 <p>Em software tradicional, o custo marginal de um request é aproximadamente zero — por isso você nunca precisou pensar nele por request. Em IA, <strong>cada chamada tem custo unitário visível</strong>, e isso reintroduz uma disciplina que a nossa geração de engenheiros nunca precisou ter: contabilidade por operação. É também o que separa o protótipo do produto: qualquer um faz uma demo bonita queimando o modelo mais caro em tudo; produto exige margem. E é a pergunta que o seu gestor (e o seu futuro cliente) vai fazer primeiro: <em>"quanto custa rodar isso?"</em>.</p>
 
@@ -1121,7 +966,7 @@ custo_mensal  = custo_request_médio × requests_mês
 margem_bruta  = (preço_do_plano − custo_mensal_por_cliente) / preço_do_plano</code></pre>
 
 <div class="box">
-<span class="lbl">Contexto · Preços de referência — conferidos em agosto de 2026 (US$ por milhão de tokens)</span>
+<span class="lbl">Contexto · Preços de referência — retrato ago/2026, revalidar em 90 dias (US$ por milhão de tokens)</span>
 <table>
 <thead><tr><th>Modelo</th><th>Input</th><th>Output</th><th>Cache write (5min)</th><th>Cache read</th></tr></thead>
 <tbody>
@@ -1134,8 +979,8 @@ margem_bruta  = (preço_do_plano − custo_mensal_por_cliente) / preço_do_plano
 </div>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Você já fez isso com <strong>DTU/vCore do SQL Azure e consumo do Service Bus</strong>: dimensionar, medir e defender o custo por transação. A diferença é que aqui o custo varia com o <em>conteúdo</em> de cada request (prompt de 2k vs. de 50k tokens), não só com a quantidade — então a média esconde a cauda. Meça <strong>p50, p95 e máximo</strong> do custo por request, e não só o total: é o request de 50k tokens que mata a sua margem, e ele não aparece na média.</p>
+<span class="lbl">Custo por conteúdo, não por quantidade</span>
+<p>O custo aqui varia com o <em>conteúdo</em> de cada request (prompt de 2k vs. de 50k tokens), não só com a quantidade — então a média esconde a cauda. Meça <strong>p50, p95 e máximo</strong> do custo por request, e não só o total: é o request gigante que mata a margem, e ele não aparece na média.</p>
 </div>
 
 <h3>As sete alavancas, em ordem de retorno</h3>
@@ -1157,38 +1002,41 @@ margem_bruta  = (preço_do_plano − custo_mensal_por_cliente) / preço_do_plano
 <p>A pergunta mais lucrativa da engenharia de IA é: <em>"isto precisa mesmo de um LLM?"</em>. Detectar a linguagem de um arquivo pela extensão custa zero e acerta mais que o modelo. Contar linhas, extrair imports, achar TODOs, calcular métricas de acoplamento (M10) — tudo determinístico. A regra de ouro da arquitetura do seu Capstone (está lá no <code>docs/projeto-final.md</code>) é exatamente esta: <strong>o que é determinístico fica determinístico; o modelo entra para explicar, priorizar e conversar</strong>. Além de derrubar o custo, isso elimina uma classe inteira de alucinação e é o julgamento arquitetural que separa engenheiro sênior de IA de quem só chama API.</p>
 </div>
 
-<h3>Mini-projeto guiado · <code>services/llm/</code> do Capstone (40 min)</h3>
-<p>Hora de juntar os sete blocos numa peça de produção. Especifique com o kit do M01 (<code>docs/spec/006-llm-service/</code>) e implemente:</p>
+<h3>Leitura aplicada · A camada de LLM como peça</h3>
+<p>Juntar os sete blocos numa camada de produção — gateway com aliases e telemetria, prompts versionados, schemas, contabilidade persistida, circuit breaker de custo por tenant e endpoint de custo — é o exercício deste bloco; o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, abaixo. O percurso: fronteira única que só ela conhece o SDK (trocar de gateway não toca o domínio); telemetria por chamada com dinheiro em tipo decimal e tenant desde a primeira migration; recusa 402 ou degradação quando o tenant estoura o orçamento; e endpoint de custo legível por não-técnicos. Como conta de guardanapo: estime três cenários (tudo no modelo forte sem cache; com cache no prefixo; roteando a maioria para o modelo rápido com lote na ingestão), apresente em moeda com margem para o plano — e valide contra execução real, documentando o erro percentual e a razão da diferença. <em>Errar a estimativa é normal; não saber por que errou é o problema.</em></p>
+<p>A aplicação ao Capstone é trilha opcional com especificação própria; o laboratório entrega gateway, ledger e relatório sobre fakes.</p>
 
-<div class="step"><span class="n">1</span><strong>Estrutura:</strong>
-<pre><code>capstone/backend/src/app/services/llm/
-├── gateway.py      # bloco 6: pedir(), aliases, telemetria
-├── prompts/        # bloco 5: markdown versionado, prefixo estável
-│   └── analista.md
-├── schemas.py      # bloco 2: AnaliseArquivo, Achado, Risco
-├── extractor.py    # bloco 2 + 5: chama o gateway com cache marcado
-├── cost.py         # bloco 7: tabela de preços, cálculo, registro
-└── __init__.py     # expõe só o que o resto do app usa</code></pre>
-<p><strong>Resultado esperado:</strong> <code>lint-imports</code> (M03 b4) verde — nada fora de <code>services/llm/</code> importa <code>litellm</code> ou <code>anthropic</code>. Essa fronteira é o que permite trocar de gateway sem tocar no domínio.</p></div>
+<!-- ============================================ LABORATÓRIO GUIADO -->
+<h2 id="lab-guiado">Laboratório guiado M05</h2>
+<p>A prática do módulo, reunida e executável com fakes locais — sem rede, conta ou crédito. Pode atravessar várias sessões: cada etapa termina retomável. Lint, tipos e testes são oráculos do programa; o checkpoint vem depois, separado. Trilha live opcional (provedor real, com chave e crédito) replica as etapas 1, 2, 4 e 6 com os mesmos resultados esperados.</p>
 
-<div class="step"><span class="n">2</span><strong>Persista a telemetria.</strong> Migration Alembic criando <code>llm_calls</code>: <code>id, tenant_id, analysis_id, alias, modelo_usado, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, custo_usd numeric(12,6), latencia_ms, created_at</code>. Grave uma linha por chamada.</p>
-<p><strong>Resultado esperado:</strong> depois de rodar 20 análises, <code>SELECT alias, count(*), sum(custo_usd), avg(latencia_ms) FROM llm_calls GROUP BY alias;</code> devolve seu primeiro painel de custo. Repare que dinheiro é <code>numeric</code>, nunca float (M02) — e que <code>tenant_id</code> já está lá desde o começo, porque adicionar depois é migração dolorosa (M12).</p></div>
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigido: Python 3.14 e <code>uv</code>. Nunca edite a referência em <code>modulos/M05-llm-pratica-gateway-cache/lab/</code>:</p>
+<pre><code>cd modulos/M05-llm-pratica-gateway-cache/lab
+python3 create_working_copy.py
+cd /tmp/m05-xxxx   # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>Resultado esperado:</strong> ambiente sincronizado. A cópia pode ser descartada e refeita; nada fora dela é tocado.</p>
 
-<div class="step"><span class="n">3</span><strong>Circuit breaker de custo.</strong> Antes de cada chamada, verifique o gasto acumulado do tenant no mês; acima do limite do plano, recuse com <strong>402</strong> (ou degrade para o alias barato, conforme a política que você escrever).</p>
-<p><strong>Resultado esperado:</strong> um teste de integração (M03 b6) que insere gasto acima do limite e prova que a 21ª chamada é recusada. <strong>Esse é o mecanismo que impede o cliente de R$ 99 gastar R$ 400 em tokens</strong> — o cenário do M12, resolvido aqui na origem.</p></div>
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Contrato e estimativa (bloco 1).</strong> Rode <code>uv run pytest -q tests/test_contract.py</code>.
+<p><strong>Resultado esperado:</strong> dois adapters na mesma suíte, usage contabilizado, truncamento como erro explícito.</p></div>
+<div class="step"><span class="n">2</span><strong>Saída estruturada (bloco 2).</strong> Rode <code>uv run pytest -q tests/test_structured.py</code>.
+<p><strong>Resultado esperado:</strong> JSON válido vira objeto, inválido e fora do schema viram erro tipado, abstenção passa.</p></div>
+<div class="step"><span class="n">3</span><strong>Tools com teto (bloco 3).</strong> Rode <code>uv run pytest -q tests/test_tools.py</code>.
+<p><strong>Resultado esperado:</strong> loop pede→executa→devolve; ferramenta desconhecida e argumento inválido viram erro acionável; loop infinito vira teto.</p></div>
+<div class="step"><span class="n">4</span><strong>Streaming (bloco 4).</strong> Rode <code>uv run pytest -q tests/test_streaming.py</code>.
+<p><strong>Resultado esperado:</strong> montagem em ordem, corte detectado, tubo com teto sem perda.</p></div>
+<div class="step"><span class="n">5</span><strong>Cache e gateway (blocos 5–6).</strong> Rode <code>uv run pytest -q tests/test_cache.py tests/test_gateway.py</code>.
+<p><strong>Resultado esperado:</strong> hit evita chamada, TTL expira, fallback responde sem o cliente perceber, retry tem teto, ledger soma e relatório lista economia.</p></div>
+<div class="step"><span class="n">6</span><strong>Validação técnica.</strong> <code>uv run ruff check .</code>, <code>uv run ruff format --check .</code>, <code>uv run mypy src tests</code>, suíte completa.
+<p><strong>Resultado esperado:</strong> tudo verde. Qualquer vermelho é defeito do programa.</p></div>
 
-<div class="step"><span class="n">4</span><strong>Endpoint de custo:</strong> <code>GET /analises/{id}/custo</code> devolvendo tokens, custo em USD, custo em BRL (cotação em configuração, não hardcoded) e o detalhamento por chamada.</p>
-<p><strong>Resultado esperado:</strong> resposta JSON que você consegue mostrar para alguém não-técnico. Se o número parecer alto, ótimo — as sete alavancas estão logo acima, e o exercício abaixo é exatamente sobre isso.</p></div>
-
-<h3>Exercício sozinho (sem pistas até pedir)</h3>
-<p><strong>Parte A — a conta de guardanapo.</strong> Estime o custo mensal do Capstone no cenário: 30 clientes, cada um analisando 2 repositórios/mês, cada repositório com 400 arquivos relevantes, ~1.200 tokens de código por arquivo, prompt de sistema de 2.000 tokens, saída média de 300 tokens por arquivo. Calcule três cenários: (a) tudo em Sonnet 5 sem cache; (b) com prompt caching no prefixo estável; (c) roteando 70% dos arquivos para Haiku 4.5 e usando Batch API na ingestão. Apresente em USD e BRL, e diga qual seria o preço mínimo do plano para 80% de margem bruta.</p>
-<p><strong>Parte B — a validação.</strong> Rode 20 arquivos de verdade pelo pipeline e compare o custo real com a sua estimativa. Documente o erro percentual e a razão da diferença. <em>Errar a estimativa é normal; não saber por que errou é o problema.</em> Registre os dois no PROGRESSO.md — este é o material do seu post público do módulo (trilha de marketing pessoal do currículo).</p>
-
-<h3>Peça do produto</h3>
-<p><strong>Entrega para o Capstone:</strong> <code>services/llm/</code> completo — gateway com aliases e fallback, prompts versionados com prefixo estável cacheado, schemas Pydantic, tabela <code>llm_calls</code>, circuit breaker de custo por tenant e endpoint de custo. É a camada que o M06 vai avaliar, o M07 vai alimentar com contexto recuperado e o M08 vai transformar em agente.</p>
+<h3>Limpeza e retomada</h3>
+<p>Apague a cópia se quiser. Para retomar, crie uma nova e volte à etapa: cada uma só precisa da cópia sincronizada.</p>
 
 <!-- ============================================ DIAGNÓSTICO -->
-<h2>Tabela de Diagnóstico</h2>
+<h2 id="diagnostico-m05">Tabela de Diagnóstico</h2>
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
@@ -1206,32 +1054,40 @@ margem_bruta  = (preço_do_plano − custo_mensal_por_cliente) / preço_do_plano
 </table>
 
 <!-- ============================================ CHECKPOINT -->
-<h2>Checkpoint M05</h2>
+<h2 id="checkpoint-m05">Checkpoint M05</h2>
 <div class="box ok">
 <span class="lbl">Avaliação sem consulta — diga "Checkpoint M05" no chat</span>
+<p>Cada pergunta cobre uma família de cenários; a rubrica diz o que basta e o que reprova. Demonstração com a referência do lab executa junto.</p>
 <ul class="check">
-<li><strong>P1.</strong> Dado um volume de 10.000 requests/mês do seu extrator, calcule o custo mensal (mostre a fórmula e os números) e apresente <strong>duas otimizações com o impacto em R$ de cada uma</strong>. Defenda por que escolheu essas duas e não outras da lista de sete.</li>
-<li><strong>P2.</strong> Por que <code>temperature=0</code> não garante determinismo, e quais duas consequências práticas isso tem — uma para testes, outra para dependências de produção?</li>
-<li><strong>P3.</strong> Structured output garante o quê e não garante o quê? Dê um exemplo real do seu extrator para cada lado da fronteira.</li>
-<li><strong>P4.</strong> "O modelo executou a ferramenta." Corrija a frase com precisão e explique por que a diferença é de segurança, citando o guardrail que você implementou no bloco 3.</li>
-<li><strong>P5.</strong> Explique a ordem <code>tools → system → messages</code> do prompt caching e por que colocar um timestamp no início do system destrói o cache inteiro. Qual métrica denuncia isso?</li>
-<li><strong>P6.</strong> Cache write custa 1,25x e read custa 0,1x. Em que condição ativar prompt caching <strong>aumenta</strong> o custo? Escreva a desigualdade.</li>
-<li><strong>P7.</strong> Quando streaming, quando 202+job? Dê o critério e explique o que o padrão assíncrono te dá que o streaming não dá.</li>
-<li><strong>P8.</strong> Demonstre o fallback: derrube o provedor primário e prove com telemetria que o cliente não percebeu — e explique por que registrar <code>modelo_usado</code> é obrigatório.</li>
-<li><strong>P9.</strong> Qual é a alavanca de custo mais subestimada, e como ela se aplica ao Capstone? Cite três coisas do seu produto que NÃO devem usar LLM.</li>
+<li><strong>P1 · Custo (AT-016–017).</strong> Dado um volume mensal, calcule com a fórmula e apresente duas otimizações com impacto em moeda, defendendo a escolha. <em>Basta:</em> conta com input/output/cache separados + ledger que confirma. <em>Reprova:</em> média sem cauda.</li>
+<li><strong>P2 · Determinismo (AT-001–003).</strong> Por que temperatura 0 não garante, e as consequências para testes e dependências. <em>Basta:</em> sem string exata em teste + versão pinada. <em>Reprova:</em> "0 = determinístico".</li>
+<li><strong>P3 · Forma vs. verdade (AT-004–006).</strong> O que o schema garante e não garante, com exemplo de cada lado e abstenção. <em>Basta:</em> rejeição demonstrada + saída válida para "não sei". <em>Reprova:</em> "JSON válido = correto".</li>
+<li><strong>P4 · Tools (AT-007–008).</strong> Corrija "o modelo executou a ferramenta" com precisão de segurança e mostre o guardrail. <em>Basta:</em> valida→executa→devolve com teto + recusa demonstrada. <em>Reprova:</em> execução sem validação.</li>
+<li><strong>P5 · Cache (AT-011–012).</strong> Ordem do prefixo, por que variável no início destrói tudo, e a desigualdade em que cache aumenta o custo. <em>Basta:</em> breakpoint no último estável + hit/TTL demonstrados. <em>Reprova:</em> cache por fé.</li>
+<li><strong>P6 · Streaming (AT-009–010).</strong> Quando streamar vs. 202+job, e o que o assíncrono dá a mais. <em>Basta:</em> critério por tempo + corte detectado. <em>Reprova:</em> parse de JSON parcial.</li>
+<li><strong>P7 · Gateway (AT-013–015).</strong> Derrube o primário e prove com telemetria que o cliente não percebeu; explique o teto de retry. <em>Basta:</em> fallback com modelo_usado + tentativas limitadas. <em>Reprova:</em> retry sem teto.</li>
 </ul>
 <h4>Entregáveis verificados (mostrar rodando)</h4>
 <ol>
-<li><code>services/llm/</code> completo no Capstone, com <code>lint-imports</code> provando que só ele conhece o SDK.</li>
-<li>Extrator com structured output validado + abstenção funcionando (lista vazia em arquivo trivial).</li>
-<li>Loop de tool calling com orçamento de passos, sandbox de caminho e erro acionável — demonstrando a recusa do <code>../../.env</code>.</li>
-<li>Endpoint SSE com métricas de TTFT/TPOT e o experimento dos dois tamanhos de saída.</li>
-<li>Prompt caching medido: relatório com <code>cache_read</code>/<code>cache_creation</code> e a economia percentual em 5 chamadas; cache de embeddings com a segunda execução em zero chamadas de API.</li>
-<li>Gateway com fallback comprovado (chave inválida no primário) e a tabela comparando <code>rapido</code> × <code>raciocinio</code> em custo, latência e qualidade.</li>
-<li>Tabela <code>llm_calls</code> populada + circuit breaker de custo com teste de integração + <code>GET /analises/{id}/custo</code>.</li>
-<li>ADR-0002 (gateway) e a conta de guardanapo com a validação real e o erro percentual explicado.</li>
+<li>Gates verdes: <code>ruff</code>, <code>format</code>, <code>mypy --strict</code>, <code>pytest</code> (27 passed).</li>
+<li>Dois adapters na mesma suíte de contrato; structured com rejeição e abstenção.</li>
+<li>Tool loop com teto e erro acionável; stream com corte detectado e teto sem perda.</li>
+<li>Cache com hit/TTL/invalidação; gateway com fallback, timeout e ledger + relatório.</li>
 </ol>
 </div>
+
+<h2 id="fontes-m05">Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://docs.anthropic.com/en/api/messages">Anthropic API — messages</a></td><td>contrato de chamada e usage (bloco 1)</td><td>fornecedor</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://platform.openai.com/docs/api-reference/chat">OpenAI API — chat</a></td><td>segundo adapter (bloco 6)</td><td>fornecedor</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching">Prompt caching</a></td><td>prefixo, TTL, preços (bloco 5)</td><td>fornecedor</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://html.spec.whatwg.org/multipage/server-sent-events.html">SSE (HTML standard)</a></td><td>formato do stream (bloco 4)</td><td>normativa</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://json-schema.org/specification">JSON Schema 2020-12</a></td><td>validação de saída (bloco 2)</td><td>padrão aberto</td><td>14/09/2026</td></tr>
+</tbody>
+</table>
+<p>Preços, versões de modelo, quotas e capacidades são informação de alto risco: revalidar em até 90 dias. O invariante do módulo (contrato, cache, retry, custo) não depende de nenhum fornecedor.</p>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

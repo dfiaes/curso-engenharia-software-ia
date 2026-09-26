@@ -1,0 +1,66 @@
+LT01-B03-L — evidencia de gates (folha B03-L, bloco B03)
+Data (UTC): 2026-09-19 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir: modulos/LT01-novo/lab/ · HTML/spec/trace/STATUS/PROGRESSO intocados.
+
+COMANDOS (tails reais)
+- uv sync → "Resolved 13 packages" / "Checked 11 packages" (mypy 1.20.2, pytest 9.1.1, ruff 0.16.8); venv 3.14.7.
+- uv run ruff check . → "All checks passed!"
+- uv run ruff format --check . → "18 files already formatted"
+- uv run mypy → "Success: no issues found in 18 source files"
+- uv run pytest → "63 passed, 1 skipped in 1.63s" (at001:4, at002:7, at003:3, at010:5, at011:6, at012:9, at020:9, at021:4, at022:15+1 skip; 0 skip fora do BLOCKED-TLS)
+- repeticoes B03 (29 passed, 1 skipped em 0.35s; at021 3x: 4 passed em ~0.01s — deterministico)
+
+NUMEROS MEDIDOS (exemplo variavel, medicao local desta maquina)
+- resolver_local("localhost", 5.0) → ['::1', '127.0.0.1'] em 3.2 ms (getaddrinfo local, sem DNS externo)
+- resolver_com_atraso("localhost", 0.05, 0.3) → ResolucaoExpirada (prazo estourou no sleep local)
+- resolver_com_atraso("localhost", 5.0, 0.0) → resolve (atraso dentro do prazo)
+- conectar("127.0.0.1", porta_livre_fechada(), 5.0) → ConexaoRecusada em 0.2 ms (sem bytes trocados)
+- servir_reset_uma_vez() + conectar ok + ler_ate_reset → ConexaoResetada ("par abortou a conversa (RST)")
+- ServidorFimLimpo (carga b"oi" + SHUT_WR) → ler_ate_reset retorna sem erro (EOF limpo, nao falha)
+- verificar_hostname SAN exato/curinga-restrito/CN-legado passam; divergente/SAN-sobre-CN/sem-nomes → HostnameInvalido
+- verificar_validade janela ±3600 s passa; fora da janela → CertificadoExpirado (2 ramos: expirado / ainda-nao-valido)
+- apertar_mao contra TCP cru (nao-TLS) em 127.0.0.1 → OSError (falha validada, conversa nao segue)
+- apertar_mao contra porta fechada → OSError (falha sem seguir; verificacao nunca desligada)
+
+DIVERGENCIAS DO VERBATIM
+- Nenhuma nos 3 modulos B03: byte-identicos aos <pre> executaveis 14/15/16 da
+  secao B03 do LT01.html (conferencia por diff programatico apos html.unescape:
+  resolucao_local.py 2090 B, conexao_tcp.py 2620 B, tls_local.py 3654 B).
+- Acomodacoes de ferramenta (NAO alteram modulo, precedente do override mypy B01):
+  pyproject name/version/description estendidos para B01+B02+B03 e files com os
+  3 modulos novos; per-file-ignores "tls_local.py" = ["E501", "SIM117"] porque o
+  contrato congelado traz `def apertar_mao(...)` com 102 colunas e `with`
+  aninhados no handshake; [tool.ruff.format] exclude = ["tls_local.py"] porque o
+  formatador reembrulharia a assinatura e quebraria o byte-identico. Correcao
+  pertence a revisao futura do HTML, nao a este lab. Testes proprios 100%
+  limpos (ruff + format + mypy strict sem ignores).
+- Comportamento contratado observado e dependente de plataforma padrao: curinga
+  "*.localhost" cobre "a.b.localhost" mas nao "app.localhost" (prefixo sem ponto
+  reprova em `_casa`); teste fixa o comportamento do contrato, nao RFC.
+
+LIMITES
+- So localhost/127.0.0.1 e porta efemera em modulos e testes (stdlib: socket,
+  ssl, time, struct, threading); nenhuma rede externa, nenhum DNS externo.
+- Servidores de teste em thread daemon com shutdown: ServidorFimLimpo e
+  ServidorTcpCru com join(timeout=5.0) + close da escuta no __exit__;
+  servir_reset_uma_vez (modulo) morre sozinho apos um aceite; sockets do
+  chamador sempre fechados em finally; sem flaky (3 repeticoes verdes).
+- TLS com cadeia real = BLOCKED honesto: gerar/assinar certificado exige
+  openssl externo, fora da stdlib; sem certidao gerada em runtime. Cobertura
+  sem rede: verificar_hostname/validade contra estrutura (SAN, CN, notBefore/
+  notAfter via ssl.cert_time_to_seconds) + fonte de apertar_mao com
+  check_hostname=True e CERT_REQUIRED (assert estrutural: sem CERT_NONE,
+  sem unverified, sem check_hostname=False) + handshake que falha validado
+  (OSError) contra par nao-TLS e porta fechada em 127.0.0.1.
+- QUIC sem oraculo de execucao: stdlib nao implementa (assert not hasattr(ssl,
+  "QUIC")); diagnostico transfere o raciocinio sem fingir execucao.
+- Portas, ms e enderecos sao exemplo variavel; amostras fixas: prazo 5.0 s,
+  atraso 0.3 s vs prazo 0.05 s, carga b"oi"/b"x", janela ±3600 s.
+- STATUS-IMPLEMENTACAO-CURSO.md ja modificado no worktree por trabalho alheio
+  paralelo; esta folha nao o tocou (nem HTML/spec/trace/PROGRESSO).
+
+GATE CANDIDATO
+- LT01-B03-L APTO a G2 (lab B03): 3 contratos verbatim + pyproject (3.14/uv/ruff
+  100 E,F,I,B,UP,SIM,RUF,ASYNC/mypy strict 18 arquivos/pytest strict) + README +
+  3 oraculos (AT-020/021/022, 9+4+15 testes, 1 skip BLOCKED-TLS honesto) +
+  suite verde integral (63 passed, 1 skipped) nesta plataforma POSIX.

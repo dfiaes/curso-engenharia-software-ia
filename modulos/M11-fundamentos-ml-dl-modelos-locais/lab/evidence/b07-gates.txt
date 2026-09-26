@@ -1,0 +1,41 @@
+M11-B07-L — evidência de execução real dos gates (orquestrador, 14/09/2026)
+Construção DIRETA (contratos fechados do B07-C; collections.abc em vez
+de typing para Callable/Mapping, sem efeito semântico). 78 passed
+(67 anteriores + 11 novos: 6 provedor AT-024–028, 5 dimensionar AT-029).
+
+AMBIENTE
+  Python 3.14.7 · ruff 0.16.7 · mypy 1.20.2 · pytest 9.1.1; sem torch
+  neste lote (stdlib puro); sem rede/modelo; Docker/Ollama/GPU AUSENTES
+  (servidor live BLOCKED com registro; oráculos sem servidor).
+
+GATES
+  $ uv run ruff check .
+  All checks passed! (intermediários: I001 ordem de imports; RUF002
+  en-dash em docstring; E501 linha de 104 chars)
+  $ uv run ruff format --check .
+  37 files already formatted
+  $ uv run mypy
+  Success: no issues found in 36 source files (fakes anotados com
+  Mapping por contravariância de Callable; semântica intacta)
+  $ uv run pytest -q
+  78 passed, 2 warnings in 54.50s (treino B04 domina; B07 < 0.1s)
+
+MEDIDOS (transporte fake + fórmula, execução real)
+  completar: texto preservado, Uso(10, 5, 0.0), confianca -0.15,
+  provedor/modelo rotulados; sem logprobs → None.
+  keep_alive "-1" e options.num_ctx 8192 chegam ao corpo enviado.
+  localhost → base_url; 0.0.0.0 sem proxy → ValueError; com proxy → URL.
+  n_ctx 4096 < 20000 → erro de truncamento; parallel 0 → erro.
+  $ dimensionar_local.py --vram 24 --ctx-max 8192 → Q8_0 pleno
+  8 GB → Q6_K reduzido; 4 GB → API; 70 GB/131k/4 → Q8_0 reduzido;
+  parallel 4 estoura onde 1 cabe (KV ×4).
+
+DIVERGÊNCIAS DO VERBATIM: zero semântico (imports collections.abc no
+lugar de typing.Callable/Mapping exigido pelo UP035; HTML já publicado
+com collections.abc pela correção do orquestrador no B07-C).
+
+CLEANUP: nenhum resíduo em /tmp.
+
+LIMITE: servidor Ollama/Docker/GPU ausentes → oráculos live (curl/pull/
+run/ps, vazão tok/s) BLOCKED com registro; cross-family real com
+servidores e matriz API×local pertencem a B07-trilha/B08.

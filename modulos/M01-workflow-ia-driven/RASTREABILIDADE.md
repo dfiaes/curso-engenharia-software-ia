@@ -1,6 +1,6 @@
 # Rastreabilidade do M01
 
-**Data-base:** 15/08/2026 · **Especificação:** `docs/especificacoes/M01-ESPECIFICACAO.md` · **Estado:** VERIFICADO / G0–G6 APROVADOS
+**Data-base:** 15/08/2026 · **Especificação:** `docs/especificacoes/M01-ESPECIFICACAO.md` · **Estado:** EM REVISÃO EDITORIAL em 12/09/2026; baseline técnico de agosto preservado
 
 ## Competências por bloco
 
@@ -71,7 +71,7 @@
 | G3 · Avaliação | APROVADO PARA OFERTA | oito questões por cenário, seis entregáveis e rubrica 80%/100% segurança |
 | G4 · Portabilidade | APROVADO NO LAB | núcleo canônico + Agent Skills + dois adapters com mesmo fingerprint |
 | G5 · Produção | APROVADO NO LAB | subprocess, UTF-8, hash/allowlist, paths, Git, dirty cleanup e falhas cobertos |
-| G6 · Editorial | APROVADO | estrutura visual padronizada pelo M00; tags balanceadas, fontes distintas acessíveis, CSS móvel, SVGs nomeados e revisão localhost sem overflow |
+| G6 · Editorial | REVALIDAÇÃO PENDENTE | Evidência histórica de agosto:  estrutura visual padronizada pelo M00; tags balanceadas, fontes distintas acessíveis, CSS móvel, SVGs nomeados e revisão localhost sem overflow |
 
 ## Auditoria de profundidade sênior
 
@@ -99,6 +99,20 @@ Regra editorial: aprofundamentos acima pertencem ao módulo indicado e devem ref
 
 Auditoria de suporte: `docs/auditorias/M01-DIDATICA-2026-08.md`. A revisão não altera os resultados dos 22 cenários, o laboratório ou a aprovação G0–G6.
 
+## Reestruturação do laboratório em 21/08/2026
+
+Esta mudança reorganiza a experiência didática, sem promover gate ou substituir a execução do aluno por evidência editorial.
+
+| ID | Mudança aplicada | Competências e cenários cobertos | Evidência | Estado |
+|---|---|---|---|---|
+| LAB-M01-001 | comandos e práticas intermediárias dos blocos 1–4 foram convertidos em leitura aplicada e cenário explicado | B01–B04 | não há `<div class="step">` antes do laboratório final | APLICADO |
+| LAB-M01-002 | laboratório final percorre contrato, quatro estados de drift, runner, caso negativo, workflow e Git real | AT-001..021 | `M01.html#lab` | APLICADO |
+| LAB-M01-003 | cópia temporária marcada preserva a referência e esvazia somente `drift.py` para reconstrução por código completo | AT-004..006, G2, G5 | `lab/create_working_copy.py` | VERIFICADO |
+| LAB-M01-004 | lint, mypy, testes e gates são apresentados como oráculos do programa; checkpoint permanece posterior | AT-007..019, G3 | laboratório e checkpoint separados | APLICADO |
+| LAB-M01-005 | bloco 5 mantém os artefatos como referência; a execução passa para o laboratório | B05 | aviso editorial e âncora `#lab` | APLICADO |
+
+Execução da cópia de referência em 21/08/2026: CPython 3.14.7; `uv sync --locked --offline --extra dev`; Ruff format/lint aprovados; mypy estrito sem issues em 21 arquivos; 27 testes `OK`, incluindo worktrees e merges Git reais em diretório temporário.
+
 ## Execução registrada
 
 ```text
@@ -114,4 +128,8 @@ HTML: 9.167 palavras visíveis; 18 blocos de código; 21 resultados; 20 links ex
 Visual: padrão M00; header, mapa com 6 âncoras válidas, 1 H1, 8 H2, zero overflow horizontal em 1280 px e 2 SVGs nomeados
 ```
 
-O laboratório e o conteúdo foram revisados pelo orquestrador. M01 está `VERIFICADO` em G0–G6. Práticas marcadas como “do aluno” são critérios de aprendizagem, não bloqueios editoriais.
+O laboratório e o conteúdo foram revisados pelo orquestrador. M01 teve G0–G6 aprovados em agosto; a apresentação atual aguarda revalidação G6. Práticas marcadas como “do aluno” são critérios de aprendizagem, não bloqueios editoriais.
+
+## Revisão editorial — 12/09/2026
+
+O HTML principal recebeu explicações independentes de outra stack, remoção de duração obrigatória, links por seção e aviso de prontidão. A navegação permite leitura e prática no ritmo do aluno. O verificador editorial examinou estrutura, destinos locais e âncoras; não executou laboratórios nem certificou fontes externas ou apresentação visual. Os resultados técnicos anteriores permanecem históricos; G6 da apresentação revisada continua pendente.

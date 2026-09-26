@@ -2,12 +2,12 @@
 
 ## Resultado do módulo
 
-O M01 ensina a transformar intenção em mudanças pequenas, rastreáveis e verificáveis. O agente executa sob contrato, capabilities e gates; não é tratado como autoridade do processo. Conceitos permanecem agnósticos, Python 3.14 é a linguagem canônica e .NET aparece como ponte para conhecimento transferível.
+O M01 ensina a transformar intenção em mudanças pequenas, rastreáveis e verificáveis. O agente executa sob contrato, capabilities e gates; não é tratado como autoridade do processo. Conceitos permanecem agnósticos, Python 3.14 é a linguagem canônica sem pressupor conhecimento de outra stack.
 
 ## Materiais
 
 - [`M01.html`](M01.html): material principal, cinco blocos/10h;
-- [`lab/README.md`](lab/README.md): ambiente, comandos e limites do laboratório;
+- [`lab/README.md`](lab/README.md): referência executável; o roteiro de ambiente, código e diagnóstico fica no laboratório ao fim do HTML;
 - [`RASTREABILIDADE.md`](RASTREABILIDADE.md): 27 competências, 22 cenários e gates;
 - `lab/contracts/feature-contract.schema.json`: contrato estrutural Draft 2020-12;
 - `lab/src/sdd_lab/`: parser, drift, runner, workflow, policy, adapters, Git e Capstone;
@@ -21,6 +21,16 @@ O M01 ensina a transformar intenção em mudanças pequenas, rastreáveis e veri
 3. estado externalizado, pause/resume, orçamento e 12-Factor Agents sob crítica;
 4. DAG, read/write sets, recursos, worktrees descartáveis e integração por waves;
 5. kit portátil, revisão de workflow externo e primeira fatia do Capstone.
+
+## Cópia de trabalho e baseline
+
+Não execute a prática na pasta `lab/` versionada. A partir dela, use:
+
+```powershell
+python .\create_working_copy.py
+```
+
+O comando cria uma cópia marcada em diretório temporário. O **Laboratório guiado M01** em `M01.html` explica o código a reconstruir, os comandos, os resultados e a recuperação de falhas. `--reference` mantém a cópia completa apenas para comparação.
 
 ## Baseline executada
 
@@ -47,4 +57,4 @@ Os testes Git criam repositório e worktrees somente em `TemporaryDirectory`. Fa
 
 ## Estado editorial
 
-G0–G6 estão aprovados. Em 15/08/2026, a apresentação foi alinhada ao contrato visual e didático do M00: header de saída, mapa navegável, contrato pedagógico, seções identificadas, numeração progressiva, callouts semânticos, diagnóstico e fontes como fechamento. A revisão visual em localhost confirmou tipografia equivalente, largura de 1100 px, seis âncoras válidas e ausência de overflow horizontal.
+O baseline de agosto teve G0–G6 aprovados; a revisão editorial de setembro aguarda revalidação G6. Em 15/08/2026, a apresentação foi alinhada ao contrato visual e didático do M00: header de saída, mapa navegável, contrato pedagógico, seções identificadas, numeração progressiva, callouts semânticos, diagnóstico e fontes como fechamento. A revisão visual em localhost confirmou tipografia equivalente, largura de 1100 px, seis âncoras válidas e ausência de overflow horizontal.

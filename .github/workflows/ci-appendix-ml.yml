@@ -1,0 +1,38 @@
+# Manual and independent by design: ML01–ML07 are optional and currently
+# have specifications but no produced lab environments. This workflow is
+# never a dependency of course-core or ci-m03.
+name: course-ml-optional
+
+on:
+  workflow_dispatch:
+    inputs:
+      unit:
+        description: Optional unit to validate when its lab exists
+        required: true
+        type: choice
+        options:
+          - ML01
+          - ML02
+          - ML03
+          - ML04
+          - ML05
+          - ML06
+          - ML07
+
+permissions:
+  contents: read
+
+jobs:
+  optional-lab:
+    name: Optional appendix · ${{ inputs.unit }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.14"
+      - name: Run only the selected optional lab
+        run: python tools/run_course_lab.py --unit "${{ inputs.unit }}" --mode offline

@@ -8,8 +8,8 @@
 |---|---|---|---|
 | M00-B01-C01 | separar modelo, cliente, harness, tool, ambiente e processo | diagrama/explicação no HTML | PRODUZIDO |
 | M00-B01-C02 | explicar limites do modelo mental sem memória implícita | checkpoint 2 | PRODUZIDO |
-| M00-B01-C03 | decidir workflow ou autonomia por risco | matriz + exercício de oito tarefas | PRODUZIDO |
-| M00-B01-C04 | escrever task contract | artefato do aluno | PRÁTICA GUIADA |
+| M00-B01-C03 | decidir workflow ou autonomia por risco | matriz + tabela guiada de oito cenários em `M00.html` §1.3 | PRODUZIDO |
+| M00-B01-C04 | escrever task contract | exemplo resolvido + artefato do aluno no checkpoint | PRÁTICA GUIADA |
 | M00-B02-C01 | criar instrução canônica portátil | `AGENTS.md` do aluno | PRÁTICA GUIADA |
 | M00-B02-C02 | manter adapters mínimos por produto | tabela Codex/Claude/Copilot | PRODUZIDO |
 | M00-B02-C03 | aplicar Agent Skills/progressive disclosure | skill do aluno | PRÁTICA GUIADA |
@@ -87,6 +87,20 @@ Esta revisão registra autoria e compreensão; ela não altera a aprovação dos
 
 Documento de auditoria: `docs/auditorias/M00-DIDATICA-2026-08.md`.
 
+## Reestruturação do laboratório em 21/08/2026
+
+Esta mudança não promove gates nem transforma a execução do aluno em evidência editorial. Ela altera a forma de chegar à prática: leitura primeiro, laboratório único no fim e checkpoint somente depois da montagem.
+
+| ID | Mudança aplicada | Competências e cenários cobertos | Evidência | Estado |
+|---|---|---|---|---|
+| LAB-M00-001 | comandos e práticas manuais removidos dos blocos 1–4; exemplos permanecem no texto como leitura aplicada | B01–B04 | `M00.html` só contém comandos de execução após `#lab` | APLICADO |
+| LAB-M00-002 | seção final guiada reconstrói contrato, seleção de contexto e policy em ordem causal | AT-001..007, AT-013 | código copiável + saída esperada + diagnóstico por passo | APLICADO |
+| LAB-M00-003 | script cria cópia temporária nova, marcada e sem ambientes/caches locais; o roteiro nunca altera a referência | G2, G5 | `lab/create_working_copy.py` | VERIFICADO |
+| LAB-M00-004 | lint, tipagem e testes passam a ser oráculos de software, não perguntas de avaliação durante a prática | AT-001..010, AT-013 | texto do laboratório e checkpoint separado | APLICADO |
+| LAB-M00-005 | adapter MCP fica depois da função de domínio e do contrato local; Inspector é extensão opcional | AT-008, AT-010 | sequência do laboratório e limite declarado | APLICADO |
+
+Execução da cópia de referência em 21/08/2026: CPython 3.14.7; `uv sync --locked --offline --extra dev --extra mcp`; Ruff sem achados; mypy estrito sem issues em 13 arquivos; 18 testes `OK`, incluindo os dois testes MCP in-memory. A cópia foi criada em `%TEMP%/tutor-ia-codex-labs/` e possui marcador `.course-lab-workspace` com `M00`.
+
 ## Execução registrada
 
 ```text
@@ -98,3 +112,12 @@ HTML após a correção focal de slash: 4.595 palavras visíveis; 70 ocorrência
 ```
 
 M00 permanece `EM REVISÃO`, não `VERIFICADO`, até fechar G6 visual. O Inspector é prática do aluno; a interoperabilidade programática do adapter já foi verificada com o cliente oficial in-memory. As práticas marcadas como “do aluno” são critérios de aprendizagem, não bloqueios editoriais do curso.
+
+## Revisão editorial — 12/09/2026
+
+O HTML principal recebeu explicações independentes de outra stack, remoção de duração obrigatória, links por seção e aviso de prontidão. A navegação permite leitura e prática no ritmo do aluno. O verificador editorial examinou estrutura, destinos locais e âncoras; não executou laboratórios nem certificou fontes externas ou apresentação visual. Os resultados técnicos anteriores permanecem históricos; G6 da apresentação revisada continua pendente.
+
+
+## Execução focal M00-B01-L — autoria original `01a0de8b-ffd8-72d2-800e-ffb966485ed6`; correção `01a0dea7-003e-7262-8bbd-4ed3faf5d5e2`
+
+Na revisão independente, foi encontrada divergência entre o resultado de task contract prometido no HTML e o contrato JSON, que não exigia objetivo, escopo, capacidades nem condições de parada. A correção adicionou esses campos à validação, fixture, teste e trecho copiável do laboratório. Reexecução com Python 3.14.7: contrato válido; inválido retorna dez violações/exit 1; 19 testes OK; Ruff check e mypy estrito aprovados; `ruff format --check src tests` aprovado; JSON válido; checker M00: 1 documento/0 erros; backlog: 699/0. A evidência anterior de bootstrap bloqueado por `mypy==1.20.2` ausente no cache segue válida como limitação, não como aprovação. Nenhum AT/gate promovido; a correção deste RUN aguarda revisão independente.

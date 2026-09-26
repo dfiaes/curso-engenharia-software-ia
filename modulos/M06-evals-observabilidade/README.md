@@ -1,16 +1,21 @@
+**Status:** G0 approved; B01–B06 in didactic review with offline executable lab. G1–G6 pending orchestrator review.
+
 # M06 · Evals e observabilidade
 
 ## Visão geral
 
-O módulo que separa quem fez demo de quem entregou produção, e o principal sinal de contratação em IA em 2026. A pergunta central: *se eu mudar o prompt amanhã, como sei que não quebrei outra coisa?* A resposta é a suíte que este módulo constrói — datasets por categoria de comportamento, graders em escada, juiz calibrado contra você, prompts versionados, gate na CI e tracing com custo por análise.
+O módulo que separa demo de produção: *se eu mudar o prompt amanhã, como sei que não quebrei outra coisa?* A resposta é a suíte que este módulo constrói — datasets por categoria de comportamento, graders em escada, juiz comparado com rótulos de referência cuja proveniência precisa ser registrada, prompts versionados, gate e tracing sanitizado. A fixture local é roteirizada e não representa coleta humana.
 
 O conceito que organiza tudo é **regressão comportamental**: em sistema com LLM, toda mudança é global — você conserta A e quebra B, C e D sem nenhum sinal.
 
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M06.html`](M06.html) — abra no navegador
-- **Carga:** 6 blocos de 2h (12h)
-- **Pré-requisito:** M05 (o extrator, o gateway com telemetria e o registry de custo são o objeto de avaliação)
+- **Especificação:** [`docs/especificacoes/M06-ESPECIFICACAO.md`](../../docs/especificacoes/M06-ESPECIFICACAO.md) — G0 aprovado
+- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Laboratório:** [`lab/`](lab/) — runner offline com sistema e juiz falsos, sem rede/conta/crédito
+- **Carga:** 6 blocos de conteúdo (12h)
+- **Pré-requisito:** M05
 
 ## Estrutura dos blocos
 
@@ -23,10 +28,11 @@ O conceito que organiza tudo é **regressão comportamental**: em sistema com LL
 
 ## Entregáveis
 
-- `evals/` completo: ~50 casos nas seis categorias com manifesto, runner com graders, juiz calibrado com concordância publicada.
-- Registry de prompts versionados + CHANGELOG com números + matriz de comparação salva como baseline.
-- Gate no CI reprovando dois PRs (um por queda de qualidade, outro por violar piso de segurança) + nightly.
-- Tracing com custo por análise e pelo menos um caso de dataset nascido de um trace real.
+- Runner com graders determinísticos + universais, datasets nas seis categorias, juiz com acordo medido.
+- Registry de prompts versionados + CHANGELOG; gate com tolerância e pisos; tracing sem vazamento.
+- Chamadas a modelos reais (juiz live, matriz contra provedor) são trilha opcional.
+
+A aplicação ao Capstone (`evals/`) é trilha opcional com especificação própria.
 
 ## Fundamentos reciclados neste módulo
 

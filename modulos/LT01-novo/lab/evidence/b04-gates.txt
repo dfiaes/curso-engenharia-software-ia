@@ -1,0 +1,102 @@
+LT01-B04-L — evidencia de gates (folha B04-L, bloco B04)
+Data (UTC): 2026-09-19 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir: modulos/LT01-novo/lab/ · HTML/spec/trace/STATUS/PROGRESSO intocados.
+
+COMANDOS (tails reais)
+- uv sync → "Resolved 13 packages" / "Checked 11 packages" (mypy 1.20.2, pytest 9.1.1, ruff 0.16.8); venv 3.14.7.
+- uv run ruff check . → "All checks passed!"
+- uv run ruff format --check . → "23 files already formatted"
+- uv run mypy → "Success: no issues found in 24 source files"
+- uv run pytest → "111 passed, 1 skipped in 39.80s" (suite inteira: B01–B04; 1 skip = BLOCKED-TLS pre-existente, sem skip novo; 2 corridas verdes seguidas; duracao reflete distress transiente da maquina — load 8.6, ver LIMITES; com a maquina saudavel a mesma suite fecha em ~4 s)
+- B04 isolado: at030 9 passed em 0.84s; at031 27 passed em 0.53s; at032 12 passed (48 no total; at032 varia com a maquina: ~1 s saudavel, ~40 s sob distress, sem falhar)
+- repeticoes: B04 3x (48 passed, ~2.2 s cada, maquina saudavel) + suite integral 4x verdes no total (2x ~4 s saudavel, 2x ~40 s sob distress) — sem flaky apos os fixes abaixo
+
+NUMEROS MEDIDOS (exemplo variavel, medicao local desta maquina)
+- Waterfall de latencia por fase (amostra fixa N = 8 aquisicoes livres, pool tamanho 2):
+  aquisicao livre min/med/max 0.001/0.002/0.004 ms; aquisicao contendida
+  (slot liberado apos 0.05 s) 60.1 ms — degrau observado, nao estimado.
+- Pool esgotado: tamanho 1, prazo 0.2 s, slot ocupado → PoolEsgotado com
+  decorrido em [0.2, 2.0) s (prazo <= decorrido < prazo x10); stats
+  {"tamanho": 1, "livres": 0, "em_uso": 1} no momento da recusa.
+- Evidencia bilateral (destino ocioso x fila): sonda urllib direta ao
+  HTTP local responde b"ok" em ms enquanto a aquisicao contendida levanta
+  PoolEsgotado — esgotamento falha antes de qualquer byte viajar.
+- Orcamento 5.0 s em pesos {conectar:1, enviar:1, aguardar:2, ler:1} →
+  {1.0, 1.0, 2.0, 1.0}, soma 5.0 (fecha no total); fase recebe o menor
+  entre orcamento e restante (relogio controlado: restante 2.0 s vence
+  orcamento 4.0 s).
+- Fase localhost: endpoint /lento com atraso 0.2 s sob orcamento
+  "aguardar" 2.0 s → b"lento-ok" em 205.1 ms, dentro do deadline 5.0 s;
+  trabalho recebeu teto <= orcamento.
+- Retry: matriz 16 casos (5 repetiveis + normalizacao + 9 vedacoes);
+  POST vedado, GET permitido pelos 3 freios, PUT sem restante vedado;
+  laco simulado para em 3 tentativas (teto 3, sem tempestade).
+- Cancelamento: sinal falso → verdadeiro, idempotente; trabalho com
+  1000 passos parou apos 8 (sinal aos 0.1 s), thread encerrada sozinha
+  (viva: False, sem kill); slot devolvido (em_uso 0, livres 1);
+  leitura localhost de fluxo ilimitado (cadencia 0.04 s, parada por evento
+  + flag no __exit__, sem corrida de relogio): cancela apos o primeiro
+  byte e para no limite seguinte — bytes lidos << teto de 1 MB (teto
+  fisico: 1 MB exigiria ~1 h de fluxo pos-cancelamento a 225 B/s) com
+  Cancelado observado e resposta fechada; servidor com shutdown+join
+  limpos.
+
+DIVERGENCIAS DO VERBATIM
+- Nenhuma nos 3 modulos B04: byte-identicos aos <pre> executaveis 1/2/3 da
+  secao B04 do LT01.html (conferencia por diff programatico apos
+  html.unescape: pool_local.py 2577 B, deadline_fases.py 2750 B,
+  cancelamento_cooperativo.py 1795 B).
+- Acomodacoes de ferramenta (NAO alteram modulo, precedente do override mypy B01):
+  pyproject name/version/description estendidos para B01+B02+B03+B04 e files
+  com os 3 modulos novos; per-file-ignores "pool_local.py" = ["F401"] porque
+  o contrato congelado importa `time` sem uso direto, "deadline_fases.py" e
+  "cancelamento_cooperativo.py" = ["UP047"] porque o contrato usa
+  `TypeVar` em vez da sintaxe PEP 695; [tool.ruff.format] exclude =
+  ["deadline_fases.py", "cancelamento_cooperativo.py"] porque o formatador
+  colapsaria as assinaturas e quebraria o byte-identico (pool_local.py ja e
+  format-limpo). Correcao pertence a revisao futura do HTML, nao a este lab.
+  Testes proprios 100% limpos (ruff + format + mypy strict sem ignores).
+- Comportamento contratado observado: fechar() descarta livres mas mantem
+  o contador de criadas (em_uso = criadas - livres); item liberado depois
+  de fechar() volta a ser adquirivel; teste fixa o contrato, nao lei geral.
+
+LIMITES
+- So localhost/127.0.0.1 e porta efemera em modulos e testes (stdlib:
+  http.server, urllib, threading, queue, time); nenhuma rede externa.
+- Servidores de teste (ServidorRapido, ServidorLento, ServidorLongo) em
+  thread daemon com shutdown + join (5.0 s; 60.0 s no longo) +
+  server_close no __exit__; ServidorLongo tem flag de parada checada por
+  bloco e fluxo ilimitado (o leitor nunca atinge EOF antes do cancelamento:
+  sem corrida entre fim do fluxo e sinal); respostas sempre fechadas
+  (with/finally); threads de teste sempre com join.
+- Distress transiente da maquina (medido, nao simulado): handler localhost
+  entrou em 8 ms e o primeiro flush so chegou ao leitor ~19 s depois;
+  sleep(0.12) da thread principal estourou 1.2 s de fluxo; load 5.6→8.6
+  com appstoreagent a 82%. Fixes aplicados (falhas reais vistas e removidas):
+  (a) assert por contagem de read() → bytes lidos << teto fisico;
+  (b) sleep fixo p/ cancelar → evento (primeiro byte) + fluxo ilimitado;
+  (c) urlopen global → opener com ProxyHandler vazio (item seguinte);
+  (d) horizontes do teste longo em 60 s (custo zero com maquina saudavel).
+  Apos os fixes: 4 suites integrais verdes seguidas, 0 flaky.
+- Cliente urllib com ProxyHandler vazio (opener dedicado por arquivo):
+  dispensa a consulta de proxy do SO — macOS SystemConfiguration travou
+  ~18 s em transiente medido (socket cru no mesmo instante: 4 ms) e esse
+  atraso mora fora do timeout do socket; sem o bypass, o primeiro urlopen
+  do processo vira loteria. Direto a 127.0.0.1, sem rede externa.
+- Relogio controlado: deterministico com fake agora() nos testes de
+  orcamento/restante/executar_fase; trechos localhost usam monotonic com
+  margem larga (prazo <= decorrido < prazo x10; teto 5.0 s), sem assert de
+  tempo exato fragil.
+- Waterfall, ms, contagens e blocos sao exemplo variavel; amostras fixas:
+  N = 8 aquisicoes, 4 fases, fluxo ilimitado (cadencia 0.04 s, teto 1 MB),
+  prazo de aquisicao 0.2 s, atraso lento 0.2 s, semente/amostra declaradas
+  aqui.
+- B03-gates ja registra trabalho alheio paralelo no worktree; esta folha
+  nao tocou HTML/spec/trace/STATUS/PROGRESSO (nem README alem do lab).
+
+GATE CANDIDATO
+- LT01-B04-L APTO a G2 (lab B04): 3 contratos verbatim + pyproject (3.14/uv/ruff
+  100 E,F,I,B,UP,SIM,RUF,ASYNC/mypy strict 24 arquivos/pytest strict) + README +
+  3 oraculos (AT-030 9 testes, AT-031 27 testes, AT-032 12 testes, 0 skip) +
+  suite verde integral (111 passed, 1 skipped BLOCKED-TLS pre-existente) +
+  waterfall de latencia por fase publicado acima, nesta plataforma POSIX.

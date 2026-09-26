@@ -1,16 +1,21 @@
+**Status:** G0 approved; B01–B08 in didactic review with local executable lab (scripted policy). G1–G6 pending orchestrator review.
+
 # M08 · Agentes: padrões e context engineering
 
 ## Visão geral
 
-O núcleo do currículo — e o lugar onde mais gente erra, construindo agente autônomo para problema que um `if` resolveria. O módulo dá a definição operacional (workflow = caminho no código; agente = o modelo escolhe o caminho), a taxonomia dos cinco padrões que a indústria adotou, o design de ferramentas como API para um leitor literal, e o assunto central: **context engineering como gestão de orçamento de atenção**.
+O núcleo do currículo — e o lugar onde mais gente erra, construindo agente autônomo para problema que um `if` resolveria. O módulo dá a definição operacional (workflow = caminho no código; agente = o modelo escolhe o caminho), a taxonomia dos cinco padrões, o design de ferramentas como API para um leitor literal, e o assunto central: **context engineering como gestão de orçamento de atenção**.
 
 Entrega o agente investigador do Capstone e — o mais valioso — o número que quase ninguém tem: **quanto custa e quanto acerta o agente comparado ao workflow determinístico equivalente**.
 
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M08.html`](M08.html) — abra no navegador
-- **Carga:** 8 blocos de 2h (16h)
-- **Pré-requisito:** M07 (as ferramentas de busca vêm de lá; o loop de tool calling, do M05 b3)
+- **Especificação:** [`docs/especificacoes/M08-ESPECIFICACAO.md`](../../docs/especificacoes/M08-ESPECIFICACAO.md) — G0 aprovado
+- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Laboratório:** [`lab/`](lab/) — agente local com política roteirizada, sem rede/modelo real
+- **Carga:** 8 blocos de conteúdo (16h)
+- **Pré-requisito:** M07
 
 ## Estrutura dos blocos
 
@@ -25,10 +30,11 @@ Entrega o agente investigador do Capstone e — o mais valioso — o número que
 
 ## Entregáveis
 
-- `services/agent/`: cinco ferramentas com eval próprio, prompt versionado, loop com orçamento triplo e sete paradas, compactação, memória de fatos com invalidação, subagente opcional.
-- Categoria `agente_impacto` nos evals do M06, com os casos estruturais marcados `esperado_falhar` (insumo do M10).
-- ADR-0003 sobre framework, com gatilho de revisão explícito.
-- Tabela agente × workflow: custo, latência p50/p95, acurácia e variância.
+- Agente investigador local: loop com 7 paradas, ferramentas com sandbox, memória com validade, subagente como ferramenta.
+- Comparação workflow × agente com números (passos, custo, parada).
+- Modelos reais e frameworks são trilha externa ao lab.
+
+A aplicação ao Capstone (`services/agent/`) é trilha opcional com especificação própria.
 
 ## Fundamentos reciclados neste módulo
 

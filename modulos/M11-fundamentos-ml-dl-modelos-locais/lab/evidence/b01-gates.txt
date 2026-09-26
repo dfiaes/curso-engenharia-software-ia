@@ -1,0 +1,55 @@
+M11-B01-L — evidência de execução real dos gates (orquestrador, 14/09/2026)
+Raiz: modulos/M11-fundamentos-ml-dl-modelos-locais/lab (pré-validado no
+scratch /tmp/m11-b01-l e re-executado verbatim no repo; resultados idênticos).
+
+AMBIENTE
+  $ uv run python --version
+  Python 3.14.7
+  $ uv run ruff --version
+  ruff 0.16.7
+  $ uv run mypy --version
+  mypy 1.20.2 (compiled: yes)
+  $ uv run pytest --version
+  pytest 9.1.1
+  $ command -v docker
+  docker ausente (oráculo PG BLOCKED)
+
+SINCRONIZAÇÃO
+  $ uv sync
+  Using CPython 3.14.7
+  Creating virtual environment at: .venv
+  Resolved 13 packages in 8ms
+  Installed 11 packages in 27ms
+   + iniconfig==2.3.0
+   + librt==0.15.0
+   + mypy==1.20.2
+   + mypy-extensions==1.1.0
+   + packaging==26.3
+   + pathspec==1.1.1
+   + pluggy==1.6.0
+   + pygments==2.21.0
+   + pytest==9.1.1
+   + ruff==0.16.7
+   + typing-extensions==4.16.0
+  (uv.lock gerado e versionado; pins dentro das faixas do M10)
+
+GATES
+  $ uv run ruff check .
+  All checks passed!
+  $ uv run ruff format --check .
+  6 files already formatted
+  $ uv run mypy
+  Success: no issues found in 5 source files
+  $ uv run pytest -q
+  .............
+  13 passed in 0.03s
+  (7 test_metrics AT-003 + 5 test_pct_incerto_sql AT-004 + 1 test_working_copy)
+
+CLEANUP
+  Nenhum resíduo em /tmp após os testes (tmp_path limpo pelo pytest);
+  a cópia de trabalho nasce em diretório temporário possuído e é descartável.
+
+LIMITE
+  pct_incerto.sql executa SOMENTE no PostgreSQL do Capstone (Docker).
+  Docker ausente → oráculo PG BLOCKED honesto; os testes guardam contrato
+  + matemática e não fingem execução PG.

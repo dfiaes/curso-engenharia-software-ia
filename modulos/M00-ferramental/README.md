@@ -5,29 +5,24 @@
 ## Ordem de estudo
 
 1. Leia [`M00.html`](M00.html), que é o material didático canônico.
-2. Execute [`lab/README.md`](lab/README.md) no Python 3.14.
-3. Produza os entregáveis do checkpoint no seu repositório de estudo.
+2. Ao chegar ao fim do HTML, execute o **Laboratório guiado M00**. Ele cria uma cópia temporária, reconstrói as partes centrais do código com blocos copiáveis e explica cada validação.
+3. Só depois faça o checkpoint no seu repositório de estudo.
 4. Consulte a [especificação](../../docs/especificacoes/M00-ESPECIFICACAO.md) para competências e cenários de aceitação.
-5. Consulte a [auditoria](../../docs/auditorias/M00-AUDITORIA.md) para entender o que foi corrigido no material anterior.
+5. Consulte a [auditoria](../../docs/historico/2026-09-21/auditorias/M00-AUDITORIA.md) para entender o que foi corrigido no material anterior.
 
 O arquivo `bloco-4-mcp-e-hooks.html` e os PDFs associados são históricos. Não use seus imports, comandos ou descrição do ciclo de vida MCP como referência atual.
 
-## Gates locais reproduzíveis
+## Referência executável
 
-No diretório `lab/`:
+O código final e os testes ficam em `lab/`. Não pratique diretamente nessa pasta. No PowerShell, a partir dela:
 
 ```powershell
-uv sync --python 3.14 --extra dev
-$env:PYTHONPATH = "src"
-uv run --python 3.14 ruff check .
-uv run --python 3.14 mypy
-uv run --python 3.14 python -m unittest discover -s tests -v
-uv run --python 3.14 python -m harness_lab validate examples/harness.safe.json
-uv run --python 3.14 python -m harness_lab context-demo
-uv run --python 3.14 python -m harness_lab policy-demo --workspace .
+python .\create_working_copy.py
 ```
 
-Baseline verificada em 14/08/2026:
+O HTML explica como entrar no diretório impresso, preparar o ambiente, colar o código, observar os casos negativos e executar as validações. `python .\create_working_copy.py --reference` produz uma cópia completa para consulta, sem limpar os arquivos guiados.
+
+Baseline da referência, verificada em 14/08/2026:
 
 ```text
 Python 3.14.7

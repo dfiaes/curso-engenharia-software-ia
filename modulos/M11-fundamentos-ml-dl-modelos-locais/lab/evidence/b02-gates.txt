@@ -1,0 +1,54 @@
+M11-B02-L — evidência de execução real dos gates (orquestrador, 14/09/2026)
+Raiz: modulos/M11-fundamentos-ml-dl-modelos-locais/lab (pré-validado no
+scratch /tmp/m11-b02-l e re-executado verbatim no repo; resultados idênticos).
+Números rotulados "medido" valem para este ambiente; não são promessa.
+
+AMBIENTE
+  $ uv run python --version
+  Python 3.14.7
+  $ uv run python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+  2.9.1 False
+  ruff 0.16.7 · mypy 1.20.2 · pytest 9.1.1 (mesmos do B01-L)
+  docker ausente (oráculo PG BLOCKED); GPU ausente — CPU baseline
+
+SINCRONIZAÇÃO
+  $ uv sync
+  Resolved 38 pacotes; instalado torch==2.9.1 (+ filelock, fsspec, jinja2,
+  markupsafe, mpmath, networkx, setuptools, sympy, typing-extensions)
+  uv.lock regenerado pelo próprio `uv sync` e versionado.
+
+GATES
+  $ uv run ruff check .
+  All checks passed!
+  $ uv run ruff format --check .
+  11 files already formatted
+  $ uv run mypy
+  Success: no issues found in 10 source files
+  (regressao.py e nao_linear.py verbatim do Bloco 2, zero divergência)
+  $ uv run pytest -q
+  23 passed, 2 warnings in 8.52s
+  (13 B01 intactos e verdes + 10 B02: 5 regressão AT-001/002/006,
+  2 não-linear AT-007, 3 formas AT-005/006)
+
+SAÍDAS DOS CONTRATOS (execução real, CPU, torch 2.9.1, semente 1337)
+  $ uv run python regressao.py
+  passo   0 | perda 8.7459 | w=1.38 b=0.45
+  passo 100..500 | perda 0.0127 | w=3.00 b=2.01
+  $ uv run python nao_linear.py
+  linear perda final = 0.1657
+  mlp perda final = 0.0045
+
+DIVERGÊNCIA SEM zero_grad (MEDIDA, corrige o claim "até nan")
+  Variante limpar_grad=False: perda final 3.0697, sem nan/inf — oscila em
+  patamar ~240× acima do feliz (0.0127). "Até nan" é um desfecho possível
+  conforme taxa/passos, não o garantido neste lab; o teste aceita
+  nan OU perda > 0.5. Teoria, spec e checkpoint emendados em 14/09/2026
+  para dizer "diverge (até nan)".
+
+CLEANUP
+  Nenhum resíduo em /tmp após os testes; scratch removido após integração.
+
+LIMITE
+  pct_incerto.sql segue BLOCKED sem Docker. Números de perda valem para
+  CPU + torch 2.9.1 + semente 1337. Linux x86_64 baixa ~900 MB de wheel
+  (CUDA embutido, sem uso); ver nota do índice CPU no README.

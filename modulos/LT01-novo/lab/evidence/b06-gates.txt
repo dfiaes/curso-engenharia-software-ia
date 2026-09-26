@@ -1,0 +1,86 @@
+LT01-B06-L — evidencia de gates (folha B06-L, bloco B06)
+Data (UTC): 2026-09-20 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir: modulos/LT01-novo/lab/ · HTML/spec/trace/STATUS/PROGRESSO intocados.
+
+COMANDOS (tails reais)
+- uv sync → "Resolved 13 packages" / "Checked 11 packages" (ruff 0.16.8, mypy 1.20.2, pytest 9.1.1); venv 3.14.7.
+- uv run ruff check . → FALHA com 1 erro, SIM102 no verbatim (ver DIVERGENCIAS):
+  restauracao_baseline.py:30 (ifs aninhados em veredito_restauracao).
+  Testes novos 100% limpos: ruff check nos 2 arquivos de teste → "All checks passed!".
+- uv run ruff format --check . → "3 files would be reformatted, 34 files already formatted":
+  exatamente os 3 modulos verbatim (registro_incidente.py, exercicio_runbook.py,
+  restauracao_baseline.py — assinaturas multi-linha no estilo do HTML, nao no estilo
+  do format). Testes novos 100% formatados (2 files already formatted).
+- uv run mypy → "Success: no issues found in 36 source files" (strict, 3 modulos novos +
+  2 testes novos cobertos; pyproject files estendido sem ignores novos).
+- uv run pytest → "160 passed, 1 skipped in 40.28s" (suite inteira B01–B06; +22 testes B06;
+  1 skip = BLOCKED-TLS pre-existente do B03, sem skip novo).
+- B06 isolado: 22 passed em 0.01s (at060 13, at061 9).
+
+NUMEROS MEDIDOS (exemplo variavel, medicao local desta maquina)
+- Alvo local por modo declarado: saudavel {p95_ms 80.0, taxa_erro 0.001};
+  latencia_alta {900.0, 0.01} (> 11x o baseline); erros_altos {120.0, 0.25}.
+- Mitigacao: aplicar_mitigacao("isolar_upstream") → {acao, efeito
+  "impacto_contido_causa_aberta"}, mitigado True, observar preserva
+  {900.0, 0.01} (contem sem apagar o sinal).
+- Regressao (checagem p95 < 200 e erro < 0.05): falha no degradado
+  (900.0 → nao conforme, controle negativo) e passa no corrigido
+  (80.0/0.001 → conforme); veredito_runbook "mitigado" so com todos conformes.
+- incident.md: secoes fixas "# Incidente INC-060", "Impacto:", "Baseline:",
+  "## Hipoteses" antes de "## Evidencias"; 3 hipoteses (H1 recurso local
+  refutada, H2 upstream confirmada, H3 mudanca recente inconclusiva/aberta).
+- Restauracao: desligar_faults({latencia_injetada: True, erros_altos: True})
+  → ambos False (entrada original preservada); smoke_verde com 2 sondas
+  injetadas → ambas True; veredito_restauracao → "restaurado"; ambiente
+  restaurado == baseline lado a lado ({80.0, 0.001}).
+- Amostras seedadas: semente 20260601, N = 50 observacoes/sondagens,
+  deterministicas entre re-runs (rng re-semeado gera a mesma sequencia).
+
+DIVERGENCIAS DO VERBATIM
+- Nenhuma nos 3 modulos B06: byte-identicos aos <pre> executaveis 1/2/3 da
+  secao B06 do LT01.html (conferencia por diff programatico apos
+  html.unescape: registro_incidente.py 3623 B, exercicio_runbook.py 2586 B,
+  restauracao_baseline.py 1261 B).
+- SIM102 x1 + format x3 sao DIVERGENCIA FERRAMENTA x CONTRATO, sem acomodacao
+  (regra vigente: sem ignores em pyproject; corrigir codigo+HTML em vez de
+  acomodar): ruff check . falha em restauracao_baseline.py:30 porque o contrato
+  congelado usa dois `if` aninhados onde o SIM102 pede `and`; ruff format
+  reescreveria as assinaturas congeladas (registrar_hipotese,
+  registrar_evidencia, executar_passo em multi-linha alternativa, e
+  veredito_restauracao em linha unica). Nenhum ignore foi adicionado
+  (pyproject recebeu só name/version/description B06 e os 3 modulos na lista
+  files do mypy; zero per-file-ignores novos). Correcao pertence a revisao
+  futura do HTML (combinar os `if`s com `and`; reformatar as 4 assinaturas no
+  estilo do ruff format), nao a este lab. Testes proprios 100% limpos
+  (ruff + format + mypy strict sem ignores).
+
+LIMITES
+- So stdlib (dataclasses; collections.abc); nenhuma rede, nenhum container,
+  nenhum servidor de teste no B06 (alvo local por modo declarado, leituras por
+  dicionario, sondas injetadas pelo chamador).
+- Degradacao reutiliza o vocabulario dos blocos anteriores em forma simulada:
+  p95/taxa_erro por modo (eco do breakdown B04/B05 local x upstream), sem
+  relogio real nem sleep — vereditos sobre numeros declarados, nao sobre tempo
+  medido; sem assert de tempo em todo o B06.
+- incident.md sai so com as 4 secoes do contrato (titulo, impacto, baseline,
+  hipoteses, evidencias); timeline/patch/regressao vivem nos testes como cadeia
+  (hipotese → evidencia → mitigacao → correcao → regressao), nao em arquivo novo.
+- Registros sanitizados pelo chamador (o modulo nao mascara segredos; testes
+  usam valores ficticios "INC-060"/"p95 alto no checkout").
+- desliga-mapa-vazio publica {} (vacuoso); veredito com faults {} + sondas
+  verdes rende "restaurado" por vacuidade — documentado em teste, sem oraculo
+  de producao sobre mapa vazio.
+- Esta folha nao tocou HTML/spec/trace/STATUS/PROGRESSO (lab: 3 modulos +
+  2 testes + pyproject files/name/version/description + README B06 +
+  esta evidencia).
+
+GATE CANDIDATO
+- LT01-B06-L NAO APTO a G2 ainda: 3 contratos verbatim byte-identicos +
+  pyproject (3.14/uv/ruff E,F,I,B,UP,SIM,RUF,ASYNC/mypy strict 36 arquivos/
+  pytest strict) + README + 2 oraculos (AT-060 13 testes, AT-061 9 testes,
+  0 skip) + suite verde integral (160 passed, 1 skipped BLOCKED-TLS
+  pre-existente) + numeros acima — POREM ruff check . vermelho pelo SIM102 do
+  verbatim e ruff format --check . com 3 verbatins a reformatar. APTO a G2 apos
+  revisao do HTML combinar os `if`s de veredito_restauracao com `and` e
+  reformatar as 4 assinaturas no estilo do ruff format (reexecutar ruff +
+  diff verbatim apos a revisao).

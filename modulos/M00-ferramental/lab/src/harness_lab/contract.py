@@ -17,6 +17,11 @@ class Integration:
 
 @dataclass(frozen=True, slots=True)
 class HarnessContract:
+    objective: str
+    in_scope: tuple[str, ...]
+    out_of_scope: tuple[str, ...]
+    capabilities: tuple[str, ...]
+    stop_conditions: tuple[str, ...]
     instruction_files: tuple[str, ...]
     evidence_commands: tuple[tuple[str, ...], ...]
     allowed_command_prefixes: tuple[tuple[str, ...], ...]
@@ -25,6 +30,16 @@ class HarnessContract:
 
     def violations(self) -> tuple[str, ...]:
         problems: list[str] = []
+        if not self.objective.strip():
+            problems.append("MISSING_OBJECTIVE: informe o objetivo da tarefa")
+        for field, values in (
+            ("in_scope", self.in_scope),
+            ("out_of_scope", self.out_of_scope),
+            ("capabilities", self.capabilities),
+            ("stop_conditions", self.stop_conditions),
+        ):
+            if not values or any(not value.strip() for value in values):
+                problems.append(f"MISSING_{field.upper()}: informe valores não vazios")
         if not any(Path(name).name == "AGENTS.md" for name in self.instruction_files):
             problems.append("MISSING_PORTABLE_INSTRUCTIONS: instruction_files requer AGENTS.md")
         if not self.evidence_commands:
@@ -94,6 +109,11 @@ def load_contract(path: Path) -> HarnessContract:
         raise ValueError("context_budget deve ser inteiro")
 
     return HarnessContract(
+        objective=str(raw.get("objective", "")),
+        in_scope=_strings(raw.get("in_scope", []), "in_scope"),
+        out_of_scope=_strings(raw.get("out_of_scope", []), "out_of_scope"),
+        capabilities=_strings(raw.get("capabilities", []), "capabilities"),
+        stop_conditions=_strings(raw.get("stop_conditions", []), "stop_conditions"),
         instruction_files=_strings(raw.get("instruction_files"), "instruction_files"),
         evidence_commands=_commands(raw.get("evidence_commands"), "evidence_commands"),
         allowed_command_prefixes=_commands(

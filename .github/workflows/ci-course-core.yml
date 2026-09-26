@@ -1,0 +1,71 @@
+name: course-core
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: course-core-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-checks:
+    name: Course structure and backlog
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.14"
+      - name: Record command context
+        run: |
+          python --version
+          uv --version
+          git rev-parse HEAD
+      - name: Run local-equivalent source checks
+        run: |
+          python tools/check_course.py
+          python tools/validate_backlog.py
+
+  core-labs:
+    name: Offline lab matrix · ${{ matrix.unit }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        unit:
+          - LT01-novo
+          - LT02-novo
+          - LT03-novo
+          - LT04-novo
+          - M00-ferramental
+          - M01-workflow-ia-driven
+          - M02-python-para-dev-dotnet
+          - M02A-engenharia-software-senior
+          - M04-design-docs-com-ia
+          - M05-llm-pratica-gateway-cache
+          - M06-evals-observabilidade
+          - M07-rag-de-verdade
+          - M08-agentes-e-context-engineering
+          - M09-protocolos-mcp-e-a2a
+          - M10-graph-engineering-saude-arquitetural
+          - M11-fundamentos-ml-dl-modelos-locais
+          - M12-producao-seguranca-sre-billing
+          - M13-capstone
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.14"
+      - name: Run locked local-equivalent lab gates
+        run: python tools/run_course_lab.py --unit "${{ matrix.unit }}" --mode offline

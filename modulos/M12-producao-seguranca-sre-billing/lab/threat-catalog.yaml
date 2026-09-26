@@ -1,0 +1,223 @@
+# M12 threat catalog — machine-readable companion to M12.html Bloco 1.
+# Format is flat YAML (list of maps, 2-space indent, inline lists only).
+# Values are illustrative variables, never measurements.
+- id: TM-001
+  asset: tool_authority
+  entry_point: ingested_readme
+  boundary: retrieval_to_model
+  stride: elevation_of_privilege
+  agentic: [ASI01, ASI02, ASI03]
+  scenario: "ingested README hides instruction to drop goal and exfiltrate reports via legit tool"
+  controls: [provenance, closed_schema, policy_decision, egress_allowlist]
+  acceptance_test: M12-AT-001
+  owner: security-owner
+  residual_risk: medium
+- id: TM-002
+  asset: report_delivery
+  entry_point: agent_plan
+  boundary: model_to_executor
+  stride: tampering
+  agentic: [ASI02]
+  scenario: "legit report tool reused to exfiltrate to attacker-controlled destination"
+  controls: [capability_min, destination_allowlist, policy_decision, approval_binding]
+  acceptance_test: M12-AT-004
+  owner: security-owner
+  residual_risk: medium
+- id: TM-003
+  asset: admin_privilege
+  entry_point: delegated_token
+  boundary: model_to_executor
+  stride: elevation_of_privilege
+  agentic: [ASI03]
+  scenario: "agent inherits full admin token and acts outside workflow need"
+  controls: [split_identity, short_scoped_credential, delegation_chain, policy_decision]
+  acceptance_test: M12-AT-006
+  owner: identity-owner
+  residual_risk: medium
+- id: TM-004
+  asset: supply_chain
+  entry_point: model_registry
+  boundary: ingestion_to_retrieval
+  stride: tampering
+  agentic: [ASI04]
+  scenario: "model, package, or tool-server update changes behavior under same identifier"
+  controls: [lockfile, provenance_hash, dependency_review, tool_allowlist]
+  acceptance_test: M12-AT-004
+  owner: platform-owner
+  residual_risk: high
+- id: TM-005
+  asset: code_execution
+  entry_point: user_prompt
+  boundary: model_to_executor
+  stride: elevation_of_privilege
+  agentic: [ASI05]
+  scenario: "input asks runtime to generate and run code escaping the objective"
+  controls: [no_exec_by_default, sandbox, resource_limits, deny_egress]
+  acceptance_test: M12-AT-002
+  owner: platform-owner
+  residual_risk: medium
+- id: TM-006
+  asset: agent_memory
+  entry_point: prior_turn
+  boundary: retrieval_to_model
+  stride: tampering
+  agentic: [ASI06]
+  scenario: "injected fact persists as memory and steers future sessions"
+  controls: [provenance_write_policy, memory_ttl, review_high_impact, no_auth_as_text]
+  acceptance_test: M12-AT-001
+  owner: security-owner
+  residual_risk: medium
+- id: TM-007
+  asset: inter_agent_trust
+  entry_point: a2a_message
+  boundary: executor_to_network
+  stride: spoofing
+  agentic: [ASI07]
+  scenario: "A2A message claims peer origin and requests privileged effect with foreign tenant"
+  controls: [workload_auth, envelope_tenant, reauthorize_receiver, untrusted_payload]
+  acceptance_test: M12-AT-006
+  owner: identity-owner
+  residual_risk: medium
+- id: TM-008
+  asset: availability_budget
+  entry_point: slow_dependency
+  boundary: executor_to_network
+  stride: denial_of_service
+  agentic: [ASI08]
+  scenario: "retries across layers plus recursive subtasks amplify cost and outage"
+  controls: [deadline_propagation, single_layer_retry, retry_budget, circuit_breaker]
+  acceptance_test: M12-AT-040
+  owner: sre-owner
+  residual_risk: medium
+- id: TM-009
+  asset: operator_trust
+  entry_point: model_summary
+  boundary: telemetry_to_operator
+  stride: repudiation
+  agentic: [ASI09]
+  scenario: "confident wording hides uncertainty and builds ambiguous approval card"
+  controls: [canonical_card, effect_diff, friction_by_risk, explicit_refusal]
+  acceptance_test: M12-AT-005
+  owner: product-owner
+  residual_risk: medium
+- id: TM-010
+  asset: objective_integrity
+  entry_point: metric_definition
+  boundary: model_to_executor
+  stride: tampering
+  agentic: [ASI10]
+  scenario: "agent games legit metric by skipping checks or marking uncertain as success"
+  controls: [explicit_constraints, balanced_metrics, quality_evals, autonomy_limit]
+  acceptance_test: M12-AT-050
+  owner: product-owner
+  residual_risk: medium
+- id: TM-011
+  asset: tenant_rows
+  entry_point: app_query
+  boundary: executor_to_data
+  stride: information_disclosure
+  agentic: [ASI03]
+  scenario: "query without tenant predicate runs after middleware failure"
+  controls: [rls_deny_default, app_role_no_bypass, force_rls, txn_local_context]
+  acceptance_test: M12-AT-010
+  owner: data-owner
+  residual_risk: low
+- id: TM-012
+  asset: vector_chunks
+  entry_point: vector_search
+  boundary: executor_to_data
+  stride: information_disclosure
+  agentic: [ASI06]
+  scenario: "vector search omits tenant filter and returns foreign chunk"
+  controls: [tenant_port, server_side_namespace, result_tenant_check, negative_test]
+  acceptance_test: M12-AT-014
+  owner: data-owner
+  residual_risk: medium
+- id: TM-013
+  asset: cache_entries
+  entry_point: cache_key
+  boundary: executor_to_data
+  stride: information_disclosure
+  agentic: [ASI06]
+  scenario: "response cached by question hash only is served across tenants"
+  controls: [tenant_in_key, envelope_validation, ttl_invalidation, fail_closed]
+  acceptance_test: M12-AT-014
+  owner: data-owner
+  residual_risk: medium
+- id: TM-014
+  asset: approval_token
+  entry_point: approval_replay
+  boundary: model_to_executor
+  stride: elevation_of_privilege
+  agentic: [ASI02, ASI03]
+  scenario: "valid approval replayed twice, past expiry, or against altered payload"
+  controls: [intent_digest, expiry, atomic_single_use, revalidate_preconditions]
+  acceptance_test: M12-AT-005
+  owner: identity-owner
+  residual_risk: low
+- id: TM-015
+  asset: external_effect
+  entry_point: ambiguous_timeout
+  boundary: executor_to_network
+  stride: tampering
+  agentic: [ASI08]
+  scenario: "provider completes effect but response is lost and client retries blindly"
+  controls: [idempotency_key, durable_ledger, intent_hash, reconcile_unknown]
+  acceptance_test: M12-AT-023
+  owner: reliability-owner
+  residual_risk: medium
+- id: TM-016
+  asset: entitlement_state
+  entry_point: billing_webhook
+  boundary: executor_to_network
+  stride: spoofing
+  agentic: [ASI07]
+  scenario: "forged, replayed, or stale webhook flips entitlement or credits twice"
+  controls: [hmac_verify, replay_window, dedup_id, monotonic_state_machine]
+  acceptance_test: M12-AT-031
+  owner: billing-owner
+  residual_risk: medium
+- id: TM-017
+  asset: inference_budget
+  entry_point: cheap_request_burst
+  boundary: executor_to_network
+  stride: denial_of_service
+  agentic: [ASI08]
+  scenario: "cheap attacker requests trigger expensive inference, tools, or loops"
+  controls: [authn, multi_unit_quota, step_concurrency_limit, reserved_budget]
+  acceptance_test: M12-AT-040
+  owner: sre-owner
+  residual_risk: medium
+- id: TM-018
+  asset: telemetry_store
+  entry_point: span_export
+  boundary: telemetry_to_operator
+  stride: information_disclosure
+  agentic: [ASI09]
+  scenario: "prompt, code, token, or PII lands in spans visible beyond source system"
+  controls: [attribute_allowlist, redact_before_export, backend_rbac, short_retention]
+  acceptance_test: M12-AT-003
+  owner: observability-owner
+  residual_risk: medium
+- id: TM-019
+  asset: prod_operations
+  entry_point: chatops_log
+  boundary: telemetry_to_operator
+  stride: elevation_of_privilege
+  agentic: [ASI09]
+  scenario: "log line persuades copilot to run commands or reveal credentials"
+  controls: [read_only_copilot, evidence_sanitization, approval_workflow, no_write_tools]
+  acceptance_test: M12-AT-051
+  owner: sre-owner
+  residual_risk: medium
+- id: TM-020
+  asset: tenant_erasure
+  entry_point: deletion_request
+  boundary: executor_to_data
+  stride: information_disclosure
+  agentic: [ASI06]
+  scenario: "primary record deleted while chunks, cache, objects, or traces remain"
+  controls: [store_registry, idempotent_deletion, tombstone, backup_expiry_policy]
+  acceptance_test: M12-AT-060
+  owner: data-owner
+  residual_risk: high

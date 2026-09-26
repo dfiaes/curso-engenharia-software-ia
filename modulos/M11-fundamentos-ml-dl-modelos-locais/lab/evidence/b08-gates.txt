@@ -1,0 +1,55 @@
+M11-B08-L — evidência de execução real dos gates (orquestrador, 15/09/2026)
+Construção DIRETA (contratos verbatim do B08; sem ajuste de lint/tipos:
+ruff + mypy-strict limpos no verbatim decodificado das entidades HTML).
+94 passed (78 anteriores intactos + 16 novos: 7 custo AT-033/035,
+9 matriz AT-030-032/034-035).
+
+AMBIENTE
+  Python 3.14.7 · ruff 0.16.7 · mypy 1.20.2 · pytest 9.1.1; stdlib puro
+  neste lote (sem torch, sem rede/modelo/pesos); Docker/Ollama/GPU
+  AUSENTES (oráculos live BLOCKED com registro; oráculos sem servidor).
+
+GATES
+  $ uv sync
+  Resolved 38 packages (sem mudança de lock)
+  $ uv run ruff check .
+  All checks passed!
+  $ uv run ruff format --check .
+  41 files already formatted (intermediário: 1 reformat só em
+  teste novo test_custo_local.py; verbatim intocado)
+  $ uv run mypy
+  Success: no issues found in 40 source files (intermediário: **dict
+  misto int→float em teste novo; corrigido com construção explícita)
+  $ uv run pytest -q
+  94 passed, 2 warnings in 54.63s (treino B04 domina; B08 < 0.1s;
+  warnings pré-existentes: NumPy ausente p/ torch, broadcast AT-006)
+
+MEDIDOS (fórmula + dict puro, execução real; parâmetros como EXEMPLO)
+  $ custo_local.py --preco-hw 4000 --vida-meses 36 --watts 350 \
+      --kwh 0.20 --tok-s 45
+  energia US$ 0.43 / Mtok; hardware US$ 3.81 / Mtok; TOTAL US$ 4.24 / Mtok
+  horas/Mtok 6.1728 (exato: 1e6/45/3600); total 4.2425 > API 3.00 (M05).
+  break_even(100 rel, 8000 tok, api 3.00, local 4.2425, fixo 111.11):
+  (2.40, 114.51, 'api') — baixo volume perde (AT-033/035).
+  Cenário rápido declarado (120 tok/s, util 0.50): total 0.8765 < 3.00;
+  break_even(100000 rel): (2400.00, 812.30, 'local') — crossover (AT-035).
+  Formato (AT-030): JSON Schema com type/properties/required + round-trip;
+  assinatura Python sem schema. Tabela: 1 linha/config, taxa 3 casas,
+  p50/p95 1 casa, custo 4 casas; total=0 rende taxa 0.0 (AT-032).
+  LoRA r=16/D=4096: 2r/D = 0.78% < 1%; r=32 estoura (AT-034, sem treino).
+
+DIVERGÊNCIAS DO VERBATIM: duas, ambas para o orquestrador emendar o HTML.
+  (1) A ordem pedia "matriz_local.py (... + main)", mas o contrato
+  verbatim do Bloco 8 NÃO define main/CLI nesse módulo — arquivo escrito
+  sem main, verbatim preservado. README registra "(sem main)".
+  (2) Nenhuma correcao de lint/tipos no verbatim: zero divergência de
+  código (só decodificação das entidades HTML: -> por -&gt;, < por &lt;).
+
+CLEANUP: nenhum resíduo em /tmp.
+
+LIMITE: pesos/servidor/API de comparação ausentes → BFCL real, pull/run
+de pesos, vazão tok/s e matriz API×local medida pertencem à trilha
+externa (live BLOCKED); taxas/latências nos testes são ESTRUTURA sobre
+dados declarados como exemplo, nunca medida; LoRA é cálculo puro de
+fração (r=16/D=4096), sem treino/GPU; formato é construção de
+schema/tools em dict puro, sem modelo.

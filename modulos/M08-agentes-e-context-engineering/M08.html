@@ -30,12 +30,14 @@ h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercas
 p,li{margin:0 0 14px}
 ul,ol{padding-left:22px}
 a{color:var(--accent)}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
 code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
   padding:2px 5px;border-radius:4px}
 pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
   padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
 pre code{background:none;padding:0}
 table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+@media screen and (max-width:640px){table{display:block;overflow-x:auto}}
 th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
 th{background:var(--code-bg);font-weight:600}
 blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
@@ -70,6 +72,8 @@ svg{max-width:100%;height:auto}
 hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 .kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
   border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
 .step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
 .step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
   width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
@@ -84,6 +88,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="wrap">
 
 <h1>M08 · Agentes: padrões e context engineering</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Em produção: B01–B08 em revisão didática; laboratório local com política roteirizada e gates G1–G6 pendentes de revisão do orquestrador. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final. Modelos reais e frameworks são trilha externa ao lab.</p></aside>
 <p class="meta"><span class="badge">MÓDULO 08</span> &nbsp; 8 blocos de 2h · pré-requisito: M07 · <strong>o núcleo do que você pediu — e o lugar onde mais gente erra</strong></p>
 
 <div class="box">
@@ -104,20 +109,19 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="toc">
 <strong>Roteiro</strong>
 <ol>
-<li><strong>Bloco 1</strong> — Workflow × agente: a definição e o critério de escolha <em>(fundamento)</em></li>
-<li><strong>Bloco 2</strong> — Os cinco padrões compostáveis <em>(taxonomia)</em></li>
-<li><strong>Bloco 3</strong> — Design de ferramentas: é design de API para um leitor literal <em>(interface)</em></li>
-<li><strong>Bloco 4</strong> — Context engineering: o orçamento de atenção <em>(o recurso escasso)</em></li>
-<li><strong>Bloco 5</strong> — O loop: planejar, agir, observar, parar <em>(mecânica)</em></li>
-<li><strong>Bloco 6</strong> — Memória e multi-agente: quando compensa e quando é overengineering <em>(escala)</em></li>
-<li><strong>Bloco 7</strong> — Frameworks: panorama honesto e critério de escolha <em>(mercado)</em></li>
-<li><strong>Bloco 8</strong> — Mini-projeto: o agente investigador · Diagnóstico · Checkpoint <em>(entrega)</em></li>
+<li><a href="#b01"><strong>Bloco 1</strong> — Workflow × agente: a definição e o critério de escolha</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Os cinco padrões compostáveis</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Design de ferramentas: API para um leitor literal</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Context engineering: o orçamento de atenção</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — O loop: planejar, agir, observar, parar</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Memória e multi-agente: quando compensa</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — Frameworks: panorama honesto e critério de escolha</a></li>
+<li><a href="#b08"><strong>Bloco 8</strong> — O agente investigador de código</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado M08</strong> — prática executável reunida, retomável por etapa</a></li>
 </ol>
 </div>
 <!-- ============================================ BLOCO 1 -->
-<h2>Bloco 1 · Workflow × agente: a definição e o critério de escolha</h2>
-<div class="clock">00:00–00:25 as definições que a indústria adotou &nbsp;|&nbsp; 00:25–01:00 o LLM aumentado: o bloco básico &nbsp;|&nbsp; 01:00–01:35 o critério de decisão &nbsp;|&nbsp; 01:35–02:00 prática: classificar problemas reais</div>
-
+<h2 id="b01">Bloco 1 · Workflow × agente: a definição e o critério de escolha</h2>
 <h3>Por que isso importa</h3>
 <p>A confusão de vocabulário aqui custa dinheiro real: times constroem agente autônomo para problema que um <code>if</code> resolveria, pagam 10x mais, entregam menos confiabilidade e depois concluem que "IA não funciona". A distinção que a indústria convergiu (e que este curso adota) é simples e operacional:</p>
 
@@ -135,8 +139,8 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <p>A recomendação padrão, e ela vale como regra de projeto: <strong>comece com o prompt mais simples, otimize com avaliação, e só adicione complexidade agêntica quando o simples comprovadamente não resolver</strong>. Agente não é o topo de uma escala de sofisticação — é uma escolha de arquitetura com custo. A maioria dos problemas de produção não precisa de agente <em>e fica pior com agente</em>.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Workflow é o seu <strong>pipeline / máquina de estados / orquestração de saga</strong>: você escreveu as transições, elas estão no código, o log mostra por onde passou. Agente é mais próximo de um <strong>resolvedor com backtracking</strong> — ou, na comparação que costuma cair melhor numa reunião: workflow é um <em>stored procedure</em>; agente é um <em>estagiário competente com acesso ao banco e uma tarefa</em>. Você usa o estagiário quando o trabalho exige julgamento a cada passo, não quando é o mesmo relatório de sempre. E, como com estagiário, o que decide o resultado é a qualidade das <em>ferramentas</em>, dos <em>limites</em> e da <em>revisão</em> — não a inteligência bruta.</p>
+<span class="lbl">Caminho escrito × caminho escolhido</span>
+<p>Workflow é <strong>pipeline com transições escritas</strong>: estão no código, o log mostra por onde passou. Agente é um <strong>resolvedor com backtracking</strong>: tenta, observa, ajusta. Use o resolvedor quando o trabalho exige julgamento a cada passo, não quando é o mesmo relatório de sempre. E o que decide o resultado é a qualidade das <em>ferramentas</em>, dos <em>limites</em> e da <em>revisão</em> — não a inteligência bruta.</p>
 </div>
 
 <h3>O bloco básico: o LLM aumentado</h3>
@@ -204,30 +208,11 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 </ul>
 </div>
 
-<h3>Prática guiada · Classificar problemas reais (30 min)</h3>
-<div class="step"><span class="n">1</span><strong>Liste 8 tarefas</strong> — 4 do Capstone e 4 do seu trabalho .NET — e classifique cada uma como workflow, agente ou "workflow com um passo de LLM", aplicando as três perguntas.</p>
-<p><strong>Resultado esperado:</strong> tipicamente 6 de 8 são workflow. Se a sua lista deu maioria "agente", releia as três perguntas: a tentação de classificar como agente é justamente o viés que este bloco combate.</p></div>
+<h3>Leitura aplicada · Classificar antes de construir</h3>
+<p>Listar tarefas, classificar cada uma pelas três perguntas, tentar escrever o workflow da mais "agêntica" e estimar o custo dos dois desenhos é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M08</code>, depois do bloco 8. O percurso: tipicamente 6 de 8 caem em workflow (maioria "agente" sinaliza o viés que o bloco combate); o ponto exato onde o workflow precisaria parar é a justificativa do agente, defendida no checkpoint; e o preço da flexibilidade em mediana e p95, dito antes de escolher.</p>
 
-<div class="step"><span class="n">2</span><strong>Pegue a tarefa mais "agêntica" da sua lista e tente escrever o workflow equivalente.</strong> No papel: quais passos, quais decisões, o que faria o workflow falhar.</p>
-<p><strong>Resultado esperado:</strong> um de dois desfechos, ambos valiosos. Ou você consegue escrever o workflow (e acabou de economizar semanas), ou você encontra o ponto exato em que precisa parar — "aqui eu não sei quantas vezes vou precisar buscar referência". <strong>Esse ponto é a justificativa do agente</strong>, e é o que você defende no checkpoint.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Estime custo dos dois desenhos</strong> para a tarefa escolhida, usando os números do M05 bloco 7: workflow (N chamadas fixas) × agente (mediana e p95 de passos, com histórico crescente a cada passo).</p>
-<p><strong>Resultado esperado:</strong> o agente sai 3–10x mais caro na mediana e muito pior no p95 — porque o contexto cresce a cada volta. Esse número é o preço da flexibilidade, e você precisa saber dizê-lo antes de escolher.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 1</span>
-<ul>
-<li>Workflow = caminho no código; agente = o modelo escolhe o caminho. A diferença é quem decide o próximo passo.</li>
-<li>Comece simples; adicione agência só quando o simples comprovadamente falhar. Agente não é o topo de uma escala.</li>
-<li>Bloco básico: LLM aumentado com recuperação, ferramentas e memória — modelo escolhe, código executa.</li>
-<li>Três perguntas: sabe quantos passos? sabe quais ferramentas e em que ordem? o caminho é o mesmo sempre? Três "sim" = workflow.</li>
-<li>Não determinismo no fluxo de controle: teste vira amostragem, custo vira distribuição, depuração exige trace, idempotência vira obrigação.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 2 -->
-<h2>Bloco 2 · Os cinco padrões compostáveis</h2>
-<div class="clock">00:00–00:30 encadeamento e roteamento &nbsp;|&nbsp; 00:30–01:05 paralelização: sectioning e voting &nbsp;|&nbsp; 01:05–01:40 orquestrador-trabalhadores e avaliador-otimizador &nbsp;|&nbsp; 01:40–02:00 prática: escolher e compor</div>
-
+<h2 id="b02">Bloco 2 · Os cinco padrões compostáveis</h2>
 <h3>Por que isso importa</h3>
 <p>Entre "uma chamada de LLM" e "agente autônomo" existem cinco padrões de workflow que resolvem a maior parte dos problemas reais — com custo previsível e depuração fácil. Conhecê-los pelo nome é vocabulário de mercado; saber <em>qual escolher</em> é engenharia. São compostáveis: sistemas de produção geralmente combinam dois ou três, e o Capstone usa quatro.</p>
 
@@ -266,8 +251,8 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <p><strong>Quando usar:</strong> existe critério de avaliação claro <em>e</em> o feedback comprovadamente melhora o resultado — o teste honesto: um revisor humano melhoraria isso com feedback escrito? Se sim, o padrão funciona. <strong>No Capstone:</strong> o relatório final passa por um avaliador que checa "toda afirmação tem citação verificável" (o grader determinístico do M07 bloco 7 — nem precisa de LLM no avaliador!). <strong>Cuidado:</strong> loop sem teto e avaliador frouxo produzem gasto sem ganho; e avaliador do mesmo modelo/família herda os vieses do gerador (M06 bloco 3).</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Você reconhece os cinco de outros contextos: chaining é <strong>pipeline</strong> (ou o pipeline behavior do MediatR); routing é <strong>strategy + factory</strong>, ou o roteamento por tipo de mensagem no Service Bus; sectioning é <code>Task.WhenAll</code>; voting é <strong>quórum</strong> (o mesmo raciocínio de consenso em sistema distribuído); orchestrator-workers é <strong>saga com coordenador</strong> ou o master/worker de processamento em lote; evaluator-optimizer é o <strong>ciclo de code review</strong> automatizado. Nenhum é novo — o que é novo é que os "nós" agora são probabilísticos, o que muda o tratamento de erro: em vez de exceção, você tem saída ruim, e é por isso que os gates determinísticos entre passos importam tanto.</p>
+<span class="lbl">Padrões conhecidos, nós probabilísticos</span>
+<p>Os cinco têm parentes em engenharia: chaining é <strong>pipeline</strong>; routing é <strong>strategy + factory</strong>; sectioning é execução paralela agregada; voting é <strong>quórum por consenso</strong>; orchestrator-workers é <strong>coordenador com trabalhadores</strong>; evaluator-optimizer é o <strong>ciclo de revisão</strong> automatizado. Nenhum é novo — o que é novo é que os "nós" agora são probabilísticos, o que muda o tratamento de erro: em vez de exceção, saída ruim. Por isso os gates determinísticos entre passos importam tanto.</p>
 </div>
 
 <div class="box warn">
@@ -275,38 +260,16 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <p>A orientação da fonte primária deste bloco é direta: <strong>comece usando a API do modelo diretamente</strong>. Os cinco padrões acima são dezenas de linhas de código cada um — você acabou de ver todos em pseudocódigo, e o loop completo você já escreveu no M05 bloco 3. Frameworks (bloco 7) escondem o prompt real, adicionam camadas de abstração que dificultam depuração, e induzem complexidade que o problema não pedia. Adote framework quando souber exatamente o que ele faz por você — e o único jeito de saber é ter escrito sem ele antes. Esta é a mesma tese do M06 sobre construir o runner de evals à mão.</p>
 </div>
 
-<h3>Prática guiada · Escolher e compor (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Mapeie o Capstone nos cinco padrões.</strong> Para cada etapa do produto (ingestão, análise por arquivo, agregação em relatório, resposta a pergunta, priorização de riscos), diga qual padrão se aplica e por quê.</p>
-<p><strong>Resultado esperado:</strong> algo como — ingestão: sectioning; análise por arquivo: chamada única com structured output (nem é padrão, é o mais simples); resposta a pergunta: routing → RAG ou agente; relatório: chaining + evaluator-optimizer; risco alto: voting. <strong>Note que só uma etapa exige agente de verdade.</strong> Esse mapa vira um diagrama Mermaid em <code>capstone/docs/architecture.md</code> (M04).</p></div>
+<h3>Leitura aplicada · Mapa de padrões do produto</h3>
+<p>Mapear cada etapa nos cinco padrões, implementar o roteador com fallback e o avaliador-otimizador determinístico é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M08</code>, depois do bloco 8. O percurso: mapa em que só uma etapa exige agência real; roteador com regra primeiro, LLM no resto e rota de fallback explícita (a rota "estrutura" responde "não implementado" — buraco explícito vence ficção); e avaliador determinístico de citação com no máximo 2 voltas, medindo custo contra chamada única.</p>
 
-<div class="step"><span class="n">2</span><strong>Implemente o roteador</strong> em <code>services/agent/router.py</code>: regra determinística primeiro (regex de identificador, palavras-chave de estrutura), LLM só no resto, e uma rota de fallback explícita.</p>
-<pre><code>PADRAO_IDENTIFICADOR = re.compile(r"\b[A-Z][a-zA-Z0-9]*(?:Service|Controller|Repository|Dto)\b|\b\w+_\w+\b")
-GATILHOS_ESTRUTURA = ("o que quebra", "quem chama", "quais dependem", "impacto de mudar",
-                      "código morto", "ciclo de dependência")</code></pre>
-<p><strong>Resultado esperado:</strong> rode sobre as 40 consultas do dataset do M07 e conte a distribuição das rotas. Meça: quantas foram decididas por regra (grátis) e quantas precisaram de LLM? <strong>As que caem em "estrutura" devem ir para uma rota que ainda responde "não implementado"</strong> — é o buraco que o M10 preenche, e deixá-lo explícito é melhor que fingir que responde.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Implemente o evaluator-optimizer do relatório</strong> — com avaliador <em>determinístico</em>: gere um resumo de riscos, verifique mecanicamente que toda afirmação tem citação válida (reuse <code>citacao_valida</code> do M07 bloco 7), e devolva ao gerador as afirmações sem evidência para revisão. Máximo 2 voltas.</p>
-<p><strong>Resultado esperado:</strong> na primeira volta, tipicamente 1–3 afirmações sem citação válida; na segunda, zero (o modelo remove ou fundamenta). Meça o custo das duas voltas contra uma chamada só — e o ganho em citação válida. <strong>Este é o padrão mais subestimado da lista</strong>: avaliador determinístico custa zero e melhora muito.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 2</span>
-<ul>
-<li>Cinco padrões: chaining (passos fixos + gates), routing (categorias distintas), parallelization (sectioning=latência, voting=confiança), orchestrator-workers (subtarefas imprevisíveis), evaluator-optimizer (critério claro + feedback útil).</li>
-<li>São compostáveis; o Capstone usa quatro — e só uma etapa exige agente de verdade.</li>
-<li>Avaliador pode ser determinístico: citação verificável custa zero de LLM e melhora muito.</li>
-<li>Voting com o mesmo prompt em temperatura 0 é consenso ilusório: varie o prompt.</li>
-<li>Comece pela API direta. Framework só depois de saber o que ele faz por você.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 3 -->
-<h2>Bloco 3 · Design de ferramentas: API para um leitor literal</h2>
-<div class="clock">00:00–00:30 os princípios &nbsp;|&nbsp; 00:30–01:05 economia de tokens e formato de resposta &nbsp;|&nbsp; 01:05–01:35 erros que ensinam &nbsp;|&nbsp; 01:35–02:00 prática: avaliar e refazer uma ferramenta</div>
-
+<h2 id="b03">Bloco 3 · Design de ferramentas: API para um leitor literal</h2>
 <h3>Por que isso importa</h3>
 <p>A qualidade de um agente é limitada pela qualidade das suas ferramentas — mais do que pelo modelo. Um agente com ferramentas bem desenhadas resolve em 3 passos o que um agente com ferramentas ruins não resolve em 15. E, diferente de prompt, ferramenta é <strong>código que você controla inteiramente</strong>: é a alavanca de melhoria mais determinística que existe no sistema.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
+<span class="lbl">API para um consumidor peculiar</span>
 <p>Você está publicando uma API para um consumidor com características peculiares: <strong>lê a documentação inteira toda vez</strong> (bom), <strong>não pode fazer perguntas</strong> (ruim), <strong>segue a descrição literalmente</strong> (bom e ruim), e <strong>paga por token na resposta</strong> (novo). Todas as regras de API pública valem — nomes claros, contrato estável, erro acionável, paginação — com pesos diferentes. O melhor teste continua sendo o de sempre: <em>um dev novo, lendo só a assinatura e a descrição, usaria isso corretamente na primeira tentativa?</em></p>
 </div>
 
@@ -374,9 +337,9 @@ ocorrência é a DEFINIÇÃO ou um USO. Ordenado com definições primeiro."""</
 <table>
 <thead><tr><th>Erro ruim</th><th>Erro que ensina</th></tr></thead>
 <tbody>
-<tr><td><code>FileNotFoundError: [Errno 2] ...</code> + stack trace</td><td><code>ERRO: 'Servicos/PagtoService.cs' não existe. Caminhos parecidos: 'Services/PagamentoService.cs'. Use repo_buscar_simbolo para localizar.</code></td></tr>
+<tr><td><code>FileNotFoundError: [Errno 2] ...</code> + stack trace</td><td><code>ERRO: 'servicos/pagto_svc.py' não existe. Caminhos parecidos: ['services/pagamento_svc.py']. Use repo_buscar_simbolo para localizar.</code></td></tr>
 <tr><td><code>ValidationError: limite &gt; 50</code></td><td><code>ERRO: limite máximo é 50 (você pediu 200). Refaça com limite=50 e use pagina=2 para os próximos.</code></td></tr>
-<tr><td><code>[]</code> (lista vazia, sem explicação)</td><td><code>Nenhuma ocorrência de 'CalculaJuros'. Verifique a grafia ou tente um nome parcial ('Juros'). O repositório tem 1.204 símbolos indexados.</code></td></tr>
+<tr><td><code>[]</code> (lista vazia, sem explicação)</td><td><code>Nenhuma ocorrência de 'calcula_juros'. Verifique a grafia ou tente um nome parcial ('juros').</code></td></tr>
 </tbody>
 </table>
 <p>Os três da direita têm a mesma estrutura: <strong>o que aconteceu + por quê + o que fazer agora</strong>. Cada um economiza um ou dois passos de tentativa e erro — e passo economizado é token, latência e risco de o agente se perder.</p>
@@ -396,42 +359,19 @@ ocorrência é a DEFINIÇÃO ou um USO. Ordenado com definições primeiro."""</
 </ul>
 </div>
 
-<h3>Prática guiada · Avaliar e refazer uma ferramenta (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Instrumente as ferramentas do M05 bloco 3</strong> para registrar por chamada: nome, argumentos, tamanho da resposta em tokens, sucesso/erro e duração — gravando no trace do M06.</p>
-<p><strong>Resultado esperado:</strong> rode 5 investigações e olhe os números. Tipicamente você descobre que <strong>uma ferramenta domina o consumo de tokens</strong> (quase sempre a de ler arquivo) e que há um erro recorrente (caminho errado). São os dois alvos do refactor.</p></div>
+<h3>Leitura aplicada · Ferramenta que se mede</h3>
+<p>Instrumentar ferramentas, refazer a pior, criar o eval e pedir a análise ao modelo é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M08</code>, depois do bloco 8. O percurso: números por chamada revelando a ferramenta que domina tokens e o erro recorrente; refactor com descrição "use quando / não use quando", faixa de linhas e erro com sugestão; eval de 10 tarefas medindo acurácia e, principalmente, número médio de chamadas; e transcripts apontando a ambiguidade que só aparece em uso.</p>
 
-<div class="step"><span class="n">2</span><strong>Refaça a pior ferramenta</strong> aplicando os cinco princípios: descrição com "use quando / não use quando", parâmetro de faixa de linhas para não trazer o arquivo inteiro, truncamento com instrução, e erro que sugere o caminho parecido (<code>difflib.get_close_matches</code> resolve).</p>
-<p><strong>Resultado esperado:</strong> a mesma investigação consumindo bem menos tokens. Meça antes e depois — a redução costuma ser de 40–70% quando a ferramenta de leitura ganha faixa de linhas.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Crie o eval de ferramentas</strong>: 10 tarefas realistas que exigem múltiplas chamadas, medindo acurácia, nº de chamadas, tokens e erros. Rode com a versão antiga e a nova.</p>
-<p><strong>Resultado esperado:</strong> uma tabela comparativa. O indicador mais revelador não é a acurácia — é o <strong>número médio de chamadas</strong>: ferramenta boa reduz passos. Adicione essa suíte ao <code>evals/</code> do M06 com uma categoria própria.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Peça a análise ao modelo:</strong> passe 3 transcripts de execução e pergunte <em>"onde a descrição da ferramenta foi ambígua? que ferramenta faltou? que chamada foi desperdiçada?"</em>.</p>
-<p><strong>Resultado esperado:</strong> tipicamente uma sugestão óbvia em retrospecto (falta uma ferramenta que liste os arquivos de um diretório; a descrição de <code>tipo</code> não diz os valores válidos). Implemente uma delas e re-rode o eval — o ciclo de melhoria de ferramentas é este, e é barato.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 3</span>
-<ul>
-<li>Ferramenta é a alavanca mais determinística do agente — é código que você controla inteiramente.</li>
-<li>Poucas e de alto impacto (5–8), com namespace por domínio; construa para fluxos, não para endpoints.</li>
-<li>Devolva contexto útil, não UUID; trunque com aviso, pagine com total, filtre na origem, detalhe como parâmetro.</li>
-<li>Descrição é prompt: diga quando usar E quando não usar. Erro é interface: o que houve + por quê + o que fazer.</li>
-<li>Ferramentas têm eval: acurácia, nº de chamadas, tokens, erros — e o nº de chamadas é o indicador mais revelador.</li>
-<li>Escopo (tenant/repo) vem do runtime, nunca de argumento preenchido pelo modelo.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 4 -->
-<h2>Bloco 4 · Context engineering: o orçamento de atenção</h2>
-<div class="clock">00:00–00:30 contexto como recurso finito &nbsp;|&nbsp; 00:30–01:00 a altitude certa do system prompt &nbsp;|&nbsp; 01:00–01:40 as três técnicas de horizonte longo &nbsp;|&nbsp; 01:40–02:00 prática: compactação</div>
-
+<h2 id="b04">Bloco 4 · Context engineering: o orçamento de atenção</h2>
 <h3>Por que isso importa</h3>
 <p>Este é o bloco central do módulo e o assunto que o M00 abriu (bloco 1: contexto não é memória). A tese, agora com o mecanismo: <strong>o modelo tem um orçamento de atenção finito</strong>. Não é só que a janela acaba — é que a qualidade da atenção degrada conforme o contexto cresce, porque a arquitetura transformer relaciona cada token com todos os outros (O(n²) — o M11 abre essa conta). Mais contexto não é mais informação: passado certo ponto, é <em>menos</em> capacidade de usar a informação que está lá.</p>
 
 <p>Daí a definição operacional de <strong>context engineering</strong>: a disciplina de decidir, a cada chamada, <em>o conjunto mínimo de tokens de alto sinal</em> que maximiza a chance do comportamento desejado. Não é "colocar tudo o que pode ser útil" — é curadoria sob restrição.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Duas analogias que funcionam. A primeira é <strong>orçamento de memória em sistema embarcado</strong>: você não carrega tudo porque cabe; você carrega o que precisa, e sabe o custo de cada byte. A segunda, mais próxima do seu dia: <strong>projeção no EF</strong> — <code>Select(x =&gt; new { x.Id, x.Nome })</code> em vez de arrastar a entidade inteira com todas as navegações. O instinto de "traz tudo por garantia" custa caro nos dois mundos; a diferença é que aqui o custo aparece como <em>resposta pior</em>, não como query lenta — e por isso é mais difícil de perceber.</p>
+<span class="lbl">Orçamento finito, custo invisível</span>
+<p>Duas intuições. A primeira é <strong>orçamento de memória</strong>: você não carrega tudo porque cabe; carrega o que precisa, sabendo o custo de cada byte. A segunda é <strong>projeção em consulta</strong>: trazer só os campos necessários em vez da entidade inteira com todas as relações. O instinto de "traz tudo por garantia" custa caro nos dois mundos; a diferença é que aqui o custo aparece como <em>resposta pior</em>, não como consulta lenta — e por isso é mais difícil de perceber.</p>
 </div>
 
 <h3>Onde o contexto é gasto (e o que fazer com cada parte)</h3>
@@ -486,13 +426,10 @@ ocorrência é a DEFINIÇÃO ou um USO. Ordenado com definições primeiro."""</
 </ul>
 </div>
 
-<h3>Prática guiada · Compactação e orçamento (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Instrumente a composição do contexto.</strong> Antes de cada chamada do loop, conte os tokens de cada parte (system, tools, histórico, saídas de ferramenta) e registre no trace.</p>
-<p><strong>Resultado esperado:</strong> um gráfico de barras mental ao longo dos passos. O padrão típico: system e tools são constantes; <strong>saídas de ferramenta dominam a partir do passo 3</strong> e crescem monotonicamente. Anote em que passo você passaria de 50% da janela.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Implemente a compactação</strong> com política explícita:
-<pre><code># services/agent/context.py
-LIMITE_COMPACTAR = 0.6          # fração da janela a partir da qual compacta
+<h3>Leitura aplicada · Menos contexto, melhor resposta</h3>
+<p>Instrumentar a composição, implementar compactação com política, adicionar notas em disco e comparar as três estratégias é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M08</code>, depois do bloco 8. O percurso: saídas de ferramenta dominando a partir do passo 3; compactação que preserva fatos com arquivo:linha; notas que sobrevivem ao kill do processo; e a tabela contraintuitiva em que (c) custa menos <em>e</em> responde melhor.</p>
+<p>Exemplo trabalhado — o prompt de compactação com política explícita (a cópia executável vive no laboratório):</p>
+<pre><code>LIMITE_COMPACTAR = 0.6          # fração da janela a partir da qual compacta
 
 PROMPT_COMPACTAR = """Resuma a investigação até aqui para continuar em uma
 sessão nova. PRESERVE, em lista: (1) a pergunta original; (2) fatos
@@ -500,13 +437,6 @@ estabelecidos com arquivo:linha; (3) hipóteses descartadas e por quê;
 (4) o que ainda falta verificar. DESCARTE: conteúdo de arquivos já lidos,
 saídas de ferramenta já interpretadas, raciocínio intermediário.
 Máximo 800 tokens. Não invente nada que não esteja no histórico."""</code></pre>
-<p><strong>Resultado esperado:</strong> rode uma investigação longa (uma pergunta que exija 10+ passos) e observe a compactação disparar. Compare a resposta final com e sem compactação: a com compactação deve ser <em>igual ou melhor</em> — se ficou pior, o seu prompt de compactação está descartando o que importa (quase sempre os fatos com arquivo:linha).</p></div>
-
-<div class="step"><span class="n">3</span><strong>Adicione notas estruturadas:</strong> uma ferramenta <code>notas_registrar(fato, evidencia)</code> que grava em disco, e a instrução no system prompt para o agente registrar todo fato estabelecido.</p>
-<p><strong>Resultado esperado:</strong> ao final, um arquivo com os fatos e evidências — que sobrevive à sessão e serve de resposta parcial mesmo se o loop estourar o orçamento. Teste o cenário duro: <strong>mate o processo no meio e retome</strong>. Com notas, o agente continua de onde parou; sem elas, recomeça do zero. (É o ensaio do checkpointing durável do M10.)</p></div>
-
-<div class="step"><span class="n">4</span><strong>Compare as três estratégias</strong> na mesma investigação difícil: (a) sem gestão de contexto (deixa crescer até estourar); (b) com compactação; (c) com compactação + notas.</p>
-<p><strong>Resultado esperado:</strong> uma tabela com passos até a resposta, tokens totais, custo e qualidade da resposta. A configuração (c) costuma custar menos <em>e</em> responder melhor — o resultado contraintuitivo que fecha o bloco: <strong>menos contexto, melhor resposta</strong>.</p></div>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 4</span>
@@ -520,9 +450,7 @@ Máximo 800 tokens. Não invente nada que não esteja no histórico."""</code></
 </ul>
 </div>
 <!-- ============================================ BLOCO 5 -->
-<h2>Bloco 5 · O loop: planejar, agir, observar, parar</h2>
-<div class="clock">00:00–00:30 anatomia do loop e o ciclo ReAct &nbsp;|&nbsp; 00:30–01:10 critérios de parada e orçamento &nbsp;|&nbsp; 01:10–01:40 confiabilidade: retry, timeout, HITL &nbsp;|&nbsp; 01:40–02:00 prática: o loop robusto</div>
-
+<h2 id="b05">Bloco 5 · O loop: planejar, agir, observar, parar</h2>
 <h3>Por que isso importa</h3>
 <p>Você já escreveu um loop de tool calling no M05 bloco 3. Este bloco o transforma em algo que sobrevive à produção: com critério de parada explícito, orçamento em três dimensões, tratamento de erro que não envenena o contexto, e ponto de intervenção humana. A frase que resume o risco: <strong>agente sem critério de parada não é autônomo, é uma fatura aberta com esperança de convergir.</strong></p>
 
@@ -561,7 +489,7 @@ Máximo 800 tokens. Não invente nada que não esteja no histórico."""</code></
 </div>
 
 <h3>O loop robusto, completo</h3>
-<pre><code># services/agent/loop.py
+<pre><code># loop.py (exemplo de leitura; a cópia executável vive no laboratório)
 """Loop do agente investigador: orçamento triplo, parada explícita, HITL."""
 
 from __future__ import annotations
@@ -674,8 +602,8 @@ def _parcial(fatos: list[str], motivo: str) -> str:
     )</code></pre>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>O loop é o seu <strong>worker com políticas de resiliência</strong>: <code>max_passos</code> é o limite de tentativas, <code>max_segundos</code> é o <code>CancellationTokenSource(timeout)</code>, o detector de loop estéril é o <em>circuit breaker</em> (padrão repetido = abre o circuito), e a resposta parcial é o <strong>graceful degradation</strong> que você já aplica quando um serviço externo cai. A parte genuinamente nova é o <strong>orçamento em dinheiro</strong>: nenhum worker seu jamais precisou parar porque a execução custou US$ 0,50 — e essa dimensão precisa ser tratada com o mesmo rigor das outras duas.</p>
+<span class="lbl">Worker com três orçamentos</span>
+<p>O loop é um <strong>worker com políticas</strong>: limite de tentativas, timeout global, detector de padrão repetido (circuito que abre) e degradação graciosa quando o serviço cai. A dimensão nova é o <strong>orçamento em dinheiro</strong>: parar porque a execução custou além do teto — tratada com o mesmo rigor das outras duas.</p>
 </div>
 
 <h3>Confiabilidade: os detalhes que separam demo de produção</h3>
@@ -697,18 +625,8 @@ def _parcial(fatos: list[str], motivo: str) -> str:
 </ul>
 </div>
 
-<h3>Prática guiada · O loop robusto (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Implemente o loop acima</strong> substituindo o do M05 bloco 3, e rode a mesma pergunta de antes.</p>
-<p><strong>Resultado esperado:</strong> mesma resposta, agora com <code>Execucao</code> completo — passos, custo, duração, motivo de parada. Confira que <code>parada == "sucesso"</code>.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Force cada critério de parada, um por vez:</strong> (a) <code>max_passos=2</code> numa pergunta difícil; (b) <code>max_custo_usd=0.001</code>; (c) uma ferramenta que sempre devolve o mesmo erro (para provocar loop estéril).</p>
-<p><strong>Resultado esperado:</strong> os três motivos disparando corretamente, e — o ponto principal — <strong>resposta parcial útil em todos</strong>, com os fatos já estabelecidos. Se algum devolveu string vazia ou erro genérico, conserte: é exatamente o caso que mais acontece em produção.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Meça a distribuição.</strong> Rode as 20 perguntas do dataset e colete: passos (p50/p95), custo (p50/p95), taxa de sucesso por motivo de parada.</p>
-<p><strong>Resultado esperado:</strong> uma tabela reveladora — tipicamente p50 de 4–6 passos e p95 de 11–12 (batendo no teto). <strong>O p95 batendo no teto significa que o teto está apertado ou que há uma classe de pergunta que o agente não resolve</strong>; investigue quais são (dica: costumam ser as perguntas estruturais do M07). Registre no PROGRESSO.md.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Adicione o gancho de HITL:</strong> implemente <code>_exige_aprovacao</code> com uma allowlist explícita de ferramentas que podem rodar sem humano, e faça o loop pausar (retornando <code>requer_humano</code>) para qualquer outra.</p>
-<p><strong>Resultado esperado:</strong> ferramentas de leitura passam; qualquer ferramenta de escrita que você adicionar pausa. Note o desenho: <strong>a lista é de permitidas, não de proibidas</strong> — default deny (M07 bloco 6). Ferramenta nova nasce exigindo aprovação até você decidir o contrário.</p></div>
+<h3>Leitura aplicada · Parada que se provoca</h3>
+<p>Implementar o loop, forçar cada critério de parada, medir a distribuição e adicionar o gancho de HITL é o exercício deste bloco — o roteiro executável com política roteirizada fica no <code>Laboratório guiado M08</code>, depois do bloco 8. O percurso: execução completa com motivo <code>sucesso</code>; três estouros com parcial útil em todos (vazio ou genérico é defeito); p50/p95 de passos e custo com o p95 no teto apontando classe não resolvida (tipicamente estrutural, M07); e allowlist de leitura com default deny para escrita.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 5</span>
@@ -722,9 +640,7 @@ def _parcial(fatos: list[str], motivo: str) -> str:
 </ul>
 </div>
 <!-- ============================================ BLOCO 6 -->
-<h2>Bloco 6 · Memória e multi-agente</h2>
-<div class="clock">00:00–00:30 os quatro tipos de memória &nbsp;|&nbsp; 00:30–01:05 implementar memória sem virar RAG ruim &nbsp;|&nbsp; 01:05–01:40 multi-agente: quando compensa &nbsp;|&nbsp; 01:40–02:00 prática: subagente investigador</div>
-
+<h2 id="b06">Bloco 6 · Memória e multi-agente</h2>
 <h3>Por que isso importa</h3>
 <p>Dois assuntos que o mercado trata como sinônimo de sofisticação e que, mal aplicados, só adicionam custo e modos de falha. A regra que atravessa o bloco: <strong>memória e multi-agente resolvem problemas específicos — se você não consegue nomear o problema, não precisa deles</strong>.</p>
 
@@ -756,8 +672,8 @@ def _parcial(fatos: list[str], motivo: str) -> str:
 </div>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Memória de agente é <strong>cache com política de invalidação</strong> (M05 bloco 5), não "banco de tudo". As mesmas perguntas se aplicam: qual a chave? qual o TTL? o que invalida? qual o custo de servir dado velho? A diferença é que aqui servir dado velho não gera um erro — gera uma <em>afirmação confiante e errada</em>, que é pior. E há um paralelo direto com o seu mundo: memória sem invalidação é o mesmo problema do cache de segundo nível do ORM que ninguém sabe quando limpa.</p>
+<span class="lbl">Memória é cache com invalidação</span>
+<p>Memória de agente é <strong>cache com política de invalidação</strong> (M05 bloco 5), não "banco de tudo". As mesmas perguntas se aplicam: qual a chave? qual o TTL? o que invalida? qual o custo de servir dado velho? A diferença é que aqui servir dado velho não gera um erro — gera uma <em>afirmação confiante e errada</em>, que é pior.</p>
 </div>
 
 <h3>Implementar memória sem virar RAG ruim</h3>
@@ -804,41 +720,8 @@ CREATE INDEX ix_fatos_vigentes ON fatos_agente (tenant_id, repo_id)
 </table>
 <p>Repare na última linha: metade do que o mercado chama de "sistema multi-agente" é um workflow com agentes nos nós. Isso é bom — é previsível e depurável. Só não chame de autonomia.</p>
 
-<h3>Prática guiada · O subagente investigador (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Meça o problema antes de resolver.</strong> Rode o agente do bloco 5 numa pergunta que exija ler 4–5 arquivos grandes e registre o pico de contexto e o custo.</p>
-<p><strong>Resultado esperado:</strong> o pico chegando a dezenas de milhares de tokens, com as saídas de ferramenta dominando (bloco 4). <strong>Este número é a justificativa</strong> — sem ele, o subagente é decoração.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Implemente o subagente como ferramenta.</strong> O detalhe de design que faz isso funcionar: para o coordenador, o subagente é apenas mais uma ferramenta — com contrato de entrada e saída bem definidos.</p>
-<pre><code>class InvestigarSimboloIn(BaseModel):
-    simbolo: str = Field(description="Símbolo a investigar em profundidade.")
-    objetivo: str = Field(description="O que precisa ser descoberto sobre ele, em uma frase.")
-
-
-DESCRICAO_SUBAGENTE = """Investiga um símbolo em profundidade e devolve um RESUMO.
-
-Use quando: precisar entender um símbolo por completo (definição, usos, dependências)
-e isso exigiria ler vários arquivos.
-
-Devolve: resumo de até 1.500 tokens com os fatos estabelecidos e as evidências
-(arquivo:linha). NÃO devolve o conteúdo dos arquivos lidos."""
-
-
-async def investigar_simbolo(entrada: InvestigarSimboloIn) -> str:
-    """Roda um agente com contexto PRÓPRIO e devolve só o resumo."""
-    execucao = await investigar(                      # o loop do bloco 5, reaproveitado
-        pergunta=f"Investigue {entrada.simbolo}. Objetivo: {entrada.objetivo}. "
-                 f"Ao final, resuma em no máximo 1.500 tokens: fatos + evidências.",
-        orc=Orcamento(max_passos=8, max_custo_usd=0.20, max_segundos=60),
-    )
-    prefixo = "" if not execucao.parcial else f"[PARCIAL: {execucao.parada}] "
-    return prefixo + execucao.resposta               # o coordenador vê SÓ isto</code></pre>
-<p><strong>Resultado esperado:</strong> o coordenador chamando <code>investigar_simbolo</code> e recebendo 1.500 tokens em vez de 30 mil. Compare o pico de contexto do coordenador com o do passo 1 — deve cair drasticamente. E note que o subagente tem <strong>orçamento próprio, menor</strong>: sem isso, um subagente pode consumir o orçamento inteiro da operação.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Compare as duas arquiteturas</strong> nas mesmas 10 perguntas: agente único × coordenador + subagente. Meça custo total, latência, passos e acurácia (com os evals do M06).</p>
-<p><strong>Resultado esperado:</strong> o resultado costuma ser <strong>ambíguo — e isso é o aprendizado</strong>: o multi-agente reduz o pico de contexto e melhora perguntas amplas, mas custa mais no total (instruções repetidas) e às vezes perde detalhe no resumo. Documente qual venceu <em>na sua carga</em> e por quê. Se o único venceu, mantenha o único — e você tem o número para defender a escolha, que é o que importa no checkpoint.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Implemente a memória de fatos</strong> (tabela acima): o agente grava fatos com evidência ao final da execução, e lê os vigentes no início.</p>
-<p><strong>Resultado esperado:</strong> faça a MESMA pergunta duas vezes. A segunda deve ser visivelmente mais rápida e barata — o agente lê os fatos e pula a redescoberta. Depois <strong>altere um dos arquivos citados</strong>, rode a ingestão incremental (M07) e confirme que os fatos correspondentes foram invalidados. É o ciclo completo de memória com validade.</p></div>
+<h3>Leitura aplicada · Subagente com contrato</h3>
+<p>Medir o pico de contexto, implementar o subagente como ferramenta, comparar as arquiteturas e implementar a memória de fatos é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M08</code>, depois do bloco 8. O percurso: pico em dezenas de milhares de tokens como justificativa medida (sem número, subagente é decoração); coordenador recebendo 1,5k em vez de 30k, com orçamento próprio menor no subagente; comparação ambígua documentada por carga (menos pico, mais custo total); e segunda pergunta igual mais barata pela memória, com invalidação após alterar o arquivo citado.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 6</span>
@@ -852,15 +735,13 @@ async def investigar_simbolo(entrada: InvestigarSimboloIn) -> str:
 </ul>
 </div>
 <!-- ============================================ BLOCO 7 -->
-<h2>Bloco 7 · Frameworks: panorama honesto e critério de escolha</h2>
-<div class="clock">00:00–00:30 o que um framework realmente entrega &nbsp;|&nbsp; 00:30–01:15 o panorama, um a um &nbsp;|&nbsp; 01:15–01:45 o critério e o custo de troca &nbsp;|&nbsp; 01:45–02:00 prática: ADR de escolha</div>
-
+<h2 id="b07">Bloco 7 · Frameworks: panorama honesto e critério de escolha</h2>
 <h3>Por que isso importa</h3>
 <p>Você chega neste bloco tendo construído tudo à mão: loop, ferramentas, contexto, memória, subagente. Essa é exatamente a posição certa para avaliar frameworks — <strong>você sabe o que eles fazem, porque fez</strong>. A pergunta deixa de ser "qual framework aprender?" e vira "que parte do que eu já tenho vale a pena delegar, e a que custo?".</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É a discussão de sempre: ORM ou ADO.NET puro? MediatR ou chamar o handler direto? A resposta madura nunca foi ideológica — é <em>o que o framework resolve que eu resolveria pior, e o que ele esconde que eu preciso ver?</em>. A diferença aqui é que a camada escondida é o <strong>prompt e o contexto exatos enviados ao modelo</strong> — e esse é justamente o material que você precisa inspecionar para depurar qualidade (M06) e controlar custo (M05). Framework de agente que não te deixa ver e editar o prompt final é o equivalente a um ORM que não te deixa ver o SQL: aceitável em CRUD, inaceitável no caminho crítico.</p>
+<span class="lbl">O que ele esconde que você precisa ver</span>
+<p>A resposta madura nunca foi ideológica — é <em>o que o framework resolve que eu resolveria pior, e o que ele esconde que eu preciso ver?</em> Aqui a camada escondida é o <strong>prompt e o contexto exatos enviados ao modelo</strong> — justamente o material para depurar qualidade (M06) e controlar custo (M05). Framework que não deixa ver e editar o prompt final é inaceitável no caminho crítico.</p>
 </div>
 
 <h3>O que um framework de agentes entrega — e o que custa</h3>
@@ -887,14 +768,11 @@ async def investigar_simbolo(entrada: InvestigarSimboloIn) -> str:
 <tr><td><strong>CrewAI</strong></td><td>"equipe" de agentes com papéis e tarefas</td><td>prototipagem rápida de multi-agente; metáfora fácil de explicar</td><td>a metáfora de papéis induz multi-agente onde não precisa (bloco 6); menos controle fino</td></tr>
 <tr><td><strong>OpenAI Agents SDK</strong></td><td>agentes com handoffs e guardrails</td><td>simplicidade; bom com o ecossistema do provedor</td><td>gravidade para um provedor — pesar contra a tese de agnosticismo do curso</td></tr>
 <tr><td><strong>Google ADK</strong></td><td>agentes e workflows com forte integração ao ecossistema Google/A2A</td><td>quem está em GCP; suporte de primeira classe a A2A (M09)</td><td>mesma observação de gravidade de plataforma</td></tr>
-<tr><td><strong>Microsoft Agent Framework</strong></td><td>SDK unificado que sucede Semantic Kernel e AutoGen; workflows em grafo, C# e Python de primeira classe, MCP e A2A</td><td><strong>a ponte com o seu mundo</strong>: é o caminho legítimo de agentes em .NET corporativo</td><td>não é o caminho deste curso (Python), mas é o seu atalho de capital político no emprego atual</td></tr>
+<tr><td><strong>Microsoft Agent Framework</strong></td><td>SDK unificado para agentes e workflows em grafo, com MCP e A2A</td><td>ambientes corporativos Microsoft</td><td>fora do caminho deste curso (Python); avaliar pelo mesmo critério</td></tr>
 </tbody>
 </table>
 
-<div class="box">
-<span class="lbl">Contexto · Por que o Microsoft Agent Framework importa para VOCÊ especificamente</span>
-<p>Ele é o sucessor unificado do Semantic Kernel e do AutoGen, com C# e Python de primeira classe, workflows baseados em grafo, e suporte a MCP e A2A. Traduzindo para a sua situação: <strong>existe um caminho legítimo e suportado para agentes dentro do mundo .NET corporativo</strong>. O currículo é explícito sobre o que fazer com essa informação: <em>nada agora</em>. Sua carreira está indo para Python e o curso inteiro reflete isso. Mas, se em algum momento você quiser converter aprendizado em visibilidade no emprego atual, existe um atalho de ~2 blocos: portar o agente deste módulo para C# com esse framework. O valor pedagógico é secundário (reimplementar em outra API mostra o que era conceito e o que era sintaxe); o valor político pode ser alto. Guarde como opção, não como plano.</p>
-</div>
+
 
 <h3>O critério de escolha</h3>
 <p>Quatro perguntas, na ordem:</p>
@@ -915,34 +793,15 @@ async def investigar_simbolo(entrada: InvestigarSimboloIn) -> str:
 </ul>
 </div>
 
-<h3>Prática guiada · O ADR da escolha (30 min)</h3>
-<div class="step"><span class="n">1</span><strong>Faça o teste de transparência</strong> num framework: instale Pydantic AI (o mais alinhado com o curso), reimplemente o agente investigador com 2 ferramentas, e <strong>capture o payload HTTP real</strong> enviado ao provedor (log do httpx ou proxy local).</p>
-<p><strong>Resultado esperado:</strong> você vê o prompt final, as definições de ferramenta e a ordem das mensagens. Compare com o que o seu loop manual envia. Duas descobertas típicas: o framework adiciona instruções que você não escreveu, e a ordem das mensagens difere — <strong>e uma dessas duas coisas afeta o prompt caching</strong> (M05 bloco 5: prefixo byte-a-byte). Meça o <code>cache_read</code> nas duas implementações.</p></div>
+<h3>Leitura aplicada · Decisão com gatilho</h3>
+<p>Testar transparência num framework, comparar com evals e escrever o ADR da escolha é o exercício deste bloco — com execução externa opcional (framework real e provedor). O percurso: payload HTTP real capturado comparando prompt final, ordem e cache entre manual e framework; empate típico em acurácia com diferença em tokens; e ADR "manual agora, LangGraph no M10 para durabilidade" com o gatilho escrito — decisão com gatilho é madura, sem gatilho é dogma.</p>
 
-<div class="step"><span class="n">2</span><strong>Compare com os evals do M06:</strong> rode a suíte de agente (bloco 3) nas duas implementações — a sua e a do framework.</p>
-<p><strong>Resultado esperado:</strong> tipicamente empate em acurácia, com diferença em tokens e em número de chamadas. O que importa é você ter o <em>método</em> de comparar — daqui em diante, toda adoção de framework passa pelo mesmo crivo, com números.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Escreva o ADR-0003</strong> (formato do M04): "Construir o agente sem framework agora, adotar LangGraph no M10 para orquestração durável". Contexto real, opções (manual / Pydantic AI / LangGraph agora / CrewAI), decisão com porquê, consequências honestas (mais código nosso para manter; risco de reinventar mal o que já existe) e o gatilho explícito de revisão.</p>
-<p><strong>Resultado esperado:</strong> um ADR com o gatilho escrito — "quando a execução precisar sobreviver a restart do processo, o que acontece no M10". Decisão com gatilho de revisão é decisão madura; decisão sem gatilho é dogma.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 7</span>
-<ul>
-<li>Você construiu tudo à mão — por isso pode avaliar frameworks pelo que eles realmente entregam.</li>
-<li>Do que eles oferecem, o que ainda te falta é <strong>orquestração com estado durável</strong> (M10). O resto você já tem.</li>
-<li>Eliminatório: não deixar ver/editar o prompt final. Framework opaco no caminho crítico é ORM que esconde o SQL.</li>
-<li>Panorama: LangGraph (grafo+checkpoint), Pydantic AI (tipado, alinhado ao curso), CrewAI (papéis, induz multi-agente), SDKs de provedor (gravidade), Microsoft Agent Framework (a ponte .NET — opção, não plano).</li>
-<li>Estratégia de menor arrependimento: fronteira fina primeiro, implementação trocável depois. E eval como rede de segurança de qualquer adoção.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 8 -->
-<h2>Bloco 8 · Mini-projeto: o agente investigador de código</h2>
-<div class="clock">00:00–01:00 construir o agente completo &nbsp;|&nbsp; 01:00–01:35 o exercício que compara agente × workflow &nbsp;|&nbsp; 01:35–02:00 diagnóstico e checkpoint</div>
-
+<h2 id="b08">Bloco 8 · Mini-projeto: o agente investigador de código</h2>
 <h3>O que você vai construir</h3>
-<p>O agente central do Capstone: responde <strong>"o que quebra se eu mudar a assinatura deste método?"</strong> investigando sozinho, com ferramentas, orçamento, memória e citação de evidência. É a v2 e a v3 da tabela de versões do produto (<code>projeto-final.md</code>): <em>tools reais</em> e <em>agente com loop, orçamento de passos e critério de parada</em>.</p>
+<p>O agente investigador: responde <strong>"o que quebra se eu mudar a assinatura deste método?"</strong> investigando sozinho, com ferramentas, orçamento, memória e citação de evidência — sobre o repositório fixture do laboratório.</p>
 
-<div class="step"><span class="n">1</span><strong>O conjunto de ferramentas</strong> — cinco, com namespace, aplicando o bloco 3:
+<p><strong>O conjunto de ferramentas</strong> — cinco, com namespace, aplicando o bloco 3 (exemplo de leitura; a cópia executável vive no laboratório):
 <table>
 <thead><tr><th>Ferramenta</th><th>Faz</th><th>Devolve</th></tr></thead>
 <tbody>
@@ -953,9 +812,9 @@ async def investigar_simbolo(entrada: InvestigarSimboloIn) -> str:
 <tr><td><code>notas_registrar</code></td><td>grava um fato com evidência</td><td>confirmação curta</td></tr>
 </tbody>
 </table>
-<p><strong>Resultado esperado:</strong> as cinco com descrição "use quando / não use quando", schema Pydantic, erro acionável e truncamento com instrução. Rode <code>mypy --strict</code> e o <code>lint-imports</code> (M03 b4): nada em <code>services/agent/</code> deve importar SDK de provedor diretamente — só o gateway.</p></div>
+<p>As cinco com descrição "use quando / não use quando", schema Pydantic, erro acionável e truncamento com instrução — verificadas pelo guardrail do laboratório.</p>
 
-<div class="step"><span class="n">2</span><strong>O system prompt na altitude certa</strong> (bloco 4), versionado no registry do M06:
+<p><strong>O system prompt na altitude certa</strong> (bloco 4), versionado como no registry do M06:</p>
 <pre><code>---
 id: investigador
 versao: 1
@@ -982,24 +841,45 @@ REGRAS
 SAÍDA
 Objeto com: impacto_resumo, itens_afetados[] (caminho, linhas, tipo_de_uso,
 severidade), riscos_nao_verificados[], e confianca (alta|media|baixa).</code></pre>
-<p><strong>Resultado esperado:</strong> repare no que o prompt <em>não</em> faz: não lista os arquivos do projeto (isso é ferramenta), não tenta prever casos (isso é heurística), não pede raciocínio verboso. E note a instrução "pare quando tiver a resposta" — modelos tendem a super-investigar quando têm ferramentas.</p></div>
+<p><strong>Resultado esperado:</strong> repare no que o prompt <em>não</em> faz: não lista os arquivos do projeto (isso é ferramenta), não tenta prever casos (isso é heurística), não pede raciocínio verboso. E note a instrução "pare quando tiver a resposta" — modelos tendem a super-investigar quando têm ferramentas.</p>
 
-<div class="step"><span class="n">3</span><strong>Junte tudo:</strong> loop do bloco 5 (orçamento triplo, parada, HITL), compactação do bloco 4, memória de fatos do bloco 6, saída estruturada do M05 bloco 2, telemetria do M06 bloco 5.</p>
-<p><strong>Resultado esperado:</strong> <code>POST /repos/{id}/impacto</code> recebendo <code>{"simbolo": "CalcularJuros"}</code> e devolvendo o objeto estruturado com citações. Teste com um método que você <em>conhece</em>: confira item por item se os chamadores listados são reais e se não faltou nenhum. Anote a taxa — precisão e recall dos itens afetados são as métricas deste agente.</p></div>
+<p><strong>Juntando tudo:</strong> loop do bloco 5 (orçamento triplo, parada, HITL), compactação do bloco 4, memória de fatos do bloco 6, saída estruturada do M05 bloco 2, telemetria do M06 bloco 5.</p>
+<p><strong>Resultado esperado:</strong> pergunta sobre <code>fechar_pedido</code> devolvendo chamadores com arquivo:linha — confira item por item contra o fixture. Precisão e recall dos itens afetados são as métricas deste agente.</p>
 
-<div class="step"><span class="n">4</span><strong>Ligue nos evals (M06):</strong> crie a categoria <code>agente_impacto</code> com 10 casos onde você conhece a resposta completa (símbolos que você mesmo mapeou à mão), medindo precisão, recall, passos, custo e citação válida.</p>
-<p><strong>Resultado esperado:</strong> a baseline do agente no CI. Você vai descobrir o limite dele: <strong>usos por reflexão, string e injeção de dependência não aparecem na busca textual</strong> — e essa é justamente a evidência que motiva o grafo do M10. Marque esses casos como <code>esperado_falhar: true</code>, junto com os três do M07.</p></div>
+<p><strong>Ligando nos evals (M06):</strong> categoria <code>agente_impacto</code> com casos de resposta conhecida, medindo precisão, recall, passos, custo e citação válida.</p>
+<p><strong>Resultado esperado:</strong> a baseline do agente com precisão/recall por caso. Usos por reflexão ou string não aparecem na busca textual — evidência que motiva o grafo do M10; marque esses casos como <code>esperado_falhar</code>.</p>
 
-<h3>Exercício sozinho (sem pistas até pedir)</h3>
-<p><strong>Transforme o mesmo problema num workflow determinístico e compare.</strong> O workflow: (1) buscar definição por regra; (2) listar ocorrências por busca textual; (3) para cada ocorrência, classificar o tipo de uso com <em>uma</em> chamada de LLM barata e estruturada; (4) agregar e ordenar por severidade com código. Nenhum loop, nenhuma decisão do modelo sobre o próximo passo.</p>
-<p>Meça os dois nas mesmas 10 perguntas: <strong>custo, latência p50/p95, acurácia (precisão e recall dos itens afetados), e variância entre execuções repetidas</strong>. Escreva a conclusão no PROGRESSO.md e um ADR se a decisão mudar o produto.</p>
-<p><strong>A resposta vai te surpreender</strong> — e é por isso que o exercício existe. O padrão típico: o workflow é 3–8x mais barato, muito mais rápido, tem variância quase zero, e <em>empata ou ganha</em> em acurácia nas perguntas bem definidas. O agente ganha nas perguntas abertas e quando o caminho de investigação realmente varia. A conclusão de engenharia é a do bloco 1, agora com os seus números: <strong>use agente onde a agência é necessária, e workflow no resto</strong> — e o produto final provavelmente usa os dois, com roteamento (bloco 2) decidindo.</p>
+<h3>Leitura aplicada · Workflow contra agente, com números</h3>
+<p>Transformar o problema em workflow determinístico e comparar custo, latência, acurácia e variância é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M08</code>, abaixo. O percurso: workflow em 4 passos fixos sem decisão do modelo; mesmas perguntas nos dois; o padrão típico (workflow 3–8x mais barato, mais rápido, variância quase zero, empatando ou ganhando onde o caminho é definido); e a conclusão de engenharia com números — agente onde a agência é necessária, workflow no resto, com roteamento decidindo.</p>
+<p>A aplicação ao Capstone (<code>services/agent/</code>) é trilha opcional com especificação própria.</p>
 
-<h3>Peça do produto</h3>
-<p><strong>Entrega para o Capstone:</strong> <code>services/agent/</code> completo — cinco ferramentas com eval próprio, system prompt versionado, loop com orçamento triplo e sete critérios de parada, compactação, memória de fatos com evidência e invalidação, subagente opcional, e a categoria <code>agente_impacto</code> nos evals. Mais o ADR-0003 sobre framework e a comparação agente × workflow com números.</p>
+<!-- ============================================ LABORATÓRIO GUIADO -->
+<h2 id="lab-guiado">Laboratório guiado M08</h2>
+<p>A prática do módulo, reunida e executável com política roteirizada — sem rede, conta ou modelo real. Pode atravessar várias sessões: cada etapa termina retomável. Lint, tipos e testes são oráculos do programa; o checkpoint vem depois, separado. Modelos reais e frameworks são trilha externa.</p>
+
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigido: Python 3.14 e <code>uv</code>. Nunca edite a referência em <code>modulos/M08-agentes-e-context-engineering/lab/</code>:</p>
+<pre><code>cd modulos/M08-agentes-e-context-engineering/lab
+python3 create_working_copy.py
+cd /tmp/m08-xxxx   # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>Resultado esperado:</strong> ambiente sincronizado. A cópia pode ser descartada e refeita; nada fora dela é tocado.</p>
+
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Loop e paradas (blocos 1/5).</strong> Rode <code>uv run pytest -q tests/test_loop.py</code>.
+<p><strong>Resultado esperado:</strong> sucesso com fatos, os três orçamentos com parcial útil, estéril detectado, inexistente como irrecuperável, escrita pausando para humano.</p></div>
+<div class="step"><span class="n">2</span><strong>Ferramentas e contexto (blocos 3–4).</strong> Rode <code>uv run pytest -q tests/test_agent.py -k "ferramenta or buscar or ler or composicao or compactacao or patterns"</code>.
+<p><strong>Resultado esperado:</strong> recusa fora da raiz, sugestão de parecido, vilão medido, fatos preservados.</p></div>
+<div class="step"><span class="n">3</span><strong>Padrões, memória e subagente (blocos 2/6).</strong> Rode o restante de <code>tests/test_agent.py</code>.
+<p><strong>Resultado esperado:</strong> padrões compostos, fato com validade e invalidação, resumo ≤1500, workflow mais barato que agente.</p></div>
+<div class="step"><span class="n">4</span><strong>Validação técnica.</strong> <code>uv run ruff check .</code>, <code>uv run ruff format --check .</code>, <code>uv run mypy src tests</code>, suíte completa.
+<p><strong>Resultado esperado:</strong> tudo verde. Qualquer vermelho é defeito do programa.</p></div>
+
+<h3>Limpeza e retomada</h3>
+<p>Apague a cópia se quiser. Para retomar, crie uma nova e volte à etapa: cada uma só precisa da cópia sincronizada.</p>
 
 <!-- ============================================ DIAGNÓSTICO -->
-<h2>Tabela de Diagnóstico</h2>
+<h2 id="diagnostico-m08">Tabela de Diagnóstico</h2>
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
@@ -1018,7 +898,7 @@ severidade), riscos_nao_verificados[], e confianca (alta|media|baixa).</code></p
 </table>
 
 <!-- ============================================ CHECKPOINT -->
-<h2>Checkpoint M08</h2>
+<h2 id="checkpoint-m08">Checkpoint M08</h2>
 <div class="box ok">
 <span class="lbl">Avaliação sem consulta — diga "Checkpoint M08" no chat</span>
 <p>A P1 é a prova principal: <strong>justificar cada ferramenta e mostrar o que acontece ao adicionar uma décima.</strong></p>
@@ -1035,15 +915,24 @@ severidade), riscos_nao_verificados[], e confianca (alta|media|baixa).</code></p
 </ul>
 <h4>Entregáveis verificados (mostrar rodando)</h4>
 <ol>
-<li>Agente investigador respondendo "o que quebra se eu mudar X" com saída estruturada e citações verificadas.</li>
-<li>Cinco ferramentas com descrição completa, erro acionável e eval próprio (acurácia, nº de chamadas, tokens).</li>
-<li>Loop com orçamento triplo: demonstrar os três estouros e a resposta parcial útil em cada um.</li>
-<li>Compactação e notas em disco: matar o processo no meio e mostrar o que sobrevive.</li>
-<li>Memória de fatos com evidência, e a invalidação disparando após mudança no arquivo citado.</li>
-<li>Categoria <code>agente_impacto</code> no CI, com os casos estruturais marcados <code>esperado_falhar</code>.</li>
-<li>ADR-0003 (framework) com gatilho de revisão, e a tabela agente × workflow com os números.</li>
+<li>Gates verdes: <code>ruff</code>, <code>format</code>, <code>mypy --strict</code>, <code>pytest</code> do lab.</li>
+<li>Loop com os 7 motivos demonstrados e parcial útil em cada estouro; HITL pausando escrita.</li>
+<li>Ferramentas com recusa, truncamento e erro acionável; compactação preservando fatos; padrões compostos.</li>
+<li>Memória com validade e invalidação; subagente com resumo e orçamento próprio; workflow × agente com números.</li>
 </ol>
 </div>
+
+<h2 id="fontes-m08">Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://arxiv.org/abs/2210.03629">Yao et al. — ReAct (2022)</a></td><td>ciclo planejar/agir/observar (bloco 5)</td><td>científica</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://www.anthropic.com/engineering/building-effective-agents">Anthropic — building effective agents</a></td><td>workflows vs agentes (blocos 1–2)</td><td>fornecedor</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://github.com/humanlayer/12-factor-agents">12-Factor Agents (HumanLayer)</a></td><td>fatores de harness</td><td>industrial</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://docs.langchain.com/">LangGraph docs</a></td><td>orquestração com estado (M10)</td><td>oficial</td><td>14/09/2026</td></tr>
+</tbody>
+</table>
+<p>Docs de framework e capacidades de modelo são informação de alto risco: revalidar em até 90 dias. Frameworks são adapters; nenhum define o currículo.</p>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

@@ -1,3 +1,5 @@
+**Status:** G0 approved; B01–B07 in didactic review with executable lab (local fakes). G1–G6 pending orchestrator review.
+
 # M05 · LLM na prática: contrato, custo, gateway, cache
 
 ## Visão geral
@@ -7,8 +9,11 @@ Início da segunda transformação do currículo: sair de "usar IA para construi
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M05.html`](M05.html) — abra no navegador
-- **Carga:** 7 blocos de 2h (14h)
-- **Pré-requisito:** M04 (e o M02 inteiro: asyncio, Pydantic e fronteira de confiança são usados sem re-explicação)
+- **Especificação:** [`docs/especificacoes/M05-ESPECIFICACAO.md`](../../docs/especificacoes/M05-ESPECIFICACAO.md) — G0 aprovado
+- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Laboratório:** [`lab/`](lab/) — gateway com fakes locais, sem rede/conta/crédito
+- **Carga:** 7 blocos de conteúdo (14h)
+- **Pré-requisito:** M04; usa Pydantic, asyncio e fronteira de confiança do M02 (com links para o ponto onde foram ensinados)
 
 ## Estrutura dos blocos
 
@@ -22,10 +27,11 @@ Início da segunda transformação do currículo: sair de "usar IA para construi
 
 ## Entregáveis
 
-- `capstone/backend/src/app/services/llm/`: gateway com aliases e fallback, prompts versionados com prefixo cacheado, schemas Pydantic, `cost.py`.
-- Tabela `llm_calls` + circuit breaker de custo por tenant + `GET /analises/{id}/custo`.
-- Medições: TTFT/TPOT, economia real do prompt caching, comparação `rapido` × `raciocinio` (custo/latência/qualidade).
-- ADR-0002 sobre o gateway; conta de guardanapo do custo mensal validada contra execução real, com o erro percentual explicado.
+- Gateway com dois adapters na mesma suíte de contrato, cache com TTL, retry com teto, timeout, fallback e ledger com relatório.
+- Saída estruturada com rejeição e abstenção; tool loop com orçamento; stream com corte detectado.
+- Chamadas a provedores reais são trilha opcional (chave e crédito próprios).
+
+A aplicação ao Capstone (`services/llm/`) é trilha opcional com especificação própria.
 
 ## Fundamentos reciclados neste módulo
 

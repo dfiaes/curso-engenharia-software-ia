@@ -69,4 +69,3 @@ def main() -> int:
     if args.command == "policy-demo":
         return _policy_demo(args.workspace)
     raise AssertionError("subcomando não tratado")
-

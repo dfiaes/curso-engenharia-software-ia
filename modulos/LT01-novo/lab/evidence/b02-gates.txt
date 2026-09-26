@@ -1,0 +1,48 @@
+LT01-B02-L — evidencia de gates (folha B02-L, bloco B02)
+Data (UTC): 2026-09-19 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir: modulos/LT01-novo/lab/ · HTML/spec/trace/STATUS/PROGRESSO intocados.
+
+COMANDOS (tails reais)
+- uv sync → "Resolved 13 packages" / "Checked 11 packages" (mypy 1.20.2, pytest 9.1.1, ruff 0.16.8); venv 3.14.7.
+- uv run ruff check . → "All checks passed!"
+- uv run ruff format --check . → "13 files already formatted"
+- uv run mypy → "Success: no issues found in 12 source files"
+- uv run pytest → "34 passed in 1.27s" (at001:4, at002:7, at003:3, at010:5, at011:6, at012:9; 0 skip nesta plataforma)
+
+NUMEROS MEDIDOS (exemplo variavel, amostra: N=8 aberturas de arquivo possuido em tmp_path)
+- baseline em_aberto 0; servir_sem_fechar(N=8) → 8 (crescimento detectado); apos cleanup 0
+- servir_fechando(N=8) → 0 (baseline restaurado); ondas 3+2 → patamar 5, cleanup → 0
+- listar_fd_visiveis() → [] (sem /proc nesta plataforma; fallback honesto)
+- resolver_confinado(base, "dentro.txt") → dentro da base True; ler_confinado → b'dentro'
+- resolver ../fora.txt → EscapeNegado; symlink ao carneirinho → EscapeNegado (valor externo nunca devolvido)
+- rodando_como_root() → False (uid 501, non-root); destino dentro → True; escrita fora → EscritaNaoPermitida
+- carregar_segredo len 6 via ambiente; relatar_contexto → {'root': 'False', 'segredo_presente': 'sim'} (valor nunca exibido)
+- mapa de permissoes (amostra tmp): dados mode=0o755 uid=501 gid=20
+
+DIVERGENCIAS DO VERBATIM
+- Nenhuma: os 3 modulos B02 sao byte-identicos aos <pre> executaveis da secao B02
+  do LT01.html (conferencia por diff programatico apos html.unescape: PRE 9/10/11
+  → vazamento_fd.py 1822 B, caminho_seguro.py 1060 B, execucao_confinada.py 1857 B).
+- Acomodacao de ferramenta (NAO altera modulo): pyproject name/version/description
+  estendidos para B01+B02 e files com os 3 modulos novos; README tabela estendida
+  (6 linhas) + notas B02; nenhum contrato tocado.
+
+LIMITES
+- Root so POSIX: geteuid ausente rende False honesto, sem simular; exige_non_root
+  passa como non-root (uid 501) e recusa sob uid 0 (ramo uid 0 coberto por monkeypatch
+  com restauracao; plataforma nunca fingida).
+- /proc com fallback: listar_fd_visiveis rende [] onde nao ha /proc (macOS aqui);
+  em Linux real publica a lista ordenada; fallback coberto por monkeypatch OSError.
+- Sem rede/Docker em testes e modulos (so stdlib: os, pathlib).
+- Filhos: nenhum criado no B02; arquivos temporarios exclusivamente em tmp_path
+  com cleanup do pytest (inclui fechar todo fd do rastreador em finally e rename
+  temporario-mais-replace dentro dos dados).
+- Segredo: so ambiente no boot; ausencia/branco rende SegredoAusente; valor nunca
+  persistido em arquivo nem incluido em relatar_contexto (assercao negativa); sem
+  argv/log com segredo em teste algum.
+
+GATE CANDIDATO
+- LT01-B02-L APTO a G2 (lab B02): 3 contratos verbatim + pyproject (3.14/uv/ruff
+  100 E,F,I,B,UP,SIM,RUF,ASYNC/mypy strict 12 arquivos/pytest strict) + README +
+  3 oraculos (AT-010/011/012, 20 testes) + suite verde integral (34/34) nesta
+  plataforma POSIX non-root.

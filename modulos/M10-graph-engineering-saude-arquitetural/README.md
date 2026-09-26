@@ -1,3 +1,5 @@
+**Status:** G0 approved; B01–B10 in didactic review with local executable lab (no external deps). G1–G6 pending orchestrator review.
+
 # M10 · Graph engineering e saúde arquitetural
 
 ## Visão geral
@@ -18,8 +20,11 @@ E fecha com a terceira aplicação de grafo: **métricas de saúde arquitetural*
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M10.html`](M10.html) — abra no navegador
-- **Carga:** 10 blocos de 2h (20h)
-- **Pré-requisito:** M08 (o loop caseiro e o ADR-0003) e M07 (o índice vetorial que o grafo vai complementar)
+- **Especificação:** [`docs/especificacoes/M10-ESPECIFICACAO.md`](../../docs/especificacoes/M10-ESPECIFICACAO.md) — G0 aprovado
+- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Laboratório:** [`lab/`](lab/) — workflow, grafo e métricas locais, sem rede/banco/framework
+- **Carga:** 10 blocos de conteúdo (20h)
+- **Pré-requisito:** M09
 
 ## Estrutura dos blocos
 
@@ -36,10 +41,12 @@ E fecha com a terceira aplicação de grafo: **métricas de saúde arquitetural*
 
 ## Entregáveis
 
-- `capstone/grafo/`: pipeline de ingestão em LangGraph com `AsyncPostgresSaver`, HITL na etapa de escrita, extrator determinístico (tree-sitter) e schema em Apache AGE.
-- As **três perguntas do M07 respondidas** — com os casos de eval correspondentes saindo de `esperado_falhar: true` para verde.
-- `metricas.py` + **relatório de saúde arquitetural** do sistema legado (I/A/D, ciclos, candidatos a código morto) com as ressalvas explícitas.
-- ADR sobre a fronteira de microsserviço sugerida pelas métricas — e a prova de durabilidade: matar o processo no meio da execução e mostrar retomada **sem repetir chamadas pagas**.
+- Workflow durável com checkpoint em arquivo, HITL com pausa/retomada e fan-out com reducers.
+- Grafo extraído por AST com as três perguntas respondidas e híbrido com orçamento.
+- Memória temporal com validade; métricas I/A/D com zonas e ciclos.
+- LangGraph, AGE e modelos reais são trilha externa.
+
+A aplicação ao Capstone (`orchestration/`, `graph/`, `metrics/`) é trilha opcional com especificação própria.
 
 ## Fundamentos reciclados neste módulo
 

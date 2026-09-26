@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "link-shortener"
+version = "0.1.0"
+description = "Laboratório do M03 (lote B02): sessão, transação e migration do encurtador de links"
+readme = "README.md"
+requires-python = ">=3.14"
+license = { text = "MIT" }
+authors = [{ name = "Curso Engenharia de IA" }]
+dependencies = [
+  "alembic>=1.14,<2",
+  "asyncpg>=0.29,<1",
+  "fastapi>=0.115,<1",
+  "psycopg[binary]>=3.3.5",
+  "pydantic>=2.11,<3",
+  "pydantic-settings>=2.5,<3",
+  "sqlalchemy[asyncio]>=2.0,<3",
+]
+
+[dependency-groups]
+dev = [
+  "aiosqlite>=0.20,<1",
+  "httpx>=0.28,<1",
+  "mypy>=1.15,<2",
+  "pytest>=8.3,<10",
+  "pytest-asyncio>=0.25,<1",
+  "pyyaml>=6.0.3",
+  "ruff>=0.11,<1",
+  "testcontainers[postgres]>=4.0,<5",
+  "types-pyyaml>=6.0.12.20260906",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/link_shortener"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "ASYNC"]
+ignore = ["SIM108"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+"migrations/**/*.py" = ["E", "F", "I", "B", "UP", "SIM", "RUF", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+files = ["src", "tests"]
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+  "postgres: exige PostgreSQL real via Docker/Testcontainers (bloqueado sem Docker)",
+]

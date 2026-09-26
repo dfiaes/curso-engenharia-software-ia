@@ -18,9 +18,7 @@ class McpAdapterTests(unittest.IsolatedAsyncioTestCase):
             (root / "PROGRESSO.md").write_text("M00 em revisão", encoding="utf-8")
             with patch.dict(os.environ, {"M00_PROGRESS_ROOT": directory}):
                 async with Client(mcp) as client:
-                    result = await client.call_tool(
-                        "course_progress", {"path": "PROGRESSO.md"}
-                    )
+                    result = await client.call_tool("course_progress", {"path": "PROGRESSO.md"})
         self.assertFalse(result.is_error)
         self.assertIn("M00 em revisão", str(result.structured_content))
 

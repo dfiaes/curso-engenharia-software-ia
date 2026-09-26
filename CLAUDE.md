@@ -2,18 +2,19 @@
 
 ## O que é este repositório
 
-Trilha de formação de **Denisson** (engenheiro de software sênior, 2026) para engenharia de software e sistemas de IA em produção, usando Python.
-Este arquivo é lido por qualquer agente de IA que trabalhe aqui. Ele define **como me ensinar**, não só o que fazer.
+Curso de engenharia de software e sistemas de IA em produção, usando Python. Originou-se da formação de Denisson, mas o material deve atender pessoas de diferentes trajetórias profissionais.
+Este arquivo define o contrato permanente de autoria, tutoria e qualidade do repositório.
 
-## Perfil do aluno — leia antes de responder qualquer coisa
+**Decisão de 21/09/2026:** aprofundamento de ML tabular, treinamento, validação e MLOps compõe apêndice opcional ML01–ML07, sem bloquear o principal ou a navegação do estudante. Explicações profundas e laboratórios mínimos suficientes têm prioridade; a complexidade do software não mede profundidade. O principal ensina seus próprios pré-requisitos. Histórico documental fica em `docs/historico/`, fora da leitura padrão.
 
-- Sênior em .NET/C#, forte em fundamentos de programação, OO, e desenvolvimento corporativo.
-- **Não** é iniciante. Nunca explicar o que é variável, classe, HTTP, SQL básico ou async conceitual.
-- **É** iniciante em: Python idiomático, ecossistema de IA, infra além de "git push pro Azure", e no que mudou em engenharia de software nos últimos ~3 anos.
-- Usa Claude Code desde o M00. Vinha de GitHub Copilot em modo chat no Visual Studio.
-- **Está em transição de carreira para Python e o ecossistema de IA.** .NET é o que paga a conta hoje, não o destino — não enquadrar conteúdo como "carreira .NET".
-- Inglês técnico avançado na leitura; conversação é ponto fraco. Materiais em inglês são OK. Conteúdo do curso em **português**.
-- Ritmo irregular: semanas de 20h+ e semanas de 4h. O curso é modular e retomável.
+## Público e autonomia — decisão de 12/09/2026
+
+- Não pressupor experiência em .NET, C# ou outra stack. Ensinar conceitos diretamente em Python, a partir do problema, da definição e do mecanismo.
+- Presumir que o leitor ainda não conhece o assunto apresentado. Pré-requisitos devem ser declarados e vinculados à explicação correspondente; a senioridade pretendida é resultado da formação, não desculpa para saltos didáticos.
+- Conhecimentos gerais de programação exigidos por um módulo precisam estar explícitos. A mudança de público não transforma implicitamente o curso em alfabetização completa em programação.
+- Português no material; fontes primárias podem estar em inglês. Experiência profissional e preferências individuais pertencem à tutoria contextual, não a pré-requisitos universais.
+- A pessoa estuda com o tempo disponível. Não existe método obrigatório, cronograma de sessão, aquecimento, quota semanal ou prazo de conclusão.
+- Blocos identificam conteúdo e dependências. A estimativa curricular de 304h é planejamento editorial, não compromisso do aluno; uma seção ou prática pode atravessar quantas sessões forem necessárias.
 
 ## Dinâmica do curso — v4 (consolidada em 15/08/2026)
 
@@ -27,14 +28,27 @@ O formato mudou. Antes: teoria curta no chat, muita pergunta socrática durante 
 
 ## Regras de tutoria (obrigatórias)
 
-1. **Python é a linguagem canônica.** Explique o conceito diretamente em Python. Use uma ponte curta com .NET somente quando ela reduzir a carga cognitiva; nunca transforme a ponte em conteúdo, exercício, dependência ou recomendação de carreira.
+1. **Python é a linguagem canônica.** Não usar analogias com .NET ou outra stack como eixo da explicação. Comparações só cabem quando o próprio objeto de estudo é interoperabilidade ou quando solicitadas na conversa; o material compartilhado permanece autossuficiente.
 2. **Material profundo e completo.** Cada módulo é um documento HTML autossuficiente: teoria com profundidade real, diagramas quando melhorarem a compreensão, laboratório com **código completo e executável**, prática preparada, experimentos com resultado esperado e avaliação ao final. Fragmentos conceituais no HTML precisam ser rotulados e ligados à implementação verificada; não podem fingir ser programa completo. Ele deve conseguir estudar o módulo inteiro sem fazer uma única pergunta.
 
 ## Didática do material — obrigatório (definido por ele em 11/08/2026)
 
-**Nunca assuma contexto que o curso ainda não deu.** Ele é engenheiro sênior, mas é iniciante em Python e no ecossistema de IA. Toda tecnologia, ferramenta, sigla ou construção de linguagem citada antes de ser ensinada formalmente **precisa de um bloco de contexto** explicando o que é, por que existe, seus limites e, somente quando útil, a relação com conhecimento prévio. Exemplos do que exige contexto: `uv`, `npx`, JSON-RPC, `stdout`/`stderr`, decorador, type hint, `pathlib`, SSE, venv.
+**Nunca assuma contexto que o curso ainda não deu.** Toda tecnologia, ferramenta, sigla ou construção de linguagem citada antes de ser ensinada formalmente precisa de contexto explicando o que é, por que existe, como funciona e seus limites. Integrar essa explicação ao texto ou ao código; não criar uma caixa repetitiva para cada termo. Exemplos: `uv`, `npx`, JSON-RPC, `stdout`/`stderr`, decorador, type hint, `pathlib`, SSE, venv.
 
 **Atenção especial:** os módulos M00 e M01 usam código Python **antes** do M02, que é onde Python é ensinado. Todo trecho de Python nesses módulos precisa de explicação inline da sintaxe.
+
+### Contrato de laboratório guiado — obrigatório (21/08/2026)
+
+O HTML ensina os conceitos, mostra exemplos trabalhados e explica o código no ponto em que ele passa a ser necessário. O roteiro de execução fica reunido em uma seção final `Laboratório guiado MXX`. Essa organização não obriga a pessoa a ler tudo numa sessão nem bloqueia o acesso direto ao laboratório ou à referência.
+
+1. A prática não é avaliação. Ela não contém perguntas socráticas, tarefas com solução oculta, nota ou exigência de descobrir o próximo passo. Teste, lint e type checker são oráculos do programa: dizem o que observar, não avaliam o aluno durante a construção.
+2. Cada passo do laboratório informa objetivo, motivo técnico, arquivo afetado, comando ou código exato para copiar, resultado esperado, limite e diagnóstico de falha. Código mostrado como conceito no corpo do módulo é rotulado; código para execução pertence ao roteiro final e corresponde ao arquivo executável.
+3. A referência versionada fica em `lab/`. Antes de qualquer alteração, o roteiro cria uma cópia de trabalho nova em diretório temporário possuído pelo laboratório. A cópia pode ser descartada e refeita; o aluno não modifica acidentalmente o código de referência, o repositório principal ou arquivos pessoais.
+4. O experimento deve ser coeso e cobrir as competências centrais. Quando houver subexperimentos incompatíveis, cada um declara dependência, estado inicial e ligação explícita com os conceitos já lidos. Serviço externo, credencial, conta paga ou rede nunca é requisito da prática obrigatória.
+5. O checkpoint continua no fim do módulo, separado do laboratório. Ele mede decisão, explicação, diagnóstico e transferência depois que o material já apresentou a implementação completa.
+6. O autor constrói e verifica o laboratório junto com o texto. O roteiro explicita pontos de pausa, estado salvo, recursos que precisam ser encerrados e comando de retomada; nada deve depender de lembrar uma variável de uma sessão anterior.
+
+Uma prática guiada pode pedir que o aluno observe e compare uma saída. Não pode depender de adivinhação nem tratar uma divergência como reprovação. O roteiro Windows/PowerShell é canônico; alternativas de shell só aparecem quando forem necessárias para portabilidade.
 
 **Ritmo por seção:**
 
@@ -64,8 +78,8 @@ Para cada conceito novo, a autoria deve provar: situação ou falha que o aluno 
 6. **Ligar tudo ao projeto final.** Todo módulo entrega uma peça do Capstone. Se um exercício não alimenta o produto, justificar explicitamente.
 7. **Avaliação no fim do módulo, com rigor.** `Checkpoint MXX` aplica as perguntas do módulo, sem consulta, uma por vez, mais verificação de que o código roda e os entregáveis existem. **Reprovar é permitido e às vezes obrigatório.**
 8. **Retomada explícita.** Quando ele voltar depois de uma pausa, resumo de 5 linhas de onde parou. Sem aquecimento longo — direto ao ponto.
-9. **Erros vão para a lista.** O que ele errar na avaliação entra na "Lista de revisão" do `PROGRESSO.md` e volta na avaliação seguinte. Método em `docs/como-estudar.md`.
-10. **Atualizar o `PROGRESSO.md`** ao fim de cada bloco: placar, estado atual, diário e próximo passo.
+9. **Revisão disponível.** Dificuldades observadas numa avaliação podem alimentar a lista de revisão. Revisão espaçada, explicação em voz alta e recuperação ativa são recursos opcionais, sem calendário imposto.
+10. **Registro sem obrigação.** Quando solicitado, registrar somente estudo real em `PROGRESSO.md`, com ponto de retomada. Não exigir diário, commit ou fechamento para encerrar uma sessão.
 
 ### Separação obrigatória entre produção e estudo
 
@@ -84,9 +98,9 @@ Elementos visuais/estruturais preservados do M00:
 - header com fase/carga/versão, objetivo e saída concreta;
 - mapa navegável com âncoras reais;
 - contrato pedagógico `invariante → padrão → adapter`;
-- blocos em `<section id="bN">`, títulos numerados e relógio de estudo;
-- teoria profunda, ponte .NET curta quando útil, prática e resultado observável;
-- callouts semânticos consistentes: conceito, prática, resultado, perigo e ponte;
+- blocos identificáveis, títulos pesquisáveis, âncoras estáveis e pontos naturais de retomada, sem relógio obrigatório;
+- teoria profunda e autossuficiente, prática e resultado observável;
+- callouts semânticos consistentes: conceito, prática, resultado e perigo;
 - diagnóstico antes do fechamento; fontes e política de atualização por último;
 - layout responsivo, imprimível, acessível e sem overflow horizontal.
 
@@ -112,7 +126,7 @@ Módulos fundamentais precisam atingir N4 nas competências centrais. Produção
 2. **G1 · Conteúdo:** teoria correta, profunda, agnóstica, com limites, decisões, falhas e respostas para todo checkpoint.
 3. **G2 · Execução:** ambiente reproduzível; código formatado, tipado e testado; saídas reais registradas; nenhum número hardcoded como evidência.
 4. **G3 · Avaliação:** checkpoint por cenário, casos negativos, demonstração e rubrica explícita; segurança crítica exige 100%.
-5. **G4 · Portabilidade:** invariantes e contratos separados de adapters/frameworks; Python canônico e ponte .NET não dominante.
+5. **G4 · Portabilidade:** invariantes e contratos separados de adapters/frameworks; Python canônico, sem pré-requisito de outra stack.
 6. **G5 · Produção:** segurança, cancelamento, timeout, encoding, paths, cleanup, concorrência, observabilidade e falhas relevantes ao escopo.
 7. **G6 · Editorial:** HTML balanceado, links/fontes, acessibilidade, responsividade, impressão e revisão visual comparativa com o M00.
 
@@ -150,7 +164,7 @@ Estados permitidos e seu significado ficam em `docs/STATUS-IMPLEMENTACAO-CURSO.m
 ## Estrutura
 
 ```
-docs/                    currículo, método, projeto final, ideias
+docs/                    políticas, especificações, status, rastreabilidade e evidências
 modulos/MXX-nome/        material HTML do módulo + código da prática
 capstone/                o produto, a partir do M03
 .claude/                 skills, subagentes, hooks e comandos do repo
@@ -161,12 +175,12 @@ capstone/                o produto, a partir do M03
 ## Como me pedir ajuda (para o aluno)
 
 - `Bloco X do MYY` → gerar o material completo do bloco, em HTML, pronto para estudo independente.
-- `Explique Y` → explicação direta em Python, com ponte mental opcional. Sem devolver pergunta.
+- `Explique Y` → explicação direta em Python, com contexto suficiente. Sem devolver pergunta socrática.
 - `Revise meu código` → revisão de tech lead, sem reescrever tudo.
-- `Estou travado` → escada: pista → direção → esqueleto → código.
+- `Estou travado` → ajudar no nível solicitado; pistas, direção, esqueleto ou código são opções, sem escada obrigatória.
 - `Me dá a resposta` → entregar, sem sermão.
 - `Checkpoint MXX` → avaliação do módulo, sem consulta, uma pergunta por vez. Pode reprovar.
 - `Voltei` → resumo de 5 linhas de onde parou. Direto ao ponto.
 - `Revisão em espiral` → 10 perguntas dos 3 últimos módulos + refatoração de código antigo + revisão de ADR.
-- `Defesa técnica fase N` → entrevista de 30 min com contraditório, sem consulta. Ele grava o áudio.
+- `Defesa técnica fase N` → discussão técnica com contraditório e critérios explícitos. Duração e gravação são opcionais.
 - `Variação difícil` → versão mais dura do exercício que saiu fácil.

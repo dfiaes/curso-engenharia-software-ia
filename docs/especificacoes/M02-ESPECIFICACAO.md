@@ -1,18 +1,18 @@
 # Especificação do M02 — Python 3.14 para engenharia profissional
 
-**Versão:** 1.0 · **Data-base:** 15/08/2026 · **Estado:** G0 APROVADO · **Carga:** 8 blocos / 16h
+**Versão:** 1.1 · **Data-base:** 15/08/2026 · **Estado:** G0 APROVADO · **Carga:** 8 blocos / 16h
 
-**Implementação em 15/08/2026:** VERIFICADO; G0–G6 e os 38 cenários aprovados. Evidências estão em `modulos/M02-python-para-dev-dotnet/RASTREABILIDADE.md`.
+**Baseline de execução de 15/08/2026:** o orquestrador aprovou G0–G6 e os 38 cenários daquela edição; os comandos e saídas são evidência histórica em `modulos/M02-python-para-dev-dotnet/RASTREABILIDADE.md`. A edição editorial de setembro requer revalidação, especialmente G6; consulte `docs/STATUS-IMPLEMENTACAO-CURSO.md` para o estado operacional atual. Esta especificação preserva o registro de agosto e não promove gate.
 
 ## 1. Decisão de escopo
 
 O M02 cresce de seis para oito blocos, de 12h para 16h. A versão anterior mistura sintaxe, runtime, typing, validação, concorrência, paralelismo, packaging e testes em uma carga que permite repetir exemplos, mas não formar julgamento sênior. A ampliação separa responsabilidades sem transformar o módulo em enciclopédia.
 
-Python 3.14 é a linguagem e o runtime canônicos. .NET/C# permanece como ponte comparativa: ajuda a localizar diferenças de semântica, mas não define a organização do código Python. `uv`, mypy, Pydantic, pytest e Hypothesis são implementações usadas no laboratório; padrões Python, typing specification, PyPA e contratos observáveis são o núcleo transferível.
+Python 3.14 é a linguagem e o runtime canônicos. A explicação independe de outra stack e ensina a semântica no ponto de uso. `uv`, mypy, Pydantic, pytest e Hypothesis são implementações usadas no laboratório; padrões Python, typing specification, PyPA e contratos observáveis são o núcleo transferível.
 
 ## 2. Resultado do módulo
 
-Ao concluir o M02, o aluno deve construir, empacotar, testar, medir e diagnosticar um CLI Python 3.14 profissional, explicando onde as analogias com .NET ajudam e onde produzem bugs. A aprovação exige demonstrar que ele:
+Ao concluir o M02, o aluno deve construir, empacotar, testar, medir e diagnosticar um CLI Python 3.14 profissional, explicando mecanismos, decisões e limites com exemplos Python. A aprovação exige demonstrar que ele:
 
 - explica nomes, objetos, referências, mutabilidade, identidade, igualdade e hash;
 - diagnostica import/path/package sem depender de “funcionou no editor”;
@@ -144,7 +144,7 @@ O gate de distribuição instala o wheel produzido em ambiente temporário sem u
 - implementar context manager síncrono/assíncrono com cleanup em falha;
 - preservar causa por exception chaining e produzir diagnóstico acionável.
 
-**Prática:** corrigir um parser com aliasing, chave mutável, import circular, arquivo não fechado e exceção que perde a causa. Comparar referências Python com classes/records C# sem afirmar equivalência.
+**Prática:** corrigir um parser com aliasing, chave mutável, import circular, arquivo não fechado e exceção que perde a causa. Explicar referências, identidade e igualdade diretamente em Python.
 
 **Resultado esperado:** os cinco defeitos falham antes da correção; testes verificam identidade/igualdade, cleanup e cadeia de exceções.
 
@@ -216,7 +216,7 @@ O gate de distribuição instala o wheel produzido em ambiente temporário sem u
 - projetar logging estruturado, encoding explícito e exit codes;
 - medir tempo/memória e investigar traceback antes de otimizar.
 
-**Prática:** refatorar código “C# traduzido” para pipeline simples, mantendo contrato. Rodar arquivo UTF-8 com newline distinto, input grande em streaming e falha com correlação preservada.
+**Prática:** refatorar código Python com estado e abstrações desnecessários para pipeline simples, mantendo contrato. Rodar arquivo UTF-8 com newline distinto, input grande em streaming e falha com correlação preservada.
 
 **Resultado esperado:** a refatoração reduz estado/acoplamento sem sacrificar observabilidade; memória cresce de forma compatível com streaming, não com o arquivo inteiro.
 
@@ -286,7 +286,7 @@ O checkpoint possui dez perguntas no total, baseadas nos cenários, sem consulta
 - 100% nos itens de cancelamento, trust boundary, encoding/path, distribuição limpa e casos negativos;
 - execução ao vivo do gate final e de duas falhas semeadas;
 - defesa de uma escolha entre asyncio/thread/process/interpreter com evidência do próprio ambiente;
-- explicação de duas analogias .NET que ajudam e duas que quebram.
+- explicação de duas escolhas de implementação Python e de seus limites.
 
 Não contam como evidência: saída copiada do HTML, benchmark sem ambiente/amostras, teste marcado `skip`, número hardcoded, execução só dentro do checkout ou resposta de IA sem reprodução.
 
@@ -324,7 +324,7 @@ Documentação Python 3.14 e PyPA foi revalidada em 15/08/2026. Fontes de implem
 - **Saída para M05/M08/M09:** Protocols e Pydantic formam os contratos agnósticos de provider/tool/protocolo.
 - **Saída para M06:** property/mutation tests e evidence runner tornam evals menos frágeis.
 - **Saída para M10/LT02:** TaskGroup, cancelamento e backpressure sustentam durabilidade e sistemas distribuídos, sem substituí-los.
-- **Limite com M02A:** M02 ensina domínio profissional da linguagem; M02A amplia arquitetura, dados, segurança, entrega, liderança e comparação Python/.NET em sistema maior.
+- **Limite com M02A:** M02 ensina domínio profissional da linguagem; M02A amplia arquitetura, dados, segurança, entrega, liderança e compatibilidade entre implementações Python em sistema maior.
 
 ## 11. Gate G0
 
@@ -335,8 +335,12 @@ Documentação Python 3.14 e PyPA foi revalidada em 15/08/2026. Fontes de implem
 - [x] padrões separados de uv/mypy/Pydantic/pytest;
 - [x] afirmações absolutas incorretas substituídas por contratos com limites;
 - [x] testing, operação, distribuição e evidência fazem parte da conclusão;
-- [x] ponte .NET preservada e Python mantido como linguagem canônica;
+- [x] explicação autossuficiente e Python mantido como linguagem canônica;
 - [x] fontes primárias classificadas, datadas e com risco de obsolescência;
 - [x] escopo não duplica M03, LT02, M11 ou M02A.
 
 **Decisão em 15/08/2026:** G0–G6 aprovados. O HTML regenerado, o laboratório, a rastreabilidade, a portabilidade Windows/3.14t/Linux e a inspeção visual substituíram o artefato legado; o M02 está `VERIFICADO`.
+
+## Revisão didática — 12/09/2026
+
+Removida a exigência de analogias com outra stack na autoria e na rubrica. Os 38 cenários técnicos foram preservados. A evidência de agosto permanece histórica; a apresentação e o checkpoint revisados exigem revalidação editorial. As 16h são estimativa de escopo, sem duração obrigatória por sessão.

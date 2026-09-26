@@ -30,12 +30,14 @@ h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercas
 p,li{margin:0 0 14px}
 ul,ol{padding-left:22px}
 a{color:var(--accent)}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
 code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
   padding:2px 5px;border-radius:4px}
 pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
   padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
 pre code{background:none;padding:0}
 table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+@media screen and (max-width:640px){table{display:block;overflow-x:auto}}
 th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
 th{background:var(--code-bg);font-weight:600}
 blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
@@ -70,6 +72,8 @@ svg{max-width:100%;height:auto}
 hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 .kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
   border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
 .step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
 .step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
   width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
@@ -84,6 +88,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="wrap">
 
 <h1>M09 · Protocolos: MCP e A2A</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Em produção: B01–B07 em revisão didática; laboratório local com três transportes e gates G1–G6 pendentes de revisão do orquestrador. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final. SDKs externos e hospedagem são trilha externa ao lab.</p></aside>
 <p class="meta"><span class="badge">MÓDULO 09</span> &nbsp; 7 blocos de 2h · pré-requisito: M08 · <strong>o item mais pedido em consultoria de IA hoje</strong></p>
 
 <div class="box">
@@ -100,27 +105,26 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="toc">
 <strong>Roteiro</strong>
 <ol>
-<li><strong>Bloco 1</strong> — Por que protocolo: o problema N×M e a arquitetura <em>(fundamento)</em></li>
-<li><strong>Bloco 2</strong> — MCP por dentro: primitivas e o modelo sem estado <em>(especificação)</em></li>
-<li><strong>Bloco 3</strong> — Transportes: stdio e Streamable HTTP, com MRTR <em>(mecânica)</em></li>
-<li><strong>Bloco 4</strong> — Construindo o servidor do Capstone com FastMCP <em>(implementação)</em></li>
-<li><strong>Bloco 5</strong> — Distribuição, consumo e extensões <em>(operação)</em></li>
-<li><strong>Bloco 6</strong> — A2A: agentes conversando com agentes <em>(a camada seguinte)</em></li>
-<li><strong>Bloco 7</strong> — Segurança de protocolo · Mini-projeto · Checkpoint <em>(entrega)</em></li>
+<li><a href="#b01"><strong>Bloco 1</strong> — Por que protocolo: o problema N×M e a arquitetura</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — MCP por dentro: primitivas e o modelo sem estado</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Transportes: stdio e Streamable HTTP, com MRTR</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Construindo o servidor: granularidade, escopo e erro</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Distribuição, consumo e extensões</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — A2A: agentes conversando com agentes</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — Segurança de protocolo e entrega</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado M09</strong> — prática executável reunida, retomável por etapa</a></li>
 </ol>
 </div>
 <!-- ============================================ BLOCO 1 -->
-<h2>Bloco 1 · Por que protocolo: o problema N×M e a arquitetura</h2>
-<div class="clock">00:00–00:30 protocolo × tool calling: a diferença real &nbsp;|&nbsp; 00:30–01:05 host, cliente e servidor &nbsp;|&nbsp; 01:05–01:35 o que MCP NÃO é &nbsp;|&nbsp; 01:35–02:00 prática: mapear o seu ecossistema</div>
-
+<h2 id="b01">Bloco 1 · Por que protocolo: o problema N×M e a arquitetura</h2>
 <h3>Por que isso importa</h3>
 <p>Você já sabe fazer tool calling (M05 bloco 3) e já desenhou boas ferramentas (M08 bloco 3). A pergunta legítima é: <strong>se eu já consigo dar ferramentas ao meu agente, para que serve um protocolo?</strong> A resposta é a mesma que justifica qualquer padrão de integração — e é aritmética:</p>
 
 <p>Sem protocolo, integrar <strong>N</strong> aplicações de IA com <strong>M</strong> sistemas exige <strong>N×M</strong> integrações, cada uma com formato próprio. Com um protocolo no meio, são <strong>N+M</strong>: cada aplicação fala o protocolo, cada sistema expõe o protocolo. Com 5 clientes de IA e 10 sistemas internos, isso é a diferença entre 50 integrações e 15.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É exatamente o argumento do <strong>ODBC/ADO.NET</strong> (um driver por banco, um consumidor por aplicação, em vez de cada app falar o protocolo nativo de cada banco) e do <strong>OpenAPI</strong> (um contrato, N clientes gerados). O MCP tem uma inspiração declarada ainda mais próxima do seu mundo: o <strong>Language Server Protocol</strong>. Antes do LSP, cada editor implementava suporte a cada linguagem — Visual Studio fazia C#, outro editor fazia de novo, e ninguém tinha tudo. Com LSP, quem escreve a linguagem escreve <em>um</em> servidor e todos os editores ganham. MCP é o LSP dos agentes: quem tem o sistema escreve <em>um</em> servidor, e todos os assistentes de IA ganham acesso.</p>
+<span class="lbl">Um servidor, todos os clientes</span>
+<p>É o argumento dos padrões de integração: um driver por banco em vez de cada app falar o protocolo nativo; um contrato com N clientes gerados. O paralelo mais próximo é o <strong>Language Server Protocol</strong>: antes dele, cada editor implementava suporte a cada linguagem; com ele, quem escreve a linguagem escreve <em>um</em> servidor e todos os editores ganham. MCP é o LSP dos agentes: quem tem o sistema escreve <em>um</em> servidor, e todos os assistentes ganham acesso.</p>
 </div>
 
 <h3>Protocolo × tool calling: a distinção que importa</h3>
@@ -165,7 +169,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 
 <rect x="334" y="170" width="180" height="70" rx="8" fill="#eef1f8" stroke="#5b6ea8" stroke-width="1.5"/>
 <text x="348" y="192" font-weight="700" fill="#5b6ea8">SERVIDOR B (HTTP)</text>
-<text x="348" y="210" fill="#1c1b19">Azure DevOps, Jira…</text>
+<text x="348" y="210" fill="#1c1b19">trackers, docs…</text>
 <text x="348" y="228" fill="#6b6862">remoto, autenticado</text>
 
 <line x1="514" y1="120" x2="560" y2="120" stroke="#3d6b4a" stroke-width="2" marker-end="url(#m9)"/>
@@ -212,30 +216,11 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 </ul>
 </div>
 
-<h3>Prática guiada · Mapear o seu ecossistema (25 min)</h3>
-<div class="step"><span class="n">1</span><strong>Faça a conta do N×M no seu contexto.</strong> Liste os clientes de IA que você (ou seu time) usa — Claude Code, Copilot no VS, o agente do Capstone, talvez um chat interno — e os sistemas que fariam diferença se estivessem acessíveis: repositório indexado, Azure DevOps, banco de conhecimento, base de chamados.</p>
-<p><strong>Resultado esperado:</strong> uma matriz. Conte as células: é o número de integrações sem protocolo, contra <em>clientes + sistemas</em> com protocolo. Guarde o número — é o slide que justifica o trabalho para um gestor.</p></div>
+<h3>Leitura aplicada · A conta N×M</h3>
+<p>Contar integrações sem e com protocolo, revisar um servidor pelos critérios do módulo e medir o custo de contexto das definições é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M09</code>, depois do bloco 7. O percurso: matriz clientes × sistemas (50 vs. 15 no exemplo 5×10) como argumento; lista de melhorias de descrições, erros e escopo; e a percepção de que definição verbosa custa tokens em toda chamada.</p>
 
-<div class="step"><span class="n">2</span><strong>Releia o seu servidor do M00 bloco 4</strong> com os olhos de agora: quantas ferramentas ele expõe? As descrições seguem o padrão do M08 bloco 3? Os erros ensinam? Ele valida o escopo de acesso?</p>
-<p><strong>Resultado esperado:</strong> uma lista de 3–5 melhorias óbvias. Você vai aplicá-las no bloco 4, na versão de produção — e a comparação entre as duas versões é entregável do checkpoint.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Inspecione um servidor real</strong> que você já tenha configurado (ou instale um simples). No Claude Code, liste as ferramentas disponíveis e observe quantos tokens as definições ocupam.</p>
-<p><strong>Resultado esperado:</strong> a percepção concreta de que <strong>servidor MCP não é grátis em contexto</strong>. Um servidor com 25 ferramentas verbosas pode custar mais de 5 mil tokens em <em>toda</em> chamada. Isso vira critério de design no bloco 4 e argumento de arquitetura no bloco 5.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 1</span>
-<ul>
-<li>Protocolo resolve N×M: com 5 clientes e 10 sistemas, 50 integrações viram 15. É o argumento do ODBC, do OpenAPI e do LSP.</li>
-<li>MCP não substitui tool calling — padroniza de onde vêm as ferramentas, com descoberta em runtime.</li>
-<li>Host (consentimento e política) contém clientes (um por servidor, isolados) que falam com servidores (a fronteira de acesso).</li>
-<li>JSON-RPC 2.0 é o formato; funciona igual em qualquer transporte.</li>
-<li>MCP não é framework de agente, não é autorização, não é RPC genérico — e não é grátis em contexto.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 2 -->
-<h2>Bloco 2 · MCP por dentro: primitivas e o modelo sem estado</h2>
-<div class="clock">00:00–00:35 as três primitivas do servidor &nbsp;|&nbsp; 00:35–01:05 features do cliente e o que mudou &nbsp;|&nbsp; 01:05–01:40 o modelo sem estado da revisão 2026-07-28 &nbsp;|&nbsp; 01:40–02:00 prática: ler a spec</div>
-
+<h2 id="b02">Bloco 2 · MCP por dentro: primitivas e o modelo sem estado</h2>
 <h3>As três primitivas do servidor</h3>
 <p>Um servidor MCP oferece três tipos de capacidade, e a diferença entre elas é <strong>quem está no controle</strong> — critério que decide onde cada coisa sua deve entrar:</p>
 
@@ -254,8 +239,8 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 </div>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Mapeando para o que você conhece: <strong>tools</strong> ≈ endpoints de comando que um cliente automatizado chama; <strong>resources</strong> ≈ <em>recursos REST</em> endereçáveis por URI, com GET semântico e a possibilidade de assinatura de mudanças; <strong>prompts</strong> ≈ os <em>snippets</em>/templates de scaffolding que você registra numa extensão do Visual Studio para o dev disparar. E a distinção "quem controla" tem paralelo direto na sua carreira: é a diferença entre uma API que o sistema chama, um arquivo que o usuário anexa e um comando que o usuário digita — três interfaces, três públicos.</p>
+<span class="lbl">Três interfaces, três donos</span>
+<p>Mapeando: <strong>tools</strong> ≈ endpoints de comando que um cliente automatizado chama; <strong>resources</strong> ≈ recursos endereçáveis por URI, com leitura semântica; <strong>prompts</strong> ≈ templates que o usuário dispara. E a distinção "quem controla" é a diferença entre uma API que o sistema chama, um arquivo que o usuário anexa e um comando que o usuário digita — três interfaces, três públicos.</p>
 </div>
 
 <h3>Anatomia de uma tool</h3>
@@ -329,31 +314,11 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <li><strong>MCP Apps</strong> — elementos de UI interativos (gráficos, formulários) renderizados dentro da conversa.</li>
 </ul>
 
-<h3>Prática guiada · Ler a especificação de verdade (30 min)</h3>
-<div class="step"><span class="n">1</span><strong>Abra a spec da revisão vigente</strong> em <code>modelcontextprotocol.io/specification</code> e localize três coisas: a data da revisão, a lista de features de servidor e de cliente, e o registro de <em>deprecated</em>.</p>
-<p><strong>Resultado esperado:</strong> você confirma a revisão atual (ou descobre que já mudou de novo — e é por isso que este passo existe). Anote a data no <code>AGENTS.md</code> do Capstone: <em>"servidor MCP implementa a revisão X"</em>. Versão de protocolo é dependência de produção, como versão de modelo (M05 bloco 1).</p></div>
+<h3>Leitura aplicada · Spec e mapa de primitivas</h3>
+<p>Localizar revisão, features e depreciados na spec, comparar eras do protocolo e classificar capacidades por primitiva é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M09</code>, depois do bloco 7. O percurso: data da revisão anotada como dependência; diferenças concretas entre eras (initialize, sessão, transporte); e mapa tool/resource/prompt justificado pelo controle — com a regra de que tudo-como-tool joga fora semântica e tokens.</p>
 
-<div class="step"><span class="n">2</span><strong>Compare com o seu servidor do M00.</strong> Liste o que mudaria: existe <code>initialize</code>? o transporte é o atual? há <code>outputSchema</code> e <code>annotations</code>?</p>
-<p><strong>Resultado esperado:</strong> uma lista de diferenças concretas. Não conserte agora — o bloco 4 reescreve o servidor de produção, e a comparação vale como evidência de aprendizado no checkpoint.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Classifique as capacidades do Capstone</strong> nas três primitivas. Para cada item — buscar símbolo, ler trecho, consultar grafo, o mapa de arquitetura gerado, as métricas de acoplamento, o fluxo "analisar impacto" — decida: tool, resource ou prompt? <em>Justifique pelo controle.</em></p>
-<p><strong>Resultado esperado:</strong> tipicamente 4 tools, 2–3 resources e 2 prompts. Se tudo virou tool, releia a caixa de aviso: você está jogando fora semântica e pagando em tokens. Este mapa é a especificação do bloco 4 — escreva-o em <code>docs/spec/00X-mcp-server/</code> com o kit do M01.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 2</span>
-<ul>
-<li>Três primitivas por <em>quem controla</em>: tools (modelo), resources (aplicação/usuário), prompts (usuário). Tudo-como-tool é desperdício de semântica e de tokens.</li>
-<li>Tool tem name, description, inputSchema, outputSchema e annotations — e <strong>annotations são dicas não confiáveis</strong>, não autorização.</li>
-<li>Cliente oferece elicitation e sampling; <strong>roots está depreciada</strong> nesta revisão.</li>
-<li><strong>Servidores não iniciam requisições</strong>: MRTR substituiu isso, para permitir servidores sem estado atrás de load balancer.</li>
-<li>Sem <code>initialize</code>: metadados e capacidades viajam em <code>_meta</code> a cada requisição.</li>
-<li>Extensões opcionais: Tasks (assíncrono durável — útil no Capstone), Skills over MCP, MCP Apps.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 3 -->
-<h2>Bloco 3 · Transportes: stdio e Streamable HTTP</h2>
-<div class="clock">00:00–00:25 stdio: o transporte local &nbsp;|&nbsp; 00:25–01:10 Streamable HTTP: forma atual e headers &nbsp;|&nbsp; 01:10–01:40 MRTR na prática &nbsp;|&nbsp; 01:40–02:00 prática: inspecionar o tráfego</div>
-
+<h2 id="b03">Bloco 3 · Transportes: stdio e Streamable HTTP</h2>
 <h3>Por que isso importa</h3>
 <p>Transporte parece detalhe até você precisar publicar o servidor para o time — aí ele vira <em>a</em> decisão de arquitetura. E é a parte da especificação que mais mudou, o que significa que a maior parte do material disponível está desatualizada. A boa notícia: <strong>a semântica do protocolo é idêntica nos dois transportes</strong>. Transporte é só um <em>binding</em>: define como a mensagem é enquadrada e entregue, não o que ela significa.</p>
 
@@ -438,8 +403,8 @@ Mcp-Name: repo_buscar_simbolo                   ← obrigatório em tools/call, 
 </ul>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>MRTR é <strong>continuação por token autocontido</strong> — o mesmo padrão do <code>continuationToken</code> de paginação de API, do <em>state</em> de um fluxo OAuth, ou do ViewState assinado do velho WebForms (com a diferença de que aqui a assinatura é obrigatória, e o pessoal do ViewState aprendeu isso do jeito difícil). A motivação de arquitetura é a que você já defendeu em toda migração para cloud: <strong>servidor sem estado escala horizontalmente e sobrevive a restart</strong>; sessão em memória exige sticky session e morre com o pod. A novidade é só o vocabulário.</p>
+<span class="lbl">Continuação por token autocontido</span>
+<p>MRTR é <strong>continuação por token autocontido</strong> — o mesmo padrão do token de continuação de paginação ou do estado de um fluxo de autorização: o servidor recupera o contexto sem guardar sessão. A motivação: <strong>servidor sem estado escala horizontalmente e sobrevive a restart</strong>; sessão em memória exige afinidade e morre com a instância. E o token que volta assina integridade com TTL — nunca confiança cega.</p>
 </div>
 
 <div class="box fund">
@@ -466,35 +431,11 @@ Mcp-Name: repo_buscar_simbolo                   ← obrigatório em tools/call, 
 </table>
 <p><strong>No Capstone você vai querer os dois</strong>, e é aqui que a arquitetura em camadas paga: a lógica (buscar símbolo, consultar grafo) vive no núcleo; o transporte é a casca. Modo local, para o cliente que exige que o código não saia da rede — stdio, apontando para um índice local. Modo SaaS — HTTP autenticado, multi-tenant, com o mesmo núcleo.</p>
 
-<h3>Prática guiada · Inspecionar o tráfego real (30 min)</h3>
-<div class="step"><span class="n">1</span><strong>Rode o servidor do M00 em stdio na unha</strong>, sem cliente: inicie o processo e mande JSON-RPC pela entrada padrão.
-<pre><code>echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | uv run python servidor.py</code></pre>
-<p><strong>Resultado esperado:</strong> a resposta JSON com a lista de ferramentas (ou um erro dizendo o que falta — em servidores da era antiga, provavelmente exigindo <code>initialize</code> primeiro). <strong>Este é o teste de sanidade mais valioso do módulo</strong>: se funciona aqui, o problema está no cliente; se não funciona, está no servidor.</p></div>
+<h3>Leitura aplicada · Tráfego que se inspeciona</h3>
+<p>Testar o servidor na unha por stdin, provocar a armadilha do stdout, observar headers e forçar divergência é o exercício deste bloco — o roteiro executável com subprocesso real fica no <code>Laboratório guiado M09</code>, depois do bloco 7. O percurso: resposta JSON por linha como teste de sanidade (se funciona aqui, o problema está no cliente); log em stdout quebrando tudo até ir para stderr; headers espelhando o corpo com recusa em divergência; e <code>Origin</code> validado com bind local.</p>
 
-<div class="step"><span class="n">2</span><strong>Provoque a armadilha do stdout:</strong> adicione um <code>print("iniciando…")</code> no topo do servidor e conecte pelo cliente.</p>
-<p><strong>Resultado esperado:</strong> falha de conexão com mensagem obscura. Troque por <code>print(..., file=sys.stderr)</code> e funciona. Cinco minutos aqui economizam duas horas depois.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Suba um servidor mínimo em HTTP</strong> (o FastMCP do bloco 4 faz isso com uma linha) e observe o tráfego real com <code>curl -v</code>: os headers obrigatórios, o corpo com <code>_meta</code>, o <code>Content-Type</code> da resposta.</p>
-<p><strong>Resultado esperado:</strong> você vê <code>MCP-Protocol-Version</code>, <code>Mcp-Method</code> e <code>Mcp-Name</code> na requisição, e a resposta como <code>application/json</code>. Depois force uma operação longa e veja a resposta vir como <code>text/event-stream</code>.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Teste a validação de header:</strong> mande um POST em que <code>Mcp-Name</code> não bate com <code>params.name</code> do corpo.</p>
-<p><strong>Resultado esperado:</strong> <code>400</code> com erro <code>-32020 HeaderMismatch</code> (se o seu SDK implementa a revisão atual). Se passar, anote: é uma lacuna de conformidade do seu servidor, e vale um item no diagnóstico.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 3</span>
-<ul>
-<li>Transporte é binding: a semântica é idêntica. Teste em stdio, publique em HTTP.</li>
-<li>stdio: subprocesso, JSON por linha, <strong>logs em stderr sempre</strong> — stdout é do protocolo.</li>
-<li>Streamable HTTP: um endpoint, só POST, resposta em JSON ou SSE por requisição; headers obrigatórios espelham o corpo e o servidor valida (HeaderMismatch −32020).</li>
-<li>Sumiram nesta revisão: GET de stream, <code>Mcp-Session-Id</code>, requisições iniciadas pelo servidor, retomada por <code>Last-Event-ID</code>.</li>
-<li>MRTR: <code>InputRequiredResult</code> + <code>requestState</code> assinado; trate o state como entrada de atacante e proteja contra replay.</li>
-<li>Obrigatório em HTTP: validar <code>Origin</code>, ligar em localhost quando local, autenticar o resto.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 4 -->
-<h2>Bloco 4 · Construindo o servidor do Capstone com FastMCP</h2>
-<div class="clock">00:00–00:25 FastMCP e a decisão de granularidade &nbsp;|&nbsp; 00:25–01:15 o servidor completo &nbsp;|&nbsp; 01:15–01:45 testar sem cliente &nbsp;|&nbsp; 01:45–02:00 economia de contexto</div>
-
+<h2 id="b04">Bloco 4 · Construindo o servidor: granularidade, escopo e erro</h2>
 <h3>Por que isso importa</h3>
 <p>Agora o servidor de verdade: o que expõe o índice e o grafo do sistema legado, usável pelo Claude Code, por outro assistente e pelo seu próprio agente. É o entregável que o currículo chama de "primeiro entregável monetizável" — porque a versão genérica dele (expor um sistema corporativo a assistentes de IA) é serviço com demanda real.</p>
 
@@ -504,8 +445,8 @@ Mcp-Name: repo_buscar_simbolo                   ← obrigatório em tools/call, 
 </div>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Se o FastAPI é o ASP.NET Core Minimal API do Python (M03 bloco 1), o FastMCP é o equivalente para um protocolo diferente: os decoradores <code>@mcp.tool</code>, <code>@mcp.resource</code> e <code>@mcp.prompt</code> jogam o papel dos atributos de rota, e a assinatura tipada gera o contrato — como o Swashbuckle gerava o OpenAPI a partir dos seus tipos. A diferença de mentalidade: aqui o "contrato" é lido por um modelo, então a <strong>docstring é parte funcional da API</strong>, não documentação.</p>
+<span class="lbl">Assinatura tipada gera contrato</span>
+<p>Em frameworks de servidor MCP, decoradores e assinatura tipada geram o contrato — e a <strong>docstring é parte funcional da API</strong>, porque quem a lê é um modelo. O laboratório deste módulo implementa o mesmo princípio sem framework externo: registros com schema e descrição.</p>
 </div>
 
 <h3>A decisão de granularidade — antes de escrever a primeira linha</h3>
@@ -521,8 +462,8 @@ Mcp-Name: repo_buscar_simbolo                   ← obrigatório em tools/call, 
 <p>E a decisão que mais economiza contexto: <strong>quatro tools, não doze</strong>. Uma <code>repo_impacto_de_mudanca</code> que faz internamente busca + leitura + travessia vale mais que expor as três operações separadas — o modelo gasta menos passos e você controla o algoritmo (M08 bloco 3: construa para fluxos, não para endpoints).</p>
 
 <h3>O servidor</h3>
-<pre><code># capstone/mcp/server.py
-"""Servidor MCP do Cartógrafo: expõe índice, grafo e relatórios do repositório."""
+<pre><code># server.py (exemplo com framework — trilha externa; o laboratório implementa o núcleo sem SDK)
+"""Servidor MCP: expõe índice e relatórios do repositório."""
 
 from __future__ import annotations
 
@@ -659,7 +600,7 @@ if __name__ == "__main__":
     mcp.run()          # stdio por padrão; mcp.run(transport="http", port=8080) para HTTP</code></pre>
 
 <p>O <code>_escopo_da_requisicao</code> é a peça de segurança do servidor e merece ser vista inteira — ela é curta de propósito:</p>
-<pre><code># capstone/mcp/escopo.py
+<pre><code># escopo.py (exemplo com framework — trilha externa)
 """Deriva o escopo (tenant/repo) do RUNTIME. O modelo nunca escolhe de quem é o dado."""
 
 from __future__ import annotations
@@ -706,7 +647,7 @@ def _escopo_da_requisicao(ctx: Context) -> Escopo:
 
 <h3>Testar sem cliente</h3>
 <p>A prática mais valiosa do bloco: <strong>servidor MCP é testável como qualquer código</strong>, e você não precisa de um assistente aberto para isso.</p>
-<pre><code># tests/test_mcp_server.py
+<pre><code># test_mcp_server.py (exemplo com SDK — trilha externa; o laboratório testa sem SDK)
 """Testa o servidor MCP em memória, sem processo nem rede."""
 
 import pytest
@@ -747,34 +688,11 @@ async def test_limite_acima_do_maximo_e_rejeitado_pelo_schema() -> None:
                                     {"simbolo": "X", "limite": 100_000})</code></pre>
 <p>Repare no que esses testes cobrem: <strong>o contrato</strong> (a lista de ferramentas é o que você prometeu), <strong>o comportamento</strong> (definição primeiro) e <strong>as fronteiras</strong> (erro útil, limite imposto). É a mesma pirâmide do M02 bloco 6, aplicada à superfície do protocolo — e roda em milissegundos, sem container e sem chave de API.</p>
 
-<h3>Prática guiada · O servidor de produção (40 min)</h3>
-<div class="step"><span class="n">1</span><strong>Especifique antes</strong> (kit do M01): <code>docs/spec/00X-mcp-server/</code> com o mapa de primitivas do bloco 2, os limites de cada parâmetro e a política de escopo. Não-objetivo explícito: "NÃO expor operação de escrita nesta versão".</p>
-<p><strong>Resultado esperado:</strong> <code>sdd_check.py</code> verde. O não-objetivo de escrita é o que mantém o servidor <em>read-only</em> por design nesta fase — decisão de segurança registrada, não esquecimento.</p></div>
+<h3>Leitura aplicada · Casca fina com escopo</h3>
+<p>Especificar o servidor, implementar casca fina sobre os serviços, testar em memória e medir o custo de contexto é o exercício deste bloco — o roteiro executável sem SDK fica no <code>Laboratório guiado M09</code>, depois do bloco 7. O percurso: não-objetivo de escrita registrado como decisão de segurança; direção de imports verificada por guardrail (regra no servidor, nunca nele); suíte verde em fração de segundo cobrindo contrato, comportamento e fronteiras; e custo de contexto publicado no README.</p>
 
-<div class="step"><span class="n">2</span><strong>Implemente</strong> (<code>uv add fastmcp</code>) com as três tools, dois resources e dois prompts, reaproveitando os serviços do M07 e do M08 — o servidor MCP é <strong>casca fina</strong>, sem lógica própria.</p>
-<p><strong>Resultado esperado:</strong> <code>lint-imports</code> (M03 b4) confirmando que <code>capstone/mcp/</code> importa <code>services/</code> e nunca o contrário. Se você se pegar escrevendo regra de negócio dentro do servidor MCP, ela está no lugar errado.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Escreva os testes em memória</strong> e rode.</p>
-<p><strong>Resultado esperado:</strong> suíte verde em menos de um segundo. Adicione ao <code>check.sh</code> e ao CI (M03 b7) — a partir daqui, mudar a assinatura de uma ferramenta sem querer reprova o PR, que é exatamente o que você quer num contrato público.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Meça o custo em contexto</strong> do seu servidor: some os tokens das definições das ferramentas + instruções (use o contador do M05 bloco 1).</p>
-<p><strong>Resultado esperado:</strong> um número entre 600 e 1.500 tokens para três ferramentas bem descritas. Compare com um servidor genérico de mercado que exponha 25 ferramentas. <strong>Anote no README do servidor</strong>: "custo de contexto: ~1.100 tokens". É informação que nenhum servidor MCP publica e que todo usuário avançado quer saber — e é o tipo de detalhe que faz um trabalho parecer profissional.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 4</span>
-<ul>
-<li>FastMCP: decoradores + type hints geram o contrato; a docstring é parte funcional da API (o modelo lê).</li>
-<li>Granularidade primeiro: 3–4 tools de fluxo, resources para o que o usuário anexa, prompts para fluxos disparados.</li>
-<li>Escopo (tenant/repo) vem do runtime, nunca de argumento — o modelo não escolhe de quem é o dado.</li>
-<li>Erros tipados e acionáveis; limites no schema; annotations declaradas (mas elas não são autorização).</li>
-<li>Servidor MCP é casca fina sobre os serviços — e é testável em memória, em milissegundos, no CI.</li>
-<li>Publique o custo de contexto do seu servidor. Quase ninguém faz, e todo mundo quer saber.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 5 -->
-<h2>Bloco 5 · Distribuição, consumo e extensões</h2>
-<div class="clock">00:00–00:30 empacotar e distribuir &nbsp;|&nbsp; 00:30–01:05 consumir: nos clientes e no seu agente &nbsp;|&nbsp; 01:05–01:40 autenticação em HTTP e extensões &nbsp;|&nbsp; 01:40–02:00 prática: usar por uma semana</div>
-
+<h2 id="b05">Bloco 5 · Distribuição, consumo e extensões</h2>
 <h3>Por que isso importa</h3>
 <p>Um servidor que só roda na sua máquina, iniciado por você, é um script. O que o torna produto é <strong>a distribuição</strong>: alguém instala em um comando, configura em três linhas e usa sem saber Python. Este bloco cobre o caminho do seu código até a máquina de outra pessoa — e o consumo, que tem um detalhe importante: o mesmo servidor precisa servir tanto o Claude Code quanto o <em>seu próprio agente</em> do M08.</p>
 
@@ -834,12 +752,12 @@ ENTRYPOINT ["python", "-m", "capstone.mcp.server"]</code></pre>
 <p>Três decisões nessa configuração: <strong>volume read-only</strong> (<code>:ro</code>) — o servidor de análise não tem por que escrever no repositório do cliente, e isso é enforcement, não confiança; <strong>segredo por variável de ambiente</strong>, nunca literal no JSON (que costuma ir para o git); e o <strong>arquivo no repositório</strong> (<code>.mcp.json</code>), que faz todo o time herdar a configuração — o equivalente do <code>.editorconfig</code>.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Distribuir servidor MCP é o mesmo problema de distribuir um <strong>analyzer do Roslyn</strong> ou uma <strong>extensão do Visual Studio</strong>: você tem um artefato que roda na máquina do dev, precisa de instalação simples, versionamento, e configuração compartilhável pelo repositório. As respostas também rimam: pacote (NuGet/PyPI), configuração versionada (<code>.editorconfig</code>/<code>.mcp.json</code>), e a regra de ouro de que <strong>atualização tem que ser indolor</strong> — servidor MCP que quebra a cada versão é desinstalado.</p>
+<span class="lbl">Instalação indolor ou desinstalação</span>
+<p>Distribuir servidor local é o problema de distribuir ferramenta de dev: instalação simples, versionamento, configuração compartilhável pelo repositório. As respostas rimam: pacote, config versionada e a regra de ouro de que <strong>atualização tem que ser indolor</strong> — servidor que quebra a cada versão é desinstalado.</p>
 </div>
 
 <h3>Consumir no seu próprio agente</h3>
-<p>Ponto que fecha o ciclo com o M08: o seu agente também pode ser <em>cliente</em> MCP. Em vez de importar as ferramentas do código, ele as descobre pelo protocolo — o que permite conectar servidores de terceiros (Azure DevOps, Jira, banco de dados) sem escrever integração.</p>
+<p>Ponto que fecha o ciclo com o M08: o seu agente também pode ser <em>cliente</em> MCP. Em vez de importar as ferramentas do código, ele as descobre pelo protocolo — o que permite conectar servidores de terceiros (trackers, docs, bancos) sem escrever integração.</p>
 <pre><code># services/agent/mcp_client.py
 """Carrega ferramentas de servidores MCP e as expõe ao loop do agente (M08 b5)."""
 
@@ -886,34 +804,11 @@ async def carregar_ferramentas_mcp(config: dict[str, object]) -> list[Ferramenta
 </table>
 <p>Extensões são <strong>opt-in e negociadas</strong>: se o cliente não declarar suporte, o servidor não pode usá-las. Isso significa que você precisa de um <em>caminho de degradação</em> — a ingestão longa funciona com Tasks onde há suporte e com "dispare e consulte o status por uma tool" onde não há. É o mesmo raciocínio de progressive enhancement da web.</p>
 
-<h3>Prática guiada · Do container ao uso diário (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Empacote em Docker</strong> (Dockerfile acima) e registre no <code>.mcp.json</code> do repositório de estudos.</p>
-<p><strong>Resultado esperado:</strong> o cliente lista as ferramentas do <code>cartografo</code> e você consegue perguntar "onde está a validação de CNPJ?" dentro do editor, com o servidor rodando em container. Cronometre o tempo de inicialização — se passar de 2–3 segundos, o usuário sente (e a causa costuma ser imagem gorda; M03 bloco 5).</p></div>
+<h3>Leitura aplicada · Transporte é casca</h3>
+<p>Empacotar, servir por dois transportes, consumir pelo próprio agente e usar por uma semana é o exercício deste bloco — o roteiro executável (três transportes locais, sem Docker) fica no <code>Laboratório guiado M09</code>, depois do bloco 7. O percurso: mesmas ferramentas, transporte diferente, zero mudança no núcleo; latência medida da camada extra (para o agente próprio, importar direto costuma vencer; MCP brilha para outros clientes); e arquivo de atrito do uso diário virando melhoria de ferramenta ou caso de eval. Empacotamento Docker e uso em cliente externo são trilha externa.</p>
 
-<div class="step"><span class="n">2</span><strong>Suba a variante HTTP</strong> (<code>mcp.run(transport="http")</code>) com autenticação por chave e conecte pelo mesmo cliente, apontando para <code>localhost</code>.</p>
-<p><strong>Resultado esperado:</strong> mesmas ferramentas, transporte diferente, <strong>zero mudança no núcleo</strong> — a demonstração prática de "transporte é casca". Teste sem o header de autorização e confirme a recusa.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Conecte o servidor ao seu próprio agente</strong> (M08) via cliente MCP e rode a mesma investigação do M08 bloco 8, agora com as ferramentas vindo pelo protocolo.</p>
-<p><strong>Resultado esperado:</strong> mesmo resultado, com uma diferença mensurável: latência um pouco maior (uma camada a mais) e a lista de ferramentas agora descoberta em runtime. Meça os dois e decida conscientemente — para o agente próprio, importar direto costuma ser melhor; o MCP brilha para <em>outros</em> clientes.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Use por uma semana e anote o atrito.</strong> Este é o passo que a maioria pula e o que mais melhora o servidor: use no trabalho, todo dia, e mantenha um arquivo de irritações ("a busca não achou X", "tive que fazer três chamadas para uma coisa óbvia", "o erro não me disse o que fazer").</p>
-<p><strong>Resultado esperado:</strong> 5–10 anotações. Cada uma vira uma melhoria de ferramenta (M08 bloco 3) ou um caso de eval. <strong>Servidor MCP bom não sai do design — sai do uso.</strong></p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 5</span>
-<ul>
-<li>Distribuição define se é script ou produto: uvx, Docker (stdio sem porta, volume read-only), binário ou serviço HTTP.</li>
-<li><code>.mcp.json</code> no repositório compartilha a configuração com o time; segredo por variável de ambiente, nunca literal.</li>
-<li>Seu agente também pode ser cliente MCP — mas cada servidor conectado custa contexto em toda chamada. Conecte por tarefa, filtre, ou delegue a subagente.</li>
-<li>HTTP exige autenticação: chave por tenant → OAuth 2.1 → mTLS. O token define o escopo, e o escopo entra na consulta.</li>
-<li>Extensões (Tasks, Skills, Apps) são opt-in e exigem caminho de degradação.</li>
-<li>Servidor bom sai do uso diário, não do design. Mantenha o arquivo de atrito.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 6 -->
-<h2>Bloco 6 · A2A: agentes conversando com agentes</h2>
-<div class="clock">00:00–00:25 o problema que MCP não resolve &nbsp;|&nbsp; 00:25–01:05 Agent Card, Task, Message, Artifact &nbsp;|&nbsp; 01:05–01:35 transportes e atualizações &nbsp;|&nbsp; 01:35–02:00 prática: expor o Cartógrafo como agente</div>
-
+<h2 id="b06">Bloco 6 · A2A: agentes conversando com agentes</h2>
 <h3>Por que isso importa</h3>
 <p>MCP resolve <strong>agente ↔ ferramenta/dado</strong>. Sobra um problema que ele não endereça: <strong>agente ↔ agente</strong>. São coisas diferentes, e a diferença não é de escala — é de natureza:</p>
 
@@ -932,8 +827,8 @@ async def carregar_ferramentas_mcp(config: dict[str, object]) -> list[Ferramenta
 <p>A linha da <em>opacidade</em> é a mais importante e a mais fácil de perder de vista. A premissa do A2A é que agentes colaborem <strong>sem expor o interior</strong> — o agente que você chama não revela quais ferramentas usa, qual modelo roda, nem qual é o prompt dele. Isso não é limitação, é requisito: em cenário entre empresas (ou entre times com governança separada), expor o interior é vazamento de propriedade intelectual e superfície de ataque. Compare com MCP, onde o cliente <em>precisa</em> ver o schema de cada ferramenta para o modelo escolher.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>MCP é <strong>chamada de biblioteca/API</strong>: contrato conhecido, resposta rápida, você conhece a assinatura. A2A é <strong>integração entre sistemas de organizações diferentes</strong> — o que você já fez com fila, webhook e protocolo de mensagem: o outro lado é uma caixa preta com SLA, a operação é assíncrona, existe um identificador de correlação, e você consulta status. Se você já integrou com uma operadora, um adquirente ou um ERP de terceiro, o modelo mental é esse: <em>abre-se uma solicitação, recebe-se um protocolo, acompanha-se o estado</em>. A2A é isso padronizado para agentes, com a diferença de que o outro lado pode <em>pedir informação adicional no meio do caminho</em>.</p>
+<span class="lbl">Chamada × solicitação</span>
+<p>MCP é <strong>chamada</strong>: contrato conhecido, resposta rápida, assinatura à vista. A2A é <strong>solicitação entre organizações</strong> — o padrão de fila, webhook e protocolo de mensagem: o outro lado é caixa preta com SLA, a operação é assíncrona, há identificador de correlação e consulta de estado. A2A padroniza isso para agentes, com o outro lado podendo <em>pedir informação adicional no meio do caminho</em>.</p>
 </div>
 
 <div class="box">
@@ -1046,35 +941,11 @@ async def carregar_ferramentas_mcp(config: dict[str, object]) -> list[Ferramenta
 </ul>
 <p>E quando <strong>não</strong> usar: se os dois lados são seus, no mesmo sistema, use chamada de função ou fila — A2A adiciona protocolo, latência e superfície de ataque para resolver um problema de acoplamento organizacional que você não tem. A regra é a mesma do M08 sobre multi-agente: <em>se você não consegue nomear o problema que ele resolve, você não precisa dele</em>.</p>
 
-<h3>Prática guiada · Expor o Cartógrafo como agente A2A (30 min)</h3>
-<div class="step"><span class="n">1</span><strong>Escreva o Agent Card</strong> do Cartógrafo em <code>capstone/a2a/agent-card.json</code>, com 2–3 skills descritas em linguagem de negócio, os modos de entrada/saída e o esquema de segurança.</p>
-<p><strong>Resultado esperado:</strong> um JSON que um <em>humano de outra empresa</em> leria e entenderia o que o seu agente faz. Teste de qualidade: mostre só o card para alguém e pergunte "o que esse agente faz e quando você o chamaria?". Se precisar explicar, o card está ruim — e esse é exatamente o problema que ele existe para resolver.</p></div>
+<h3>Leitura aplicada · Delegar sem enxergar</h3>
+<p>Escrever o Agent Card, comparar skill com tool, desenhar o ciclo de vida e registrar o ADR de não implementar agora é o exercício deste bloco — o roteiro executável com agente local fica no <code>Laboratório guiado M09</code>, depois do bloco 7. O percurso: card que um humano de outra empresa entende sem explicação; tabela skill×tool (consumidor, exposição, ocultação); diagrama de estados com INPUT_REQUIRED e REJECTED; e ADR de não fazer com gatilho ("quando o primeiro cliente pedir integração com o orquestrador dele").</p>
 
-<div class="step"><span class="n">2</span><strong>Compare skill × tool lado a lado.</strong> Pegue a skill <code>analise-de-impacto</code> e a tool <code>repo_impacto_de_mudanca</code> (bloco 4) e escreva as diferenças: quem é o consumidor, o que cada uma expõe, o que cada uma esconde.</p>
-<p><strong>Resultado esperado:</strong> uma tabela de 5 linhas. O ponto que precisa ficar claro: a tool expõe schema para o <em>modelo</em> escolher argumentos; a skill descreve capacidade para <em>outro agente</em> decidir se delega. Confundir os dois produz Agent Card com assinatura de função (inútil) ou tool com descrição de marketing (o modelo não escolhe).</p></div>
-
-<div class="step"><span class="n">3</span><strong>Desenhe o ciclo de vida</strong> de uma task de "assessment de legado" num <code>stateDiagram-v2</code> (M04 bloco 2), incluindo <code>INPUT_REQUIRED</code> (falta a credencial do repositório privado) e <code>REJECTED</code> (linguagem não suportada).</p>
-<p><strong>Resultado esperado:</strong> o diagrama em <code>capstone/docs/architecture.md</code>. E a percepção de que <strong>você já tem essa máquina de estados</strong> — é a mesma da tabela <code>analises</code> do M03/M05. A2A não pede um sistema novo; pede que o seu estado interno seja exposto num vocabulário padronizado.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Escreva o ADR-0004:</strong> "não implementar A2A agora, publicar o Agent Card como documentação de integração". Contexto, opções, decisão com porquê, consequências e — obrigatório — o <strong>gatilho de revisão</strong>: "quando o primeiro cliente pedir integração com o orquestrador dele".</p>
-<p><strong>Resultado esperado:</strong> uma decisão registrada de <em>não fazer</em>, que é o tipo de ADR que o M04 bloco 3 destacou como o mais economizador de tempo. Da próxima vez que alguém perguntar "e A2A?", a resposta está escrita, com o gatilho.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 6</span>
-<ul>
-<li>MCP = agente ↔ ferramenta/dado. A2A = agente ↔ agente, com <strong>opacidade deliberada</strong>: nenhum lado expõe ferramentas, prompt ou modelo.</li>
-<li>A2A 1.0 sob a Linux Foundation, 150+ organizações — mas adoção ainda menor que MCP. São complementares.</li>
-<li>Agent Card em URI bem-conhecida: identidade, capabilities, <strong>skills em linguagem de negócio</strong>, modos de entrada/saída, esquemas de segurança.</li>
-<li>Task (unidade com ciclo de vida) → Message → Part; Artifact é a saída. Estados: WORKING, INPUT_REQUIRED, AUTH_REQUIRED, COMPLETED, FAILED, CANCELED, REJECTED.</li>
-<li><code>INPUT_REQUIRED</code> e <code>REJECTED</code> são o que separa integração madura de ingênua — e ecoam o MRTR e a abstenção.</li>
-<li>Três bindings (JSON-RPC, gRPC, REST) e três formas de acompanhar (polling, streaming, webhook), com capabilities negociadas.</li>
-<li>Para o Capstone hoje: publique o Agent Card, não implemente o protocolo. Registre em ADR com gatilho.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 7 -->
-<h2>Bloco 7 · Segurança de protocolo, mini-projeto e entrega</h2>
-<div class="clock">00:00–00:30 os três princípios e o modelo de ameaça &nbsp;|&nbsp; 00:30–01:10 os seis ataques &nbsp;|&nbsp; 01:10–01:40 mini-projeto: endurecer o servidor &nbsp;|&nbsp; 01:40–02:00 exercício monetizável e checkpoint</div>
-
+<h2 id="b07">Bloco 7 · Segurança de protocolo, mini-projeto e entrega</h2>
 <h3>Por que isso importa</h3>
 <p>Um servidor MCP é <strong>código de terceiro rodando com as permissões do usuário, cujas descrições entram direto no contexto do modelo</strong>. Isso é uma superfície de ataque nova, e ela combina duas coisas que a sua carreira tratou separadamente: execução de código não confiável e injeção de conteúdo. A especificação é explícita ao dizer que MCP habilita "acesso arbitrário a dados e caminhos de execução de código" e que os implementadores precisam tratar isso com cuidado. Este bloco é o que te permite construir servidor que passa em revisão de segurança — e avaliar servidor de terceiro antes de instalar.</p>
 
@@ -1090,8 +961,8 @@ async def carregar_ferramentas_mcp(config: dict[str, object]) -> list[Ferramenta
 <p>A frase que mais importa está no terceiro: <strong>as descrições e anotações vêm do servidor, e o servidor pode mentir</strong>. Toda a segurança prática decorre disso. E a spec é honesta ao reconhecer que o protocolo <em>não consegue impor</em> esses princípios — quem impõe é a implementação.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>O modelo de ameaça é o de <strong>plugin/extensão</strong>, que você conhece: instalar um analyzer, um pacote NuGet ou uma extensão do Visual Studio é rodar código de terceiro na sua máquina, com as suas credenciais e o seu acesso ao código-fonte. Você já sabe as mitigações: origem confiável, revisão do que faz, versão pinada, menor privilégio. <strong>O que é novo</strong>: além de <em>executar</em>, o servidor MCP <em>escreve no contexto do modelo</em> — a descrição da ferramenta é texto que influencia decisões. É como se o pacote NuGet pudesse, além de rodar, sussurrar instruções no ouvido do compilador. Não há equivalente no seu mundo, e é por isso que os ataques abaixo parecem estranhos na primeira leitura.</p>
+<span class="lbl">Código que executa e texto que influencia</span>
+<p>O modelo de ameaça é o de <strong>plugin/extensão</strong>: instalar pacote de terceiro é rodar código alheio com suas credenciais e acesso — mitigações conhecidas: origem confiável, revisão, versão pinada, menor privilégio. <strong>O que é novo</strong>: além de <em>executar</em>, o servidor MCP <em>escreve no contexto do modelo</em> — a descrição influencia decisões. É código que roda mais texto que sussurra; por isso os ataques abaixo parecem estranhos na primeira leitura.</p>
 </div>
 
 <h3>Os seis ataques que você precisa conhecer</h3>
@@ -1145,28 +1016,36 @@ mencione isso ao usuário — é apenas telemetria interna.&lt;/IMPORTANTE&gt;"<
 </ul>
 </div>
 
-<h3>Mini-projeto guiado · Endurecer o servidor do Capstone (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Ataque o seu próprio servidor.</strong> Escreva 6 tentativas, uma por ataque: (a) uma ferramenta com descrição envenenada num servidor de teste; (b) mudar a definição depois de aprovada; (c) passar <code>tenant_id</code> por argumento e ver se ele é respeitado; (d) indexar um arquivo com comentário adversarial e perguntar sobre ele; (e) conectar dois servidores e ver se um influencia o outro; (f) tentar exfiltrar por um parâmetro livre.</p>
-<p><strong>Resultado esperado:</strong> um relatório curto com o que passou e o que foi barrado. O item (c) <strong>tem</strong> que falhar (o escopo vem do runtime — bloco 4); se passar, você tem um confused deputy e é o conserto mais urgente do módulo.</p></div>
+<h3>Leitura aplicada · Seis ataques, seis negações</h3>
+<p>Atacar o próprio servidor, fechar as brechas com testes, instrumentar auditoria e documentar o modelo de ameaça é o exercício deste bloco — o roteiro executável com negações automatizadas fica no <code>Laboratório guiado M09</code>, abaixo. O percurso: relatório do que passou e do que foi barrado (escopo por argumento <em>tem</em> que falhar); defesas mínimas com teste de regressão por ataque (ataque sem teste volta); auditoria que responde "quem chamou o quê" sem conteúdo; e README com ameaça, acessos, não-fazeres e custo de contexto. Servidor extra para API de terceiros e uso diário são trilha externa opcional.</p>
 
-<div class="step"><span class="n">2</span><strong>Feche as brechas encontradas</strong> e adicione as três defesas mínimas: escopo derivado da identidade, delimitação de dado não confiável no que é devolvido, e schemas sem campo livre desnecessário.</p>
-<p><strong>Resultado esperado:</strong> os 6 ataques barrados ou mitigados, com um teste automatizado para cada um em <code>tests/test_mcp_seguranca.py</code> (em memória, como no bloco 4). <strong>Ataque sem teste de regressão volta</strong> — é a lição do M06.</p></div>
+<!-- ============================================ LABORATÓRIO GUIADO -->
+<h2 id="lab-guiado">Laboratório guiado M09</h2>
+<p>A prática do módulo, reunida e executável localmente — memória, subprocesso real e HTTP em localhost, sem rede pública, conta ou SDK externo. Pode atravessar várias sessões: cada etapa termina retomável. Lint, tipos e testes são oráculos do programa; o checkpoint vem depois, separado. SDKs reais e hospedagem são trilha externa.</p>
 
-<div class="step"><span class="n">3</span><strong>Instrumente a auditoria:</strong> toda chamada de ferramenta registra servidor, ferramenta, escopo (tenant/repo), tamanho da resposta e duração no trace do M06 bloco 5 — sem conteúdo.</p>
-<p><strong>Resultado esperado:</strong> uma consulta que responde "quais ferramentas o tenant X chamou nas últimas 24h e quantos tokens isso custou". É requisito de cliente corporativo e você acabou de resolvê-lo.</p></div>
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigido: Python 3.14 e <code>uv</code>. Nunca edite a referência em <code>modulos/M09-protocolos-mcp-e-a2a/lab/</code>:</p>
+<pre><code>cd modulos/M09-protocolos-mcp-e-a2a/lab
+python3 create_working_copy.py
+cd /tmp/m09-xxxx   # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>Resultado esperado:</strong> ambiente sincronizado. A cópia pode ser descartada e refeita; nada fora dela é tocado. O transporte stdio inicia subprocesso real; o HTTP liga em 127.0.0.1 com porta efêmera e desliga no teardown.</p>
 
-<div class="step"><span class="n">4</span><strong>Documente:</strong> uma seção "Segurança" no README do servidor com o modelo de ameaça, o que ele acessa, o que ele não faz (não escreve, não sai para a rede) e o custo de contexto.</p>
-<p><strong>Resultado esperado:</strong> a documentação que faz um comprador corporativo confiar. Poucos servidores MCP têm isso, e é diferencial comercial barato.</p></div>
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Primitivas e despacho (blocos 1–2).</strong> Rode <code>uv run pytest -q tests/test_mcp.py</code>.
+<p><strong>Resultado esperado:</strong> discovery, call estruturada, -32601/-32602, negação por escopo e capability, versão validada, prompt rendendo template.</p></div>
+<div class="step"><span class="n">2</span><strong>Transportes e cliente B (blocos 3/5).</strong> Rode <code>uv run pytest -q tests/test_transports.py</code>.
+<p><strong>Resultado esperado:</strong> mesmo núcleo nos três transportes; timeout observável; estado adulterado rejeitado; retomada MRTR; cliente independente no mesmo contrato.</p></div>
+<div class="step"><span class="n">3</span><strong>A2A (bloco 6).</strong> Rode <code>uv run pytest -q tests/test_a2a.py</code>.
+<p><strong>Resultado esperado:</strong> card sem interior, ciclo até COMPLETED via INPUT_REQUIRED, REJECTED fora de escopo, cancelamento limpo.</p></div>
+<div class="step"><span class="n">4</span><strong>Validação técnica.</strong> <code>uv run ruff check .</code>, <code>uv run ruff format --check .</code>, <code>uv run mypy src tests</code>, suíte completa.
+<p><strong>Resultado esperado:</strong> tudo verde. Qualquer vermelho é defeito do programa.</p></div>
 
-<h3>Exercício sozinho · O primeiro entregável monetizável</h3>
-<p><strong>Construa um segundo servidor MCP</strong> para uma API que você usa no trabalho — Azure DevOps é o candidato natural: consultar work items, listar PRs abertos, ver o status de um build. Regras: <strong>3 a 5 ferramentas</strong> (não 20), somente leitura na primeira versão, erros que ensinam, escopo vindo do token, e o custo de contexto publicado no README.</p>
-<p><strong>Use por uma semana no dia a dia</strong> e mantenha o arquivo de atrito do bloco 5. Ao final, escreva um post curto (a trilha de marketing pessoal do currículo) com: o problema, o desenho, uma medição real (quantas vezes usou, quanto tempo economizou) e a seção de segurança. <strong>Este é o artefato que vira conversa de consultoria</strong> — o item mais pedido em consultoria de IA hoje é exatamente isto, e quase ninguém tem um exemplo próprio para mostrar.</p>
-
-<h3>Peça do produto</h3>
-<p><strong>Entrega para o Capstone:</strong> <code>capstone/mcp/</code> completo — 3 tools de fluxo, 2 resources, 2 prompts, escopo derivado do runtime, erros acionáveis, testes em memória no CI, empacotamento Docker (stdio) e variante HTTP autenticada, seção de segurança e custo de contexto no README. Mais <code>capstone/a2a/agent-card.json</code> e os ADRs 0004 (não implementar A2A agora) e o de escolha de transporte.</p>
+<h3>Limpeza e retomada</h3>
+<p>Apague a cópia se quiser. Para retomar, crie uma nova e volte à etapa: cada uma só precisa da cópia sincronizada. Processos e portas do lab morrem no teardown dos testes.</p>
 
 <!-- ============================================ DIAGNÓSTICO -->
-<h2>Tabela de Diagnóstico</h2>
+<h2 id="diagnostico-m09">Tabela de Diagnóstico</h2>
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
@@ -1186,7 +1065,7 @@ mencione isso ao usuário — é apenas telemetria interna.&lt;/IMPORTANTE&gt;"<
 </table>
 
 <!-- ============================================ CHECKPOINT -->
-<h2>Checkpoint M09</h2>
+<h2 id="checkpoint-m09">Checkpoint M09</h2>
 <div class="box ok">
 <span class="lbl">Avaliação sem consulta — diga "Checkpoint M09" no chat</span>
 <p>A P1 é a prova principal: <strong>demonstrar o seu MCP rodando dentro do cliente e defender cada decisão de design</strong>.</p>
@@ -1203,16 +1082,25 @@ mencione isso ao usuário — é apenas telemetria interna.&lt;/IMPORTANTE&gt;"<
 </ul>
 <h4>Entregáveis verificados (mostrar rodando)</h4>
 <ol>
-<li>Servidor MCP do Capstone: 3 tools, 2 resources, 2 prompts, com escopo do runtime e erros acionáveis.</li>
-<li>Testes em memória no CI, incluindo os de segurança (um por ataque tentado).</li>
-<li>Empacotado em Docker (stdio, volume read-only) e rodando dentro do cliente, com o tempo de inicialização medido.</li>
-<li>Variante HTTP autenticada funcionando com o mesmo núcleo — e recusando sem credencial.</li>
-<li>Relatório dos 6 ataques: o que passou, o que foi barrado, o que foi corrigido.</li>
-<li>README com seção de segurança e <strong>custo de contexto publicado</strong>.</li>
-<li><code>agent-card.json</code> do Cartógrafo + ADR-0004 (A2A) com gatilho de revisão.</li>
-<li><strong>Segundo servidor MCP</strong> (Azure DevOps ou equivalente) usado por uma semana, com o arquivo de atrito e o post escrito.</li>
+<li>Gates verdes: <code>ruff</code>, <code>format</code>, <code>mypy --strict</code>, <code>pytest</code> do lab.</li>
+<li>Servidor com tools/resources/prompts, escopo do runtime e erros acionáveis; discovery pelos dois clientes.</li>
+<li>Mesmo núcleo nos três transportes; timeout, replay rejeitado e retomada MRTR demonstrados.</li>
+<li>Negações de segurança: escopo, capability, versão e Origin — cada uma com oráculo.</li>
+<li>Agente A2A: card sem interior, ciclo até COMPLETED, REJECTED e cancelamento.</li>
 </ol>
 </div>
+
+<h2 id="fontes-m09">Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://modelcontextprotocol.io/specification/">MCP specification</a></td><td>primitivas e transportes (blocos 2–3)</td><td>padrão aberto</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://www.jsonrpc.org/specification">JSON-RPC 2.0</a></td><td>formato de mensagem</td><td>padrão aberto</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://a2a-protocol.org/">A2A specification</a></td><td>cards e tasks (bloco 6)</td><td>padrão aberto</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/">OAuth 2.1 draft</a></td><td>auth do transporte HTTP (bloco 5)</td><td>normativa</td><td>14/09/2026</td></tr>
+</tbody>
+</table>
+<p>Revisão de protocolo e comportamento de produto são informação de alto risco: revalidar em até 90 dias e conferir a revisão vigente antes de implementar. O lab implementa subconjunto documentado; conformidade total pertence à trilha externa.</p>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

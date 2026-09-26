@@ -6,6 +6,8 @@
 
 O curso ensina conhecimento transferível. Nenhuma API proprietária, framework ou modelo é tratado como fundamento universal. Python é a linguagem canônica; tecnologias específicas são implementações intercambiáveis de contratos explícitos.
 
+**Decisão didática de 12/09/2026:** neutralidade também se aplica à origem do aluno. Nenhum conceito, exercício ou checkpoint pressupõe .NET ou outra stack. Ensinar problema, definição, mecanismo e limite antes de qualquer comparação. Corpus de outra linguagem, quando necessário ao produto, é dado de teste com contexto próprio, não pré-requisito do leitor.
+
 ## 2. Hierarquia de fontes
 
 1. **Normativa:** RFCs, PEPs, especificações abertas, padrões e documentação oficial.

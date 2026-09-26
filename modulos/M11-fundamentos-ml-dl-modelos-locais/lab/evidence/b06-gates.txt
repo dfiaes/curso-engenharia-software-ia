@@ -1,0 +1,37 @@
+M11-B06-L — evidência de execução real dos gates (orquestrador, 14/09/2026)
+Construção DIRETA (stdlib, contratos fechados do B06-C). 67 passed
+(58 anteriores + 9 novos: 5 orcamento AT-020, 4 licencas AT-023).
+
+AMBIENTE
+  Python 3.14.7 · ruff 0.16.7 · mypy 1.20.2 · pytest 9.1.1; sem torch
+  neste lote (stdlib puro); sem rede/modelo/Docker/GPU.
+
+GATES
+  $ uv run ruff check .
+  All checks passed! (1 E501 intermediário: linha de argv com 101 chars)
+  $ uv run ruff format --check .
+  33 files already formatted
+  $ uv run mypy
+  Success: no issues found in 32 source files (verbatim limpo, zero retoque)
+  $ uv run pytest -q
+  67 passed, 2 warnings in 53.77s (treino B04 domina; B06 < 0.1s)
+
+MEDIDOS (fórmula, execução real da CLI)
+  $ uv run python orcamento_vram.py 8 --quant Q4_K_M --ctx 8192
+  pesos 4.32 GB | KV 1.00 GB | overhead 1.50 GB | TOTAL 6.82 GB
+  $ uv run python orcamento_vram.py 8 --quant Q4_K_M --ctx 131072 --batch 4
+  pesos 4.32 GB | KV 64.00 GB | overhead 1.50 GB | TOTAL 69.82 GB
+  (pesos imóveis; KV dobra com ctx e com batch; limiares com margem)
+  licenças: Apache-2.0→liberado; CC-BY-NC/non-commercial→bloqueado;
+  destilado→bloqueado; própria→ler-licenca.
+
+DIVERGÊNCIAS DO VERBATIM: zero (dois módulos + testes passam strict sem
+retoque; HTML e lab idênticos na lógica e nos nomes).
+
+CLEANUP: nenhum resíduo em /tmp.
+
+LIMITE: AT-021/AT-022 (quant por tarefa, perplexidade vs raciocínio)
+exigem pesos reais + evals por categoria: sem download de ~5 GB no
+caminho obrigatório (rede), ficam em construção local + quarentena
+SRC-M11-20, com prova por matriz no B08. Pull/medida Ollama: trilha
+externa, BLOCKED onde Docker/rede faltarem (aqui: Docker ausente).

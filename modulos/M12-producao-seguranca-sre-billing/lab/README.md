@@ -27,7 +27,7 @@ uv run mypy --strict src
 uv run pytest
 ```
 
-Current deterministic result: `41 passed`; the PostgreSQL test is skipped until Docker is
+Current deterministic result: `62 passed, 1 skipped (postgres BLOCKED)`; the PostgreSQL test is skipped until Docker is
 available.
 
 PostgreSQL acceptance tests require Docker and the optional group:

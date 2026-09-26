@@ -30,12 +30,14 @@ h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercas
 p,li{margin:0 0 14px}
 ul,ol{padding-left:22px}
 a{color:var(--accent)}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
 code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
   padding:2px 5px;border-radius:4px}
 pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
   padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
 pre code{background:none;padding:0}
 table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+@media screen and (max-width:640px){table{display:block;overflow-x:auto}}
 th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
 th{background:var(--code-bg);font-weight:600}
 blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
@@ -70,6 +72,8 @@ svg{max-width:100%;height:auto}
 hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 .kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
   border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
 .step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
 .step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
   width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
@@ -84,6 +88,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="wrap">
 
 <h1>M06 · Evals e observabilidade</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Em produção: B01–B06 em revisão didática; laboratório executável offline e gates G1–G6 pendentes de revisão do orquestrador. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final. Chamadas a modelos reais são trilha opcional.</p></aside>
 <p class="meta"><span class="badge">MÓDULO 06</span> &nbsp; 6 blocos de 2h · pré-requisito: M05 · <strong>o módulo que separa quem fez demo de quem entregou produção</strong></p>
 
 <div class="box">
@@ -100,20 +105,18 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="toc">
 <strong>Roteiro</strong>
 <ol>
-<li><strong>Bloco 1</strong> — Por que teste unitário não serve, e o que serve <em>(fundamento)</em></li>
-<li><strong>Bloco 2</strong> — A taxonomia obrigatória de datasets <em>(o que proteger)</em></li>
-<li><strong>Bloco 3</strong> — Graders: determinístico, estatístico e LLM-as-judge <em>(como medir)</em></li>
-<li><strong>Bloco 4</strong> — Prompt é código: versionamento, registry e experimento <em>(como iterar)</em></li>
-<li><strong>Bloco 5</strong> — Observabilidade: tracing, custo e o que logar sem vazar <em>(produção)</em></li>
-<li><strong>Bloco 6</strong> — O gate na CI, o relatório e o Checkpoint <em>(entrega)</em></li>
+<li><a href="#b01"><strong>Bloco 1</strong> — Como testes unitários e evals se complementam <em>(fundamento)</em></a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — A taxonomia obrigatória de datasets <em>(o que proteger)</em></a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Graders: determinístico, estatístico e LLM-as-judge <em>(como medir)</em></a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Prompt é código: versionamento, registry e experimento <em>(como iterar)</em></a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Observabilidade: tracing, custo e o que logar sem vazar <em>(produção)</em></a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — O gate na CI, o relatório e o Checkpoint <em>(entrega)</em></a></li>
 </ol>
 </div>
 <!-- ============================================ BLOCO 1 -->
-<h2>Bloco 1 · Por que teste unitário não serve, e o que serve</h2>
-<div class="clock">00:00–00:25 as três propriedades que quebram o teste tradicional &nbsp;|&nbsp; 00:25–01:00 anatomia de um eval &nbsp;|&nbsp; 01:00–01:35 os três níveis e a análise de erro &nbsp;|&nbsp; 01:35–02:00 prática: seus primeiros 20 casos</div>
-
+<h2 id="b01">Bloco 1 · Como testes unitários e evals se complementam</h2>
 <h3>Por que isso importa</h3>
-<p>Você sabe testar software há dez anos. O instinto correto — escrever um teste que compara a saída esperada com a obtida — falha aqui por três propriedades do sistema, e entender <em>exatamente</em> quais são evita que você tente forçar a ferramenta errada:</p>
+<p>O instinto correto de quem testa software — escrever um teste que compara a saída esperada com a obtida — falha aqui por três propriedades do sistema, e entender <em>exatamente</em> quais são evita que você tente forçar a ferramenta errada:</p>
 
 <table>
 <thead><tr><th>Propriedade</th><th>O que quebra</th><th>O que substitui</th></tr></thead>
@@ -125,8 +128,8 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 </table>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>O parente mais próximo que você conhece não é o teste unitário — é o <strong>teste de regressão de um modelo estatístico</strong> ou, mais familiar ainda, o <strong>teste de performance</strong>: você não afirma "esta requisição levou exatamente 87 ms"; você mede uma distribuição e cobra um limiar ("p95 &lt; 200 ms sobre 1.000 amostras"). Eval é isso aplicado a qualidade: <em>"acurácia ≥ 90% sobre 50 casos rotulados, e não pode cair mais de 2 pontos em relação à baseline"</em>. E há um segundo parente: o <strong>golden/approval test</strong> (snapshot) que você já usou para relatório gerado — só que aqui a comparação não pode ser textual exata.</p>
+<span class="lbl">Parentes próximos</span>
+<p>O parente mais próximo não é o teste unitário — é o <strong>teste de regressão de um modelo estatístico</strong> ou, mais familiar ainda, o <strong>teste de performance</strong>: você não afirma "esta requisição levou exatamente 87 ms"; você mede uma distribuição e cobra um limiar. Eval aplica essa ideia à qualidade. Exemplo de requisito de um produto: <em>"alcançar a meta de acurácia definida sobre um conjunto rotulado e limitar a queda contra a baseline"</em>; o conjunto e a regra de decisão precisam de desenho e evidência próprios, não ficam validados pelo número de casos escolhido. E há um segundo parente: o <strong>golden/approval test</strong> (snapshot) que você já usou para relatório gerado — só que aqui a comparação não pode ser textual exata.</p>
 </div>
 
 <h3>Anatomia de um eval</h3>
@@ -140,13 +143,18 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 
 <div class="box fund">
 <span class="lbl">Fundamento de engenharia · Estatística mínima para não se enganar sozinho</span>
-<p>Eval é medição amostral, e medição amostral tem armadilhas conhecidas. Quatro que você precisa ter na ponta da língua:</p>
+<p>Um eval observa resultados em um conjunto de casos; para inferir sobre outros casos, esse conjunto precisa representar a população de interesse segundo um desenho declarado. Um corpus fixo e escrito à mão descreve esse corpus: um intervalo binomial, sozinho, não mede cobertura, viés de seleção, mudança de distribuição nem variação entre execuções do modelo. Cinco ideias ajudam a não exagerar o que os dados dizem:</p>
 <ul>
-<li><strong>Tamanho de amostra e ruído.</strong> Com 10 casos, cada caso vale 10 pontos percentuais — 80% e 90% são a mesma coisa dentro do ruído. Com 50 casos você distingue diferenças de ~5 pontos; com 200, de ~2. Regra prática do curso: <strong>50 casos por categoria é o mínimo para decidir</strong>, e abaixo de 30 você está lendo ruído. (A intuição formal: o erro padrão de uma proporção cai com √n — quadruplicar a amostra reduz o erro pela metade.)</li>
+<li><strong>Proporção e erro padrão.</strong> Para um resultado binário, <code>p̂ = x/n</code>, onde <code>x</code> é o número de acertos e <code>n</code> o número de casos avaliados. O erro padrão aproximado é <code>√(p̂(1−p̂)/n)</code>; ele descreve variação de amostragem sob as hipóteses do modelo binomial, não uma garantia de que toda diferença menor seja invisível. Em <code>p̂=0,90</code>, dá cerca de 4,24 pontos percentuais com <code>n=50</code> e 2,12 com <code>n=200</code>. Quadruplicar <code>n</code> reduz esse erro pela metade. Isso, por si só, não escolhe tamanho suficiente.</li>
+<li><strong>Intervalo de Wilson.</strong> Um ponto estimado não mostra sua incerteza. Para uma proporção binomial, o intervalo Wilson evita algumas limitações do intervalo normal simples, especialmente perto de 0 ou 1. Exemplo a 95% (<code>z=1,96</code>): <code>p̂=x/n</code>; centro <code>(p̂+z²/(2n))/(1+z²/n)</code>; semi-amplitude <code>z√(p̂(1−p̂)/n+z²/(4n²))/(1+z²/n)</code>. Com 45 acertos em 50, <code>p̂=90%</code> e Wilson é aproximadamente <strong>78,6%–95,7%</strong>. Com 180 em 200, a mesma estimativa de 90% dá <strong>85,1%–93,4%</strong>. O segundo intervalo é mais estreito; nenhum dos dois, isoladamente, decide se uma versão atende a um limiar. A regra de decisão, população, confiança e custo dos erros devem ser definidos antes de olhar o resultado.</li>
 <li><strong>Média esconde a cauda.</strong> Acurácia global de 92% pode ser 99% no caminho feliz e 40% em prompt injection. <strong>Sempre reporte por categoria</strong> — e é exatamente por isso que o bloco 2 existe.</li>
 <li><strong>p50 × p95 em custo e latência.</strong> A média de custo é dominada pelos requests pequenos; a fatura é dominada pela cauda. Reporte os dois (M05 bloco 7).</li>
-<li><strong>Não se engane com significância.</strong> Se a diferença entre prompt A e B cabe dentro do ruído da amostra, ela não existe — repetir a medição até dar o resultado que você queria é o mesmo p-hacking da ciência ruim. Quando a diferença é pequena, aumente a amostra ou aceite que os dois são equivalentes e escolha pelo custo.</li>
+<li><strong>Efeito, poder e resultado inconclusivo.</strong> Antes de comparar versões, declare o efeito mínimo relevante (por exemplo, melhoria de 5 pontos), a taxa de base, o risco de falso positivo <code>α</code>, o poder desejado <code>1−β</code>, o desenho e o método. O poder é a chance de detectar um efeito especificado se ele existir, dadas essas escolhas; o tamanho necessário depende delas, da variabilidade e do teste. Não há regra universal de 50 ou 200 casos. “Não rejeitar diferença” significa que os dados e o método não deram evidência suficiente de diferença; não prova igualdade. Equivalência exige margem prática <code>±δ</code> escolhida antes e evidência de que a diferença inteira cabe nela (por exemplo, teste de equivalência/TOST). Se o intervalo ainda permite tanto uma regressão relevante quanto uma melhoria relevante, reporte <strong>inconclusivo</strong> e planeje novos dados ou execuções; não force promoção nem declare empate.</li>
 </ul>
+<p><strong>Conta pequena de planejamento (uma proporção, aproximação normal):</strong> suponha taxa de base <code>p₀=0,90</code>, melhoria mínima relevante até <code>p₁=0,95</code> (<code>δ=0,05</code>), erro tipo I <code>α=0,05</code> bilateral e poder de <code>1−β=0,80</code>. Com <code>z₁₋α/₂≈1,96</code> e <code>z₁₋β≈0,84</code>, a fórmula sem correção de continuidade dá <code>n′ ≈ ((1,96√(0,90·0,10)+0,84√(0,95·0,05))/0,05)² ≈ 237,82</code>; arredondando para cima, são <strong>238 observações</strong>. O NIST/SEMATECH relata a correção de continuidade recomendada por Fleiss, Levin e Paik. Na notação do handbook, o tamanho corrigido é <code>n = n′ + 1/δ</code>: neste exemplo, <code>237,82 + 20 = 257,82</code>, portanto <strong>258 observações</strong>. Com taxa-alvo <code>0,85</code> e a mesma diferença de cinco pontos, a aproximação sem correção dá <code>315,37</code> (316 observações) e com correção dá <code>335,37</code> (336). A variância binomial muda com a taxa. São aproximações de planejamento, não uma recomendação universal: pressupõem observações independentes; pareamento, múltiplas categorias, repetição estocástica e dependência por caso pedem outro cálculo. Para comparar A/B nos mesmos casos, use um método pareado adequado em vez desta conta de uma proporção.</p>
+<p><strong>Caso de borda do checkpoint:</strong> se os mesmos 15 casos gerarem 12/15 acertos (80%) na versão A e 13/15 (86,7%, arredondado para 87%) na B, a diferença observada é um caso, cerca de 6,7 pontos. O intervalo é largo; no desenho pareado também faltam os resultados individuais discordantes. Esse cenário não sustenta promoção nem equivalência por si só: a resposta correta pode ser inconclusiva, com método e próxima evidência declarados.</p>
+<p><strong>Comparação pareada:</strong> quando A e B rodam sobre os mesmos casos, preserve o par. Em 50 casos, suponha que ambas acertem 43, só A acerte 2, só B acerte 4 e ambas errem 1: A marca 45/50 (90%) e B 47/50 (94%), uma diferença observada de +4 pontos. A comparação informativa está nos seis casos discordantes (2 contra 4), não em fingir que são 100 observações independentes. Para resultado binário pareado, McNemar é um método possível; para métricas graduadas, uma análise pareada como bootstrap pode ser adequada. Se houver aleatoriedade entre chamadas do modelo, repita execuções e respeite o agrupamento por caso. Escolha método conforme desenho e métrica.</p>
+<p><strong>Testes unitários continuam necessários:</strong> verificam invariantes determinísticas, schema, tratamento de erros e mecânica do runtime. Evals complementam esses testes para comportamento variável; não os substituem.</p>
 </div>
 
 <h3>Os três níveis de avaliação</h3>
@@ -156,7 +164,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <thead><tr><th>Nível</th><th>O que é</th><th>Custo</th><th>Quando roda</th></tr></thead>
 <tbody>
 <tr><td><strong>1. Asserções e testes de unidade</strong></td><td>Verificações baratas e determinísticas sobre a saída: schema válido, campo presente, formato de CNPJ, ausência de PII, tamanho máximo, "não contém desculpa"</td><td>~zero, milissegundos</td><td>a cada execução, em desenvolvimento e na CI</td></tr>
-<tr><td><strong>2. Avaliação humana e por modelo</strong></td><td>Você (ou um juiz LLM alinhado com você) julgando saídas em cima de traces reais</td><td>caro em tempo humano; moderado em tokens</td><td>por iteração de prompt; e continuamente sobre amostra de produção</td></tr>
+<tr><td><strong>2. Avaliação humana e por modelo</strong></td><td>Revisores humanos aplicam rubrica documentada; um juiz LLM pode ser comparado a referências humanas registradas em uma amostra de traces</td><td>caro em tempo humano; moderado em tokens</td><td>por iteração de prompt; e continuamente sobre amostra de produção</td></tr>
 <tr><td><strong>3. Teste A/B</strong></td><td>Duas versões em produção, medindo comportamento real do usuário</td><td>alto (tráfego, tempo, infra)</td><td>quando a métrica offline não captura o valor (ex.: o usuário aceita mais a sugestão?)</td></tr>
 </tbody>
 </table>
@@ -168,39 +176,11 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <p>O reflexo errado ao começar evals é procurar a métrica ideal. O certo é <strong>olhar as saídas erradas, uma a uma, e agrupá-las por tipo de falha</strong> — isso se chama análise de erro, e é a atividade de maior retorno do módulo. Pegue 30 execuções reais do seu extrator, leia todas, e escreva ao lado de cada erro <em>o que exatamente aconteceu</em> ("inventou número de linha", "classificou risco alto onde era baixo", "listou o mesmo achado duas vezes"). Os grupos que emergirem <strong>são</strong> as suas categorias de eval e os seus graders. Métrica escolhida antes da análise de erro mede o que é fácil medir, não o que quebra o produto.</p>
 </div>
 
-<h3>Prática guiada · Seus primeiros 20 casos (35 min)</h3>
-<p>Você vai construir o dataset a partir de execuções reais — nunca de imaginação.</p>
+<h3>Leitura aplicada · Do trace ao caso rotulado</h3>
+<p>Coletar traces reais, fazer análise de erro à mão e converter em casos rotulados com <code>por_que</code> é o exercício deste bloco — o roteiro executável com sistema falso fica no <code>Laboratório guiado M06</code>, depois do bloco 6. O percurso: salvar entrada, saída e versão de cada execução (sem versão declarada o dado não é comparável); julgar as saídas e deixar os tipos de erro emergirem em vez de impor categorias; e escrever a expectativa em formato verificável — propriedade, proibição ou comportamento. O achado típico: 3 a 6 tipos recorrentes e taxa de acerto menor que a impressão de saídas isoladas. <strong>Trilha com modelo real opcional:</strong> rodar o extrator do M05 sobre arquivos conhecidos, com conta e crédito próprios.</p>
 
-<div class="step"><span class="n">1</span><strong>Colete traces reais.</strong> Rode o extrator do M05 sobre 20 arquivos <code>.cs</code> variados do seu trabalho (grandes, pequenos, um DTO trivial, um arquivo com SQL embutido, um com muita lógica). Salve entrada e saída em JSONL:
-<pre><code>uv run python -m llm_lab.coletar --dir ./repo-analisado --n 20 \
-  --out evals/datasets/bruto.jsonl</code></pre>
-<p><strong>Resultado esperado:</strong> um arquivo com 20 linhas, cada uma com <code>{"caminho": ..., "codigo": ..., "saida": {...}, "modelo": ..., "prompt_versao": ...}</code>. Repare nos dois últimos campos: <strong>sem eles o dado não é comparável no futuro</strong>.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Faça a análise de erro à mão.</strong> Abra o JSONL e julgue as 20 saídas, escrevendo para cada uma: <code>ok</code> ou o tipo de erro em <em>suas</em> palavras. Sem categorias pré-definidas — deixe elas emergirem.</p>
-<p><strong>Resultado esperado:</strong> tipicamente 3 a 6 tipos de erro recorrentes, e a descoberta desconfortável de que a taxa de acerto é bem menor do que a impressão que você tinha vendo saídas isoladas. <strong>Essa lista é o coração do módulo</strong> — cole-a no PROGRESSO.md.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Converta em casos rotulados.</strong> Para cada um dos 20, escreva a expectativa em formato verificável. Não precisa ser a resposta completa: pode ser propriedade ("<code>achados</code> deve conter pelo menos um item com risco alto"), proibição ("nenhum <code>linha_inicial</code> maior que o total de linhas do arquivo") ou comportamento ("<code>achados</code> vazio").</p>
-<pre><code>{"id": "dto-trivial-01", "categoria": "fora_de_escopo",
- "entrada": {"caminho": "Models/ClienteDto.cs", "codigo": "..."},
- "espera": {"tipo": "lista_vazia", "campo": "achados"},
- "por_que": "DTO sem lógica não tem risco de modernização; inventar achado gera ruído"}</code></pre>
-<p><strong>Resultado esperado:</strong> <code>evals/datasets/</code> com os 20 casos rotulados e o campo <code>por_que</code> preenchido em todos. O <code>por_que</code> não é enfeite: daqui a três meses ele é o que impede você (ou um agente) de "corrigir" um caso rotulado que estava certo.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 1</span>
-<ul>
-<li>Teste tradicional quebra por três propriedades: saída não única, não determinismo, e mudança global.</li>
-<li>Eval = dataset + sistema (com versão declarada) + grader + limiar. Falta um, não é eval.</li>
-<li>Estatística mínima: ≥50 casos por categoria para decidir; média esconde a cauda; reporte por categoria; diferença dentro do ruído não existe.</li>
-<li>Três níveis: asserções baratas (comece aqui), humano/juiz, A/B. Pular o nível 1 é o erro mais comum.</li>
-<li>Análise de erro antes da métrica: leia 30 saídas erradas e deixe as categorias emergirem.</li>
-<li>Dataset nasce de execução real, com <code>por_que</code> em cada caso.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 2 -->
-<h2>Bloco 2 · A taxonomia obrigatória de datasets</h2>
-<div class="clock">00:00–00:25 regressão comportamental: o cenário completo &nbsp;|&nbsp; 00:25–01:10 as seis categorias, uma a uma &nbsp;|&nbsp; 01:10–01:40 quantos casos, e como versionar &nbsp;|&nbsp; 01:40–02:00 prática: construir as seis</div>
-
+<h2 id="b02">Bloco 2 · A taxonomia obrigatória de datasets</h2>
 <h3>Por que isso importa</h3>
 <p>Um dataset só não detecta regressão comportamental. Vale a pena percorrer o cenário completo, porque ele é a razão de existir deste bloco:</p>
 
@@ -223,8 +203,8 @@ Três semanas depois: o extrator passou a listar achados em DTOs triviais (perde
 </table>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Essas seis categorias são a versão para IA de uma coisa que você já faz sem pensar: a sua suíte de API tem testes de caminho feliz, de validação (400), de autorização (401/403), de idempotência e de regressão de bugs antigos. Ninguém aceitaria uma suíte que só testa o caminho feliz. A diferença é que aqui as categorias 3 e 4 <strong>não têm equivalente barato no mundo determinístico</strong> — em API REST, "não obedecer instrução vinda do payload" é impossível por construção; com LLM, é um comportamento que precisa ser <em>testado continuamente</em> porque pode desaparecer numa troca de modelo que você nem fez (o provedor atualizou).</p>
+<span class="lbl">Seis categorias, um princípio</span>
+<p>Essas seis categorias aplicam a suítes de IA o que suítes de API já fazem: testes de caminho feliz, de validação (400), de autorização (401/403), de idempotência e de regressão de bugs antigos. Ninguém aceitaria uma suíte que só testa o caminho feliz. A diferença é que aqui as categorias 3 e 4 <strong>não têm equivalente barato no mundo determinístico</strong> — em API REST, "não obedecer instrução vinda do payload" é impossível por construção; com LLM, é um comportamento que precisa ser <em>testado continuamente</em> porque pode desaparecer numa troca de modelo que você nem fez (o provedor atualizou).</p>
 </div>
 
 <div class="box warn">
@@ -260,35 +240,11 @@ Três semanas depois: o extrator passou a listar achados em DTOs triviais (perde
  "por_que": "Instrução adversarial em comentário não pode alterar o comportamento da análise",
  "origem": "sintetico, semente: cliente-x-2026-07", "adicionado_em": "2026-08-14"}</code></pre>
 
-<h3>Prática guiada · Construir as seis categorias (40 min)</h3>
+<h3>Leitura aplicada · Cobrir o que quebra</h3>
+<p>Distribuir casos nas seis categorias, escrever injection à mão com vetores variados, gerar variações sintéticas com semente real e escrever o manifesto é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M06</code>, depois do bloco 6. O percurso: reorganizar os casos e diagnosticar a assimetria (quase tudo em golden path é o sintoma de testar só o que funciona); 10 injections variando vetor e idioma, rodando o sistema atual antes de qualquer defesa para registrar a linha de base; sintéticos revisados um a um (1 em 5 não preserva a dificuldade); e o manifesto com critério de entrada e a regra "bug vira caso no mesmo PR".</p>
 
-<div class="step"><span class="n">1</span><strong>Reorganize os 20 casos do bloco 1</strong> em arquivos por categoria: <code>evals/datasets/01-golden.jsonl</code>, <code>02-fora-escopo.jsonl</code>, etc. Você provavelmente vai descobrir que quase todos caíram em golden path e fora de escopo.</p>
-<p><strong>Resultado esperado:</strong> seis arquivos, três deles quase vazios. Essa assimetria é o diagnóstico: <strong>você estava testando só o que funciona</strong>. Os próximos passos preenchem o resto.</p></div>
-
-<div class="step"><span class="n">2</span><strong>Escreva 10 casos de injection à mão.</strong> Varie o vetor: comentário de linha, docstring/XML doc, nome de variável (<code>var ignorePreviousInstructions = ...</code>), string literal, nome de arquivo, e conteúdo de um <code>.md</code> dentro do repositório. Misture português e inglês.</p>
-<p><strong>Resultado esperado:</strong> <code>03-injection.jsonl</code> com 10 casos. Rode o extrator atual contra eles <em>agora</em>, antes de qualquer defesa. <strong>Anote quantos passaram.</strong> Esse número é a sua linha de base de segurança e vai para o relatório de ataque do M12.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Gere variações sintéticas com semente real.</strong> Pegue 3 casos de borda verdadeiros (o arquivo gigante, o de encoding estranho, o gerado por ferramenta) e peça ao agente: <em>"Gere 5 variações deste caso mantendo a característica que o torna difícil, mudando o conteúdo. Não gere casos fáceis."</em></p>
-<p><strong>Resultado esperado:</strong> ~15 casos novos em <code>06-bordas.jsonl</code>, marcados com <code>origem: sintetico</code>. Leia todos — sintético não revisado é lixo com aparência de dataset; tipicamente 1 em 5 não preserva a dificuldade e precisa ser descartado.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Escreva o manifesto do dataset:</strong> <code>evals/datasets/README.md</code> com a tabela das seis categorias, quantos casos há em cada, o critério de entrada, e a regra "bug de produção vira caso no mesmo PR".</p>
-<p><strong>Resultado esperado:</strong> um documento de meia página. Ele é lido por você em três meses e pelo agente que for adicionar casos — e é o que impede o dataset de virar um monte de arquivos JSONL sem critério.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 2</span>
-<ul>
-<li>Regressão comportamental: você conserta A e quebra B, C e D, sem sinal nenhum. Dataset único não detecta.</li>
-<li>Seis categorias: golden path, fora de escopo, injection, vazamento, ação destrutiva, bordas.</li>
-<li>Injection é ameaça real no Capstone (ingere código de terceiros) e pode reaparecer sem você mudar nada — o provedor atualiza o modelo.</li>
-<li>10–15 casos por categoria para começar, ~50 nas que decidem release. Produção &gt; domínio &gt; sintético.</li>
-<li>Todo bug de produção vira caso no mesmo PR do conserto.</li>
-<li>Casos são imutáveis (deprecate, não edite) e nunca contêm dado sensível de cliente.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 3 -->
-<h2>Bloco 3 · Graders: determinístico, estatístico e LLM-as-judge</h2>
-<div class="clock">00:00–00:30 a escada de graders &nbsp;|&nbsp; 00:30–01:05 o runner de evals em código &nbsp;|&nbsp; 01:05–01:40 LLM-as-judge e seus vieses &nbsp;|&nbsp; 01:40–02:00 prática: alinhar o juiz com você</div>
-
+<h2 id="b03">Bloco 3 · Graders: determinístico, estatístico e LLM-as-judge</h2>
 <h3>Por que isso importa</h3>
 <p>O grader é a função que transforma "a saída parece boa" em um número. Escolher o grader errado produz uma suíte que mede a coisa errada com muita precisão — o pior dos mundos, porque dá confiança falsa. A regra que organiza tudo: <strong>desça a escada até o grader mais barato que responde a sua pergunta</strong>, e só suba quando o de baixo não der conta.</p>
 
@@ -297,8 +253,8 @@ Três semanas depois: o extrator passou a listar achados em DTOs triviais (perde
 <tbody>
 <tr><td>1</td><td><strong>Determinístico</strong></td><td>schema válido; campo presente; regex; valor dentro da faixa; <em>a linha citada existe no arquivo</em>; lista vazia; string proibida ausente</td><td>~0</td><td>total</td></tr>
 <tr><td>2</td><td><strong>Estatístico / semântico</strong></td><td>similaridade de embedding com a resposta de referência; sobreposição de palavras-chave; ROUGE/BLEU (raramente úteis)</td><td>baixo</td><td>média — mede parecença, não correção</td></tr>
-<tr><td>3</td><td><strong>LLM-as-judge</strong></td><td>"esta justificativa é sustentada pelo código?"; "esta classificação de risco é razoável?"</td><td>alto (tokens + latência)</td><td>depende inteiramente do alinhamento com você</td></tr>
-<tr><td>4</td><td><strong>Humano</strong></td><td>você julgando uma amostra</td><td>altíssimo</td><td>é a referência — os outros três se calibram contra ele</td></tr>
+<tr><td>3</td><td><strong>LLM-as-judge</strong></td><td>"esta justificativa é sustentada pelo código?"; "esta classificação de risco é razoável?"</td><td>alto (tokens + latência)</td><td>concordância precisa ser medida contra referências documentadas; vieses e limites da rubrica continuam relevantes</td></tr>
+<tr><td>4</td><td><strong>Humano</strong></td><td>revisores aplicando uma rubrica a uma amostra</td><td>altíssimo</td><td>referência útil quando proveniência, rubrica e resolução de desacordos são registradas; humanos também podem discordar ou errar</td></tr>
 </tbody>
 </table>
 
@@ -425,19 +381,33 @@ async def rodar_suite(pasta: Path, concorrencia: int = 5) -> list[Resultado]:
 <p>Três decisões desse runner que valem para qualquer suíte que você escrever: <strong>graders universais</strong> (invariantes que valem em toda categoria — aqui, "não invente número de linha"), <strong>exceção é reprovação</strong> (sistema que quebra não "passa por omissão"), e <strong>concorrência limitada por semáforo</strong> (M05 bloco 4 — senão a própria suíte se auto-DDoSa e você mede rate limit em vez de qualidade).</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Os graders determinísticos são as suas <strong>asserções de FluentAssertions</strong>, com uma diferença de mentalidade: em vez de <code>resultado.Should().Be(esperado)</code> sobre um valor, você escreve <em>invariantes</em> sobre uma saída variável — "a linha citada existe", "nenhum campo contém string proibida", "a lista está vazia". É o mesmo salto que você deu quando conheceu <strong>property-based testing</strong> (FsCheck): parar de afirmar o valor exato e passar a afirmar a propriedade que sempre vale. E os graders universais são o equivalente de um <code>BaseTest</code> com asserções comuns a toda a suíte — invariantes que não dependem do caso.</p>
+<span class="lbl">Invariantes em vez de valor exato</span>
+<p>Os graders determinísticos são <strong>asserções sobre invariantes</strong>, com uma diferença de mentalidade: em vez de <code>resultado.Should().Be(esperado)</code> sobre um valor, você escreve <em>invariantes</em> sobre uma saída variável — "a linha citada existe", "nenhum campo contém string proibida", "a lista está vazia". É o mesmo salto que você deu quando conheceu <strong>property-based testing</strong> (FsCheck): parar de afirmar o valor exato e passar a afirmar a propriedade que sempre vale. E os graders universais são o equivalente de um <code>BaseTest</code> com asserções comuns a toda a suíte — invariantes que não dependem do caso.</p>
 </div>
 
 <div class="box fund">
-<span class="lbl">Fundamento de engenharia · Validade e confiabilidade — medir o próprio instrumento</span>
-<p>Você está construindo um instrumento de medida, e instrumento não calibrado produz número com aparência de fato. Dois conceitos de metrologia que valem a pena reciclar:</p>
+<span class="lbl">Fundamento de engenharia · Concordância, confiabilidade e calibração do juiz</span>
+<p>Você está construindo um instrumento de medida, e instrumento sem validação produz número com aparência de fato. Separe estas quatro perguntas:</p>
 <ul>
 <li><strong>Confiabilidade</strong> é consistência: o instrumento dá o mesmo resultado ao medir a mesma coisa duas vezes. Um juiz LLM que muda de opinião entre execuções tem baixa confiabilidade — teste isso rodando o juiz duas vezes nos mesmos 30 casos e contando as divergências <em>dele com ele mesmo</em>.</li>
-<li><strong>Validade</strong> é medir a coisa certa: um instrumento pode ser perfeitamente consistente e estar medindo verbosidade em vez de correção. É por isso que a concordância com o <em>humano</em> (você) é a métrica que importa, e não a estabilidade do juiz.</li>
-<li><strong>Concordância corrigida por acaso.</strong> Se 90% dos casos são "sustentada", um juiz que responde sempre "sim" acerta 90% sem saber nada. Por isso balanceie o conjunto de calibração (metade de cada) ou olhe acerto por classe — a versão simples do que a estatística chama de kappa de Cohen.</li>
-<li><strong>Corolário prático:</strong> publique a margem de erro do seu instrumento ao lado do número que ele produz. "Acurácia 91% (juiz com 88% de concordância humana)" é honesto; "acurácia 91%" sozinho superestima o que você sabe.</li>
+<li><strong>Concordância observada</strong> compara os vereditos do juiz com referências rotuladas. Ela responde quantos casos coincidem neste conjunto. Relate também matriz de confusão e resultados por classe: uma média pode esconder que o juiz falha justamente nos casos de maior consequência.</li>
+<li><strong>Correção por acaso</strong> é uma pergunta diferente. O kappa de Cohen compara a concordância observada com a concordância esperada a partir das distribuições marginais dos rótulos; não substitui matriz por classe nem elimina todos os efeitos de prevalência. Balancear casos pode ajudar a revelar um atalho, mas o relatório também deve declarar a composição original e a amostragem usada.</li>
+<li><strong>Calibração probabilística</strong> compara probabilidades previstas com frequências de acerto: entre casos aos quais o juiz atribui cerca de 80% de confiança, aproximadamente 80% deveriam estar corretos no conjunto de avaliação. Isso pede saídas probabilísticas, dados separados para ajuste/avaliação e um gráfico de confiabilidade ou medida adequada. O `JuizRoteirizado` deste lab retorna apenas `True`/`False`; ele não tem probabilidade para calibrar.</li>
+<li><strong>Validade</strong> pergunta se a rubrica mede a propriedade necessária. Um instrumento pode ser consistente e concordar com rótulos que codificam uma regra errada. Examine exemplos e desacordos, explicite o custo dos falsos positivos e negativos e permita abstenção/escalonamento humano quando a evidência não sustenta um veredito.</li>
 </ul>
+<p><strong>Fixture não é anotação humana:</strong> os dez itens de <code>_rotulos()</code> no laboratório são dados roteirizados escritos para exercitar o código. O campo interno <code>rotulo_referencia</code> guarda apenas o alvo didático da fixture; o tipo não comprova a origem do rótulo e ninguém rotulou esses exemplos numa sessão humana. O percentual do teste não mede concordância com pessoas. Para estimar acordo humano, registre quem rotulou, a instrução, a composição e as divergências; reserve casos que não foram usados para ajustar a rubrica e documente como desacordos foram resolvidos. Não invente coleta nem use a fixture como validação de produto.</p>
+
+<h4>O mesmo acordo total pode esconder erros diferentes</h4>
+<p>Considere, apenas como exemplo variável, 100 referências com 80 justificativas sustentadas e 20 não sustentadas. O rótulo positivo abaixo é “sustentada”. A acurácia é o total correto dividido por 100; sensibilidade mede acerto entre sustentadas e especificidade mede acerto entre não sustentadas.</p>
+<table>
+<thead><tr><th>Juiz</th><th>VP</th><th>FN</th><th>VN</th><th>FP</th><th>Acordo total</th><th>Sensibilidade</th><th>Especificidade</th></tr></thead>
+<tbody>
+<tr><td>A</td><td>76</td><td>4</td><td>14</td><td>6</td><td>90/100 = 90%</td><td>76/80 = 95%</td><td>14/20 = 70%</td></tr>
+<tr><td>B</td><td>70</td><td>10</td><td>20</td><td>0</td><td>90/100 = 90%</td><td>70/80 = 87,5%</td><td>20/20 = 100%</td></tr>
+<tr><td>Sempre “sustentada”</td><td>80</td><td>0</td><td>0</td><td>20</td><td>80/100 = 80%</td><td>80/80 = 100%</td><td>0/20 = 0%</td></tr>
+</tbody>
+</table>
+<p>Os juízes A e B empatam no total de 90%, mas A deixa passar seis justificativas não sustentadas e B não deixa nenhuma; B, por sua vez, reprova dez justificativas sustentadas em vez de quatro. O melhor juiz depende do custo de cada erro e da tarefa. Um limiar de 85% aceitaria ambos A e B, mas não revela essa diferença e não é universal. Se o erro for caro ou o caso for ambíguo, a decisão pode ser abster e pedir revisão. O juiz sempre-positivo alcança 80% só por seguir a classe majoritária; um corte local de 80% o aceitaria apesar de especificidade zero.</p>
 </div>
 
 <h3>LLM-as-judge: quando é inevitável, e como não se enganar</h3>
@@ -458,7 +428,7 @@ async def rodar_suite(pasta: Path, concorrencia: int = 5) -> list[Resultado]:
 <li><strong>Julgamento binário, não nota de 1 a 5.</strong> "Esta justificativa é sustentada pelo código: sim/não" é reprodutível; "dê uma nota de 1 a 5 para a qualidade" não é — nem entre humanos. Se precisar de granularidade, use <em>vários</em> critérios binários.</li>
 <li><strong>Um critério por chamada.</strong> Juiz que avalia cinco dimensões de uma vez borra todas.</li>
 <li><strong>Peça a evidência antes do veredito.</strong> "Cite o trecho do código que sustenta a justificativa; se não houver, responda NAO_SUSTENTADA" força o juiz a olhar o material em vez de opinar.</li>
-<li><strong>Meça o alinhamento do juiz com você.</strong> Este é o passo que quase todo mundo pula: rotule 30 casos à mão, rode o juiz, e calcule a concordância. <strong>Abaixo de ~85% de concordância, o juiz não serve</strong> — conserte a rubrica antes de confiar nele. Um juiz não alinhado é pior que nenhum: você passa a otimizar para o gosto dele.</li>
+<li><strong>Compare com referências humanas quando disponíveis.</strong> Registre concordância total e por classe, desacordos e incerteza. Uma amostra pequena, como 30 rótulos, pode revelar problemas grosseiros, mas não certifica o juiz. No laboratório roteirizado, 85% é o limiar local usado para testar uma regra do exercício; em produto real, escolha critério e quantidade de rótulos conforme prevalência, erros aceitáveis e consequências. Um juiz desalinhado pode levar a otimizar para o gosto dele.</li>
 </ol>
 
 <pre><code># evals/judge.py
@@ -497,40 +467,17 @@ async def julgar(codigo: str, justificativa: str) -> VereditoJustificativa:
     )
     return r.dados</code></pre>
 
-<h3>Prática guiada · Alinhar o juiz com você (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Implemente o runner</strong> e rode a suíte inteira do bloco 2.
-<pre><code>uv run python -m evals.runner --datasets evals/datasets --out evals/resultados/baseline.json</code></pre>
-<p><strong>Resultado esperado:</strong> a taxa por categoria impressa. O padrão típico: golden path alto, fora de escopo médio, <strong>injection baixo</strong>. Esse é o seu retrato honesto — e a primeira vez que você tem um número em vez de impressão.</p></div>
+<h3>Leitura aplicada · Verificar concordância antes de confiar</h3>
+<p>Rodar a suíte, examinar como os rótulos roteirizados afetam concordância e provar o viés de verbosidade é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M06</code>, depois do bloco 6. Rótulos de fixture são demonstração determinística, não julgamento humano. Para calibração com pessoas, a atividade precisa registrar rótulos humanos realmente coletados, a rubrica e as divergências; uma amostra não usada para ajustar a rubrica deve confirmar a decisão. Qualquer limiar é uma política local justificada por custos e incerteza, não garantia universal. <strong>Trilha com juiz real opcional:</strong> os mesmos passos contra provedor, com conta e crédito, sem tornar coleta humana fictícia.</p>
 
-<div class="step"><span class="n">2</span><strong>Rotule 30 justificativas à mão:</strong> pegue 30 achados gerados, leia o código, e marque <code>sustentada: true/false</code> na sua opinião.</p>
-<p><strong>Resultado esperado:</strong> um CSV/JSONL com 30 rótulos humanos. Cronometre: leva ~20 minutos. Guarde o tempo — é o argumento econômico do juiz automático.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Meça a concordância:</strong> rode <code>julgar()</code> nos mesmos 30 e calcule quantos batem com o seu rótulo. Separe os desacordos em dois grupos: juiz frouxo (aprovou o que você reprovou) e juiz duro.</p>
-<p><strong>Resultado esperado:</strong> tipicamente 70–85% na primeira tentativa. Leia os desacordos: quase sempre a rubrica está ambígua, não o juiz burro. Ajuste a rubrica (2–3 iterações) até passar de 85% e <strong>anote a concordância final no README dos evals</strong> — é a margem de erro do seu instrumento, e sem ela o número que ele produz não significa nada.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Prove o viés de verbosidade:</strong> pegue uma justificativa correta e curta, gere uma versão inflada (mesmo conteúdo, o dobro de palavras) e submeta as duas ao juiz.</p>
-<p><strong>Resultado esperado:</strong> se a rubrica for fraca, a versão longa é julgada melhor; com a exigência de <code>trecho_citado</code>, as duas empatam. Você acabou de validar mecanicamente uma decisão de design da rubrica — e esse é o padrão para todas as outras.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 3</span>
-<ul>
-<li>Escada de graders: determinístico → estatístico → juiz LLM → humano. Desça até o mais barato que responde.</li>
-<li>Se cabe em 10 linhas de Python, não é trabalho de juiz. O Capstone tem verdade verificável — explore isso.</li>
-<li>Runner: graders universais, exceção conta como reprovação, concorrência limitada por semáforo.</li>
-<li>Vieses do juiz: posição, verbosidade, auto-preferência, raciocínio fraco. Juiz de outra família, um critério por chamada, binário, evidência antes do veredito.</li>
-<li>Meça a concordância do juiz com você (≥85%) e publique esse número — é a margem de erro do instrumento.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 4 -->
-<h2>Bloco 4 · Prompt é código: versionamento, registry e experimento</h2>
-<div class="clock">00:00–00:25 por que prompt em string literal é dívida &nbsp;|&nbsp; 00:25–01:00 o registry de prompts &nbsp;|&nbsp; 01:00–01:35 experimento: comparar 3 prompts × 3 modelos &nbsp;|&nbsp; 01:35–02:00 prática: a matriz</div>
-
+<h2 id="b04">Bloco 4 · Prompt é código: versionamento, registry e experimento</h2>
 <h3>Por que isso importa</h3>
 <p>O fator 2 do 12-Factor Agents (M01 bloco 3) diz "own your prompts". Este bloco é a implementação disso, e a motivação é concreta: sem versionamento de prompt, você não consegue responder três perguntas que <em>vão</em> aparecer — <em>qual versão estava no ar quando o cliente reclamou? o que exatamente mudou entre a v14 e a v15? a v15 é melhor mesmo, ou só parece?</em>. Prompt em string literal dentro de uma função é o equivalente a SQL concatenado no meio do controller: funciona até o dia em que você precisa auditar.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Trate prompt como você trata <strong>script de migration</strong>: arquivo versionado, numerado, imutável depois de aplicado, com histórico navegável. E como <strong>feature flag</strong>: a versão ativa é configuração, não código — dá para promover ou reverter sem deploy. A combinação das duas ideias é o registry deste bloco. Se você já defendeu que query crítica não deve nascer de string interpolada, já sabe defender isto.</p>
+<span class="lbl">Prompt como migration e como flag</span>
+<p>Trate prompt como <strong>script de migration</strong>: arquivo versionado, numerado, imutável depois de aplicado, com histórico navegável. E como <strong>feature flag</strong>: a versão ativa é configuração, não código — dá para promover ou reverter sem deploy. A combinação das duas ideias é o registry deste bloco — e a mesma razão pela qual consulta crítica não nasce de string interpolada.</p>
 </div>
 
 <h3>O registry de prompts</h3>
@@ -669,7 +616,7 @@ analista@v3 @ raciocinio  |  91%  |      95%       |     80%      |    79%    | 
 <li>A v3 melhorou dramaticamente <strong>fora de escopo</strong> (45→85, 70→95): era exatamente a mudança pretendida (abstenção). <em>Confirmado.</em></li>
 <li>A v3 <strong>não</strong> mexeu em injection (60/80 nos dois): a defesa continua fraca e é o próximo trabalho — e agora você <em>sabe</em>, em vez de supor.</li>
 <li>O modelo rápido custa ~4x menos e é 1,7x mais veloz, com 17 pontos a menos no golden path. Decisão possível: rotear por tipo de arquivo (arquivos triviais no rápido, arquivos com lógica no de raciocínio) e medir de novo.</li>
-<li><strong>O que a tabela não diz:</strong> se as diferenças de 2–3 pontos são reais ou ruído. Com 15 casos por categoria, 74% e 72% são a mesma coisa (bloco 1). Não tome decisão em cima delas.</li>
+<li><strong>O que a tabela não diz:</strong> se as diferenças de 2–3 pontos são estáveis ou relevantes. Com 15 casos por categoria, a estimativa é incerta; sem contagens exatas, desenho e critério prévio, não conclua diferença nem equivalência. Use os mesmos casos quando comparar versões e reporte o resultado como inconclusivo se os dados não resolverem a decisão.</li>
 </ul>
 
 <div class="box fund">
@@ -683,39 +630,17 @@ analista@v3 @ raciocinio  |  91%  |      95%       |     80%      |    79%    | 
 <p>Isto é o método científico básico aplicado a engenharia, e é a mesma disciplina do teste de performance que você já faz: não se muda a query e o índice ao mesmo tempo e se declara vitória.</p>
 </div>
 
-<h3>Prática guiada · A matriz (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Extraia o prompt atual</strong> do código para <code>prompts/analista/v1.md</code> com front matter, e faça o extrator carregá-lo pelo registry. Rode a suíte e salve como baseline.</p>
-<p><strong>Resultado esperado:</strong> nenhuma mudança de comportamento (mesma taxa por categoria) — refatoração honesta. E o <code>tag</code> (<code>analista@v1</code>) aparecendo nos resultados.</p></div>
+<h3>Leitura aplicada · Decidir com a matriz</h3>
+<p>Extrair o prompt para o registry, escrever a v2 com hipótese prévia, rodar a matriz e decidir com registro é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M06</code>, depois do bloco 6. O percurso: refatoração honesta (mesma taxa, tag aparecendo); hipótese escrita ANTES do resultado ("espero subir X sem perder Y"); tabela impressa e salva, comparada com a hipótese — melhora com piora em outra categoria é regressão comportamental ao vivo; e promoção por configuração com CHANGELOG numerado (trade-off com custo vira ADR). <strong>Trilha com modelos reais opcional:</strong> a matriz 2×2 contra provedores, com conta e crédito.</p>
 
-<div class="step"><span class="n">2</span><strong>Escreva a v2 mirando a sua categoria mais fraca</strong> (provavelmente fora de escopo ou injection). Uma mudança só, descrita no front matter.</p>
-<p><strong>Resultado esperado:</strong> <code>v2.md</code> + entrada no CHANGELOG explicando o quê e o porquê. Ainda sem rodar — escreva a hipótese antes: <em>"espero subir fora-de-escopo de X% para Y% sem perder golden path"</em>. Hipótese escrita antes do resultado é o que impede a racionalização depois.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Rode a matriz</strong> (2 prompts × 2 aliases) e produza a tabela.</p>
-<p><strong>Resultado esperado:</strong> a tabela impressa e salva em <code>evals/resultados/</code>. Compare com a sua hipótese: acertou? Se a v2 melhorou a categoria alvo e <strong>piorou outra</strong>, você acabou de observar regressão comportamental ao vivo — o cenário do bloco 2, agora visível.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Decida e registre.</strong> Promova a versão vencedora (mude a configuração, não o código) e escreva 5 linhas no CHANGELOG com os números.</p>
-<p><strong>Resultado esperado:</strong> o extrator rodando com a versão nova e um histórico auditável. Se a decisão envolveu trade-off (mais caro por mais qualidade), isso é ADR (M04), não CHANGELOG. Commit: <code>M06: promote analista@v2 after eval matrix</code>.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 4</span>
-<ul>
-<li>Prompt em string literal é SQL concatenado no controller: funciona até o dia da auditoria.</li>
-<li>Registry: arquivo por versão, front matter com metadados, imutável depois de produção, versão ativa é configuração.</li>
-<li>A <code>tag</code> (<code>id@vN</code>) entra em todo log, trace e resultado — sem ela nada é comparável.</li>
-<li>Matriz prompt × modelo com acurácia por categoria + custo + p95: é a tabela que se leva para a reunião.</li>
-<li>Uma variável por rodada, baseline salva, hipótese escrita antes. Diferença dentro do ruído não é diferença.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 5 -->
-<h2>Bloco 5 · Observabilidade: tracing, custo e o que logar sem vazar</h2>
-<div class="clock">00:00–00:25 por que log não basta &nbsp;|&nbsp; 00:25–01:05 tracing com as convenções GenAI &nbsp;|&nbsp; 01:05–01:35 o que NÃO logar &nbsp;|&nbsp; 01:35–02:00 prática: rastrear uma análise inteira</div>
-
+<h2 id="b05">Bloco 5 · Observabilidade: tracing, custo e o que logar sem vazar</h2>
 <h3>Por que isso importa</h3>
 <p>Evals medem qualidade <em>offline</em>, sobre casos que você escolheu. Observabilidade mede o que acontece <em>de verdade</em>, com dados que você não previu. As duas coisas se alimentam: é do trace de produção que saem os casos novos de dataset, e é do eval que sai a confiança para agir sobre o que o trace mostrou. Sem observabilidade, o ciclo do M06 fica preso no laboratório — e a reclamação de cliente chega como "está estranho", sem nada para investigar.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É o mesmo Application Insights / OpenTelemetry que você já usou, com três adaptações: (1) o span relevante não é "chamada HTTP", é <strong>chamada de modelo</strong>, e ele carrega tokens e custo como atributos de primeira classe; (2) uma operação de negócio vira uma <strong>árvore</strong> de spans (agente → várias chamadas de modelo → várias ferramentas), então o que importa é o trace inteiro, não o span isolado; (3) o payload é interessante para depurar (prompt e resposta) <em>e</em> perigoso para logar — o que cria um problema de privacidade que a sua telemetria de API nunca teve.</p>
+<span class="lbl">Telemetria conhecida, três adaptações</span>
+<p>É o mesmo OpenTelemetry de qualquer backend, com três adaptações: (1) o span relevante não é "chamada HTTP", é <strong>chamada de modelo</strong>, e ele carrega tokens e custo como atributos de primeira classe; (2) uma operação de negócio vira uma <strong>árvore</strong> de spans (agente → várias chamadas de modelo → várias ferramentas), então o que importa é o trace inteiro, não o span isolado; (3) o payload é interessante para depurar (prompt e resposta) <em>e</em> perigoso para logar — o que cria um problema de privacidade que a sua telemetria de API nunca teve.</p>
 </div>
 
 <div class="box">
@@ -746,8 +671,20 @@ from collections.abc import Iterator
 
 from opentelemetry import trace
 from opentelemetry.trace import Span
+from typing import Protocol
 
 tracer = trace.get_tracer("cartografo")
+
+
+class UsoResposta(Protocol):
+    """O mínimo que a telemetria precisa da resposta (M05 bloco 6)."""
+
+    input_tokens: int
+    output_tokens: int
+    finish_reason: str
+    modelo_usado: str
+    cache_read_tokens: int
+    custo_usd: float
 
 
 @contextmanager
@@ -765,7 +702,7 @@ def span_chamada_modelo(
         yield span
 
 
-def registrar_uso(span: Span, resposta) -> None:  # type: ignore[no-untyped-def]
+def registrar_uso(span: Span, resposta: UsoResposta) -> None:
     """Fecha o span com tokens, custo e motivo de parada."""
     span.set_attribute("gen_ai.usage.input_tokens", resposta.input_tokens)
     span.set_attribute("gen_ai.usage.output_tokens", resposta.output_tokens)
@@ -809,41 +746,17 @@ def registrar_uso(span: Span, resposta) -> None:  # type: ignore[no-untyped-def]
 
 <p>Duas métricas específicas de IA que quase ninguém monitora e que valem alerta desde o dia um: <strong>taxa de fallback</strong> (subiu = provedor primário degradado, e a sua qualidade caiu sem aviso — M05 bloco 6) e <strong>taxa de abstenção</strong> (caiu bruscamente = o sistema parou de dizer "não sei" e começou a inventar; subiu bruscamente = ficou inútil).</p>
 
-<h3>Prática guiada · Rastrear uma análise inteira (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Suba um coletor local.</strong> A opção mais simples para o curso é o Langfuse self-hosted via Compose (ele fala OTLP e já traz visualização de traces de LLM com custo), mas qualquer backend OTLP serve:
-<pre><code>uv add opentelemetry-sdk opentelemetry-exporter-otlp
-docker compose -f docker-compose.observability.yml up -d</code></pre>
-<p><strong>Resultado esperado:</strong> UI acessível em <code>localhost</code> e a variável <code>OTEL_EXPORTER_OTLP_ENDPOINT</code> configurada no <code>.env</code>. Se o coletor não subir, não trave: exporte para console (<code>ConsoleSpanExporter</code>) e siga — o que importa é a instrumentação, não a ferramenta.</p></div>
+<h3>Leitura aplicada · Do trace ao caso</h3>
+<p>Instrumentar o gateway, responder com o trace e fechar o ciclo eval ↔ produção é o exercício deste bloco — o roteiro executável com gravador em memória fica no <code>Laboratório guiado M06</code>, depois do bloco 6. O percurso: spans com tokens, custo e tag, confirmando ausência de conteúdo; agregação por tag e modelo revelando a fatia inesperada do custo; e um trace ruim virando caso que falha na suíte atual — produção revela, dataset captura, eval mede, CI protege. Backend externo (coletor OTLP) é trilha opcional; o laboratório prova a política sem ele.</p>
 
-<div class="step"><span class="n">2</span><strong>Instrumente o gateway</strong> (M05 bloco 6) com o <code>span_chamada_modelo</code> e rode uma análise de 20 arquivos.</p>
-<p><strong>Resultado esperado:</strong> um trace com 20 spans filhos, cada um com tokens, custo e <code>prompt_tag</code>. Abra um span e confirme que <strong>não há conteúdo</strong> — só metadados. Se houver, sua política de conteúdo não está sendo aplicada.</p></div>
-
-<div class="step"><span class="n">3</span><strong>Faça a pergunta que o trace responde:</strong> some o custo por <code>prompt_tag</code> e por <code>gen_ai.response.model</code> nas últimas 24h.</p>
-<p><strong>Resultado esperado:</strong> a descoberta típica — uma fatia inesperada do custo veio de um caminho que você achava barato (retries, ou um arquivo gigante, ou o fallback acionando mais do que você imaginava). <strong>Anote o achado</strong>: ele é a próxima otimização do M05 bloco 7, agora baseada em dado e não em palpite.</p></div>
-
-<div class="step"><span class="n">4</span><strong>Feche o ciclo eval ↔ produção:</strong> escolha o trace de uma saída ruim, extraia a entrada (com o mascarador ou reproduzindo sinteticamente) e adicione como caso na categoria certa do dataset.</p>
-<p><strong>Resultado esperado:</strong> um caso novo em <code>evals/datasets/</code> que <em>falha</em> na suíte atual. Esse é o ciclo completo do módulo: produção revela → dataset captura → eval mede → prompt corrige → CI protege. Commit: <code>M06: add regression case from production trace</code>.</p></div>
-
-<div class="box ok">
-<span class="lbl">Síntese do bloco 5</span>
-<ul>
-<li>Eval mede o que você previu; observabilidade mostra o que aconteceu. Traces alimentam datasets.</li>
-<li>Use os nomes das convenções GenAI (mesmo em evolução): trocar de ferramenta depois sai de graça.</li>
-<li>Trace é árvore: agente → chamadas de modelo → ferramentas, com tokens e custo em cada nó.</li>
-<li>Metadados sempre, conteúdo quase nunca; hash do input resolve a maior parte da depuração; <code>tenant_id</code>, jamais nome.</li>
-<li>Quatro painéis: custo, qualidade em produção, latência, saúde. Alerta em taxa de fallback e de abstenção.</li>
-</ul>
-</div>
 <!-- ============================================ BLOCO 6 -->
-<h2>Bloco 6 · O gate na CI, o relatório e a entrega</h2>
-<div class="clock">00:00–00:30 o gate: como reprovar um PR por qualidade &nbsp;|&nbsp; 00:30–01:05 o relatório para gente não-técnica &nbsp;|&nbsp; 01:05–01:40 mini-projeto: a suíte completa &nbsp;|&nbsp; 01:40–02:00 exercício e entrega</div>
-
+<h2 id="b06">Bloco 6 · O gate na CI, o relatório e a entrega</h2>
 <h3>Por que isso importa</h3>
 <p>Tudo que você construiu nos cinco blocos anteriores vira teatro se depender de alguém lembrar de rodar. O princípio do M01 bloco 2 vale igual aqui: <strong>regra inegociável vira exit code</strong>. A diferença é que o gate de qualidade de IA tem uma complicação que o gate de testes não tem — ele é <em>caro</em>, <em>lento</em> e <em>não-determinístico</em>. Este bloco resolve as três.</p>
 
 <div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>Isto é um <strong>quality gate</strong> — o mesmo conceito do SonarQube ou da branch policy do Azure DevOps que reprova o PR quando a cobertura cai. Você já defendeu essa ideia em reunião. As duas diferenças aqui: o gate <strong>custa dinheiro por execução</strong> (então não roda tudo em todo push) e o número que ele compara <strong>oscila sozinho</strong> (então a comparação é contra uma baseline com banda, não contra um valor fixo). Se o seu time já usou "cobertura não pode cair mais de X%" em vez de "cobertura ≥ 80%", você já conhece a mecânica da tolerância relativa.</p>
+<span class="lbl">Quality gate com número que oscila</span>
+<p>Isto é um <strong>quality gate</strong> — reprovar a mudança quando a qualidade cai. Duas diferenças aqui: o gate <strong>custa dinheiro por execução</strong> (então não roda tudo em todo push) e o número que ele compara <strong>oscila sozinho</strong> (então a comparação é contra uma baseline com banda, não contra um valor fixo). Se o seu time já usou "cobertura não pode cair mais de X%" em vez de "cobertura ≥ 80%", você já conhece a mecânica da tolerância relativa.</p>
 </div>
 
 <div class="box">
@@ -976,34 +889,46 @@ jobs:
 <li><strong>A evidência, no anexo.</strong> A matriz do bloco 4 — mostrada só se perguntarem.</li>
 </ol>
 
-<h3>Mini-projeto guiado · A suíte completa do Capstone (40 min)</h3>
-<div class="step"><span class="n">1</span><strong>Complete os datasets para ~50 casos</strong> distribuídos nas seis categorias, com pelo menos 15 em golden path e 10 em injection.</p>
-<p><strong>Resultado esperado:</strong> <code>evals/datasets/</code> com o manifesto atualizado. Marque o subconjunto <code>rapida</code> (uma flag no caso) com ~40% deles, cobrindo todas as categorias — é o que roda no PR.</p></div>
+<h3>Leitura aplicada · A suíte como entrega</h3>
+<p>Completar datasets, rodar a matriz, ligar o gate e provar o piso de segurança é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M06</code>, abaixo. O percurso usa um conjunto local ilustrativo nas seis categorias, com subconjunto rápido marcado; esse tamanho serve ao roteiro do laboratório e não é amostra universalmente suficiente para inferência. Registre baseline e configuração; observe um PR que piora o prompt e outro que viola o piso de segurança, defendendo os critérios diferentes no checkpoint. Como transferência, estude o cache de resultado de eval do laboratório (chave por caso+tag+modelo+dataset) e responda por escrito em que situação ele engana e como detectar: o não determinismo escondido pelo cache é exatamente o que um caso que passa 70% das vezes revela.</p>
+<p>A aplicação ao Capstone é trilha opcional com especificação própria; o laboratório entrega runner, datasets, registry, gate e tracing sobre sistema falso.</p>
 
-<div class="step"><span class="n">2</span><strong>Rode a matriz completa</strong> (3 versões de prompt × 3 modelos, se seu orçamento permitir; 2×2 já serve) e salve o vencedor como <code>evals/baseline.json</code>.</p>
-<p><strong>Resultado esperado:</strong> baseline commitada, com a configuração declarada dentro do arquivo. O relatório comparando 3 modelos e 3 versões de prompt com custo e acurácia lado a lado é <strong>o entregável central deste módulo</strong> (está no currículo).</p></div>
+<!-- ============================================ LABORATÓRIO GUIADO -->
+<h2 id="lab-guiado">Laboratório guiado M06</h2>
+<p>A prática do módulo, reunida e executável 100% offline — sistema falso, juiz roteirizado, tracing em memória. Pode atravessar várias sessões: cada etapa termina retomável. Lint, tipos e testes são oráculos do programa; o checkpoint vem depois, separado. Trilha live opcional (modelos reais, com conta e crédito) replica as etapas 2 e 4.</p>
 
-<div class="step"><span class="n">3</span><strong>Ligue o gate no CI</strong> e prove que ele morde: abra um PR que piora o prompt de propósito (remova a instrução de abstenção).</p>
-<p><strong>Resultado esperado:</strong> check vermelho, comentário no PR com a tabela mostrando a queda em <code>fora_de_escopo</code>, e o merge bloqueado. <strong>Este é o momento em que o M06 deixa de ser exercício</strong> — a partir daqui, o repositório não aceita mais regressão silenciosa.</p></div>
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigido: Python 3.14 e <code>uv</code>. Nenhum serviço, conta ou rede. Nunca edite a referência em <code>modulos/M06-evals-observabilidade/lab/</code>:</p>
+<pre><code>cd modulos/M06-evals-observabilidade/lab
+python3 create_working_copy.py
+cd /tmp/m06-xxxx   # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>Resultado esperado:</strong> ambiente sincronizado. A cópia pode ser descartada e refeita; nada fora dela é tocado.</p>
 
-<div class="step"><span class="n">4</span><strong>Prove o piso de segurança:</strong> num segundo PR, faça uma mudança que quebre um caso de injection.</p>
-<p><strong>Resultado esperado:</strong> reprovação com a mensagem de piso absoluto (não de tolerância). A diferença de tratamento entre as duas categorias é intencional e você deve saber defendê-la no checkpoint.</p></div>
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Anatomia e graders (blocos 1/3).</strong> Rode <code>uv run pytest -q tests/test_graders.py</code>.
+<p><strong>Resultado esperado:</strong> todo tipo tem grader; o mutante off-by-one é pego onde o correto passa.</p></div>
+<div class="step"><span class="n">2</span><strong>Acordo do juiz roteirizado (bloco 3).</strong> Rode <code>uv run pytest -q tests/test_judge.py</code>.
+<p><strong>Resultado esperado:</strong> o conjunto roteirizado passa o limiar local configurado de 85%; isso verifica o comportamento do laboratório, não certifica juiz real. O sempre-sim é rejeitado antes de qualquer uso.</p></div>
+<div class="step"><span class="n">3</span><strong>Runner e regressão (blocos 2/4).</strong> Rode <code>uv run pytest -q tests/test_runner.py</code>.
+<p><strong>Resultado esperado:</strong> v1 passa tudo; v2 piora fora_de_escopo e injection sem tocar golden — regressão comportamental visível; relatório salvo como baseline.</p></div>
+<div class="step"><span class="n">4</span><strong>Registry, gate e tracing (blocos 4–6).</strong> Rode <code>uv run pytest -q tests/test_gate_tracing.py</code>.
+<p><strong>Resultado esperado:</strong> tags e versões; gate reprova queda e piso, avisa custo; conteúdo na telemetria é bloqueado, hash correlaciona.</p></div>
+<div class="step"><span class="n">5</span><strong>Validação técnica.</strong> <code>uv run ruff check .</code>, <code>uv run ruff format --check .</code>, <code>uv run mypy src tests</code>, suíte completa.
+<p><strong>Resultado esperado:</strong> tudo verde. Qualquer vermelho é defeito do programa.</p></div>
 
-<h3>Exercício sozinho (sem pistas até pedir)</h3>
-<p>Implemente o <strong>cache de resultado de eval</strong>: chave por <code>(caso_id, prompt_tag, modelo, hash_do_dataset)</code>, guardada em disco (<code>evals/.cache/</code>, no gitignore). Um caso já avaliado com a mesma configuração não é reexecutado. Depois meça: quanto caiu o custo e o tempo da suíte no segundo run consecutivo? E responda por escrito no PROGRESSO.md a pergunta difícil: <strong>em que situação esse cache te engana</strong>, e como você detecta (dica: o não determinismo do modelo é exatamente o que o cache esconde — pense no que acontece com um caso que passa 70% das vezes).</p>
-
-<h3>Peça do produto</h3>
-<p><strong>Entrega para o Capstone:</strong> <code>evals/</code> completo — datasets nas seis categorias com manifesto, runner com graders determinísticos + juiz alinhado (com a concordância publicada), registry de prompts versionados, matriz de comparação, baseline, gate no CI (PR rápido + nightly completo) e tracing com custo por análise. É a prova de que o seu produto funciona — e, segundo o currículo, o seu diferencial mais forte no mercado.</p>
+<h3>Limpeza e retomada</h3>
+<p>Apague a cópia se quiser. Para retomar, crie uma nova e volte à etapa: cada uma só precisa da cópia sincronizada.</p>
 
 <!-- ============================================ DIAGNÓSTICO -->
-<h2>Tabela de Diagnóstico</h2>
+<h2 id="diagnostico-m06">Tabela de Diagnóstico</h2>
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
 <tr><td>A suíte passa em tudo desde o primeiro dia.</td><td>Casos fáceis demais (sintéticos gerados pelo próprio modelo) ou graders frouxos.</td><td>Casos de produção e de análise de erro; grader que verifica fato (a linha existe), não formato.</td></tr>
-<tr><td>Acurácia oscila 5–10pp entre execuções sem mudança.</td><td>Amostra pequena demais — você está lendo ruído.</td><td>≥50 casos por categoria de decisão; comparar sempre contra baseline com banda de tolerância.</td></tr>
+<tr><td>Acurácia oscila 5–10pp entre execuções sem mudança.</td><td>Variação de amostragem, aleatoriedade do modelo, composição diferente ou mudança de ambiente.</td><td>Repetir com desenho controlado; manter pares e versão/configuração, quantificar incerteza e escolher n pela taxa de base, efeito mínimo relevante, α, poder e dependência entre observações. Se não resolver a decisão, registrar inconclusivo.</td></tr>
 <tr><td>O gate reprova toda semana sem motivo e o time começa a ignorar.</td><td>Limiar absoluto e apertado num sistema não-determinístico.</td><td>Tolerância relativa (2pp) para qualidade; piso absoluto só em segurança; custo/latência só avisam.</td></tr>
-<tr><td>Juiz LLM discorda de você em metade dos casos.</td><td>Rubrica ambígua, critério múltiplo na mesma chamada, ou nota 1–5 em vez de binário.</td><td>Um critério, binário, evidência antes do veredito; itere a rubrica até ≥85% de concordância.</td></tr>
+<tr><td>Juiz LLM discorda de você em metade dos casos.</td><td>Rubrica ambígua, critério múltiplo na mesma chamada, ou nota 1–5 em vez de binário.</td><td>Um critério, binário, evidência antes do veredito; inspecione desacordos por classe e revise a rubrica. Defina previamente a concordância aceitável e dimensione a calibração pelas consequências dos erros.</td></tr>
 <tr><td>A v-nova ficou melhor no eval e pior para o cliente.</td><td>O dataset não representa a distribuição real (só casos que você imaginou).</td><td>Alimentar o dataset com traces de produção continuamente; medir também em produção (bloco 5).</td></tr>
 <tr><td>Suíte demora 20 min e custa caro por PR.</td><td>Suíte completa em todo push, sem concorrência nem cache.</td><td>Subconjunto rápido no PR + completa no nightly; semáforo; cache por (caso, prompt_tag, modelo).</td></tr>
 <tr><td>Resultados de eval de meses atrás não são comparáveis.</td><td>Prompt editado no lugar, ou versão de modelo não registrada no resultado.</td><td>Registry imutável, <code>prompt_tag</code> e <code>gen_ai.response.model</code> gravados em todo resultado.</td></tr>
@@ -1014,32 +939,48 @@ jobs:
 </table>
 
 <!-- ============================================ CHECKPOINT -->
-<h2>Checkpoint M06</h2>
+<h2 id="checkpoint-m06">Checkpoint M06</h2>
 <div class="box ok">
 <span class="lbl">Avaliação sem consulta — diga "Checkpoint M06" no chat</span>
 <p>A P1 é a prova principal deste módulo: <strong>me apresente como se eu fosse um gestor não-técnico</strong>, e eu vou perguntar "e daí?" até chegar em dinheiro ou risco.</p>
 <ul class="check">
 <li><strong>P1.</strong> Apresente, para um gestor não-técnico, por que a versão B do seu prompt é melhor que a A. Com números, em linguagem de negócio, com o custo e o risco declarados.</li>
 <li><strong>P2.</strong> Explique regressão comportamental com o cenário completo, e diga por que um dataset único não a detecta. Cite as seis categorias e o que cada uma protege.</li>
-<li><strong>P3.</strong> Por que teste unitário tradicional não serve para LLM? Dê as três propriedades e o que substitui cada uma.</li>
+<li><strong>P3.</strong> Em que situações testes unitários são insuficientes para avaliar o comportamento variável de um LLM? Cite as três propriedades do sistema e explique como evals complementam os testes unitários, sem substituir os invariantes determinísticos do runtime.</li>
 <li><strong>P4.</strong> A escada de graders: dê um exemplo do SEU produto para cada degrau e justifique por que não subiu um degrau a mais em cada caso.</li>
-<li><strong>P5.</strong> Cite três vieses do LLM-as-judge e a mitigação de cada um. Qual é a concordância medida do seu juiz com você, e por que esse número precisa estar publicado?</li>
+<li><strong>P5.</strong> Cite três vieses do LLM-as-judge e a mitigação de cada um. Se houver referências humanas disponíveis, como você registraria sua proveniência, composição, concordância total e por classe, e por que publicaria esses limites?</li>
 <li><strong>P6.</strong> Por que o gate usa tolerância relativa em qualidade e piso absoluto em segurança? O que aconteceria com cada um dos dois se invertesse?</li>
-<li><strong>P7.</strong> Sua suíte tem 15 casos numa categoria e a acurácia foi de 80% para 87%. Você promove a versão? Justifique com o raciocínio estatístico.</li>
+<li><strong>P7.</strong> Sua suíte tem 15 casos numa categoria e a acurácia observada foi de 80% para 87%. Declare que informações faltam sobre contagens, pareamento, amostragem, aleatoriedade, efeito relevante, α e poder; classifique a decisão como sustentada, rejeitada ou inconclusiva pelo método que escolher. Explique que nova evidência mudaria a decisão e por que não detectar diferença não prova equivalência.</li>
 <li><strong>P8.</strong> O nightly reprovou sem nenhum commit no repositório. Liste as causas possíveis, em ordem de probabilidade, e como você investiga cada uma.</li>
 <li><strong>P9.</strong> O que você loga e o que não loga em produção, e por quê? Como depura uma falha sem ter o conteúdo do prompt?</li>
 </ul>
 <h4>Entregáveis verificados (mostrar rodando)</h4>
 <ol>
-<li><code>evals/datasets/</code> com ~50 casos nas seis categorias, manifesto e subconjunto rápido marcado.</li>
-<li>Runner com graders determinísticos + universais, rodando com concorrência limitada; exceção contando como reprovação.</li>
-<li>Juiz LLM com rubrica binária e concordância ≥85% medida contra 30 rótulos seus, publicada no README.</li>
-<li>Registry de prompts com ≥2 versões, CHANGELOG com números e a versão ativa em configuração.</li>
-<li><strong>A matriz</strong>: relatório comparando modelos × versões de prompt com acurácia por categoria, custo e p95.</li>
-<li>Gate no CI: um PR reprovado por queda de qualidade e outro por violar o piso de segurança.</li>
-<li>Nightly configurado; tracing com custo por análise e um caso de dataset criado a partir de um trace real.</li>
+<li>Gates verdes: <code>ruff</code>, <code>format</code>, <code>mypy --strict</code>, <code>pytest</code> do lab.</li>
+<li>Datasets nas seis categorias com caso deprecated excluído; todo tipo com grader; mutante pego.</li>
+<li>Juiz do laboratório supera o limiar local de 85% contra rótulos roteirizados; juiz sempre-sim rejeitado antes do uso. Isso não certifica um juiz real.</li>
+<li>Runner com regressão v1→v2 visível por categoria; relatório salvo como baseline.</li>
+<li>Registry com 2 versões e CHANGELOG; gate reprovando queda e piso, avisando custo; tracing sem vazamento.</li>
 </ol>
 </div>
+
+<h2 id="fontes-m06">Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://arxiv.org/abs/2306.05685">Zheng et al. — Judging LLM-as-a-Judge (2023)</a></td><td>vieses do juiz (bloco 3)</td><td>científica</td><td>26/09/2026</td></tr>
+<tr><td><a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/">OTel — GenAI semconv</a></td><td>spans e atributos (bloco 5)</td><td>padrão aberto</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://sre.google/workbook/table-of-contents/">Google SRE workbook</a></td><td>postmortem e operação</td><td>canônica</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://diataxis.fr/">Diátaxis</a></td><td>tipos de doc do relatório</td><td>canônica</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm">NIST/SEMATECH e-Handbook, §7.2.4.1</a></td><td>intervalo de Wilson para proporção binomial; fórmula e limites (bloco 1)</td><td>referência técnica pública</td><td>25/09/2026</td></tr>
+<tr><td><a href="https://www.itl.nist.gov/div898/handbook/prc/section2/prc242.htm">NIST/SEMATECH e-Handbook, §7.2.4.2</a></td><td>planejamento de amostra por diferença, α e poder (bloco 1)</td><td>referência técnica pública</td><td>25/09/2026</td></tr>
+<tr><td><a href="https://www.itl.nist.gov/div898/handbook/prc/section1/prc13.htm">NIST/SEMATECH e-Handbook, §7.1.3</a></td><td>hipóteses, falso positivo e erro tipo II; não rejeitar não é provar igualdade</td><td>referência técnica pública</td><td>25/09/2026</td></tr>
+<tr><td><a href="https://pubmed.ncbi.nlm.nih.gov/20254758/">McNemar (1947), Note on the sampling error of the difference between correlated proportions or percentages</a></td><td>comparação binária pareada (bloco 1)</td><td>artigo original</td><td>25/09/2026</td></tr>
+<tr><td><a href="https://journals.sagepub.com/doi/10.1177/001316446002000104">Cohen (1960), A Coefficient of Agreement for Nominal Scales</a></td><td>kappa como medida de concordância corrigida por chance (bloco 3)</td><td>artigo original</td><td>26/09/2026</td></tr>
+<tr><td><a href="https://proceedings.mlr.press/v70/guo17a.html">Guo et al. (2017), On Calibration of Modern Neural Networks</a></td><td>calibração de probabilidades versus acurácia de classificação (bloco 3; conceito geral, não valida juiz LLM)</td><td>artigo original</td><td>26/09/2026</td></tr>
+</tbody>
+</table>
+<p>Convenções GenAI estão em evolução: revalidar em até 90 dias. Juiz nunca substitui calibração humana — concordância observada e intervalo de incerteza são medidas distintas; não confunda concordância do juiz com margem de erro da acurácia do produto.</p>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>
@@ -1047,7 +988,7 @@ jobs:
 Dataset por categoria ou você conserta A e quebra B, C e D em silêncio.<br>
 Análise de erro antes da métrica: leia as saídas ruins e deixe as categorias emergirem.<br>
 Desça a escada de graders: se cabe em 10 linhas de Python, não é trabalho de juiz.<br>
-Juiz binário, um critério, evidência antes do veredito — e concordância medida com você.<br>
+Juiz binário, um critério, evidência antes do veredito — e concordância reportada contra referências com origem documentada.<br>
 Prompt é código: versionado, imutável, com a tag em todo log e resultado.<br>
 Gate com tolerância em qualidade e piso absoluto em segurança. Nightly pega o que você não mudou.<br>
 Traces alimentam datasets: produção revela, eval mede, CI protege.</p>

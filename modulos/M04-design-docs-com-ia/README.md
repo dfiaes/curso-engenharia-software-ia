@@ -1,16 +1,19 @@
+**Status:** G0 approved; B01–B04 in didactic review with executable lab. G1–G6 pending orchestrator review.
+
 # M04 · Design Docs com IA
 
 ## Visão geral
 
-Documentação parou de ser burocracia porque apareceu um leitor que lê tudo, toda vez, e age com base no que leu. Isso inverte a economia: doc ausente vira invenção, doc desatualizada vira erro confiante (pior que ausente), doc correta se paga a cada sessão nova. O módulo cobre os quatro formatos que importam (taxonomia, C4/Mermaid, ADR, postmortem) e — a parte que sempre falha — a **manutenção automatizada** via linter determinístico + agente revisor de PR.
-
-Bônus estratégico: o Capstone **gera documentação**. Este módulo define o gabarito da saída do produto (`output-spec.md`), que o M13 usa como definição de pronto.
+Documentação tem agora um leitor que lê tudo, toda vez, e age com base no que leu. Isso inverte a economia: doc ausente vira invenção, doc desatualizada vira erro confiante (pior que ausente), doc correta se paga a cada sessão nova. O módulo cobre os quatro formatos que importam (taxonomia, C4/Mermaid, ADR, postmortem) e — a parte que sempre falha — a **manutenção automatizada** via verificador determinístico com exit code + revisor com restrições.
 
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M04.html`](M04.html) — abra no navegador
-- **Carga:** 4 blocos de 2h (8h)
-- **Pré-requisito:** M03 (o CI e o `check.sh` recebem o doc lint; o Capstone já está no ar)
+- **Especificação:** [`docs/especificacoes/M04-ESPECIFICACAO.md`](../../docs/especificacoes/M04-ESPECIFICACAO.md) — G0 aprovado
+- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Laboratório:** [`lab/`](lab/) — `design_guard` + demonstração local
+- **Carga:** 4 blocos de conteúdo (8h)
+- **Pré-requisito:** M03
 
 ## Estrutura dos blocos
 
@@ -21,10 +24,12 @@ Bônus estratégico: o Capstone **gera documentação**. Este módulo define o g
 
 ## Entregáveis
 
-- `capstone/docs/` completo: PRD, `architecture.md` (C4 L1+L2 + sequence com caminho de erro), `adr/0001`, `runbook.md`, `output-spec.md`.
-- Postmortem blameless de incidente real do trabalho, com contraditório do agente.
-- `tools/doc_lint.py` no `check.sh` e no CI + workflow `doc-drift.yml` reprovando PR com doc desatualizada.
-- `AGENTS.md` (<200 linhas) com `CLAUDE.md` como ponteiro.
+- `lab/demo_docs/` auditado: taxonomia, C4 com contexto, ADRs, runbook com comandos.
+- ADR com custo declarado + postmortem com ações, ambos passando no verificador.
+- `design_guard` verde (`ruff`, `mypy --strict`, `pytest`) + mutante rejeitado e revertido.
+- Prompt de revisor versionado (`lab/prompts/doc-drift.md`).
+
+A aplicação ao Capstone (`capstone/docs/`) é trilha opcional com especificação própria; este módulo entrega o gabarito e o verificador.
 
 ## Fundamentos reciclados neste módulo
 

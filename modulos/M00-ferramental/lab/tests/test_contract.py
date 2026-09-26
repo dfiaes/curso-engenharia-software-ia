@@ -22,6 +22,29 @@ class ContractTests(unittest.TestCase):
         self.assertIn("MISSING_ALLOWLIST", codes)
         self.assertIn("INVALID_CONTEXT_BUDGET", codes)
         self.assertIn("UNVERSIONED_INTEGRATION", codes)
+        self.assertIn("MISSING_OBJECTIVE", codes)
+        self.assertIn("MISSING_IN_SCOPE", codes)
+        self.assertIn("MISSING_OUT_OF_SCOPE", codes)
+        self.assertIn("MISSING_CAPABILITIES", codes)
+        self.assertIn("MISSING_STOP_CONDITIONS", codes)
+
+    def test_empty_task_contract_item_is_rejected(self) -> None:
+        contract = load_contract(self.root / "examples" / "harness.safe.json")
+        incomplete = contract.__class__(
+            objective=" ",
+            in_scope=("",),
+            out_of_scope=contract.out_of_scope,
+            capabilities=contract.capabilities,
+            stop_conditions=contract.stop_conditions,
+            instruction_files=contract.instruction_files,
+            evidence_commands=contract.evidence_commands,
+            allowed_command_prefixes=contract.allowed_command_prefixes,
+            context_budget=contract.context_budget,
+            integrations=contract.integrations,
+        )
+        codes = "\n".join(incomplete.violations())
+        self.assertIn("MISSING_OBJECTIVE", codes)
+        self.assertIn("MISSING_IN_SCOPE", codes)
 
     def test_shell_string_is_rejected(self) -> None:
         payload = {
@@ -52,4 +75,3 @@ class ContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -1,0 +1,48 @@
+LT01-B01-L — evidencia de gates (folha B01-L, bloco B01)
+Data (UTC): 2026-09-19 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir novo: modulos/LT01-novo/lab/ · HTML/spec/trace/STATUS/PROGRESSO intocados.
+
+COMANDOS (tails reais)
+- uv sync → "Installed 11 packages" (mypy 1.20.2, pytest 9.1.1, ruff 0.16.8); venv 3.14.7.
+- uv run ruff check . → "All checks passed!"
+- uv run ruff format --check . → "7 files already formatted"
+- uv run mypy → "Success: no issues found in 6 source files"
+- uv run pytest → "14 passed in 1.25s" (at001:4, at002:7, at003:3; 0 skip nesta plataforma)
+
+NUMEROS MEDIDOS (exemplo variavel, amostra: duracao 0,2 s, n=2 tarefas)
+- cenario_cooperativo(0.2) → relogio_s 0.2012 (~1× duracao: sobreposicao ok)
+- cenario_com_bloqueio(0.2) → relogio_s 0.2053 (>= duracao; >= cooperativo: inocente atrasada)
+- desligar() sob 2 tarefas em curso → codigo 0, canceladas 2, decorrido < prazo 5,0 s
+- demonstra() → pid_filho 76364, exit_code_coletado 3
+
+DIVERGENCIAS DO VERBATIM
+- Nenhuma: os 3 modulos sao byte-identicos aos <pre> executaveis da secao B01
+  do LT01.html (conferencia por diff programatico apos html.unescape).
+- Acomodacao de ferramenta (NAO altera modulo): pyproject traz override mypy
+  `module = "shutdown_gracioso", disable_error_code = "arg-type"`, porque o
+  contrato congelado registra `ao_sinal: Callable[[int], None]` sem args extras
+  em `add_signal_handler` (typeshed espera Callable[[], object]). Nota latente:
+  se um SIGTERM real disparasse esse handler registrado sem args, o loop
+  chamaria `ao_sinal()` com zero args → TypeError; a suite nunca dispara
+  handlers. Correcao pertence a revisao futura do HTML, nao a este lab.
+
+LIMITES
+- POSIX: macOS/Linux rodam tudo; em Windows sem os.fork, AT-003 faz skip com
+  "BLOCKED" registrado (modulo levanta RuntimeError em vez de simular).
+  add_signal_handler real so testado fora de win32, com restauracao em finally.
+- Sem rede/Docker em testes e modulos (so stdlib: asyncio, time, signal, os).
+- Filhos: exclusivamente possuidos (os.fork), sempre recolhidos via waitpid
+  em finally (inclui teste de zombie proposital com reap garantido).
+- Nenhum sinal real enviado ao processo de teste; SIGKILL nao-recuperavel
+  coberto por contrato/documentacao, nao por execucao.
+
+GATE CANDIDATO
+- LT01-B01-L APTO a G1 (lab): 3 contratos verbatim + pyproject (3.14/uv/ruff
+  100 E,F,I,B,UP,SIM,RUF,ASYNC/mypy strict/pytest strict) + README + 3 oraculos
+  (AT-001/002/003) + suite verde integral (14/14) nesta plataforma POSIX.
+
+ADENDO 14/09/2026 (orquestrador): bug latente corrigido — `ao_sinal:
+Callable[[int], None]` geraria TypeError em SIGTERM real (typeshed exige
+zero args); contrato corrigido para `Callable[[], None]` no lab, nos
+testes e no HTML; override mypy removido. Re-execução: ruff + format +
+mypy (6 arquivos) verdes; pytest 14 passed.

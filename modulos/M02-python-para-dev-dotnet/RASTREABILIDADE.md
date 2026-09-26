@@ -1,6 +1,6 @@
 # Rastreabilidade do M02
 
-**Data-base:** 15/08/2026 · **Especificação:** `docs/especificacoes/M02-ESPECIFICACAO.md` · **Estado:** VERIFICADO / G0–G6 APROVADOS
+**Data-base:** 15/08/2026 · **Especificação:** `docs/especificacoes/M02-ESPECIFICACAO.md` · **Estado:** EM REVISÃO EDITORIAL em 12/09/2026; baseline técnico de agosto preservado
 
 ## Regra de leitura do estado
 
@@ -12,7 +12,7 @@ O baseline anterior (seis blocos/12h, sem laboratório) foi substituído. O HTML
 
 - **Carga:** oito blocos de 2h, total de 16h;
 - **Linguagem/runtime canônicos:** Python 3.14;
-- **Ponte de transição:** .NET/C# apenas para localizar analogias úteis e seus limites;
+- **Público:** sem pré-requisito de outra stack; conceitos ensinados diretamente em Python;
 - **Produto didático:** CLI instalável `csv-cleaner`, sem dependência obrigatória de rede;
 - **Profundidade:** conceito, decisão/trade-off, implementação, falha/diagnóstico e evidência/transferência;
 - **Inventário:** 43 competências, 38 cenários de aceitação e 20 fontes primárias/versionáveis.
@@ -171,7 +171,7 @@ A lista de URLs, uso e risco de cada uma das 20 fontes está na seção 9 da esp
 | G3 · Avaliação | APROVADO | dez perguntas baseadas em cenários, oito entregáveis e rubrica 80%/100% nos itens críticos |
 | G4 · Portabilidade | APROVADO | Windows e WSL2/Ubuntu verificados em CPython 3.14.7; UTF-8/newline e padrões separados dos adapters confirmados |
 | G5 · Produção | APROVADO | cleanup, cancelamento, timeout, fila bounded, starvation local, comparação/race, ownership negativo, memória, subprocesso, mutação controlada e trust boundary cobertos |
-| G6 · Editorial | APROVADO | tags/IDs/fontes e desktop verificados; viewport real de 390 px sem overflow; PDF de 52 páginas inspecionado por amostras e folha de contato integral, sem cortes, sobreposições ou páginas vazias |
+| G6 · Editorial | REVALIDAÇÃO PENDENTE | Evidência histórica de agosto:  tags/IDs/fontes e desktop verificados; viewport real de 390 px sem overflow; PDF de 52 páginas inspecionado por amostras e folha de contato integral, sem cortes, sobreposições ou páginas vazias |
 
 ## Gates de execução planejados
 
@@ -189,7 +189,7 @@ Em 15/08/2026, o orquestrador executou esses comandos em CPython 3.14.7/Windows:
 
 ## Checkpoint e promoção
 
-A aprovação exige no mínimo 80% das perguntas e 100% nos itens de cancelamento, trust boundary, encoding/path, instalação limpa e casos negativos. O aluno deverá executar o gate final, reproduzir duas falhas semeadas, defender uma escolha entre asyncio/thread/process/interpreter com medições locais e explicar analogias .NET que ajudam ou quebram.
+A aprovação exige no mínimo 80% das perguntas e 100% nos itens de cancelamento, trust boundary, encoding/path, instalação limpa e casos negativos. O aluno deverá executar o gate final, reproduzir duas falhas semeadas, defender uma escolha entre asyncio/thread/process/interpreter com medições locais e explicar escolhas de implementação Python e seus limites.
 
 Não contam como evidência: saída copiada do material, benchmark sem ambiente/warm-up/amostras, teste com `skip`, número hardcoded, execução somente no source tree ou resposta de IA sem reprodução. Nenhum cenário está aprovado enquanto seu oráculo não tiver sido executado e revisado.
 
@@ -214,6 +214,28 @@ Não contam como evidência: saída copiada do material, benchmark sem ambiente/
 
 Auditoria de suporte: `docs/auditorias/M02-DIDATICA-2026-08.md`. A revisão não modifica os 38 cenários, a execução do laboratório ou as decisões G0–G6.
 
+## Reestruturação do laboratório em 21/08/2026
+
+Esta mudança reorganiza a experiência de prática e não promove gates por texto.
+
+| ID | Mudança aplicada | Competências e cenários cobertos | Evidência | Estado |
+|---|---|---|---|---|
+| LAB-M02-001 | referência de arquitetura no bloco 8 separada do laboratório executável | B08 e entrega | `M02.html` | APLICADO |
+| LAB-M02-002 | laboratório final reconstrói a boundary Pydantic e executa CLI, caso negativo, gates e build | B04, B08, ATs de CLI/trust boundary/entrega | `M02.html#lab` | APLICADO |
+| LAB-M02-003 | cópia temporária marcada preserva o código de referência e exclui ambientes/caches/wheels de testes anteriores | G2, G5 | `lab/create_working_copy.py` | VERIFICADO |
+| LAB-M02-004 | Ruff, mypy, pytest e build são oráculos do produto; o checkpoint é posterior à prática | G2, G3 | roteiro e âncora `#checkpoint` | APLICADO |
+| LAB-M02-005 | blocos 1–7 passaram a expor cenários e código de referência; não há passo executável antes do laboratório final | B01–B07, contrato de laboratório guiado | varredura estática de `M02.html` em 21/08/2026 | VERIFICADO |
+
+Execução da cópia de referência em 21/08/2026: CPython 3.14.7; `uv sync --locked --offline`; 36 arquivos formatados, Ruff sem achados, mypy estrito sem issues em 29 arquivos, 51 testes aprovados em 6,39 s e CLI exibiu ajuda. A cópia padrão foi confirmada com marcador `M02`, `models.py` preparado para reconstrução e sem ambientes de wheel anteriores.
+
 ## Próxima promoção permitida
 
-G0–G6 estão aprovados por especificação, material, execução, avaliação, portabilidade, casos negativos e inspeção editorial/visual revisados. O módulo só deverá voltar a revisão por mudança relevante de fonte, runtime, dependência, contrato ou material.
+O baseline de agosto teve G0–G6 aprovados por especificação, material, execução, avaliação, portabilidade, casos negativos e inspeção editorial/visual revisados. A edição de setembro aguarda revalidação G6. O módulo só deverá voltar a revisão por mudança relevante de fonte, runtime, dependência, contrato ou material.
+
+## Revisão editorial — 12/09/2026
+
+O HTML principal recebeu explicações independentes de outra stack, remoção de duração obrigatória, links por seção e aviso de prontidão. A navegação permite leitura e prática no ritmo do aluno. O verificador editorial examinou estrutura, destinos locais e âncoras; não executou laboratórios nem certificou fontes externas ou apresentação visual. Os resultados técnicos anteriores permanecem históricos; G6 da apresentação revisada continua pendente.
+
+## M02-S — reconciliação editorial — RUN `01a0dea7-003e-7262-8bbd-4ed3faf5d5e2`
+
+A comparação da especificação, rastreabilidade e entrada M02 do catálogo encontrou os mesmos 38 cenários e 43 competências; nenhum ID foi alterado ou descartado. O catálogo permanece intacto. A especificação agora identifica as aprovações G0–G6 de 15/08 como baseline histórica e encaminha o estado atual ao STATUS único. O README foi refeito como roteiro operacional sem alegar execução: cwd/comandos Python 3.14, grupo `dev`, mypy strict com `src tests`, cópia temporária marcada, retomada, diagnóstico e limpeza segura. Os resultados antigos continuam acima como histórico; nenhum gate/AT foi promovido. Validações de documentação e backlog constam em `docs/planejamento-v4/evidencias/M02-S.md`; esta entrega aguarda revisão independente.

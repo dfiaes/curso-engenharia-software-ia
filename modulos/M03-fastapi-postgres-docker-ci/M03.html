@@ -36,6 +36,7 @@ pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
   padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
 pre code{background:none;padding:0}
 table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+@media screen and (max-width:640px){table{display:block;overflow-x:auto}}
 th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
 th{background:var(--code-bg);font-weight:600}
 blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
@@ -78,63 +79,85 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
   .wrap{max-width:none;padding:0}
   h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
 }
+
+/* Navegação de leitura e retomada, revisão 2026-09-12. */
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <h1>M03 · FastAPI, Postgres, Docker, CI</h1>
-<p class="meta"><span class="badge">MÓDULO 03</span> &nbsp; 8 blocos de 2h · pré-requisito: M02 · <strong>de "git push pro Azure" a "eu levanto e publico sozinho"</strong></p>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Em produção: B01–B08 produzidos; laboratório guiado e checkpoint reconstruídos. Gates G1–G6 pendem de revisão do orquestrador e de execução PostgreSQL com Docker. Laboratório executável e gates G1–G6 ainda pendentes. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário ou o link de uma seção para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
+<p class="meta"><span class="badge">MÓDULO 03</span> &nbsp; 8 blocos de conteúdo · pré-requisito: M02 · backend HTTP, dados, containers e CI com evidência local</p>
 
 <div class="box">
-<span class="lbl">O que muda ao final deste módulo</span>
-<p>Este é o módulo que mata o seu gap declarado de DevOps. Você entra sabendo construir API (faz isso há dez anos em ASP.NET) e sai sabendo <strong>construir, containerizar, testar contra banco real, automatizar e publicar</strong> — sozinho, sem o time de infra que "configurou o resto". A pilha: FastAPI + SQLAlchemy 2.0 async + Alembic sobre Postgres, Docker multi-stage com Compose, GitHub Actions, deploy real com domínio e HTTPS. A peça entregue é o esqueleto do backend do Capstone — vazio, mas <em>no ar</em>.</p>
+<span class="lbl">Saída concreta</span>
+<p>Você vai construir um serviço de encurtamento de links em Python 3.14. A fronteira HTTP usa FastAPI; os dados passam por SQLAlchemy, Alembic e PostgreSQL; Docker Compose reproduz o ambiente local; a mesma verificação entra em CI. O laboratório é único e fica depois do bloco 8. Ele não exige conta de cloud nem mexe no Capstone.</p>
+</div>
+
+<div class="box fund">
+<span class="lbl">Contrato pedagógico</span>
+<p><strong>Invariante:</strong> uma API mantém contrato de transporte, regras de aplicação e persistência em fronteiras distintas; falha e saúde precisam ser observáveis. <strong>Padrões abertos:</strong> HTTP, OpenAPI e Problem Details. <strong>Adapters deste módulo:</strong> FastAPI, SQLAlchemy, PostgreSQL, Docker Compose, Testcontainers e GitHub Actions. Trocar um adapter tem custo; não muda a necessidade do contrato.</p>
 </div>
 
 <div class="toc">
 <strong>Roteiro</strong>
 <ol>
-<li><strong>Bloco 1</strong> — FastAPI: rotas, <code>Depends</code>, middleware, lifespan <em>(o ASP.NET Core do Python)</em></li>
-<li><strong>Bloco 2</strong> — SQLAlchemy 2.0 async + Alembic <em>(EF Core + Migrations)</em></li>
-<li><strong>Bloco 3</strong> — Postgres para valer: índices, EXPLAIN, transações, JSONB <em>(o banco como ferramenta, não mistério)</em></li>
-<li><strong>Bloco 4</strong> — Estrutura que escala: api/ core/ services/ repositories/ <em>(arquitetura)</em></li>
-<li><strong>Bloco 5</strong> — Docker do zero: imagens, camadas, multi-stage, Compose <em>(o gap nº 1)</em></li>
-<li><strong>Bloco 6</strong> — Testes de integração com containers <em>(teste que fala com banco de verdade)</em></li>
-<li><strong>Bloco 7</strong> — GitHub Actions e deploy em produção <em>(CI/CD ponta a ponta)</em></li>
-<li><strong>Bloco 8</strong> — Mini-projeto: encurtador em produção + esqueleto do Capstone · Diagnóstico · Checkpoint</li>
+<li><a href="#b01"><strong>Bloco 1</strong> — fronteira HTTP: rotas, <code>Depends</code>, middleware e lifespan</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — SQLAlchemy async e Alembic</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — PostgreSQL: índices, planos, transações e JSONB</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — fronteiras internas e guardrails de arquitetura</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — imagens, camadas, multi-stage e Compose</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — testes de integração com PostgreSQL descartável</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — CI, imagem imutável e contrato de release</a></li>
+<li><a href="#b08"><strong>Bloco 8</strong> — operação local: saúde, correlação e fechamento</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado M03</strong> — prática executável reunida, retomável por etapa</a></li>
 </ol>
 </div>
 <!-- ============================================ BLOCO 1 -->
-<h2>Bloco 1 · FastAPI: rotas, <code>Depends</code>, middleware, lifespan</h2>
-<div class="clock">00:00–00:20 o mapa ASP.NET → FastAPI &nbsp;|&nbsp; 00:20–01:00 rotas e a mágica dos type hints &nbsp;|&nbsp; 01:00–01:35 Depends: a DI por função &nbsp;|&nbsp; 01:35–02:00 middleware, lifespan e prática</div>
+<section id="b01">
+<h2>Bloco 1 · Fronteira HTTP: rotas, <code>Depends</code>, middleware e lifespan</h2>
 
-<h3>Por que isso importa</h3>
-<p><strong>FastAPI</strong> é o framework HTTP dominante do Python para APIs — e o motivo de ele ter vencido é uma ideia só: <em>reutilizar os type hints que você já escreve</em> (M02) como fonte de roteamento, validação, serialização e documentação. Você declara <code>async def criar(dto: DocumentoCreate) -> DocumentoOut:</code> e o framework extrai disso o binding, a validação Pydantic (com 422 estruturado), o schema OpenAPI e o Swagger UI. Nada de atributos <code>[FromBody]</code>, nada de configuração de Swashbuckle: a assinatura É a configuração.</p>
 
-<div class="box net">
-<span class="lbl">Tradução .NET — o mapa completo</span>
-<table>
-<thead><tr><th>ASP.NET Core</th><th>FastAPI</th><th>Nota</th></tr></thead>
-<tbody>
-<tr><td>Minimal API <code>app.MapGet(...)</code></td><td><code>@app.get("/rota")</code></td><td>decorador em vez de método de extensão</td></tr>
-<tr><td>Model binding + validação</td><td>type hints + Pydantic, automático</td><td>corpo inválido → 422 com erros estruturados, de graça</td></tr>
-<tr><td><code>[FromQuery]/[FromRoute]/[FromBody]</code></td><td>inferido: path param se está na rota, body se é BaseModel, query se é escalar</td><td>convenção sobre atributo</td></tr>
-<tr><td><code>IServiceCollection</code> + construtor</td><td><code>Depends(funcao)</code> por parâmetro</td><td>DI por função, resolvida por request — abaixo</td></tr>
-<tr><td>Middleware pipeline</td><td><code>@app.middleware("http")</code> / ASGI middleware</td><td>mesmo modelo de cebola</td></tr>
-<tr><td><code>IHostApplicationLifetime</code></td><td><code>lifespan</code> (um context manager async)</td><td>startup/shutdown num só lugar</td></tr>
-<tr><td>Swashbuckle/OpenAPI</td><td>embutido: <code>/docs</code> (Swagger) e <code>/openapi.json</code></td><td>zero config</td></tr>
-<tr><td>Kestrel</td><td><code>uvicorn</code> (servidor ASGI)</td><td>processo separado do framework</td></tr>
-<tr><td><code>IExceptionHandler</code>/ProblemDetails</td><td><code>@app.exception_handler(MinhaExcecao)</code></td><td>você padroniza o formato de erro</td></tr>
-</tbody>
-</table>
-</div>
+<h3 id="sec-uma-api-nao-comeca-na-rota">Uma API não começa na rota <a class="section-link" href="#sec-uma-api-nao-comeca-na-rota" aria-label="Link para esta seção">#</a></h3>
+<p>Um cliente precisa criar um link e recuperá-lo depois. Ele não deveria saber se o serviço usa um dicionário, PostgreSQL ou outro processo. Também não deveria receber uma exceção Python, uma página HTML ou uma resposta cujo formato muda a cada endpoint. A fronteira HTTP existe para estabilizar esse acordo.</p>
+<p>Ela recebe bytes e metadados de HTTP, valida uma representação, chama a aplicação e devolve uma representação com status, headers e corpo. Isso é transporte. A regra que decide se um link pode existir pertence à aplicação. A persistência só aparece no bloco 2.</p>
 
-<div class="box">
-<span class="lbl">Contexto · ASGI e uvicorn — quem segura o socket</span>
-<p><strong>ASGI</strong> (Asynchronous Server Gateway Interface) é o contrato entre servidores HTTP e frameworks async do Python — o papel que o par Kestrel↔pipeline cumpre no ASP.NET, só que padronizado entre frameworks. <strong>uvicorn</strong> é o servidor ASGI que você vai usar: ele aceita as conexões, fala HTTP, e entrega cada request ao FastAPI como uma corrotina no event loop (o MESMO loop único do M02 bloco 4 — toda a teoria de lá vale aqui, request a request). Em produção, roda-se uvicorn com múltiplos <em>workers</em> (processos), cada um com seu loop: <code>uvicorn app:app --workers 4</code> ≈ 4 cópias do seu app atrás do mesmo socket.</p>
-</div>
+<figure>
+<svg viewBox="0 0 760 190" role="img" aria-labelledby="b01-flow-title b01-flow-desc">
+<title id="b01-flow-title">Fluxo de uma requisição na fronteira HTTP</title>
+<desc id="b01-flow-desc">O cliente envia HTTP; Uvicorn entrega o escopo ASGI ao FastAPI; middleware e dependências tratam contexto; a rota traduz o contrato e chama a aplicação; a resposta retorna com status e headers.</desc>
+<rect x="18" y="64" width="108" height="58" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="72" y="91" text-anchor="middle" fill="currentColor">cliente</text><text x="72" y="110" text-anchor="middle" fill="currentColor">HTTP</text>
+<path d="M126 93 H190" stroke="var(--muted)" stroke-width="2" marker-end="url(#b01-arrow)"/>
+<rect x="192" y="64" width="110" height="58" rx="8" fill="var(--code-bg)" stroke="var(--line)"/><text x="247" y="91" text-anchor="middle" fill="currentColor">Uvicorn</text><text x="247" y="110" text-anchor="middle" fill="currentColor">ASGI</text>
+<path d="M302 93 H366" stroke="var(--muted)" stroke-width="2" marker-end="url(#b01-arrow)"/>
+<rect x="368" y="45" width="154" height="96" rx="8" fill="var(--net-soft)" stroke="var(--net)"/><text x="445" y="76" text-anchor="middle" fill="currentColor">FastAPI</text><text x="445" y="97" text-anchor="middle" fill="currentColor">middleware · Depends</text><text x="445" y="118" text-anchor="middle" fill="currentColor">rota · schema</text>
+<path d="M522 93 H586" stroke="var(--muted)" stroke-width="2" marker-end="url(#b01-arrow)"/>
+<rect x="588" y="64" width="154" height="58" rx="8" fill="var(--fund-soft)" stroke="var(--fund)"/><text x="665" y="91" text-anchor="middle" fill="currentColor">aplicação</text><text x="665" y="110" text-anchor="middle" fill="currentColor">regra e resultado</text>
+<defs><marker id="b01-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="var(--muted)"/></marker></defs>
+</svg>
+<figcaption>O framework acelera a tradução HTTP. Ele não decide semântica, autorização, transação ou desenho de dados.</figcaption>
+</figure>
 
-<h3>A gramática essencial, num arquivo</h3>
+<h3 id="sec-asgi-uvicorn-e-fastapi-fazem-trabalhos-diferentes">ASGI, Uvicorn e FastAPI fazem trabalhos diferentes <a class="section-link" href="#sec-asgi-uvicorn-e-fastapi-fazem-trabalhos-diferentes" aria-label="Link para esta seção">#</a></h3>
+<p><strong>ASGI</strong> é uma interface Python para servidor e aplicação assíncrona. Ela descreve como uma conexão HTTP, WebSocket ou lifecycle chega à aplicação. <strong>Uvicorn</strong> é um servidor que aceita conexões e chama uma aplicação ASGI. <strong>FastAPI</strong> é o adapter que interpreta rotas, tipos, dependências e respostas sobre essa interface.</p>
+<p>Essa separação permite testar o app em memória por um transporte ASGI e trocar o servidor sem reescrever endpoints. Ela não transforma cada handler em paralelismo. Um endpoint <code>async def</code> continua sujeito às regras de I/O cooperativo do M02; uma operação bloqueante no handler continua bloqueando o trabalho daquele loop.</p>
+
+<h3 id="sec-fastapi-usa-a-assinatura-como-parte-do-contrato">FastAPI usa a assinatura como parte do contrato <a class="section-link" href="#sec-fastapi-usa-a-assinatura-como-parte-do-contrato" aria-label="Link para esta seção">#</a></h3>
+<p>FastAPI lê parâmetros e modelos Pydantic para decidir onde uma entrada vem e como documentá-la. Um parâmetro presente no caminho da rota é path parameter. Um modelo Pydantic normalmente representa o corpo. A anotação de retorno e <code>response_model</code> delimitam a forma exposta. O resultado entra em OpenAPI, uma descrição interoperável que pode alimentar documentação ou geradores de cliente.</p>
+<p>Inferência reduz configuração repetida. Não elimina decisão. Aceitar campo extra, escolher o status de conflito ou publicar uma entidade do banco continuam sendo escolhas do autor da API.</p>
+
+<div class="box"><span class="lbl">Referência do conceito</span><p><code>@app.get</code> registra uma rota; os modelos descrevem entrada e saída; <code>Depends</code> resolve dependências; middleware envolve o processamento; <code>lifespan</code> organiza abertura e encerramento de recursos da aplicação. Essas responsabilidades serão percorridas no exemplo abaixo.</p></div>
+
+
+
+<h3 id="sec-exemplo-trabalhado-a-fronteira-antes-do-banco">Exemplo trabalhado: a fronteira antes do banco <a class="section-link" href="#sec-exemplo-trabalhado-a-fronteira-antes-do-banco" aria-label="Link para esta seção">#</a></h3>
+<p>Este é um exemplo conceitual completo. Ele guarda links em memória para tornar visível a rota, o schema, a dependência e o erro. Não é o código do laboratório e não prova persistência, colisão concorrente ou segurança de slug. A referência executável só aparece no laboratório final.</p>
 <pre><code>from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from typing import Annotated
@@ -175,7 +198,7 @@ Repo = Annotated[dict[str, str], Depends(get_repo)]   # alias reutilizável
 
 @app.post("/links", response_model=LinkOut, status_code=status.HTTP_201_CREATED)
 async def criar_link(body: LinkIn, repo: Repo) -> LinkOut:
-    slug = hex(abs(hash(body.url)))[2:10]
+    slug = f"demo-{len(repo) + 1}"  # visualização; B02 substitui por persistência/constraint
     repo[slug] = body.url
     return LinkOut(slug=slug, url=body.url)
 
@@ -186,13 +209,26 @@ async def obter_link(slug: str, repo: Repo) -> LinkOut:
         raise HTTPException(status_code=404, detail="slug não encontrado")
     return LinkOut(slug=slug, url=repo[slug])</code></pre>
 
-<h3><code>Depends</code>: a DI que é função, não container</h3>
-<p>A diferença conceitual para o <code>IServiceCollection</code>: não há registro central nem grafo resolvido no boot. <strong>Cada parâmetro com <code>Depends(f)</code> executa <code>f</code> por request</strong>, e <code>f</code> pode por sua vez depender de outras funções — o grafo é implícito e por endpoint. Três consequências práticas:</p>
+<h3 id="sec-depends-a-di-que-e-funcao-nao-container"><code>Depends</code>: a DI que é função, não container <a class="section-link" href="#sec-depends-a-di-que-e-funcao-nao-container" aria-label="Link para esta seção">#</a></h3>
+<p><code>Depends</code> não é um contêiner de injeção de dependências genérico. É uma instrução para FastAPI resolver uma callable para a operação e suas subdependências. O grafo fica próximo ao endpoint. Uma dependência pode ser síncrona ou assíncrona; a escolha deve seguir o trabalho realizado, não uma preferência estética.</p>
+<p>O alias <code>Repo = Annotated[dict[str, str], Depends(get_repo)]</code> preserva o tipo que o endpoint recebe e evita repetir a mesma declaração. Ele não torna o dicionário seguro entre requests. A versão de banco troca esse adapter por uma sessão de escopo explícito.</p>
 <ul>
-<li><strong>Escopo por request é o default natural.</strong> A dependência com <code>yield</code> é o scoped + Dispose: setup antes, teardown depois — é assim que a sessão de banco vai abrir/commitar/fechar no bloco 2 (compare com o <code>AddDbContext</code> scoped).</li>
+<li><strong>Escopo por request é uma decisão visível.</strong> A dependência com <code>yield</code> modela preparo antes da operação e teardown depois. No bloco 2 ela abrirá, confirmará ou reverterá e fechará a sessão de banco; a limpeza precisa de oráculo, não de confiança no framework.</li>
 <li><strong>Override em teste é trivial:</strong> <code>app.dependency_overrides[get_repo] = get_repo_fake</code> — sem container de teste, sem builder (bloco 6 usa).</li>
 <li><strong>Autenticação/autorização são dependências também</strong> (uma função que lê o header, valida o token e devolve o usuário — ou levanta 401). O M12 constrói isso; a mecânica é a mesma do <code>get_repo</code>.</li>
 </ul>
+
+<pre><code>from collections.abc import AsyncIterator
+
+
+async def get_request_resource() -> AsyncIterator[str]:
+    resource = "aberto"
+    try:
+        yield resource
+    finally:
+        # O bloco B02 provará cleanup e rollback com PostgreSQL real.
+        resource = "fechado"</code></pre>
+<p>O valor alterado no <code>finally</code> só visualiza o lifecycle. Um <code>yield</code> não torna uma sessão segura para várias tarefas concorrentes, não escolhe commit e não recupera uma falha remota. A responsabilidade continua sendo de quem abriu o recurso e de quem definiu o protocolo de encerramento.</p>
 
 <div class="box fund">
 <span class="lbl">Fundamento de engenharia · HTTP e REST — a reciclagem que o Swagger não faz por você</span>
@@ -200,12 +236,34 @@ async def obter_link(slug: str, repo: Repo) -> LinkOut:
 <ul>
 <li><strong>Semântica dos verbos e idempotência:</strong> GET/PUT/DELETE são idempotentes (repetir = mesmo efeito), POST não. Isso não é pedantismo: retry automático (do seu gateway do M05, do load balancer, do agente do M08) SÓ é seguro sobre operação idempotente. API que faz POST não-idempotente sem chave de idempotência é a fonte da dupla cobrança do M12.</li>
 <li><strong>Status codes como contrato:</strong> 400 (request mal-formado) ≠ 404 (não existe) ≠ 409 (conflito de estado) ≠ 422 (bem-formado, semanticamente inválido — o que o Pydantic devolve) ≠ 500 (culpa SUA). Cliente e agente decidem retry/fallback pelo código — errar o código é quebrar o contrato de erro.</li>
-<li><strong>Erros num formato só:</strong> padronize (RFC 9457, Problem Details — o mesmo do ASP.NET) com <code>exception_handler</code>. Erro estruturado é o fator 9 do M01 aplicado a HTTP.</li>
+<li><strong>Erros num formato só:</strong> padronize (RFC 9457, Problem Details) com <code>exception_handler</code>. Erro estruturado é o fator 9 do M01 aplicado a HTTP.</li>
 <li><strong>Versionamento e compatibilidade:</strong> campo novo opcional = seguro; remover/renomear = quebra. Some com o <code>extra="forbid"</code> do M02 e você tem contratos que evoluem sem sustos.</li>
 </ul>
 </div>
 
-<h3>Middleware e o pipeline</h3>
+<div class="box warn">
+<span class="lbl">422 não é uma política de negócio</span>
+<p>FastAPI devolve por padrão uma resposta estruturada quando a entrada não satisfaz o schema. Isso não torna toda resposta de erro aderente a RFC 9457. Se a API adota <em>Problem Details</em>, ela precisa definir explicitamente esse formato para erros de domínio e, quando necessário, para erros de validação. Não prometa um contrato que o framework não foi configurado para entregar.</p>
+</div>
+
+<h3 id="sec-semantica-http-que-o-framework-nao-escolhe">Semântica HTTP que o framework não escolhe <a class="section-link" href="#sec-semantica-http-que-o-framework-nao-escolhe" aria-label="Link para esta seção">#</a></h3>
+<table>
+<thead><tr><th>Situação</th><th>Resposta deliberada</th><th>Decisão e limite</th></tr></thead>
+<tbody>
+<tr><td>criação aceita</td><td><code>201 Created</code> + representação</td><td>o recurso existe; a URL final pode entrar depois quando o slug for estável</td></tr>
+<tr><td>schema inválido</td><td><code>422 Unprocessable Content</code></td><td>a representação não atende ao schema; a forma do erro precisa ser documentada</td></tr>
+<tr><td>slug ausente</td><td><code>404 Not Found</code> + Problem Details</td><td>o endpoint é válido, aquele recurso não existe</td></tr>
+<tr><td>colisão de slug</td><td><code>409 Conflict</code></td><td>B02 provará que a constraint do banco, não um <code>if</code> prévio, fecha a corrida</td></tr>
+<tr><td>falha inesperada</td><td><code>5xx</code>, correlação e log seguro</td><td>não vazar stack trace ou segredo ao cliente; diagnóstico detalhado fica do lado do operador</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<span class="lbl">Contraste: documentação não é autorização</span>
+<p>OpenAPI descreve que existe <code>POST /links</code>. Ele não diz quem pode criá-lo, quanto pode criar ou se uma URL é segura para o domínio. Autenticação, autorização, quota e auditoria entram em M12. Misturar esses controles ao schema gera uma API aparentemente validada que ainda aceita uma ação indevida.</p>
+</div>
+
+<h3 id="sec-middleware-e-o-pipeline">Middleware e o pipeline <a class="section-link" href="#sec-middleware-e-o-pipeline" aria-label="Link para esta seção">#</a></h3>
 <pre><code>import time
 import uuid
 
@@ -214,62 +272,54 @@ from fastapi import Request, Response
 
 @app.middleware("http")
 async def request_id_e_tempo(request: Request, call_next) -> Response:  # type: ignore[no-untyped-def]
-    rid = request.headers.get("x-request-id", str(uuid.uuid4()))
+    received = request.headers.get("x-request-id")
+    try:
+        rid = str(uuid.UUID(received)) if received else str(uuid.uuid4())
+    except ValueError:
+        rid = str(uuid.uuid4())
     inicio = time.perf_counter()
     response = await call_next(request)            # o resto da cebola
     response.headers["x-request-id"] = rid
     response.headers["x-elapsed-ms"] = f"{(time.perf_counter() - inicio) * 1000:.1f}"
     return response</code></pre>
-<p>Mesma cebola do ASP.NET: o que vem antes do <code>call_next</code> roda na ida, o que vem depois roda na volta, e a ordem de registro importa. O <code>x-request-id</code> que você acabou de propagar é a semente da observabilidade do M06 — um request rastreável do edge ao banco.</p>
+<p>O middleware envolve o processamento: o que vem antes do <code>call_next</code> roda na ida, o que vem depois roda na volta, e a ordem de registro importa. O exemplo só preserva um UUID válido; confiar em qualquer header de um cliente permite conteúdo arbitrário no log. Em uma borda com gateway confiável, a política de confiança precisa ser declarada. O <code>x-request-id</code> é a semente da observabilidade do M06 — um request rastreável do edge ao banco.</p>
 
-<h3>Prática guiada · Primeira API no ar (25 min)</h3>
-<div class="step"><span class="n">1</span><strong>Crie o projeto do módulo</strong> — ele evolui até o bloco 8:
-<pre><code>uv init shortener --package && cd shortener
-uv add fastapi uvicorn && uv add --dev pytest mypy ruff httpx</code></pre>
-<p><strong>Resultado esperado:</strong> dependências instaladas; copie o arquivo da gramática acima para <code>src/shortener/api.py</code>.</p></div>
-<div class="step"><span class="n">2</span><strong>Suba e explore o que veio de graça:</strong>
-<pre><code>uv run uvicorn shortener.api:app --reload</code></pre>
-<p><strong>Resultado esperado:</strong> <code>Uvicorn running on http://127.0.0.1:8000</code> e as duas linhas do lifespan ("subindo"). Abra <code>http://127.0.0.1:8000/docs</code>: Swagger UI completo, com schemas derivados dos seus modelos — que você não configurou em lugar nenhum. O <code>--reload</code> é o hot reload de dev.</p></div>
-<div class="step"><span class="n">3</span><strong>Exercite o contrato de erro:</strong> pelo Swagger (ou <code>curl</code>), (a) POST com <code>{"url": "ftp://x"}</code>; (b) GET de slug inexistente; (c) POST válido seguido do GET correspondente.</p>
-<p><strong>Resultado esperado:</strong> (a) <strong>422</strong> com o caminho do campo e a regra violada (o Pydantic do M02 trabalhando na fronteira); (b) <strong>404</strong> com seu detail; (c) <strong>201</strong> + <strong>200</strong> com o header <code>x-request-id</code> presente nas respostas. Confira também <code>x-elapsed-ms</code> — seu primeiro dado de latência.</p></div>
+<h3 id="sec-leitura-aplicada-acompanhe-uma-requisicao">Leitura aplicada: acompanhe uma requisição <a class="section-link" href="#sec-leitura-aplicada-acompanhe-uma-requisicao" aria-label="Link para esta seção">#</a></h3>
+<ol>
+<li><code>POST /links</code> chega com um JSON. Uvicorn entrega o evento ao FastAPI; o middleware cria ou normaliza o correlation id.</li>
+<li>FastAPI constrói <code>LinkIn</code>. Uma URL fora do pattern interrompe o caminho antes da função de rota. Isso é validação de representação, não decisão de negócio.</li>
+<li>A rota pede <code>Repo</code>. FastAPI chama <code>get_repo</code>, entrega o valor retornado e converte o resultado para <code>LinkOut</code>. Esse último passo impede que uma chave interna do dicionário vaze por acidente.</li>
+<li>Se <code>GET /links/{slug}</code> não encontra o valor, a rota declara uma condição de aplicação. A tradução para 404 pertence ao handler. O middleware acrescenta o mesmo ID à resposta.</li>
+</ol>
+<p>Este exemplo serve à leitura do fluxo. O laboratório final ainda está pendente: falta criar a referência executável e verificar respostas e falhas. Você pode retomar por esta seção; o texto não representa uma prática já aprovada.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 1</span>
 <ul>
 <li>FastAPI = a assinatura é a configuração: hints geram binding, validação, OpenAPI e docs.</li>
-<li>uvicorn (ASGI) segura o socket; cada request é corrotina no loop único — TODO o M02 bloco 4 se aplica.</li>
-<li><code>Depends</code> = DI por função e por request; com <code>yield</code> = scoped + Dispose; override trivial em teste.</li>
+<li>Uvicorn recebe conexões e chama a aplicação ASGI; operações bloqueantes afetam o loop em que executam. Veja concorrência no M02, bloco 5.</li>
+<li><code>Depends</code> resolve funções; <code>yield</code> organiza preparo e encerramento de recursos. Overrides permitem trocar dependências em testes.</li>
 <li>Verbos idempotentes, status codes corretos e erro padronizado são o contrato — o framework não decide isso por você.</li>
 <li>Middleware é a mesma cebola; request-id hoje, tracing no M06.</li>
 </ul>
 </div>
+<p><strong>Fontes deste bloco:</strong> <a href="https://fastapi.tiangolo.com/tutorial/dependencies/">FastAPI dependencies</a>, <a href="https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/">dependencies with yield</a>, <a href="https://fastapi.tiangolo.com/advanced/events/">lifespan</a>, <a href="https://fastapi.tiangolo.com/async/">async</a>, <a href="https://spec.openapis.org/oas/latest.html">OpenAPI</a>, <a href="https://www.rfc-editor.org/rfc/rfc9110">RFC 9110</a> e <a href="https://www.rfc-editor.org/rfc/rfc9457">RFC 9457</a>. Consultadas em 21/08/2026; documentação de framework deve ser revalidada em até 90 dias.</p>
+</section>
 <!-- ============================================ BLOCO 2 -->
-<h2>Bloco 2 · SQLAlchemy 2.0 async + Alembic</h2>
-<div class="clock">00:00–00:25 o mapa EF Core → SQLAlchemy &nbsp;|&nbsp; 00:25–01:00 modelos, sessão e unit of work &nbsp;|&nbsp; 01:00–01:30 Alembic: migrations honestas &nbsp;|&nbsp; 01:30–02:00 prática: o encurtador ganha banco</div>
+<h2 id="b02">Bloco 2 · Sessão, transação e migration</h2>
 
-<h3>Por que isso importa</h3>
-<p><strong>SQLAlchemy 2.0</strong> é o EF Core do Python — ORM maduro, tipado e, desde a 2.0, async de primeira classe. <strong>Alembic</strong> é o Migrations. A boa notícia: o modelo mental transfere quase inteiro (DbContext→Session, DbSet→select, migrations→revisions). A má: as diferenças são sutis e ficam exatamente onde async encontra lazy loading — o erro <code>MissingGreenlet</code> que TODO dev .NET encontra na primeira semana. Este bloco te faz encontrá-lo de propósito, com o antídoto na mão.</p>
+<h3 id="sec-b02-contexto-e-saida">Contexto e saída <a class="section-link" href="#sec-b02-contexto-e-saida" aria-label="Link para esta seção">#</a></h3>
+<p><strong>Pré-requisitos:</strong> bloco 1 (fronteira HTTP, <code>Depends</code> com <code>yield</code>, correlation id) e M02 (Pydantic em trust boundary, <code>asyncio</code> cooperativo, testes com caminho feliz e falha). <strong>Objetivo:</strong> decidir onde uma alteração é confirmada, o que acontece quando ela falha no meio e como o schema evolui sem perder dados. <strong>Saída observável:</strong> você descreve o ciclo de vida de uma sessão por request, o par upgrade/downgrade de uma migration e por que a constraint do banco — e não um <code>if</code> — fecha uma corrida. A execução fica reunida no <code>Laboratório guiado M03</code>, depois do bloco 8; este bloco é leitura com exemplos rotulados.</p>
 
-<div class="box net">
-<span class="lbl">Tradução .NET — o mapa completo</span>
-<table>
-<thead><tr><th>EF Core</th><th>SQLAlchemy 2.0 async</th><th>Nota</th></tr></thead>
-<tbody>
-<tr><td><code>DbContext</code></td><td><code>AsyncSession</code></td><td>unit of work + identity map, escopo por request</td></tr>
-<tr><td><code>DbSet&lt;T&gt;</code> + LINQ</td><td><code>select(Model).where(...)</code></td><td>query como expressão; sem LINQ, mas tipado</td></tr>
-<tr><td><code>SaveChangesAsync()</code></td><td><code>await session.commit()</code></td><td><code>flush</code> = enviar SQL sem commitar (pega o id gerado)</td></tr>
-<tr><td>change tracking</td><td>idem: objeto carregado é rastreado; mutou, o commit persiste</td><td>mesma mágica, mesmos sustos</td></tr>
-<tr><td><code>OnModelCreating</code>/atributos</td><td><code>Mapped[tipo]</code> + <code>mapped_column(...)</code></td><td>declarativo na classe, tipado para o mypy</td></tr>
-<tr><td><code>Include(x => x.Filhos)</code></td><td><code>options(selectinload(Model.filhos))</code></td><td><strong>obrigatório em async</strong> — lazy load implícito não existe</td></tr>
-<tr><td><code>dotnet ef migrations add X</code></td><td><code>alembic revision --autogenerate -m "x"</code></td><td>gera diff modelo↔banco; SEMPRE revise o gerado</td></tr>
-<tr><td><code>dotnet ef database update</code></td><td><code>alembic upgrade head</code></td><td><code>downgrade -1</code> desfaz (se você escreveu o down!)</td></tr>
-<tr><td>connection string em appsettings</td><td><code>DATABASE_URL</code> via Settings (M02)</td><td><code>postgresql+asyncpg://...</code> — o driver async no nome</td></tr>
-</tbody>
-</table>
-</div>
+<h3 id="sec-b02-situacao">A situação: três falhas que só o banco resolve <a class="section-link" href="#sec-b02-situacao" aria-label="Link para esta seção">#</a></h3>
+<p>O dicionário em memória do bloco 1 perde tudo ao reiniciar, aceita o mesmo slug duas vezes se dois requests chegarem juntos e não tem resposta para "a tabela precisa de uma coluna nova sem apagar as linhas". Cada sintoma aponta para um mecanismo distinto: a <strong>transação</strong> delimita o que é confirmado junto e desfaz o que falhou no meio; a <strong>constraint</strong> proíbe o estado inválido mesmo sob concorrência; a <strong>migration</strong> versiona a evolução do schema com volta declarada. Nenhum dos três vive no framework HTTP; todos vivem entre a aplicação e o PostgreSQL, mediados pelo SQLAlchemy.</p>
+<p><strong>Vocabulário mínimo, ensinado aqui porque é usado aqui.</strong> <strong>Engine</strong> é o objeto que guarda o pool de conexões com o banco e é compartilhado pelo processo. <strong>Pool</strong> é o conjunto de conexões abertas e reutilizáveis; abrir conexão TCP+TLS a cada request seria o custo dominante da API. <strong>Sessão</strong> (<code>AsyncSession</code>) é a unidade de trabalho de um fluxo: guarda os objetos tocados, acumula alterações e as envia dentro de uma transação. <strong>Transação</strong> é o bloco atômico — tudo confirma (<code>commit</code>) ou tudo desfaz (<code>rollback</code>). <strong>Migration</strong> é um script versionado com <code>upgrade</code> e <code>downgrade</code>. <strong>Constraint</strong> é a regra gravada no schema (<code>UNIQUE</code>, chave estrangeira) que o banco impõe a toda escrita, venha de onde vier.</p>
 
-<h3>Modelos e engine — o setup canônico</h3>
-<pre><code># src/shortener/db.py
+<div class="box"><span class="lbl">Referência do conceito</span><p><code>AsyncSession</code> mantém o estado de uma unidade de trabalho. <code>session.add</code> registra um objeto; <code>flush</code> envia as alterações ao banco dentro da transação aberta sem confirmá-la; <code>commit</code> confirma a transação; <code>rollback</code> desfaz o que ainda não foi confirmado. Alembic registra a evolução do schema em revisions encadeadas. Uma sessão nunca é compartilhada por tarefas concorrentes.</p></div>
+
+<h3 id="sec-b02-sessao-por-request">Uma sessão por request, um pool por processo <a class="section-link" href="#sec-b02-sessao-por-request" aria-label="Link para esta seção">#</a></h3>
+<p>O exemplo abaixo é conceitual e completo para leitura: mostra engine, modelo, mapeamento e a dependência que delimita a transação. Não é o código do laboratório e não prova comportamento contra banco real.</p>
+<pre><code># shortener/db.py — exemplo conceitual; a referência executável fica no laboratório final
 from collections.abc import AsyncIterator
 from datetime import datetime
 
@@ -312,77 +362,87 @@ async def get_session() -> AsyncIterator[AsyncSession]:
             raise</code></pre>
 <p>Repare em três decisões que valem discussão de code review:</p>
 <ul>
-<li><strong><code>expire_on_commit=False</code>:</strong> por padrão o SQLAlchemy "expira" objetos após commit (próximo acesso recarrega do banco — mais um round-trip async escondido). Em API, você quer devolver o objeto que acabou de salvar sem nova query.</li>
-<li><strong>Pool no engine, sessão por request:</strong> o engine (e seu pool de conexões) é singleton do processo; a <code>AsyncSession</code> é scoped — exatamente como AddDbContext/AddDbContextPool.</li>
-<li><strong>Commit na dependência, não no endpoint:</strong> o endpoint declara a intenção; a fronteira transaciona. É o padrão unit-of-work-por-request — igual ao middleware de transação que você já escreveu em ASP.NET.</li>
+<li><strong><code>expire_on_commit=False</code>:</strong> por padrão o SQLAlchemy "expira" os atributos dos objetos após <code>commit</code>, de modo que o próximo acesso recarrega do banco — mais um round-trip assíncrono escondido. Numa API, o comum é devolver o objeto que acabou de ser salvo sem nova consulta, por isso o laboratório desliga a expiração.</li>
+<li><strong>Pool no engine, sessão por request:</strong> o engine, com seu pool de conexões, é um singleton do processo, criado uma vez no startup. A <code>AsyncSession</code> é de escopo curto — uma por request, aberta na dependência e fechada no teardown. Compartilhar uma sessão entre tarefas concorrentes corrompe a unidade de trabalho; o laboratório prova isso com um oráculo negativo (AT-007).</li>
+<li><strong>Commit na dependência, não no endpoint:</strong> o endpoint declara a intenção (criar, buscar); a fronteira transaciona. É o padrão unidade-de-trabalho-por-request: a rota nunca chama <code>commit</code> diretamente, então nenhum caminho esquece de confirmar ou de reverter.</li>
 </ul>
 
 <div class="box warn">
-<span class="lbl">A pegadinha nº 1: lazy loading não existe em async</span>
-<p>No EF, acessar <code>pedido.Cliente</code> não carregado dispara query silenciosa (N+1, mas funciona). No SQLAlchemy async, o acesso lazy fora de contexto async explode com <code>MissingGreenlet</code> — o ORM não pode fazer I/O síncrono no meio do seu event loop (M02 bloco 4 explica exatamente por quê!). O antídoto é declarar o carregamento na query: <code>select(Pedido).options(selectinload(Pedido.itens))</code>. Isso é um RECURSO disfarçado de dor: o N+1 que no EF era silencioso aqui é impossível de ignorar — o custo de I/O fica explícito no código.</p>
+<span class="lbl">Carregamento explícito em async: a regra que impede o N+1 silencioso</span>
+<p>Neste mapeador, em contexto assíncrono, acessar um relacionamento que não foi carregado não dispara uma consulta silenciosa: falha com <code>MissingGreenlet</code>, porque o ORM não pode fazer I/O bloqueante no meio do event loop (o bloco 5 do M02 explica o mecanismo cooperativo). O antídoto é declarar o carregamento na consulta: <code>select(Link).options(selectinload(Link.clicks))</code>. O efeito colateral é didático — o custo de I/O deixa de ser invisível e passa a ser uma decisão escrita na query. O laboratório provoca o erro de propósito uma vez, para que o diagnóstico vire reflexo.</p>
 </div>
 
 <div class="box fund">
-<span class="lbl">Fundamento de engenharia · ACID e isolamento — a reciclagem de 10 anos de "o EF resolvia"</span>
+<span class="lbl">Fundamento · Atomicidade, consistência e isolamento</span>
 <ul>
-<li><strong>Atomicidade</strong> você usa via commit/rollback da dependência acima. <strong>Durabilidade</strong> é do Postgres. As que exigem o SEU cérebro: <strong>Consistência</strong> (constraints! <code>unique=True</code> no slug é a única garantia real contra duplicata — checagem em código tem race condition entre o SELECT e o INSERT) e <strong>Isolamento</strong>.</li>
-<li><strong>Isolamento na prática:</strong> Postgres default é READ COMMITTED — duas transações concorrentes incrementando <code>hits</code> com "ler, somar 1, gravar" PERDEM updates (lost update). Consertos, do mais simples ao mais forte: update atômico no banco (<code>UPDATE links SET hits = hits + 1</code> — deixe o banco somar), <code>SELECT ... FOR UPDATE</code> (lock pessimista), ou coluna de versão (lock otimista, o <code>RowVersion</code> do EF). Você vai PROVAR o lost update no bloco 6, com teste.</li>
-<li><strong>Transação curta é regra de ouro:</strong> transação aberta atravessando chamada de LLM de 2 segundos (M05!) = conexão presa, pool esgotado, API morta. Transacione o banco, não o workflow.</li>
+<li><strong>Atomicidade</strong> é o commit/rollback da dependência acima: ou todas as escritas do request confirmam, ou nenhuma. <strong>Durabilidade</strong> é garantia do PostgreSQL após o commit. As duas que exigem decisão sua: <strong>consistência</strong> e <strong>isolamento</strong>.</li>
+<li><strong>Consistência mora em constraints.</strong> <code>unique=True</code> no slug é a única garantia real contra duplicata: uma checagem "existe?" em código tem uma janela entre o SELECT e o INSERT por onde um request concorrente passa. A constraint fecha essa janela porque é verificada dentro da escrita, não antes dela.</li>
+<li><strong>Isolamento na prática:</strong> o padrão do PostgreSQL é READ COMMITTED — duas transações que fazem "ler, somar 1, gravar" sobre o mesmo contador perdem atualizações (lost update). Consertos, do mais simples ao mais forte: update atômico no banco (<code>UPDATE links SET hits = hits + 1</code> — o banco soma, não o Python), <code>SELECT ... FOR UPDATE</code> (trava pessimista) ou coluna de versão (trava otimista: grava só se a versão lida ainda for a atual). O bloco 6 prova o lost update com teste concorrente.</li>
+<li><strong>Transação curta é regra de ouro:</strong> transação aberta atravessando uma chamada lenta (uma chamada de modelo no M05, por exemplo) segura uma conexão do pool pelo tempo da chamada. Pool esgotado é API morta. Transacione o banco, nunca o workflow.</li>
 </ul>
 </div>
 
-<h3>Alembic: migrations com contrato</h3>
-<pre><code>uv add alembic
-uv run alembic init -t async migrations   # template async: env.py já preparado</code></pre>
-<p>Configure uma vez (em <code>migrations/env.py</code>): aponte <code>target_metadata = Base.metadata</code> e leia a URL do seu Settings. Daí o ciclo é o do EF:</p>
+<h3 id="sec-alembic-migrations-com-contrato">Alembic: migrations com contrato <a class="section-link" href="#sec-alembic-migrations-com-contrato" aria-label="Link para esta seção">#</a></h3>
+<p><strong>Alembic</strong> é a ferramenta que versiona o schema do banco: cada mudança é uma <strong>revision</strong>, um arquivo Python numerado e encadeado com funções <code>upgrade</code> (aplica) e <code>downgrade</code> (desfaz). O comando <code>alembic init -t async migrations</code> cria o esqueleto já preparado para engine assíncrono; a configuração única é apontar <code>target_metadata = Base.metadata</code> no <code>env.py</code> e ler a URL do banco a partir das settings do projeto. Daí o ciclo é sempre o mesmo:</p>
 <pre><code>uv run alembic revision --autogenerate -m "create links table"
 # REVISE o arquivo gerado em migrations/versions/ — autogenerate erra rename
 # (vê drop+add), não vê mudança de server_default, e não escreve backfill.
 uv run alembic upgrade head</code></pre>
-<p>Regras de sênior que valem dobrado com agentes gerando migrations: (1) migration é <strong>código revisado</strong>, nunca "confia no autogenerate"; (2) todo <code>upgrade</code> tem <code>downgrade</code> testado — rollback de deploy depende dele (bloco 7); (3) migration destrutiva (drop de coluna com dado) é um processo em 2 releases: parar de usar → depois dropar. Deploy sem downtime agradece.</p>
+<p>Três regras separam migration revisada de incidente futuro. Primeira: <strong>migration é código revisado</strong> — o <code>--autogenerate</code> escreve um rascunho comparando modelos e banco, e rascunho se revisa. Segunda: <strong>todo <code>upgrade</code> tem <code>downgrade</code> testado</strong>, porque rollback de deploy depende dele (bloco 7). Terceira: <strong>migration destrutiva</strong> (remover coluna com dado) acontece em duas releases — primeiro o código para de usar a coluna, depois outra migration a remove. E a proibição que o laboratório verifica com oráculo (AT-008): nenhum startup de produção cria schema com <code>create_all</code>; o schema nasce de migration, sempre.</p>
 
-<h3>Prática guiada · O encurtador ganha banco (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Suba o Postgres</strong> (Docker chega oficialmente no bloco 5; aqui, um container descartável é só a cobaia):
-<pre><code>docker run -d --name pg-shortener -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres:16</code></pre>
-<p><strong>Resultado esperado:</strong> <code>docker ps</code> mostra o container <code>Up</code>. <code>.env</code>: <code>APP_DATABASE_URL=postgresql+asyncpg://postgres:dev@localhost:5432/postgres</code> (e o <code>.env.example</code> junto, sempre).</p></div>
-<div class="step"><span class="n">2</span><strong>Migre:</strong> <code>uv add asyncpg</code>, crie <code>db.py</code> acima, configure o env.py, gere e aplique a revision.
-<p><strong>Resultado esperado:</strong> <code>alembic upgrade head</code> loga <code>Running upgrade -> xxxx, create links table</code>. Confira no banco: <code>docker exec -it pg-shortener psql -U postgres -c "\d links"</code> mostra a tabela com o índice único no slug.</p></div>
-<div class="step"><span class="n">3</span><strong>Troque o dict fake pela sessão real</strong> no <code>api.py</code>: <code>get_repo</code> vira <code>Depends(get_session)</code>, os endpoints usam <code>select(Link).where(Link.slug == slug)</code> e <code>session.add(...)</code>. O POST agora trata a colisão de slug: capture <code>IntegrityError</code> e devolva <strong>409</strong>.</p>
-<p><strong>Resultado esperado:</strong> POST cria (confira no psql!), GET busca, POST da mesma URL duas vezes → o segundo devolve 409 (a constraint trabalhando — não um <code>if</code> com race condition). Reinicie a API: os dados sobrevivem. O encurtador é uma aplicação de verdade agora.</p></div>
-<div class="step"><span class="n">4</span><strong>Provoque o MissingGreenlet de propósito</strong> (vacina): adicione temporariamente um modelo <code>Click</code> com FK para <code>Link</code> e um relacionamento <code>Link.clicks</code>; num endpoint, acesse <code>link.clicks</code> SEM selectinload.</p>
-<p><strong>Resultado esperado:</strong> o erro <code>MissingGreenlet ... IO attempted in unexpected place</code> no log. Agora conserte com <code>options(selectinload(Link.clicks))</code> e veja funcionar. Você levou a vacina: nunca mais vai perder 2 horas nesse erro (ele está na tabela de diagnóstico, mas agora você o CONHECE).</p></div>
+<h3 id="sec-b02-leitura-aplicada">Leitura aplicada: acompanhe um request com banco <a class="section-link" href="#sec-b02-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
+<ol>
+<li><code>POST /links</code> chega validado pelo schema do bloco 1. A dependência <code>get_session</code> abre uma <code>AsyncSession</code> — uma unidade de trabalho vazia, presa a uma conexão do pool.</li>
+<li>A rota consulta <code>select(Link).where(Link.slug == slug)</code> e adiciona o novo objeto com <code>session.add</code>. Nada foi confirmado ainda; <code>flush</code> enviaria as escritas dentro da transação aberta, sem confirmar.</li>
+<li>Se um segundo request inseriu o mesmo slug entre a consulta e a escrita, a constraint <code>UNIQUE</code> rejeita a escrita com <code>IntegrityError</code>. A rota traduz para <code>409 Conflict</code>. Nenhum <code>if</code> prévio seria capaz disso — a janela entre checar e inserir pertence a quem escreve por último, e só o banco a fecha.</li>
+<li>Se o service levanta exceção no meio, a dependência executa <code>rollback</code> e a sessão fecha sem deixar resíduo (AT-003). Se tudo corre bem, <code>commit</code> confirma atomicamente.</li>
+<li>Semanas depois, o time precisa de uma coluna nova. Uma revision Alembic descreve <code>upgrade</code> e <code>downgrade</code>; <code>upgrade head</code> num banco vazio e <code>downgrade</code> de volta provam o caminho de ida e volta (AT-005).</li>
+</ol>
+<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — subir PostgreSQL, gerar e aplicar a migration, trocar o armazenamento em memória pela sessão real e provocar cada falha — fica no <code>Laboratório guiado M03</code>, depois do bloco 8, com resultado esperado e diagnóstico por passo.</p>
+
+<div class="box warn">
+<span class="lbl">Contraste: o que parece funcionar e quebra em produção</span>
+<ul>
+<li><strong><code>if exists: 409</code> antes de inserir</strong> parece prevenir duplicata, mas duas tarefas passam pela checagem antes de qualquer escrita — ambas inserem, uma quebra sem tratamento ou, pior, ambas passam sem constraint. Constraint + tradução de <code>IntegrityError</code> é o único fechamento.</li>
+<li><strong><code>create_all</code> no startup</strong> parece simplificar o deploy, mas cria schema sem histórico, sem revisão e sem volta — e diverge do banco real na primeira alteração manual. Migration versionada é o único caminho de ida e volta.</li>
+<li><strong>Sessão global reutilizada</strong> parece economizar objetos, mas mistura unidades de trabalho de requests distintos e falha sob concorrência. Sessão nova por request, engine compartilhado.</li>
+</ul>
+</div>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 2</span>
 <ul>
-<li>AsyncSession = DbContext (UoW + tracking, escopo request via dependência com yield; commit na fronteira).</li>
-<li>Lazy load async não existe: eager explícito com selectinload — o N+1 vira decisão visível, não acidente.</li>
-<li>Consistência mora em constraint (unique, FK); checagem só em código = race condition. 409 vem do IntegrityError.</li>
-<li>Lost update é real em READ COMMITTED: some no banco, ou lock, ou versão. Transação curta, sempre — LLM fora dela.</li>
-<li>Alembic: autogenerate é rascunho, revisão é obrigatória, downgrade testado, destrutivo em 2 releases.</li>
+<li>Sessão é unidade de trabalho de escopo curto; engine e pool são do processo. Uma sessão por request, nunca compartilhada entre tarefas.</li>
+<li>Commit e rollback moram na dependência com <code>yield</code>: a rota declara intenção, a fronteira confirma ou desfaz. Transação curta — nunca atravessando I/O lento externo.</li>
+<li>Consistência sob concorrência mora na constraint; checagem prévia em código tem janela de corrida. <code>409</code> vem da tradução de <code>IntegrityError</code>.</li>
+<li>Em async, relacionamento se carrega por declaração explícita (<code>selectinload</code>); o erro <code>MissingGreenlet</code> é o sintoma do acesso implícito.</li>
+<li>Alembic: autogenerate é rascunho revisado, todo upgrade tem downgrade testado, destrutivo em duas releases, nunca <code>create_all</code> em produção.</li>
 </ul>
 </div>
+<p><strong>Fontes deste bloco:</strong> <a href="https://docs.sqlalchemy.org/en/21/orm/extensions/asyncio.html">SQLAlchemy asyncio</a>, <a href="https://docs.sqlalchemy.org/en/20/orm/session_basics.html">Session basics</a>, <a href="https://alembic.sqlalchemy.org/en/latest/cookbook.html">Alembic cookbook</a>, <a href="https://www.postgresql.org/docs/current/mvcc.html">PostgreSQL MVCC</a> e <a href="https://www.postgresql.org/docs/current/tutorial-transactions.html">PostgreSQL transactions</a>. Consultadas em 21/08/2026; documentação de framework e banco deve ser revalidada em até 90 dias.</p>
 <!-- ============================================ BLOCO 3 -->
-<h2>Bloco 3 · Postgres para valer: índices, EXPLAIN, transações, JSONB</h2>
-<div class="clock">00:00–00:30 índices e o modelo mental de custo &nbsp;|&nbsp; 00:30–01:05 EXPLAIN ANALYZE: ler o plano &nbsp;|&nbsp; 01:05–01:40 JSONB e por que ele salva produto de IA &nbsp;|&nbsp; 01:40–02:00 prática de medição</div>
+<h2 id="b03">Bloco 3 · Postgres para valer: índices, planos, transações e JSONB</h2>
 
-<h3>Por que isso importa</h3>
-<p>Você usou SQL Server por dez anos, mas — seja honesto — quantas vezes o DBA resolveu? No mundo para onde você está indo não há DBA: <strong>você é o DBA</strong>. E o Postgres é o banco do ecossistema de IA por um motivo composto: é excelente banco relacional E, com JSONB + pgvector (M07), elimina duas peças de infraestrutura (document store e vector store) que você teria que operar separadamente. Este bloco te dá o kit de sobrevivência: prever custo de query, ler um plano de execução e usar JSONB sem transformar o banco num pântano sem schema.</p>
+
+<h3 id="sec-por-que-isso-importa-2">Por que isso importa <a class="section-link" href="#sec-por-que-isso-importa-2" aria-label="Link para esta seção">#</a></h3>
+<p>O encurtador funciona com poucos links. Com centenas de milhares de linhas, três perguntas passam a decidir cada endpoint: existe um índice que sirva ao predicado da consulta, o plano de execução confirma que ele é usado e os atributos de formato variável têm um lar que não destrua o schema. Sem essas respostas, a API degrada em silêncio — latência que cresce com a tabela, contadores que perdem increments sob concorrência e uma coluna nova por semana para cada variação de payload. Este bloco ensina a prever o custo antes do deploy, a ler o plano depois dele e a separar o que é coluna relacional do que é documento.</p>
 
 <div class="box fund">
-<span class="lbl">Fundamento de engenharia · Índices — a reciclagem do que o DBA sabia</span>
+<span class="lbl">Fundamento · Índices</span>
 <ul>
-<li><strong>B-tree é o default e serve para <code>=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>ORDER BY</code>, prefixo de LIKE.</strong> Pense numa árvore de busca: O(log n) para achar, mas cada INSERT/UPDATE paga a manutenção de TODOS os índices da tabela. Índice não é grátis — é troca de escrita por leitura.</li>
-<li><strong>Índice composto (a, b) serve consultas por (a) e (a,b) — não por (b).</strong> A ordem das colunas segue a seletividade E o padrão de consulta. É o mesmo do SQL Server; só recicle.</li>
-<li><strong>Índice parcial</strong> (<code>WHERE status = 'active'</code>) e <strong>índice de expressão</strong> (<code>ON lower(email)</code>) são as armas subusadas — indexam só o que se consulta, mantendo-os pequenos.</li>
-<li><strong>Seletividade decide tudo:</strong> índice em coluna com 3 valores distintos raramente compensa (o planner vai de seq scan mesmo); em coluna quase-única, quase sempre. O planner usa estatísticas (<code>ANALYZE</code>) — estatística velha = plano ruim.</li>
-<li><strong>GIN</strong> é o índice para conteúdo "dentro" da coluna: arrays, full-text e <strong>JSONB</strong> (abaixo). B-tree acha A LINHA; GIN acha O QUE HÁ NELA.</li>
+<li><strong>B-tree é o padrão e serve a <code>=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>ORDER BY</code> e prefixo de LIKE.</strong> Pense numa árvore de busca: O(log n) para localizar, mas cada INSERT/UPDATE paga a manutenção de TODOS os índices da tabela. Índice não é grátis — é troca de escrita por leitura.</li>
+<li><strong>Índice composto (a, b) serve a consultas por (a) e (a,b) — não por (b).</strong> A ordem das colunas segue a seletividade e o padrão de consulta: a coluna mais filtrada primeiro.</li>
+<li><strong>Índice parcial</strong> (<code>WHERE status = 'active'</code>) e <strong>índice de expressão</strong> (<code>ON lower(email)</code>) indexam só o que se consulta, mantendo-se pequenos.</li>
+<li><strong>Seletividade decide tudo:</strong> índice em coluna com pouquíssimos valores distintos raramente compensa (o planejador escolhe varredura sequencial mesmo assim); em coluna quase-única, quase sempre. O planejador usa estatísticas (<code>ANALYZE</code>) — estatística desatualizada gera plano ruim.</li>
+<li><strong>GIN</strong> é o índice para o conteúdo "dentro" da coluna: arrays, texto integral e <strong>JSONB</strong> (abaixo). B-tree localiza A LINHA; GIN localiza O QUE HÁ NELA.</li>
 </ul>
 </div>
 
-<h3>EXPLAIN ANALYZE: o raio-X que você vai rodar toda semana</h3>
+<h3 id="sec-explain-analyze-o-raio-x-que-voce-vai-rodar-toda-semana">EXPLAIN: o raio-X da consulta <a class="section-link" href="#sec-explain-analyze-o-raio-x-que-voce-vai-rodar-toda-semana" aria-label="Link para esta seção">#</a></h3>
+<p><strong>EXPLAIN</strong> é o comando do PostgreSQL que mostra o plano que o planejador escolheu para uma consulta, sem executá-la. Com a opção <strong>ANALYZE</strong>, ele executa e acrescenta os tempos reais. A leitura é sempre a mesma comparação: o que o planejador estimou contra o que realmente aconteceu.</p>
 <pre><code>EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM links WHERE slug = 'abc123';</code></pre>
+<p>Saída ilustrativa (exemplo variável — tempos e custos dependem de hardware, volume e estatísticas; o formato dos campos é o estável):</p>
 <p>Como ler o resultado, de baixo para cima (nós internos consomem filhos):</p>
 <pre><code>Index Scan using ix_links_slug on links  (cost=0.29..8.31 rows=1 width=64)
                                           (actual time=0.041..0.043 rows=1 loops=1)
@@ -390,15 +450,16 @@ SELECT * FROM links WHERE slug = 'abc123';</code></pre>
 Planning Time: 0.180 ms
 Execution Time: 0.071 ms</code></pre>
 <ul>
-<li><strong><code>cost=0.29..8.31</code></strong>: estimativa do planner (startup..total, em unidades abstratas). <strong><code>actual time</code></strong>: a realidade, em ms. Quando estimativa e realidade divergem muito (rows estimado 1, real 80.000), o problema é estatística — <code>ANALYZE tabela;</code>.</li>
-<li><strong>Os quatro nós que resolvem 90% das leituras:</strong> <code>Seq Scan</code> (leu a tabela inteira — ok em tabela pequena, alarme em grande), <code>Index Scan</code> (foi pela árvore), <code>Index Only Scan</code> (respondeu SÓ com o índice — o covering index), <code>Nested Loop / Hash Join</code> (como o join foi feito; nested loop com loops=50000 é o N+1 do plano).</li>
-<li><strong><code>BUFFERS</code></strong> mostra páginas lidas de cache (<code>shared hit</code>) vs. disco (<code>read</code>) — a diferença entre 2 ms e 200 ms da mesma query.</li>
+<li><strong><code>cost=0.29..8.31</code></strong>: estimativa do planejador (custo de partida..custo total, em unidades abstratas). <strong><code>actual time</code></strong>: a realidade, em ms. Quando estimativa e realidade divergem muito (linhas estimadas 1, reais 80.000), o problema é estatística — <code>ANALYZE tabela;</code>.</li>
+<li><strong>Os quatro nós que resolvem a maioria das leituras:</strong> <code>Seq Scan</code> (leu a tabela inteira — aceitável em tabela pequena, alarme em tabela grande), <code>Index Scan</code> (percorreu a árvore), <code>Index Only Scan</code> (respondeu só com o índice, sem visitar a tabela) e <code>Nested Loop / Hash Join</code> (estratégia de junção; nested loop com milhares de iterações denuncia um N+1 no plano).</li>
+<li><strong><code>BUFFERS</code></strong> mostra páginas lidas de cache (<code>shared hit</code>) contra disco (<code>read</code>) — a diferença entre uma consulta de milissegundos e a mesma consulta em centenas de milissegundos.</li>
 </ul>
+<p>A decisão que o plano sustenta (AT-009): o predicado crítico — busca por slug, listagem recente por data — usa o índice escolhido, e isso se lê no nó do plano, não no cronômetro. Tempo absoluto varia por máquina; presença do nó <code>Index Scan</code> sobre o índice certo é o invariante.</p>
 
-<h3>JSONB: por que ele salva produto de IA</h3>
-<p>Produto de IA produz dado semi-estruturado o tempo todo: resposta de LLM com campos que variam por versão de prompt, metadados de execução (modelo, tokens, custo, latência), configurações por tenant. Modelar cada variação como coluna = migration por semana; jogar tudo num document store = perder joins, transações e o resto do seu modelo relacional. <strong>JSONB é a terceira via:</strong> colunas relacionais para o que é estável e consultado sempre; UMA coluna JSONB para a cauda variável — indexável com GIN, consultável com operadores:</p>
+<h3 id="sec-jsonb-por-que-ele-salva-produto-de-ia">JSONB: coluna relacional para o estável, documento para o variável <a class="section-link" href="#sec-jsonb-por-que-ele-salva-produto-de-ia" aria-label="Link para esta seção">#</a></h3>
+<p>Sistemas que consomem modelos produzem dado semiestruturado com frequência: respostas com campos que variam por versão, metadados de execução (modelo, tokens, custo, latência), configurações por tenant. Modelar cada variação como coluna significa uma migration por semana; despejar tudo num armazenamento sem schema significa perder junções, transações e validação. <strong>JSONB é a terceira via do PostgreSQL:</strong> colunas relacionais para o que é estável e consultado sempre; uma coluna JSONB para a cauda variável — indexável com GIN e consultável com operadores:</p>
 
-<pre><code>-- o padrão do Capstone: núcleo relacional + cauda flexível
+<pre><code>-- exemplo variável: o padrão núcleo relacional + cauda flexível
 CREATE TABLE analises (
     id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     tenant_id   bigint NOT NULL REFERENCES tenants(id),
@@ -415,125 +476,128 @@ SELECT resultado->>'modelo' FROM analises;                     -- extrai como te
 SELECT * FROM analises WHERE resultado @> '{"modelo": "gpt"}'; -- contém (usa o GIN!)
 SELECT * FROM analises WHERE resultado ? 'warnings';           -- tem a chave?</code></pre>
 
-<div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>JSONB ≈ a coluna <code>nvarchar(max)</code> com JSON do SQL Server, MAS: binário decomposto (não re-parseia a cada consulta), com operadores nativos e índice GIN que torna <code>@&gt;</code> tão rápido quanto um WHERE indexado. No EF você usava <code>OwnsOne().ToJson()</code>; aqui o SQLAlchemy mapeia <code>Mapped[dict[str, Any]] = mapped_column(JSONB)</code> — e o Pydantic (M02) valida a forma na fronteira da aplicação, que é onde schema de JSONB deve morar. <strong>Regra de sênior:</strong> o que você consulta/filtra/agrega em TODA query vira coluna; o que varia por caso fica no JSONB. JSONB de 50 KB por linha consultado por chave única é design errado — é um document store fingindo ser tabela.</p>
-</div>
+<div class="box"><span class="lbl">Referência do conceito</span><p>JSONB armazena documentos JSON em representação própria do PostgreSQL e oferece operadores de consulta. O formato não elimina a necessidade de schema, validação e índices: o que se consulta sempre vira coluna; o schema do documento mora no Pydantic; o acesso por chave usa índice GIN. Usar JSONB como substituto do schema relacional — sem validação e sem índice — troca uma migration por semana por consultas sem plano estável (AT-011).</p></div>
 
-<h3>Prática guiada · Medir, não achar (35 min)</h3>
-<div class="step"><span class="n">1</span><strong>Povoe massa de teste</strong> — 500 mil links falsos direto no banco (SQL puro é a ferramenta certa para seed em massa):
-<pre><code>docker exec -it pg-shortener psql -U postgres -c "
-INSERT INTO links (slug, url, hits, created_at)
-SELECT md5(g::text), 'https://exemplo.com/' || g,
-       (random()*1000)::int, now() - (g || ' seconds')::interval
-FROM generate_series(1, 500000) g;"</code></pre>
-<p><strong>Resultado esperado:</strong> <code>INSERT 0 500000</code> em poucos segundos. <code>generate_series</code> é o gerador de massa nativo — guarde-o.</p></div>
-<div class="step"><span class="n">2</span><strong>Compare os planos.</strong> Rode <code>EXPLAIN (ANALYZE, BUFFERS)</code> para: (a) busca por slug (indexado); (b) busca por <code>url</code> (não indexado); (c) <code>ORDER BY created_at DESC LIMIT 20</code> (não indexado).</p>
-<p><strong>Resultado esperado:</strong> (a) Index Scan, &lt;0,1 ms; (b) Seq Scan (possivelmente Parallel), dezenas/centenas de ms varrendo 500k linhas; (c) Seq Scan + Sort — o pior padrão de "listagem recente" sem índice. Anote os três tempos.</p></div>
-<div class="step"><span class="n">3</span><strong>Conserte com índice e re-meça:</strong>
-<pre><code>CREATE INDEX ix_links_created_at ON links (created_at DESC);</code></pre>
-<p><strong>Resultado esperado:</strong> a query (c) cai para Index Scan de ~1 ms — centenas de vezes mais rápido. Agora meça o custo do outro lado: <code>\timing on</code> e um INSERT único antes/depois de criar mais 3 índices dummy — a escrita fica mensuravelmente mais lenta. Você acabou de ver a troca leitura×escrita em números.</p></div>
-<div class="step"><span class="n">4</span><strong>JSONB com GIN:</strong> adicione (via Alembic! pratique o ciclo) a coluna <code>meta jsonb</code> em links, povoe <code>{"origem": "api", "campanha": "c" || (g % 50)}</code> para todos, e compare <code>WHERE meta @&gt; '{"campanha":"c7"}'</code> sem e com o índice GIN.</p>
-<p><strong>Resultado esperado:</strong> Seq Scan de centenas de ms → Bitmap Index Scan de poucos ms. E o aprendizado de processo: a migration da coluna + índice passou pelo Alembic com downgrade escrito, como manda o bloco 2.</p></div>
+<h3 id="sec-b03-leitura-aplicada">Leitura aplicada: do sintoma ao conserto <a class="section-link" href="#sec-b03-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
+<ol>
+<li>A listagem "links recentes" ordena por <code>created_at</code> sem índice. O plano mostra <code>Seq Scan + Sort</code>: a tabela inteira lida e ordenada para devolver 20 linhas. O conserto é um índice <code>(created_at DESC)</code>; o plano passa a <code>Index Scan</code>. O preço aparece do outro lado: cada índice novo torna cada escrita mensuravelmente mais lenta — a troca leitura×escrita, decidida por predicado, não por hábito.</li>
+<li>O contador <code>hits</code> é incrementado como "ler, somar 1, gravar" em Python. Sob concorrência em READ COMMITTED, duas transações leem o mesmo valor e uma sobrescreve a outra: updates perdidos sem nenhum erro. O conserto é somar no banco (<code>UPDATE links SET hits = hits + 1</code>), onde a operação é atômica. O laboratório prova os dois comportamentos com um teste concorrente (AT-010).</li>
+<li>Metadados de origem e campanha chegam por link e variam a cada trimestre. Viram coluna <code>meta</code> JSONB com índice GIN e consulta por contenção (<code>@&gt;</code>), adicionada via migration Alembic com downgrade — o ciclo do bloco 2 aplicado a um tipo novo.</li>
+</ol>
+<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — popular massa de teste, comparar planos antes e depois do índice, provocar o lost update e consultar o JSONB com e sem GIN — fica no <code>Laboratório guiado M03</code>, depois do bloco 8, com resultado esperado e diagnóstico por passo.</p>
+
+<div class="box warn">
+<span class="lbl">Contraste: medir uma vez não é provar para sempre</span>
+<ul>
+<li><strong>Plano lido, estatística velha:</strong> um <code>EXPLAIN</code> de hoje não garante o plano de amanhã — sem <code>ANALYZE</code> após carga relevante, o planejador decide com mapa desatualizado.</li>
+<li><strong>Índice em tudo:</strong> cada índice acelera uma leitura e taxa todas as escritas. Índice sem predicado que o use é custo puro.</li>
+<li><strong>JSONB sem validação:</strong> documento sem schema Pydantic e sem GIN acumula chaves inconsistentes e consultas sequenciais — o pântano sem schema que o tipo prometia evitar.</li>
+</ul>
+</div>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 3</span>
 <ul>
-<li>Sem DBA: você prevê custo (B-tree, composto, parcial, GIN), lê plano (Seq vs Index vs Index-Only, estimado vs real) e mede com BUFFERS.</li>
-<li>Índice troca escrita por leitura; seletividade decide se compensa; estatística velha = plano ruim.</li>
-<li>JSONB = núcleo relacional + cauda variável indexável. O que se consulta sempre vira coluna; schema do JSON mora no Pydantic.</li>
-<li>Postgres é o banco do curso porque JSONB hoje + pgvector no M07 = menos infraestrutura para operar.</li>
-<li>Reflexo novo: query nova em tabela grande → EXPLAIN antes do deploy, não depois do incidente.</li>
+<li>Prever custo é escolher índice pelo predicado (B-tree, composto, parcial, expressão, GIN) sabendo que escrita paga cada índice.</li>
+<li>Ler plano é comparar estimativa e realidade (nós, linhas, buffers); o invariante é o nó certo sobre o índice certo, não o tempo absoluto.</li>
+<li>JSONB recebe a cauda variável com validação e GIN; o que se consulta sempre é coluna relacional.</li>
+<li>Lost update em READ COMMITTED se corrige somando no banco; concorrência se prova com teste, não com argumento.</li>
+<li>Reflexo novo: consulta nova em tabela grande passa por <code>EXPLAIN</code> antes do deploy, não depois do incidente.</li>
 </ul>
 </div>
+<p><strong>Fontes deste bloco:</strong> <a href="https://www.postgresql.org/docs/current/using-explain.html">PostgreSQL EXPLAIN</a>, <a href="https://www.postgresql.org/docs/current/sql-analyze.html">ANALYZE</a>, <a href="https://www.postgresql.org/docs/current/datatype-json.html">PostgreSQL JSON types</a>, <a href="https://www.postgresql.org/docs/current/mvcc.html">PostgreSQL MVCC</a> e <a href="https://www.postgresql.org/docs/current/tutorial-transactions.html">PostgreSQL transactions</a>. Consultadas em 21/08/2026; documentação de banco deve ser revalidada em até 90 dias.</p>
 <!-- ============================================ BLOCO 4 -->
-<h2>Bloco 4 · Estrutura que escala: <code>api/ core/ services/ repositories/</code></h2>
-<div class="clock">00:00–00:25 por que não é MVC &nbsp;|&nbsp; 00:25–01:00 as camadas e as regras de import &nbsp;|&nbsp; 01:00–01:40 prática: reestruturar o encurtador &nbsp;|&nbsp; 01:40–02:00 onde a IA encaixa nisso</div>
+<h2 id="b04">Bloco 4 · Fronteiras internas: camadas e guardrails</h2>
 
-<h3>Por que isso importa</h3>
-<p>Até aqui o encurtador vive em dois arquivos — ótimo para aprender, péssimo para crescer. Este bloco define a estrutura que o Capstone usa até o fim do curso. Ela importa DOBRADO na era dos agentes: <strong>estrutura previsível é context engineering</strong> — um agente acha o lugar certo de mexer num projeto bem estruturado com um décimo do contexto que gasta num monolito de arquivos gigantes. A spec do M01 dizia "restrições de camada"; este bloco é onde elas ganham forma física.</p>
 
-<h3>A estrutura e o contrato de cada pasta</h3>
-<pre><code>src/app/
-├── api/                # HTTP: routers, DTOs de request/response, dependências
-│   ├── routers/        #   um arquivo por recurso: links.py, health.py
-│   └── deps.py         #   Depends compartilhados (sessão, auth, paginação)
-├── core/               # o "kernel": settings, erros de domínio, logging
-├── models/             # entidades SQLAlchemy (o schema do banco)
-├── schemas/            # contratos Pydantic (a fronteira — M02 bloco 3)
-├── services/           # regra de negócio: orquestra repos, decide, transaciona
-├── repositories/       # acesso a dados: queries SQLAlchemy, NADA de regra
-└── workers/            # jobs assíncronos fora do ciclo request/response</code></pre>
+<h3 id="sec-por-que-isso-importa-3">Por que isso importa <a class="section-link" href="#sec-por-que-isso-importa-3" aria-label="Link para esta seção">#</a></h3>
+<p>Até aqui o encurtador vive em módulos planos — suficiente para aprender, frágil para crescer. Quando a regra de negócio mora na rota, cada endpoint novo duplica decisão; quando a rota importa o banco diretamente, trocar persistência exige reescrever HTTP; quando nada verifica a estrutura, ela decai no primeiro prazo apertado. Este bloco define as fronteiras que o laboratório usa daqui em diante: o que cada camada pode importar, como a aplicação troca a infraestrutura sem mudar de regra e como uma regra de arquitetura vira verificação executável em vez de convenção oral.</p>
 
-<p>O que cada camada PODE importar é o contrato inteiro — desenhe a seta e ela só aponta para baixo:</p>
+<h3 id="sec-b04-contexto-e-saida">Contexto e saída <a class="section-link" href="#sec-b04-contexto-e-saida" aria-label="Link para esta seção">#</a></h3>
+<p><strong>Pré-requisitos:</strong> blocos 1–3 (contrato HTTP, sessão por request, constraints e índices). <strong>Objetivo:</strong> separar tradução HTTP, decisão de aplicação e acesso a dados em camadas com direção de import explícita, e tornar essa direção verificável por teste. <strong>Saída observável:</strong> você enuncia o que cada camada pode importar, demonstra a troca da infraestrutura por override sem tocar na regra e aponta onde a decisão está registrada (ADR). A execução fica no <code>Laboratório guiado M03</code>; este bloco é leitura.</p>
+
+<h3 id="sec-a-estrutura-e-o-contrato-de-cada-pasta">A estrutura e o contrato de cada pacote <a class="section-link" href="#sec-a-estrutura-e-o-contrato-de-cada-pasta" aria-label="Link para esta seção">#</a></h3>
+<pre><code>src/link_shortener/
+├── api/                # HTTP: app, rotas, tradução erro de domínio → status
+├── services/           # regra: valida, orquestra repositório, decide
+├── repositories/       # acesso a dados: queries, NADA de regra
+├── composition.py      # raiz de composição: liga sessão → repositório
+├── domain.py           # contratos e validações puras da fronteira
+├── errors.py           # tradução erro de persistência → erro de domínio
+├── counters.py         # políticas de incremento (ingênuo vs. atômico)
+├── models.py           # entidades SQLAlchemy (o schema do banco)
+└── db.py               # engine, sessões, fronteira transacional</code></pre>
+
+<p>O contrato inteiro é a direção dos imports — a seta só aponta para baixo:</p>
 <ul>
-<li><strong><code>api</code></strong> importa services e schemas. NUNCA repositories direto (a tentação vai aparecer no CRUD simples; resista — o dia que o CRUD ganhar regra, ela terá lugar) e NUNCA models (entidade de banco não vaza para HTTP — o campo <code>tenant_id</code> exposto por preguiça é o vazamento do M12).</li>
-<li><strong><code>services</code></strong> importa repositories, models, schemas, core. É o único lugar com decisão de negócio; recebe e devolve tipos de domínio, não Request/Response — service que importa FastAPI está vazando HTTP para dentro.</li>
-<li><strong><code>repositories</code></strong> importa models e core. Query e persistência, zero regra ("se status for X então..." em repository é regra fugida de casa).</li>
-<li><strong><code>core</code></strong> não importa NINGUÉM das camadas acima. É a base da pirâmide.</li>
+<li><strong><code>api</code></strong> importa services, domain e errors. NUNCA repositories (a tentação aparece no CRUD simples; no dia em que o CRUD ganha regra, ela já tem lugar) e NUNCA models nem SQLAlchemy (entidade de banco não vaza para HTTP — um campo interno exposto por preguiça vira vazamento no M12).</li>
+<li><strong><code>services</code></strong> importa repositories (via protocolo), domain e errors. É o único lugar com decisão; recebe e devolve tipos de domínio, não Request/Response — service que importa FastAPI vazou HTTP para dentro.</li>
+<li><strong><code>repositories</code></strong> importa models e o necessário de SQLAlchemy. Query e persistência, zero regra ("se status for X então..." em repository é regra fugida de casa).</li>
+<li>A <strong>raiz de composição</strong> (<code>composition.py</code>) é a única exceção documentada: ela liga a sessão ao repositório concreto para a rota. Todo o resto só conhece contratos.</li>
+<li><strong><code>domain</code> e <code>errors</code></strong> não importam framework nenhum. São a base da pirâmide: testáveis sem banco, sem HTTP, sem container.</li>
 </ul>
 
-<div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É a sua Clean/Onion Architecture de sempre — Api/Application/Domain/Infrastructure — com duas diferenças pragmáticas do mundo Python: (1) sem projetos separados nem <code>.sln</code>: a fronteira é convenção de import, não fronteira de assembly — e por isso o lint (import-linter, ou as regras de isolamento do ruff) assume o papel que o compilador fazia de graça; (2) menos interface cerimonial: repository é classe concreta; quando precisar de dublê, o <code>Protocol</code> (M02) define o contrato NO CONSUMIDOR — sem projeto Abstractions, sem 40 interfaces de um método.</p>
-</div>
+<div class="box"><span class="lbl">Referência do conceito</span><p>Em Python, os imports tornam dependências entre módulos observáveis: o sistema de imports resolve nomes a partir de pacotes, e qualquer import proibido aparece como texto no fonte. Uma regra executável pode varrer a árvore sintática e rejeitar import de infraestrutura no domínio. <code>Protocol</code> descreve o contrato necessário ao consumidor sem herdar implementação; a composição escolhe qual objeto atende ao protocolo. Testes demonstram que substituir o adapter preserva o comportamento.</p></div>
 
 <div class="box fund">
-<span class="lbl">Fundamento de engenharia · Coesão, acoplamento e a Dependency Rule — a reciclagem</span>
+<span class="lbl">Fundamento · Coesão, acoplamento e direção de dependência</span>
 <ul>
-<li><strong>Coesão alta:</strong> o que muda junto, mora junto. <strong>Acoplamento baixo:</strong> o que muda separado, depende pouco. Toda arquitetura em camadas é só isso operacionalizado.</li>
-<li><strong>Dependency Rule (Clean Architecture):</strong> dependências apontam para dentro — o domínio não conhece o HTTP nem o banco. O par api→service→repository é a versão pragmática; a versão purista (domínio sem NENHUMA dependência) você adota quando o custo se justificar. Saber ONDE relaxar a regra é o que diferencia sênior de fanático.</li>
-<li><strong>Stable Dependencies Principle:</strong> dependa na direção do que é mais estável. <code>core</code> é o mais estável (muda pouco, todos dependem); <code>api</code> é o mais volátil (muda sempre, ninguém depende dele). Se você inverter — um <code>core</code> importando <code>api</code> — cada mudança de rota sacode a base inteira. <em>Gancho:</em> no M10 você vai CALCULAR isso (instabilidade I, abstratividade A, distância da main sequence) sobre o grafo real de um sistema — a régua numérica destes princípios.</li>
+<li><strong>Coesão alta:</strong> o que muda junto, mora junto. <strong>Acoplamento baixo:</strong> o que muda separado, depende pouco. Camadas são essa ideia operacionalizada: cada pacote tem um motivo para mudar.</li>
+<li><strong>Direção para dentro:</strong> dependências apontam das bordas (HTTP, banco) para o centro (domínio, regras). O domínio não conhece HTTP nem banco; a versão pragmática admite o service conhecer o protocolo do repositório, nunca a implementação. A regra vale o custo quando a troca de adapter — provada em teste — continua possível.</li>
+<li><strong>Dependência estável:</strong> dependa na direção do que muda pouco. <code>domain</code> muda raramente e todos dependem dele; <code>api</code> muda sempre e ninguém depende dela. Inverter a seta faz cada mudança de rota sacudir a base.</li>
 </ul>
 </div>
 
-<h3>Prática guiada · Reestruturar o encurtador (40 min)</h3>
-<p>Exercício de SDD completo — você vai usar o kit do M01, porque refatoração estrutural é exatamente onde agente sem spec destrói:</p>
-<div class="step"><span class="n">1</span><strong>Spec primeiro:</strong> <code>docs/spec/005-restructure/</code> — o prd é curto (mover, não mudar comportamento: os testes atuais DEVEM passar sem edição); a spec técnica é a estrutura acima com as regras de import explícitas; o plan move uma camada por etapa (schemas → models+repositories → services → api), com <code>bash check.sh</code> + <code>pytest</code> como verificação de cada etapa.</p>
-<p><strong>Resultado esperado:</strong> <code>sdd_check.py</code> verde. Repare que "os testes passam sem edição" é o critério de refatoração honesta — se um teste precisou mudar, comportamento mudou.</p></div>
-<div class="step"><span class="n">2</span><strong>Execute com o agente, etapa por etapa.</strong> Na etapa dos services, a regra de negócio existente (gerar slug, tratar colisão) sai do router e vira <code>LinkService.criar(url) -> Link</code>; o router vira tradução HTTP pura (chama service, mapeia exceção de domínio para status code).</p>
-<p><strong>Resultado esperado por etapa:</strong> gate verde, commit atômico. Ao final, o <code>api/routers/links.py</code> tem ~30 linhas e zero import de sqlalchemy.</p></div>
-<div class="step"><span class="n">3</span><strong>Torne a regra mecânica</strong> (M01: inegociável vira exit code): <code>uv add --dev import-linter</code> e configure no pyproject:
-<pre><code>[tool.importlinter]
-root_package = "app"
+<h3 id="sec-b04-override">Override: trocar a infraestrutura sem tocar na regra <a class="section-link" href="#sec-b04-override" aria-label="Link para esta seção">#</a></h3>
+<p>O service recebe um repositório que atende ao protocolo — no laboratório, a implementação SQLAlchemy; no teste, um fake em memória com o mesmo comportamento. Nada na regra muda entre os dois: a construção escolhe o objeto, a lógica só usa o contrato. No nível HTTP, o mesmo princípio aparece como <code>dependency_overrides</code>: a aplicação real atende requests com a sessão de teste injetada, sem startup alternativo e sem condicional de ambiente. É assim que AT-015 se prova — mesma regra, duas infraestruturas, mesmos resultados.</p>
 
-[[tool.importlinter.contracts]]
-name = "layers"
-type = "layers"
-layers = ["app.api", "app.services", "app.repositories", "app.core"]</code></pre>
-<p>Adicione <code>uv run lint-imports</code> ao <code>check.sh</code>. <strong>Resultado esperado:</strong> tudo verde. Agora sabote: importe um repository dentro de um router e rode de novo — <code>Contracts: 1 broken</code>, exit code 1. A arquitetura agora tem guardrail: nem você às pressas, nem um agente confiante conseguem furá-la silenciosamente.</p></div>
+<h3 id="sec-b04-guardrail">Guardrail: arquitetura com exit code <a class="section-link" href="#sec-b04-guardrail" aria-label="Link para esta seção">#</a></h3>
+<p>Convenção oral decai; verificação executável permanece. O laboratório varre a árvore sintática dos pacotes e rejeita imports proibidos: <code>api</code> não toca repositories nem models (a sessão atravessa como valor opaco da dependência); services não toca FastAPI, SQLAlchemy nem models; repositories não toca FastAPI; o núcleo não toca framework nenhum. Um import ilegal quebra a suíte com a violação apontada (AT-013/AT-014). O teste inclui seu próprio controle negativo — um trecho violador sintético que o verificador deve acusar — para que o oráculo não aprove tudo por acidente.</p>
+
+<h3 id="sec-b04-leitura-aplicada">Leitura aplicada: seguir uma criação de ponta a ponta <a class="section-link" href="#sec-b04-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
+<ol>
+<li><code>POST /links</code> chega à rota em <code>api</code>, que extrai slug e URL e chama o service. Nenhum SQL existe neste nível.</li>
+<li>O service valida pelo <code>domain</code> (422 se inválido), pede ao repositório via protocolo e traduz violação de unicidade em conflito (409). A decisão "criar" e o mapeamento de erro moram aqui.</li>
+<li>O repositório executa <code>select</code>/<code>add</code> na sessão que a dependência abriu. Se a constraint rejeita a escrita, o erro sobe já traduzido pelo <code>errors</code>.</li>
+<li>A resposta volta como contrato de saída; a entidade do banco nunca cruza a fronteira. Trocar o repositório SQLAlchemy pelo fake não altera nenhuma dessas linhas — só a construção.</li>
+</ol>
+<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — service, repositório, app com override e guardrail verde — fica no <code>Laboratório guiado M03</code>, depois do bloco 8. A decisão de fronteiras, com custo e condição de revisão, está registrada no ADR do laboratório (AT-016).</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 4</span>
 <ul>
-<li>api → services → repositories → core; setas só para baixo; models/schemas são vocabulário, não camada de passagem.</li>
-<li>Entidade de banco não vaza para HTTP; regra de negócio mora em service; repository é query pura.</li>
-<li>Em Python a fronteira é import — então o import vira lint com exit code (import-linter no check.sh).</li>
-<li>Estrutura previsível é context engineering: agente acha o lugar certo com fração do contexto.</li>
-<li>Coesão/acoplamento/estabilidade deixam de ser opinião no M10: viram métrica sobre o grafo.</li>
+<li>Setas só para baixo: api → services → repositories; núcleo sem imports de framework.</li>
+<li>Entidade de banco não vaza para HTTP; regra mora em service; repository é query pura.</li>
+<li>Em Python a fronteira é import — então o import vira teste com exit code, com controle negativo próprio.</li>
+<li>Override (protocolo no service, <code>dependency_overrides</code> no app) troca infraestrutura sem tocar na regra.</li>
+<li>Decisão de fronteira se registra em ADR, com custo e condição de revisão explícitos.</li>
 </ul>
 </div>
+<p><strong>Fontes deste bloco:</strong> <a href="https://docs.python.org/3/reference/import.html">Python — the import system</a>, <a href="https://docs.python.org/3/library/typing.html">Python — typing (Protocol)</a> e <a href="https://fastapi.tiangolo.com/tutorial/dependencies/">FastAPI dependencies</a>. Consultadas em 13/09/2026; documentação de framework deve ser revalidada em até 90 dias.</p>
 <!-- ============================================ BLOCO 5 -->
-<h2>Bloco 5 · Docker do zero: imagens, camadas, multi-stage, Compose</h2>
-<div class="clock">00:00–00:30 o modelo mental: imagem, camada, container &nbsp;|&nbsp; 00:30–01:10 o Dockerfile de produção, linha a linha &nbsp;|&nbsp; 01:10–01:45 Compose: o ambiente inteiro num arquivo &nbsp;|&nbsp; 01:45–02:00 higiene e segurança</div>
+<h2 id="b05">Bloco 5 · Imagens, Compose e ambiente reproduzível</h2>
 
-<h3>Por que isso importa</h3>
-<p>Este é o coração do seu gap de DevOps — e o bloco que faltava por inteiro na primeira versão deste material. Docker resolve o problema que você conhece como "funciona na minha máquina": empacota app + runtime + dependências do SO numa <strong>imagem</strong> imutável que roda idêntica no seu Windows, no CI e no servidor. Para o Capstone é inegociável: Postgres local sem instalar Postgres, deploy que é "envie a imagem", e (M09) distribuição do seu servidor MCP.</p>
+
+<h3 id="sec-por-que-isso-importa-4">Por que isso importa <a class="section-link" href="#sec-por-que-isso-importa-4" aria-label="Link para esta seção">#</a></h3>
+<p>Testes que passam na máquina de quem escreveu e quebram em qualquer outro lugar custam caro — e banco de desenvolvimento instalado à mão, com versão e configuração desconhecidas, é uma fonte clássica dessa divergência. Docker resolve a embalagem: aplicação, runtime e dependências do sistema viajam numa <strong>imagem</strong> imutável, e o ambiente inteiro (API + banco + rede + volume) viaja num arquivo Compose versionado. O laboratório usa os dois para que PostgreSQL, migrations e suíte executem no mesmo ambiente em qualquer máquina com Docker Engine.</p>
+
+<h3 id="sec-b05-contexto-e-saida">Contexto e saída <a class="section-link" href="#sec-b05-contexto-e-saida" aria-label="Link para esta seção">#</a></h3>
+<p><strong>Pré-requisitos:</strong> blocos 1–4 (app HTTP em camadas). <strong>Objetivo:</strong> embalar o laboratório numa imagem reproduzível e declarar o ambiente local em Compose, com saúde observável e segredos fora da imagem. <strong>Saída observável:</strong> você explica cada estágio do Dockerfile, a função de volume/rede/healthcheck no Compose e o que impede um segredo de entrar na imagem. A construção e execução de containers exigem Docker Engine; sem ele, os oráculos estáticos do lab verificam os artefatos e a execução fica marcada como bloqueada.</p>
 
 <div class="box">
-<span class="lbl">Contexto · Imagem, camada, container, registry — o vocabulário em 60 segundos</span>
+<span class="lbl">Contexto · Imagem, camada, container, registry — o vocabulário</span>
 <ul>
-<li><strong>Imagem</strong> = o pacote imutável (pense: uma AMI/ISO minimalista, ou o zip de publish do .NET + o SO junto). Identificada por tag: <code>postgres:16</code>.</li>
-<li><strong>Camada</strong> = cada instrução do Dockerfile gera uma fatia somente-leitura, com hash. Imagens compartilham camadas — 10 apps sobre <code>python:3.12-slim</code> baixam a base UMA vez. <strong>Cache de build funciona por camada, de cima para baixo: mudou uma linha, tudo abaixo rebuilda.</strong> Esta frase explica 90% dos builds lentos.</li>
-<li><strong>Container</strong> = uma instância em execução da imagem (processo isolado por namespaces/cgroups do kernel — não é VM; por isso sobe em milissegundos). Imagem:container :: classe:objeto.</li>
-<li><strong>Registry</strong> = o NuGet de imagens: Docker Hub, GHCR. <code>docker push/pull</code>.</li>
+<li><strong>Imagem</strong> = o pacote imutável com aplicação, bibliotecas e arquivos necessários à execução. Identificada por tag: <code>postgres:16</code>.</li>
+<li><strong>Camada</strong> = cada instrução do Dockerfile gera uma fatia somente-leitura, com hash. Imagens compartilham camadas. <strong>Cache de build funciona por camada, de cima para baixo: mudou uma linha, tudo abaixo rebuilda.</strong> Essa frase explica a maioria dos builds lentos.</li>
+<li><strong>Container</strong> = uma instância em execução da imagem: processo isolado pelo kernel, não máquina virtual — por isso inicia em fração de segundo. Imagem está para container como classe está para objeto.</li>
+<li><strong>Registry</strong> = o repositório de imagens (Docker Hub, GHCR). <code>docker push/pull</code> publica e baixa.</li>
 </ul>
 </div>
 
-<h3>O Dockerfile de produção, linha a linha</h3>
-<p>Este é o arquivo do curso — cada linha tem um porquê, e o checkpoint cobra todos:</p>
+<h3 id="sec-o-dockerfile-de-producao-linha-a-linha">O Dockerfile, linha a linha <a class="section-link" href="#sec-o-dockerfile-de-producao-linha-a-linha" aria-label="Link para esta seção">#</a></h3>
+<p>Exemplo de referência completo — corresponde ao <code>Dockerfile</code> do laboratório. Cada linha tem um porquê, e o checkpoint cobra todos:</p>
 <pre><code># ---------- estágio 1: builder (ferramentas de build ficam AQUI e morrem aqui)
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 WORKDIR /app
@@ -549,10 +613,10 @@ COPY src/ src/
 RUN uv sync --frozen --no-dev
 
 # ---------- estágio 2: runtime (só o necessário para RODAR)
-FROM python:3.12-slim AS runtime
+FROM python:3.14-slim AS runtime
 WORKDIR /app
 
-# usuário não-root: container invadido != root no host
+# usuário não-root: um processo comprometido não opera como root
 RUN groupadd -r app && useradd -r -g app app
 
 COPY --from=builder --chown=app:app /app/.venv /app/.venv
@@ -565,21 +629,22 @@ EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --retries=3 \
   CMD python -c "import urllib.request as u; u.urlopen('http://localhost:8000/health')"
 
-CMD ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+CMD ["uvicorn", "link_shortener.serve:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
 
 <p>Os porquês que o checkpoint cobra:</p>
 <ul>
-<li><strong>Multi-stage (<code>AS builder</code> → <code>FROM ... AS runtime</code>):</strong> compiladores, headers e o próprio uv não vão para produção. Imagem menor = deploy mais rápido + superfície de ataque menor. Equivalente: a distinção SDK vs. runtime das imagens .NET.</li>
-<li><strong>Manifests antes do código:</strong> a ordem das camadas segue a frequência de mudança — deps mudam por semana, código por hora. Inverter a ordem = reinstalar tudo a cada build (o bug de performance nº 1 de Dockerfile).</li>
-<li><strong><code>--frozen</code>:</strong> usa o uv.lock exato, falha se desatualizado — o restore determinístico atravessando o build.</li>
-<li><strong><code>USER app</code>:</strong> processo não roda como root. Custa duas linhas; economiza um parágrafo no seu relatório de incidente.</li>
-<li><strong><code>PYTHONUNBUFFERED=1</code>:</strong> logs saem na hora (sem buffer), porque em container <strong>log é stdout</strong> — quem captura é a plataforma (12-Factor App, fator XI: logs como stream de eventos; nada de escrever arquivo de log dentro do container, que morre com ele).</li>
-<li><strong><code>HEALTHCHECK</code>:</strong> o orquestrador (Compose, e o deploy do bloco 7) precisa distinguir "processo vivo" de "app saudável" — o endpoint <code>/health</code> que você criará responde isso.</li>
-<li><strong><code>.dockerignore</code></strong> (crie junto, sempre): <code>.git</code>, <code>.venv</code>, <code>.env</code>, <code>__pycache__</code>, <code>tests/</code>. Sem ele, seu <code>.env</code> COM SEGREDOS entra na imagem — e imagem é arquivável, inspecionável e frequentemente pública. É o vazamento mais bobo e mais comum de 2026.</li>
+<li><strong>Multi-stage (<code>AS builder</code> → <code>AS runtime</code>):</strong> compiladores, headers e o próprio uv não viajam para produção. Imagem menor significa deploy mais rápido e superfície de ataque menor.</li>
+<li><strong>Manifests antes do código:</strong> a ordem das camadas segue a frequência de mudança — dependências mudam por semana, código por hora. Inverter a ordem reinstala tudo a cada build.</li>
+<li><strong><code>--frozen</code>:</strong> usa o uv.lock exato e falha se estiver desatualizado — determinismo do build.</li>
+<li><strong><code>USER app</code>:</strong> o processo não roda como root. Custa duas linhas e remove uma classe inteira de impacto em caso de invasão.</li>
+<li><strong><code>PYTHONUNBUFFERED=1</code>:</strong> logs saem sem buffer, porque em container o log é stdout — quem captura é a plataforma. Arquivo de log dentro do container morre com ele.</li>
+<li><strong><code>HEALTHCHECK</code>:</strong> o orquestrador precisa distinguir "processo vivo" de "app saudável" — o endpoint <code>/health</code> responde isso (AT-017/AT-020 o verificam).</li>
+<li><strong><code>.dockerignore</code></strong> (sempre, junto): <code>.git</code>, <code>.venv</code>, <code>.env</code>, <code>__pycache__</code>, <code>tests/</code>. Sem ele, um <code>.env</code> com segredos entra na imagem — e imagem é arquivável, inspecionável e frequentemente pública (AT-018).</li>
 </ul>
 
-<h3>Compose: o ambiente inteiro, declarado</h3>
-<pre><code># docker-compose.yml
+<h3 id="sec-compose-o-ambiente-inteiro-declarado">Compose: o ambiente inteiro, declarado <a class="section-link" href="#sec-compose-o-ambiente-inteiro-declarado" aria-label="Link para esta seção">#</a></h3>
+<p>Exemplo de referência — corresponde ao <code>compose.yml</code> do laboratório:</p>
+<pre><code># compose.yml
 services:
   db:
     image: postgres:16
@@ -589,6 +654,7 @@ services:
     ports: ["5432:5432"]
     volumes:
       - pgdata:/var/lib/postgresql/data      # dados sobrevivem ao container
+    networks: [shortnet]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -603,271 +669,305 @@ services:
     depends_on:
       db:
         condition: service_healthy           # espera SAUDÁVEL, não só "subiu"
+    networks: [shortnet]
 
 volumes:
-  pgdata:</code></pre>
+  pgdata:
+
+networks:
+  shortnet:</code></pre>
 <p>Três mecânicas para entender de verdade:</p>
 <ul>
-<li><strong>Rede e DNS:</strong> o Compose cria uma rede onde cada serviço é hostname — repare na URL: <code>@db:5432</code>, não <code>@localhost</code>. Dentro da rede, o nome do serviço resolve; <code>localhost</code> dentro do container é O PRÓPRIO container (o erro clássico da primeira semana).</li>
-<li><strong>Volume:</strong> container é descartável; volume é onde dado persiste. Sem o <code>pgdata</code>, cada <code>docker compose down</code> apaga seu banco.</li>
+<li><strong>Rede e DNS:</strong> o Compose cria uma rede onde cada serviço é hostname — repare na URL: <code>@db:5432</code>, não <code>@localhost</code>. Dentro da rede, o nome do serviço resolve; <code>localhost</code> dentro do container é o próprio container (AT-019).</li>
+<li><strong>Volume e rede nomeados:</strong> container é descartável; o volume <code>pgdata</code> é onde o dado persiste — sem ele, cada <code>down</code> apaga o banco. A rede <code>shortnet</code> declara o isolamento; a limpeza do laboratório só atinge esses recursos nomeados (AT-020).</li>
 <li><strong><code>depends_on</code> + <code>service_healthy</code>:</strong> "depois de" não é "pronto" — a API esperar o healthcheck do Postgres elimina o <code>ConnectionRefused</code> da corrida de inicialização.</li>
 </ul>
 
-<h3>Prática guiada · O encurtador containerizado (30 min)</h3>
-<div class="step"><span class="n">1</span><strong>Escreva Dockerfile + .dockerignore + compose</strong> (adapte os acima; adicione o endpoint <code>/health</code> no router: devolve <code>{"status":"ok"}</code> e um <code>SELECT 1</code> no banco).</p>
-<p><strong>Resultado esperado:</strong> <code>docker build -t shortener .</code> termina; <code>docker images shortener</code> mostra o tamanho — anote-o.</p></div>
-<div class="step"><span class="n">2</span><strong>Prove o valor do multi-stage:</strong> comente temporariamente o estágio runtime (build single-stage) e rebuilde com outra tag.</p>
-<p><strong>Resultado esperado:</strong> a imagem single-stage é visivelmente maior (tipicamente 1,5–3x). Volte ao multi-stage. Depois toque um arquivo de <code>src/</code> e rebuilde: repare no log que as camadas de dependência vêm <code>CACHED</code> e só o código rebuilda — a ordem das camadas trabalhando.</p></div>
-<div class="step"><span class="n">3</span><strong>Suba tudo:</strong>
-<pre><code>docker compose up --build</code></pre>
-<p><strong>Resultado esperado:</strong> o Postgres sobe primeiro, fica <code>healthy</code>, SÓ ENTÃO a API sobe. <code>curl localhost:8000/health</code> → <code>{"status":"ok"}</code>. Rode as migrations dentro do ambiente: <code>docker compose exec api alembic upgrade head</code>. POST/GET funcionam; <code>docker compose down && up</code> e os dados persistem (o volume).</p></div>
-<div class="step"><span class="n">4</span><strong>Mate e observe:</strong> <code>docker compose stop db</code> com a API no ar; bata no <code>/health</code>.</p>
-<p><strong>Resultado esperado:</strong> a API responde erro claro (500 com detail de conexão) e o healthcheck a marca <code>unhealthy</code> — degradação com sinal, não travamento. É o embrião do checkpoint do módulo.</p></div>
+<h3 id="sec-b05-leitura-aplicada">Leitura aplicada: do build à degradação <a class="section-link" href="#sec-b05-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
+<ol>
+<li>O build copia manifests antes do código: enquanto <code>pyproject/uv.lock</code> não mudam, as camadas de dependência vêm do cache e só o código rebuilda. Tocar um arquivo de <code>src/</code> e rebuildar mostra isso no log.</li>
+<li>A imagem final não contém ferramentas de build, roda como usuário <code>app</code> e não contém <code>.env</code> — três fatos verificáveis por inspeção, e o laboratório os verifica sem precisar executar nada.</li>
+<li><code>compose up</code> sobe o Postgres primeiro; só quando o healthcheck acusa <code>healthy</code> a API sobe e aplica <code>alembic upgrade head</code>. <code>GET /health</code> responde o estado; com o banco parado, a API degrada com erro claro em vez de travar.</li>
+</ol>
+<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — build, inspeção, subida, migrations no ambiente e observação da degradação — fica no <code>Laboratório guiado M03</code>, depois do bloco 8. Sem Docker Engine, a execução fica marcada como bloqueada e os oráculos estáticos verificam os artefatos.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 5</span>
 <ul>
-<li>Imagem = pacote imutável em camadas; container = instância; cache por camada de cima para baixo → manifests antes do código.</li>
+<li>Imagem = pacote imutável em camadas; container = instância; cache por camada de cima para baixo leva manifests antes do código.</li>
 <li>Multi-stage: build fica no builder, produção leva só runtime. Menor, mais rápido, menos superfície.</li>
-<li>Não-root, log em stdout (unbuffered), healthcheck de app (não de processo), .dockerignore SEMPRE (o .env fora da imagem!).</li>
-<li>Compose: serviços por nome na rede interna, volume para dados, service_healthy contra corrida de boot.</li>
-<li>O ambiente inteiro é um arquivo commitado — o fim do "roda na minha máquina".</li>
+<li>Não-root, log em stdout sem buffer, healthcheck de app (não de processo), .dockerignore sempre — segredo nunca entra na imagem.</li>
+<li>Compose: serviços por nome na rede interna, volume para dados, <code>service_healthy</code> contra corrida de boot, limpeza só em recursos nomeados.</li>
+<li>O ambiente inteiro é um arquivo versionado: mesma API, mesmo banco, mesma rede em qualquer máquina com Docker.</li>
 </ul>
 </div>
+<p><strong>Fontes deste bloco:</strong> <a href="https://docs.docker.com/build/building/multi-stage/">Docker multi-stage builds</a>, <a href="https://docs.docker.com/build/building/context/">Docker build context</a> e <a href="https://docs.docker.com/compose/how-tos/startup-order/">Docker Compose startup order</a>. Consultadas em 21/08/2026; documentação de ferramenta deve ser revalidada em até 90 dias.</p>
 <!-- ============================================ BLOCO 6 -->
-<h2>Bloco 6 · Testes de integração com containers</h2>
-<div class="clock">00:00–00:25 unitário vs. integração: a fronteira honesta &nbsp;|&nbsp; 00:25–01:00 a fixture de banco descartável &nbsp;|&nbsp; 01:00–01:40 prática: a suíte do encurtador &nbsp;|&nbsp; 01:40–02:00 o teste do lost update</div>
+<h2 id="b06">Bloco 6 · Integração honesta: PostgreSQL descartável</h2>
 
-<h3>Por que isso importa</h3>
-<p>O teste unitário do M02 prova a lógica pura. Mas o encurtador agora É integração: constraint de unicidade, transação, migration, JSON no banco. Mockar o SQLAlchemy para "testar" isso é teatro — o mock passa e a constraint que faltou explode em produção. A regra do curso: <strong>lógica pura testa com unitário; tudo que atravessa a fronteira do banco testa contra Postgres DE VERDADE</strong>, descartável, dentro do teste. Em 2026 isso é barato: um container sobe em segundos, e o CI (bloco 7) roda igualzinho.</p>
 
-<div class="box net">
-<span class="lbl">Tradução .NET</span>
-<p>É o padrão <code>WebApplicationFactory</code> + Testcontainers-dotnet que os times .NET maduros adotaram — a mesma ideia, com as mesmas decisões: banco real efêmero em vez de InMemoryDatabase (que mente sobre SQL, constraint e concorrência — o InMemory do EF ensinou essa lição a todo mundo da pior forma). Aqui: <code>httpx.AsyncClient</code> falando com o app via ASGI (sem porta! mais rápido e sem colisão) + <code>testcontainers</code> subindo o Postgres.</p>
-</div>
+<h3 id="sec-por-que-isso-importa-5">Por que isso importa <a class="section-link" href="#sec-por-que-isso-importa-5" aria-label="Link para esta seção">#</a></h3>
+<p>O teste unitário prova a lógica pura. Mas constraint de unicidade, transação, migration e JSON no banco só existem no banco: simular o SQLAlchemy para "testá-los" aprova o mock e deixa a constraint que faltava explodir em produção. A regra do módulo: <strong>lógica pura testa com unitário; tudo que atravessa a fronteira do banco testa contra PostgreSQL de verdade</strong>, descartável e criado dentro do teste. O bloco 7 mostra que o CI executa a mesma suíte; este bloco define como ela é escrita.</p>
 
-<h3>A fundação: três fixtures em camadas</h3>
-<pre><code># tests/conftest.py
-from collections.abc import AsyncIterator, Iterator
+<div class="box"><span class="lbl">Referência do conceito</span><p>O cliente ASGI exercita a aplicação sem abrir uma porta HTTP. PostgreSQL descartável permite verificar SQL, constraints e concorrência no banco real. O primeiro mecanismo testa a fronteira da aplicação; o segundo verifica integração com persistência. Um não substitui o outro.</p></div>
 
+<h3 id="sec-b06-contexto-e-saida">Contexto e saída <a class="section-link" href="#sec-b06-contexto-e-saida" aria-label="Link para esta seção">#</a></h3>
+<p><strong>Pré-requisitos:</strong> blocos 2–5 (migrations, constraints, Compose). <strong>Objetivo:</strong> isolar estado por teste contra PostgreSQL descartável, com schema vindo de migration e determinismo sem relógio ou aleatoriedade no caminho. <strong>Saída observável:</strong> você descreve as três fixtures, prova isolamento por rollback e explica por que a suíte não depende de ordem. A execução exige Docker Engine; sem ele, o contrato dos testes existe no lab e a execução fica bloqueada.</p>
+
+<h3 id="sec-a-fundacao-tres-fixtures-em-camadas">A fundação: três fixtures em camadas <a class="section-link" href="#sec-a-fundacao-tres-fixtures-em-camadas" aria-label="Link para esta seção">#</a></h3>
+<p>Exemplo de referência — a cópia executável vive em <code>tests/conftest.py</code> do laboratório:</p>
+<pre><code># tests/conftest.py (referência; execução exige Docker Engine)
 import pytest
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
-from app.api.main import app
-from app.api.deps import get_session
-from app.models.base import Base
+from link_shortener.db import create_engine, session_factory
 
 
 @pytest.fixture(scope="session")
-def pg_url() -> Iterator[str]:
-    """Um Postgres para a SESSÃO inteira de testes (subir custa ~3s; sobe 1x)."""
-    with PostgresContainer("postgres:16", driver="asyncpg") as pg:
-        yield pg.get_connection_url()
+def pg_url():
+    """Um Postgres para a SESSÃO inteira (subir custa segundos; sobe 1x)."""
+    with PostgresContainer("postgres:16") as pg:
+        yield pg.get_connection_url().replace("psycopg2", "asyncpg")
 
 
 @pytest.fixture
-async def db_session(pg_url: str) -> AsyncIterator[AsyncSession]:
-    """Sessão POR TESTE, com isolamento por rollback: nada vaza entre testes."""
-    engine = create_async_engine(pg_url)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+async def pg_factory(pg_url):
+    """Schema via MIGRATION (nunca create_all), engine descartado no teardown."""
+    from alembic.config import Config
+    from alembic import command
 
-    async with engine.connect() as conn:
-        trans = await conn.begin()
-        session = async_sessionmaker(bind=conn, expire_on_commit=False)()
-        yield session
-        await session.close()
-        await trans.rollback()          # o teste inteiro é desfeito aqui
-    await engine.dispose()
+    cfg = Config("alembic.ini")
+    command.upgrade(cfg, "head")          # APP_DATABASE_URL aponta ao container
+    engine = create_engine(pg_url)
+    try:
+        yield session_factory(engine)
+    finally:
+        await engine.dispose()
 
 
 @pytest.fixture
-async def client(db_session: AsyncSession) -> AsyncIterator[AsyncClient]:
-    """API completa com o banco de teste injetado via dependency_overrides."""
-    app.dependency_overrides[get_session] = lambda: db_session
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
+async def pg_client(pg_factory):
+    """API real com o banco de teste injetado via dependency_overrides."""
+    from httpx import ASGITransport, AsyncClient
+
+    from link_shortener.api.app import create_app
+    from link_shortener.api.deps import get_request_session
+
+    app = create_app(pg_factory)
+
+    async def override():
+        async with pg_factory() as session:
+            yield session
+            await session.commit()
+
+    app.dependency_overrides[get_request_session] = override
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()</code></pre>
-<p>Leia a arquitetura das fixtures (é composição do M02 bloco 6 em ação): <code>pg_url</code> caro e session-scoped; <code>db_session</code> barata e por teste, com o truque da <strong>transação-envelope</strong> — o teste roda inteiro dentro de uma transação que faz rollback no teardown, dando isolamento perfeito sem recriar schema a cada teste; <code>client</code> injeta a sessão de teste na API real via <code>dependency_overrides</code> — o container de DI trocado em uma linha, sem builder, sem startup alternativo.</p>
+<p>A arquitetura das fixtures: <code>pg_url</code> caro e compartilhado pela sessão; schema criado uma vez por migration; cada teste recebe fábrica e cliente sobre o banco descartável; o teardown descarta o engine. O isolamento entre testes vem da <strong>transação-envelope</strong> — o teste roda dentro de uma transação que sofre rollback no teardown, sem recriar schema a cada teste. O cliente injeta a sessão de teste na API real via <code>dependency_overrides</code>.</p>
 
 <div class="box fund">
-<span class="lbl">Fundamento de engenharia · O que faz um teste de integração ser BOM</span>
+<span class="lbl">Fundamento · O que faz um teste de integração ser bom</span>
 <ul>
-<li><strong>Isolamento:</strong> teste não depende de ordem nem de resíduo de outro teste (a transação-envelope garante). Teste que só passa "rodando a suíte inteira" é dívida com juros.</li>
-<li><strong>Determinismo:</strong> relógio, aleatoriedade e rede são as três fontes de flakiness. Injete-os (o slug aleatório do service recebe um gerador; em teste, um fixo) — flaky test é pior que ausência de teste, porque ensina o time a ignorar vermelho.</li>
-<li><strong>Teste pela interface pública:</strong> chame a API (o client), não o repository por dentro — refatoração interna (bloco 4!) não deve quebrar teste. Teste acoplado a implementação é âncora, não rede.</li>
-<li><strong>A pirâmide continua valendo:</strong> integração cobre os FLUXOS e as fronteiras; a combinatória de regras fica nos unitários. Suíte de integração de 20 min que ninguém roda protege menos que uma de 40s que roda em todo commit.</li>
+<li><strong>Isolamento:</strong> teste não depende de ordem nem de resíduo de outro teste. Teste que só passa rodando a suíte inteira é dívida.</li>
+<li><strong>Determinismo:</strong> relógio, aleatoriedade e rede são as três fontes de teste instável. Este lab elimina duas pela construção: o slug é entrada explícita (nenhum gerador aleatório no caminho) e nenhum teste depende da hora atual. Teste instável é pior que ausência de teste, porque ensina a ignorar vermelho.</li>
+<li><strong>Teste pela interface pública:</strong> chame a API (o client), não o repository por dentro — refatoração interna (bloco 4) não deve quebrar teste. Teste acoplado a implementação é âncora, não rede.</li>
+<li><strong>Pirâmide:</strong> integração cobre fluxos e fronteiras; a combinatória de regras fica nos unitários. Suíte de integração que ninguém roda porque demora protege menos que uma rápida que roda em todo commit.</li>
 </ul>
 </div>
 
-<h3>Prática guiada · A suíte do encurtador (40 min)</h3>
-<div class="step"><span class="n">1</span><strong>Instale e escreva os básicos:</strong> <code>uv add --dev testcontainers pytest-asyncio</code>. Testes: criar link (201 + slug no formato), buscar (200), inexistente (404), URL inválida (422 com o campo apontado), duplicata (409 — provando a constraint + o handler de IntegrityError).</p>
-<p><strong>Resultado esperado:</strong> <code>uv run pytest -q</code> → primeiro run ~5–8s (o container subindo), depois cada teste em ms. Cinco verdes.</p></div>
-<div class="step"><span class="n">2</span><strong>Prove o isolamento:</strong> dois testes que criam o MESMO slug fixo, rodando em sequência.</p>
-<p><strong>Resultado esperado:</strong> ambos passam — o rollback da transação-envelope apagou o primeiro antes do segundo. Comente o rollback e rode de novo: o segundo falha com violação de unicidade. Descomente. Você viu o mecanismo, não decorou a receita.</p></div>
-<div class="step"><span class="n">3</span><strong>O teste do lost update (prometido no bloco 2):</strong> escreva o incremento de <code>hits</code> de dois jeitos no repository — (a) ler-somar-gravar em Python; (b) <code>UPDATE links SET hits = hits + 1</code> atômico. Teste: dispare 50 incrementos CONCORRENTES com <code>asyncio.gather</code> (cada um com sessão própria — aqui use o engine direto, sem a transação-envelope) e leia o total.</p>
-<p><strong>Resultado esperado:</strong> versão (a): total &lt; 50 — updates perdidos, o número exato varia por corrida (a assinatura da race condition: não-determinismo). Versão (b): exatos 50, sempre. Este teste vale mais que qualquer parágrafo sobre isolamento — e é o padrão que você reusará quando o assunto for idempotência de billing no M12.</p></div>
+<h3 id="sec-b06-leitura-aplicada">Leitura aplicada: o que cada teste de integração prova <a class="section-link" href="#sec-b06-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
+<ol>
+<li>Criação e busca pela API (201/200), inexistente (404), URL inválida (422), duplicata (409): o contrato HTTP contra persistência real.</li>
+<li>Isolamento: dois testes criam o mesmo slug fixo em sequência e ambos passam — o rollback do envelope apagou o primeiro antes do segundo.</li>
+<li>Lost update resolvido: N increments concorrentes com sessões próprias totalizam exatamente N no update atômico.</li>
+<li>Migration como setup: o schema do banco de teste nasce de <code>alembic upgrade head</code>, então a suíte quebra se uma revision estiver inconsistente.</li>
+</ol>
+<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável fica no <code>Laboratório guiado M03</code>, depois do bloco 8. Sem Docker Engine, a execução fica marcada como bloqueada; a indisponibilidade do banco (erro observável com cleanup, AT-024) tem oráculo parcial executável sem Docker no lab.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 6</span>
 <ul>
-<li>Fronteira honesta: lógica pura → unitário; atravessou o banco → Postgres real efêmero. Mock de ORM é teatro.</li>
-<li>Três fixtures: container session-scoped (caro, 1x), transação-envelope por teste (isolamento grátis), client ASGI com override de DI.</li>
-<li>Determinismo: injete relógio/aleatório/rede. Flaky ensina a ignorar vermelho.</li>
-<li>O teste de 50 gathers provou o lost update e o conserto atômico — concorrência se testa, não se discute.</li>
+<li>Fronteira honesta: lógica pura em unitário; atravessou o banco, PostgreSQL real descartável. Simulação de ORM não prova integração.</li>
+<li>Três fixtures: container por sessão, schema por migration, cliente ASGI com override de dependência; isolamento por transação-envelope.</li>
+<li>Determinismo por construção: entradas explícitas, sem relógio nem aleatoriedade no caminho testado.</li>
+<li>Concorrência se testa com sessões próprias e total exato — não se discute.</li>
 </ul>
 </div>
+<p><strong>Fontes deste bloco:</strong> <a href="https://testcontainers.com/guides/getting-started-with-testcontainers-for-python/">Testcontainers for Python</a>, <a href="https://docs.sqlalchemy.org/en/21/orm/extensions/asyncio.html">SQLAlchemy asyncio</a> e <a href="https://alembic.sqlalchemy.org/en/latest/cookbook.html">Alembic cookbook</a>. Consultadas em 13/09/2026 (Testcontainers) e 21/08/2026 (demais); documentação de ferramenta deve ser revalidada em até 90 dias.</p>
 <!-- ============================================ BLOCO 7 -->
-<h2>Bloco 7 · GitHub Actions e deploy em produção</h2>
-<div class="clock">00:00–00:30 anatomia de um workflow &nbsp;|&nbsp; 00:30–01:00 o pipeline do curso, linha a linha &nbsp;|&nbsp; 01:00–01:45 deploy real: Fly.io/Railway, domínio, HTTPS &nbsp;|&nbsp; 01:45–02:00 rollback e o contrato de release</div>
+<h2 id="b07">Bloco 7 · CI, imagem imutável e contrato de release</h2>
 
-<h3>Por que isso importa</h3>
-<p>Até aqui os guardrails (M01) rodam na SUA máquina — protegem quando você lembra de rodá-los. CI é a promoção deles para lei: <strong>todo push, toda branch, sem exceção, numa máquina que não é a sua</strong>. E o deploy fecha o ciclo do seu gap: o "alguém configurou o resto" vira "eu configurei, está no ar, e sei fazer rollback". Nada aqui é novidade conceitual para você — Azure DevOps fazia isso — mas agora é você quem escreve, do zero, no ecossistema onde o Capstone vai viver.</p>
+
+<h3 id="sec-por-que-isso-importa-6">Por que isso importa <a class="section-link" href="#sec-por-que-isso-importa-6" aria-label="Link para esta seção">#</a></h3>
+<p>Até aqui os gates (lint, tipos, testes) rodam na máquina de quem lembra de rodá-los. CI os promove a lei: <strong>todo push, todo pull request, sem exceção, numa máquina que não é a sua</strong>. E release fecha o ciclo: a mesma imagem verificada, endereçada por revisão imutável, com migrations aplicadas antes de promover e rollback ensaiado. Nada neste bloco exige conta externa: qualidade, imagem e contrato de release são locais e versionados; publicação externa é trilha opcional (AT-032).</p>
 
 <div class="box">
 <span class="lbl">Contexto · GitHub Actions em 90 segundos</span>
-<p>CI/CD nativo do GitHub. Um <strong>workflow</strong> é um YAML em <code>.github/workflows/</code>; dispara por evento (<code>push</code>, <code>pull_request</code>, cron); contém <strong>jobs</strong> (paralelos por padrão, cada um numa VM efêmera — <code>ubuntu-latest</code>); cada job tem <strong>steps</strong> que ou rodam shell (<code>run:</code>) ou invocam <strong>actions</strong> reutilizáveis do marketplace (<code>uses: actions/checkout@v4</code>). Equivalente direto do azure-pipelines.yml — até o YAML parece. Segredos ficam em Settings → Secrets, expostos como <code>${{ secrets.NOME }}</code>, mascarados no log.</p>
+<p>CI nativo do GitHub. Um <strong>workflow</strong> é um YAML em <code>.github/workflows/</code>; dispara por evento (<code>push</code>, <code>pull_request</code>); contém <strong>jobs</strong> (cada um numa máquina efêmera); cada job tem <strong>steps</strong> que rodam shell (<code>run:</code>) ou invocam <strong>actions</strong> reutilizáveis (<code>uses:</code>). Segredos ficam no cofre do repositório, expostos como <code>${{ secrets.NOME }}</code> e mascarados no log — nunca em código, imagem ou saída.</p>
 </div>
 
-<h3>O pipeline do curso</h3>
-<pre><code># .github/workflows/ci.yml
-name: ci
+<h3 id="sec-b07-contexto-e-saida">Contexto e saída <a class="section-link" href="#sec-b07-contexto-e-saida" aria-label="Link para esta seção">#</a></h3>
+<p><strong>Pré-requisitos:</strong> blocos 1–6 (gates locais e suíte com e sem Docker). <strong>Objetivo:</strong> reproduzir os gates locais em workflow versionado, endereçar a imagem por revisão imutável e registrar o contrato de release (migrations, segredos, rollback). <strong>Saída observável:</strong> você explica o encadeamento qualidade → imagem, por que o PR não recebe caminho de deploy e quais são as três perguntas que todo release responde antes de existir.</p>
+
+<h3 id="sec-o-pipeline-do-curso">O pipeline do laboratório <a class="section-link" href="#sec-o-pipeline-do-curso" aria-label="Link para esta seção">#</a></h3>
+<p>Exemplo de referência — corresponde a <code>.github/workflows/ci-m03.yml</code> do repositório e a <code>scripts/check.sh</code> do lab (o equivalente local):</p>
+<pre><code># .github/workflows/ci-m03.yml (referência)
+name: ci-m03
 
 on:
   push:
-    branches: [main]
+    paths: ["modulos/M03-fastapi-postgres-docker-ci/**"]
   pull_request:
+    paths: ["modulos/M03-fastapi-postgres-docker-ci/**"]
 
 jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4          # instala uv + cache de dependências
+      - uses: astral-sh/setup-uv@v4
       - run: uv sync --frozen
+        working-directory: modulos/M03-fastapi-postgres-docker-ci/lab
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy --strict src/
-      - run: uv run lint-imports              # a arquitetura do bloco 4, como lei
-      - run: uv run pytest -q                 # inclui os de integração: o runner TEM Docker
-        env:
-          TESTCONTAINERS_RYUK_DISABLED: "true"
+      - run: uv run mypy src tests
+      - run: uv run pytest -q
+      # o runner tem Docker: a suíte postgres executa; sem Docker ela pula BLOCKED
 
   build-image:
-    needs: quality                            # só builda se a qualidade passou
+    needs: quality
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     permissions:
       packages: write
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v6
         with:
-          context: .
+          context: modulos/M03-fastapi-postgres-docker-ci/lab
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy:
-    needs: build-image
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}</code></pre>
+            ghcr.io/${{ github.repository }}:${{ github.sha }}</code></pre>
 <p>As decisões que importam:</p>
 <ul>
-<li><strong><code>needs:</code> encadeia gates:</strong> deploy só existe se build passou, que só existe se qualidade passou. É o seu <code>check.sh</code> promovido a máquina de estados — e o mesmo grafo de dependências das waves do M01 bloco 4.</li>
-<li><strong>Os testes de integração rodam no CI</strong> sem mudar uma linha: o runner tem Docker, o testcontainers sobe o Postgres lá também. Paridade dev↔CI é o objetivo — divergência entre os dois é onde bug se esconde.</li>
-<li><strong>Tag pela SHA além de latest:</strong> cada commit tem imagem imutável endereçável — é isso que torna rollback trivial (redeployar a SHA anterior), e é o "versiono e faço rollback" das suas três perguntas de sênior.</li>
-<li><strong>PR roda qualidade mas não deploya</strong> (<code>if: github.ref == ...</code>): o gate de merge do M01, agora institucional.</li>
+<li><strong><code>needs:</code> encadeia gates:</strong> imagem só existe se qualidade passou. O <code>check.sh</code> local executa os mesmos comandos — paridade dev↔CI; divergência entre os dois é onde defeito se esconde (AT-025).</li>
+<li><strong>PR verifica, main endereça:</strong> o job de build só roda na main (<code>if: github.ref == ...</code>); nenhum caminho de deploy nem segredo de produção aparece no contexto de pull request (AT-026).</li>
+<li><strong>Tag pela SHA além de latest:</strong> cada commit tem imagem imutável endereçável — é isso que torna rollback uma operação (redeployar a SHA anterior), não uma esperança (AT-027).</li>
+<li><strong>Lock preservado:</strong> <code>uv sync --frozen</code> falha se o lock divergir — a imagem sempre corresponde ao lock revisado.</li>
 </ul>
 
-<h3>Deploy real: Fly.io (ou Railway)</h3>
-<p>Os dois são a mesma categoria: PaaS que recebe container e devolve URL com HTTPS — o App Service sem o portal de 400 abas. O curso usa <strong>Fly.io</strong> (config como arquivo versionável; Postgres gerenciado básico; região <code>gru</code> = São Paulo). Railway é igualmente válido — se preferir UI, vá nele; os conceitos transferem 1:1.</p>
-<pre><code>flyctl launch --no-deploy      # gera fly.toml lendo seu Dockerfile
-flyctl postgres create         # Postgres gerenciado
-flyctl postgres attach         # injeta DATABASE_URL como secret no app
-flyctl secrets set APP_ENV=production
-flyctl deploy                  # builda, publica, health-checa, promove
-flyctl logs                    # stdout do container (o fator XI trabalhando)</code></pre>
-<p>No <code>fly.toml</code>, o essencial a conferir: <code>internal_port = 8000</code> (o EXPOSE do seu Dockerfile), a seção <code>[[http_service.checks]]</code> apontando para <code>/health</code> (o deploy só promove a versão nova se ela responder saudável — <strong>zero-downtime por health gate</strong>, o mecanismo que o slot swap do App Service fazia por você), e <code>min_machines_running = 0</code> vs. <code>1</code> (0 = hiberna e economiza, com cold start; 1 = sempre quente — a decisão custo×latência que o M12 revisita com número).</p>
-
 <div class="box warn">
-<span class="lbl">Migrations no deploy — a decisão que separa deploy de incidente</span>
-<p>NUNCA rode <code>create_all</code> no startup em produção (o lifespan de dev do bloco 1 morre aqui) e nunca deixe a migration para "depois". O padrão: <strong>release command</strong> — o Fly roda <code>alembic upgrade head</code> numa máquina efêmera ANTES de promover a versão nova (<code>[deploy] release_command = "alembic upgrade head"</code>). Se a migration falha, o deploy aborta e a versão velha segue no ar. Combine com a regra do bloco 2 (migration compatível com a versão anterior — expandir/contrair em 2 releases) e você tem deploy sem downtime e sem drama.</p>
+<span class="lbl">Migrations no release — a decisão que separa deploy de incidente</span>
+<p>Nunca criar schema com <code>create_all</code> no startup em produção e nunca deixar a migration para "depois". O padrão é o <strong>comando de release</strong>: <code>alembic upgrade head</code> roda num passo efêmero ANTES de promover a versão nova. Se a migration falha, o release aborta e a versão anterior segue no ar. Combine com a regra do bloco 2 (migration compatível com a versão anterior — expandir/contrair em duas releases) e o banco deixa de ser o ponto sem volta (AT-028).</p>
 </div>
 
 <div class="box fund">
-<span class="lbl">Fundamento de engenharia · Config, segredos e as três perguntas de release</span>
+<span class="lbl">Fundamento · Configuração, segredos e as três perguntas de release</span>
 <ul>
-<li><strong>Config no ambiente (12-Factor, fator III):</strong> a MESMA imagem roda em dev/staging/prod; o que muda é ambiente injetado. Se você precisa rebuildar para trocar de ambiente, o desenho está errado. Seu <code>Settings</code> do M02 já implementa isso — o Fly injeta, o Pydantic valida no boot, config faltando mata o deploy (e não a madrugada).</li>
-<li><strong>Segredo nunca em: código, imagem, log.</strong> Só no cofre da plataforma (<code>flyctl secrets</code>/GitHub Secrets). O <code>.dockerignore</code> do bloco 5 e o mascaramento do Actions são as redes; a disciplina é sua.</li>
-<li><strong>As três perguntas que todo release responde ANTES de ir:</strong> (1) como sei que quebrou? (health check + logs + o p95 do exercício); (2) como volto? (redeploy da SHA anterior — testado, não teórico); (3) o banco volta junto? (downgrade compatível ou expand/contract). Sem as três respostas, não é release — é aposta.</li>
+<li><strong>Mesma imagem, configuração no ambiente:</strong> o que muda entre dev e produção é injetado, não rebuildado. Se trocar de ambiente exige rebuildar, o desenho está errado. Configuração obrigatória ausente deve falhar cedo e alto — e a mensagem de falha nunca revela o valor do segredo (AT-029).</li>
+<li><strong>Segredo nunca em: código, imagem, log.</strong> Só no cofre da plataforma. O <code>.dockerignore</code> do bloco 5 e o mascaramento do CI são as redes; a disciplina é sua.</li>
+<li><strong>As três perguntas que todo release responde ANTES de existir:</strong> (1) como sei que quebrou? (health check + logs); (2) como volto? (redeploy da SHA anterior + downgrade compatível — ensaiado, não teórico); (3) o banco volta junto? (downgrade testado ou expandir/contrair). Sem as três respostas, não é release — é aposta.</li>
 </ul>
 </div>
 
-<h3>Prática guiada · Do push ao ar (40 min)</h3>
-<div class="step"><span class="n">1</span><strong>Suba o workflow:</strong> commite o <code>ci.yml</code> e faça push de uma branch com PR.</p>
-<p><strong>Resultado esperado:</strong> aba Actions mostra o job <code>quality</code> rodando; PR exibe o check. Quebre de propósito (um erro de tipo) e veja o vermelho ANTES do merge; conserte.</p></div>
-<div class="step"><span class="n">2</span><strong>Deploy manual primeiro</strong> (entenda antes de automatizar): <code>flyctl launch</code>, attach do Postgres, release_command configurado, <code>flyctl deploy</code>.</p>
-<p><strong>Resultado esperado:</strong> URL <code>https://seu-app.fly.dev/health</code> respondendo <code>{"status":"ok"}</code> — com HTTPS que você não configurou (a plataforma terminou o TLS). <code>flyctl logs</code> mostra o log da migration no release e o uvicorn subindo.</p></div>
-<div class="step"><span class="n">3</span><strong>Automatize:</strong> <code>flyctl tokens create deploy</code> → cole em Settings→Secrets como <code>FLY_API_TOKEN</code> → push na main.</p>
-<p><strong>Resultado esperado:</strong> a cadeia inteira no Actions: quality → build-image → deploy, e a versão nova no ar sem você tocar em nada. Confira o ghcr.io do repo: as imagens tagueadas por SHA acumulando — seu histórico de rollback.</p></div>
-<div class="step"><span class="n">4</span><strong>Ensaie o rollback</strong> (agora, com calma — não durante o incidente): <code>flyctl releases</code> lista; <code>flyctl deploy --image ghcr.io/voce/repo:SHA_ANTERIOR</code> volta.</p>
-<p><strong>Resultado esperado:</strong> versão anterior no ar em ~1 min. Anote o tempo: essa é sua resposta à pergunta 3 do enquadramento sênior deste módulo.</p></div>
+<h3 id="sec-b07-trilha-opcional">Trilha opcional · Publicação externa <a class="section-link" href="#sec-b07-trilha-opcional" aria-label="Link para esta seção">#</a></h3>
+<p>Publicar o encurtador numa plataforma (PaaS com suporte a container e Postgres, qualquer fornecedor) é trilha opcional e não condiciona a aprovação do módulo (AT-032). Quem a percorrer registra no contrato de release: ambiente, revisão publicada, método de rollback ensaiado e limite do ensaio. Conta, cartão e URL pública ficam fora do caminho obrigatório — por isso o laboratório nunca os exige.</p>
+
+<h3 id="sec-b07-leitura-aplicada">Leitura aplicada: do push ao rollback <a class="section-link" href="#sec-b07-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
+<ol>
+<li>Um push abre o workflow: checkout, <code>uv sync --frozen</code>, lint, formato, tipos, testes. Quebrar um tipo propositalmente mostra o vermelho antes do merge — o gate mecânico do bloco 4, agora institucional.</li>
+<li>Na main, a imagem é construída e endereçada pela SHA do commit. A mesma SHA que passou nos testes é a que seria publicada: nada é rebuildado entre verificação e release.</li>
+<li>O release aplica migrations antes de promover; a versão anterior segue disponível pelo endereço imutável. Rollback é redeploy + downgrade compatível, com o tempo ensaiado anotado no contrato.</li>
+</ol>
+<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — workflow, script local equivalente, build do wheel e contrato de release — fica no <code>Laboratório guiado M03</code>, depois do bloco 8.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 7</span>
 <ul>
-<li>CI = seus guardrails como lei: todo push, máquina neutra, needs: encadeando qualidade → imagem → deploy.</li>
-<li>Imagem imutável por SHA = rollback trivial e auditável. PR verifica, main deploya.</li>
-<li>Deploy com health gate + release_command para migrations = zero-downtime sem drama.</li>
-<li>Mesma imagem, config do ambiente, segredos no cofre — e as três perguntas respondidas antes do release.</li>
-<li>Seu gap oficial de "publicar sozinho" morreu neste bloco.</li>
+<li>CI é o gate local como lei: todo push, máquina neutra, <code>needs</code> encadeando qualidade → imagem.</li>
+<li>Imagem imutável por SHA: rollback auditável. PR verifica, main endereça; segredo de produção nunca aparece no PR.</li>
+<li>Release aplica migration antes de promover; <code>create_all</code> nunca cria schema em produção.</li>
+<li>Mesma imagem, configuração no ambiente, falha cedo sem vazar segredo — e as três perguntas respondidas antes do release.</li>
+<li>Publicação externa é trilha opcional registrada, não requisito.</li>
 </ul>
 </div>
+<p><strong>Fontes deste bloco:</strong> <a href="https://docs.github.com/actions/writing-workflows/workflow-syntax-for-github-actions">GitHub Actions workflow syntax</a> e <a href="https://docs.github.com/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions">Security hardening for GitHub Actions</a>. Consultadas em 21/08/2026; documentação de plataforma deve ser revalidada em até 90 dias.</p>
 <!-- ============================================ BLOCO 8 -->
-<h2>Bloco 8 · Mini-projeto final: encurtador em produção + esqueleto do Capstone</h2>
-<div class="clock">00:00–01:00 fechar o encurtador (exercício integrador) &nbsp;|&nbsp; 01:00–01:40 esqueleto do Capstone no ar &nbsp;|&nbsp; 01:40–02:00 diagnóstico e preparação do checkpoint</div>
+<h2 id="b08">Bloco 8 · Operação local: saúde, correlação e fechamento</h2>
 
-<h3>Parte 1 · Fechar o encurtador (exercício, sozinho)</h3>
-<p>O encurtador está funcional; falta o acabamento que separa projeto de estudo de serviço. Sem passo a passo agora — é exercício. A lista de aceitação:</p>
+
+<h3 id="sec-por-que-isso-importa-7">Por que isso importa <a class="section-link" href="#sec-por-que-isso-importa-7" aria-label="Link para esta seção">#</a></h3>
+<p>Serviço sem saúde observável é caixa-preta: quando algo degrada, ninguém sabe se o processo vive, se o banco responde ou qual request falhou. Este bloco fecha o módulo ligando três fios — um endpoint de saúde que verifica o banco de verdade, correlação que atravessa request e resposta, e degradação que vira erro estruturado em vez de travamento. Tudo local, tudo sem conta externa.</p>
+
+<h3 id="sec-b08-contexto-e-saida">Contexto e saída <a class="section-link" href="#sec-b08-contexto-e-saida" aria-label="Link para esta seção">#</a></h3>
+<p><strong>Pré-requisitos:</strong> blocos 1–7. <strong>Objetivo:</strong> expor saúde com checagem de banco, propagar correlation id e degradar com sinal observável. <strong>Saída observável:</strong> você explica o que <code>/health</code> verifica, onde o correlation id nasce e é preservado, e por que a indisponibilidade do banco vira 503 estruturado em vez de timeout silencioso.</p>
+
+<h3 id="sec-saude-que-verifica">Saúde que verifica, não que finge <a class="section-link" href="#sec-saude-que-verifica" aria-label="Link para esta seção">#</a></h3>
+<p>Há duas saúdes diferentes e o laboratório separa as duas. A do <strong>processo</strong> (o <code>HEALTHCHECK</code> do Dockerfile) pergunta "o servidor HTTP responde". A do <strong>serviço</strong> (<code>GET /health</code> do app) executa <code>select 1</code> no banco: 200 com <code>{"status":"ok"}</code> quando alcança, 503 com Problem Details quando não alcança — incluindo o caso em que o banco cai com a API no ar. Por que não trava: a sessão é aberta com o pool, a falha vira exceção capturada na borda, a sessão é encerrada e a resposta sai com status e corpo explícitos. O detalhe nunca vaza segredo nem stack trace — só o tipo do erro e a ação ("verifique a conexão").</p>
+
+<h3 id="sec-correlacao-de-ponta-a-ponta">Correlação de ponta a ponta <a class="section-link" href="#sec-correlacao-de-ponta-a-ponta" aria-label="Link para esta seção">#</a></h3>
+<p>O middleware do bloco 1 agora mora no app: preserva <code>x-request-id</code> quando o cliente envia um UUID válido, cria um quando ausente ou forjado. Toda resposta — 201, 409, 404, 422, 503 — carrega o id e o tempo decorrido. Na operação, isso significa que um 503 no log do cliente e uma entrada no log do servidor se encontram pelo mesmo id. É a semente da observabilidade do M06, plantada aqui com um middleware de vinte linhas.</p>
+
+<div class="box warn">
+<span class="lbl">Contraste: saúde de enfeite</span>
 <ul>
-<li><strong>Redirect de verdade:</strong> <code>GET /{slug}</code> responde <strong>307</strong> para a URL destino e incrementa <code>hits</code> <em>atomicamente</em> (bloco 6 te deu o padrão — e pense: o incremento precisa estar no caminho crítico do redirect, ou pode ser background task?).</li>
-<li><strong>Paginação em <code>GET /links</code>:</strong> <code>limit</code>/<code>offset</code> com máximo imposto (ninguém pede 500k linhas), ordenado por <code>created_at DESC</code> — que você JÁ indexou no bloco 3.</li>
-<li><strong>Rate limit tosco mas real:</strong> um middleware com contador por IP em memória (60 req/min, 429 ao estourar). No M12 isso vira Redis multi-instância; aqui o objetivo é você tocar o mecanismo.</li>
-<li><strong>Publicado:</strong> tudo isso no ar via pipeline, com um teste de carga de 60 segundos (<code>uv run python -m scripts.load_test</code> — escreva com httpx+gather, M02) medindo <strong>p95 local vs. produção</strong>.</li>
+<li><strong><code>/health</code> que devolve ok sem tocar no banco</strong> declara saudável um serviço que não atende nada — o orquestrador mantém tráfego numa API morta.</li>
+<li><strong>Erro 500 com stack trace</strong> entrega ao cliente detalhes internos e nenhum id para o operador correlacionar.</li>
+<li><strong>Timeout sem limite</strong> segura worker e conexão até o cliente desistir; degradação com sinal libera os dois na hora.</li>
 </ul>
-<p><strong>Resultado esperado ao final:</strong> URL pública encurtando de verdade; suíte verde; p95 anotado no PROGRESSO.md com as três perguntas de sênior respondidas (concorrência? falha do Postgres? rollback?). Se o p95 de produção te surpreender (vai), investigue com os logs e o EXPLAIN antes de culpar a plataforma — 90% das vezes é cold start ou índice.</p>
+</div>
 
-<h3>Parte 2 · Peça do produto: o esqueleto do Capstone no ar</h3>
-<p>Agora o replay no repositório real, começando o <code>capstone/</code> de verdade. Use o kit SDD (M01) — a spec da fatia 1 que você escreveu lá é exatamente isto:</p>
-<div class="step"><span class="n">1</span><strong>Estruture</strong> <code>capstone/backend/</code> com o layout do bloco 4, importando o <code>core/</code> do M02 (os modelos base viram o começo de <code>schemas/</code>).</p></div>
-<div class="step"><span class="n">2</span><strong>Implemente o mínimo honesto:</strong> <code>/health</code> (com SELECT 1), <code>POST /projects</code> + <code>GET /projects</code> (nome + repo_url + <code>meta jsonb</code> — a primeira entidade do produto: o sistema legado a analisar), migrations Alembic, testes de integração dos três endpoints.</p></div>
-<div class="step"><span class="n">3</span><strong>Pipeline completo:</strong> Dockerfile multi-stage, compose local, ci.yml com os três jobs, deploy no Fly com release_command.</p>
-<p><strong>Resultado esperado:</strong> <code>https://capstone-SEUNOME.fly.dev/health</code> verde, deployado por um push — o produto existe. Vazio, mas com fundação de gente grande: daqui em diante, cada módulo deposita uma peça NUM SISTEMA QUE JÁ ESTÁ EM PRODUÇÃO, que é como produto se constrói de verdade.</p></div>
+<div class="box ok">
+<span class="lbl">Síntese do bloco 8</span>
+<ul>
+<li>Saúde em dois níveis: processo (responde HTTP) e serviço (alcança o banco). Só a segunda autoriza tráfego.</li>
+<li>Correlation id em toda resposta: preservado se válido, criado se ausente ou forjado.</li>
+<li>Indisponibilidade vira 503 estruturado com sessão encerrada — degradação com sinal, nunca travamento.</li>
+<li>Configuração ausente falha na construção, com mensagem que não ecoa segredos.</li>
+</ul>
+</div>
+
+<!-- ============================================ LABORATÓRIO GUIADO -->
+<h2 id="lab-guiado">Laboratório guiado M03</h2>
+<p>A prática do módulo, reunida e executável. Pode ser percorrida em várias sessões: cada etapa declara estado inicial, resultado esperado e diagnóstico, e termina num ponto retomável. Nada aqui é avaliado durante a construção — <code>ruff</code>, <code>mypy</code> e <code>pytest</code> são oráculos do programa. O checkpoint vem depois, separado.</p>
+
+<h3 id="sec-lab-pre-requisitos">Pré-requisitos e cópia de trabalho <a class="section-link" href="#sec-lab-pre-requisitos" aria-label="Link para esta seção">#</a></h3>
+<p>Exigido: Python 3.14 e <code>uv</code>. Para as etapas marcadas <span class="badge">DOCKER</span>: Docker Engine/Compose; sem eles, essas etapas ficam como leitura do roteiro e os oráculos estáticos correspondentes já passaram na referência. Nunca edite a referência em <code>modulos/M03-fastapi-postgres-docker-ci/lab/</code> diretamente:</p>
+<pre><code>cd modulos/M03-fastapi-postgres-docker-ci/lab
+python3 create_working_copy.py
+# imprime o diretório da cópia, ex.: /tmp/m03-b02-xxxx — trabalhe nele
+cd /tmp/m03-b02-xxxx
+uv sync --frozen</code></pre>
+<p><strong>Resultado esperado:</strong> ambiente sincronizado com o lock, sem erros. <strong>Diagnóstico:</strong> <code>uv sync</code> reclamando de lock desatualizado significa referência modificada — refaça a cópia. A cópia pode ser descartada e refeita a qualquer momento; nada fora dela é tocado.</p>
+
+<h3 id="sec-lab-etapas">Etapas <a class="section-link" href="#sec-lab-etapas" aria-label="Link para esta seção">#</a></h3>
+<div class="step"><span class="n">1</span><strong>Fronteira e sessão (blocos 1–2).</strong> Rode <code>uv run pytest -q tests/test_domain.py tests/test_conflict_mapping.py tests/test_session_scope.py tests/test_migration_pairing.py</code>.
+<p><strong>Por quê:</strong> prova validação, tradução de conflito, commit/rollback e cadeia de migrations antes de qualquer container. <strong>Resultado esperado:</strong> verdes. <strong>Diagnóstico:</strong> falha em pairing indica revision com <code>down_revision</code> quebrado — abra o arquivo em <code>migrations/versions/</code>.</p></div>
+<div class="step"><span class="n">2</span><strong>Dados e concorrência (bloco 3).</strong> Rode <code>uv run pytest -q tests/test_counters.py tests/test_data.py</code>.
+<p><strong>Resultado esperado:</strong> o intercalamento perde, o atômico fecha exato, os índices constam no schema. Para o plano real e o GIN, leia o roteiro <span class="badge">DOCKER</span> abaixo.</p></div>
+<div class="step"><span class="n">3</span><strong>Camadas e guardrail (bloco 4).</strong> Rode <code>uv run pytest -q tests/test_layers.py tests/test_service_override.py</code>; depois, para ver o guardrail morder, adicione temporariamente <code>from link_shortener.models import Link</code> em <code>src/link_shortener/api/app.py</code> e rode o teste de camadas de novo.
+<p><strong>Resultado esperado:</strong> verdes; com o import sabotador, vermelho apontando arquivo e linha. Reverta a sabotagem. <strong>Estado:</strong> reflita: a rota nunca importou persistência — só a composição.</p></div>
+<div class="step"><span class="n">4</span><strong>Embalagem (bloco 5).</strong> Rode <code>uv run pytest -q tests/test_packaging.py</code> e inspecione <code>Dockerfile</code>, <code>.dockerignore</code> e <code>compose.yml</code>.
+<p><strong>Resultado esperado:</strong> multi-stage 3.14, não-root, contexto sem <code>.env</code>, Compose com <code>service_healthy</code> e rede/volume nomeados.</p></div>
+<div class="step"><span class="n">5</span><strong>Integração e operação (blocos 6/8).</strong> Rode <code>uv run pytest -q tests/test_resilience.py tests/test_operation.py tests/test_release.py</code>.
+<p><strong>Resultado esperado:</strong> degradação 503 com sinal, correlation id preservado/forjado, workflow e release validados estaticamente, falha cedo sem vazar segredo.</p></div>
+<div class="step"><span class="n">6</span><strong>Validação técnica.</strong> Rode <code>./scripts/check.sh</code> (equivale ao CI) e <code>uv build</code>.
+<p><strong>Resultado esperado:</strong> lint, formato, tipos e suíte verdes; wheel em <code>dist/</code>. <strong>Diagnóstico:</strong> qualquer vermelho aqui é defeito do programa, não seu — anote e corrija antes de prosseguir.</p></div>
+<div class="step"><span class="n">7</span><strong>PostgreSQL real.</strong> <span class="badge">DOCKER</span> Com Docker Engine: <code>docker compose up --build -d</code>, <code>uv run alembic upgrade head</code>, <code>uv run pytest -q -m postgres</code>, <code>docker compose stop db</code> com a API no ar (observe o 503), <code>docker compose down</code> (limpeza só dos recursos nomeados).
+<p><strong>Resultado esperado:</strong> Postgres saudável antes da API, migrations aplicadas, suíte PG verde, degradação observada, volume persistindo entre <code>down/up</code>. <strong>Sem Docker:</strong> esta etapa é leitura; os 6 testes pulam como BLOCKED e os gates G2/G5 seguem pendentes.</p></div>
+
+<h3 id="sec-lab-limpeza-retomada">Limpeza e retomada <a class="section-link" href="#sec-lab-limpeza-retomada" aria-label="Link para esta seção">#</a></h3>
+<p>Encerre com <code>docker compose down</code> (só com Docker) e apague a cópia de trabalho se quiser — ela é descartável. Para retomar, crie uma cópia nova e volte à etapa indicada: cada etapa só precisa da cópia sincronizada (<code>uv sync --frozen</code>), exceto a 7, que precisa dos containers no ar. Nenhum recurso fora da cópia e dos containers nomeados é criado ou removido.</p>
 
 <!-- ============================================ DIAGNÓSTICO -->
-<h2>Tabela de Diagnóstico</h2>
+<h2 id="diagnostico-m03">Tabela de Diagnóstico</h2>
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
 <tr><td><code>MissingGreenlet</code> ao acessar relacionamento.</td><td>Lazy load em contexto async (não existe).</td><td><code>options(selectinload(...))</code> na query; carregamento é decisão explícita.</td></tr>
+<tr><td>Sessão reutilizada por tarefas concorrentes; resultados misturados ou erro de concorrência.</td><td>Uma <code>AsyncSession</code> é unidade de trabalho de um fluxo, não um recurso compartilhado.</td><td>Sessão nova por request na dependência; engine compartilhado. O oráculo negativo do lab prova a rejeição.</td></tr>
 <tr><td><code>ConnectionRefused</code> da API para o banco no Compose.</td><td>Corrida de boot: API subiu antes do Postgres aceitar conexão; ou usou <code>localhost</code> em vez do nome do serviço.</td><td><code>depends_on.condition: service_healthy</code> + healthcheck; host = nome do serviço (<code>db</code>).</td></tr>
 <tr><td>Build Docker reinstala TODAS as dependências a cada mudança de código.</td><td>COPY do código antes dos manifests — cache invalidado no topo.</td><td>Ordem: manifests → <code>uv sync</code> → código. Confirme os <code>CACHED</code> no log.</td></tr>
 <tr><td>Imagem gigante (1 GB+).</td><td>Single-stage: ferramentas de build embarcadas; ou sem .dockerignore (.git/.venv dentro).</td><td>Multi-stage + .dockerignore. Compare tamanhos com <code>docker images</code>.</td></tr>
@@ -877,43 +977,45 @@ flyctl logs                    # stdout do container (o fator XI trabalhando)</c
 <tr><td>Deploy passou, produção quebrou na migration.</td><td>Migration rodou depois da promoção, ou incompatível com a versão anterior durante o rollout.</td><td><code>release_command</code> (migra ANTES de promover) + expand/contract em 2 releases.</td></tr>
 <tr><td>422 em produção num payload que "funciona no Postman local".</td><td>Divergência de versão de schema/contrato entre ambientes; ou coerção estrita ligada só em prod.</td><td>Mesma imagem em todo ambiente (config no ambiente, não no build); contrato versionado.</td></tr>
 <tr><td>Alembic autogenerate "não viu" sua mudança (ou viu drop+add num rename).</td><td>Limitações do autogenerate: rename, server_default, tipos custom.</td><td>Autogenerate é rascunho: revise e edite a revision; para rename, escreva <code>op.alter_column</code> à mão.</td></tr>
+<tr><td>Busca por chave do JSONB varre a tabela (<code>Seq Scan</code>) ou devolve chaves inconsistentes.</td><td>Coluna JSONB sem índice GIN; documento sem schema validado na fronteira.</td><td>Índice GIN sobre a coluna e validação Pydantic do documento; o plano deve mostrar acesso por índice, não varredura.</td></tr>
+<tr><td>Rota importa repositório ou entidade do banco; teste de regra exige HTTP e banco.</td><td>Fronteira furada: tradução HTTP conhece persistência.</td><td>Regra no service via protocolo, construção na composição; o guardrail de imports aponta arquivo e linha.</td></tr>
 </tbody>
 </table>
 
 <!-- ============================================ CHECKPOINT -->
-<h2>Checkpoint M03</h2>
+<h2 id="checkpoint-m03">Checkpoint M03</h2>
 <div class="box ok">
 <span class="lbl">Avaliação sem consulta — diga "Checkpoint M03" no chat</span>
+<p>Cada pergunta cobre uma família de cenários; a rubrica diz o que basta e o que reprova. Demonstração com a referência do lab executa junto.</p>
 <ul class="check">
-<li><strong>P1.</strong> Explique seu Dockerfile LINHA A LINHA — em especial: por que os manifests antes do código, o que cada estágio carrega, e o que quebraria se você removesse <code>USER app</code>, <code>--frozen</code> e o HEALTHCHECK.</li>
-<li><strong>P2.</strong> A prova de fogo do módulo: derrube o Postgres com a API no ar (local ou produção). Mostre que ela degrada com erro claro e health unhealthy em vez de travar — e explique POR QUE não trava (pool, timeout, e onde a exceção é tratada).</li>
-<li><strong>P3.</strong> <code>Depends</code> com <code>yield</code> vs. <code>AddDbContext</code> scoped: descreva o ciclo de vida da sessão num request que dá exceção no meio do service. Onde acontece o rollback e por quê?</li>
-<li><strong>P4.</strong> Por que a constraint UNIQUE no banco é a única proteção real contra slug duplicado, e por que o <code>if exists</code> em código não é? Que status code o cliente recebe e de onde ele vem?</li>
-<li><strong>P5.</strong> Leia em voz alta um EXPLAIN ANALYZE (eu te dou um): identifique o nó problemático, diga se é problema de índice ou de estatística, e proponha o conserto.</li>
-<li><strong>P6.</strong> Lost update: descreva o teste que o prova, por que o total varia entre corridas, e as três soluções em ordem de custo.</li>
-<li><strong>P7.</strong> O que se consulta sempre vira coluna; o que varia fica no JSONB — justifique com os DOIS custos de errar para cada lado.</li>
-<li><strong>P8.</strong> Seu deploy: as três perguntas de release (como sei que quebrou / como volto / e o banco?) respondidas com os mecanismos EXATOS do seu pipeline, incluindo o tempo real do rollback que você ensaiou.</li>
+<li><strong>P1 · Contrato HTTP (AT-001–004).</strong> Mostre criação, inválido, inexistente e correlation id pela API. <em>Basta:</em> status e corpo deliberados por situação, sem vazar entidade. <em>Reprova:</em> erro inconsistente ou header que altera semântica.</li>
+<li><strong>P2 · Sessão e migration (AT-003/005–008).</strong> Descreva o ciclo da sessão quando o service levanta exceção; mostre upgrade e downgrade da revision. <em>Basta:</em> rollback na borda, volta declarada, schema só de migration. <em>Reprova:</em> <code>create_all</code> em startup ou sessão compartilhada.</li>
+<li><strong>P3 · Plano e JSONB (AT-009/011).</strong> Dado um plano, identifique o nó problemático e diga se é índice ou estatística; justifique coluna vs. documento pelos dois custos de errar. <em>Basta:</em> invariante do nó certo + GIN/validação. <em>Reprova:</em> cronômetro como prova ou JSONB sem schema.</li>
+<li><strong>P4 · Concorrência (AT-006/010).</strong> Por que só a constraint fecha a corrida de slug; descreva o teste do lost update e as correções em ordem de custo. <em>Basta:</em> 409 vindo de <code>IntegrityError</code> e total exato no atômico. <em>Reprova:</em> <code>if exists</code> como proteção.</li>
+<li><strong>P5 · Fronteiras e override (AT-013–016).</strong> Enuncie o que cada camada pode importar; troque a infraestrutura sem tocar na regra; apresente o ADR com custo e condição de revisão. <em>Basta:</em> guardrail verde + override demonstrado + ADR. <em>Reprova:</em> rota importando persistência.</li>
+<li><strong>P6 · Embalagem (AT-017–020).</strong> Explique o Dockerfile linha a linha e o Compose (saúde, rede, volume, limpeza). <em>Basta:</em> não-root, contexto sem segredo, API após banco saudável. <em>Reprova:</em> segredo na imagem ou <code>localhost</code> interno.</li>
+<li><strong>P7 · Integração (AT-012/021–024).</strong> Prove isolamento (mesmo slug, qualquer ordem) e degradação com o banco parado. <em>Basta:</em> rollback do envelope + 503 estruturado com cleanup. <em>Reprova:</em> teste dependente de ordem ou travamento.</li>
+<li><strong>P8 · Release (AT-025–032).</strong> Responda as três perguntas (como sei que quebrou / como volto / e o banco?) com os mecanismos do pipeline, e diga o que é trilha opcional. <em>Basta:</em> gates paritários, SHA imutável, migration antes de promover. <em>Reprova:</em> segredo no PR ou publicação como requisito.</li>
 </ul>
 <h4>Entregáveis verificados (mostrar rodando)</h4>
 <ol>
-<li>Encurtador completo em produção: URL pública, redirect 307 com hit atômico, paginação, rate limit, 409 na duplicata.</li>
-<li>Suíte de integração com testcontainers: isolamento provado (teste do slug repetido) + teste do lost update passando.</li>
-<li>Pipeline verde ponta a ponta: quality → imagem por SHA no ghcr → deploy automático no push para main; rollback ensaiado com tempo anotado.</li>
-<li><code>import-linter</code> no check.sh e no CI, com demonstração de violação sendo barrada.</li>
-<li>p95 local vs. produção medidos e anotados no PROGRESSO.md, com as três perguntas de sênior respondidas.</li>
-<li><strong>Esqueleto do Capstone no ar</strong>: /health e /projects deployados por push, com migrations e testes.</li>
+<li>Gates locais verdes: <code>scripts/check.sh</code> (lint, formato, tipos, suíte) + wheel em <code>dist/</code>.</li>
+<li>Guardrail com mutante rejeitado e revertido; ADR 0001 apresentado.</li>
+<li>Fluxo final pela API: criação, consulta, 409, 404, 422, <code>/health</code> 200 e 503 degradado, correlation id.</li>
+<li>Suíte <code>postgres</code> como contrato: verde com Docker, BLOCKED sem ele (G2/G5 pendentes nesse caso).</li>
+<li>Contrato de release (<code>RELEASE.md</code>) com gates, SHA, migrations, segredos e trilha opcional registrada.</li>
 </ol>
 </div>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>
 <p>A assinatura é a configuração: hints → validação, docs, contrato.<br>
-Sessão por request, commit na fronteira, transação curta — LLM nunca dentro dela.<br>
+Sessão por request, commit na fronteira, transação curta.<br>
 Constraint no banco é a verdade; código que checa antes é corrida que você perde.<br>
 EXPLAIN antes do deploy; índice troca escrita por leitura; JSONB para a cauda variável.<br>
-Camadas são imports, imports são lint, lint é exit code.<br>
+Camadas são imports, imports são teste com exit code.<br>
 Imagem em camadas: manifests primeiro, multi-stage, não-root, log em stdout.<br>
-Teste de integração fala com Postgres de verdade — mock de ORM é teatro.<br>
+Teste de integração fala com Postgres de verdade — simulação de ORM não prova.<br>
 Release responde três perguntas antes de existir: quebrou como sei, volto como, e o banco?</p>
 </div>
 

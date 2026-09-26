@@ -36,6 +36,7 @@ pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
   padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
 pre code{background:none;padding:0}
 table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+@media screen and (max-width:640px){table{display:block;overflow-x:auto}}
 th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
 th{background:var(--code-bg);font-weight:600}
 blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
@@ -97,109 +98,83 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="toc">
 <strong>Roteiro do laboratório</strong>
 <ol start="2">
-  <li><strong>Bloco 2 ·</strong> Tensor, gradiente e o loop de treino: PyTorch em 40 linhas</li>
-  <li><strong>Bloco 3 ·</strong> Atenção — o mecanismo, em código, e o preço do O(n²)</li>
-  <li><strong>Bloco 4 ·</strong> O transformer completo: montar, treinar, ver o loss cair</li>
+  <li><a href="#b02"><strong>Bloco 2 ·</strong> Tensor, gradiente e o loop de treino</a></li>
+  <li><a href="#b03"><strong>Bloco 3 ·</strong> Atenção — o mecanismo, em código, e o preço do O(n²)</a></li>
+  <li><a href="#b04"><strong>Bloco 4 ·</strong> O transformer completo: montar, treinar, ver o loss cair</a></li>
 </ol>
 <p style="margin:10px 0 0"><em>A tabela de diagnóstico e o checkpoint dos oito blocos estão no fim de <code>M11.html</code>.</em></p>
 </div>
-<h2>Bloco 2 · Tensor, gradiente e o loop de treino: PyTorch em 40 linhas</h2>
-<p class="clock">00:00–00:15 setup · 00:15–00:45 tensor e as três operações que importam · 00:45–01:15 autograd e o que é um gradiente · 01:15–02:00 prática: treinar do zero e ver o loss cair</p>
-
-<h3>Por que isso importa</h3>
-
-<p>Você não vai treinar modelos de produção. Mas há uma diferença enorme entre <em>ler</em> que "o modelo aprende ajustando pesos por gradiente descendente" e <em>ver</em> um número descer na sua tela porque você escreveu o loop. Depois de ver, três coisas ficam permanentemente claras: por que fine-tuning custa o que custa, por que o modelo "esquece" quando você o retreina, e por que o produto escalar — a mesma operação que você usa no pgvector desde o M07 — é a única operação que realmente importa em toda essa pilha.</p>
-
-<p>São 40 linhas. Elas contêm 100% da mecânica de aprendizado de qualquer rede neural, incluindo as de trilhões de parâmetros. A diferença entre o que você vai escrever e um GPT é <strong>escala e arquitetura</strong>, não princípio.</p>
-
-<h3>Setup</h3>
-
-<div class="step"><span class="n">1</span> Crie um projeto separado — este código é laboratório, não vai para o Capstone:
-<pre><code>uv init ~/lab-transformer && cd ~/lab-transformer
-uv add torch --index-url https://download.pytorch.org/whl/cpu
-uv add numpy
-uv run python -c "import torch; print(torch.__version__, torch.cuda.is_available())"</code></pre>
-<p><strong>Resultado esperado:</strong> algo como <code>2.13.0+cpu False</code>. O <code>False</code> é esperado e não atrapalha nada neste módulo — o índice <code>/whl/cpu</code> evita baixar ~2,5 GB de dependências CUDA que você não vai usar. Se você tem GPU NVIDIA e quer usá-la, troque para o índice <code>cu124</code> (ou o corrente) e o <code>False</code> vira <code>True</code>.</p>
+<h2 id="b02">Bloco 2 · Tensor, gradiente e o loop de treino</h2>
+<h3>Orientação: o que este bloco entrega</h3>
+<div class="box">
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco transforma o vocabulário do Bloco 1 em objeto manipulado. Cinco resultados saem daqui:</p>
+<ul>
+<li>descrever tensor por forma, tipo e dispositivo, e aplicar a convenção B/T/C na leitura de qualquer forma;</li>
+<li>aplicar as três operações — produto escalar, multiplicação de matrizes, broadcasting — e detectar a expansão silenciosa (AT-005) e a junção com forma errada (AT-006);</li>
+<li>explicar autograd como grafo dinâmico por passagem direta, e por que <code>backward()</code> soma no <code>.grad</code> existente (AT-002);</li>
+<li>executar o loop de cinco passos com <code>nn.Linear</code>, <code>MSELoss</code> e SGD, e dizer o que Adam e AdamW mudam no passo;</li>
+<li>prever quando profundidade colapsa sem ativação (AT-007) e quando parar por overfitting, com ponte ao Bloco 4.</li>
+</ul>
+<p><strong>Pré-requisitos.</strong> Bloco 1 (tensor, inferência × treino, logprobs como instrumento). Cada termo novo é definido no ponto de uso. Todo exemplo é Python. Nenhuma outra stack é pressuposta.</p>
+<p><strong>Saída observável.</strong> Ao fim da leitura, você lê formas como <code>(4, 16, 32)</code> sem hesitar, explica por que a limpeza de gradiente decide entre convergir e divergir, e lê as duas referências executáveis — <code>lab/regressao.py</code> e <code>lab/nao_linear.py</code> — sabendo o que cada linha prova. A execução pertence ao <code>Laboratório guiado M11</code>, ao final do módulo.</p>
+<p><strong>Ponte com o B01.</strong> O B01 definiu tensor, camada e treino como vocabulário. Este bloco abre cada um: tensor vira forma concreta na memória, camada vira <code>xW + b</code> com parâmetros aprendidos, treino vira cinco passos repetidos até o critério de parada.</p>
 </div>
 
-<div class="box net">
-<p><strong>Tradução .NET · projeto de laboratório.</strong> O equivalente ao <code>dotnet new console -o Scratch</code> que você cria para testar uma ideia sem sujar a solution. A diferença cultural: em Python/ML isso é a norma, não a exceção — quase todo trabalho começa como script solto e só depois vira módulo. O <code>uv</code> (M02 bloco 1) mantém o isolamento por projeto, então esse laboratório não contamina o ambiente do Capstone.</p>
-</div>
-
-<h3>Tensor: uma estrutura de dados, três operações</h3>
-
-<p>Um tensor é um array N-dimensional homogêneo. O nome intimida; a coisa é <code>float[,,]</code> com metadados. As propriedades que você vai olhar o tempo todo são <strong>shape</strong> (as dimensões), <strong>dtype</strong> (o tipo numérico) e <strong>device</strong> (CPU ou GPU).</p>
-
+<h3>Tensor: forma, tipo e dispositivo</h3>
+<p><strong>Tensor</strong> é um arranjo N-dimensional de elementos do mesmo tipo. Três atributos decidem quase todo diagnóstico. <strong>Shape</strong> (forma) lista o tamanho de cada dimensão, da externa para a interna. <strong>Dtype</strong> (tipo numérico) diz como cada elemento é guardado — <code>float32</code> para pesos e ativações, <code>long</code> para índices de token. <strong>Device</strong> (dispositivo) diz onde o dado mora — <code>cpu</code> neste módulo; GPU só acelera, sem mudar o resultado.</p>
+<p><strong>Convenção B/T/C.</strong> Em modelo de linguagem, as dimensões têm nome estável. <strong>B</strong> (<em>batch</em>, lote) conta quantas sequências entram juntas. <strong>T</strong> (<em>time</em>, tokens) mede o comprimento da sequência. <strong>C</strong> (<em>channels</em>, canais) mede a dimensão do embedding. Ler <code>(4, 16, 32)</code> como "4 sequências, 16 tokens cada, 32 números por token" evita metade dos erros de junção.</p>
+<p><strong>Trecho conceitual — leitura de forma.</strong> Ilustra o mecanismo; a execução com oráculos pertence à folha L:</p>
 <pre><code>import torch
 
 x = torch.tensor([[1.0, 2.0, 3.0],
                   [4.0, 5.0, 6.0]])
-print(x.shape)   # torch.Size([2, 3])   -> 2 linhas, 3 colunas
-print(x.dtype)   # torch.float32
-print(x.device)  # cpu
+assert x.shape == torch.Size([2, 3])
+assert x.dtype == torch.float32
 
-# Nomes convencionais das dimensoes num modelo de linguagem:
-#   B = batch (quantas sequencias de uma vez)
-#   T = time / tokens (comprimento da sequencia)
-#   C = channels / dimensao do embedding
-lote = torch.randn(4, 16, 32)   # B=4, T=16, C=32
-print(lote.shape)               # torch.Size([4, 16, 32])</code></pre>
+lote = torch.randn(4, 16, 32)  # B=4, T=16, C=32
+assert lote.shape == torch.Size([4, 16, 32])</code></pre>
 
-<div class="box net">
-<p><strong>Tradução .NET · shape é o contrato.</strong> Em C# o compilador te protege: <code>Matrix4x4</code> não compila contra <code>Vector3</code>. Em PyTorch <strong>não existe essa proteção</strong> — shapes erradas causam erro em runtime, e o pior caso é quando <em>não</em> causam erro porque o <em>broadcasting</em> "conserta" silenciosamente e você treina o modelo errado por três horas. A disciplina que substitui o compilador: comentar a shape esperada em toda linha não óbvia, e usar <code>assert x.shape == (B, T, C)</code> nos pontos de junção. Os praticantes sérios fazem isso; não é paranoia de iniciante.</p>
-</div>
-
-<p>Três operações cobrem quase tudo:</p>
-
-<pre><code># 1. PRODUTO ESCALAR — a operacao fundamental. "Quanto esses dois vetores concordam?"
-a = torch.tensor([1.0, 2.0, 3.0])
-b = torch.tensor([4.0, 5.0, 6.0])
-print(a @ b)                    # tensor(32.)  = 1*4 + 2*5 + 3*6
-
-# 2. MULTIPLICACAO DE MATRIZES — muitos produtos escalares de uma vez.
-#    (n, k) @ (k, m) -> (n, m). A dimensao do meio tem que casar; ela "some".
-A = torch.randn(4, 8)
-W = torch.randn(8, 16)
-print((A @ W).shape)            # torch.Size([4, 16])
-
-# 3. BROADCASTING — dimensoes de tamanho 1 (ou ausentes) sao esticadas.
-#    Poderosissimo e a fonte numero 1 de bugs silenciosos.
-m = torch.randn(4, 16)
-vies = torch.randn(16)          # shape (16,) -> tratado como (1, 16) -> esticado para (4, 16)
-print((m + vies).shape)         # torch.Size([4, 16])</code></pre>
-
-<div class="box">
-<p><strong>Contexto · O que é broadcasting.</strong> A regra do NumPy/PyTorch para operar tensores de shapes diferentes: alinhe as dimensões pela direita; onde uma delas for 1 (ou não existir), ela é replicada até casar. <code>(4,16) + (16,)</code> funciona; <code>(4,16) + (4,)</code> falha, porque 4 não casa com 16 na última posição. O perigo é o caso em que a operação <em>funciona mas não é o que você queria</em> — clássico: somar um vetor de shape <code>(4,1)</code> com um de shape <code>(1,4)</code> produz uma matriz <code>(4,4)</code> em vez do vetor <code>(4,)</code> que você esperava, e o treino simplesmente converge para algo errado sem estourar exceção.</p>
-</div>
-
-<div class="box fund">
-<p><strong>Fundamento de engenharia · Álgebra linear, na dose que importa.</strong> Três ideias sustentam tudo. <strong>(1) Produto escalar é medida de concordância</strong> — <code>a·b = |a||b|cos(θ)</code>. Se você normalizar os vetores para tamanho 1, o produto escalar <em>é</em> o cosseno: exatamente a <code>&lt;=&gt;</code> do pgvector que você usou no M07 bloco 3. A busca semântica e a atenção do transformer usam <em>a mesma operação</em>, com significados diferentes. <strong>(2) Matriz é uma transformação linear</strong>: multiplicar por <code>W</code> leva um vetor de um espaço para outro — é assim que um embedding de 32 dimensões vira uma query de 8. <strong>(3) Camada linear é <code>xW + b</code></strong>, ponto final; toda a "inteligência" das redes vem de empilhar isso com uma não-linearidade no meio. Se você entender esses três itens, entendeu a álgebra deste módulo inteiro — não há um quarto.</p>
-</div>
-
-<h3>Autograd: o gradiente é uma direção, não uma fórmula</h3>
-
-<p>Aqui está o conceito que, uma vez internalizado, dissolve o mistério do treino. Você tem uma função de erro (o <em>loss</em>) que depende dos pesos. Quer diminuí-la. A derivada do loss em relação a cada peso responde: <em>"se eu aumentar este peso um tantinho, o erro sobe ou desce, e quão rápido?"</em>. O vetor com todas essas derivadas é o <strong>gradiente</strong> — ele aponta na direção de <em>subida</em> mais íngreme. Então você anda no sentido contrário. Isso é gradiente descendente, e é tudo.</p>
-
-<p>O trabalho do autograd é calcular essas derivadas sem que você as escreva. Ele monta um grafo das operações à medida que você as executa e depois percorre esse grafo de trás para frente aplicando a regra da cadeia.</p>
-
-<pre><code>x = torch.tensor(3.0, requires_grad=True)   # "acompanhe as derivadas deste"
-y = x ** 2 + 5 * x                          # PyTorch registra: pow, mul, add
-
-y.backward()                                # percorre o grafo ao contrario
-print(x.grad)                               # tensor(11.)   -> dy/dx = 2x + 5 = 11</code></pre>
-
-<div class="box net">
-<p><strong>Tradução .NET · autograd é uma expression tree que sabe derivar.</strong> Você conhece <code>Expression&lt;Func&lt;T, bool&gt;&gt;</code>: o lambda não é compilado direto, é capturado como <em>árvore</em>, e o EF Core percorre essa árvore para gerar SQL. Autograd faz o mesmo movimento: cada operação sobre um tensor com <code>requires_grad=True</code> anexa um nó ao grafo, guardando o que é preciso para derivar. <code>backward()</code> é o "visitor" que percorre essa árvore de trás para frente. A diferença: o grafo do PyTorch é <em>dinâmico</em> — reconstruído a cada forward pass, o que permite <code>if</code> e <code>for</code> comuns dentro do modelo. É por isso que PyTorch ganhou de frameworks de grafo estático.</p>
-</div>
-
+<h3>As três operações que sustentam o treino</h3>
+<table>
+<thead><tr><th>Operação</th><th>Definição</th><th>Por que importa</th></tr></thead>
+<tbody>
+<tr><td><strong>Produto escalar</strong></td><td><code>a @ b</code> soma os produtos posição a posição; mede concordância entre dois vetores.</td><td>É a busca vetorial do M07 e a concordância query-key do Bloco 3. Vetores normalizados reduzem o produto ao cosseno.</td></tr>
+<tr><td><strong>Multiplicação de matrizes</strong></td><td><code>(n, k) @ (k, m)</code> devolve <code>(n, m)</code>; a dimensão do meio casa e some.</td><td>Uma camada linear é isso mais um viés: <code>xW + b</code>. Empilhar camadas é encadear essas transformações.</td></tr>
+<tr><td><strong>Broadcasting</strong></td><td>Dimensões de tamanho 1 (ou ausentes) são replicadas até casar, alinhando pela direita.</td><td>Evita cópia explícita de viés por linha. A mesma regra que economiza memória esconde o bug do próximo quadro.</td></tr>
+</tbody>
+</table>
 <div class="box warn">
-<p><strong>Pegadinha: gradientes acumulam.</strong> <code>backward()</code> <em>soma</em> no <code>.grad</code> existente em vez de sobrescrever. Se você esquecer <code>optimizer.zero_grad()</code> a cada passo, os gradientes de todos os passos anteriores se somam e o treino diverge de um jeito bizarro — o loss sobe, oscila, vira <code>nan</code>. É o bug número 1 de quem escreve o primeiro loop de treino. (O comportamento não é um defeito: ele permite acumular gradiente de vários mini-lotes para simular um lote grande quando a memória não cabe. Só precisa ser intencional.)</p>
+<p><span class="lbl">Contraste</span><strong>Forma certa não garante conta certa.</strong> <code>(4, 16) + (16,)</code> funciona: o vetor é tratado como <code>(1, 16)</code> e replicado por 4 linhas. <code>(4, 16) + (4,)</code> falha: 4 não casa com 16 na última posição. O caso que queima tempo é o que passa: <code>(4, 1) + (1, 4)</code> devolve <code>(4, 4)</code> sem erro, quando o esperado era um vetor de 4. O treino converge para algo errado sem levantar exceção. A disciplina que cobre os três casos: comentar a forma esperada nas junções e checar com <code>assert</code> antes do treino (AT-005, AT-006).</p>
+</div>
+<p><strong>Trecho conceitual — expansão silenciosa e guarda.</strong> Ilustra a regra; os oráculos com falha injetada pertencem à folha L:</p>
+<pre><code>import torch
+
+a = torch.ones(4, 1)
+b = torch.ones(1, 4)
+c = a + b
+assert c.shape == torch.Size([4, 4])  # AT-005
+
+# Guarda de juncao: falha antes do treino (AT-006)
+B, T, C = 4, 16, 32
+x = torch.randn(B, T, C)
+assert x.shape == (B, T, C)</code></pre>
+
+<h3>Autograd: o grafo dinâmico e o gradiente que soma</h3>
+<p><strong>Autograd</strong> é o registro automático de operações para derivação. Cada operação sobre um tensor marcado com <code>requires_grad=True</code> anexa um nó ao <strong>grafo</strong> da passagem direta (<em>forward</em>). <code>backward()</code> percorre esse grafo de trás para frente aplicando a regra da cadeia. O grafo é <strong>dinâmico</strong>: reconstruído a cada passagem, aceita <code>if</code> e <code>for</code> comuns dentro do modelo.</p>
+<p><strong>Gradiente</strong> é o vetor das derivadas da perda em relação a cada peso. Cada componente responde "se este peso subir um pouco, a perda sobe ou desce, e a que taxa". O vetor aponta para a subida mais íngreme; treinar é andar no sentido oposto em passos. Sem limpeza por iteração, o acumulado diverge — até <code>nan</code>, conforme taxa e passos (no lab deste módulo, oscila em patamar alto).</p>
+<p><strong>Trecho conceitual — derivada sem fórmula escrita.</strong> Ilustra o mecanismo:</p>
+<pre><code>import torch
+
+x = torch.tensor(3.0, requires_grad=True)
+y = x ** 2 + 5.0 * x  # registra pow, mul, add
+y.backward()  # dy/dx = 2x + 5 = 11.0
+assert x.grad is not None</code></pre>
+<div class="box warn">
+<p><span class="lbl">Contraste</span><strong>"Acumular gradiente é sempre bug" — não.</strong> <code>backward()</code> soma no <code>.grad</code> existente em vez de sobrescrever. Sem limpeza por iteração, gradientes de passos antigos se somam aos novos e a perda diverge — até <code>nan</code>, conforme taxa e passos (AT-002). Esse é o bug por esquecimento. A mesma soma, feita de propósito, simula um lote grande quando a memória não comporta o lote de uma vez: acumula-se por K mini-lotes e só então se atualiza. O critério separa os dois: acumulação sem chamada correspondente a <code>zero_grad()</code> no ritmo certo é acidente; acumulação contada e zerada no ponto marcado é técnica.</p>
 </div>
 
-<h3>O loop de treino, inteiro</h3>
-
-<p>Cinco passos, sempre os mesmos, em qualquer modelo de qualquer tamanho:</p>
-
+<h3>O loop de cinco passos</h3>
+<p>Todo treino repete o mesmo ciclo. <strong>Forward</strong> calcula a saída a partir da entrada. <strong>Loss</strong> (perda) mede a distância entre saída e alvo. <strong>Backward</strong> preenche <code>.grad</code> de cada parâmetro. <strong>Step</strong> (passo do otimizador) desloca cada peso contra o gradiente. <strong>Zero_grad</strong> limpa o acumulado para a próxima iteração. Repetir o ciclo é treinar.</p>
 <figure>
 <svg viewBox="0 0 720 120" width="100%" height="120" role="img" aria-label="Ciclo de treino: forward, loss, backward, step, zero_grad">
   <defs><marker id="sa" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#6b6862"/></marker></defs>
@@ -224,400 +199,568 @@ print(x.grad)                               # tensor(11.)   -> dy/dx = 2x + 5 = 
 </svg>
 <figcaption>O ciclo de treino. Um GPT de fronteira e o modelo de duas linhas abaixo executam exatamente estes cinco passos; muda a escala, não a mecânica.</figcaption>
 </figure>
-
-<h3>Prática guiada · treinar do zero e ver o loss cair (40 min)</h3>
-
-<p>Vamos aprender uma função que você já sabe de cor, para que o resultado seja verificável: <code>y = 3x + 2</code>. O modelo tem exatamente dois parâmetros. Se ele descobrir 3 e 2, o mecanismo funciona.</p>
-
-<div class="step"><span class="n">2</span> Crie <code>01_regressao.py</code>:
-<pre><code>import torch
-from torch import nn
-
-torch.manual_seed(1337)  # reprodutibilidade: mesmo resultado toda vez
-
-# Dados: y = 3x + 2, com um pouco de ruido (como dados reais teriam)
-X = torch.randn(200, 1)
-y = 3 * X + 2 + 0.1 * torch.randn(200, 1)
-
-modelo = nn.Linear(in_features=1, out_features=1)   # aprende y = wx + b
-funcao_de_perda = nn.MSELoss()                      # erro quadratico medio
-otimizador = torch.optim.SGD(modelo.parameters(), lr=0.1)
-
-for passo in range(101):
-    previsao = modelo(X)                    # 1. forward
-    perda = funcao_de_perda(previsao, y)    # 2. loss
-    otimizador.zero_grad()                  # 5. (feito antes, mesma coisa)
-    perda.backward()                        # 3. backward
-    otimizador.step()                       # 4. step
-
-    if passo % 20 == 0:
-        w = modelo.weight.item()
-        b = modelo.bias.item()
-        print(f"passo {passo:3d} | perda {perda.item():7.4f} | w={w:5.2f} b={b:5.2f}")</code></pre>
-<p><strong>Resultado esperado:</strong> <code>uv run python 01_regressao.py</code> imprime seis linhas com a perda caindo de ~<code>13</code> para ~<code>0.01</code>, e <code>w</code> convergindo para perto de <code>3.00</code> e <code>b</code> para perto de <code>2.00</code>. <strong>Este é o momento.</strong> Nenhuma fórmula de derivada foi escrita: o autograd descobriu que precisava aumentar <code>w</code> e <code>b</code>, e em quanto.</p>
+<p><strong>As três peças da regressão.</strong> <code>nn.Linear(in, out)</code> guarda <code>weight</code> e <code>bias</code> e calcula <code>xW + b</code>. <code>nn.MSELoss</code> calcula o erro quadrático médio; pune erro grande mais que proporcionalmente, o que convém à regressão de demonstração. <code>torch.optim.SGD</code> aplica <code>peso -= lr * grad</code>; <strong>lr</strong> (taxa de aprendizado) é o tamanho do passo. Passo grande oscila e diverge; passo pequeno demora; a escolha é decisão de engenharia, não propriedade do algoritmo.</p>
+<div class="box">
+<p><span class="lbl">Contexto</span><strong>O que Adam e AdamW fazem.</strong> SGD usa um passo único para todos os parâmetros. <strong>Adam</strong> guarda por parâmetro uma média móvel do gradiente (momento) e do gradiente ao quadrado (escala), e ajusta o passo de cada um: anda mais onde o terreno é plano, menos onde é íngreme. <strong>AdamW</strong> mantém o mesmo ajuste e corrige o <em>weight decay</em> (penalidade que puxa pesos para zero como regularização), aplicando-o fora do cálculo adaptativo. Adam e AdamW são o padrão em transformers; a regressão abaixo usa SGD porque um parâmetro por dimensão dispensa adaptação, e o seno usa Adam. Fonte: SRC-M11-11.</p>
 </div>
 
-<div class="step"><span class="n">3</span> Quebre de propósito, para fixar. Comente a linha do <code>zero_grad()</code> e rode de novo.
-<p><strong>Resultado esperado:</strong> a perda cai nos primeiros passos e depois <em>explode</em> — valores como <code>3.4e+12</code>, terminando em <code>nan</code>. Você acabou de reproduzir, em 10 segundos, o bug mais comum do campo. Descomente antes de seguir.</p>
-</div>
+<h3>Sem ativação, profundidade colapsa</h3>
+<p><strong>Ativação</strong> é uma função não linear aplicada entre camadas, como <code>Tanh</code>. Sem ela, duas camadas lineares em série equivalem a uma só: <code>(xW1)W2 = x(W1W2)</code>. O produto <code>W1W2</code> é outra matriz; nenhuma profundidade linear cria função nova. A ativação quebra a linearidade e dá poder expressivo ao empilhamento (AT-007). A referência <code>nao_linear.py</code> mostra o colapso na prática: a reta não acompanha o seno, o MLP com <code>Tanh</code> acompanha.</p>
+<h3>Overfitting: o critério de parada, com ponte ao Bloco 4</h3>
+<p><strong>Overfitting</strong> é decorar o treino e piorar fora dele. A perda de treino continua caindo enquanto a perda em dados separados — <strong>validação</strong>, o conjunto que o modelo não usa para atualizar peso — para de cair e começa a subir. O ponto de virada é o critério de parada: interromper ali preserva generalização (<strong>early stopping</strong>). O Bloco 4 torna o fenômeno visível com treino e validação separados sobre código (AT-014). A regra atravessa domínios: nunca valide um sistema só com os dados que o construíram.</p>
+<h3>Exemplo trabalhado: referência executável</h3>
+<p><strong>Estatuto do código.</strong> Os dois blocos abaixo são referência executável: o contrato que a folha B02-L implementa verbatim em <code>lab/</code>. Leitura aqui; execução no <code>Laboratório guiado M11</code>. Nomes de módulo, funções e comportamento estão congelados. Trechos anteriores rotulados como conceituais ilustram mecanismo; só estes dois são programa completo.</p>
+<p><strong>Referência executável 1 — <code>lab/regressao.py</code>.</strong> Aprende <code>y = 3x + 2</code> com ruído, semente fixa, loop de cinco passos e impressão periódica. Tipagem estrita, só CPU:</p>
+<pre><code>"""Regressao linear y = 3x + 2 com ruido.
 
-<div class="step"><span class="n">4</span> Veja a não-linearidade importar. Troque a tarefa para algo que uma reta não consegue aprender e compare dois modelos:
-<pre><code># 02_nao_linear.py
+Referencia executavel do Bloco 2.
+Implementacao verbatim na folha B02-L.
+CPU-only: sem `.to(cuda)`; GPU opcional.
+"""
+
 import torch
 from torch import nn
 
-torch.manual_seed(1337)
-X = torch.linspace(-3, 3, 400).unsqueeze(1)   # shape (400, 1)
-y = torch.sin(X) + 0.05 * torch.randn_like(X)
+SEMENTE: int = 1337
+N_AMOSTRAS: int = 200
+PASSOS: int = 500
+IMPRIMIR_A_CADA: int = 100
+TAXA: float = 0.1
 
-linear = nn.Linear(1, 1)
-mlp = nn.Sequential(          # camada -> nao-linearidade -> camada
-    nn.Linear(1, 64),
-    nn.Tanh(),                # sem isto, duas Linear em serie ainda sao UMA Linear
-    nn.Linear(64, 1),
-)
 
-for nome, modelo in (("linear", linear), ("mlp", mlp)):
-    otim = torch.optim.Adam(modelo.parameters(), lr=0.02)
-    for _ in range(2000):
-        perda = nn.functional.mse_loss(modelo(X), y)
-        otim.zero_grad()
+def gerar_dados(n: int) -&gt; tuple[torch.Tensor, torch.Tensor]:
+    """Gera X e y = 3x + 2 + ruido gaussiano."""
+    x = torch.randn(n, 1)
+    ruido = 0.1 * torch.randn(n, 1)
+    y = 3.0 * x + 2.0 + ruido
+    return x, y
+
+
+def construir_modelo() -&gt; nn.Linear:
+    """Modelo y = wx + b com um neuronio."""
+    return nn.Linear(in_features=1, out_features=1)
+
+
+def treinar(
+    modelo: nn.Linear,
+    x: torch.Tensor,
+    alvo: torch.Tensor,
+    limpar_grad: bool = True,
+) -&gt; nn.Linear:
+    """Loop de 5 passos; retorna o modelo treinado."""
+    criterio = nn.MSELoss()
+    otimizador = torch.optim.SGD(modelo.parameters(), lr=TAXA)
+    otimizador.zero_grad()
+    for passo in range(PASSOS + 1):
+        pred = modelo(x)  # 1. forward
+        perda = criterio(pred, alvo)  # 2. loss
+        perda.backward()  # 3. backward
+        otimizador.step()  # 4. step
+        if limpar_grad:  # 5. zero_grad
+            otimizador.zero_grad()
+        if passo % IMPRIMIR_A_CADA == 0:
+            w = modelo.weight.item()
+            b = modelo.bias.item()
+            print(f"passo {passo:3d} | perda {perda.item():.4f}")
+            print(f"  w={w:.2f} b={b:.2f}")
+    return modelo
+
+
+def main() -&gt; None:
+    """Caminho feliz: semente fixa e limpeza ligada."""
+    torch.manual_seed(SEMENTE)
+    x, alvo = gerar_dados(N_AMOSTRAS)
+    modelo = construir_modelo()
+    treinar(modelo, x, alvo, limpar_grad=True)
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+<p><strong>Variante de quebra.</strong> A mesma referência com <code>limpar_grad=False</code> é o caso negativo: o caminho feliz converge para perto de <code>w = 3</code> e <code>b = 2</code>; sem limpeza o acumulado diverge. A folha L executa os dois caminhos a partir deste único parâmetro (AT-002).</p>
+<p><strong>Referência executável 2 — <code>lab/nao_linear.py</code>.</strong> O seno separa o que é linear do que exige ativação: baseline <code>Linear</code> contra MLP <code>Linear-Tanh-Linear</code>. Tipagem estrita, só CPU:</p>
+<pre><code>"""Seno: reta contra MLP com ativacao.
+
+Referencia executavel do Bloco 2.
+Implementacao verbatim na folha B02-L.
+CPU-only: sem `.to(cuda)`; GPU opcional.
+"""
+
+import torch
+from torch import nn
+
+SEMENTE: int = 1337
+N_PONTOS: int = 400
+OCULTOS: int = 64
+PASSOS: int = 2000
+TAXA: float = 0.02
+
+
+def gerar_seno(n: int) -&gt; tuple[torch.Tensor, torch.Tensor]:
+    """X em [-3, 3]; y = sin(x) + ruido."""
+    x = torch.linspace(-3.0, 3.0, n).unsqueeze(1)
+    y = torch.sin(x) + 0.05 * torch.randn_like(x)
+    return x, y
+
+
+def criar_linear() -&gt; nn.Linear:
+    """Baseline: uma reta y = wx + b."""
+    return nn.Linear(1, 1)
+
+
+def criar_mlp(ocultos: int = OCULTOS) -&gt; nn.Sequential:
+    """Linear -&gt; Tanh -&gt; Linear; a ativacao impede o colapso."""
+    return nn.Sequential(
+        nn.Linear(1, ocultos),
+        nn.Tanh(),
+        nn.Linear(ocultos, 1),
+    )
+
+
+def treinar(
+    modelo: nn.Module, x: torch.Tensor, alvo: torch.Tensor
+) -&gt; float:
+    """Treina com Adam e devolve a perda final."""
+    criterio = nn.MSELoss()
+    otimizador = torch.optim.Adam(modelo.parameters(), lr=TAXA)
+    perda_final = 0.0
+    for _ in range(PASSOS):
+        pred = modelo(x)
+        perda = criterio(pred, alvo)
+        otimizador.zero_grad()
         perda.backward()
-        otim.step()
-    print(f"{nome:6s} perda final = {perda.item():.4f}")</code></pre>
-<p><strong>Resultado esperado:</strong> <code>linear perda final = 0.49</code> (aproximadamente) e <code>mlp perda final = 0.003</code> (aproximadamente). O linear está preso — nenhuma reta aproxima um seno. A lição estrutural: <strong>empilhar camadas lineares sem não-linearidade no meio é matematicamente idêntico a ter uma única camada linear</strong> (<code>(xW₁)W₂ = x(W₁W₂)</code>). A função de ativação é o que dá poder expressivo à profundidade.</p>
-</div>
+        otimizador.step()
+        perda_final = perda.item()
+    return perda_final
 
+
+def main() -&gt; None:
+    """Treina os dois e imprime as perdas finais."""
+    torch.manual_seed(SEMENTE)
+    x, alvo = gerar_seno(N_PONTOS)
+    perda_linear = treinar(criar_linear(), x, alvo)
+    perda_mlp = treinar(criar_mlp(), x, alvo)
+    print(f"linear perda final = {perda_linear:.4f}")
+    print(f"mlp perda final = {perda_mlp:.4f}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+<p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> No caminho feliz, a perda impressa desce ao longo dos passos e os pesos se aproximam de 3 e 2; na variante sem limpeza, a sequência diverge. No seno, a perda final do MLP fica abaixo da reta por margem clara. Formatos ilustrativos. A folha L mede no ambiente real e registra os números observados; nenhum valor aqui é prova.</p>
 <div class="box">
-<p><strong>Contexto · O que é Adam, e por que não SGD.</strong> SGD ("gradiente descendente estocástico") anda um passo fixo na direção contrária ao gradiente. Funciona, mas é sensível à taxa de aprendizado e lento em superfícies desiguais. <strong>Adam</strong> mantém, para cada parâmetro, uma média móvel do gradiente (momento) e do gradiente ao quadrado (escala), e usa as duas para dar passos maiores onde o terreno é plano e menores onde é íngreme — parâmetro por parâmetro. Na prática: Adam (ou <code>AdamW</code>, a variante com <em>weight decay</em> corrigido) é o padrão para transformers, e é o que você vai usar no bloco 4. A analogia de controle é honesta: SGD é um controlador proporcional puro; Adam tem termos integral e adaptativo.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B02-L constrói em <code>lab/</code>.</strong> <code>lab/regressao.py</code> e <code>lab/nao_linear.py</code> com estes contratos verbatim; prova AT-001 (mesma semente reproduz a sequência, semente solta diverge); prova AT-002 (caminho com <code>limpar_grad=True</code> converge, com <code>False</code> diverge); oráculo AT-005 (assert de forma detecta <code>(4, 1) + (1, 4) -&gt; (4, 4)</code>); oráculo AT-006 (junção com forma errada falha antes do treino); oráculo AT-007 (MLP sem ativação equivale à reta, com <code>Tanh</code> acompanha o seno). CPU é o baseline; GPU opcional só acelera. Nenhum passo de construção ou execução vive neste bloco: o passo a passo mora no <code>Laboratório guiado M11</code>.</p>
 </div>
-
-<div class="box fund">
-<p><strong>Fundamento de engenharia · Otimização iterativa e o critério de parada.</strong> Gradiente descendente pertence à mesma família de algoritmos que você já usa sem chamar assim: busca binária, método de Newton, controladores PID, <em>backoff</em> exponencial em retry. Todos seguem o mesmo esqueleto — <em>meça o erro, ajuste na direção que o reduz, repita, pare por um critério</em>. E todos compartilham as mesmas patologias: passo grande demais oscila e diverge; passo pequeno demais nunca chega; e <strong>o critério de parada é uma decisão de engenharia, não uma propriedade do algoritmo</strong>. Em treino de modelo, parar cedo demais dá um modelo cru e parar tarde demais dá <em>overfitting</em> (o modelo decora o conjunto de treino e piora no resto) — exatamente o mesmo dilema de "quantas iterações de tuning até a query estar boa o bastante". Quem já dimensionou um retry policy já pensou nisso.</p>
-</div>
-
 <div class="box ok">
-<p><strong>Síntese do bloco 2</strong></p>
+<p><span class="lbl">Síntese</span><strong>Bloco 2 em seis frases.</strong></p>
 <ul>
-<li>Tensor é array N-dimensional com shape, dtype e device; shape errada é o erro mais comum e o compilador não te salva.</li>
-<li>Produto escalar mede concordância — é a mesma operação da busca vetorial do M07 e da atenção do bloco 3.</li>
-<li>Gradiente é a direção de subida do erro; treinar é andar no sentido oposto, em passos.</li>
-<li>Autograd é uma expression tree dinâmica que deriva sozinha; <code>zero_grad()</code> é obrigatório porque gradientes acumulam.</li>
-<li>O loop de treino tem cinco passos e é idêntico em qualquer escala.</li>
-<li>Sem função de ativação, profundidade não agrega nada: duas camadas lineares em série são uma camada linear.</li>
+<li>Tensor se lê por forma, tipo e dispositivo; B/T/C nomeia cada dimensão.</li>
+<li>Produto escalar mede concordância; matmul encadeia transformações; broadcasting alinha pela direita e pode expandir em silêncio.</li>
+<li>Autograd reconstrói o grafo a cada passagem; <code>backward()</code> soma, por isso a limpeza decide o treino.</li>
+<li>O loop tem cinco passos e é idêntico em qualquer escala; lr escolhe o tamanho do passo.</li>
+<li>Adam adapta o passo por parâmetro; AdamW corrige o weight decay; ambos são o padrão em transformers.</li>
+<li>Sem ativação, profundidade colapsa; sem validação separada, o treino decora — o Bloco 4 mostra o segundo.</li>
 </ul>
 </div>
-<h2>Bloco 3 · Atenção — o mecanismo, em código, e o preço do O(n²)</h2>
-<p class="clock">00:00–00:25 o problema que a atenção resolve · 00:25–01:00 Q, K, V e a máscara causal · 01:00–01:30 multi-head · 01:30–02:00 prática: implementar, conferir contra o PyTorch e medir o custo quadrático</p>
-
-<h3>Por que isso importa</h3>
-
-<p>Este é o bloco central do módulo. A atenção é a razão pela qual (a) o modelo entende que "ele" na quarta linha se refere ao <code>PedidoService</code> da primeira, (b) a janela de contexto é finita e cara, e (c) o M08 precisou de um "orçamento de atenção". Depois de implementar o mecanismo com as próprias mãos, aquele orçamento deixa de ser uma regra do curso e vira uma consequência que você consegue derivar.</p>
-
-<h3>O problema: representação depende do contexto</h3>
-
-<p>No M07 você aprendeu que cada trecho de texto vira um vetor. Mas um embedding fixo por token tem um limite fatal: a palavra <code>Cliente</code> significa coisas diferentes em <code>class Cliente</code>, em <code>cliente.Salvar()</code> e em "o cliente reclamou do prazo". Se o vetor de <code>Cliente</code> for sempre o mesmo, o modelo não consegue distinguir.</p>
-
-<p>A atenção resolve isso deixando cada token <strong>olhar para os outros tokens da sequência e reescrever a própria representação como uma mistura ponderada deles</strong>. Depois da camada de atenção, o vetor na posição de <code>Cliente</code> não representa mais "a palavra Cliente" — representa "a palavra Cliente <em>neste</em> contexto". É isso, e o resto é aritmética.</p>
-
-<div class="box net">
-<p><strong>Tradução .NET · atenção como resolução de escopo.</strong> O analisador semântico do Roslyn faz algo estruturalmente parecido: ao encontrar o identificador <code>cliente</code> numa expressão, ele consulta o escopo — parâmetros, campos, usings — e <em>resolve</em> o símbolo. A diferença é o mecanismo de decisão: o Roslyn resolve por <strong>regras determinísticas de linguagem</strong> (há uma especificação que diz qual símbolo vence); a atenção resolve por <strong>pesos aprendidos e contínuos</strong> — em vez de escolher um símbolo, ela mistura todos com pesos que somam 1. É "resolução de escopo difusa, aprendida dos dados". A analogia ajuda a entender o propósito; guarde a diferença, porque ela explica por que o modelo às vezes resolve errado e o compilador nunca.</p>
-</div>
-
-<h3>Query, Key e Value</h3>
-
-<p>Cada token produz três vetores, cada um por uma multiplicação de matriz (uma camada linear, do bloco 2):</p>
-
+<h3>Fontes do Bloco 2</h3>
 <ul>
-<li><strong>Query (Q)</strong> — "o que eu estou procurando".</li>
-<li><strong>Key (K)</strong> — "o que eu ofereço a quem procurar".</li>
-<li><strong>Value (V)</strong> — "o que eu efetivamente entrego se for escolhido".</li>
+<li>SRC-M11-01 — PyTorch docs — documentação oficial — Tensor, autograd, <code>nn</code>. URLs na spec §6. Consulta: 14/09/2026. Risco: médio. Versão a fixar na folha L; nenhuma versão afirmada aqui.</li>
+<li>SRC-M11-11 — Adam — científica — momento e escala por parâmetro; base do contexto Adam/AdamW. URLs na spec §6. Consulta: 14/09/2026. Risco: baixo.</li>
+<li>Execução CPU baseline, GPU opcional; sem rede, conta, download de pesos ou serviço externo neste bloco.</li>
 </ul>
+<h2 id="b03">Bloco 3 · Atenção — o mecanismo, em código, e o preço do O(n²)</h2>
+<h3>Orientação: o que este bloco entrega</h3>
+<div class="box">
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco abre a peça que decide custo e qualidade no transformer: a atenção. Cinco resultados saem daqui:</p>
+<ul>
+<li>explicar por que um vetor fixo por token falha (polissemia) e o que a mistura contextual muda na representação (AT-008);</li>
+<li>ler <code>softmax(QKᵀ/√d)V</code> peça por peça, com formas, e dizer onde nasce o O(n²);</li>
+<li>aplicar a máscara causal e prever a falha quando ela é invertida (AT-008) e quando a escala some (saturação);</li>
+<li>distinguir a implementação oficial (SDPA) do kernel otimizado (FlashAttention): o que economiza memória, o que mantém computação, e por que dobrar o contexto multiplica o tempo por ~4× (AT-009, AT-010);</li>
+<li>descrever multi-head sem loop, com a cabeça como dimensão de lote, e a exigência de <code>contiguous()</code> após <code>transpose</code> (AT-011).</li>
+</ul>
+<p><strong>Pré-requisitos.</strong> Bloco 2 (leitura B/T/C, produto escalar, matmul, broadcasting, <code>nn.Linear</code> como <code>xW + b</code>). Cada termo novo — query, key, value, máscara causal, softmax, SDPA, TTFT — é definido no ponto de uso. Todo exemplo é Python. Nenhuma outra stack é pressuposta.</p>
+<p><strong>Saída observável.</strong> Ao fim da leitura, você deriva a forma de cada etapa sem consultar tabela, explica cada divisão e cada <code>-inf</code>, prevê três falhas por inspeção (máscara invertida, escala ausente, <code>view</code> sem <code>contiguous</code>) e lê as três referências executáveis — <code>lab/atencao.py</code>, <code>lab/custo_quadratico.py</code>, <code>lab/multihead.py</code> — sabendo o que cada nome prova. A execução pertence ao <code>Laboratório guiado M11</code>, ao final do módulo.</p>
+<p><strong>Ponte com o B02.</strong> O B02 entregou produto escalar como medida de concordância, matmul como transformação e <code>Linear</code> como projeção aprendida. Este bloco combina os três: cada token é projetado em três papéis, a concordância entre papéis vira peso, o peso mistura conteúdo. O preço aparece na mesma operação que já era quadrática no papel.</p>
+</div>
+<h3>O problema: o mesmo token, sentidos distintos</h3>
+<p>Um vetor fixo por token não distingue uso. A palavra <code>Cliente</code> em <code>class Cliente</code> (definição), em <code>cliente.salvar()</code> (instância em chamada) e em "o cliente reclamou do prazo" (pessoa fora do código) exigiria três significados; um embedding estático entrega um só. O modelo precisa de representação que depende da vizinhança.</p>
+<p>A atenção resolve o impasse com mistura contextual: cada posição mede concordância com as demais e reescreve o próprio vetor como soma ponderada dos vetores vizinhos. Após a camada, o vetor na posição de <code>Cliente</code> carrega "Cliente neste contexto", não "Cliente em geral". O mecanismo é busca ponderada; o resto é aritmética com formas controladas.</p>
 
-<p>A analogia canônica é busca em dicionário, e ela é boa desde que você aceite o detalhe crucial: <strong>a busca é difusa</strong>. Em vez de casar exatamente uma chave, o mecanismo calcula o quanto a query de cada token concorda com a key de cada outro — produto escalar, de novo — e usa esses graus de concordância como pesos para somar os values.</p>
+<!-- B03: caixa de stack removida (Python canônico, sem pré-requisito de outra stack). O propósito da atenção está nos dois parágrafos do problema acima. -->
 
-<pre><code>atencao(Q, K, V) = softmax( (Q @ K.T) / sqrt(d_k) ) @ V</code></pre>
+<h3>Q, K, V: busca difusa por produto escalar</h3>
+<p>Cada token produz três vetores por projeção linear aprendida sobre a entrada. <strong>Query (Q)</strong> declara o que a posição procura. <strong>Key (K)</strong> declara o que cada posição oferece à procura alheia. <strong>Value (V)</strong> carrega o conteúdo que será misturado quando a posição for selecionada. Três projeções separadas permitem que "procurar", "ser encontrado" e "entregar" aprendam geometrias distintas.</p>
+<p>A busca é difusa: nenhuma chave vence sozinha. O escore entre a posição <code>i</code> e a posição <code>j</code> é o produto escalar entre <code>Q[i]</code> e <code>K[j]</code> — a operação de concordância do Bloco 2, reaproveitada sem mudança. Escores altos viram pesos altos na mistura; escores baixos viram pesos próximos de zero. Difuso significa ponderado, não indeciso: a soma final carrega mais dos vizinhos relevantes.</p>
+<p><strong>Trecho conceitual — escores como concordância.</strong> Ilustra o mecanismo; a prova com oráculo pertence à folha L:</p>
+<pre><code>import torch
 
-<p>Lendo a fórmula da esquerda para a direita, cada peça tem um motivo:</p>
-
+# Duas queries (T=2) contra tres keys (T=3), dim=4: (2, 4) @ (4, 3) -&gt; (2, 3)
+q = torch.randn(2, 4)
+k = torch.randn(3, 4)
+escores = q @ k.T
+assert escores.shape == torch.Size([2, 3])</code></pre>
+<h3>A fórmula, peça por peça</h3>
+<p><code>atencao(Q, K, V) = softmax(Q @ K.T / sqrt(d)) @ V</code>. Leitura da esquerda para a direita, com entrada <code>(B, T, C)</code> e dimensão por cabeça <code>d</code>:</p>
 <table>
-<thead><tr><th>Peça</th><th>Shape</th><th>O que faz</th><th>Por que existe</th></tr></thead>
+<thead><tr><th>Peça</th><th>Forma</th><th>O que faz</th><th>Por que existe</th></tr></thead>
 <tbody>
-<tr><td><code>Q @ K.T</code></td><td>(T, T)</td><td>Concordância de cada token com cada token.</td><td>É a matriz de atenção. <strong>Aqui nasce o O(n²)</strong>: T linhas × T colunas.</td></tr>
-<tr><td><code>/ sqrt(d_k)</code></td><td>(T, T)</td><td>Divide pela raiz da dimensão das keys.</td><td>Sem isso, com <code>d_k</code> grande os produtos escalares ficam enormes, o softmax satura (vira quase one-hot) e o gradiente morre.</td></tr>
-<tr><td>máscara causal</td><td>(T, T)</td><td>Põe −∞ acima da diagonal.</td><td>Num modelo que gera texto, o token 3 não pode olhar o token 7 — seria ver o futuro. −∞ vira 0 depois do softmax.</td></tr>
-<tr><td><code>softmax(...)</code></td><td>(T, T)</td><td>Normaliza cada linha para somar 1.</td><td>Transforma pontuações em pesos de mistura.</td></tr>
-<tr><td><code>... @ V</code></td><td>(T, C)</td><td>Mistura ponderada dos values.</td><td>É a saída: a nova representação, contextualizada.</td></tr>
+<tr><td><code>Q @ K.T</code></td><td><code>(B, T, T)</code></td><td>Concordância de cada posição com cada posição.</td><td>É a matriz de atenção. Aqui nasce o O(n²): T linhas × T colunas por lote e por cabeça (AT-010).</td></tr>
+<tr><td><code>/ sqrt(d)</code></td><td><code>(B, T, T)</code></td><td>Reduz a magnitude antes de normalizar.</td><td>Sem a escala, produtos em dimensão alta saturam o softmax em quase one-hot e o gradiente some.</td></tr>
+<tr><td>máscara causal</td><td><code>(T, T)</code></td><td>Escreve <code>-inf</code> acima da diagonal principal.</td><td>Geração é causal: a posição 3 não consulta a posição 7. <code>-inf</code> vira peso zero após o softmax. Máscara invertida prende o treino em <code>ln(vocab)</code> (AT-008).</td></tr>
+<tr><td><code>softmax</code></td><td><code>(B, T, T)</code></td><td>Normaliza cada linha para somar 1.</td><td>Converte escores em pesos de mistura. Preserva ordem e exagera diferenças: o maior continua maior, com margem ampliada.</td></tr>
+<tr><td><code>@ V</code></td><td><code>(B, T, d)</code></td><td>Soma ponderada dos valores.</td><td>É a saída: cada posição carrega a mistura do contexto permitido.</td></tr>
 </tbody>
 </table>
 
 <div class="box">
-<p><strong>Contexto · O que é softmax, concretamente.</strong> Dada uma lista de números quaisquer, o softmax devolve uma lista de mesmo tamanho, todos positivos, somando 1. A fórmula é <code>exp(xᵢ) / Σ exp(xⱼ)</code>. Duas propriedades importam aqui: (1) preserva a ordem — o maior continua o maior; (2) <strong>exagera diferenças</strong>, porque a exponencial cresce rápido: <code>[1, 2, 3]</code> vira <code>[0.09, 0.24, 0.67]</code>, e <code>[10, 20, 30]</code> vira <code>[0.000, 0.000, 1.000]</code>. Essa segunda propriedade é exatamente o que a divisão por <code>sqrt(d_k)</code> vem controlar — e é também o que faz a temperatura funcionar (bloco 5): dividir os logits por <code>T</code> antes do softmax muda o quanto ele exagera.</p>
+<p><span class="lbl">Contexto</span><strong>O que softmax faz, em números.</strong> Dado um vetor qualquer, devolve vetor positivo de mesma dimensão somando 1, por <code>exp(x) / soma(exp(x))</code>. <code>[1, 2, 3]</code> vira aproximadamente <code>[0.09, 0.24, 0.67]</code>: ordem preservada, distância exagerada. Com magnitudes grandes o exagero vira colapso (quase tudo no máximo). A divisão por <code>sqrt(d)</code> controla esse colapso na atenção; a temperatura controla o mesmo exagero na amostragem do Bloco 5.</p>
 </div>
-
+<div class="box warn">
+<p><span class="lbl">Contraste</span><strong>"Softmax ordena por importância absoluta" — não.</strong> Softmax preserva a ordem relativa dos escores e exagera a separação; não atribui sentido absoluto a nenhum peso. Um peso 0.67 em <code>[1, 2, 3]</code> não significa "67% importante em geral": significa "maior que os vizinhos desta linha, nesta escala". Trocar a escala ou os vizinhos muda todos os pesos sem mudar nenhuma key. Comparar pesos entre linhas ou entre sequências distintas como se fossem escores universais produz leitura falsa do que o modelo julga importante.</p>
+</div>
 <div class="box fund">
-<p><strong>Fundamento de engenharia · Estabilidade numérica em ponto flutuante.</strong> A divisão por <code>sqrt(d_k)</code> não é estética — é a mesma classe de cuidado que você toma ao somar valores monetários em <code>float</code>, ou ao comparar dois <code>double</code> com <code>==</code>. Ponto flutuante tem faixa e precisão finitas: <code>exp(800)</code> estoura para <code>inf</code>, e a partir daí toda operação vira <code>nan</code> e contamina o modelo inteiro. É por isso que implementações reais de softmax subtraem o máximo antes de exponenciar (<code>exp(x - max(x))</code>, matematicamente idêntico, numericamente seguro), e por isso que treino em <code>float16</code> exige <em>loss scaling</em>. A regra que atravessa domínios: <strong>quando uma expressão matemática é reescrita "sem motivo" no código de produção, o motivo geralmente é a faixa do tipo numérico</strong>.</p>
+<p><span class="lbl">Estabilidade</span><strong>Subtrair o máximo não muda a conta; muda o estouro.</strong> <code>exp(800)</code> ultrapassa a faixa do ponto flutuante e contamina o treino com <code>inf</code> e <code>nan</code>. Implementações sérias calculam <code>exp(x - max(x))</code> antes de normalizar: matematicamente idêntico, numericamente seguro, porque o maior expoente vira <code>exp(0) = 1</code>. A regra atravessa domínios: expressão reescrita "sem motivo" em código de produção costuma proteger faixa de tipo numérico, não elegância.</p>
+</div>
+<p><strong>Trecho conceitual — softmax estável.</strong> Ilustra a reescrita; o oráculo de equivalência pertence à folha L:</p>
+<pre><code>import torch
+
+def softmax_estavel(x: torch.Tensor) -&gt; torch.Tensor:
+    """Softmax com subtracao do maximo; mesma conta, sem estouro."""
+    m = x.max(dim=-1, keepdim=True).values
+    e = torch.exp(x - m)
+    return e / e.sum(dim=-1, keepdim=True)</code></pre>
+
+<h3>A implementação oficial e o que o kernel otimizado economiza</h3>
+<p><code>torch.nn.functional.scaled_dot_product_attention</code> (SDPA) é a implementação oficial da fórmula: recebe Q, K e V e aplica escala, máscara causal opcional e mistura em caminho otimizado. A referência <code>lab/atencao.py</code> escreve a conta passo a passo e prova equivalência contra SDPA com tolerância explícita (AT-009). SDPA é o oráculo; a versão manual é o instrumento de entendimento.</p>
+<p><strong>FlashAttention</strong> é o kernel otimizado que SDPA seleciona quando o hardware permite. A economia é de memória: em vez de materializar a matriz <code>T×T</code> inteira, processa em blocos e recomputa no backward. A contagem de operações continua quadrática. Em serving, o cache de chaves e valores evita refazer o prefixo estável; organizar esse cache em páginas responde por throughput (PagedAttention). Nenhuma dessas técnicas remove o termo dominante do prefill: dobrar a entrada continua multiplicando o trabalho por quatro (tempo ≈4× por dobra onde a computação domina; em contextos curtos o overhead de lançamento domina).</p>
+<div class="box warn">
+<p><span class="lbl">Contraste</span><strong>"FlashAttention elimina o O(n²)" — não.</strong> FlashAttention elimina a materialização da matriz <code>T×T</code> em memória; não elimina as comparações par a par que definem a atenção. Confundir pico de memória com contagem de operações leva a dimensionar contexto por VRAM e descobrir o estouro no relógio: cabe na placa, não cabe no TTFT. A decisão que decorre do contraste: medir tempo por dobra de contexto (AT-010) em vez de inferir custo por consumo de memória.</p>
 </div>
 
-<h3>Prática guiada · implementar atenção e conferir contra o PyTorch (45 min)</h3>
+<h3>O custo quadrático e a decisão no gateway</h3>
+<p>O prefill (processar o prompt de entrada) cresce com o quadrado do comprimento: cada token novo compara-se com todos os anteriores. A referência <code>lab/custo_quadratico.py</code> varre comprimentos crescentes com repetição e aquecimento e publica a razão entre dobras sucessivas (AT-010). CPU é o baseline; GPU opcional só acelera. A implicação atravessa o gateway do M05: tempo até o primeiro token (TTFT) dispara com prompts longos, enquanto a cobrança por token sugere crescimento linear. O cache de prompt evita refazer o trabalho quadrático sobre o prefixo estável; o orçamento de atenção do M08 poda o contexto porque cada token cortado remove uma linha e uma coluna da matriz.</p>
+<div class="box">
+<p><span class="lbl">Decisão</span><strong>Cortar 30% do contexto corta ~51% do trabalho de atenção.</strong> A conta é direta: <code>0.7² = 0.49</code>. Podar prefixo estável, histórico redundante e instrumento verboso antes de chamar o modelo reduz o termo dominante do prefill; completar com cache quando o prefixo se repete reduz o restante. A referência de medição publica células <code>T×T</code> ao lado do tempo para a causa ficar visível: de 128 para 1024 tokens, as células crescem 64× para 8× mais tokens. Números ilustrativos seguem como exemplo variável; a folha L mede na máquina local.</p>
+</div>
 
-<div class="step"><span class="n">1</span> Crie <code>03_atencao.py</code> com a versão de uma cabeça, escrita à mão:
-<pre><code>import math
+<h3>Multi-head sem loop: a cabeça como dimensão de lote</h3>
+<p>Uma cabeça aprende um tipo de relação. Um token precisa consultar várias ao mesmo tempo — a quem um pronome se refere, qual o tipo de um identificador, onde o bloco atual começou. A solução executa <code>h</code> cabeças em paralelo, cada uma com projeção Q/K/V própria e dimensão <code>C/h</code>, e concatena as saídas. A referência <code>lab/multihead.py</code> usa uma projeção única que produz Q, K e V de uma vez, divide o resultado em três, reorganiza cada parte e aplica SDPA causal uma única vez.</p>
+<p>O truque está na reorganização: <code>(B, T, C)</code> vira <code>(B, h, T, d)</code> por <code>view</code> seguido de <code>transpose</code>, de modo que a dimensão de cabeça ocupa a posição de lote. Uma multiplicação calcula todas as cabeças juntas. Na volta, <code>transpose</code> + <code>contiguous()</code> + <code>view</code> recola as cabeças em <code>(B, T, C)</code>, e uma projeção linear de saída mistura as cabeças. Forma de saída igual à de entrada: a propriedade que permite empilhar camadas no Bloco 4.</p>
+
+<p><strong>Trecho conceitual — cabeça como lote.</strong> Ilustra a reorganização; a prova de forma pertence à folha L:</p>
+<pre><code>import torch
+
+B, T, H, D = 2, 8, 4, 16
+x = torch.randn(B, T, H * D)          # (B, T, C) com C = H * D
+por_cabeca = x.view(B, T, H, D).transpose(1, 2)  # (B, H, T, D)
+assert por_cabeca.shape == torch.Size([B, H, T, D])
+junta = por_cabeca.transpose(1, 2).contiguous().view(B, T, H * D)
+assert junta.shape == x.shape</code></pre>
+<div class="box warn">
+<p><span class="lbl">Contraste</span><strong><code>view</code> após <code>transpose</code> exige <code>contiguous()</code> — sem exceção silenciosa.</strong> <code>view</code> e <code>transpose</code> devolvem visões sobre o mesmo buffer, com passos (strides) distintos; após <code>transpose</code> os elementos não estão em ordem linear, e <code>view</code> exige ordem linear. Omitir <code>contiguous()</code> levanta erro de stride em vez de conta errada (AT-011). O diagnóstico é direto: erro de <code>view</code> após <code>transpose</code> pede <code>contiguous()</code> entre os dois; laço por cabeça em vez de dimensão de lote pede a reorganização acima.</p>
+</div>
+<h3>Exemplo trabalhado: referências executáveis</h3>
+<p><strong>Estatuto do código.</strong> Os três blocos abaixo são referência executável: o contrato que a folha B03-L implementa verbatim em <code>lab/</code>. Leitura aqui; execução no <code>Laboratório guiado M11</code>. Nomes de módulo, classes, funções e comportamento estão congelados. Trechos anteriores rotulados como conceituais ilustram mecanismo; só estes três são programa completo.</p>
+<p><strong>Referência executável 1 — <code>lab/atencao.py</code>.</strong> Uma cabeça causal escrita passo a passo, mais a prova contra SDPA. Tipagem estrita, só CPU:</p>
+<pre><code>"""Cabeca de atencao causal manual + prova contra SDPA.
+
+Referencia executavel do Bloco 3.
+Implementacao verbatim na folha B03-L.
+CPU-only: sem `.to(cuda)`; GPU opcional.
+"""
+
+import math
+
 import torch
 from torch import nn
+from torch.nn.functional import scaled_dot_product_attention as sdpa
+
+SEMENTE: int = 1337
+LOTE: int = 2
+TOKENS: int = 8
+DIM_ENTRADA: int = 32
+DIM_CABECA: int = 16
+CONTEXTO_MAX: int = 64
+ATOL: float = 1e-5
 
 
-class CabecaDeAtencao(nn.Module):
-    """Uma cabeca de self-attention causal. Escrita passo a passo, de proposito."""
+class CabecaAtencao(nn.Module):
+    """Uma cabeca de self-attention causal, passo a passo."""
 
-    def __init__(self, dim_entrada: int, dim_cabeca: int, contexto_max: int) -> None:
+    mascara: torch.Tensor
+
+    def __init__(self, dim_entrada: int, dim_cabeca: int, contexto_max: int) -&gt; None:
         super().__init__()
         self.dim_cabeca = dim_cabeca
         self.para_query = nn.Linear(dim_entrada, dim_cabeca, bias=False)
         self.para_key = nn.Linear(dim_entrada, dim_cabeca, bias=False)
         self.para_value = nn.Linear(dim_entrada, dim_cabeca, bias=False)
-        # buffer = tensor que viaja com o modelo mas nao e parametro treinavel
-        self.register_buffer(
-            "mascara",
-            torch.tril(torch.ones(contexto_max, contexto_max)),
-        )
+        self.register_buffer("mascara", torch.tril(torch.ones(contexto_max, contexto_max)))
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        B, T, _ = x.shape                       # batch, tokens, canais
-        q = self.para_query(x)                  # (B, T, dim_cabeca)
-        k = self.para_key(x)                    # (B, T, dim_cabeca)
-        v = self.para_value(x)                  # (B, T, dim_cabeca)
+    def forward(self, x: torch.Tensor) -&gt; torch.Tensor:
+        _, t, _ = x.shape
+        q = self.para_query(x)
+        k = self.para_key(x)
+        v = self.para_value(x)
+        escores = q @ k.transpose(-2, -1) / math.sqrt(self.dim_cabeca)
+        escores = escores.masked_fill(self.mascara[:t, :t] == 0, float("-inf"))
+        pesos = torch.softmax(escores, dim=-1)
+        saida: torch.Tensor = pesos @ v
+        return saida
 
-        pesos = q @ k.transpose(-2, -1)         # (B, T, T)  <-- a matriz quadratica
-        pesos = pesos / math.sqrt(self.dim_cabeca)
-        pesos = pesos.masked_fill(self.mascara[:T, :T] == 0, float("-inf"))
-        pesos = torch.softmax(pesos, dim=-1)    # cada linha soma 1
 
-        return pesos @ v                        # (B, T, dim_cabeca)</code></pre>
-<p><strong>Resultado esperado:</strong> <code>uv run mypy --strict 03_atencao.py</code> passa. Ainda não roda nada — o passo seguinte confere se está correto.</p>
-</div>
-
-<div class="step"><span class="n">2</span> Prove que a sua implementação bate com a do PyTorch. Adicione ao mesmo arquivo:
-<pre><code>if __name__ == "__main__":
-    torch.manual_seed(1337)
-    B, T, C, H = 2, 8, 32, 16
-    x = torch.randn(B, T, C)
-
-    cabeca = CabecaDeAtencao(dim_entrada=C, dim_cabeca=H, contexto_max=64)
-    minha = cabeca(x)
-
-    # A versao oficial, otimizada (despacha para FlashAttention quando disponivel)
+def comparar_com_sdpa() -&gt; float:
+    """Roda a cabeca manual e SDPA sobre a mesma entrada; devolve o erro maximo."""
+    torch.manual_seed(SEMENTE)
+    x = torch.randn(LOTE, TOKENS, DIM_ENTRADA)
+    cabeca = CabecaAtencao(DIM_ENTRADA, DIM_CABECA, CONTEXTO_MAX)
+    manual = cabeca(x)
     q = cabeca.para_query(x)
     k = cabeca.para_key(x)
     v = cabeca.para_value(x)
-    oficial = torch.nn.functional.scaled_dot_product_attention(q, k, v, is_causal=True)
+    oficial = sdpa(q, k, v, is_causal=True)
+    assert manual.shape == oficial.shape
+    assert torch.allclose(manual, oficial, atol=ATOL)
+    erro: float = (manual - oficial).abs().max().item()
+    return erro
 
-    print("shapes iguais:", minha.shape == oficial.shape)
-    print("erro maximo:  ", (minha - oficial).abs().max().item())
-    assert torch.allclose(minha, oficial, atol=1e-5)
-    print("OK — a sua atencao e a do PyTorch calculam a mesma coisa.")</code></pre>
-<p><strong>Resultado esperado:</strong>
-<code>shapes iguais: True</code>, <code>erro maximo: ~1e-07</code> e a mensagem final de OK. Se o erro for da ordem de <code>1e-1</code>, quase sempre é a máscara: confira se você usou <code>tril</code> (triangular inferior) e não <code>triu</code>.</p>
-</div>
 
-<div class="box">
-<p><strong>Contexto · O que é <code>scaled_dot_product_attention</code> e o que é FlashAttention.</strong> <code>torch.nn.functional.scaled_dot_product_attention(query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False, scale=None, enable_gqa=False)</code> é a implementação oficial do PyTorch da fórmula que você acabou de escrever. Ela despacha em runtime para o melhor backend disponível: <strong>FlashAttention</strong> (kernel de GPU que evita materializar a matriz T×T inteira na memória, processando-a em blocos), um kernel <em>memory-efficient</em>, ou a implementação matemática ingênua como fallback. O ponto didático: FlashAttention <strong>reduz a memória, não a computação</strong> — continua sendo O(n²) em operações. É por isso que dobrar o contexto continua custando ~4× em tempo, mesmo com a otimização ligada.</p>
-</div>
+def main() -&gt; None:
+    """Prova AT-009: manual equivale a SDPA dentro da tolerancia."""
+    erro = comparar_com_sdpa()
+    print(f"formas iguais; erro maximo = {erro:.2e}")
 
-<div class="step"><span class="n">3</span> Meça o O(n²) na sua própria máquina. Crie <code>04_custo_quadratico.py</code>:
-<pre><code>import time
+
+if __name__ == "__main__":
+    main()</code></pre>
+<p><strong>Referência executável 2 — <code>lab/custo_quadratico.py</code>.</strong> Varredura de comprimentos com aquecimento, cronometragem por <code>perf_counter</code> e razão entre dobras. Tipagem estrita, só CPU:</p>
+<pre><code>"""Varredura do custo quadratico da atencao.
+
+Referencia executavel do Bloco 3.
+Implementacao verbatim na folha B03-L.
+CPU-only: mede na maquina local; GPU opcional.
+"""
+
+import time
+
 import torch
 from torch.nn.functional import scaled_dot_product_attention as sdpa
 
-torch.manual_seed(1337)
-B, H, D = 1, 8, 64
-print(f"{'tokens':>7} | {'tempo(ms)':>10} | {'matriz T×T':>14} | {'ratio':>6}")
-anterior = None
-for T in (128, 256, 512, 1024, 2048, 4096):
-    q = torch.randn(B, H, T, D)
-    k = torch.randn(B, H, T, D)
-    v = torch.randn(B, H, T, D)
-    sdpa(q, k, v, is_causal=True)                     # aquece
+SEMENTE: int = 1337
+REPETICOES: int = 5
+CONTEXTOS: tuple[int, ...] = (128, 256, 512, 1024)
+CABECAS: int = 4
+DIM_CABECA: int = 32
+
+
+def medir_ms(tokens: int) -&gt; float:
+    """Tempo medio em ms de uma chamada causal para o contexto dado."""
+    q = torch.randn(1, CABECAS, tokens, DIM_CABECA)
+    k = torch.randn(1, CABECAS, tokens, DIM_CABECA)
+    v = torch.randn(1, CABECAS, tokens, DIM_CABECA)
+    sdpa(q, k, v, is_causal=True)
     inicio = time.perf_counter()
-    for _ in range(5):
+    for _ in range(REPETICOES):
         sdpa(q, k, v, is_causal=True)
-    ms = (time.perf_counter() - inicio) / 5 * 1000
-    celulas = T * T
-    ratio = f"{ms / anterior:.2f}x" if anterior else "—"
-    anterior = ms
-    print(f"{T:7d} | {ms:10.2f} | {celulas:14,d} | {ratio:>6}")</code></pre>
-<p><strong>Resultado esperado:</strong> a coluna <code>ratio</code> fica próxima de <strong>4×</strong> a cada dobra de <code>tokens</code> (na prática entre 3,2× e 4,5×, dependendo de cache e de <em>threading</em>). A coluna <code>matriz T×T</code> mostra o porquê: de 128 para 4096 tokens, o número de células vai de 16 mil para 16,7 milhões — <strong>mil vezes mais</strong> para 32× mais tokens.</p>
-</div>
+    return (time.perf_counter() - inicio) / REPETICOES * 1000.0
 
-<div class="box warn">
-<p><strong>Onde esse número vira dinheiro.</strong> Três consequências diretas no Cartógrafo, todas já visíveis nos módulos anteriores e agora explicadas: <strong>(1)</strong> o custo de <em>prefill</em> (processar o prompt de entrada) cresce quadraticamente, e não linearmente como a cobrança por token sugere — por isso o tempo até o primeiro token dispara com prompts longos. <strong>(2)</strong> O cache de prompt do M05 bloco 5 é tão eficaz justamente porque evita <em>refazer</em> esse trabalho quadrático sobre o prefixo estável; o desconto de 10× no preço de leitura reflete um custo computacional real, não uma promoção. <strong>(3)</strong> O "orçamento de atenção" do M08 bloco 4 — a diretriz de podar o contexto agressivamente — deixa de ser boa prática vaga: <strong>cortar 30% do contexto corta ~51% do trabalho de atenção</strong> (0,7² = 0,49). É a diferença entre um relatório que sai em 40s e um que sai em 80s.</p>
-</div>
 
-<h3>Multi-head: várias perguntas ao mesmo tempo</h3>
+def varrer_contextos() -&gt; list[tuple[int, float, int, str]]:
+    """Varre CONTEXTOS; devolve (tokens, ms, celulas, razao)."""
+    linhas: list[tuple[int, float, int, str]] = []
+    anterior = 0.0
+    for tokens in CONTEXTOS:
+        ms = medir_ms(tokens)
+        razao = f"{ms / anterior:.2f}x" if anterior &gt; 0.0 else "--"
+        linhas.append((tokens, ms, tokens * tokens, razao))
+        anterior = ms
+    return linhas
 
-<p>Uma cabeça só aprende um tipo de relação. Na prática, um token precisa consultar várias coisas simultaneamente — a quem "ele" se refere, qual o tipo daquele identificador, onde o bloco atual começou. A solução é rodar <em>h</em> cabeças em paralelo, cada uma com sua própria projeção Q/K/V e dimensão <code>C/h</code>, e concatenar as saídas.</p>
 
-<p>Aqui vem uma sutileza de implementação que quase todo tutorial esconde: <strong>não se roda um loop com <em>h</em> cabeças</strong>. Reorganiza-se o tensor para que a dimensão de cabeça vire uma dimensão de lote, e uma única multiplicação de matriz calcula todas as cabeças de uma vez. É a diferença entre 8 chamadas ao kernel e 1.</p>
+def main() -&gt; None:
+    """Imprime a tabela tokens | tempo | celulas | razao (AT-010)."""
+    torch.manual_seed(SEMENTE)
+    print(f"{'tokens':&gt;7} | {'tempo(ms)':&gt;10} | {'celulas T*T':&gt;12} | {'razao':&gt;6}")
+    for tokens, ms, celulas, razao in varrer_contextos():
+        print(f"{tokens:7d} | {ms:10.2f} | {celulas:12d} | {razao:&gt;6}")
 
-<div class="step"><span class="n">4</span> Implemente a versão eficiente em <code>multihead.py</code> — sem prefixo numérico, porque este arquivo vai ser <em>importado</em> pelo próximo bloco e <strong>nome de módulo Python não pode começar com dígito</strong>:
-<pre><code>import torch
+
+if __name__ == "__main__":
+    main()</code></pre>
+
+<p><strong>Referência executável 3 — <code>lab/multihead.py</code>.</strong> Multi-head causal sem loop, no formato que o Bloco 4 reutiliza. Tipagem estrita, só CPU:</p>
+<pre><code>"""Atencao multi-cabeca causal sem loop por cabeca.
+
+Referencia executavel do Bloco 3.
+Implementacao verbatim na folha B03-L.
+CPU-only: sem `.to(cuda)`; GPU opcional.
+"""
+
+import torch
 from torch import nn
-from torch.nn.functional import scaled_dot_product_attention
+from torch.nn.functional import scaled_dot_product_attention as sdpa
+
+N_EMBD: int = 128
+N_CABECAS: int = 8
 
 
 class AtencaoMultiCabeca(nn.Module):
-    """Multi-head causal, no formato que os modelos reais usam."""
+    """Multi-head causal; a cabeca vira dimensao de lote."""
 
-    def __init__(self, n_embd: int, n_cabecas: int, dropout: float = 0.0) -> None:
+    def __init__(self, n_embd: int, n_cabecas: int, dropout: float = 0.0) -&gt; None:
         super().__init__()
         if n_embd % n_cabecas != 0:
             raise ValueError("n_embd precisa ser divisivel por n_cabecas")
         self.n_cabecas = n_cabecas
         self.dim_cabeca = n_embd // n_cabecas
         self.dropout = dropout
-        # UMA projecao que produz Q, K e V de uma vez -> 3x mais barato que tres Linear
         self.qkv = nn.Linear(n_embd, 3 * n_embd, bias=False)
         self.saida = nn.Linear(n_embd, n_embd, bias=False)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        B, T, C = x.shape
-        q, k, v = self.qkv(x).split(C, dim=2)              # 3 x (B, T, C)
+    def forward(self, x: torch.Tensor) -&gt; torch.Tensor:
+        b, t, c = x.shape
+        q, k, v = self.qkv(x).split(c, dim=2)
 
-        # (B, T, C) -> (B, n_cabecas, T, dim_cabeca): a cabeca vira dimensao de lote
-        def por_cabeca(t: torch.Tensor) -> torch.Tensor:
-            return t.view(B, T, self.n_cabecas, self.dim_cabeca).transpose(1, 2)
+        def por_cabeca(tensor: torch.Tensor) -&gt; torch.Tensor:
+            return tensor.view(b, t, self.n_cabecas, self.dim_cabeca).transpose(1, 2)
 
-        q, k, v = por_cabeca(q), por_cabeca(k), por_cabeca(v)
+        qh, kh, vh = por_cabeca(q), por_cabeca(k), por_cabeca(v)
+        y = sdpa(qh, kh, vh, dropout_p=self.dropout if self.training else 0.0, is_causal=True)
+        y = y.transpose(1, 2).contiguous().view(b, t, c)
+        saida: torch.Tensor = self.saida(y)
+        return saida
 
-        y = scaled_dot_product_attention(
-            q, k, v,
-            dropout_p=self.dropout if self.training else 0.0,
-            is_causal=True,
-        )                                                   # (B, n_cabecas, T, dim_cabeca)
 
-        y = y.transpose(1, 2).contiguous().view(B, T, C)    # volta a juntar as cabecas
-        return self.saida(y)
+def main() -&gt; None:
+    """Forma preservada e contagem de parametros (exemplo variavel)."""
+    torch.manual_seed(1337)
+    bloco = AtencaoMultiCabeca(n_embd=N_EMBD, n_cabecas=N_CABECAS)
+    x = torch.randn(4, 32, N_EMBD)
+    total = sum(p.numel() for p in bloco.parameters())
+    print(f"saida: {tuple(bloco(x).shape)}")
+    print(f"parametros: {total}")
 
 
 if __name__ == "__main__":
-    torch.manual_seed(1337)
-    bloco = AtencaoMultiCabeca(n_embd=128, n_cabecas=8)
-    x = torch.randn(4, 32, 128)
-    total = sum(p.numel() for p in bloco.parameters())
-    print("saida:", bloco(x).shape)
-    print(f"parametros: {total:,}")</code></pre>
-<p><strong>Resultado esperado:</strong> <code>saida: torch.Size([4, 32, 128])</code> — mesma shape da entrada, que é a propriedade que permite empilhar camadas — e <code>parametros: 65,536</code> (três projeções de 128×128 mais a de saída, sem bias). Guarde essa classe: o bloco 4 a usa sem alteração.</p>
+    main()</code></pre>
+<p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> No caminho feliz, a prova de equivalência publica erro máximo na casa de <code>1e-7</code> ou melhor (neste lab, 0.0) dentro de tolerância <code>1e-5</code>; a varredura publica razão próxima de <code>4×</code> a cada dobra de contexto onde a computação domina; a multi-head preserva a forma de entrada e publica a contagem de parâmetros das quatro projeções sem viés. Formatos ilustrativos. A folha L mede no ambiente real e registra os números observados; nenhum valor aqui é prova.</p>
+<div class="box">
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B03-L constrói em <code>lab/</code>.</strong> <code>lab/atencao.py</code> com o contrato acima; prova AT-009 (mesma semente, mesma entrada, <code>allclose</code> com <code>atol=1e-5</code>, erro máximo publicado); caso negativo AT-008 (máscara trocada prende a perda em <code>ln(vocab)</code>); <code>lab/custo_quadratico.py</code> com o contrato acima; prova AT-010 (tabela tokens, tempo, células, razão por dobra); <code>lab/multihead.py</code> com o contrato acima; prova AT-011 (forma preservada, erro de stride sem <code>contiguous()</code>, divisão indivisível rejeitada). CPU é o baseline; GPU opcional só acelera. Nenhum passo de construção ou execução vive neste bloco: o passo a passo mora no <code>Laboratório guiado M11</code>.</p>
 </div>
-
-<div class="box net">
-<p><strong>Tradução .NET · <code>view</code>/<code>transpose</code> e o <code>contiguous()</code>.</strong> <code>view</code> e <code>transpose</code> não copiam dados — devolvem uma <em>visão</em> sobre o mesmo buffer com strides diferentes, exatamente como <code>Span&lt;T&gt;</code> e <code>Memory&lt;T&gt;</code> em .NET dão janelas sobre um array sem alocar. O <code>contiguous()</code> é o momento em que você força a materialização: depois de um <code>transpose</code>, os elementos não estão mais em ordem linear na memória, e <code>view</code> exige que estejam. Se você esquecer, o PyTorch levanta <code>RuntimeError: view size is not compatible with input tensor's size and stride</code> — que é um erro claro, ao contrário de quase todos os outros deste campo.</p>
-</div>
-
 <div class="box ok">
-<p><strong>Síntese do bloco 3</strong></p>
+<p><span class="lbl">Síntese</span><strong>Bloco 3 em seis frases.</strong></p>
 <ul>
-<li>Atenção reescreve a representação de cada token como mistura ponderada dos outros — representação passa a depender do contexto.</li>
-<li>Q pergunta, K oferece, V entrega; a concordância é produto escalar, a mesma operação da busca vetorial do M07.</li>
-<li><code>sqrt(d_k)</code> existe por estabilidade numérica; a máscara causal existe para o modelo não ver o futuro.</li>
-<li>A matriz T×T é a origem do O(n²) — e você mediu ~4× de custo a cada dobra de contexto.</li>
-<li>FlashAttention reduz memória, não computação: o custo quadrático de tempo continua lá.</li>
-<li>Multi-head roda cabeças como dimensão de lote, não em loop; a shape de saída é igual à de entrada, o que permite empilhar.</li>
+<li>Atenção troca vetor fixo por mistura contextual: cada posição pondera os vizinhos permitidos.</li>
+<li>Q declara procura, K declara oferta, V carrega conteúdo; o produto escalar mede a concordância.</li>
+<li><code>sqrt(d)</code> contém a saturação, a máscara causal impõe o futuro proibido, softmax converte escore em peso.</li>
+<li>SDPA é o oráculo oficial; FlashAttention economiza memória em blocos sem remover a conta quadrática.</li>
+<li>Custo cresce com <code>T²</code>: dobrar o contexto multiplica o trabalho por quatro — tempo ≈4× por dobra onde a computação domina — e o TTFT acompanha.</li>
+<li>Multi-head empilha cabeças como lote, não como laço; <code>contiguous()</code> separa visão de cópia.</li>
 </ul>
 </div>
-<h2>Bloco 4 · O transformer completo: montar, treinar, ver o loss cair</h2>
-<p class="clock">00:00–00:20 tokenização e a resposta sobre aritmética · 00:20–00:50 as peças que faltam (residual, LayerNorm, MLP) · 00:50–01:10 as três arquiteturas · 01:10–02:00 prática: o modelo inteiro, treinado</p>
-
-<h3>Por que isso importa</h3>
-
-<p>Você tem a atenção. Faltam quatro peças pequenas para ter um modelo de linguagem funcionando — e cada uma dessas peças responde uma dúvida prática. A tokenização explica por que o modelo erra contas. O <em>residual</em> explica por que profundidade funciona. O LayerNorm explica por que o treino não explode. E a escolha de arquitetura (encoder-only, decoder-only, encoder-decoder) explica por que o modelo de <em>embedding</em> que você usou no M07 é diferente do modelo de <em>chat</em> que você usou no M05, e por que não dá para trocar um pelo outro.</p>
-
-<h3>Tokenização: onde a aritmética morre</h3>
-
-<p>O modelo não vê texto; vê uma sequência de inteiros. O tradutor entre os dois é o <strong>tokenizador</strong>, e o algoritmo dominante é o <strong>BPE</strong> (<em>Byte Pair Encoding</em>): parte-se de bytes individuais e, iterativamente, o par de símbolos mais frequente no corpus vira um símbolo novo. Depois de milhares de fusões, você tem um vocabulário em que palavras comuns são um token só e palavras raras se quebram em pedaços.</p>
-
+<h3>Fontes do Bloco 3</h3>
+<ul>
+<li>SRC-M11-02 — Attention Is All You Need — científica — QKV, fórmula, máscara, multi-head. URLs na spec §6. Consulta: 14/09/2026. Risco: baixo.</li>
+<li>SRC-M11-07 — PagedAttention — científica — cache KV em páginas, throughput em serving. URLs na spec §6. Consulta: 14/09/2026. Risco: médio.</li>
+<li>SRC-M11-08 — FlashAttention — científica — economia de memória em blocos, sem remover computação O(n²). URLs na spec §6. Consulta: 14/09/2026. Risco: baixo.</li>
+<li>Execução CPU baseline, GPU opcional; sem rede, conta, download de pesos ou serviço externo neste bloco. Versão de biblioteca a fixar na folha L; nenhuma versão afirmada aqui.</li>
+</ul>
+<h2 id="b04">Bloco 4 · O transformer completo: montar, treinar, ver o loss cair</h2>
+<h3>Orientação: o que este bloco entrega</h3>
 <div class="box">
-<p><strong>Contexto · O que é BPE, com um exemplo pequeno.</strong> Corpus: <code>baixo baixa baixar</code>. Início: cada caractere é um símbolo. O par mais frequente é <code>b+a</code> → cria-se <code>ba</code>. Depois <code>ba+i</code> → <code>bai</code>. Depois <code>bai+x</code> → <code>baix</code>. Em poucas rodadas <code>baix</code> é um único token e os sufixos <code>o</code>, <code>a</code>, <code>ar</code> ficam separados. O resultado tem duas propriedades desejáveis: nunca falha em texto novo (no pior caso cai para bytes) e comprime bem o que é comum. E uma indesejável, que é o assunto abaixo.</p>
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco monta o transformer a partir das peças dos Blocos 2 e 3 e mostra o treino até o diagnóstico. Cinco resultados saem daqui:</p>
+<ul>
+<li>explicar BPE como fusão por frequência e prever por que dígitos vizinhos caem em segmentos distintos (AT-012);</li>
+<li>descrever residual, LayerNorm, MLP e embedding posicional, com a forma preservada que permite empilhar blocos;</li>
+<li>ler <code>gerar()</code> como recorte, reponderação por temperatura e sorteio por <code>multinomial</code>, sem confundir amostra com escolha (AT-013);</li>
+<li>distinguir encoder-only, decoder-only e encoder-decoder por máscara e tarefa, e prever a degradação ao trocá-las (AT-015);</li>
+<li>declarar overfitting por treino contra validação separada e aplicar holdout com parada antecipada (AT-014).</li>
+</ul>
+<p><strong>Pré-requisitos.</strong> Bloco 2 (tensor B/T/C, loop de cinco passos, ativação, validação) e Bloco 3 (<code>AtencaoMultiCabeca</code>, máscara causal, custo quadrático). Cada termo novo — token, vocabulário, residual, LayerNorm, holdout — é definido no ponto de uso. Todo exemplo é Python. Nenhuma outra stack é pressuposta.</p>
+<p><strong>Saída observável.</strong> Ao fim da leitura, você explica por que aritmética falha por tokenização, deriva a forma em cada ponto do bloco, descreve cada arquitetura pela máscara que usa e lê as três referências executáveis — <code>lab/bpe_mini.py</code>, <code>lab/gpt.py</code>, <code>lab/treinar.py</code> — sabendo o que cada nome prova. A execução pertence ao <code>Laboratório guiado M11</code>, ao final do módulo.</p>
+<p><strong>Ponte com o B03.</strong> O B03 entregou atenção causal multi-cabeça com forma preservada. Este bloco reutiliza essa classe sem alteração como comunicação entre posições, acrescenta processamento por posição e fecha o laço com treino e validação. A linha <code>torch.multinomial</code> em <code>gerar()</code> abre o Bloco 5.</p>
 </div>
 
-<div class="step"><span class="n">1</span> Veja a propriedade indesejável com as próprias mãos:
-<pre><code>uv add tiktoken
-uv run python - &lt;&lt;'PY'
-import tiktoken
-enc = tiktoken.get_encoding("cl100k_base")
-for s in ["1234", "1235", "12345", " 1234", "3.14159", "IPedidoRepository", "Pedido"]:
-    ids = enc.encode(s)
-    print(f"{s!r:20} -> {len(ids)} tokens {ids}  {[enc.decode([i]) for i in ids]}")
-PY</code></pre>
-<p><strong>Resultado esperado:</strong> saídas do tipo <code>'1234' -> 1 tokens</code> mas <code>'1235' -> 2 tokens</code> com os pedaços <code>['123','5']</code>, e <code>'12345' -> 2 tokens</code> quebrado em lugar arbitrário. Números vizinhos recebem <strong>segmentações completamente diferentes</strong>. Note também que <code>' 1234'</code> (com espaço) é um token distinto de <code>'1234'</code>.</p>
+<h3>Tokenização BPE: de bytes a fusões por frequência</h3>
+<p><strong>Token</strong> é o inteiro que o modelo enxerga; <strong>vocabulário</strong> é a tabela que converte trecho de texto em inteiros e de volta. <strong>BPE</strong> (<em>Byte Pair Encoding</em>) constrói essa tabela a partir de bytes: começa com um símbolo por byte, conta pares adjacentes no corpus, funde o par mais frequente num símbolo novo e repete por um número fixo de fusões. Palavra comum vira símbolo único; palavra rara segue quebrada em pedaços frequentes.</p>
+<p>A propriedade que sustenta o treino: BPE nunca falha diante de texto novo. Símbolo ausente se decompõe até bytes, e byte sempre pertence ao vocabulário inicial. Compressão boa para o frequente convive com cobertura total para o raro. O preço aparece nos dígitos.</p>
+<div class="box">
+<p><span class="lbl">Contexto</span><strong>O que uma fusão aprende, em pequeno.</strong> Corpus com <code>baixo baixa baixar</code>: cada caractere começa separado; o par <code>b+a</code> domina a contagem e vira <code>ba</code>; em seguida <code>ba+i</code> vira <code>bai</code>; depois <code>bai+x</code> vira <code>baix</code>. O radical frequente comprime num token; os sufixos <code>o</code>, <code>a</code>, <code>ar</code> seguem separados. Frequência decide a fronteira, sem gramática.</p>
 </div>
 
+<p><strong>Trecho conceitual — fusão por frequência.</strong> Ilustra o mecanismo; o oráculo offline com números pertence à referência <code>lab/bpe_mini.py</code>:</p>
+<pre><code>pares = Counter(zip(simbolos, simbolos[1:]))  # frequência decide
+a, b = max(pares, key=pares.get)  # par vencedor vira símbolo novo
+novo = a + b  # fusão registrada na ordem aprendida</code></pre>
+<p>Com a tabela pronta, segmentar aplica as fusões na ordem aprendida sobre a sequência de caracteres. Ordem importa: a mesma string se quebra de modo distinto conforme o corpus. O oráculo da folha L prova o caso crítico: <code>1234</code> e <code>1235</code> caem em segmentos distintos, com dígitos vizinhos em pedaços distintos (AT-012).</p>
 <div class="box warn">
-<p><strong>A resposta sobre aritmética — anote, é pergunta de checkpoint.</strong> Peça a um humano para somar 1234 + 5678. Ele aplica um algoritmo posicional sobre <em>dígitos</em>. O modelo não tem dígitos: ele tem <code>['123','4']</code> e <code>['567','8']</code>, símbolos cuja relação numérica não é estrutural, é <strong>estatística</strong> — aprendida de coocorrências no corpus. Ele não executa o algoritmo da soma; ele prediz a continuação mais provável de uma sequência que <em>se parece</em> com uma soma. Por isso acerta contas pequenas e frequentes (viu milhares de vezes) e erra as grandes e raras — e por isso <strong>mais dados não conserta</strong>: o espaço de somas possíveis é infinito e a representação de entrada não carrega a estrutura posicional. Modelos modernos mitigam com truques de tokenização (dígitos separados, agrupamento fixo de 3) e sobretudo <em>terceirizando</em> o cálculo para uma ferramenta. Que é exatamente o que você fez no M08: <strong>se a resposta precisa ser exata, não peça ao modelo — dê a ele uma tool</strong>. Agora você sabe por que essa regra existe.</p>
+<p><span class="lbl">Contraste</span><strong>"Mais dados consertam a aritmética" — não.</strong> Humano soma por algoritmo posicional sobre dígitos. O modelo recebe símbolos como <code>123</code> e <code>4</code>, cuja relação numérica é estatística, aprendida de coocorrência, sem estrutura posicional garantida. Ele prediz a continuação mais provável de sequência que se parece com soma; acerta o frequente e erra o raro. O espaço de somas é infinito e a entrada não carrega o algoritmo, por isso volume de treino não remove a falha.</p>
 </div>
+<p><strong>Mitigação.</strong> Duas respostas convivem. Na entrada, dígitos separados ou agrupamento fixo reduzem a arbitrariedade da fronteira, sem criar aritmética. Na arquitetura, terceirizar a conta para tool decide o caso exato: se a resposta precisa ser exata, o modelo chama cálculo em vez de completar texto. É a regra do M08, agora com mecanismo.</p>
 
-<div class="box net">
-<p><strong>Tradução .NET · tokenizador é o lexer, e o vocabulário é o charset.</strong> O paralelo mais próximo é o <em>lexer</em> do compilador: transforma um fluxo de caracteres em tokens antes de qualquer análise. A diferença fundamental é que o lexer do C# tem uma gramática <em>projetada</em>, em que <code>1234</code> é um <code>NumericLiteralToken</code> com valor numérico associado; o BPE tem um vocabulário <em>estatístico</em>, em que <code>123</code> é apenas o símbolo nº 4513, sem semântica numérica. Há também um paralelo com encoding: assim como você já se queimou com UTF-8 vs Latin-1, aqui você se queima usando o tokenizador errado para um modelo — o texto vira ruído sem levantar exceção.</p>
-</div>
-
-<h3>As três peças que faltam</h3>
-
+<h3>As peças: residual, LayerNorm, MLP, posição</h3>
 <table>
 <thead><tr><th>Peça</th><th>O que é</th><th>Por que existe</th></tr></thead>
 <tbody>
-<tr><td><strong>Conexão residual</strong></td><td><code>x = x + f(x)</code> em vez de <code>x = f(x)</code></td><td>Cria um "atalho" pelo qual o gradiente flui inalterado da saída até as primeiras camadas. Sem isso, redes profundas simplesmente não treinam — o gradiente vira zero no caminho.</td></tr>
-<tr><td><strong>LayerNorm</strong></td><td>Normaliza cada vetor para média 0 e desvio 1, com escala e deslocamento aprendidos</td><td>Mantém as ativações numa faixa estável camada após camada. Sem isso, os valores crescem ou encolhem exponencialmente com a profundidade.</td></tr>
-<tr><td><strong>MLP (feed-forward)</strong></td><td>Duas camadas lineares com não-linearidade: expande para 4× e volta</td><td>A atenção <em>move informação entre posições</em>; o MLP <em>processa</em> a informação de cada posição. É onde a maior parte dos parâmetros mora — tipicamente ⅔ do modelo.</td></tr>
-<tr><td><strong>Positional embedding</strong></td><td>Um vetor somado ao embedding do token, dependente da posição</td><td>A atenção é <em>permutation-invariant</em>: sem sinal de posição, "cliente chama pedido" e "pedido chama cliente" seriam idênticos para o modelo.</td></tr>
+<tr><td><strong>Conexão residual</strong></td><td><code>x = x + f(x)</code> em vez de <code>x = f(x)</code></td><td>Abre atalho para o gradiente alcançar as primeiras camadas. Bloco que produz ~0 deixa a informação passar; empilhar dezenas de blocos segue treinável.</td></tr>
+<tr><td><strong>LayerNorm</strong></td><td>Normaliza cada vetor para média 0 e desvio 1, com escala e deslocamento aprendidos</td><td>Contém a escala camada após camada. Sem ela, ativações crescem ou encolhem com a profundidade e o treino desestabiliza.</td></tr>
+<tr><td><strong>MLP 4×</strong></td><td>Duas lineares com não-linearidade: expande para 4× e volta</td><td>A atenção move informação entre posições; o MLP processa cada posição. Guarda a maior parte dos parâmetros, cerca de dois terços (exemplo variável, não evidência).</td></tr>
+<tr><td><strong>Positional embedding</strong></td><td>Vetor somado ao embedding do token, dependente da posição</td><td>A atenção sem posição é permutation-invariant: sem esse sinal, ordem não distingue sentido e a sequência vira conjunto.</td></tr>
 </tbody>
 </table>
+<p>O bloco moderno usa Pre-LN: normaliza antes de cada sub-bloco e soma o residual depois. Forma de entrada igual à de saída <code>(B, T, C)</code>: a propriedade que permite empilhar N blocos. <code>AtencaoMultiCabeca</code> do B03 entra sem alteração como comunicação; MLP entra como computação por posição.</p>
+<p><strong>Trecho conceitual — residual Pre-LN.</strong> Ilustra a ordem; o programa completo pertence à referência <code>lab/gpt.py</code>:</p>
+<pre><code>x = x + atencao(ln1(x))  # comunica entre posições
+x = x + mlp(ln2(x))  # processa por posição</code></pre>
 
-<div class="box net">
-<p><strong>Tradução .NET · residual é o pipeline de middleware.</strong> No ASP.NET Core, cada middleware recebe o contexto, faz o seu trabalho e chama <code>await next(context)</code> — ele <em>acrescenta</em> ao pipeline em vez de substituí-lo, e o contexto original continua disponível downstream. A conexão residual é a mesma ideia em álgebra: cada bloco lê o estado, calcula um delta e <strong>soma</strong>. Duas consequências práticas idênticas às do middleware: um bloco mal-inicializado que produz ~0 é inofensivo (a informação passa direto, o modelo continua treinando), e você pode empilhar dezenas de blocos sem que cada um precise reconstruir o que o anterior fez. O nome que a literatura dá ao vetor que atravessa a pilha é <em>residual stream</em> — leia como "o <code>HttpContext</code> do modelo".</p>
-</div>
-
-<h3>As três arquiteturas</h3>
-
-<p>A escolha de qual metade do transformer original você mantém define para que serve o modelo. Isso responde por que você não pode usar um modelo de embedding para gerar texto.</p>
-
+<h3>Três arquiteturas: máscara decide a tarefa</h3>
 <table>
-<thead><tr><th>Arquitetura</th><th>Máscara</th><th>Boa para</th><th>Exemplos</th><th>Onde você já usou</th></tr></thead>
+<thead><tr><th>Arquitetura</th><th>Máscara</th><th>Quando cada</th></tr></thead>
 <tbody>
-<tr><td><strong>Encoder-only</strong></td><td>Nenhuma — cada token vê todos, inclusive os posteriores</td><td>Compreender um texto inteiro: classificação, <em>embedding</em>, <em>reranking</em>, extração de entidades</td><td>BERT e descendentes; os modelos de embedding e de rerank</td><td>M07 blocos 1 e 5 — embeddings e o reranker</td></tr>
-<tr><td><strong>Decoder-only</strong></td><td>Causal — cada token só vê os anteriores</td><td>Gerar texto token a token</td><td>Praticamente todos os LLMs de chat atuais</td><td>M05 em diante — tudo que gera</td></tr>
-<tr><td><strong>Encoder-decoder</strong></td><td>Encoder livre + decoder causal com atenção cruzada</td><td>Transformar uma sequência em outra com fronteira nítida: tradução, sumarização clássica</td><td>T5, arquiteturas de tradução</td><td>—</td></tr>
+<tr><td><strong>Encoder-only</strong></td><td>Nenhuma; cada token vê todos</td><td>Compreender texto inteiro: classificação, embedding, reranking, extração. É o modelo do M07.</td></tr>
+<tr><td><strong>Decoder-only</strong></td><td>Causal; cada token vê só os anteriores</td><td>Gerar texto token a token. É o modelo do M05 em diante; é o <code>lab/gpt.py</code> deste bloco.</td></tr>
+<tr><td><strong>Encoder-decoder</strong></td><td>Livre no encoder, causal no decoder, com atenção cruzada</td><td>Transformar sequência em sequência com fronteira nítida: tradução e sumarização clássica.</td></tr>
 </tbody>
 </table>
-
+<p>Arquiteturas não intercambiam porque máscara e objetivo divergem (AT-015). Encoder-only nunca aprende a prever o próximo token sem ver o futuro; posto para gerar, usa contexto proibido no treino e degrada fora da tarefa. Decoder-only gera por construção, mas como embedding perde contexto à direita e entrega vetor pior para busca. A teoria prevê a degradação nos dois sentidos.</p>
 <div class="box warn">
-<p><strong>Por que um modelo de embedding não gera texto (e vice-versa).</strong> O encoder-only vê o futuro por construção; ele nunca foi treinado a prever o próximo token, então não tem uma cabeça de saída sobre o vocabulário que faça sentido. O caminho inverso — usar um modelo de chat para gerar embeddings — <em>tecnicamente</em> funciona (pega-se o estado da última camada), mas produz vetores piores para busca do que um modelo de embedding dedicado, porque a máscara causal impede que os primeiros tokens vejam o resto do texto. É por isso que a arquitetura do M07 tem dois modelos diferentes, e por que trocar um pelo outro para "economizar" degrada o recall silenciosamente.</p>
+<p><span class="lbl">Contraste</span><strong>"Encoder gera texto se pedir" — não.</strong> Pedir não cria cabeça de saída sobre o vocabulário nem remove a visão do futuro embutida nos pesos. A saída parece texto e viola causalidade: condiciona em posição que geração real ainda não produziu. A folha L executa o oráculo mecânico sobre <code>lab/gpt.py</code>: mesmos pesos e mesma semente, máscara causal ligada contra desligada; sem causalidade a posição futura contamina a predição e a geração degrada.</p>
 </div>
 
-<h3>Prática guiada · o transformer inteiro, treinado (50 min)</h3>
+<h3>Gerar: recorte, temperatura, sorteio</h3>
+<p>Geração autoregressiva repete um passo: recorte de janela com os últimos <code>contexto</code> tokens, passagem direta, leitura só de <code>logits[-1]</code>, divisão por temperatura <code>T</code>, softmax e sorteio. Recorte impõe a janela literal: nada além dos últimos tokens condiciona o próximo. Temperatura repondera sem inverter a ordem: <code>T &lt; 1</code> afia, <code>T &gt; 1</code> achata, com a massa redistribuída sobre a mesma ordenação. O Bloco 5 mede esse efeito por entropia.</p>
+<p><code>torch.multinomial</code> sorteia da distribuição (AT-013). A mesma entrada e os mesmos pesos produzem continuações distintas entre chamadas, porque a saída é amostra, não máximo. Confundir amostra com escolha troca o objeto de estudo do próximo bloco.</p>
+<p><strong>Trecho conceitual — o passo de geração.</strong> Ilustra a ordem; o programa completo pertence à referência <code>lab/gpt.py</code>:</p>
+<pre><code>recorte = idx[:, -contexto:]  # janela literal
+passo = logits[:, -1, :] / T  # só a última posição, reponderada
+prox = torch.multinomial(softmax(passo), 1)  # sorteia, não escolhe</code></pre>
+<div class="box warn">
+<p><span class="lbl">Contraste</span><strong>"Argmax é a geração correta" — não.</strong> Argmax devolve sempre o token de maior probabilidade e colapsa a distribuição num ponto; útil para depurar, pobre para texto. Amostragem preserva a incerteza aprendida e é o comportamento que o Bloco 5 controla com temperatura, top-p e top-k.</p>
+</div>
 
-<div class="step"><span class="n">2</span> Junte as peças em <code>gpt.py</code> (também sem prefixo, pelo mesmo motivo). Reaproveite a <code>AtencaoMultiCabeca</code> do bloco 3:
-<pre><code>from dataclasses import dataclass
+<h3>Exemplo trabalhado: referências executáveis</h3>
+<p><strong>Estatuto do código.</strong> Os três blocos abaixo são referência executável: o contrato que a folha B04-L implementa verbatim em <code>lab/</code>, layout flat. Leitura aqui; execução no <code>Laboratório guiado M11</code>. Nomes de módulo, classes, funções e comportamento estão congelados. Trechos anteriores rotulados como conceituais ilustram mecanismo; só estes três são programa completo. Versão de biblioteca a fixar na folha L; nenhuma versão afirmada aqui.</p>
+<p><strong>Referência executável 1 — <code>lab/gpt.py</code>.</strong> <code>Config</code>, embeddings de token e posição, N blocos Pre-LN com <code>AtencaoMultiCabeca</code> do B03 mais MLP e residual, <code>ln_final</code>, cabeça sobre o vocabulário sem viés, <code>gerar()</code> com <code>multinomial</code>. Tipagem estrita, só CPU:</p>
+<pre><code>"""GPT mínimo Pre-LN sobre a atenção do Bloco 3.
 
+Referencia executavel do Bloco 4.
+Implementacao verbatim na folha B04-L.
+CPU-only: sem `.to(cuda)`; GPU opcional.
+"""
+from dataclasses import dataclass
 import torch
 from torch import nn
 from torch.nn import functional as F
-
-from multihead import AtencaoMultiCabeca   # o arquivo do bloco 3
-
-
+from multihead import AtencaoMultiCabeca
 @dataclass(frozen=True)
 class Config:
     vocab: int
-    contexto: int = 128
+    contexto: int = 64
     n_embd: int = 128
     n_cabecas: int = 4
     n_camadas: int = 4
-    dropout: float = 0.1
-
-
+    dropout: float = 0.0
 class MLP(nn.Module):
-    """Expande 4x, aplica nao-linearidade, volta. Onde moram ~2/3 dos parametros."""
-
-    def __init__(self, cfg: Config) -> None:
+    def __init__(self, cfg: Config) -&gt; None:
         super().__init__()
         self.rede = nn.Sequential(
             nn.Linear(cfg.n_embd, 4 * cfg.n_embd),
@@ -625,139 +768,229 @@ class MLP(nn.Module):
             nn.Linear(4 * cfg.n_embd, cfg.n_embd),
             nn.Dropout(cfg.dropout),
         )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.rede(x)
-
-
+    def forward(self, x: torch.Tensor) -&gt; torch.Tensor:
+        saida: torch.Tensor = self.rede(x)
+        return saida
 class Bloco(nn.Module):
-    """Pre-LN: normaliza ANTES do sub-bloco e soma o residual. Padrao moderno."""
-
-    def __init__(self, cfg: Config) -> None:
+    def __init__(self, cfg: Config) -&gt; None:
         super().__init__()
         self.ln1 = nn.LayerNorm(cfg.n_embd)
         self.atencao = AtencaoMultiCabeca(cfg.n_embd, cfg.n_cabecas, cfg.dropout)
         self.ln2 = nn.LayerNorm(cfg.n_embd)
         self.mlp = MLP(cfg)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x + self.atencao(self.ln1(x))   # residual 1: comunicacao entre posicoes
-        x = x + self.mlp(self.ln2(x))       # residual 2: processamento por posicao
-        return x</code></pre>
-<p><strong>Resultado esperado:</strong> <code>uv run mypy --strict gpt.py</code> passa. Repare que <code>Bloco.forward</code> tem duas linhas e as duas são <code>x = x + algo</code> — o <em>residual stream</em> em estado puro.</p>
-</div>
-
-<div class="step"><span class="n">3</span> Feche o modelo, com embeddings de token e de posição e a cabeça de saída:
-<pre><code>class GPTMinusculo(nn.Module):
-    def __init__(self, cfg: Config) -> None:
+    def forward(self, x: torch.Tensor) -&gt; torch.Tensor:
+        x = x + self.atencao(self.ln1(x))
+        x = x + self.mlp(self.ln2(x))
+        return x
+class GPTMinusculo(nn.Module):
+    def __init__(self, cfg: Config) -&gt; None:
         super().__init__()
         self.cfg = cfg
         self.emb_token = nn.Embedding(cfg.vocab, cfg.n_embd)
         self.emb_posicao = nn.Embedding(cfg.contexto, cfg.n_embd)
-        self.blocos = nn.ModuleList(Bloco(cfg) for _ in range(cfg.n_camadas))
+        self.blocos = nn.ModuleList([Bloco(cfg) for _ in range(cfg.n_camadas)])
         self.ln_final = nn.LayerNorm(cfg.n_embd)
         self.cabeca = nn.Linear(cfg.n_embd, cfg.vocab, bias=False)
-
     def forward(
         self, idx: torch.Tensor, alvos: torch.Tensor | None = None
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        B, T = idx.shape
-        pos = torch.arange(T, device=idx.device)
-        x = self.emb_token(idx) + self.emb_posicao(pos)   # (B, T, n_embd)
+    ) -&gt; tuple[torch.Tensor, torch.Tensor | None]:
+        b, t = idx.shape
+        pos = torch.arange(t, device=idx.device)
+        x = self.emb_token(idx) + self.emb_posicao(pos)
         for bloco in self.blocos:
             x = bloco(x)
-        logits = self.cabeca(self.ln_final(x))            # (B, T, vocab)
-
-        perda = None
+        logits = self.cabeca(self.ln_final(x))
+        perda: torch.Tensor | None = None
         if alvos is not None:
-            perda = F.cross_entropy(
-                logits.view(B * T, self.cfg.vocab), alvos.view(B * T)
-            )
+            perda = F.cross_entropy(logits.view(b * t, self.cfg.vocab), alvos.view(b * t))
         return logits, perda
-
     @torch.no_grad()
-    def gerar(self, idx: torch.Tensor, n: int, temperatura: float = 1.0) -> torch.Tensor:
+    def gerar(self, idx: torch.Tensor, n: int, temperatura: float = 1.0) -&gt; torch.Tensor:
         for _ in range(n):
-            recorte = idx[:, -self.cfg.contexto:]         # a janela de contexto, literal
+            recorte = idx[:, -self.cfg.contexto :]
             logits, _ = self(recorte)
-            logits = logits[:, -1, :] / temperatura       # so a ultima posicao importa
-            probs = F.softmax(logits, dim=-1)
-            proximo = torch.multinomial(probs, num_samples=1)   # AMOSTRAGEM, nao escolha
-            idx = torch.cat((idx, proximo), dim=1)
-        return idx</code></pre>
-<p><strong>Resultado esperado:</strong> mypy passa. Olhe <code>gerar()</code> com atenção: <code>torch.multinomial</code> <strong>sorteia</strong> da distribuição. Não é "o modelo escolheu"; é uma amostra. Guarde essa linha — o bloco 5 inteiro sai dela.</p>
-</div>
+            passo = logits[:, -1, :] / temperatura
+            probs = F.softmax(passo, dim=-1)
+            prox = torch.multinomial(probs, num_samples=1)
+            idx = torch.cat([idx, prox], dim=1)
+        return idx
+def main() -&gt; None:
+    torch.manual_seed(1337)
+    cfg = Config(vocab=64)
+    modelo = GPTMinusculo(cfg)
+    x = torch.zeros((2, 8), dtype=torch.long)
+    logits, perda = modelo(x, x)
+    print(tuple(logits.shape), perda.item() if perda is not None else None)
+if __name__ == "__main__":
+    main()</code></pre>
 
-<div class="step"><span class="n">4</span> Treine sobre um corpus que você tem à mão — o próprio código do Capstone:
-<pre><code># 07_treinar.py
-import torch
+<h3>Generalização, overfitting, holdout</h3>
+<p><strong>Generalização</strong> é acertar fora do treino; <strong>overfitting</strong> é decorar o treino e piorar fora dele. O sinal é a divergência: perda de treino segue caindo enquanto perda em dados separados para de cair e começa a subir. O conjunto separado é a <strong>validação</strong>; o conjunto reservado para o fim é o <strong>holdout</strong>. Nenhum dos dois atualiza peso. A decisão é parada antecipada: interromper no ponto onde a validação vira.</p>
+<p>A disciplina atravessa domínios: nunca valide um sistema só com os dados que o construíram. É a mesma razão do holdout nos evals do M06. A folha L declara overfitting com treino e validação impressos lado a lado e critério explícito (AT-014).</p>
+<p><strong>Referência executável 2 — <code>lab/treinar.py</code>.</strong> Corpus local em <code>lab/fixtures/corpus.txt</code> com split treino/validação 90/10, tokenizador char-level local como default offline; tiktoken ou HF só em trilha opcional com cache declarado, nunca default. Treino curto em CPU com impressão de perda de treino e validação, mais demo de overfitting. Tipagem estrita, só CPU:</p>
+<pre><code>"""Treino curto CPU do GPT mínimo sobre corpus local.
+
+Referencia executavel do Bloco 4.
+Implementacao verbatim na folha B04-L.
+CPU-only: sem `.to(cuda)`; GPU opcional.
+Default offline: char-level local. Tiktoken/HF só em trilha
+opcional com cache declarado, nunca como caminho único.
+"""
 from pathlib import Path
+import torch
 from gpt import Config, GPTMinusculo
+CORPUS: Path = Path(__file__).with_name("fixtures") / "corpus.txt"
+SEMENTE: int = 1337
+CONTEXTO: int = 64
+LOTE: int = 16
+PASSOS: int = 600
+TAXA: float = 3e-4
+def carregar_texto(caminho: Path = CORPUS) -&gt; str:
+    return caminho.read_text(encoding="utf-8")
+def construir_vocab(texto: str) -&gt; tuple[dict[str, int], dict[int, str]]:
+    chars = sorted(set(texto))
+    stoi = {c: i for i, c in enumerate(chars)}
+    return stoi, {i: c for c, i in stoi.items()}
+def codificar(texto: str, stoi: dict[str, int]) -&gt; torch.Tensor:
+    return torch.tensor([stoi[c] for c in texto], dtype=torch.long)
+def dividir(dados: torch.Tensor, fracao: float = 0.9) -&gt; tuple[torch.Tensor, torch.Tensor]:
+    corte = int(fracao * len(dados))
+    return dados[:corte], dados[corte:]
+def fazer_lote(origem: torch.Tensor, contexto: int, tamanho: int) -&gt; tuple[torch.Tensor, torch.Tensor]:
+    ix = torch.randint(len(origem) - contexto - 1, (tamanho,))
+    x = torch.stack([origem[i:i + contexto] for i in ix])
+    y = torch.stack([origem[i + 1:i + 1 + contexto] for i in ix])
+    return x, y
+def avaliar(modelo: GPTMinusculo, origem: torch.Tensor) -&gt; float:
+    modelo.eval()
+    with torch.no_grad():
+        _, perda = modelo(*fazer_lote(origem, modelo.cfg.contexto, LOTE))
+    modelo.train()
+    assert perda is not None
+    valor: float = perda.item()
+    return valor
+def treinar(passos: int = PASSOS, demo_overfitting: bool = False) -&gt; tuple[float, float]:
+    torch.manual_seed(SEMENTE)
+    texto = carregar_texto()
+    if demo_overfitting:
+        texto = texto[:2000]
+        passos = passos * 4
+    stoi, _ = construir_vocab(texto)
+    treino, valid = dividir(codificar(texto, stoi))
+    modelo = GPTMinusculo(Config(vocab=len(stoi), contexto=CONTEXTO))
+    otim = torch.optim.AdamW(modelo.parameters(), lr=TAXA)
+    final_treino = 0.0
+    for passo in range(passos + 1):
+        x, y = fazer_lote(treino, CONTEXTO, LOTE)
+        _, perda = modelo(x, y)
+        assert perda is not None
+        otim.zero_grad()
+        perda.backward()
+        otim.step()
+        final_treino = perda.item()
+        if passo % 200 == 0:
+            print(f"passo {passo} | treino {final_treino:.3f} | valid {avaliar(modelo, valid):.3f}")
+    return final_treino, avaliar(modelo, valid)
+def main() -&gt; None:
+    treinar()
+if __name__ == "__main__":
+    main()</code></pre>
 
-texto = "\n".join(
-    p.read_text(encoding="utf-8")
-    for p in Path("~/capstone/app").expanduser().rglob("*.py")
+<p><strong>Referência executável 3 — <code>lab/bpe_mini.py</code>.</strong> BPE mínimo em Python puro sobre corpus-toy local; prova <code>1234</code> contra <code>1235</code> em segmentos distintos, oráculo offline de AT-012, sem tiktoken e sem rede. Tipagem estrita, só CPU:</p>
+<pre><code>"""BPE mínimo em Python puro sobre corpus-toy local.
+
+Referencia executavel do Bloco 4.
+Implementacao verbatim na folha B04-L.
+Oráculo offline de AT-012: sem tiktoken, sem HF, sem rede.
+"""
+from collections import Counter
+from itertools import pairwise
+CORPUS_TOY: list[str] = (
+    ["1234"] * 20
+    + ["12"] * 10
+    + ["34"] * 9
+    + ["123"] * 8
+    + ["5"] * 5
+    + ["baixo"] * 5
+    + ["baixa"] * 5
 )
-chars = sorted(set(texto))
-stoi = {c: i for i, c in enumerate(chars)}
-itos = {i: c for c, i in stoi.items()}
-dados = torch.tensor([stoi[c] for c in texto], dtype=torch.long)
-corte = int(0.9 * len(dados))
-treino, validacao = dados[:corte], dados[corte:]
+N_FUSOES: int = 8
+def treinar_bpe(
+    corpus: list[str] = CORPUS_TOY, n_fusoes: int = N_FUSOES
+) -&gt; list[tuple[str, str]]:
+    palavras: list[list[str]] = [[c for c in w] for w in corpus]
+    fusoes: list[tuple[str, str]] = []
+    for _ in range(n_fusoes):
+        cont: Counter[tuple[str, str]] = Counter()
+        for p in palavras:
+            for a, b in pairwise(p):
+                cont[(a, b)] += 1
+        if not cont:
+            break
+        melhor = sorted(cont.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
+        fusoes.append(melhor)
+        a, b = melhor
+        novo = a + b
+        for p in palavras:
+            i = 0
+            ref: list[str] = []
+            while i &lt; len(p):
+                if i &lt; len(p) - 1 and p[i] == a and p[i + 1] == b:
+                    ref.append(novo)
+                    i += 2
+                else:
+                    ref.append(p[i])
+                    i += 1
+            p[:] = ref
+    return fusoes
+def segmentar(texto: str, fusoes: list[tuple[str, str]]) -&gt; list[str]:
+    toks: list[str] = [c for c in texto]
+    for a, b in fusoes:
+        novo = a + b
+        i = 0
+        ref: list[str] = []
+        while i &lt; len(toks):
+            if i &lt; len(toks) - 1 and toks[i] == a and toks[i + 1] == b:
+                ref.append(novo)
+                i += 2
+            else:
+                ref.append(toks[i])
+                i += 1
+        toks = ref
+    return toks
+def provar_numeros_vizinhos() -&gt; tuple[list[str], list[str]]:
+    fusoes = treinar_bpe()
+    return segmentar("1234", fusoes), segmentar("1235", fusoes)
+def main() -&gt; None:
+    a, b = provar_numeros_vizinhos()
+    print(f"1234 -&gt; {a}")
+    print(f"1235 -&gt; {b}")
+if __name__ == "__main__":
+    main()</code></pre>
+<p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> No caminho feliz, a perda impressa parte de perto de <code>ln(vocab)</code> e desce com treino e validação próximos; na demo de overfitting, o treino segue descendo para patamar baixo enquanto a validação para de cair e sobe. A prova BPE publica um segmento para <code>1234</code> e dois segmentos distintos para <code>1235</code>. Formatos ilustrativos. A folha L mede no ambiente real e registra os números observados; nenhum valor aqui é prova.</p>
 
-cfg = Config(vocab=len(chars))
-modelo = GPTMinusculo(cfg)
-otim = torch.optim.AdamW(modelo.parameters(), lr=3e-4)
-print(f"vocabulario={len(chars)}  parametros={sum(p.numel() for p in modelo.parameters()):,}")
-
-
-def lote(origem: torch.Tensor, tamanho: int = 32) -> tuple[torch.Tensor, torch.Tensor]:
-    ix = torch.randint(len(origem) - cfg.contexto - 1, (tamanho,))
-    x = torch.stack([origem[i : i + cfg.contexto] for i in ix])
-    y = torch.stack([origem[i + 1 : i + 1 + cfg.contexto] for i in ix])
-    return x, y   # y e x deslocado de 1: "preveja o proximo caractere"
-
-
-for passo in range(3001):
-    x, y = lote(treino)
-    _, perda = modelo(x, y)
-    otim.zero_grad(set_to_none=True)
-    perda.backward()
-    otim.step()
-    if passo % 500 == 0:
-        modelo.eval()
-        with torch.no_grad():
-            _, pv = modelo(*lote(validacao))
-        modelo.train()
-        print(f"passo {passo:4d} | treino {perda.item():.3f} | validacao {pv.item():.3f}")
-
-modelo.eval()
-inicio = torch.zeros((1, 1), dtype=torch.long)
-saida = modelo.gerar(inicio, n=400, temperatura=0.8)[0].tolist()
-print("".join(itos[i] for i in saida))</code></pre>
-<p><strong>Resultado esperado:</strong> ~<strong>800 mil parâmetros</strong>, o loss caindo de ~<code>4.4</code> (que é ln(vocab), o valor de quem chuta uniformemente) para algo entre <code>1.3</code> e <code>1.8</code> em 3000 passos, em 3–8 minutos de CPU. A amostra final <strong>não</strong> será código válido — mas terá indentação em blocos, <code>def</code> seguido de parêntese, <code>self.</code> antes de nomes, aspas que fecham. <strong>Ele aprendeu a forma da linguagem a partir de caracteres crus, sem uma única regra escrita por você.</strong> É a mesma coisa que um modelo de fronteira faz; só que com 800 mil parâmetros em vez de centenas de bilhões, e sobre 300 KB em vez de trilhões de tokens.</p>
+<div class="box">
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B04-L constrói em <code>lab/</code>.</strong> <code>lab/gpt.py</code> com o contrato acima, reutilizando <code>AtencaoMultiCabeca</code> do B03 sem alteração; prova AT-013 (mesma semente, duas gerações distintas pelo sorteio) e oráculo AT-015 (máscara ligada contra desligada, mesmos pesos). <code>lab/treinar.py</code> com o contrato acima sobre <code>lab/fixtures/corpus.txt</code>; prova AT-014 (treino desce, validação sobe, parada declarada). <code>lab/bpe_mini.py</code> com o contrato acima; prova AT-012 (<code>1234</code> contra <code>1235</code> em segmentos distintos, sem rede). CPU é o baseline; GPU opcional só acelera.</p>
 </div>
-
-<div class="step"><span class="n">5</span> Prove que o treino e a validação contam histórias diferentes. Reduza o corpus (use só um arquivo <code>.py</code>) e treine 6000 passos.
-<p><strong>Resultado esperado:</strong> a perda de treino continua caindo (abaixo de <code>0.5</code>) enquanto a de validação <strong>para de cair e começa a subir</strong>. Isso é <em>overfitting</em> visível: o modelo está decorando em vez de generalizar. É o mesmo fenômeno que faz um fine-tuning malfeito piorar o modelo — assunto do bloco 8 — e é por isso que a métrica que decide é sempre a de dados que o modelo não viu, exatamente como o conjunto de <em>holdout</em> dos evals do M06.</p>
-</div>
-
-<div class="box fund">
-<p><strong>Fundamento de engenharia · Generalização, overfitting e o conjunto que você não olha.</strong> A separação treino/validação/teste é a versão estatística de uma disciplina que você já tem: <strong>não valide um sistema com os mesmos dados que o construíram</strong>. É a razão de existir de ambiente de homologação separado de produção, de teste de integração além de unitário, e do princípio de que quem escreveu a feature não deveria ser o único a testá-la. O erro correspondente também tem o mesmo formato nos dois mundos: <em>overfitting</em> em ML é decorar o conjunto de treino; em engenharia é escrever um teste que só passa porque foi escrito depois de olhar a implementação. Em ambos os casos a métrica sobe e a qualidade real não. O antídoto é idêntico: reserve um conjunto que você <strong>não</strong> usa para iterar, e olhe para ele no fim.</p>
-</div>
-
 <div class="box ok">
-<p><strong>Síntese do bloco 4</strong></p>
+<p><span class="lbl">Síntese</span><strong>Bloco 4 em seis frases.</strong></p>
 <ul>
-<li>BPE quebra números de forma arbitrária: por isso o modelo erra contas, e por isso mais dados não conserta — use tool.</li>
-<li>Residual é o middleware pipeline do modelo: cada bloco soma um delta, o gradiente flui pelo atalho.</li>
-<li>LayerNorm estabiliza a escala; o MLP processa por posição e guarda a maior parte dos parâmetros.</li>
-<li>Sem positional embedding a atenção não distingue ordem.</li>
-<li>Encoder-only entende (embedding, rerank), decoder-only gera, encoder-decoder traduz — não são intercambiáveis.</li>
-<li>Você treinou um transformer de 800 mil parâmetros e viu o loss cair; a diferença para um de fronteira é escala e dados.</li>
-<li>Geração é <code>multinomial</code> sobre a distribuição: uma amostra, não uma escolha.</li>
+<li>BPE funde por frequência e nunca falha; dígitos vizinhos caem em pedaços distintos porque relação numérica é estatística.</li>
+<li>Residual soma o delta, LayerNorm contém a escala, MLP 4× processa por posição, posição rompe a invariância à permutação.</li>
+<li>Gerar recorta a janela, lê <code>logits[-1]/T</code> e sorteia por <code>multinomial</code>; amostra não é escolha.</li>
+<li>Encoder entende, decoder gera, encoder-decoder transforma; trocar degrada porque máscara e objetivo divergem.</li>
+<li>Treino que desce com validação que sobe declara overfitting; holdout que não atualiza peso decide a parada.</li>
+<li>Conta exata pertence à tool; dígitos separados apenas reduzem a arbitrariedade da fronteira.</li>
 </ul>
 </div>
+<h3>Fontes do Bloco 4</h3>
+<ul>
+<li>SRC-M11-02 — Attention Is All You Need — científica — transformer, residual, ordem e máscara. URLs na spec §6. Consulta: 14/09/2026. Risco: baixo.</li>
+<li>SRC-M11-03 — BERT — científica — encoder-only bidirecional e por que não gera. URLs na spec §6. Consulta: 14/09/2026. Risco: baixo.</li>
+<li>SRC-M11-09 — BPE/Sennrich — científica — fusões por frequência e falha em números. URLs na spec §6. Consulta: 14/09/2026. Risco: baixo.</li>
+<li>SRC-M11-13 — tokenizers (HF) — documentação oficial — BPE/WordPiece no produto; aqui só trilha opcional com cache. URLs na spec §6. Consulta: 14/09/2026. Risco: baixo.</li>
+<li>Execução CPU baseline, GPU opcional; núcleo offline-first com corpus e fixtures locais. Versão de biblioteca a fixar na folha L; nenhuma versão afirmada aqui.</li>
+</ul>
 <hr>
 
 <div class="box ok">

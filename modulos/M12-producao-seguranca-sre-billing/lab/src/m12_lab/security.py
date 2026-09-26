@@ -66,6 +66,8 @@ class ToolConstraints:
             or address.is_loopback
             or address.is_link_local
             or address.is_reserved
+            or address.is_multicast
+            or address.is_unspecified
         ):
             raise SecurityViolation("SEC_SSRF_ADDRESS")
         if host not in self._allowed_hosts:

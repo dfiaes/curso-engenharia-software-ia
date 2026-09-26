@@ -1,0 +1,71 @@
+LT02-B02-L — evidencia de gates (folha B02-L, bloco B02)
+Data (UTC): 2026-09-20 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir: modulos/LT02-novo/lab/ · HTML/spec/trace/STATUS/PROGRESSO intocados.
+B01 intacto (18 passed, 1 skipped BLOCKED preservados).
+
+COMANDOS (tails reais)
+- uv sync → "Resolved 13 packages in 3ms" / "Checked 11 packages in 0.39ms"
+- uv run ruff check . → "All checks passed!"
+- uv run ruff format --check . → "16 files already formatted"
+- uv run mypy → "Success: no issues found in 15 source files"
+- uv run pytest → "41 passed, 1 skipped in 0.04s" (B01: 18 + 1 skip; B02: 23)
+
+NUMEROS MEDIDOS (exemplo variavel; semente SEED_B02=20260815)
+- AT-010 (cap 20, inflight 4, 60 publicados = triplo, 2 workers): 20
+  aceitas + 40 recusas FilaCheia; profundidade 20, voo 0, memoria 20 <= 24;
+  idade logica da mais velha 19 ticks; drenagem com 2 threads (Event + join,
+  nenhuma viva apos join): 20 efeitos unicos, profundidade 0, voo 0;
+  variante concorrente (40 publicados): pico 20 + voo <= 24, efeitos +
+  recusas == 40, 1 efeito por id.
+- AT-011 (cap 8, inflight 4, 6 publicados, 3 em voo): crash simulado por
+  flag devolve 3/3, attempt 1 nas redeliveradas e 0 nas intactas, conjunto
+  de ids preservado; efeitos 6/6; ledger externo marca m-001 == 2
+  (duplicata de efeito admitida e declarada; dedup e do Bloco 3).
+- AT-012: republicar confirmada devolve "confirmada-duplicata-dedup",
+  efeitos 1, profundidade 0; duas copias confirmadas contam 1 efeito.
+- AT-013 (4 particoes, 12 mensagens: 6 tenant-a + 6 outras, agenda
+  embaralhada): mesma chave em 1 particao; ordem da chave == ordem de
+  publicacao; 2 threads em particoes disjuntas drenam 12/12 unicos com
+  join; crash de 1 particao devolve 2 sem tocar nas demais.
+- AT-014 (teto 3): repetir, repetir, "quarentena:payload-invalido"; causa
+  registrada, falhas == 3; replay com identidade e attempt 0; sucesso
+  limpa transitoria (proxima falha reconta de 1).
+- AT-015 (gate {1, 2}): v1/v2 passam; v9 levanta SchemaIncompativel com
+  "v9" e o message_id na causa; lote misto: 2 efeitos, 1 recusada em voo
+  sem efeito; causa schema chega a quarentena no teto.
+
+DIVERGENCIAS DO VERBATIM (diff programatico apos html.unescape)
+- quarentena_schema.py: IDENTICO ao <pre> 3 da secao B02.
+- fila_limitada.py: 2 linhas — (1) import sem `field`
+  (`from dataclasses import dataclass`; F401, nome nunca usado no corpo);
+  (2) `raise FilaCheia(...) from None` (B904). Tipo/mensagem/comportamento
+  identicos; testes com pytest.raises inalterados.
+- particao_por_chave.py: 1 bloco — assinatura de `__init__` quebrada em 3
+  linhas no formato do `ruff format` (E501: 111 > 100 + format --check).
+  Comportamento identico.
+- EMENDA PEDIDA NO HTML: aplicar as 3 correcoes acima nas Referencias
+  executaveis 1–2 do B02 (remover `, field` do import e `from None` no
+  raise da Referencia 1; quebrar a assinatura do `__init__` da
+  Referencia 2). Sem ignores em nenhum arquivo.
+- Escopo (nao e edicao de modulo): pyproject `tool.mypy.files` estendido
+  aditivamente com os 3 modulos (config; `uv run mypy` puro cobre B01+B02).
+
+LIMITES
+- So stdlib nos modulos (queue/threading/dataclasses nos contratos 1–2,
+  hashlib no 2, dataclasses no 3; intra-lab: particao/quarentena consomem
+  fila_limitada). Harness usa ainda random (agenda por semente) e
+  threading (2 workers/event/join); nada de rede/Docker/RabbitMQ.
+- Crash e flag do harness + redeliverar_apos_crash; nenhum kill real.
+- Sem relogio de parede: idade/throughput logicos (indice de publicacao);
+  prazo nao aparece neste bloco.
+- Numeros sao exemplo variavel com semente/amostra declaradas; o ledger
+  externo (dict/set por message_id nos testes) e o oraculo de efeito.
+- Threads do harness encerram com Event + join(timeout=10.0) e assert de
+  nao-viva; suite sem sleep e sem flake (41 passed deterministicos).
+
+GATE CANDIDATO
+- LT02-B02-L CANDIDATO a compor G2 (lab): 1 contrato byte-identico + 2
+  com 3 linhas/bloco minimos reportados para emenda no HTML + pyproject
+  (3.14/uv/ruff 100 E,F,I,B,UP,SIM,RUF,ASYNC/mypy strict/pytest strict) +
+  6 oraculos (AT-010/011/012/013/014/015, 23 testes) + suite inteira verde
+  (41 passed, 1 skipped BLOCKED herdado do B01). Promocao pelo orquestrador.

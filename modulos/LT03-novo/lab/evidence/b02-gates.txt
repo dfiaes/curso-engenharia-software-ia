@@ -1,0 +1,47 @@
+LT03-B02-L — evidencia de gates (folha B02-L, bloco B02)
+Data (UTC): 2026-09-21 · Host: Darwin arm64 (macOS, POSIX) · Python 3.14.7 (uv)
+Dir novo: modulos/LT03-novo/lab/ (2 modulos + 5 testes + este arquivo).
+HTML/spec/trace/STATUS/PROGRESSO intocados. pyproject: mypy files += 2 modulos.
+
+COMANDOS (tails reais, suite inteira)
+- uv sync → "Checked 11 packages" (venv 3.14.7).
+- uv run ruff check . → 1 erro: E501 validar_manifesto.py:49:101 (104 > 100,
+  linha verbatim do <pre> B02; sem ignores/noqa; tests/+simular_rollout.py limpos).
+- uv run ruff format --check . → "1 file would be reformatted, 12 already
+  formatted" (só validar_manifesto.py:49 verbatim; demais 12 formatados).
+- uv run mypy → "Success: no issues found in 12 source files" (strict).
+- uv run pytest → "39 passed in 0.57s" (B01 14 intactos + B02 25 novos; 0 skip).
+
+NUMEROS MEDIDOS (exemplo variavel)
+- relatorio([api-exemplo]) → aprovado True, violacoes [].
+- simular(3,[True,True,True],0) → concluiu True, removidas 3.
+- simular(3,[False,False,False],0) → concluiu False, removidas 0 (trava absoluta).
+- simular(3,[True,False,False],0) → concluiu False, removidas < 3, preservadas >= 1.
+- Amostras fixas: AT-010..014 dados em memoria; RBAC 2 contas; rede 4 ok/2 neg;
+  volumes 1 duravel/1 efemero; rollout desejadas 3, max_indisponiveis 0.
+
+DIVERGENCIAS DO VERBATIM
+- Nenhuma de conteudo: validar_manifesto.py (92 linhas) e simular_rollout.py
+  (53 linhas) sao byte-identicos aos <pre> 2 e 3 da secao B02 do LT03.html
+  (conferencia por diff programatico apos html.unescape).
+- Divergencia de estilo herdada do contrato (REPORTADA, sem ignores, sem
+  reformatar o verbatim): E501 + format em validar_manifesto.py:49
+  ("return bool(pedido.get(...) ...)" com 104 cols; limite ruff 100).
+  tests/ e simular_rollout.py passam em ruff check e format sem supressao.
+
+LIMITES
+- So stdlib (re nos modulos; testes sem rede/cluster; dicts puros, sem PyYAML).
+  Manifestos nunca aplicados; apply/convergencia observada e testes de rede
+  reais = trilha externa BLOCKED com registro onde cluster ausente.
+- RBAC/NetworkPolicy/storage verificados como dados locais (matriz default-deny,
+  allowlist com DNS porta 53, CNI registrado como dado); nao provam cluster.
+- Rollout deterministico sem relogio de parede; numeros variam com a sequencia.
+- relatorio() cobre probes/recursos/segredo; RBAC/rede/storage vivem nos
+  oraculos de dados AT-012/013/014 (modulos congelados nao estendem API).
+
+GATE CANDIDATO
+- LT03-B02-L APTO a G2 (lab) COM RESSALVA: 2 contratos verbatim byte-identicos
+  + 5 oraculos (AT-010..014, 25 testes) + suite integral verde (39/39) + mypy
+  strict verde; ressalva = E501/format herdado do <pre> B02 em
+  validar_manifesto.py:49 (1 linha, sem ignores). Orquestrador decide: aceitar
+  com ressalva ou pedir ajuste editorial no HTML antes do gate.

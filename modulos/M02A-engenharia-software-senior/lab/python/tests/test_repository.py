@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sqlite3
+import threading
 from dataclasses import replace
 from pathlib import Path
 
@@ -8,7 +10,7 @@ from work_intake.adapters.advisor import FakeAdvisor
 from work_intake.adapters.sqlite import SQLiteEvaluationRepository
 from work_intake.application.boundary import parse_work_request_json
 from work_intake.application.service import EvaluateWorkRequest, IdempotencyConflict
-from work_intake.domain.models import WorkRequest
+from work_intake.domain.models import Advisory, WorkRequest
 
 
 def _request(lab_root: Path) -> WorkRequest:
@@ -73,3 +75,52 @@ def test_tenant_isolation_and_sanitized_audit(tmp_path: Path, lab_root: Path) ->
     assert audit["contract_version"] == "1.0"
     assert audit["idempotency_key"] == request.idempotency_key
     assert audit["policy_version"] == "1.0"
+
+
+class BarrierAdvisor(FakeAdvisor):
+    """Sincroniza duas chamadas para expor a disputa de escrita local."""
+
+    def __init__(self, barrier: threading.Barrier) -> None:
+        self._barrier = barrier
+
+    def advise(self, request: WorkRequest) -> Advisory:
+        self._barrier.wait(timeout=5)
+        return super().advise(request)
+
+
+def test_concurrent_same_key_has_one_winner_and_one_observable_conflict(
+    tmp_path: Path, lab_root: Path
+) -> None:
+    database = tmp_path / "concurrent.sqlite"
+    barrier = threading.Barrier(2)
+    request = _request(lab_root)
+    results: list[object] = []
+    failures: list[BaseException] = []
+
+    def execute_once() -> None:
+        repository = SQLiteEvaluationRepository(database)
+        service = EvaluateWorkRequest(repository=repository, advisor=BarrierAdvisor(barrier))
+        try:
+            results.append(service.execute(request))
+        except BaseException as exc:
+            failures.append(exc)
+
+    first = threading.Thread(target=execute_once)
+    second = threading.Thread(target=execute_once)
+    first.start()
+    second.start()
+    first.join(timeout=10)
+    second.join(timeout=10)
+
+    assert not first.is_alive()
+    assert not second.is_alive()
+    assert len(results) == 1
+    assert len(failures) == 1
+    assert isinstance(failures[0], sqlite3.IntegrityError)
+    assert SQLiteEvaluationRepository(database).row_counts()["work_requests"] == 1
+
+
+def test_critical_idempotency_lookup_uses_an_index(tmp_path: Path) -> None:
+    repository = SQLiteEvaluationRepository(tmp_path / "plan.sqlite")
+    plan = repository.idempotency_query_plan("tenant-acme", "idem-onboard-001")
+    assert any("SEARCH work_requests" in detail and "USING INDEX" in detail for detail in plan)

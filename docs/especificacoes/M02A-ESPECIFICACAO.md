@@ -1,14 +1,14 @@
 # M02A — Engenharia de Software Sênior em 2026
 
-> Especificação normativa de produção · versão 1.1 · 15/08/2026
+> Especificação normativa de produção · versão 1.2 · 12/09/2026
 > Estado: **G0 aprovado; G1 em produção**
 
 ## 1. Decisão curricular
 
-O M02A é a ponte entre a fluência em Python do M02 e a construção de sistemas em produção. Ele atualiza o profissional experiente vindo de .NET sem transformar o curso em treinamento de plataforma.
+O M02A é a ponte entre a fluência em Python do M02 e a construção de sistemas em produção. Ele desenvolve julgamento técnico com explicações autossuficientes, sem pressupor experiência em outra stack.
 
 - **Python 3.14 é a linguagem e implementação canônica.** Todo claim técnico executável deve ser demonstrado primeiro em Python; claims organizacionais e profissionais são sustentados por artefato, dado, argumento e limitação, pois uma linguagem não os “prova”.
-- **.NET 10 é uma ponte comparativa limitada.** Um único corte vertical exercita o mesmo contrato e a mesma política para tornar diferenças de runtime, tipos, DI, cancelamento e distribuição observáveis. A parte .NET não é pré-requisito nem produto equivalente.
+- **Compatibilidade é ensinada em Python.** Um corte de integração compara chamada em processo com CLI instalada em processo separado, usando o mesmo corpus. Troca de adapter, serialização, erros, cancelamento e distribuição são ensinados pelo mecanismo; não há implementação obrigatória em outra stack.
 - Arquitetura, contratos, telemetria e evidências são agnósticos de fornecedor.
 - No `work-intake`, IA é tratada por decisão arquitetural como componente não confiável e substituível. Isso não é apresentado como propriedade universal de todo sistema; nenhum provedor, modelo ou SDK fechado é requisito do módulo.
 - O módulo entrega material de estudo, laboratório executável, falhas semeadas, avaliação e evidência; não apenas uma lista de tópicos.
@@ -19,9 +19,9 @@ Ao concluir o módulo, o aluno deve conseguir transformar uma necessidade ambíg
 
 ### 1.2 Carga e pré-requisitos
 
-- Carga planejada: **30 horas**, em 15 blocos de 2 horas.
+- Carga planejada: **30 horas estimadas**, em 15 blocos de conteúdo retomáveis. Não há duração obrigatória de sessão.
 - Pré-requisitos: M00, M01 e M02 verificados.
-- Perfil: desenvolvedor experiente em .NET/C# migrando para Python e engenharia AI-native.
+- Perfil: pessoas com os pré-requisitos declarados, sem exigência de conhecimento de outra linguagem ou plataforma.
 
 ## 2. Produto integrador: `work-intake`
 
@@ -43,7 +43,7 @@ política determinística ──► decisão accept/review/reject
       └── logs, traces, métricas e evidence manifest
 ```
 
-O produto canônico completo é Python. O corte .NET compreende somente contrato → política → advisor fake → batch limitado → telemetria → CLI publicada, suficiente para comparação diferencial sem duplicar dois produtos.
+O produto completo e o corte de compatibilidade são Python. O mesmo contrato percorre boundary → política → advisor → decisão → CLI instalada. O teste diferencial compara decisões e erros observáveis, não detalhes internos nem desempenho de processos como se fossem idênticos.
 
 ### 2.1 Modelo mínimo
 
@@ -87,16 +87,12 @@ modulos/M02A-engenharia-software-senior/lab/
 ├── README.md
 ├── pyproject.toml
 ├── uv.lock
-├── global.json
-├── Directory.Packages.props
 ├── contracts/
 ├── fixtures/{golden,adversarial,compatibility,provider-recordings,generated-defects}/
 ├── docs/{intent,requirements,quality-attributes,architecture,threat-model,slo,runbook}.md
 ├── docs/decisions/
 ├── python/src/work_intake/{domain,application,ports,adapters}/
 ├── python/tests/
-├── dotnet/src/{WorkIntake.Core,WorkIntake.Cli}/
-├── dotnet/tests/WorkIntake.Tests/
 ├── migrations/
 ├── tests/{contracts,architecture,differential,performance,negative}/
 ├── tools/gate.py
@@ -140,7 +136,7 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 - `ES26-014`: evoluir JSON Schema v1/v2 com matriz de compatibilidade.
 - `ES26-015`: normalizar tempo, decimal, enum, UTF-8 e erros entre runtimes.
 - `ES26-016`: escolher versionamento e política de depreciação.
-- Prática: corpus golden compartilhado Python/.NET.
+- Prática: corpus golden compartilhado entre chamada Python em processo e CLI instalada.
 
 ### B05 — Dados, transações e evolução de schema
 
@@ -156,7 +152,7 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 - `ES26-022`: propagar cancelamento, timeout e cleanup.
 - `ES26-023`: aplicar concorrência estruturada e ownership de tarefas.
 - `ES26-024`: limitar filas e tornar overload observável.
-- Prática: batch bounded em Python; comparação focal com `Task`/`Channel` em .NET.
+- Prática: batch bounded em Python; contraste entre recusa por capacidade, timeout e cancelamento cooperativo.
 
 ### B07 — Fundamentos de sistemas distribuídos
 
@@ -172,7 +168,7 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 - `ES26-030`: projetar oráculos e evitar testes tautológicos.
 - `ES26-031`: usar mutação e falhas semeadas para provar sensibilidade.
 - `ES26-032`: controlar clock, IDs, aleatoriedade e dependências.
-- Prática: pirâmide por risco, Hypothesis, mutante controlado e corpus cross-runtime.
+- Prática: pirâmide por risco, Hypothesis, mutante controlado e corpus entre caminhos de execução Python.
 
 ### B09 — Secure SDLC e threat modeling
 
@@ -208,19 +204,19 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 
 ### B13 — Python sênior aplicado
 
-- `ES26-049`: fazer escolhas idiomáticas sem portar C# literalmente.
+- `ES26-049`: fazer escolhas idiomáticas por responsabilidade, legibilidade e custo de execução.
 - `ES26-050`: desenhar boundaries tipadas preservando runtime truth.
 - `ES26-051`: empacotar, publicar e instalar fora do checkout.
 - `ES26-052`: depurar imports, memória, I/O e concorrência com método.
 - Prática: produto Python completo, wheel limpo e investigação orientada a evidência.
 
-### B14 — Ponte moderna .NET → Python
+### B14 — Compatibilidade entre implementações Python
 
-- `ES26-053`: comparar modelo de objetos, tipos e exceptions sem falsa equivalência.
-- `ES26-054`: comparar DI explícita, interfaces/Protocols e composition root.
-- `ES26-055`: comparar async/cancelamento e custos de runtime.
-- `ES26-056`: verificar interoperabilidade por contrato e differential test.
-- Prática: corte .NET limitado; nenhuma duplicação do adapter SQLite ou do curso.
+- `ES26-053`: preservar valores e erros ao atravessar a fronteira entre objetos Python e representação serializada.
+- `ES26-054`: substituir adapter no composition root sem alterar o contrato do consumidor.
+- `ES26-055`: distinguir sobrecarga, timeout, cancelamento cooperativo e término de processo por efeitos observáveis.
+- `ES26-056`: verificar o mesmo corpus pela API Python em processo e pela CLI instalada em processo separado.
+- Prática: corte Python instalado fora do checkout, com teste diferencial e caso negativo de incompatibilidade. Nenhuma segunda linguagem é necessária.
 
 ### B15 — Engenharia AI-native e liderança técnica
 
@@ -242,11 +238,11 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 
 ### Contratos e interoperabilidade
 
-- `M02A-AT-006`: fixture v1 válida produz decisão válida nos dois runtimes.
+- `M02A-AT-006`: fixture v1 válida produz a mesma decisão pela API Python e pela CLI instalada.
 - `M02A-AT-007`: campo externo desconhecido é rejeitado no trust boundary.
 - `M02A-AT-008`: consumidor v1 aceita somente evolução v2 declarada compatível.
 - `M02A-AT-009`: remoção ou mudança incompatível bloqueia o gate.
-- `M02A-AT-010`: reason codes e serialização canônica coincidem Python/.NET.
+- `M02A-AT-010`: reason codes e valores serializados coincidem entre chamada em processo e CLI Python instalada, incluindo entradas inválidas.
 - `M02A-AT-011`: timestamps, UTF-8, enums e decimais preservam semântica.
 
 ### Domínio e dados
@@ -264,7 +260,7 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 - `M02A-AT-019`: overload retorna resultado explícito, sem crescimento ilimitado.
 - `M02A-AT-020`: cancelamento externo executa cleanup e é propagado.
 - `M02A-AT-021`: timeout do advisor não deixa tarefa órfã.
-- `M02A-AT-022`: diferenças `TaskGroup`/`Task`/`Channel` são demonstradas sem falsa equivalência.
+- `M02A-AT-022`: recusa por capacidade, timeout e cancelamento cooperativo geram resultados distintos; o teste demonstra cleanup e explicita o que não é garantido ao encerrar um processo.
 
 ### IA agnóstica
 
@@ -291,7 +287,7 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 - `M02A-AT-037`: p50/p95/erro/throughput derivam de amostras brutas persistidas.
 - `M02A-AT-038`: workload crescente localiza saturação/backpressure sem threshold universal.
 - `M02A-AT-039`: policy v2 defeituosa é desativada e v1 restaura comportamento.
-- `M02A-AT-040`: wheel e publish .NET executam fora do source tree.
+- `M02A-AT-040`: wheel instalado executa API Python e CLI fora do source tree, sem importar acidentalmente o checkout.
 - `M02A-AT-041`: newline, casing e paths passam em Windows e Linux.
 - `M02A-AT-042`: suíte obrigatória roda offline, sem credencial.
 - `M02A-AT-043`: manifest registra commit, OS, runtimes, versões, seeds, digests e durações.
@@ -322,9 +318,9 @@ Cada bloco deve conter: problema real, modelo mental, decisão/trade-off, implem
 |---|---|---|
 | G0 — design | escopo, 60 competências, 60 ATs, fontes, limites e rubrica | **APROVADO** |
 | G1 — material | HTML no padrão M00, 15 blocos, exercícios, fontes e acessibilidade | EM PRODUÇÃO |
-| G2 — execução | Python: Ruff, mypy strict, pytest/Hypothesis e wheel; ponte .NET: restore locked, analyzers, test e publish; corpus v1/v2 executado | PENDENTE |
+| G2 — execução | Python: Ruff, mypy strict, pytest/Hypothesis e wheel; corpus v1/v2 e testes diferenciais entre API e CLI instalada | PENDENTE |
 | G3 — avaliação | 60 ATs, checkpoint por cenário, casos negativos, demonstração e rubrica corrigível | PENDENTE |
-| G4 — portabilidade | invariantes/adapters separados, Python canônico, corte .NET limitado e corpus diferencial sem falsa equivalência | PENDENTE |
+| G4 — portabilidade | invariantes/adapters separados, Python canônico, adapters substituíveis e corpus diferencial entre API e CLI, sem falsa equivalência de lifecycle | PENDENTE |
 | G5 — produção | architecture rules, adversariais, tenant, transação, bounded queue, telemetria, SLI/SLO, runbook, clean install e evidência | PENDENTE |
 | G6 — editorial/certificação | QA HTML a 390 px/desktop/impressão, links/fontes/acessibilidade e matriz Windows/Linux/CI sem P0 aberto | PENDENTE |
 
@@ -359,7 +355,6 @@ O SWEBOK é índice de cobertura, não fonte única. Normas/especificações tê
 | modularidade/domínio | [Parnas 1972](https://doi.org/10.1145/361598.361623); [Liskov/Wing 1994](https://www.cs.columbia.edu/~wing/publications/LiskovWing94.pdf); [PEP 544](https://peps.python.org/pep-0544/); [Python import system](https://docs.python.org/3.14/reference/import.html); [Cockburn 2005](https://alistair.cockburn.us/hexagonal-architecture); [DDD Reference](https://www.domainlanguage.com/ddd/reference/) | information hiding, subtipagem comportamental, Protocol, imports, ports/adapters e modelo de domínio | por release do Python; demais anual |
 | contratos | [JSON Schema 2020-12](https://json-schema.org/draft/2020-12); [OpenAPI](https://spec.openapis.org/oas/); [AsyncAPI](https://www.asyncapi.com/docs/reference/specification/latest); [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html); [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html); [CloudEvents](https://cloudevents.io/) | contrato, evolução, erros e envelopes | 90 dias quando ativo |
 | Python | [Python 3.14 Language Reference](https://docs.python.org/3.14/reference/); [Python typing specification](https://typing.python.org/en/latest/spec/) | semântica e typing gradual | por release |
-| ponte .NET | [ECMA-334](https://ecma-international.org/publications-and-standards/standards/ecma-334/); [ECMA-335](https://docs.ecma-international.org/ecma-335/Ecma-335-part-i-iv.pdf); documentação .NET 10 aplicável | comparação de linguagem/runtime | por release |
 | dados | [PostgreSQL 18 MVCC](https://www.postgresql.org/docs/18/mvcc.html); [Open Data Contract Standard](https://bitol.io/); [OpenLineage](https://openlineage.io/docs/spec/) | modelo conceitual, contratos e lineage | 90 dias/major |
 | distribuídos | [Lamport](https://lamport.azurewebsites.net/pubs/time-clocks.pdf); [Gilbert/Lynch](https://dl.acm.org/doi/10.1145/564585.564601); [Raft](https://raft.github.io/raft.pdf); [Pat Helland](https://www.cidrdb.org/cidr2007/papers/cidr07p15.pdf) | causalidade, CAP formal, consenso e mensagens | anual |
 | observabilidade/SRE | [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/); [W3C Trace Context](https://www.w3.org/TR/trace-context/); [Google SRE](https://sre.google/sre-book/service-level-objectives/) | sinais, propagação, SLI/SLO e error budget | 90 dias para OTel |
@@ -377,7 +372,6 @@ Regras: registrar versão/data no HTML; evitar claims de mercado sem pesquisa da
 | Dimensão | Windows | Linux | CI |
 |---|---|---|---|
 | Python | CPython 3.14 via lock | mesmo | matriz Windows/Ubuntu |
-| .NET ponte | SDK 10 fixado | mesmo | restore locked/test/publish |
 | dados | SQLite e temp paths | mesmo | banco novo por job |
 | encoding/path | UTF-8, CRLF de entrada, drive | UTF-8, LF, case-sensitive | fixtures divergentes |
 | IA | fake/record-replay offline | igual | rede/credencial proibidas após restore |
@@ -386,10 +380,12 @@ Regras: registrar versão/data no HTML; evitar claims de mercado sem pesquisa da
 
 ## 11. Critério de conclusão
 
-Um terceiro deve conseguir reconstruir os artefatos, executar o corpus nos dois runtimes, reproduzir falhas negativas, provar atomicidade/isolamento/backpressure/cancelamento, trocar o advisor sem alterar domínio/política, reverter policy defeituosa e ligar cada decisão relevante a requisito, ADR, teste e evidência.
+Um terceiro deve conseguir reconstruir os artefatos, executar o corpus nos dois caminhos Python, reproduzir falhas negativas, provar atomicidade/isolamento/backpressure/cancelamento, trocar o advisor sem alterar domínio/política, reverter policy defeituosa e ligar cada decisão relevante a requisito, ADR, teste e evidência.
 
 A defesa final deve também declarar quais garantias são apenas locais e quais só serão adquiridas em M03 e LT01–LT04.
 
 ## 12. Decisão G0
 
-**APROVADO em 15/08/2026; detalhe B01–B03 revisado na versão 1.1.** A especificação resolve o conflito curricular: o curso continua Python-first; .NET é somente lente de transferência. A baseline passa a 60 ATs para que papel sênior, requisitos e modularidade tenham oráculos próprios. A produção pode avançar pelo esqueleto, contratos e B01, mantendo G1 em andamento e G2–G6 fechados até evidência real.
+**G0 revisado em 12/09/2026, versão 1.2**, por decisão do usuário de remover a dependência didática de outra stack. Permanecem 15 blocos, 60 competências, 60 cenários e o produto Python. B14 e AT-006/010/022/040 passam a comprovar compatibilidade entre caminhos Python; não se transfere aprovação de evidências anteriores para esses oráculos revisados. G1 continua em produção, G2 parcial e G3–G6 pendentes.
+
+Aprovação histórica: versão 1.1 em 15/08/2026, com quinze oráculos próprios para B01–B03. O corte comparativo em outra linguagem daquela revisão foi substituído nesta versão; os IDs foram preservados para rastrear a mudança.

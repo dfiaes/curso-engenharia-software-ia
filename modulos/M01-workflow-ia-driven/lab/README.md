@@ -1,55 +1,53 @@
-# Laboratório M01 — SDD e execução segura
+# Laboratório M01 — referência executável
 
-Este laboratório transforma o M01 em evidência executável. Ele não chama modelo, não instala Spec Kit e nunca toca no repositório principal durante a prática de Git. As worktrees são criadas somente em `TemporaryDirectory`, marcadas como pertencentes ao lab, e a limpeza recusa árvores sujas.
+O roteiro está em [`../M01.html#lab`](../M01.html#lab). Este README localiza o cwd e resume a instalação, os comandos de verificação, a retomada e a limpeza segura. Os comandos são instruções, não registro de execução desta tarefa.
 
-## Ambiente
+## Criar a cópia e iniciar
 
-```text
-uv sync --python 3.14 --extra dev
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy --strict src tests
-uv run python -m unittest discover -s tests -v
+No PowerShell, a partir da raiz do curso:
+
+```powershell
+Set-Location .\modulos\M01-workflow-ia-driven\lab
+$workdir = python .\create_working_copy.py
+Set-Location $workdir
+Get-Content -Raw -LiteralPath .\.course-lab-workspace
 ```
 
-Git é requisito obrigatório dos cenários de worktree. Falta de Git bloqueia o gate: não há aprovação por `skip`.
+O marcador deve conter `M01`. A cópia nova é criada em `%TEMP%\tutor-ia-codex-labs\`; no modo guiado, somente `src/sdd_lab/drift.py` é esvaziado para reconstrução. `--reference` preserva esse arquivo. O laboratório requer Python 3.14 e Git instalado para o cenário que cria repositórios e worktrees reais. Os testes Git usam `TemporaryDirectory`; não alteram o repositório do curso.
 
-## Experimentos
+## Ambiente e oráculos
 
-```text
+Os comandos abaixo usam como cwd a pasta impressa em `$workdir`. O `uv.lock` fixa as dependências. O extra `dev` inclui mypy, pytest, pytest-asyncio e Ruff.
+
+```powershell
+uv sync --locked --python 3.14 --extra dev
 uv run python -m sdd_lab validate examples/feature.valid.json
 uv run python -m sdd_lab validate examples/feature.invalid.json
-uv run python -m sdd_lab adapters-demo examples/feature.valid.json
-uv run python -m sdd_lab check examples/feature.valid.json --evidence evidence/run.json
+uv run python -m unittest discover -s tests -v
+uv run ruff format --check .
+uv run ruff check .
+uv run mypy --strict src tests
 ```
 
-O segundo comando deve falhar e citar requisito vago, não-objetivo ausente, path inseguro e string de shell. O arquivo original permanece inalterado. O `check` usa lista de argumentos, `shell=False`, allowlist, timeout e registra evidência real.
+O arquivo `pyproject.toml` configura mypy em modo estrito para `src` e `tests`; o comando os explicita para deixar claro o escopo. As verificações negativas detalhadas, arquivos a reconstruir e resultados esperados estão no laboratório guiado. Se `uv sync` pedir rede para algo ausente no cache, registre a mensagem e retome quando a dependência estiver disponível; não altere o lock nem use `pip` para contornar o bloqueio.
 
-## O que cada suíte prova
+## Retomada e limpeza
 
-| Suíte | Evidência curricular |
-|---|---|
-| `test_contract.py` | requisitos, contraexemplos, rastreabilidade e rejeição sem mutação |
-| `test_drift.py` | quatro estados de drift sem escolher a correção automaticamente |
-| `test_runner.py` | execução tokenizada, timeout e menor privilégio |
-| `test_workflow.py` | pause/resume, idempotência e orçamento de iteração |
-| `test_policy_adapters.py` | workflow externo revisado por hash e domínio portátil |
-| `test_workspace.py` | write sets, contratos compartilhados, Git real, merge limpo, conflito semântico e cleanup seguro |
+Para retomar do zero, volte à referência e execute `python .\create_working_copy.py` outra vez; ela cria uma pasta nova e não substitui cópias anteriores. A cópia pode ficar em `%TEMP%` enquanto for útil. Se optar por removê-la, confirme que o caminho está dentro de `tutor-ia-codex-labs` e que o marcador continua com `M01`; só então remova essa pasta:
 
-## Limites honestos
-
-- `subprocess` controla o processo filho imediato; isto não é sandbox de sistema operacional.
-- o parser implementa invariantes semânticos do curso; JSON Schema 2020-12 complementa, mas não substitui essas regras;
-- worktree isola diretórios de trabalho, não serviços, banco, cache, porta, lockfile ou contrato;
-- exit code zero prova que o gate executou conforme sua definição, não que o produto satisfaz necessidades não codificadas;
-- os adapters mudam representação e entrada; nenhuma regra do domínio é duplicada neles.
-
-## Baseline verificada em 14/08/2026
-
-```text
-Python 3.14.7
-Ruff format: 33 files already formatted
-Ruff lint: All checks passed!
-mypy strict: Success: no issues found in 21 source files
-unittest: Ran 27 tests — OK
+```powershell
+$allowed = (Resolve-Path -LiteralPath (Join-Path $env:TEMP 'tutor-ia-codex-labs')).Path
+$target = (Resolve-Path -LiteralPath $workdir).Path
+$marker = Join-Path $target '.course-lab-workspace'
+$isOwnedCopy = $target.StartsWith(
+    $allowed + [IO.Path]::DirectorySeparatorChar,
+    [StringComparison]::OrdinalIgnoreCase
+) -and (Get-Content -Raw -LiteralPath $marker).Trim() -eq 'M01'
+if ($isOwnedCopy) {
+    Remove-Item -LiteralPath $target -Recurse
+} else {
+    throw 'Recusa de limpeza: o caminho não é uma cópia marcada do M01.'
+}
 ```
+
+Não substitua `$workdir` por um caminho de outra origem. A remoção é opcional e não toca na referência nem em arquivos pessoais.

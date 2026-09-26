@@ -14,4 +14,3 @@ def course_progress(path: Path, *, max_chars: int = 2_000) -> dict[str, str | in
         "truncated": clipped,
         "original_chars": len(text),
     }
-

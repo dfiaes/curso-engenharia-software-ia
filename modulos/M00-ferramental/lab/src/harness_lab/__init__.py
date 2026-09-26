@@ -15,4 +15,3 @@ __all__ = [
     "load_contract",
     "select_context",
 ]
-
