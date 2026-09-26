@@ -28,8 +28,14 @@ assert.equal(Progress.stats(manifest, complete).percent, 100);
 const imported = Progress.sanitize({ ...partial, schemaVersion: 1, courseVersion: "preview-v1", lastVisited: { unit: "M00", block: "M00:b02" }, optional: { M00: { lab: true, checkpoint: false } } }, manifest);
 assert.equal(imported.blocks["M00:b01"], "completed");
 assert.equal(imported.optional.M00.lab, true);
+const routeImported = Progress.sanitize({ ...partial, schemaVersion: 1, courseVersion: "preview-v1", externalRoute: { "1": true, "9": true } }, manifest);
+assert.deepEqual(routeImported.externalRoute, { "1": true, "9": true });
+assert.deepEqual(JSON.parse(Progress.serialize(routeImported)).externalRoute, { "1": true, "9": true });
 assert.throws(() => Progress.sanitize({ ...partial, schemaVersion: 1, courseVersion: "preview-v1", blocks: { "BAD:b01": "completed" } }, manifest), /desconhecido/);
 assert.throws(() => Progress.sanitize({ ...partial, schemaVersion: 1, courseVersion: "preview-v2" }, manifest), /outra versão/);
 assert.throws(() => Progress.sanitize({ ...partial, schemaVersion: 1, courseVersion: "preview-v1", blocks: { "M00:b01": "green" } }, manifest), /inválido/);
+assert.throws(() => Progress.sanitize({ ...partial, schemaVersion: 1, courseVersion: "preview-v1", externalRoute: { "10": true } }, manifest), /desconhecida/);
+assert.throws(() => Progress.sanitize({ ...partial, schemaVersion: 1, courseVersion: "preview-v1", externalRoute: { "1": "done" } }, manifest), /inválido/);
+assert.throws(() => Progress.sanitize({ ...partial, schemaVersion: 1, courseVersion: "preview-v1", externalRoute: false }, manifest), /roteiro externo é inválido/);
 
-console.log("Portal progress: 11 assertions passed.");
+console.log("Portal progress: 16 assertions passed.");

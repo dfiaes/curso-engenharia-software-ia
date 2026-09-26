@@ -8,6 +8,17 @@
   const MAX_IMPORT_BYTES = 1024 * 1024;
   const unitByCode = new Map(manifest.units.map((unit) => [unit.code, unit]));
   const blockById = new Map(manifest.units.flatMap((unit) => unit.blocks.map((block) => [block.id, { unit, block }])));
+  const EXTERNAL_ROUTE = [
+    { id: "1", title: "Python e primeiros testes", summary: "Fundamentos para ler, escrever e testar programas.", outcome: "Um programa pequeno que lê um arquivo, valida entradas e testa um caso normal e uma falha.", resources: [["CS50P · Harvard", "https://cs50.harvard.edu/python/"], ["Tutorial oficial de Python", "https://docs.python.org/3/tutorial/"], ["pytest · primeiros testes", "https://docs.pytest.org/en/stable/getting-started.html"]] },
+    { id: "2", title: "Git e engenharia de software", summary: "Versionamento e práticas para manter software ao longo do tempo.", outcome: "Descreva uma decisão técnica e faça uma mudança pequena com diff e teste legíveis.", resources: [["Pro Git · capítulos 1–3", "https://git-scm.com/book/en/v2"], ["Software Engineering at Google", "https://abseil.io/resources/swe-book/html/toc.html"], ["pytest · primeiros testes", "https://docs.pytest.org/en/stable/getting-started.html"]] },
+    { id: "3", title: "HTTP, APIs e banco relacional", summary: "Como a Web funciona, como descrever contratos e persistir dados.", outcome: "Modele duas entidades relacionadas e descreva endpoints e erros esperados.", resources: [["Como a Web funciona · MDN", "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works"], ["Visão geral de HTTP · MDN", "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview"], ["Aprenda OpenAPI", "https://learn.openapis.org/"], ["Tutorial do PostgreSQL", "https://www.postgresql.org/docs/current/tutorial.html"]] },
+    { id: "4", title: "Serviço Python e entrega", summary: "Construa uma API local; container e CI são extensões, não bloqueios.", outcome: "Execute uma API testável localmente; não é necessário publicar em nuvem.", resources: [["Tutorial do FastAPI", "https://fastapi.tiangolo.com/tutorial/"], ["Docker Get Started", "https://docs.docker.com/get-started/"], ["GitHub Actions · quickstart", "https://docs.github.com/en/actions/get-started/quickstart"]] },
+    { id: "5", title: "Aplicações com modelos de linguagem", summary: "Prompts, chamadas de ferramentas e escolha entre fluxo simples e agente.", outcome: "Desenhe o fluxo, permissões e validação; justifique quando uma chamada direta basta.", resources: [["Prompt engineering · OpenAI", "https://developers.openai.com/api/docs/guides/prompt-engineering"], ["Prompt engineering · Anthropic", "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"], ["Building effective agents · Anthropic", "https://www.anthropic.com/engineering/building-effective-agents"], ["Using tools · OpenAI", "https://developers.openai.com/api/docs/guides/tools"]] },
+    { id: "6", title: "Avaliação e RAG", summary: "Avalie respostas com critérios e entenda o papel da recuperação de fontes.", outcome: "Monte perguntas com respostas e fontes esperadas; localize falhas de busca, evidência ou resposta.", resources: [["Demystifying evals · Anthropic", "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents"], ["Artigo original de RAG · NeurIPS", "https://arxiv.org/abs/2005.11401"], ["Contextual Retrieval · Anthropic", "https://www.anthropic.com/engineering/contextual-retrieval"]] },
+    { id: "7", title: "Contexto, agentes e protocolos", summary: "Organize contexto e exponha ferramentas por contratos interoperáveis.", outcome: "Exponha uma operação local de baixo risco com entrada, saída, erros e permissões documentados.", resources: [["Effective context engineering · Anthropic", "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"], ["MCP Python SDK · Get started", "https://py.sdk.modelcontextprotocol.io/get-started/"], ["Especificação MCP", "https://modelcontextprotocol.io/specification/2026-07-28"], ["A2A · leitura complementar", "https://a2a-protocol.org/en/docs"]] },
+    { id: "8", title: "Observabilidade, segurança e operação", summary: "Entenda sinais operacionais, incidentes e riscos específicos de aplicações com IA.", outcome: "Documente um cenário de falha, como detectá-lo, recuperar-se e limitar seu impacto.", resources: [["OpenTelemetry · Python", "https://opentelemetry.io/docs/languages/python/getting-started/"], ["Google SRE · livro", "https://sre.google/sre-book/table-of-contents/"], ["OWASP GenAI Top 10 2026", "https://genai.owasp.org/resource/owasp-genai-llm-top-10/"]] },
+    { id: "9", title: "Projeto integrado · Cartógrafo local", summary: "Una API, documentos autorizados, recuperação de fontes, testes e operação.", outcome: "Entregue contrato, serviço testado, perguntas de avaliação, trace/falha e instruções locais.", resources: [["Enunciado do Capstone local", "docs/projeto-final.md"]] },
+  ];
   let storageAvailable = true;
   let activeFilter = "all";
   let state = loadState();
@@ -70,7 +81,7 @@
   function parseRoute() {
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (!parts.length) return { view: "inicio" };
-    const namedViews = new Set(["inicio", "curriculo", "unidades", "progresso"]);
+    const namedViews = new Set(["inicio", "curriculo", "roteiro", "unidades", "progresso"]);
     if (namedViews.has(parts[0])) return { view: parts[0] };
     const unit = unitByCode.get(parts[0].toUpperCase());
     if (!unit) return { view: "inicio" };
@@ -151,6 +162,30 @@
     return ({ not_started: "Não iniciada", in_progress: "Em andamento", completed: "Concluída" })[status];
   }
 
+  function renderExternalRoute() {
+    document.getElementById("external-route-list").innerHTML = EXTERNAL_ROUTE.map((step) => `
+      <article class="route-stage${state.externalRoute[step.id] ? " completed" : ""}" data-route-card="${step.id}">
+        <div class="route-stage-head"><span class="route-stage-number">${step.id.padStart(2, "0")}</span><div><h2>${escapeHtml(step.title)}</h2><p>${escapeHtml(step.summary)}</p></div></div>
+        <p class="route-outcome"><strong>Para consolidar:</strong> ${escapeHtml(step.outcome)}</p>
+        <ul class="route-resources">${step.resources.map(([label, href]) => `<li><a href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(label)} ↗</a></li>`).join("")}</ul>
+        <label class="route-complete"><input type="checkbox" data-route-step="${step.id}" ${state.externalRoute[step.id] ? "checked" : ""}><span>Marcar etapa ${step.id} como concluída</span></label>
+      </article>`).join("");
+    updateExternalRouteProgress();
+  }
+
+  function updateExternalRouteProgress() {
+    const completed = EXTERNAL_ROUTE.filter((step) => state.externalRoute[step.id] === true).length;
+    document.getElementById("route-progress-label").textContent = `${completed} de ${EXTERNAL_ROUTE.length} etapas concluídas`;
+    document.getElementById("route-progress-bar").style.width = `${Math.round((completed / EXTERNAL_ROUTE.length) * 100)}%`;
+    for (const step of EXTERNAL_ROUTE) {
+      const card = document.querySelector(`[data-route-card="${step.id}"]`);
+      if (!card) continue;
+      card.classList.toggle("completed", state.externalRoute[step.id] === true);
+      const checkbox = card.querySelector("[data-route-step]");
+      if (checkbox) checkbox.checked = state.externalRoute[step.id] === true;
+    }
+  }
+
   function renderCatalog() {
     const query = normalize(dom.search.value.trim());
     const catalog = document.getElementById("unit-catalog");
@@ -198,6 +233,7 @@
     document.getElementById("home-last-visited").textContent = last ? `${last.unit.code} · bloco ${last.block.number}` : "Ainda não iniciada";
     renderHome();
     renderProgressView();
+    updateExternalRouteProgress();
     updateActiveStatusButtons();
     if (parseRoute().view === "estudar") renderOutline(parseRoute().unit, parseRoute().block);
   }
@@ -328,6 +364,13 @@
   });
 
   document.addEventListener("change", (event) => {
+    const routeStep = event.target.closest("[data-route-step]");
+    if (routeStep) {
+      state.externalRoute[routeStep.dataset.routeStep] = routeStep.checked;
+      if (!routeStep.checked) delete state.externalRoute[routeStep.dataset.routeStep];
+      saveState();
+      return;
+    }
     const optional = event.target.closest("[data-optional]");
     if (!optional) return;
     const route = parseRoute();
@@ -352,7 +395,7 @@
     event.target.value = "";
   });
   document.getElementById("reset-progress").addEventListener("click", () => {
-    if (!confirm("Limpar todo o progresso desta prévia neste navegador?")) return;
+    if (!confirm("Limpar o progresso dos blocos e do roteiro externo neste navegador?")) return;
     state = Progress.emptyState(manifest.courseVersion);
     saveState();
     showMessage("Progresso limpo.");
@@ -365,6 +408,7 @@
   window.addEventListener("hashchange", handleRoute);
 
   renderSidebar();
+  renderExternalRoute();
   renderCurriculum();
   renderCatalog();
   renderProgressEverywhere();

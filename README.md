@@ -7,6 +7,7 @@ A course for learners from different software backgrounds. Python 3.14 is the ca
 ## Find your material
 
 - [Course portal](index.html): the official entry point for instructions, curriculum, all 19 units, the 152-block study path and browser-local progress.
+- [Free curated study route](docs/ROTEIRO-ESTUDO-GRATUITO.md): a shorter sequence of public courses, official documentation and references, with a nine-step checklist.
 - [Course map](CURRICULO.md): modules, prerequisites and intended outcomes.
 - [Implementation status](docs/STATUS-IMPLEMENTACAO-CURSO.md): what is ready, incomplete or blocked. Existing HTML does not imply verified material.
 - [M00](modulos/M00-ferramental/M00.html): entry module; visual review remains open.

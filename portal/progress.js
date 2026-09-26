@@ -7,6 +7,7 @@
 
   const SCHEMA_VERSION = 1;
   const STATUSES = new Set(["not_started", "in_progress", "completed"]);
+  const EXTERNAL_ROUTE_STEPS = new Set(Array.from({ length: 9 }, (_, index) => String(index + 1)));
 
   function emptyState(courseVersion) {
     return {
@@ -16,6 +17,7 @@
       lastVisited: null,
       blocks: {},
       optional: {},
+      externalRoute: {},
     };
   }
 
@@ -49,6 +51,17 @@
     for (const [code, value] of Object.entries(input.optional || {})) {
       if (!knownUnits.has(code) || !value || typeof value !== "object" || Array.isArray(value)) throw new Error(`Recurso opcional inválido: ${code}.`);
       state.optional[code] = { lab: value.lab === true, checkpoint: value.checkpoint === true };
+    }
+    if (
+      input.externalRoute !== undefined
+      && (!input.externalRoute || typeof input.externalRoute !== "object" || Array.isArray(input.externalRoute))
+    ) {
+      throw new Error("O progresso do roteiro externo é inválido.");
+    }
+    for (const [step, completed] of Object.entries(input.externalRoute || {})) {
+      if (!EXTERNAL_ROUTE_STEPS.has(step)) throw new Error(`Etapa desconhecida no roteiro externo: ${step}.`);
+      if (typeof completed !== "boolean") throw new Error(`Estado inválido para a etapa externa ${step}.`);
+      if (completed) state.externalRoute[step] = true;
     }
     state.updatedAt = typeof input.updatedAt === "string" ? input.updatedAt : null;
     return state;
@@ -99,5 +112,5 @@
     return JSON.stringify({ ...state, updatedAt: new Date().toISOString() }, null, 2) + "\n";
   }
 
-  return { SCHEMA_VERSION, STATUSES, emptyState, sanitize, unitStatus, stats, nextBlock, serialize };
+  return { SCHEMA_VERSION, STATUSES, EXTERNAL_ROUTE_STEPS, emptyState, sanitize, unitStatus, stats, nextBlock, serialize };
 });

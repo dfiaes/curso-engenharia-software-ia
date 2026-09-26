@@ -4,6 +4,8 @@
 
 O [`index.html`](index.html) é a porta de entrada oficial da Prévia Editorial v1: reúne instruções, currículo, as 19 unidades, os 152 blocos e o progresso local exportável. Os links diretos abaixo continuam válidos como fallback.
 
+Para começar por uma sequência mais curta com material publicado gratuitamente por Harvard, mantenedores de tecnologias, padrões abertos e fontes de referência, use o [roteiro de estudo curado](docs/ROTEIRO-ESTUDO-GRATUITO.md). Ele reúne nove etapas e acompanhamento por checklist; o acervo local pode ser consultado como apoio, sem exigir leitura linear dos 152 blocos.
+
 O principal ensina engenharia de software e sistemas com LLMs. O apêndice aprofunda ML tabular, treinamento, validação e MLOps. Pode ser estudado depois ou quando útil; não é pré-requisito do principal e sua produção não bloqueia leitura. Conceitos matemáticos indispensáveis são explicados no próprio módulo principal.
 
 O material combina explicação profunda e laboratório pequeno: problema → mecanismo → exemplo resolvido → decisão → falha/diagnóstico → transferência. Labs ficam ao final, seguidos do checkpoint separado. Blocos organizam conteúdo, não sessões obrigatórias. Não há relógio, quota, diário ou commit exigidos para estudar.

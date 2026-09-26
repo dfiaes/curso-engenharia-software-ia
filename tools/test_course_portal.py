@@ -39,6 +39,13 @@ class CoursePortalTests(unittest.TestCase):
         payload = json.dumps(self.manifest, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
         self.assertIn(payload, page)
 
+    def test_curated_external_route_is_reachable_from_portal(self) -> None:
+        page = render(self.manifest)
+        self.assertIn('href="#/roteiro" data-view-link="roteiro"', page)
+        self.assertIn('id="view-roteiro" data-view="roteiro"', page)
+        self.assertIn('id="external-route-list"', page)
+        self.assertIn("docs/ROTEIRO-ESTUDO-GRATUITO.md", page)
+
     def test_portal_assets_and_module_bridge_exist(self) -> None:
         page = render(self.manifest)
         for asset in ("portal/portal.css", "portal/progress.js", "portal/portal.js"):
