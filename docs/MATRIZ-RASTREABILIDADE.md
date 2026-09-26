@@ -26,6 +26,8 @@
 | LT03 | 6 | 29 | [LT03](especificacoes/LT03-ESPECIFICACAO.md) | [Rastreabilidade](../modulos/LT03-novo/RASTREABILIDADE.md) |
 | LT04 | 6 | 34 | [LT04](especificacoes/LT04-ESPECIFICACAO.md) | [Rastreabilidade](../modulos/LT04-novo/RASTREABILIDADE.md) |
 
+Na Prévia Editorial v1, LT04 publica o recorte Tier 1 de release engineering descrito na rastreabilidade local. Os 34 cenários da especificação ampliada de qualidade, supply chain e governança continuam pertencendo à certificação v4; não são apresentados como cobertura da prévia.
+
 Os IDs dos LTs e de M12 são esparsos; maior sufixo não é contagem. OPS-01 conferiu 613 IDs enumerados nas 26 specs contra o catálogo e vinculou cada critério aos blocos owner, sem preencher lacunas numéricas. Onze critérios enviesados de M07/M08/M11 foram reescritos para comparar e medir sem resultado universal; IDs preservados. A [evidência OPS-01](planejamento-v4/evidencias/OPS-01.md) registra divergências, disposição e natureza planejada da prova. Nenhuma linha acima equivale a VERIFICADO.
 
 ## Apêndice opcional

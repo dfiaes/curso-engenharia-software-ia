@@ -1,6 +1,6 @@
-# Rastreabilidade do LT04-T1 (recorte release Tier 1)
+# Rastreabilidade do LT04 — Prévia Editorial Tier 1
 
-**Data-base:** 21/09/2026 · **Especificação:** [`docs/especificacoes/LT04-ESPECIFICACAO.md`](../../docs/especificacoes/LT04-ESPECIFICACAO.md) · **Estado:** G0 aprovado (spec); B01–B06 produzidos (C+L+D Tier 1); E final executado 21/09/2026
+**Data-base:** 26/09/2026 · **Especificação:** [`docs/especificacoes/LT04-ESPECIFICACAO.md`](../../docs/especificacoes/LT04-ESPECIFICACAO.md) · **Estado:** PRÉVIA_EDITORIAL para B01–B06 Tier 1; certificação v4 permanece separada
 
 Um cenário `ESPECIFICADO` possui oráculo planejado; não significa prova.
 Só execução reproduzível, revisada pelo orquestrador, promove a `VERIFICADO`.

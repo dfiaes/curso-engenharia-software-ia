@@ -6,6 +6,7 @@ A course for learners from different software backgrounds. Python 3.14 is the ca
 
 ## Find your material
 
+- [Course portal](index.html): the official entry point for instructions, curriculum, all 19 units, the 152-block study path and browser-local progress.
 - [Course map](CURRICULO.md): modules, prerequisites and intended outcomes.
 - [Implementation status](docs/STATUS-IMPLEMENTACAO-CURSO.md): what is ready, incomplete or blocked. Existing HTML does not imply verified material.
 - [M00](modulos/M00-ferramental/M00.html): entry module; visual review remains open.
@@ -13,6 +14,8 @@ A course for learners from different software backgrounds. Python 3.14 is the ca
 - [Capstone](docs/projeto-final.md): the product connecting the modules.
 
 Use the contents and section links to read, consult an example or resume where you stopped. Guided labs are collected at the end of each module and can span several sessions. Assessments are separate; they demonstrate competence without locking access to reading. Notes and the [personal study log](PROGRESSO.md) are optional aids.
+
+The portal stores reading progress only in the current browser and can export or import it as JSON. This personal state is separate from editorial readiness: completing a block does not promote a technical gate, and an unverified lab does not block reading the preview.
 
 ## Contribute to the course
 
@@ -48,4 +51,4 @@ Keep curriculum, evidence and learner history separate. Consolidate new decision
 
 ## Editorial checks
 
-Run `python3 tools/check_course.py` from the repository root (or `python tools/check_course.py` on Windows). It checks active Markdown/HTML links, anchors and structural errors. Use `--include-history` to inspect the archive too; links to archived documents are checked in both modes. It does not execute module labs, validate external sources, or certify accessibility and teaching quality.
+Run `python3 tools/build_course_portal.py --check` to verify that the embedded portal manifest matches the 19 units and 152 block anchors. Run `python3 tools/check_course.py` from the repository root (or `python tools/check_course.py` on Windows) for active Markdown/HTML links, anchors and structural errors. Use `--include-history` to inspect the archive too. These checks do not execute module labs, validate external sources, or certify accessibility and teaching quality.

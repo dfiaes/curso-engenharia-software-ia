@@ -2,6 +2,8 @@
 
 **Principal:** 15 módulos + quatro laboratórios transversais; 152 blocos. **Apêndice opcional:** ML01–ML07, 48 blocos. Python 3.14; português; sem pressupor outra stack. As 304h da baseline anterior são estimativa histórica, não prazo ou carga validada do acervo ampliado.
 
+O [`index.html`](index.html) é a porta de entrada oficial da Prévia Editorial v1: reúne instruções, currículo, as 19 unidades, os 152 blocos e o progresso local exportável. Os links diretos abaixo continuam válidos como fallback.
+
 O principal ensina engenharia de software e sistemas com LLMs. O apêndice aprofunda ML tabular, treinamento, validação e MLOps. Pode ser estudado depois ou quando útil; não é pré-requisito do principal e sua produção não bloqueia leitura. Conceitos matemáticos indispensáveis são explicados no próprio módulo principal.
 
 O material combina explicação profunda e laboratório pequeno: problema → mecanismo → exemplo resolvido → decisão → falha/diagnóstico → transferência. Labs ficam ao final, seguidos do checkpoint separado. Blocos organizam conteúdo, não sessões obrigatórias. Não há relógio, quota, diário ou commit exigidos para estudar.
@@ -32,9 +34,9 @@ Para consultar sintaxe que M00 e M01 usam antes do ensino aprofundado de Python,
 | LT01 | 6 | Runtime, Linux e redes | [LT01](modulos/LT01-novo/LT01.html) |
 | LT02 | 6 | Sistemas distribuídos, dados e mensageria | [LT02](modulos/LT02-novo/LT02.html) |
 | LT03 | 6 | Cloud-native, IaC, GitOps e plataforma | [LT03](modulos/LT03-novo/LT03.html) |
-| LT04 | 6 | Qualidade avançada, supply chain e governança de IA | [LT04](modulos/LT04-novo/LT04.html) |
+| LT04 | 6 | Release engineering: versão, gates, rollback, sinais, comunicação e pós-mortem | [LT04](modulos/LT04-novo/LT04.html) |
 
-Dependências conceituais principais: M00/M01 → M02 → M02A → M03/M04 → M05/M06 → M07/M08/M09/M10 → M11/M12 → M13. LT01 acompanha a base HTTP/runtime; LT02 aprofunda dados e falha distribuída; LT03 plataforma; LT04 qualidade/governança. Use a especificação local para os pré-requisitos exatos; navegar fora da ordem não exige aprovação.
+Dependências conceituais principais: M00/M01 → M02 → M02A → M03/M04 → M05/M06 → M07/M08/M09/M10 → M11/M12 → M13. LT01 acompanha a base HTTP/runtime; LT02 aprofunda dados e falha distribuída; LT03 cobre plataforma; LT04 fecha o recorte de release engineering. Qualidade avançada, supply chain e governança de IA permanecem extensão de certificação v4, não promessa cumprida pela prévia. Use a especificação local para os pré-requisitos exatos; navegar fora da ordem não exige aprovação.
 
 O Capstone Cartógrafo liga as peças por uma jornada pequena: ingerir corpus autorizado, consultar com evidência e operar com controles. Não precisa virar uma plataforma grande para ensinar conceitos profundos. Quando a promessa envolver PostgreSQL, rede ou processo, a prova usa o componente real em sandbox. Detalhe: [produto final](docs/projeto-final.md).
 

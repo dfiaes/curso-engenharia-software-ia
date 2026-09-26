@@ -1,10 +1,23 @@
-# Especificação do LT04 — Qualidade avançada, supply chain e governança de IA
+# Especificação do LT04 — Release engineering e aprendizado operacional
 
-**Versão:** 1.0 · **Data-base:** 14/08/2026 · **Estado:** G0 APROVADO · **Carga:** 6 blocos / 12h
+**Versão:** 1.1 · **Data-base:** 26/09/2026 · **Estado:** PRÉVIA EDITORIAL TIER 1; extensão v4 com G0 aprovado · **Carga:** 6 blocos
 
-LT04 acontece depois do M12. Seu propósito é transformar “parece pronto” em uma decisão de release tecnicamente defensável, cobrindo software determinístico, comportamento probabilístico, cadeia de fornecimento e riscos humanos/organizacionais da IA.
+LT04 acontece depois do M12. Na Prévia Editorial v1, seu propósito é transformar “parece pronto” em uma decisão de release comunicável e reversível: versão, gates, rollback e restauração, sinais, comunicação e pós-mortem. Esse é o recorte Tier 1 já produzido no HTML e no laboratório local.
 
-## 1. Resultado do laboratório
+A extensão de certificação v4 aprofunda estratégia de testes, comportamento probabilístico, cadeia de fornecimento, segurança e riscos humanos/organizacionais da IA. Ela permanece especificada nas seções posteriores e não é apresentada como cobertura concluída da prévia.
+
+### Escopo publicado na Prévia Editorial v1
+
+| Bloco | Conteúdo disponível |
+|---|---|
+| B01 | versionamento, changelog e digest imutável |
+| B02 | gates, evidência e GO/CONDITIONAL/NO-GO |
+| B03 | rollback, restauração e stop conditions |
+| B04 | sinais, cauda, slices e dados ausentes |
+| B05 | comunicação, aprovadores e reprodução independente |
+| B06 | pós-mortem, ações e waivers com expiração |
+
+## 1. Resultado da extensão de certificação v4
 
 Ao concluir LT04, o aluno consegue:
 
@@ -94,7 +107,7 @@ O candidato contém defeitos semeados por variante: quebra de contrato, condiç�
 
 `claims.yaml` liga cada alegação a requisito, artifact digest, comando/método, raw evidence, cálculo, threshold, revisor, validade e limitações. O decision engine apenas calcula gates declarados; não fabrica resultados nem substitui assinatura humana responsável.
 
-## 4. Blocos
+## 4. Blocos da extensão de certificação v4
 
 ## Bloco 1 · Estratégia de testes por risco e oráculos fortes
 
