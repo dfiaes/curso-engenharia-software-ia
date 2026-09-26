@@ -46,7 +46,7 @@ T2 pode começar após T1, mas T3 só fecha quando ambos estiverem concluídos. 
 - Resultado: os quatro documentos usam as dez etapas do manifesto na mesma ordem; o guia traz sínteses originais, leituras essenciais, aprofundamentos e atividades opcionais. Codex/OpenCode têm prática direta; Claude Code/Cursor são comparados por documentação. Pagamento, API comercial, assinatura e certificado não são requisitos. Os módulos locais permanecem como acervo secundário; M11 e ML01–ML07 são opcionais. Checklist pessoal, gates v4 e automação editorial permanecem separados, sem promoção.
 - Evidência focal: verificação programática contra `portal/study-route-source.json` confirmou 10 etapas, ordem, títulos, URLs, papéis `essential`/`deepening` e atividades opcionais; busca por contagens/estados obsoletos não encontrou ocorrências; `python3 tools/check_course.py` nos cinco documentos retornou 0 erros estruturais/de links e 0 referências legadas; `git diff --check` passou.
 - Limites: T2 não executa testes do portal, validações amplas, inspeção visual, smoke test, checagem externa de links nem qualquer gate; esses itens pertencem ao T3.
-- Checkpoint Git: a criar ao concluir a validação focal.
+- Checkpoint Git: `9db5413` (`Document curated study route`), após o checkpoint T1 `2cde14e`.
 
 ### T3 — PRÓXIMO CARTÃO
 
