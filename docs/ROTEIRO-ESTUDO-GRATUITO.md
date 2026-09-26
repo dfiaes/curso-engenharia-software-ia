@@ -1,143 +1,221 @@
-# Roteiro gratuito de Engenharia de Software e IA
+# Trilha curada: agentes de programação antes de apps com LLMs
 
-**Curadoria consultada em 26/09/2026.** Esta é uma seleção para estudar a formação inteira usando fontes públicas, não uma lista literalmente exaustiva de tudo que existe na internet. O material prioriza cursos completos, documentação dos mantenedores, padrões abertos, livros autorizados e artigos de pesquisa. A maioria está em inglês; quando necessário, use a tradução do navegador.
+**Curadoria consultada em 26/09/2026.** Este guia apresenta, em linguagem própria, o percurso definido no manifesto [`portal/study-route-source.json`](../portal/study-route-source.json). Os links levam a cursos, documentação, padrões e artigos públicos; o guia não reproduz essas obras.
 
-## Recomendação
+## Como usar a trilha
 
-Comece por este roteiro se a prioridade for aprender com uma sequência mais curta e com material já publicado. O acervo local continua útil como consulta, mas não é preciso ler os 152 blocos em ordem para seguir este percurso. O currículo local permanece em [`index.html`](../index.html); o estado editorial e os bloqueios técnicos estão em [`STATUS-IMPLEMENTACAO-CURSO.md`](STATUS-IMPLEMENTACAO-CURSO.md).
+Esta é a entrada principal para estudar com uma sequência curta. As dez etapas começam pelo trabalho controlado com agentes de programação, fazem uma ponte seletiva de Python e avançam para aplicações com modelos de linguagem (LLMs). O [portal](../index.html) mantém o checklist e o progresso da trilha separados dos 152 blocos do acervo local.
 
-Cada etapa tem um resultado simples para consolidar o que foi aprendido. Ele serve para lembrar e transferir o conhecimento, não para pedir aprovação nem bloquear a próxima etapa. Não é necessário fazer certificados.
+Cada etapa distingue **leituras essenciais**, que sustentam o percurso, de **aprofundamentos**, que ampliam a comparação ou a prática. As atividades também são opcionais: ajudam a consolidar e transferir o conhecimento, mas não bloqueiam a etapa seguinte, não exigem certificado e podem atravessar quantas sessões forem necessárias.
 
-Os links de leitura e os cursos listados são gratuitos. Chamadas a APIs de modelos podem gerar cobrança: são opcionais neste roteiro. Não crie conta de cobrança para seguir as leituras. Para o projeto final, a integração com um modelo real pode ficar para quando houver uma forma de executar sem custo; testes com resultados fixos devem ser identificados como fixtures e não como evidência de qualidade de um modelo.
+Os recursos essenciais são gratuitos para leitura. O percurso não exige assinatura, crédito de API, nuvem ou conta de cobrança. Quando uma documentação descreve API comercial, estude o contrato sem executar chamadas pagas; fixtures podem verificar fluxo e formato offline, mas não provam a qualidade de um modelo real.
 
-## Percurso
+Codex e OpenCode recebem prática direta nas três primeiras etapas. Claude Code e Cursor aparecem como comparação de documentação oficial, sem exigir instalação ou conta. Recursos, comandos, preços e limites de produto mudam; confira a documentação atual antes de aplicar uma configuração.
 
-### 1. Python para construir e testar programas
+## Percurso principal
 
-- [CS50’s Introduction to Programming with Python — Harvard](https://cs50.harvard.edu/python/): curso aberto com aulas, exercícios e projeto final. Faça o curso completo se ainda não programa; se já programa, priorize exceções, bibliotecas, testes, arquivos e orientação a objetos.
-- [Tutorial oficial de Python](https://docs.python.org/3/tutorial/): use como referência para sintaxe e biblioteca padrão, não precisa ler de ponta a ponta antes de começar.
-- [pytest — primeiros testes](https://docs.pytest.org/en/stable/getting-started.html): acompanhe o exemplo e adapte os testes do projeto durante as etapas seguintes.
+### 1. Trabalhar com um agente de programação
 
-**Resultado para consolidar:** um pequeno programa de linha de comando que lê um arquivo, valida entradas e tem testes para o caminho normal e para uma falha.
+Um agente de programação pode explorar arquivos, executar comandos e propor mudanças, não apenas completar texto. Um fluxo controlado define objetivo, escopo e evidência de conclusão; depois inspeciona o diff e a verificação observável. Planejamento detalhado é útil quando existem incertezas ou várias partes, mas pode apenas atrasar uma correção pequena. Git e testes funcionam como recuperação e evidência, não como cerimônias obrigatórias para toda tarefa.
+
+**Leitura essencial**
+
+- [Codex Prompting Guide — OpenAI Cookbook](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide): padrões de tarefa, contexto e verificação no Codex; comandos e modelos permanecem específicos do produto.
+
+**Aprofundamentos**
+
+- [Best practices for Claude Code — Anthropic](https://code.claude.com/docs/en/best-practices): compare exploração, planejamento, implementação e verificação.
+- [Run long horizon tasks with Codex — OpenAI Developers](https://developers.openai.com/blog/run-long-horizon-tasks-with-codex): estudo de tarefas longas; separe princípios transferíveis de recursos do Codex.
+- [Agents — OpenCode](https://opencode.ai/docs/agents): agentes primários e subagentes como exemplo de harness.
+
+**Atividade opcional:** descreva uma mudança pequena com objetivo, limites e teste de aceite; execute-a com um agente e revise o diff e a saída do teste.
 
 - [ ] Etapa 1 concluída
 
-### 2. Git e engenharia de software no tempo
+### 2. Configurar Codex e OpenCode
 
-- [Pro Git](https://git-scm.com/book/en/v2): capítulos 1–3 cobrem modelo de versionamento, commits, histórico e ramificações; pare aí até precisar de tópicos mais avançados.
-- [Software Engineering at Google](https://abseil.io/resources/swe-book/html/toc.html): livro completo gratuito. Comece por “What Is Software Engineering?”, “Code Review”, “Documentation” e os capítulos de testes. São experiências de uma organização específica, úteis como casos e trade-offs, não regras universais.
-- [pytest — primeiros testes](https://docs.pytest.org/en/stable/getting-started.html): mantenha os testes pequenos, legíveis e ligados ao comportamento que importa.
+Organize separadamente regras pessoais, contexto do repositório e pedido da tarefa. Instruções persistentes devem conter apenas o que o agente não consegue inferir e o que evita erros recorrentes. Orientação para o modelo não substitui controles de ferramenta, permissão ou sandbox. A comparação deve considerar configuração pessoal e por projeto, contexto carregado, seleção de modelo e custo: nenhum arquivo configura todos os produtos da mesma forma.
 
-**Resultado para consolidar:** descreva uma decisão técnica em uma página e mostre como uma mudança pequena é revisada por diff e coberta por um teste.
+**Leituras essenciais**
+
+- [Config basics — OpenAI Codex](https://developers.openai.com/codex/config-file/config-basic): configuração pessoal e do projeto, precedência, modelo, esforço, aprovações e sandbox.
+- [Rules — OpenCode](https://opencode.ai/docs/rules): `AGENTS.md`, inicialização e precedência de instruções no OpenCode.
+
+**Aprofundamentos**
+
+- [Docs MCP em Codex, Cursor e Claude Code — OpenAI Developers](https://developers.openai.com/learn/docs-mcp): instalação de um servidor MCP de documentação e comparação de integrações.
+- [Best practices for Claude Code — Anthropic](https://code.claude.com/docs/en/best-practices): contexto, arquivos de instrução, permissões e sandbox específicos do Claude Code.
+- [Customize Cursor — Cursor](https://cursor.com/docs/customize-cursor): regras, Skills, MCP, subagentes, hooks e seus escopos no Cursor.
+
+**Atividade opcional:** configure o mesmo repositório de prática em Codex e OpenCode e registre o que é portável e o que pertence a cada produto.
 
 - [ ] Etapa 2 concluída
 
-### 3. HTTP, contratos de API e banco relacional
+### 3. Criar Skills e usar MCP com segurança
 
-- [Como a Web funciona — MDN](https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works) e [visão geral de HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview): comece pelo fluxo cliente, servidor, requisição e resposta.
-- [Aprenda OpenAPI](https://learn.openapis.org/): leia a introdução e como descrever, validar e documentar um contrato de API.
-- [Tutorial do PostgreSQL](https://www.postgresql.org/docs/current/tutorial.html): percorra criação de tabelas, consultas, joins, agregações, atualizações, chaves estrangeiras e transações.
+Uma Skill reúne instruções e recursos para um fluxo reutilizável. O Model Context Protocol (MCP) conecta clientes a recursos, prompts e ferramentas; como uma ferramenta pode agir em sistemas externos, confiança, escopo, credenciais e consentimento fazem parte do desenho. Hooks e subagentes resolvem outros problemas e não são obrigatórios. Comece por um servidor local ou de documentação confiável e somente de leitura; só depois crie uma ferramenta local mínima e inspecione a capacidade concedida. Compatibilidade de Skills e MCP varia entre clientes.
 
-**Resultado para consolidar:** modele duas entidades relacionadas e descreva em OpenAPI dois endpoints de leitura e um de escrita, incluindo erros esperados.
+**Leituras essenciais**
+
+- [Skills — OpenAI Developers](https://developers.openai.com/plugins/concepts/skills): Skill como workflow reutilizável e sua fronteira com capacidades fornecidas por MCP.
+- [Especificação do Model Context Protocol](https://modelcontextprotocol.io/specification/2026-07-28): arquitetura, recursos, prompts, ferramentas, consentimento e segurança.
+- [Agent Skills — OpenCode](https://opencode.ai/docs/skills): criação de `SKILL.md`, descoberta, frontmatter e permissões.
+
+**Aprofundamentos**
+
+- [MCP servers — OpenCode](https://opencode.ai/docs/mcp-servers): configuração e desativação de servidores locais ou remotos, custo de contexto e credenciais.
+- [Get started — MCP Python SDK](https://py.sdk.modelcontextprotocol.io/get-started/): servidor Python mínimo para uma ferramenta local de leitura.
+
+**Atividade opcional:** crie uma Skill de revisão e conecte um servidor MCP local com uma ferramenta de leitura; registre o escopo concedido e como desativá-lo.
 
 - [ ] Etapa 3 concluída
 
-### 4. Serviço Python e entrega contínua
+### 4. Ponte de Python para quem já programa
 
-- [Tutorial do FastAPI](https://fastapi.tiangolo.com/tutorial/): siga em ordem até dependências, validação, tratamento de erros e testes; consulte o guia avançado apenas quando um requisito pedir.
-- [Docker Get Started](https://docs.docker.com/get-started/): faça o tutorial de containerização da aplicação; ignore publicação em registry se não precisar compartilhar uma imagem.
-- [Quickstart do GitHub Actions](https://docs.github.com/en/actions/get-started/quickstart): adapte o primeiro workflow para executar os testes do serviço em cada mudança.
+O objetivo é ler e modificar as práticas seguintes, não repetir obrigatoriamente um curso introdutório inteiro. Priorize módulos, imports, funções, exceções, coleções, arquivos, ambientes virtuais e testes. A documentação oficial define semântica e biblioteca padrão; o CS50P oferece explicações e exercícios seletivos para os pontos ainda novos. Python é a linguagem das práticas, não um pré-requisito para configurar Codex ou OpenCode.
 
-**Resultado para consolidar:** execute localmente uma API testável em container e deixe a CI rodar os testes automaticamente. Não precisa publicar em nuvem.
+**Leituras essenciais**
+
+- [Tutorial de Python 3.14 — Python Software Foundation](https://docs.python.org/3.14/tutorial/): selecione funções, módulos, estruturas de dados, erros, exceções e arquivos como referência.
+- [Get started — pytest](https://docs.pytest.org/en/stable/getting-started.html): primeiros testes, descoberta e execução local.
+
+**Aprofundamento**
+
+- [CS50’s Introduction to Programming with Python — Harvard](https://cs50.harvard.edu/python/): escolha aulas e exercícios apenas nos assuntos que ainda não domina.
+
+**Atividade opcional:** adapte um script curto que lê um arquivo e teste tanto o caminho normal quanto uma entrada inválida.
 
 - [ ] Etapa 4 concluída
 
-### 5. Aplicações com modelos de linguagem
+### 5. Construir o primeiro app com LLM
 
-- [Prompt engineering — OpenAI Developers](https://developers.openai.com/api/docs/guides/prompt-engineering): leia como orientação específica da plataforma; destaque critérios de sucesso, exemplos, formato e separação de instruções e dados.
-- [Prompt engineering — Anthropic](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview): compare a abordagem e use as seções sobre critérios de sucesso e testes antes de ajustar prompts.
-- [Building effective agents — Anthropic](https://www.anthropic.com/engineering/building-effective-agents): antes de criar um agente, compare uma chamada única, um fluxo explícito e um loop de agente; mantenha a solução mais simples que atende ao caso.
-- [Using tools — OpenAI Developers](https://developers.openai.com/api/docs/guides/tools): entenda o contrato de chamada de ferramenta, execução pelo aplicativo e retorno do resultado.
+Comece por uma chamada direta com entrada explícita, saída validável, tratamento de erro e fronteira entre domínio e provedor. Prompt não substitui validação do programa. Depois acrescente saída estruturada e tool calling, no qual a aplicação valida e executa a ferramenta. Prompts permanecem versionados no código e o modelo fica atrás de um adapter. Fixtures offline testam a lógica e o formato, mas não medem a qualidade de um modelo real.
 
-Esses materiais são gratuitos para leitura. Para executar exemplos contra uma API comercial, confira o preço atual antes de habilitar cobrança. O roteiro não exige chamadas pagas; uma implementação local ou uma etapa conceitual é suficiente para estudar contratos, fluxo e tratamento de falhas.
+**Leituras essenciais**
 
-**Resultado para consolidar:** desenhe o fluxo de uma aplicação com modelo, ferramenta, permissões e validação de saída; indique em que condições uma chamada direta é suficiente.
+- [Prompting — OpenAI Developers](https://developers.openai.com/api/docs/guides/prompting): instruções, parâmetros tipados, prompts versionados e testes; o endpoint é específico da OpenAI.
+- [Using tools — OpenAI Developers](https://developers.openai.com/api/docs/guides/tools): contrato de tool calling e responsabilidade da aplicação pela validação e execução.
+
+**Aprofundamentos**
+
+- [Prompt engineering overview — Anthropic](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview): compare a orientação do fornecedor mantendo invariantes separados de parâmetros proprietários.
+- [Building effective agents — Anthropic Engineering](https://www.anthropic.com/engineering/building-effective-agents): orientação practitioner sobre chamada simples, workflow e agente; não é padrão normativo.
+
+**Atividade opcional:** desenhe uma chamada que transforma uma solicitação em resposta estruturada e identifique validações, falhas e dependências do provedor.
 
 - [ ] Etapa 5 concluída
 
-### 6. Avaliação e RAG
+### 6. Transformar a chamada em serviço
 
-- [Demystifying evals for AI agents — Anthropic](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents): comece por tarefa, trial, grader, taxa de sucesso e avaliação de múltiplas etapas.
-- [Artigo original de RAG — NeurIPS](https://arxiv.org/abs/2005.11401): leia resumo, introdução e desenho do sistema para entender o problema que recuperação de informação tenta resolver.
-- [Contextual Retrieval — Anthropic](https://www.anthropic.com/engineering/contextual-retrieval): estudo de caso de fornecedor sobre contexto de chunks, busca lexical, embeddings e reranking. Trate os ganhos numéricos como resultado do experimento descrito, não como garantia geral.
+Uma API organiza entrada, autenticação quando necessária, validação, resposta e erros. OpenAPI descreve o contrato; FastAPI é uma implementação Python, não o padrão em si. Acrescente persistência apenas se conversas, documentos ou resultados precisarem sobreviver ao processo. Containers, nuvem e integração contínua podem vir depois: a primeira versão deve executar e ser testável localmente.
 
-**Resultado para consolidar:** crie um conjunto pequeno de perguntas com respostas esperadas e fontes; para cada erro, identifique se falhou a recuperação, a evidência ou a resposta. Um conjunto de 10–15 perguntas já permite começar a enxergar padrões.
+**Leituras essenciais**
+
+- [Visão geral de HTTP — MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview): cliente, servidor, requisição, resposta, headers e códigos de estado.
+- [Learn OpenAPI — OpenAPI Initiative](https://learn.openapis.org/): descrição e validação de contratos HTTP sem confundir contrato com implementação.
+
+**Aprofundamentos**
+
+- [Tutorial do FastAPI](https://fastapi.tiangolo.com/tutorial/): validação, erros e testes para um serviço Python local.
+- [Tutorial do PostgreSQL](https://www.postgresql.org/docs/current/tutorial.html): relações, consultas e transações quando o projeto realmente precisar de banco relacional.
+
+**Atividade opcional:** descreva um endpoint que recebe uma pergunta e devolve resposta, fontes e erros num formato consistente.
 
 - [ ] Etapa 6 concluída
 
-### 7. Agentes e protocolos de ferramentas
+### 7. Avaliar e observar antes de aumentar a complexidade
 
-- [Effective context engineering — Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents): leia como manter instruções, ferramentas, dados e histórico úteis ao longo de uma tarefa.
-- [MCP Python SDK — Get started](https://py.sdk.modelcontextprotocol.io/get-started/): construa um servidor mínimo, conecte um cliente e teste em memória antes de usar rede ou uma aplicação hospedeira.
-- [Especificação do MCP](https://modelcontextprotocol.io/specification/2026-07-28): consulte a versão publicada atual quando precisar verificar contratos, capacidades e transporte.
-- [Documentação A2A](https://a2a-protocol.org/en/docs): leitura complementar para comunicação entre agentes independentes. Deixe a implementação para depois do fluxo simples e do MCP.
+Avaliações começam por tarefas representativas e critérios que definem uma resposta aceitável. Separe recuperação, fidelidade às fontes, formato e comportamento de ferramentas. Um conjunto pequeno revela padrões iniciais, mas não representa automaticamente todos os usuários. Traces localizam a etapa de uma falha; fixtures validam lógica e formato, não desempenho do modelo. Toda métrica fica ligada à versão do modelo, ao dataset e ao método.
 
-**Resultado para consolidar:** exponha uma operação local e de baixo risco por uma interface tipada; documente entrada, saída, erro e permissão necessária.
+**Leitura essencial**
+
+- [Demystifying evals for AI agents — Anthropic Engineering](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents): tarefa, execução, grader e taxa de sucesso; exemplos e recomendações são orientação practitioner do fornecedor.
+
+**Aprofundamentos**
+
+- [Evals — OpenAI Developers](https://developers.openai.com/api/docs/guides/evals): abordagem da plataforma OpenAI para comparar com avaliações agnósticas no código.
+- [OpenTelemetry Python — Get started](https://opentelemetry.io/docs/languages/python/getting-started/): spans, traces, métricas e instrumentação Python.
+
+**Atividade opcional:** escreva de cinco a dez casos com resultado esperado e fonte; classifique as falhas pela etapa do sistema.
 
 - [ ] Etapa 7 concluída
 
-### 8. Grafos, observabilidade, segurança e operação
+### 8. RAG com recuperação e evidências
 
-- [OpenTelemetry Python](https://opentelemetry.io/docs/languages/python/getting-started/): instrumente uma aplicação para observar traces, métricas e logs.
-- [Google SRE — livro e capítulos](https://sre.google/sre-book/table-of-contents/): escolha “Service Level Objectives”, “Monitoring Distributed Systems”, “Managing Incidents” e “Postmortem Culture”. O texto completo é leitura gratuita.
-- [OWASP GenAI Security Project — Top 10 2026](https://genai.owasp.org/initiative/owasp-top-10-for-llm-and-genai/): use a versão 2026, a mais recente consultada nesta curadoria, para revisar prompt injection, exposição de dados, agência excessiva e riscos de sistemas com agentes.
+Retrieval-Augmented Generation (RAG) recupera trechos para oferecer contexto à geração; não garante que a fonte esteja correta nem que a resposta seja fiel a ela. Comece por um corpus pequeno e autorizado, preserve metadados e identificadores de origem e mostre a evidência usada. Avalie separadamente busca e resposta. Contextualização de chunks, busca híbrida e reranking são hipóteses a testar, não receitas universais; ganhos publicados dependem do experimento descrito.
 
-**Resultado para consolidar:** escreva um cenário de falha, o sinal que permitiria detectá-la, o impacto aceitável, a ação de recuperação e o risco de segurança associado.
+**Leitura essencial**
+
+- [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks — NeurIPS 2020](https://arxiv.org/abs/2005.11401): resumo, introdução e desenho do trabalho original de RAG.
+
+**Aprofundamento**
+
+- [Contextual Retrieval — Anthropic Engineering](https://www.anthropic.com/engineering/contextual-retrieval): estudo de caso practitioner; verifique método e limites antes de interpretar os ganhos quantitativos.
+
+**Atividade opcional:** prepare perguntas sobre documentos locais e classifique cada erro como ingestão, recuperação, evidência ou geração.
 
 - [ ] Etapa 8 concluída
 
-### 9. Projeto de integração
+### 9. Workflows primeiro; agentes quando fizer sentido
 
-Use o [Capstone Cartógrafo local](projeto-final.md) como enunciado de referência. Reduza para um serviço que consulta um conjunto pequeno de documentos autorizados e apresenta as fontes usadas.
+Um workflow fixa as etapas do processo; um agente escolhe parte do caminho em tempo de execução usando contexto e ferramentas. A autonomia adicional amplia também erro, latência, custo e risco. Comece pelo menor fluxo que resolve o problema. Ferramentas devem ser estreitas, com argumentos e resultados validados, limites de iteração e recursos e consentimento humano para ações sensíveis. MCP usado dentro do produto é diferente do MCP configurado no Codex ou OpenCode para ajudar a programar.
 
-Entregas em uma única pasta, no ritmo que fizer sentido:
+**Leitura essencial**
 
-1. contrato de API e modelo de dados;
-2. serviço local com testes;
-3. índice de perguntas e resultados esperados;
-4. um trace de execução e um cenário de falha documentado;
-5. instruções para rodar e limpar os dados locais.
+- [Building effective agents — Anthropic Engineering](https://www.anthropic.com/engineering/building-effective-agents): padrões e trade-offs de workflows e agentes sob uma perspectiva practitioner.
 
-Não precisa de múltiplos agentes, Kubernetes, cloud, billing, certificado ou ML para demonstrar o percurso. Adicione cada peça só se uma pergunta do projeto exigir.
+**Aprofundamentos**
+
+- [Effective context engineering for AI agents — Anthropic Engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents): organização de contexto, ferramentas, dados e histórico.
+- [Agents — OpenAI Developers](https://developers.openai.com/api/docs/guides/agents): runtime gerenciado, harness próprio e loop da aplicação; APIs e opções são específicas da plataforma.
+
+**Atividade opcional:** desenhe um workflow e aponte qual decisão em tempo de execução justificaria transformá-lo em agente.
 
 - [ ] Etapa 9 concluída
 
-## Aprofundamentos sob demanda
+### 10. Segurança, operação e projeto de integração
 
-Estes tópicos cobrem partes especializadas de runtime, sistemas distribuídos e plataforma. Consulte-os quando o projeto exigir; não são uma segunda fila obrigatória antes do capstone.
+O capstone é um serviço local que responde perguntas sobre poucos documentos autorizados, mostra os trechos-fonte e executa casos de avaliação. A lógica pode ser testada offline com fixtures identificadas; provedor real ou modelo local é opcional. Não exige GraphRAG, Kubernetes, publicação em nuvem ou conta de cobrança. Revise prompt injection, exposição de dados, permissões excessivas e falhas de recuperação; guarde um trace para localizar falhas e explique como interromper ou remover integrações externas.
 
-- **Linux e rede:** [Introduction to Linux — Linux Foundation](https://training.linuxfoundation.org/training/introduction-to-linux/). É gratuito e introdutório, mas o material completo é extenso; quem já usa terminal pode ir direto aos capítulos de processos, operações de rede, shell e segurança local. Para revisar o fluxo DNS → TCP → TLS → HTTP, use [How the Internet works — Cloudflare Learning Center](https://www.cloudflare.com/learning/network-layer/how-does-the-internet-work/).
-- **Sistemas distribuídos:** [MIT 6.5840 Distributed Systems](https://pdos.csail.mit.edu/6.824/index.html). O curso e as leituras são públicos, mas é uma disciplina de pós-graduação com labs; para uma passada rápida, escolha aulas e notas sobre RPC, replicação e consenso e deixe os labs como prática avançada.
-- **Infraestrutura como código, Kubernetes e GitOps:** [OpenTofu — getting started](https://opentofu.org/docs/intro/), [Kubernetes Basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/) e [Argo CD — getting started](https://argo-cd.readthedocs.io/en/stable/getting_started/). Para laboratório, prefira um cluster local; não é necessário criar recursos em nuvem.
-- **Modelagem de grafos:** [Graph Data Modeling Fundamentals — GraphAcademy](https://graphacademy.neo4j.com/courses/modeling-fundamentals), curso gratuito de cerca de 2h. É específico de Neo4j; use como exemplo de modelagem, não como padrão universal.
-- **Comunicação entre agentes:** [Documentação A2A](https://a2a-protocol.org/en/docs). Leia conceitos e tarefas apenas se dois serviços precisarem delegar trabalho um ao outro.
-- **Governança de risco de IA:** [NIST AI RMF e perfil de GenAI](https://www.nist.gov/itl/ai-risk-management-framework). A página descreve uso voluntário e informa que o AI RMF 1.0 está em revisão.
+**Leitura essencial**
 
-## Como acompanhar o progresso comigo
+- [OWASP GenAI LLM Top 10 2026](https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/): riscos de aplicações com LLMs e agentes; confirme a edição atual ao estudar.
 
-O acompanhamento começa em **0/9 etapas** no portal. Marque cada etapa na seção “Roteiro”; esse progresso fica separado dos blocos locais e também é incluído na exportação JSON da página “Progresso”. Se preferir estudar fora do portal, diga “concluí a etapa 1” ou “estou na etapa 3; travei em transações” e posso retomar com você, sem transformar a leitura em uma sequência de aprovações.
+**Aprofundamentos**
 
-Se parar por um tempo, basta informar a última etapa e o que ficou difícil. Vou retomar daí e, quando uma informação de tecnologia puder ter mudado, verifico a documentação atual antes de recomendar o próximo passo.
+- [Google SRE Book — capítulos selecionados](https://sre.google/sre-book/table-of-contents/): SLOs, monitoramento, incidentes e postmortem no contexto operacional do Google.
+- [AI Risk Management Framework — NIST](https://www.nist.gov/itl/ai-risk-management-framework): orientação voluntária de risco e perfil de GenAI, não certificação do capstone.
+
+Use o [Capstone Cartógrafo](projeto-final.md) como referência e reduza-o ao necessário: contrato e modelo de dados, serviço local testado, perguntas com resultados esperados, trace e cenário de falha, além de instruções para executar e limpar dados locais.
+
+**Atividade opcional:** descreva um incidente plausível, seu sinal de detecção, impacto, recuperação e o limite de segurança do capstone.
+
+- [ ] Etapa 10 concluída
+
+## Aprofundamentos opcionais fora do percurso
+
+- **M11 — modelos locais e fundamentos de ML/DL:** todo o módulo é opcional; não é pré-requisito para aplicações com LLM, RAG ou agentes.
+- **ML01–ML07 — apêndice de ML:** matemática, ML tabular, treinamento, validação e MLOps permanecem fora da trilha principal. Consulte o [currículo](../CURRICULO.md) se esse aprofundamento servir ao seu objetivo.
+
+## Como acompanhar o progresso
+
+O acompanhamento começa em **0/10 etapas** no portal. As marcações ficam separadas do progresso dos 152 blocos locais e entram na exportação JSON da página “Progresso”. Para retomar fora do portal, informe a última etapa concluída e o ponto difícil; isso não transforma a leitura numa sequência de aprovações.
 
 ## Correspondência com o acervo local
 
-| Etapas deste roteiro | Unidades locais relacionadas |
-|---|---|
-| 1–2 | M00, M01, M02, M02A |
-| 3–4 | M03, M04, LT01, LT03 |
-| 5 | M05 |
-| 6 | M06, M07 |
-| 7–8 | M08, M09, LT02, LT04, M12 |
-| 9 | M13 |
+Os módulos locais formam um acervo secundário: oferecem explicações e laboratórios em revisão, mas não precisam ser lidos linearmente para concluir a trilha curada.
 
-M10 entra no complemento de grafos se o projeto pedir um grafo. LT01 e LT03 entram nos aprofundamentos de Linux/rede e plataforma se forem relevantes ao contexto. M11 pode ficar como leitura complementar. ML01–ML07 continuam opcionais e não são necessários para esta formação de engenharia de software e sistemas com LLMs.
+| Etapa | Unidades locais relacionadas |
+|---:|---|
+| 1 | M00, M01 |
+| 2 | M00, M04 |
+| 3 | M00, M09 |
+| 4 | M02 |
+| 5 | M05 |
+| 6 | M03, M04 |
+| 7 | M06 |
+| 8 | M07 |
+| 9 | M08, M09 |
+| 10 | M12, M13 |
+
+As demais unidades e os laboratórios transversais continuam acessíveis no [portal](../index.html). O [status de implementação](STATUS-IMPLEMENTACAO-CURSO.md) descreve prontidão, gates e bloqueios do acervo v4; esse processo editorial é separado do checklist pessoal desta trilha.

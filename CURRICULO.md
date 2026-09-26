@@ -2,19 +2,36 @@
 
 **Principal:** 15 módulos + quatro laboratórios transversais; 152 blocos. **Apêndice opcional:** ML01–ML07, 48 blocos. Python 3.14; português; sem pressupor outra stack. As 304h da baseline anterior são estimativa histórica, não prazo ou carga validada do acervo ampliado.
 
-O [`index.html`](index.html) é a porta de entrada oficial da Prévia Editorial v1: reúne instruções, currículo, as 19 unidades, os 152 blocos e o progresso local exportável. Os links diretos abaixo continuam válidos como fallback.
+O [`index.html`](index.html) é a porta de entrada oficial da Prévia Editorial v1. Ele apresenta primeiro a trilha curada de dez etapas e mantém seu progresso exportável separado dos 152 blocos locais. Os links diretos abaixo continuam válidos como fallback.
 
-Para começar por uma sequência mais curta com material publicado gratuitamente por Harvard, mantenedores de tecnologias, padrões abertos e fontes de referência, use o [roteiro de estudo curado](docs/ROTEIRO-ESTUDO-GRATUITO.md). Ele reúne nove etapas e acompanhamento por checklist; o acervo local pode ser consultado como apoio, sem exigir leitura linear dos 152 blocos.
+Para estudar pela sequência atual, use o [roteiro de estudo curado](docs/ROTEIRO-ESTUDO-GRATUITO.md). Suas dez etapas seguem o manifesto do portal na mesma ordem, com sínteses originais, leituras essenciais, aprofundamentos e atividades opcionais. A prática usa Codex e OpenCode; Claude Code e Cursor entram como comparação documental. Leituras essenciais não exigem pagamento, e chamadas de API, nuvem, assinaturas e certificados não são requisitos.
 
-O principal ensina engenharia de software e sistemas com LLMs. O apêndice aprofunda ML tabular, treinamento, validação e MLOps. Pode ser estudado depois ou quando útil; não é pré-requisito do principal e sua produção não bloqueia leitura. Conceitos matemáticos indispensáveis são explicados no próprio módulo principal.
+A trilha curada ensina agentes de programação antes de Python e sistemas com LLMs. O acervo local preserva os 19 módulos e laboratórios como referência secundária mais extensa. M11 é aprofundamento opcional sobre modelos locais e fundamentos de ML/DL; ML01–ML07 formam um apêndice opcional de ML tabular, treinamento, validação e MLOps. Nenhum deles é pré-requisito da trilha nem bloqueia leitura. Conceitos matemáticos indispensáveis são explicados no próprio percurso principal.
 
 O material combina explicação profunda e laboratório pequeno: problema → mecanismo → exemplo resolvido → decisão → falha/diagnóstico → transferência. Labs ficam ao final, seguidos do checkpoint separado. Blocos organizam conteúdo, não sessões obrigatórias. Não há relógio, quota, diário ou commit exigidos para estudar.
 
-Consulte a [prontidão atual](docs/STATUS-IMPLEMENTACAO-CURSO.md) antes de tratar material como certificado. Acesso livre não significa que um módulo parcial já cumpra todos os gates.
+Consulte a [prontidão atual](docs/STATUS-IMPLEMENTACAO-CURSO.md) antes de tratar material como certificado. O checklist individual da trilha, os gates editoriais v4 e a automação de produção são registros separados; acesso livre ou conclusão de uma etapa não promove módulo nem gate.
 
 Para consultar sintaxe que M00 e M01 usam antes do ensino aprofundado de Python, há uma [ponte de entrada opcional](modulos/apoio/entrada.html). Ela não é uma unidade avaliativa nem condição para começar o percurso.
 
-## Percurso principal
+## Trilha curada principal
+
+| Etapa | Tema | Acervo local relacionado |
+|---:|---|---|
+| 1 | Trabalhar com um agente de programação | M00, M01 |
+| 2 | Configurar Codex e OpenCode | M00, M04 |
+| 3 | Criar Skills e usar MCP com segurança | M00, M09 |
+| 4 | Ponte de Python para quem já programa | M02 |
+| 5 | Construir o primeiro app com LLM | M05 |
+| 6 | Transformar a chamada em serviço | M03, M04 |
+| 7 | Avaliar e observar antes de aumentar a complexidade | M06 |
+| 8 | RAG com recuperação e evidências | M07 |
+| 9 | Workflows primeiro; agentes quando fizer sentido | M08, M09 |
+| 10 | Segurança, operação e projeto de integração | M12, M13 |
+
+O [guia da trilha](docs/ROTEIRO-ESTUDO-GRATUITO.md) contém as sínteses, fontes e atividades. A tabela fixa somente ordem, escopo e correspondência; não transforma os módulos locais em pré-requisitos.
+
+## Acervo local secundário
 
 | Unidade | Blocos | Assunto | Material |
 |---|---:|---|---|
@@ -38,7 +55,7 @@ Para consultar sintaxe que M00 e M01 usam antes do ensino aprofundado de Python,
 | LT03 | 6 | Cloud-native, IaC, GitOps e plataforma | [LT03](modulos/LT03-novo/LT03.html) |
 | LT04 | 6 | Release engineering: versão, gates, rollback, sinais, comunicação e pós-mortem | [LT04](modulos/LT04-novo/LT04.html) |
 
-Dependências conceituais principais: M00/M01 → M02 → M02A → M03/M04 → M05/M06 → M07/M08/M09/M10 → M11/M12 → M13. LT01 acompanha a base HTTP/runtime; LT02 aprofunda dados e falha distribuída; LT03 cobre plataforma; LT04 fecha o recorte de release engineering. Qualidade avançada, supply chain e governança de IA permanecem extensão de certificação v4, não promessa cumprida pela prévia. Use a especificação local para os pré-requisitos exatos; navegar fora da ordem não exige aprovação.
+Dependências conceituais do acervo: M00/M01 → M02 → M02A → M03/M04 → M05/M06 → M07/M08/M09/M10 → M11/M12 → M13. Elas organizam a coleção local, não substituem nem ampliam a ordem das dez etapas. LT01 acompanha a base HTTP/runtime; LT02 aprofunda dados e falha distribuída; LT03 cobre plataforma; LT04 fecha o recorte de release engineering. Qualidade avançada, supply chain e governança de IA permanecem extensão de certificação v4, não promessa cumprida pela prévia. Use a especificação local para os pré-requisitos exatos; navegar fora da ordem não exige aprovação.
 
 O Capstone Cartógrafo liga as peças por uma jornada pequena: ingerir corpus autorizado, consultar com evidência e operar com controles. Não precisa virar uma plataforma grande para ensinar conceitos profundos. Quando a promessa envolver PostgreSQL, rede ou processo, a prova usa o componente real em sandbox. Detalhe: [produto final](docs/projeto-final.md).
 

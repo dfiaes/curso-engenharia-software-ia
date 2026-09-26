@@ -24,8 +24,8 @@ T2 pode começar após T1, mas T3 só fecha quando ambos estiverem concluídos. 
 | ID | Escopo | Aceite | Estado |
 |---|---|---|---|
 | T1 | Fonte estruturada com dez etapas; manifesto incorporado ao portal; trilha como percurso principal; progresso curado independente do acervo; migração conservadora do roteiro antigo. | 10 etapas na ordem aprovada; Codex/OpenCode com prática; Claude Code/Cursor comparados; M11/ML opcionais; acesso direto sem `fetch`; progresso novo separado e import/export compatível. | CONCLUÍDO nesta sessão |
-| T2 | Atualizar guia de estudo, README, currículo e decisão/status editorial para refletir a trilha curada como entrada atual. | Ordem e escopo idênticos ao manifesto; fontes com leitura essencial/aprofundamento; atividades opcionais; nenhum pagamento obrigatório; acervo e v4 descritos como referências separadas. | PRONTO PARA SESSÃO ISOLADA |
-| T3 | Executar testes locais e verificações amplas, verificar links externos, smoke test acessível quando permitido, corrigir regressões e registrar fechamento. | Testes do portal/progresso; `build_course_portal.py --check`; `check_course.py`; `validate_backlog.py`; `git diff --check`; inspeção de diff/staging; limitações visuais documentadas. | AGUARDA T1 + T2 |
+| T2 | Atualizar guia de estudo, README, currículo e decisão/status editorial para refletir a trilha curada como entrada atual. | Ordem e escopo idênticos ao manifesto; fontes com leitura essencial/aprofundamento; atividades opcionais; nenhum pagamento obrigatório; acervo e v4 descritos como referências separadas. | CONCLUÍDO nesta sessão |
+| T3 | Executar testes locais e verificações amplas, verificar links externos, smoke test acessível quando permitido, corrigir regressões e registrar fechamento. | Testes do portal/progresso; `build_course_portal.py --check`; `check_course.py`; `validate_backlog.py`; `git diff --check`; inspeção de diff/staging; limitações visuais documentadas. | PRÓXIMO CARTÃO |
 
 ## Registro de sessões e progresso
 
@@ -39,12 +39,16 @@ T2 pode começar após T1, mas T3 só fecha quando ambos estiverem concluídos. 
 - Checkpoint Git: `c21d9b9` (`Build curated study route in course portal`), após baseline `531004d`.
 - Segurança de dados: arquivos `.DS_Store` existentes são locais e permanecem fora do escopo/staging. `PROGRESSO.md` não deve ser alterado. Automação editorial v4 permanece pausada; nenhum gate será promovido.
 
-### T2 — AGUARDA INÍCIO DA PRÓXIMA SESSÃO
+### T2 — CONCLUÍDO
 
-- Sessão/task Codex: será criada após o checkpoint de T1; executar apenas documentação e alinhamento editorial listados no cartão.
-- Resultado/evidência/checkpoint: a preencher ao concluir.
+- Sessão Codex: `01a0dfd1-2b6e-7d62-b4eb-873a3f6e2799`, iniciada no checkpoint `2cde14e` (`Record curated route T1 checkpoint`).
+- Arquivos: `docs/ROTEIRO-ESTUDO-GRATUITO.md`, `README.md`, `CURRICULO.md`, `docs/STATUS-IMPLEMENTACAO-CURSO.md` e este plano.
+- Resultado: os quatro documentos usam as dez etapas do manifesto na mesma ordem; o guia traz sínteses originais, leituras essenciais, aprofundamentos e atividades opcionais. Codex/OpenCode têm prática direta; Claude Code/Cursor são comparados por documentação. Pagamento, API comercial, assinatura e certificado não são requisitos. Os módulos locais permanecem como acervo secundário; M11 e ML01–ML07 são opcionais. Checklist pessoal, gates v4 e automação editorial permanecem separados, sem promoção.
+- Evidência focal: verificação programática contra `portal/study-route-source.json` confirmou 10 etapas, ordem, títulos, URLs, papéis `essential`/`deepening` e atividades opcionais; busca por contagens/estados obsoletos não encontrou ocorrências; `python3 tools/check_course.py` nos cinco documentos retornou 0 erros estruturais/de links e 0 referências legadas; `git diff --check` passou.
+- Limites: T2 não executa testes do portal, validações amplas, inspeção visual, smoke test, checagem externa de links nem qualquer gate; esses itens pertencem ao T3.
+- Checkpoint Git: a criar ao concluir a validação focal.
 
-### T3 — AGUARDA
+### T3 — PRÓXIMO CARTÃO
 
 - Sessão/task Codex: a registrar ao iniciar.
 - Resultado/evidência/checkpoint: a preencher ao concluir.
