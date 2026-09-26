@@ -31,12 +31,12 @@ T2 pode começar após T1, mas T3 só fecha quando ambos estiverem concluídos. 
 
 ### T1 — CONCLUÍDO
 
-- Sessão atual: continuação do pedido de implementação no task existente. O ID do task atual será registrado após consulta ao índice de tasks do Codex.
+- Sessão Codex: `01a0de99-b1f3-76b3-986b-b4c4b25df5a2` (`Planejar versão rápida do curso`).
 - Alterações em curso: `portal/study-route-source.json`, `portal/study-route-manifest.json`, `tools/build_course_portal.py`, `portal/index.template.html`, `portal/portal.js`, `portal/progress.js`, `portal/portal.css`, `index.html` e testes correspondentes.
 - Resultado: manifesto canônico contém dez etapas ordenadas, leituras essenciais/aprofundamentos, atribuições, escopo por fonte, referências opcionais e data de curadoria. Portal gerado incorpora o manifesto, prioriza a trilha e deixa o acervo local secundário. O estado `studyRoute` é independente dos 152 blocos; importação mantém `externalRoute` antigo como histórico e não converte marcações. Um link OWASP que não abriu foi substituído pela página oficial do Top 10 2026.
 - Evidência executada: `python3 tools/test_course_portal.py` (7 testes), `node tools/test_portal_progress.js` (assertions passaram), `node --check portal/portal.js`, `node --check portal/progress.js`, `python3 tools/build_course_portal.py --check` e `git diff --check` passaram.
 - Pendente para T2/T3: alinhar guia/README/currículo com o manifesto; rodar verificações amplas; smoke test visual/teclado conforme permitido pelo ambiente.
-- Checkpoint Git: commit T1 a registrar após o commit deste cartão.
+- Checkpoint Git: `c21d9b9` (`Build curated study route in course portal`), após baseline `531004d`.
 - Segurança de dados: arquivos `.DS_Store` existentes são locais e permanecem fora do escopo/staging. `PROGRESSO.md` não deve ser alterado. Automação editorial v4 permanece pausada; nenhum gate será promovido.
 
 ### T2 — AGUARDA INÍCIO DA PRÓXIMA SESSÃO
