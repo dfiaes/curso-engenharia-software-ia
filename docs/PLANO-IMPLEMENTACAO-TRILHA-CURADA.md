@@ -25,7 +25,7 @@ T2 pode começar após T1, mas T3 só fecha quando ambos estiverem concluídos. 
 |---|---|---|---|
 | T1 | Fonte estruturada com dez etapas; manifesto incorporado ao portal; trilha como percurso principal; progresso curado independente do acervo; migração conservadora do roteiro antigo. | 10 etapas na ordem aprovada; Codex/OpenCode com prática; Claude Code/Cursor comparados; M11/ML opcionais; acesso direto sem `fetch`; progresso novo separado e import/export compatível. | CONCLUÍDO nesta sessão |
 | T2 | Atualizar guia de estudo, README, currículo e decisão/status editorial para refletir a trilha curada como entrada atual. | Ordem e escopo idênticos ao manifesto; fontes com leitura essencial/aprofundamento; atividades opcionais; nenhum pagamento obrigatório; acervo e v4 descritos como referências separadas. | CONCLUÍDO nesta sessão |
-| T3 | Executar testes locais e verificações amplas, verificar links externos, smoke test acessível quando permitido, corrigir regressões e registrar fechamento. | Testes do portal/progresso; `build_course_portal.py --check`; `check_course.py`; `validate_backlog.py`; `git diff --check`; inspeção de diff/staging; limitações visuais documentadas. | PRÓXIMO CARTÃO |
+| T3 | Executar testes locais e verificações amplas, verificar links externos, smoke test acessível quando permitido, corrigir regressões e registrar fechamento. | Testes do portal/progresso; `build_course_portal.py --check`; `check_course.py`; `validate_backlog.py`; `git diff --check`; inspeção de diff/staging; limitações visuais documentadas. | CONCLUÍDO nesta sessão |
 
 ## Registro de sessões e progresso
 
@@ -48,10 +48,16 @@ T2 pode começar após T1, mas T3 só fecha quando ambos estiverem concluídos. 
 - Limites: T2 não executa testes do portal, validações amplas, inspeção visual, smoke test, checagem externa de links nem qualquer gate; esses itens pertencem ao T3.
 - Checkpoint Git: `9db5413` (`Document curated study route`), após o checkpoint T1 `2cde14e`.
 
-### T3 — PRÓXIMO CARTÃO
+### T3 — CONCLUÍDO
 
-- Sessão/task Codex: a registrar ao iniciar.
-- Resultado/evidência/checkpoint: a preencher ao concluir.
+- Sessão/task Codex: `01a0dfd8-8478-7160-aad2-b6fa2fc1bb4d`, iniciada no checkpoint `4c0f330` (`Record curated route T2 checkpoint`).
+- Resultado: manifesto, portal e progresso foram validados em conjunto sem regressão encontrada. A fonte estruturada e o manifesto gerado são idênticos, preservam 10 etapas, 19 unidades e 152 blocos, e o progresso da trilha continua separado do acervo e do roteiro legado. Nenhum arquivo de módulo, lab, gate v4, automação ou `PROGRESSO.md` foi alterado.
+- Links externos: 36 entradas e 34 URLs únicas do manifesto coincidem com `portal/study-route-source.json`, `portal/study-route-manifest.json`, o guia e o portal incorporado. A URL oficial `https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/` está propagada sem divergência. Como toda a lista possui curadoria registrada em `26/09/2026`, não houve navegação adicional para revalidar links já registrados.
+- Evidência executada: `python3 tools/test_course_portal.py` (7 testes), `node tools/test_portal_progress.js`, `python3 tools/build_course_portal.py --check`, `python3 tools/check_course.py` (121 documentos, 0 erros; 14 referências/relógios legados apenas para revisão contextual), `python3 tools/validate_backlog.py` (699 tarefas, 0 erros), `git diff --check`, `node --check portal/portal.js` e `node --check portal/progress.js` passaram. A comparação programática de URLs passou; a verificação estática confirmou manifesto incorporado sem `fetch`, skip link e foco principal, controles semânticos, proteção dos links externos, foco visível, breakpoints que cobrem 390 px e movimento reduzido.
+- Limite visual: a tentativa direta de abrir `file:///Users/denisson/Documents/Codigo/Estudos/Claude/tutor-ia-opencode/index.html` no navegador do ambiente foi bloqueada pela política de segurança de URLs. Conforme o escopo do cartão, não foi usado servidor local, CDP, outro navegador ou ferramenta alternativa para contornar o bloqueio. Portanto, teclado real, desktop, 390 px, overflow e renderização `file://` não foram certificados nesta sessão; os testes automatizados e estáticos acima são substitutos explícitos, não equivalentes à observação visual.
+- Inspeção: staging vazio antes do fechamento; diff T1–T3 sem whitespace inválido; nenhum padrão semelhante a segredo nas linhas adicionadas; somente os dois `.DS_Store` locais permanecem não rastreados e fora do staging. Não houve correção funcional porque nenhuma regressão da trilha/portal foi encontrada.
+- Checkpoint Git: commit de fechamento `Close curated study route validation`; hash registrado pelo commit documental imediatamente seguinte.
+- Próximo cartão: nenhum neste plano; a Prévia Editorial v1 permanece separada da certificação v4 e não promove gates.
 
 ## Protocolo de retomada
 
