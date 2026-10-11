@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S01 · Design de Código: OO, Funcional, Padrões, Refatoração e TDD</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>S01 · Design de código: orientação a objetos, estilo funcional, padrões, refatoração e TDD</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas de terminal e os gates do laboratório vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14.7, uv 0.12.13, pytest 9.1.1, ruff 0.17.0). <a href="../../STATUS.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Os blocos organizam assuntos; não exigem sessão completa. A prática fica reunida no final.</p></aside>
+<p class="meta"><span class="badge">FASE 1</span> &nbsp; 7 blocos · carga estimada ≈ 14 h · pré-requisito: <a href="../M02-python-profissional/M02.html">M02</a> · próximo: <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a> · <strong>o nível de função, classe e módulo</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Arquitetura decide onde ficam as fronteiras; design de código decide se o que está <em>dentro</em> de cada fronteira pode ser lido, mudado e testado sem medo. É o nível em que o time passa o dia: a função de 100 linhas que ninguém quer tocar, a herança que quebrou quando alguém "otimizou" a classe base, o mock que passa enquanto a produção falha. Um agente de código herda exatamente esse terreno: se o código é difícil para você, é difícil para ele, e ele muda com mais confiança do que você.</p>
+<p>Ao terminar você consegue: (1) medir e reduzir complexidade com guard clauses e funções de um só nível de abstração, sem confundir curto com legível; (2) escolher entre composição e herança, <code>Protocol</code> e <code>ABC</code>, e prever a ordem de <code>super()</code> lendo o MRO; (3) separar um núcleo funcional puro de uma casca imperativa e saber o que <code>functools</code> faz de bom e de perigoso; (4) aplicar SOLID apontando a violação concreta e o custo da correção, inclusive recusando a correção; (5) usar strategy, factory, adapter, decorator, observer, repository e injeção por construtor sabendo o que o Python já dá de graça; (6) refatorar legado sob testes de caracterização, com passos que mantêm a suíte verde; (7) conduzir TDD de verdade e ler a dificuldade de testar como sinal de design.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não é catálogo de padrões GoF nem cartilha de "código limpo". Cada regra entra com o problema que ela resolve, a medida que a verifica e o ponto em que passa a piorar o código. Fronteiras entre módulos, portas e adapters em escala de sistema, e estratégia de testes por camada ficam no <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a> (blocos 3 e 8); <code>Protocol</code>, <code>dataclass</code> e typing ficam no <a href="../M02-python-profissional/M02.html">M02</a>. Aqui você aplica essas peças no nível de função, classe e módulo.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça, sem testar. Se acertar todas com segurança (mecanismo, não só o nome do princípio), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint">Checkpoint S01</a> e siga para o M02A. Qualquer resposta hesitante marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> Uma função tem complexidade ciclomática 32 e outra, com 12 linhas, tem 5. Qual é mais difícil de entender, e o que o número <em>não</em> mede?
+<details><summary>Resposta</summary><p>Não dá para saber só pelo número. A ciclomática conta caminhos independentes (e portanto o mínimo de casos de teste), não o esforço de leitura: um <code>match</code> plano com 30 casos simples pesa menos que quatro <code>if</code> aninhados com 5. Ela ignora aninhamento, nomes e a mistura de níveis de abstração. Por isso o módulo mede ciclomática <em>e</em> profundidade.</p></details></li>
+<li><strong>(Bloco 2)</strong> Você herda de uma coleção e sobrescreve <code>adicionar</code> e <code>adicionar_varios</code> para contar itens. Uma nova versão da biblioteca otimiza <code>adicionar_varios</code> para não chamar <code>adicionar</code>. O que acontece com a sua contagem?
+<details><summary>Resposta</summary><p>Na versão antiga o total sai dobrado (6 para 3 itens: a sua subclasse conta em <code>adicionar_varios</code> e de novo quando o pai chama <code>adicionar</code>); na nova, certo, por acidente. Subclasse depende de <em>como</em> o pai se chama internamente, que não é contrato. Composição só depende da interface pública.</p></details></li>
+<li><strong>(Bloco 2)</strong> <code>class C(A, B)</code> com <code>A.f</code> chamando <code>super().f()</code> e <code>B.f</code> sem chamar. O que roda ao chamar <code>C().f()</code>, e por quê?
+<details><summary>Resposta</summary><p>O MRO é <code>C, A, B, object</code>; <code>super()</code> em <code>A</code> segue o MRO <em>da instância</em>, não os pais de <code>A</code>, então chega em <code>B.f</code>, que encerra a cadeia. Um elo que esquece o <code>super()</code> silencia tudo que vem depois dele no MRO.</p></details></li>
+<li><strong>(Bloco 3)</strong> <code>@cache</code> numa função que consulta a cotação do dólar é seguro? E <code>@cache</code> em um método?
+<details><summary>Resposta</summary><p>Na função impura, não: o primeiro valor fica para sempre (e a função deixa de refletir o mercado). No método, o cache guarda <code>self</code> como parte da chave e mantém a instância viva enquanto a função existir: vazamento clássico (o lab mostra <code>weakref</code> ainda vivo depois do <code>del</code>).</p></details></li>
+<li><strong>(Bloco 4)</strong> Uma subclasse lança <code>ValueError</code> para valores acima de 1000 onde a base aceitava qualquer valor. Qual princípio quebrou, e quais duas saídas existem?
+<details><summary>Resposta</summary><p>Liskov: pré-condição mais forte que a da base, então código escrito contra a base quebra. Saídas: tornar a recusa parte do contrato da base (tipo de retorno declarando <code>Recusado</code>) ou deixar de ser subtipo (composição).</p></details></li>
+<li><strong>(Bloco 5)</strong> Por que um dicionário de funções frequentemente substitui o padrão Strategy em Python, e quando uma classe ainda vale?
+<details><summary>Resposta</summary><p>Funções são objetos de primeira classe; se a estratégia é uma chamada sem estado, a "interface" é a assinatura. A classe volta quando a estratégia carrega estado ou configuração (tabela regional com base e preço por kg), ou precisa de mais de um método.</p></details></li>
+<li><strong>(Bloco 6)</strong> Para refatorar uma função legada sem testes, qual é o primeiro passo e o que ele deve garantir?
+<details><summary>Resposta</summary><p>Testes de caracterização: fixar o que o código faz hoje, bugs inclusos, como oráculo. Garantem que o refator preserva comportamento observável, não que o comportamento esteja certo. Se o código depende do relógio, primeiro cria-se uma costura (seam) para controlá-lo.</p></details></li>
+<li><strong>(Bloco 7)</strong> Seu teste passa com <code>Mock()</code> mas o código falha em produção por chamar um método que não existe. Qual a correção mínima e qual a correção de design?
+<details><summary>Resposta</summary><p>Mínima: <code>create_autospec</code>/<code>spec=</code>, que recusa atributo inexistente. De design: trocar o mock por um <em>fake</em> que implementa o contrato e é testado contra o mesmo contrato do adapter real; mock fica só onde a interação é o comportamento.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — Código legível: nomes, funções pequenas, coesão, complexidade, guard clauses e comentários do porquê</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Orientação a objetos em Python: composição, herança, polimorfismo, <code>Protocol</code> vs <code>ABC</code>, MRO e <code>super()</code></a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Estilo funcional: pureza, imutabilidade, ordem superior, <code>functools</code> e núcleo funcional/casca imperativa</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — SOLID com critério: violação, correção e quando aplicar piora</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Padrões que valem em Python e o que a linguagem dispensa</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Refatoração: smells, passos seguros, testes de caracterização e costuras em legado</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — TDD: ciclo, test doubles, quando não mockar e testabilidade como sinal de design</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado S01</strong> — legado de pedidos e frete, caracterização, refatoração e kata TDD</a></li>
+</ol>
+</div>
+
+<!-- ============================================ BLOCO 1 -->
+<h2 id="b01">Bloco 1 · Código legível</h2>
+
+<h3>Por que isso importa</h3>
+<p>Código é lido muito mais vezes do que escrito, e cada leitura reconstrói um modelo mental: "o que entra, o que sai, o que pode dar errado, o que mais isso toca". Legibilidade é a medida do custo dessa reconstrução. Ela decide quanto tempo uma revisão leva, se um incidente às 3h da manhã termina em 20 minutos ou em duas horas, e se um agente de código consegue alterar o trecho sem quebrar uma regra que só estava implícita. Um agente lê melhor o que é explícito: nomes que dizem o domínio, funções com uma responsabilidade, erros no tipo de retorno em vez de em comentários.</p>
+<p>Este bloco trata do nível mais baixo do design: nomes, tamanho e forma de função, e como medir. As regras são poucas; o que importa é saber o <em>mecanismo</em> de cada uma e a medida que a verifica.</p>
+
+<h3>Nomes são a documentação que não apodrece</h3>
+<p>Um nome é uma promessa sobre o que a coisa é ou faz. Os defeitos que mais custam são três: nome genérico (<code>data</code>, <code>info</code>, <code>process</code>, <code>handle</code>) que obriga a ler o corpo; nome que mente (<code>get_user</code> que também cria o usuário, <code>is_valid</code> que lança exceção); e unidade escondida (<code>timeout = 30</code>: segundos? milissegundos?). Para dinheiro e tempo, a unidade entra no nome ou no tipo: <code>preco_centavos</code>, <code>prazo_s</code>, ou o alias <code>type Centavos = int</code> usado no lab, que ao menos documenta e é checado pelo mypy em assinaturas.</p>
+<p>Regras úteis, todas verificáveis em revisão: função que devolve valor leva nome de substantivo ou pergunta (<code>subtotal</code>, <code>esta_vencido</code>); função que age leva verbo (<code>fechar</code>, <code>salvar</code>); booleano se lê como afirmação (<code>pago</code>, <code>tem_pereciveis</code>); e escopo curto aceita nome curto (<code>i</code> em três linhas), escopo longo exige nome longo. Se você não consegue nomear uma função sem usar "e" ("valida e salva"), ela provavelmente faz duas coisas.</p>
+
+<h3>Uma função, um nível de abstração</h3>
+<p>O critério operacional mais útil para "função pequena" não são linhas: é <strong>um nível de abstração por função</strong>. Uma função que ao mesmo tempo percorre linhas de texto, faz <code>split</code>, normaliza vírgula decimal, valida dígitos e imprime avisos mistura "o que o importador faz" com "como se lê uma linha". O lab traz as duas versões (<code>exemplos/b01_legivel.py</code>):</p>
+<pre><code>def importar_misturado(linhas: list[str]) -&gt; int:
+    total = 0
+    for linha in linhas:
+        partes = linha.split(";")
+        if len(partes) != 2:
+            print(f"linha ignorada: {linha!r}")
+            continue
+        nome, valor = partes[0].strip(), partes[1].strip().replace(",", ".")
+        if not nome or not valor.replace(".", "", 1).isdigit():
+            print(f"linha ignorada: {linha!r}")
+            continue
+        total += round(float(valor) * 100)
+    return total</code></pre>
+<p>Problemas concretos, não estéticos: o <code>print</code> impede reusar a função em outro contexto (o chamador não decide o que fazer com linhas rejeitadas); a regra de "linha válida" aparece duplicada; e testar o parsing exige passar pelo laço. A versão separada:</p>
+<pre><code>def _ler_linha(linha: str) -&gt; int | None:
+    """Return the amount in centavos, or None when the line is malformed."""
+    partes = [p.strip() for p in linha.split(";")]
+    if len(partes) != 2 or not partes[0]:
+        return None
+    valor = partes[1].replace(",", ".")
+    if not valor.replace(".", "", 1).isdigit():
+        return None
+    return round(float(valor) * 100)
+
+
+def importar(linhas: list[str]) -&gt; tuple[int, list[str]]:
+    """Return (total in centavos, rejected lines). No printing: the caller decides."""
+    total = 0
+    rejeitadas = []
+    for linha in linhas:
+        valor = _ler_linha(linha)
+        if valor is None:
+            rejeitadas.append(linha)
+        else:
+            total += valor
+    return total, rejeitadas</code></pre>
+<p>Duas mudanças maiores que o "quebrar em funções". Primeiro, o efeito (imprimir) saiu: a função devolve a lista de rejeitadas e o chamador decide (log, relatório, abortar). Segundo, a falha de parsing virou valor (<code>None</code>) em vez de exceção ou mensagem: a decisão sobre o que fazer fica no nível que tem contexto. Quando <code>None</code> carregaria significado ambíguo, o próximo passo é um tipo de resultado explícito; para parsing de dados de fronteira, o <a href="../M02-python-profissional/M02.html">M02</a> mostra Pydantic.</p>
+
+<h3>Complexidade: ciclomática e cognitiva medem coisas diferentes</h3>
+<p>A <strong>complexidade ciclomática</strong> (McCabe, 1976) é o número de caminhos linearmente independentes do grafo de controle: <code>1 + decisões</code>, onde cada <code>if</code>, laço, <code>except</code>, <code>case</code>, e cada <code>and</code>/<code>or</code> contam uma decisão. Duas leituras práticas: é um <em>limite inferior do número de casos de teste</em> para cobrir todos os ramos, e correlaciona com defeitos. O que ela não vê é aninhamento: cinco decisões em sequência plana e cinco decisões encaixadas têm o mesmo número. A <strong>complexidade cognitiva</strong> (SonarSource, 2017) tenta medir o esforço de leitura penalizando aninhamento e quebras de fluxo; é uma heurística proprietária, útil como segunda opinião, não como verdade.</p>
+<p>O lab inclui um medidor mínimo baseado em <code>ast</code> (<code>complexidade.py</code>) que reporta ciclomática e profundidade de aninhamento por função. Aplicado às duas formas do mesmo reembolso:</p>
+<pre><code>$ uv run python -m design_lab.cli complexidade src/design_lab/exemplos/b01_legivel.py
+arquivo:funcao                                       linhas ciclo aninh
+src/design_lab/exemplos/b01_legivel.py:_ler_linha         9     5     1
+src/design_lab/exemplos/b01_legivel.py:decidir            8     5     1
+src/design_lab/exemplos/b01_legivel.py:decidir_aninhado     14     5     3
+src/design_lab/exemplos/b01_legivel.py:importar_misturado     13     5     2
+src/design_lab/exemplos/b01_legivel.py:importar          11     3     2</code></pre>
+<p><code>decidir_aninhado</code> e <code>decidir</code> têm <em>a mesma</em> ciclomática (5) e o mesmo comportamento, mas aninhamento 3 contra 1. Essa diferença é exatamente a que o número ciclomático esconde, e é por isso que o medidor mostra as duas colunas.</p>
+
+<h3>Guard clauses: tratar o que não presta primeiro</h3>
+<p>O padrão: validar pré-condições no topo e retornar (ou lançar) cedo, deixando o caminho feliz no nível de indentação mais externo. Compare:</p>
+<pre><code>def decidir_aninhado(r: Reembolso, papel: str) -&gt; str:
+    if r.pago:
+        if r.dias_desde_compra &lt;= PRAZO_DIAS:
+            if r.valor &lt;= LIMITE_AGENTE:
+                return "aprovado"
+            else:
+                if papel == "supervisor":
+                    return "aprovado"
+                else:
+                    return "escalar"
+        else:
+            return "recusado: prazo"
+    else:
+        return "recusado: não pago"
+
+
+def decidir(r: Reembolso, papel: str) -&gt; str:
+    if not r.pago:
+        return "recusado: não pago"
+    if r.dias_desde_compra &gt; PRAZO_DIAS:
+        return "recusado: prazo"
+    if r.valor &lt;= LIMITE_AGENTE or papel == "supervisor":
+        return "aprovado"
+    return "escalar"</code></pre>
+<p>Na primeira, a mensagem "recusado: não pago" está a 8 linhas e três níveis do <code>if</code> que a causa; é preciso manter na cabeça o contexto de todas as condições abertas. Na segunda, cada recusa está colada à sua condição, e a regra de negócio ("supervisor aprova qualquer valor") virou uma expressão. Observe também a troca de <code>else</code> aninhado por uma condição combinada: <em>guard clause não é só early return, é também achatar o que é uma única decisão</em>. Dois cuidados: não use guard clause quando as duas saídas são igualmente "normais" (um <code>if/else</code> simétrico lê melhor), e cuidado com muitos <code>return</code> em funções com recursos a liberar (use <code>with</code>/<code>try/finally</code>; ver M02).</p>
+
+<h3>Coesão: o que mora junto muda junto</h3>
+<p>Coesão é o grau em que as partes de um módulo ou classe existem pelo mesmo motivo. O teste prático: liste os métodos e os atributos que cada um usa. Se a classe se parte em dois grupos que não compartilham atributos, são duas classes coladas. Um sintoma frequente é a classe <code>Utils</code> ou o módulo <code>helpers.py</code> que cresce sem fim: nada une os itens além de "não sabíamos onde pôr". O antídoto é nomear o módulo pelo conceito (<code>frete.py</code>, <code>descontos.py</code>) e deixar a função morar onde o dado que ela usa mora. Acoplamento é o par da coesão: quanto uma parte precisa saber da outra. O alvo é alta coesão dentro, baixo acoplamento entre; o bloco 4 volta a isso como SRP.</p>
+
+<h3>Comentários explicam o porquê</h3>
+<p>O código diz <em>o que</em> e <em>como</em>; só o humano sabe <em>por que</em>. Um comentário que repete o código (<code># soma 1 ao contador</code>) é ruído que apodrece quando o código muda. Os que valem: a decisão e sua razão ("desconto é arredondado para baixo porque contabilidade fecha em centavos inteiros"), a restrição externa ("a API do gateway devolve 'OK' em maiúsculas"), o aviso ("não reordene: o desconto precisa vir antes do frete"), a referência (RFC, ticket). Se você sente necessidade de comentar um bloco para explicar <em>o que</em> ele faz, extraia-o para uma função com esse nome. Docstring documenta o contrato (entrada, saída, erros) e é parte da interface; comentário inline documenta a decisão.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Extrair função para baixar o número e piorar a leitura.</strong> Dividir uma função de 40 linhas em oito de 5, com nomes vagos (<code>_passo2</code>, <code>_continuar</code>) e estado compartilhado por atributos de instância, reduz a métrica e aumenta o custo de leitura: o leitor pula entre definições para reconstruir a sequência. Extraia quando a parte tem um <em>nome de domínio</em> e entradas e saídas claras, não para atingir um limite. Regra de bolso: se o chamador não lê melhor do que lia o bloco inline, desfaça.</p>
+<p>E o oposto: <strong>comentários de bloco no meio de uma função grande ("# calcula desconto", "# calcula frete")</strong> são os nomes das funções que faltam.</p>
+</div>
+
+<div class="box">
+<span class="lbl">Trade-offs</span>
+<p>Early return espalha pontos de saída; para quem depura com um único <em>breakpoint</em> de saída ou precisa de limpeza, isso é custo real (resolvido com <code>with</code>). Limites numéricos (ciclomática ≤ 10) servem como alarme, não como meta: um <code>match</code> sobre 30 variantes de um enum chega a 30 sem ser difícil. Linters como <code>ruff</code> (regras <code>C901</code> para McCabe, <code>PLR</code> para tamanho) automatizam o alarme; a decisão continua humana.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Nomes dizem o domínio e a unidade; função tem um nível de abstração e devolve valor em vez de imprimir.<br>
+Ciclomática conta caminhos (e casos de teste); aninhamento conta esforço de leitura: meça os dois.<br>
+Guard clauses põem a recusa ao lado da condição e deixam o caminho feliz sem indentação.<br>
+Coesão: o que muda pelo mesmo motivo mora junto. Comentário explica o porquê.<br>
+Extrair só vale com nome de domínio; número menor não é legibilidade maior.</p>
+</div>
+
+<!-- ============================================ BLOCO 2 -->
+<h2 id="b02">Bloco 2 · Orientação a objetos em Python</h2>
+
+<h3>Por que isso importa</h3>
+<p>Em Python tudo é objeto, mas isso não obriga a modelar tudo como hierarquia de classes. O erro de design mais caro em código orientado a objetos é a herança usada para reaproveitar código: ela cria o acoplamento mais forte que a linguagem oferece (a subclasse depende dos detalhes internos do pai) e só aparece quando alguém muda o pai. Este bloco dá o critério para escolher entre composição e herança, mostra o mecanismo que o Python usa para resolver métodos (MRO e <code>super()</code>), e compara as duas formas de declarar um contrato: <code>Protocol</code> (estrutural) e <code>ABC</code> (nominal).</p>
+
+<h3>Composição vs herança: a classe base frágil</h3>
+<p>Herança expressa "é um" e dá três coisas ao mesmo tempo: reuso de implementação, polimorfismo de subtipo e acoplamento ao pai. Quase sempre você quer só uma das duas primeiras. O problema da <strong>classe base frágil</strong> (<em>fragile base class</em>) é que mudanças <em>compatíveis na interface pública</em> do pai quebram subclasses, porque elas dependem de qual método chama qual. O lab reproduz o caso clássico (<code>exemplos/b02_poo.py</code>): uma coleção cuja <code>adicionar_varios</code> chama <code>adicionar</code>, e uma subclasse que conta itens sobrescrevendo os dois.</p>
+<pre><code>class ColecaoV1:
+    def adicionar(self, x): self.itens.append(x)
+    def adicionar_varios(self, xs):
+        for x in xs:
+            self.adicionar(x)          # V1 chama adicionar
+
+class ColecaoV2:                        # mesmo comportamento público
+    def adicionar(self, x): self.itens.append(x)
+    def adicionar_varios(self, xs):
+        self.itens.extend(xs)          # V2 otimizou: não chama mais adicionar
+
+class ContadaPorHeranca(ColecaoVn):
+    def adicionar(self, x):
+        self.total += 1
+        super().adicionar(x)
+    def adicionar_varios(self, xs):
+        self.total += len(xs)           # conta aqui...
+        super().adicionar_varios(xs)    # ...e o pai V1 conta de novo via adicionar</code></pre>
+<pre><code>ContadaPorHerancaV1 6 3      # total=6 para 3 itens: contagem dobrada
+ContadaPorHerancaV2 3 3      # certo, mas por acidente
+comp 3 3                     # composição: certo nas duas versões</code></pre>
+<p>A subclasse estava <em>errada desde o início</em> (contava duas vezes), e o código "passava" em um dos pais por sorte. Não há nenhuma regra na interface pública que diga "adicionar_varios chama adicionar": é um detalhe de implementação, e a herança o torna parte do contrato. A versão por composição guarda a coleção como atributo e delega:</p>
+<pre><code>class ContadaPorComposicao:
+    def __init__(self, interna: Armazem) -&gt; None:   # Armazem é um Protocol
+        self._interna = interna
+        self.total = 0
+
+    def adicionar(self, x: str) -&gt; None:
+        self.total += 1
+        self._interna.adicionar(x)
+
+    def adicionar_varios(self, xs: Sequence[str]) -&gt; None:
+        self.total += len(xs)
+        self._interna.adicionar_varios(xs)</code></pre>
+<p>Ela só depende do que a interface promete, e funciona com qualquer implementação (V1, V2, uma que escreva em disco). O custo é o boilerplate de delegação e a perda do polimorfismo de subtipo <em>nominal</em> (a classe não "é uma" Colecao; ela satisfaz o Protocol). Em Python o segundo custo quase não existe, como se vê adiante.</p>
+<p>Quando herdar é bom: (1) a relação é "é um" no sentido de substituibilidade total (bloco 4, LSP); (2) o pai foi <em>projetado para extensão</em> e documenta o que as subclasses podem sobrescrever (<code>Exception</code>, <code>unittest.TestCase</code>, <code>ABC</code> com método de gabarito); (3) você controla pai e filhos e eles evoluem juntos. Fora disso, composição. A fórmula do <em>Design Patterns</em> (GoF, 1994) continua sendo a mais útil: "prefira composição de objetos a herança de classe".</p>
+
+<h3>Polimorfismo e duck typing</h3>
+<p>Polimorfismo é tratar objetos diferentes pela mesma interface. Python o resolve em tempo de execução por <strong>duck typing</strong>: o chamador usa <code>obj.enviar(...)</code> e funciona com qualquer objeto que tenha <code>enviar</code>, sem herança comum. O custo é que o erro só aparece na chamada. Por isso a prática moderna combina duck typing com <strong>tipagem estrutural verificada em tempo de análise</strong>: o <code>Protocol</code> descreve a forma esperada e o mypy checa. Em tempo de execução nada muda; o ganho é feedback antes do deploy.</p>
+
+<h3><code>Protocol</code> vs <code>ABC</code></h3>
+<p>Ambos declaram um contrato; diferem em <em>onde</em> a conformidade é decidida.</p>
+<table>
+<thead><tr><th></th><th><code>ABC</code> (nominal)</th><th><code>Protocol</code> (estrutural)</th></tr></thead>
+<tbody>
+<tr><td>Quem se conforma</td><td>Quem herda explicitamente (ou é registrado com <code>register</code>)</td><td>Qualquer classe com os membros certos, sem importar o contrato</td></tr>
+<tr><td>Falha de implementação incompleta</td><td>Em <strong>tempo de execução</strong>, ao instanciar</td><td>No <strong>verificador de tipos</strong>; em runtime só com <code>isinstance</code> e <code>@runtime_checkable</code></td></tr>
+<tr><td>Código compartilhado</td><td>Pode ter métodos concretos (template method)</td><td>Só a forma; métodos com corpo viram herança disfarçada</td></tr>
+<tr><td>Quando usar</td><td>Você é dono da hierarquia e quer reuso de gabarito e erro cedo</td><td>O contrato pertence ao <em>consumidor</em>; as implementações vêm de fora (bibliotecas, adapters)</td></tr>
+</tbody>
+</table>
+<p>O lab mostra os dois comportamentos de runtime:</p>
+<pre><code>Can't instantiate abstract class IncompletoABC without an implementation for abstract method 'enviar'</code></pre>
+<p>Com <code>ABC</code> a subclasse incompleta nem instancia. Já <code>@runtime_checkable</code> num <code>Protocol</code> faz o <code>isinstance</code> verificar <em>apenas a presença</em> dos nomes, não a assinatura: a classe <code>AssinaturaErrada</code>, cujo <code>enviar</code> não aceita argumentos, devolve <code>True</code> em <code>isinstance(AssinaturaErrada(), NotificadorProtocol)</code>. O mypy a recusaria na análise estática, mas o <code>isinstance</code> não. Moral: <code>runtime_checkable</code> serve para despacho grosseiro, nunca como validação de contrato. A escolha que o curso adota: <strong>Protocol para portas definidas pelo consumidor</strong> (o serviço declara o que precisa de um repositório; adapters satisfazem sem importar o serviço), <strong>ABC quando há gabarito compartilhado e a hierarquia é sua</strong>.</p>
+
+<h3>MRO e <code>super()</code></h3>
+<p>Em herança múltipla, Python calcula uma única ordem linear de busca por classe, o <strong>MRO</strong> (<em>method resolution order</em>), com o algoritmo C3: cada classe aparece antes de seus pais, e a ordem declarada das bases é preservada. <code>super()</code> não significa "meu pai": significa "o <em>próximo</em> na MRO da <strong>instância</strong>, depois de mim". Esse detalhe permite a herança cooperativa (mixins), e é também a fonte de surpresa.</p>
+<figure>
+<svg viewBox="0 0 520 190" role="img" aria-labelledby="t-mro" style="max-width:520px">
+<title id="t-mro">Losango de herança: Servico herda de Auditoria e Cache, ambos herdam de Base. MRO de Servico: Servico, Auditoria, Cache, Base, object.</title>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<rect x="200" y="8" width="110" height="30" rx="5"/><rect x="60" y="80" width="110" height="30" rx="5"/><rect x="340" y="80" width="110" height="30" rx="5"/><rect x="200" y="150" width="110" height="30" rx="5"/>
+<path d="M115 80 L240 40"/><path d="M395 80 L270 40"/><path d="M240 150 L120 112"/><path d="M270 150 L390 112"/>
+</g>
+<g fill="currentColor" font-size="13" font-family="inherit" text-anchor="middle">
+<text x="255" y="28">Base</text><text x="115" y="100">Auditoria</text><text x="395" y="100">Cache</text><text x="255" y="170">Servico</text>
+<text x="255" y="124" font-size="11">MRO: Servico → Auditoria → Cache → Base → object</text>
+</g>
+</svg>
+<figcaption>Cada <code>super().passos()</code> avança uma posição na MRO da instância, não "para o pai": em <code>Auditoria</code>, o próximo é <code>Cache</code>, que não é pai dela.</figcaption>
+</figure>
+<p>Executando o exemplo do lab (cada classe devolve seu nome e delega com <code>super()</code>):</p>
+<pre><code>['Servico', 'Auditoria', 'Cache', 'Base', 'object']          # MRO de Servico
+['Servico', 'Auditoria', 'Cache', 'Base']                    # Servico().passos(): a cadeia inteira
+
+['ServicoComEloQuebrado', 'Auditoria', 'Quebrado', 'Cache', 'Base', 'object']
+['ServicoComEloQuebrado', 'Auditoria', 'Quebrado']           # Quebrado não chamou super(): Cache e Base não rodam</code></pre>
+<p>O segundo caso é o risco prático da herança cooperativa: um único elo que esquece de chamar <code>super()</code> silencia <em>silenciosamente</em> tudo que vem depois dele na MRO, inclusive classes que ele nem conhece. E o C3 rejeita hierarquias que não podem ser linearizadas:</p>
+<pre><code>Cannot create a consistent method resolution order (MRO) for bases Base, Auditoria</code></pre>
+<p>(<code>class X(Base, Auditoria)</code> exige Base antes de Auditoria, mas Auditoria herda de Base.) Regras que mantêm a herança múltipla sob controle: use apenas para <em>mixins</em> pequenos sem estado próprio; todo método cooperativo chama <code>super()</code>; aceite <code>*args, **kwargs</code> no <code>__init__</code> cooperativo; e inspecione <code>Classe.__mro__</code> quando duvidar. Se precisa desenhar o MRO para entender o código, considere composição.</p>
+
+<h3>Encapsulamento por convenção</h3>
+<p>Python não tem <code>private</code>. A convenção <code>_atributo</code> diz "interno, não dependa". Já <code>__atributo</code> (dois sublinhados, sem sublinhado final) dispara <strong>name mangling</strong>: dentro da classe <code>Conta</code>, <code>self.__historico</code> vira <code>self._Conta__historico</code>. Isso evita colisão acidental com subclasses, <em>não</em> é segurança:</p>
+<pre><code>cp = ContaPoupanca(100); cp.depositar(5)
+cp.n_movimentos()              # 2   (conta o _Conta__historico: [100, 105])
+cp.historico_da_subclasse()    # [-1] (outro atributo: _ContaPoupanca__historico)
+sorted(vars(cp))               # ['_ContaPoupanca__historico', '_Conta__historico', '_saldo']</code></pre>
+<p>A subclasse atribuiu <code>self.__historico = [-1]</code> achando que sobrescrevia o do pai; criou um segundo atributo. Use <code>__x</code> só quando a colisão de nomes com subclasses for um risco real (bibliotecas feitas para herdar); no resto, <code>_x</code> e <code>@property</code> para expor leitura sem permitir escrita.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Mixin que depende da ordem das bases.</strong> <code>class A(MixinCache, MixinAuditoria, Base)</code> e <code>class B(MixinAuditoria, MixinCache, Base)</code> se comportam de forma diferente quando os mixins interceptam o mesmo método; o erro não é de sintaxe nem de tipo. Teste a ordem que você publica e documente-a. Segunda armadilha comum: <code>super().__init__()</code> omitido em um mixin, que deixa o atributo de outro mixin sem inicializar apenas em certas combinações.</p>
+</div>
+
+<div class="box">
+<span class="lbl">Trade-offs</span>
+<p>Composição custa delegação explícita e mais objetos para montar (o bloco 5 trata de injeção); herança custa acoplamento. <code>Protocol</code> troca a garantia em runtime por flexibilidade e exige rodar o verificador de tipos em CI. <code>dataclass</code> não altera nada disso: é uma forma de escrever classes de dados, e <code>frozen=True</code> as torna imutáveis (bloco 3). Para interfaces de uma só operação, uma função (<code>Callable</code>) é o contrato mais leve de todos.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Herança é o acoplamento mais forte; reuso sozinho pede composição, e subtipo exige substituibilidade total.<br>
+A classe base frágil quebra subclasses por mudanças que a interface pública não proíbe (contagem 6 contra 3 no lab).<br>
+<code>Protocol</code> é contrato do consumidor, verificado no mypy; <code>ABC</code> é gabarito da sua hierarquia, verificado ao instanciar. <code>runtime_checkable</code> só confere nomes.<br>
+<code>super()</code> segue a MRO da instância; um elo sem <code>super()</code> corta o resto da cadeia sem aviso.<br>
+<code>__x</code> é mangling para evitar colisão, não privacidade.</p>
+</div>
+
+<!-- ============================================ BLOCO 3 -->
+<h2 id="b03">Bloco 3 · Estilo funcional</h2>
+
+<h3>Por que isso importa</h3>
+<p>O ganho do estilo funcional em Python não é ideológico: é <strong>testabilidade e raciocínio local</strong>. Uma função pura (mesma entrada, mesma saída, nenhum efeito observável) pode ser testada com uma chamada, executada em qualquer ordem, em paralelo, memoizada e depurada sem reproduzir o ambiente. A maior parte dos bugs "difíceis" em serviços vem de estado compartilhado mutável e de dependências escondidas (relógio, rede, variável global). Python não é uma linguagem funcional (sem otimização de cauda, sem estruturas persistentes na biblioteca padrão, laços são idiomáticos), então o objetivo é mais modesto e mais útil: <em>empurrar a lógica de decisão para funções puras e deixar os efeitos numa camada fina</em>.</p>
+
+<h3>Pureza: o que é e o que quebra</h3>
+<p>Uma função é <strong>pura</strong> quando (1) o resultado depende só dos argumentos e (2) não deixa efeito observável (não escreve em global, em disco, em tela; não muta o argumento). As dependências escondidas que mais quebram a pureza são três: estado global, o relógio/aleatoriedade e I/O. O remédio é sempre o mesmo: <strong>passar a dependência como argumento</strong>.</p>
+<pre><code>_total_global = 0
+def somar_impuro(valor):             # resultado depende de chamadas anteriores
+    global _total_global
+    _total_global += valor
+    return _total_global
+somar_impuro(1), somar_impuro(1)     # (1, 2): mesma entrada, saídas diferentes
+
+def somar_puro(total, valor):        # a dependência virou argumento
+    return total + valor
+
+def idade_impura(nascimento):        # lê o relógio: o teste de hoje quebra amanhã
+    hoje = date.today()
+    ...
+def idade(nascimento, hoje):         # hoje é argumento: determinística
+    ...</code></pre>
+<p>Esse é o mesmo movimento que o laboratório faz com o legado de preços: a função original chamava <code>_hoje()</code> no meio do cálculo (Black Friday é um desconto por data); a versão refatorada recebe <code>hoje: date</code> como parâmetro e o relógio é lido uma vez, na borda.</p>
+
+<h3>Imutabilidade</h3>
+<p>Dados imutáveis eliminam uma classe inteira de bugs: o objeto que você recebeu não muda debaixo de você, pode ser compartilhado entre threads sem lock e serve de chave de dicionário. Ferramentas em Python: <code>@dataclass(frozen=True, slots=True)</code> (tentativa de atribuição lança <code>FrozenInstanceError</code>), <code>tuple</code> em vez de <code>list</code>, <code>frozenset</code>, <code>MappingProxyType</code> para uma visão somente leitura de um dict, e <code>dataclasses.replace</code> para criar uma cópia alterada:</p>
+<pre><code>@dataclass(frozen=True, slots=True)
+class Ponto:
+    x: int
+    y: int
+
+Ponto(1, 2).x = 3        # FrozenInstanceError: cannot assign to field 'x'
+deslocar(Ponto(1, 2), 5) # Ponto(x=6, y=2): novo objeto; o original fica intacto</code></pre>
+<p>A armadilha é a imutabilidade <em>rasa</em>: <code>frozen</code> proíbe reatribuir o campo, não muda o conteúdo do que o campo aponta. O lab prova:</p>
+<pre><code>@dataclass(frozen=True)
+class Raso:
+    itens: list[int]
+r = Raso([1]); r.itens.append(2); print(r)    # Raso(itens=[1, 2])  &lt;- "congelado" e mutado</code></pre>
+<p>Por isso os modelos do lab usam <code>tuple[Item, ...]</code> para a coleção. Imutabilidade tem custo: cada "alteração" aloca um objeto novo, o que é irrelevante para modelos de domínio e relevante em laços quentes sobre estruturas grandes (aí, meça antes de decidir).</p>
+
+<h3>Funções de ordem superior e <code>functools</code></h3>
+<p>Funções são valores: podem ser passadas, devolvidas e guardadas. Isso dá <code>map</code>/<code>filter</code> (em Python, prefira compreensões e geradores, mais legíveis), <code>sorted(key=...)</code>, e as ferramentas de <code>functools</code> e <code>itertools</code> que valem conhecer a fundo:</p>
+<ul>
+<li><code>partial</code> fixa argumentos: <code>dez_por_cento = partial(percentual, 10)</code>, uma função de um argumento sem escrever <code>lambda</code>.</li>
+<li><code>reduce</code> dobra uma sequência; bom para <em>combinar</em> valores de um monoide (soma de efeitos de desconto no lab: <code>reduce(Efeito.somar, efeitos, Efeito())</code>), ruim quando um laço <code>for</code> seria mais claro.</li>
+<li><code>itertools.accumulate</code> devolve os parciais: <code>saldo_acumulado([100, -30, 50])</code> = <code>[100, 70, 120]</code>.</li>
+<li><code>singledispatch</code> despacha pelo tipo do primeiro argumento (polimorfismo ad hoc sem herança): <code>descrever(3)</code> dá <code>'inteiro 3'</code>, <code>descrever([1,2])</code> dá <code>'lista de 2'</code>, <code>descrever("x")</code> cai no genérico.</li>
+<li><code>cache</code>/<code>lru_cache</code> memoizam: <code>fib(80)</code> = 23416728348467685 instantaneamente, porque cada subproblema é calculado uma vez.</li>
+<li><code>wraps</code> preserva nome e docstring em decoradores (bloco 5).</li>
+</ul>
+<p>Composição de funções é um <code>reduce</code> de aplicações. O lab traz um <code>compor</code> genérico (<code>compor(f, g, h)(x)</code> é <code>h(g(f(x)))</code>) e a versão com tipos usa a sintaxe de parâmetros de tipo do Python 3.12+ (<code>def compor[T](...)</code>).</p>
+
+<h3>Memoização: onde o <code>@cache</code> morde</h3>
+<p>Memoizar só é correto para função pura. Duas falhas reais, ambas reproduzidas no lab:</p>
+<pre><code>@cache
+def cotacao_cacheada(moeda):          # impura: depende de um "mercado" que muda
+    ...
+cotacao_cacheada("USD")  # 501
+cotacao_cacheada("USD")  # 501  (sem nova consulta: a função foi chamada 1 vez)
+
+class Calculadora:
+    @cache                            # a chave inclui self
+    def dobro(self, x): return 2 * x
+
+c = Calculadora(); c.dobro(21); r = weakref.ref(c); del c; gc.collect()
+r() is not None          # True: o cache segura a instância viva</code></pre>
+<p>No primeiro, o cache congela um valor que deveria expirar (se precisa de validade, é um cache com TTL e política de invalidação, não <code>@cache</code>). No segundo, <code>self</code> faz parte da chave e o cache global mantém a instância alcançável: <em>vazamento de memória</em> que o linter (<code>B019</code>) tenta pegar. Soluções: cachear uma função de módulo que recebe só os valores, guardar o cache na instância, ou usar <code>functools.cached_property</code> para um valor calculado uma vez por objeto.</p>
+
+<h3>Functional core, imperative shell</h3>
+<p>O padrão que une tudo: divida o sistema em um <strong>núcleo</strong> de funções puras que decidem e uma <strong>casca</strong> fina que faz I/O, lê o relógio e orquestra. O núcleo recebe dados e devolve dados; a casca traz os dados e executa as consequências. No lab, o núcleo é <code>calcular(pedido, hoje) -&gt; Resultado</code> e a casca é o serviço:</p>
+<pre><code># núcleo (precificacao.py): puro, sem relógio, sem banco
+def calcular(pedido: Pedido, hoje: date) -&gt; Resultado: ...
+
+# casca (servico.py): lê o relógio, chama o núcleo, persiste, notifica
+def fechar(self, pedido_id: str, pedido: Pedido) -&gt; Resultado:
+    hoje = self._relogio.hoje()
+    resultado = calcular(pedido, hoje)
+    registro = PedidoCalculado(pedido_id, resultado, hoje)
+    self._repositorio.salvar(registro)
+    for ouvinte in self._ouvintes:
+        ouvinte(registro)
+    return resultado</code></pre>
+<p>Todas as regras de negócio (34 casos de caracterização, dezenas de bordas) são testadas sem banco, sem relógio e sem mock. A casca tem poucos testes, que verificam a orquestração: calcula, grava, notifica, na ordem certa e sem notificar em caso de falha. Quando os testes ficam difíceis de escrever, a lógica provavelmente escorregou para a casca (bloco 7).</p>
+
+<h3>Pipelines com geradores</h3>
+<p>Para dados em sequência, geradores dão o estilo de pipeline com memória constante: cada etapa é uma expressão lazy, e a função consome uma vez.</p>
+<pre><code>def faturamento_por_produto(vendas: Iterable[Venda]) -&gt; dict[str, int]:
+    validas = (v for v in vendas if not v.cancelada)
+    totais: dict[str, int] = {}
+    for v in validas:
+        totais[v.produto] = totais.get(v.produto, 0) + v.valor
+    return dict(sorted(totais.items(), key=lambda kv: (-kv[1], kv[0])))</code></pre>
+<p>Note o critério de desempate no <code>sorted</code> (<code>(-valor, nome)</code>): sem ele a ordem de itens empatados depende da ordem de inserção, o que torna a saída instável entre execuções com dados reordenados e o teste frágil. Determinismo faz parte da pureza.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Gerador consumido duas vezes.</strong> <code>validas = (v for v in vendas if ...)</code> é de uso único; passar <code>validas</code> a duas funções faz a segunda ver uma sequência vazia, sem erro. Materialize (<code>tuple(...)</code>) quando for reusar. Do mesmo grupo: <code>def f(x, acc=[])</code> (default mutável compartilhado entre chamadas) e <code>lambda</code> criada em laço capturando a variável por referência (todas veem o último valor; use <code>partial</code> ou default).</p>
+</div>
+
+<div class="box">
+<span class="lbl">Trade-offs</span>
+<p>Reescrever laços como cadeias de <code>map</code>/<code>reduce</code> costuma <em>reduzir</em> a legibilidade em Python; compreensões e funções nomeadas ganham. Pureza total é impossível (todo programa útil tem efeito): o ganho vem de localizar os efeitos. Cópia constante de estruturas grandes pode custar; estruturas persistentes existem em bibliotecas, mas raramente compensam a dependência. A fronteira núcleo/casca conversa com portas e adapters do <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a>, só que aplicada dentro do módulo.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Pura = resultado só dos argumentos e nenhum efeito; dependência escondida (relógio, global, I/O) vira argumento.<br>
+<code>frozen</code> é raso: use <code>tuple</code>/<code>frozenset</code> dentro; <code>replace</code> cria a cópia alterada.<br>
+<code>functools</code>: <code>partial</code>, <code>reduce</code>, <code>singledispatch</code>, <code>cache</code>; memoize só o que é puro, e nunca métodos com <code>@cache</code>.<br>
+Núcleo funcional decide, casca imperativa executa: regras testadas sem mock, casca testada pela orquestração.<br>
+Preserve determinismo (desempate explícito) e cuidado com geradores de uso único.</p>
+</div>
+
+<!-- ============================================ BLOCO 4 -->
+<h2 id="b04">Bloco 4 · SOLID com critério</h2>
+
+<h3>Por que isso importa</h3>
+<p>SOLID (Robert C. Martin, nos anos 2000) é um conjunto de cinco heurísticas sobre acoplamento e mudança. Elas são úteis quando lidas como <em>sintomas e remédios</em> ("este código muda por dois motivos; separe") e nocivas quando lidas como mandamentos ("toda classe precisa de uma interface"). Em Python, três delas se tornam muito mais baratas porque a linguagem tem funções de primeira classe e tipagem estrutural. Este bloco mostra, para cada letra, uma violação concreta, a correção, e o ponto em que a correção custa mais do que rende. O código está em <code>exemplos/b04_solid.py</code>.</p>
+
+<h3>S · Responsabilidade única: um motivo para mudar</h3>
+<p>A formulação útil de Martin não é "faz uma coisa", é "tem <strong>um motivo para mudar</strong>", ou seja, serve a um único <em>ator</em> (quem pede a mudança). A classe abaixo calcula, formata e grava; três atores diferentes (financeiro, produto, infraestrutura) podem forçá-la a mudar, e cada mudança arrisca as outras duas:</p>
+<pre><code>class RelatorioTudoJunto:
+    def gerar(self, destino: Path) -&gt; str:
+        total = sum(v.valor for v in self.vendas)                       # regra de negócio
+        texto = "\n".join(f"{v.produto}: {v.valor / 100:.2f}" ...)       # apresentação
+        texto += f"\nTOTAL: {total / 100:.2f}"
+        destino.write_text(texto, encoding="utf-8")                      # I/O
+        return texto</code></pre>
+<p>Para testar o total é preciso um arquivo; para mudar o formato é preciso entender a soma. A correção em Python é quase sempre <em>funções de módulo</em>, não três classes:</p>
+<pre><code>def total_vendas(vendas: Sequence[Venda]) -&gt; int:
+    return sum(v.valor for v in vendas)
+
+def formatar_relatorio(vendas: Sequence[Venda]) -&gt; str:
+    linhas = [f"{v.produto}: {v.valor / 100:.2f}" for v in vendas]
+    return "\n".join([*linhas, f"TOTAL: {total_vendas(vendas) / 100:.2f}"])
+# quem chama decide gravar: Path.write_text(formatar_relatorio(vendas))</code></pre>
+<p><strong>Quando piora:</strong> dividir por "responsabilidades" sem que haja atores distintos produz dezenas de classes de um método, com o fluxo espalhado e o leitor obrigado a abrir sete arquivos. Se o relatório só tem um consumidor e nunca muda de formato, a classe original é aceitável. Medida: <em>o histórico do Git</em>. Se os commits que tocam o arquivo têm motivos diferentes, divida; se não, deixe.</p>
+
+<h3>O · Aberto/fechado: estender sem editar</h3>
+<p>O módulo deve ser aberto para extensão e fechado para modificação: uma nova variante entra sem editar código que já funciona (e já foi testado). O sintoma é a cadeia de <code>if/elif</code> sobre um tipo que cresce a cada requisito:</p>
+<pre><code>def taxa_com_cadeia(tipo: str, valor: int) -&gt; int:
+    if tipo == "pix":     return 0
+    elif tipo == "cartao": return valor * 3 // 100
+    elif tipo == "boleto": return 350
+    raise ValueError(f"tipo desconhecido: {tipo}")</code></pre>
+<p>A correção idiomática é uma tabela de despacho (dicionário de funções), aqui alimentada por um decorador de registro:</p>
+<pre><code>_TAXAS: dict[str, Callable[[int], int]] = {}
+def taxa(tipo): ...                       # registra f em _TAXAS[tipo]
+
+@taxa("pix")    ... valor -&gt; 0
+@taxa("cartao") ... valor -&gt; valor * 3 // 100
+@taxa("boleto") ... valor -&gt; 350
+
+def calcular_taxa(tipo, valor):
+    try:    return _TAXAS[tipo](valor)
+    except KeyError: raise ValueError(f"tipo desconhecido: {tipo}") from None</code></pre>
+<p>Adicionar "débito" é adicionar uma função; nada do que existe é editado. <strong>Quando piora:</strong> com três variantes estáveis, a cadeia é mais fácil de ler que o registro (indireção sem retorno); registro em estado global de módulo cria dependência de ordem de import (se o módulo que registra "débito" não foi importado, o tipo "não existe"); e a ordem das regras às vezes <em>importa</em>, o que um dicionário esconde. No lab, os cupons usam exatamente esta tabela (<code>CUPONS</code>, um <code>MappingProxyType</code> imutável, sem registro dinâmico: a lista fecha onde está, e é testável).</p>
+
+<h3>L · Substituição de Liskov: o subtipo honra o contrato</h3>
+<p>Onde a base promete algo, o subtipo deve aceitar o mesmo conjunto de entradas (ou mais) e garantir as mesmas saídas (ou mais fortes). Em termos de contrato: <strong>pré-condições não podem ser reforçadas, pós-condições não podem ser enfraquecidas, invariantes devem ser preservadas</strong> (Liskov e Wing, 1994). A violação típica é o subtipo que "rejeita o que o pai aceitava":</p>
+<pre><code>class Pagamento:
+    def pagar(self, valor: int) -&gt; str:
+        return f"pago {valor}"
+
+class PagamentoComLimite(Pagamento):
+    def pagar(self, valor: int) -&gt; str:
+        if valor &gt; 1000:
+            raise ValueError("acima do limite")     # pré-condição mais forte
+        return super().pagar(valor)
+
+def fechar_compra(pagamento: Pagamento, valor: int) -&gt; str:
+    return pagamento.pagar(valor)       # escrita contra a base: não espera ValueError
+
+fechar_compra(PagamentoComLimite(), 5000)   # ValueError: acima do limite</code></pre>
+<p>O mypy não acusa: assinaturas iguais. O contrato quebrado é semântico. Duas correções legítimas. (1) <strong>Tornar a recusa parte do contrato da base</strong>: o retorno declara <code>str | Recusado</code> e todo chamador é obrigado (pelo verificador de tipos) a tratar os dois casos; a subclasse devolve <code>Recusado("acima do limite")</code> e ninguém é surpreendido. (2) <strong>Deixar de ser subtipo</strong>: <code>PagamentoComLimite</code> passa a <em>conter</em> um <code>Pagamento</code> e expor a sua própria interface. O caso clássico "quadrado é um retângulo" (mutável) é o mesmo problema: <code>set_largura</code> do quadrado viola a pós-condição "a altura não muda". Sinais de alerta em revisão: <code>raise NotImplementedError</code> em método herdado, <code>isinstance</code> no código cliente para tratar uma subclasse de forma diferente, método que ignora silenciosamente o argumento.</p>
+
+<h3>I · Segregação de interfaces: dependa da fatia que usa</h3>
+<p>Interfaces largas forçam clientes e testes a conhecer métodos que nunca usam. Se uma função só precisa ler, não deve exigir um repositório com seis operações:</p>
+<pre><code>class RepositorioGordo(Protocol):          # obter, salvar, remover, listar, contar, limpar
+    ...
+class Leitor(Protocol):
+    def obter(self, chave: str) -&gt; int | None: ...
+
+def saldo_ou_zero(leitor: Leitor, chave: str) -&gt; int:
+    valor = leitor.obter(chave)
+    return 0 if valor is None else valor</code></pre>
+<p>Com <code>Protocol</code> isso é barato e acontece no <em>consumidor</em>: ele declara o que precisa e qualquer repositório que tenha <code>obter</code> serve, sem herdar nada. O teste ganha um <code>LeitorFalso</code> de 5 linhas em vez de implementar seis métodos. <strong>Quando piora:</strong> um Protocol por função, com nomes como <code>ObtemEOuListaEOuConta</code>, vira ruído; agrupe por papel (leitura, escrita) e pare aí. Em Python, <code>Callable[[str], int | None]</code> também é uma interface de um método.</p>
+
+<h3>D · Inversão de dependência: a política é dona da interface</h3>
+<p>Módulos de alto nível (política, regra de negócio) não devem depender de módulos de baixo nível (SMTP, banco, HTTP); ambos dependem de uma abstração, e <strong>a abstração pertence ao alto nível</strong>. Violação: a classe cria sua própria dependência.</p>
+<pre><code>class AlertaAcoplado:
+    def __init__(self) -&gt; None:
+        self._smtp = SmtpClient()           # impossível testar sem rede
+    def disparar(self, to: str) -&gt; None:
+        self._smtp.send(to, "limite excedido")</code></pre>
+<pre><code>class Enviador(Protocol):                      # definido pelo alto nível, com o vocabulário dele
+    def enviar(self, destino: str, texto: str) -&gt; None: ...
+
+class Alerta:
+    def __init__(self, enviador: Enviador) -&gt; None:    # dependência recebida
+        self._enviador = enviador
+    def disparar(self, destino: str) -&gt; None:
+        self._enviador.enviar(destino, "limite excedido")
+
+class AdaptadorSmtp:                           # baixo nível se adapta à porta (send -&gt; enviar)
+    def __init__(self, cliente: SmtpClient) -&gt; None: self._cliente = cliente
+    def enviar(self, destino: str, texto: str) -&gt; None:
+        self._cliente.send(destino, texto)</code></pre>
+<p>Note a direção: o <code>Protocol</code> fala <code>enviar(destino, texto)</code>, o vocabulário do negócio; o cliente SMTP fala <code>send(to, body)</code>; quem se adapta é o adapter. A inversão está aí: o código de domínio não importa nada da biblioteca de e-mail. DIP é o princípio com maior retorno em testabilidade e o mais mal-entendido: <strong>não é "injeção de dependência"</strong> (que é uma técnica, bloco 5), é a decisão sobre <em>quem define a interface</em>. <strong>Quando piora:</strong> para uma dependência que nunca será trocada e é barata de usar em teste (<code>pathlib</code>, <code>json</code>, <code>datetime</code>), a abstração é cerimônia. Abstraia fronteiras que você precisa trocar em teste ou produção (rede, relógio, banco, filesystem em volume), não a biblioteca padrão pura.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>SOLID aplicado "por precaução".</strong> Criar <code>IRepositorio</code>, <code>RepositorioImpl</code>, <code>RepositorioFactory</code> e um container de DI para uma classe que tem uma implementação e nunca terá outra é a violação mais comum, e o preço é pago em cada leitura. A pergunta de revisão: <em>qual mudança concreta, que já aconteceu ou está no roadmap, esta abstração torna barata?</em> Se a resposta é "talvez um dia", escreva o código direto e abstraia quando a segunda variante aparecer (a regra dos três: duplique uma vez, abstraia na terceira). Abstrair cedo fixa a forma errada; o custo de extrair depois, com testes, é baixo.</p>
+</div>
+
+<div class="box">
+<span class="lbl">Trade-offs: mapa de sintomas</span>
+<table>
+<thead><tr><th>Sintoma</th><th>Princípio</th><th>Remédio em Python</th><th>Custo da correção</th></tr></thead>
+<tbody>
+<tr><td>Arquivo muda por motivos de atores distintos</td><td>SRP</td><td>funções/módulos separados</td><td>mais arquivos; fluxo espalhado</td></tr>
+<tr><td><code>if/elif</code> sobre tipo que cresce</td><td>OCP</td><td>dicionário de funções, <code>match</code>, <code>singledispatch</code></td><td>indireção; ordem implícita</td></tr>
+<tr><td>Subclasse lança onde o pai aceitava</td><td>LSP</td><td>recusa no contrato, ou composição</td><td>tipo de retorno mais rico</td></tr>
+<tr><td>Fake precisa implementar 6 métodos</td><td>ISP</td><td>Protocol por papel, no consumidor</td><td>mais nomes de interface</td></tr>
+<tr><td>Teste exige rede/relógio/banco</td><td>DIP</td><td>porta (Protocol) + injeção + adapter</td><td>um nível a mais; composition root</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>SRP: um ator, um motivo de mudança; confirme no histórico do Git.<br>
+OCP: tabela de despacho resolve a cadeia que cresce; três variantes estáveis não precisam.<br>
+LSP: o subtipo não pode rejeitar o que a base aceitava; o mypy não vê, o contrato sim.<br>
+ISP: o consumidor declara a fatia que usa, com <code>Protocol</code>.<br>
+DIP: a política define a interface no vocabulário dela; abstraia fronteiras que você troca, não a biblioteca padrão.</p>
+</div>
+
+<!-- ============================================ BLOCO 5 -->
+<h2 id="b05">Bloco 5 · Padrões que valem em Python</h2>
+
+<h3>Por que isso importa</h3>
+<p>Padrões de projeto são <em>vocabulário</em>: nomes para soluções recorrentes que permitem dizer "isto é um adapter" em vez de explicar dez linhas. O catálogo GoF (1994) foi escrito para linguagens onde funções não são valores e não há tipagem estrutural; muitos padrões ali compensam limites de C++ e Smalltalk-80. Em Python, boa parte vira uma função, um dicionário ou um decorador. O que fica é a <em>intenção</em>. Este bloco cobre os sete que aparecem todo dia (strategy, factory, adapter, decorator, observer, repository e injeção por construtor), cada um na forma que o Python favorece, e fecha com o que a linguagem dispensa. Código em <code>exemplos/b05_padroes.py</code> e no pacote <code>pedidos/</code>.</p>
+
+<h3>Strategy: variar o algoritmo atrás de uma interface</h3>
+<p><strong>Problema:</strong> um passo do algoritmo muda conforme o contexto (ordenação, tabela de frete, cálculo de taxa) e você não quer um <code>if</code> espalhado. <strong>Forma em Python:</strong> se a estratégia não tem estado, é uma função; o "contexto" recebe um <code>Callable</code>.</p>
+<pre><code>type Ordenacao = Callable[[str], Any]
+ESTRATEGIAS: dict[str, Ordenacao] = {"alfabetica": str.lower, "tamanho": len}
+
+def ordenar(nomes: Sequence[str], estrategia: str) -&gt; list[str]:
+    return sorted(nomes, key=ESTRATEGIAS[estrategia])</code></pre>
+<p>Quando a estratégia tem <em>configuração</em>, a classe pequena e imutável volta a valer. É o que o frete do lab faz: a política é um <code>Protocol</code> de um método e a tabela regional é uma dataclass com base e preço por quilo extra:</p>
+<pre><code>class PoliticaFrete(Protocol):
+    def calcular(self, peso_g: int) -&gt; Centavos: ...
+
+@dataclass(frozen=True, slots=True)
+class TabelaRegional:
+    base: Centavos
+    por_kg_extra: Centavos
+    def calcular(self, peso_g: int) -&gt; Centavos:
+        kgs = (peso_g + 999) // 1000
+        extra = (kgs - 1) * self.por_kg_extra if kgs &gt; 1 else 0
+        return self.base + extra
+
+TABELAS: Mapping[Regiao, PoliticaFrete] = MappingProxyType({
+    Regiao.SUDESTE: TabelaRegional(base=1500, por_kg_extra=500),
+    Regiao.SUL:     TabelaRegional(base=2000, por_kg_extra=700),
+    Regiao.OUTRAS:  TabelaRegional(base=3000, por_kg_extra=1200),
+})</code></pre>
+<p>O ganho aparece no teste: <code>calcular_frete(..., tabelas=...)</code> aceita outra tabela, e o lab troca uma região por um stub de uma linha para provar a regra de isenção sem depender de números de tarifa. <strong>Evite</strong> a hierarquia <code>EstrategiaBase</code> + três subclasses para três funções de uma linha.</p>
+
+<h3>Factory: criar sem o chamador conhecer a classe</h3>
+<p>Em Python há três formas, em ordem crescente de cerimônia: um <strong>construtor alternativo</strong> (<code>@classmethod</code>), um <strong>registro</strong> (dicionário nome para criador) e, raramente, uma classe fábrica. O construtor alternativo é o mais comum e o mais subestimado:</p>
+<pre><code>@dataclass(frozen=True, slots=True)
+class Periodo:
+    inicio: int
+    fim: int
+    @classmethod
+    def de_texto(cls, texto: str) -&gt; Periodo:
+        a, _, b = texto.partition("-")
+        return cls(int(a), int(b))        # Periodo.de_texto("2024-2026")</code></pre>
+<p>O registro com decorador permite plugar formatadores sem editar o módulo central, com mensagem de erro útil (lista os disponíveis):</p>
+<pre><code>@formatador("csv")
+def _csv(dados): return "\n".join(f"{k},{v}" for k, v in dados.items())
+
+def criar_formatador(nome: str) -&gt; Formatador:
+    try:
+        return _FORMATADORES[nome]
+    except KeyError:
+        raise ValueError(f"formato desconhecido: {nome} (disponíveis: {sorted(_FORMATADORES)})") from None</code></pre>
+<p>As classes são objetos: <code>tipo = Notificador; tipo()</code> já é uma fábrica. Uma <em>Abstract Factory</em> (família de objetos que combinam) quase nunca se justifica em Python.</p>
+
+<h3>Adapter: traduzir uma interface que você não controla</h3>
+<p><strong>Problema:</strong> uma biblioteca ou serviço externo fala um vocabulário que você não quer espalhar no seu domínio (<code>cobrar_centavos(cartao, cents)</code> devolvendo <code>{"status": "OK"}</code>). <strong>Solução:</strong> uma classe pequena que implementa a porta <em>do seu domínio</em> e traduz:</p>
+<pre><code>class Pagamentos(Protocol):
+    def pagar(self, cartao: str, valor: int) -&gt; bool: ...
+
+class AdaptadorGateway:
+    def __init__(self, gateway: GatewayLegado) -&gt; None:
+        self._gateway = gateway
+    def pagar(self, cartao: str, valor: int) -&gt; bool:
+        return self._gateway.cobrar_centavos(cartao, valor)["status"] == "OK"</code></pre>
+<p>O adapter é onde moram as traduções feias (strings mágicas, códigos de erro, unidades) e onde você converte falhas externas em exceções do domínio. O lab usa a mesma ideia em duas direções: <code>pedidos/compat.py</code> aceita o formato antigo (dicionários) e chama o núcleo tipado, e <code>RepositorioSqlite</code> adapta o <code>sqlite3</code> à porta <code>RepositorioPedidos</code>, convertendo <code>sqlite3.IntegrityError</code> em <code>PedidoJaExiste</code>. Em escala de sistema, portas e adapters são tema do <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a>.</p>
+
+<h3>Decorator: dois sentidos, não os confunda</h3>
+<p>O <strong>padrão</strong> Decorator envolve um objeto com outro da mesma interface para acrescentar comportamento (cache, log, retry, métricas). A <strong>sintaxe</strong> <code>@decorador</code> do Python aplica uma função a outra função na definição. Os dois se encontram, mas são diferentes.</p>
+<pre><code>class ComCache:                          # padrão: mesma interface, envolve outro objeto
+    def __init__(self, interna: Leitura) -&gt; None:
+        self._interna = interna
+        self._cache: dict[str, int] = {}
+    def obter(self, chave: str) -&gt; int:
+        if chave not in self._cache:
+            self._cache[chave] = self._interna.obter(chave)
+        return self._cache[chave]</code></pre>
+<pre><code>def repetir(tentativas, excecoes):          # sintaxe: decorador com parâmetros
+    def decorador[**P, R](f: Callable[P, R]) -&gt; Callable[P, R]:
+        @wraps(f)
+        def interna(*args: P.args, **kwargs: P.kwargs) -&gt; R:
+            for tentativa in range(1, tentativas + 1):
+                try:
+                    return f(*args, **kwargs)
+                except excecoes:
+                    if tentativa == tentativas:
+                        raise
+            raise AssertionError("inalcançável")
+        return interna
+    return decorador</code></pre>
+<p>Dois pontos de detalhe. <code>ParamSpec</code> (<code>**P</code>) preserva a assinatura para o verificador de tipos, e <code>wraps</code> preserva <code>__name__</code> e <code>__doc__</code>. E a <strong>ordem de aplicação</strong>: decoradores empilhados são aplicados de baixo para cima e executam de fora para dentro. O lab mostra:</p>
+<pre><code>@a
+@b
+def base(): return "base"
+
+['b aplicado', 'a aplicado', 'a(b(base))']</code></pre>
+<p>Para retry e cache, a ordem decide o comportamento: com <code>@cache</code> por fora, uma falha após as tentativas não é guardada e o sucesso é; com <code>@repetir</code> por fora, cada tentativa passa pelo cache. Decorar com retry um efeito não idempotente (cobrar cartão) é um bug de design: retry exige idempotência (M02A, blocos de falha parcial).</p>
+
+<h3>Observer: notificar sem acoplar</h3>
+<p>Um assunto avisa interessados quando algo acontece, sem conhecê-los. Em Python o assinante é um <code>Callable</code> e o "assunto" é uma lista de funções. O ponto delicado é a falha de um assinante: se uma exceção interrompe o laço, os seguintes nunca são avisados, e o publicador herda um erro que não é dele.</p>
+<pre><code>@dataclass
+class Barramento:
+    _assinantes: dict[str, list[Assinante]] = field(default_factory=dict)
+    falhas: list[str] = field(default_factory=list)
+
+    def assinar(self, evento: str, assinante: Assinante) -&gt; None:
+        self._assinantes.setdefault(evento, []).append(assinante)
+
+    def publicar(self, evento: str, carga: object) -&gt; None:
+        for assinante in self._assinantes.get(evento, []):
+            try:
+                assinante(evento, carga)
+            except Exception as erro:
+                self.falhas.append(f"{evento}: {erro!r}")
+                logging.getLogger(__name__).exception("assinante falhou")</code></pre>
+<p>Decisões embutidas (e para documentar): isolamento de falha por assinante, ordem de notificação = ordem de assinatura, execução síncrona. Se o assinante precisa sobreviver a quedas ou rodar depois, deixa de ser observer e vira mensageria (fila, outbox), assunto do módulo de sistemas distribuídos. No serviço do lab, os ouvintes recebem o registro <em>depois</em> de gravar; há um teste que prova que a falha de um ouvinte deixa o pedido gravado, e outro que prova que a falha do repositório impede qualquer notificação.</p>
+
+<h3>Repository: a coleção de agregados atrás de uma porta</h3>
+<p>Repository apresenta o armazenamento como uma coleção de objetos de domínio (<code>salvar</code>, <code>obter</code>, <code>listar_do_dia</code>), escondendo SQL, tabelas e drivers. Duas implementações no lab, ambas verificadas pelo <strong>mesmo teste de contrato</strong> parametrizado: um <em>fake</em> em memória e um adapter SQLite.</p>
+<pre><code>class RepositorioPedidos(Protocol):
+    def salvar(self, registro: PedidoCalculado) -&gt; None: ...
+    def obter(self, pedido_id: str) -&gt; PedidoCalculado | None: ...
+    def listar_do_dia(self, dia: date) -&gt; list[PedidoCalculado]: ...</code></pre>
+<p>O contrato inclui o que não está na assinatura: <code>salvar</code> com id repetido lança <code>PedidoJaExiste</code>; <code>obter</code> de id inexistente devolve <code>None</code>; <code>listar_do_dia</code> ordena por id. Se o fake e o adapter real passam nos mesmos quatro testes de contrato, o fake é confiável em todos os outros testes. É isso que torna o repository útil: o serviço é testado em milissegundos, e a lacuna entre fake e banco real é coberta por testes de contrato (bloco 7).</p>
+
+<h3>Injeção de dependência por construtor e composition root</h3>
+<p>A técnica: um objeto recebe suas dependências no <code>__init__</code> em vez de criá-las ou buscá-las em global. Isso é DIP posto em prática. O lugar onde as classes concretas são escolhidas e montadas é o <strong>composition root</strong>, perto do ponto de entrada:</p>
+<pre><code>class Cobranca:
+    def __init__(self, pagamentos: Pagamentos) -&gt; None:
+        self._pagamentos = pagamentos
+
+def montar_cobranca() -&gt; Cobranca:
+    """The only place that knows the concrete classes."""
+    return Cobranca(AdaptadorGateway(GatewayLegado()))</code></pre>
+<p>O serviço de pedidos tem três dependências injetadas (repositório, relógio, ouvintes); nos testes o relógio é uma classe de uma linha que devolve uma data fixa. Python quase nunca precisa de um <em>container</em> de DI: uma função <code>montar_*</code> explícita é mais legível, é verificada pelo mypy, e os erros aparecem na importação. Containers (e <code>FastAPI.Depends</code>, que é uma forma de DI por parâmetro) valem quando o grafo é grande e o ciclo de vida das instâncias (por requisição, singleton) precisa ser gerenciado; o <a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a> retoma isso.</p>
+
+<h3>O que o Python dispensa</h3>
+<table>
+<thead><tr><th>Padrão clássico</th><th>Em Python</th></tr></thead>
+<tbody>
+<tr><td>Singleton</td><td>Um módulo é um singleton (importado uma vez). Singleton com classe é estado global com cerimônia; prefira injeção.</td></tr>
+<tr><td>Iterator</td><td><code>__iter__</code>/<code>__next__</code>, geradores com <code>yield</code>.</td></tr>
+<tr><td>Command</td><td>Uma função (ou <code>partial</code>); classe só se precisa de <em>undo</em> ou serialização.</td></tr>
+<tr><td>Template Method</td><td>Passe a função como argumento; herança só em hierarquias projetadas para isso.</td></tr>
+<tr><td>Visitor</td><td><code>match</code> estrutural ou <code>singledispatch</code>.</td></tr>
+<tr><td>Builder</td><td>Argumentos nomeados, valores padrão e <code>dataclasses.replace</code>.</td></tr>
+<tr><td>Abstract Factory</td><td>Raramente; um módulo ou dicionário de criadores serve.</td></tr>
+<tr><td>Prototype</td><td><code>copy.copy</code>/<code>deepcopy</code>, <code>replace</code>.</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Padrão como meta, não como remédio.</strong> O código com <code>NotificadorFactory</code>, <code>NotificadorStrategy</code>, <code>NotificadorObserver</code> e um <code>NotificadorBuilder</code> para enviar um e-mail é a falha típica de quem decorou o catálogo. Um padrão entra quando há <em>duas variantes reais ou um teste que o exige</em>. Segunda armadilha: <strong>observer com estado compartilhado</strong>, onde a ordem dos assinantes passa a ser parte do comportamento e ninguém documentou; e <strong>registro global preenchido por import</strong>, que funciona na sua máquina e falha no processo em que o módulo não foi importado.</p>
+</div>
+
+<div class="box">
+<span class="lbl">Trade-offs</span>
+<p>Cada indireção custa um salto na leitura e um nome a mais; paga-se com variação real ou testabilidade real. Fake mais teste de contrato é mais trabalho inicial do que um <code>Mock</code>, e compensa porque o contrato fica escrito e executável. DI manual cresce linearmente com o grafo; passada a casa das dezenas de dependências, avalie um container, não antes.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Strategy é uma função (sem estado) ou uma dataclass pequena (com configuração). Factory é <code>classmethod</code> ou dicionário de criadores.<br>
+Adapter traduz o mundo externo para a porta do seu domínio, e é onde moram as strings mágicas e a conversão de erros.<br>
+Decorator-padrão envolve um objeto; <code>@decorador</code> envolve uma função: empilhados, aplicam-se de baixo para cima.<br>
+Observer precisa de política explícita para falha de assinante; repository precisa de teste de contrato compartilhado entre fake e real.<br>
+DI por construtor com composition root explícito; o Python raramente pede container.</p>
+</div>
+
+<!-- ============================================ BLOCO 6 -->
+<h2 id="b06">Bloco 6 · Refatoração</h2>
+
+<h3>Por que isso importa</h3>
+<p><strong>Refatorar é mudar a estrutura interna sem mudar o comportamento observável</strong> (Fowler). A segunda metade da definição é a que importa: sem um meio de verificar que o comportamento ficou igual, o que você faz é reescrever, com risco de reescrita. A maior parte do trabalho real de engenharia é em código que já existe, que funciona, que ninguém entende por inteiro e que gera receita. O legado não é um insulto: é código que sobreviveu. A habilidade sênior é mudá-lo em passos pequenos, reversíveis e verificados, de modo que dê para parar a qualquer momento com o sistema funcionando.</p>
+
+<h3>Smells: sintomas que merecem atenção, não condenação</h3>
+<p>Um <em>code smell</em> é um indício, não um defeito. Os que mais aparecem e o remédio de manual:</p>
+<table>
+<thead><tr><th>Smell</th><th>Como se reconhece</th><th>Movimento de refatoração</th></tr></thead>
+<tbody>
+<tr><td>Função longa / alta ciclomática</td><td>muitos níveis, comentários de bloco, variáveis temporárias de longa vida</td><td>Extract Function; Replace Temp with Query</td></tr>
+<tr><td>Condicional sobre tipo</td><td><code>if tipo == ...</code> repetido em vários lugares</td><td>tabela de despacho / strategy / <code>match</code></td></tr>
+<tr><td>Obsessão por primitivos</td><td>dicionário ou <code>int</code> circula com significado implícito</td><td>dataclass imutável, tipo de domínio</td></tr>
+<tr><td>Lista de parâmetros longa</td><td>cinco ou mais argumentos que viajam juntos</td><td>Introduce Parameter Object</td></tr>
+<tr><td>Feature envy</td><td>método usa mais dados de outro objeto que do próprio</td><td>Move Method</td></tr>
+<tr><td>Mudança divergente / cirurgia de espingarda</td><td>uma classe muda por vários motivos / um motivo muda vários arquivos</td><td>separar / agrupar (SRP, coesão)</td></tr>
+<tr><td>Duplicação</td><td>lógica copiada com pequenas variações</td><td>extrair; mas só após ver duas cópias <em>reais</em></td></tr>
+<tr><td>Dependência escondida</td><td><code>date.today()</code>, global, singleton no meio da regra</td><td>parâmetro ou porta injetada (costura)</td></tr>
+</tbody>
+</table>
+<p>O lab dá uma amostra concreta. O medidor do módulo, aplicado ao legado de preços e à versão refatorada:</p>
+<pre><code>$ uv run python -m design_lab.cli complexidade src/design_lab/legado.py src/design_lab/pedidos/precificacao.py src/design_lab/pedidos/frete.py src/design_lab/pedidos/descontos.py
+arquivo:funcao                                       linhas ciclo aninh
+src/design_lab/legado.py:calcular_pedido                 98    32     3
+src/design_lab/pedidos/frete.py:calcular_frete           22     5     1
+src/design_lab/pedidos/descontos.py:efeito_cliente        8     5     1
+src/design_lab/pedidos/precificacao.py:calcular          18     2     1</code></pre>
+<p>(Seleção de quatro linhas da saída completa, que lista todas as funções por ciclomática decrescente.)</p>
+<p>Uma função de 98 linhas e ciclomática 32 (portanto, no mínimo 32 casos de teste para cobrir todos os ramos) virou funções cuja maior ciclomática é 5. Nada disso, porém, prova que o comportamento é o mesmo. É o que o resto do bloco resolve.</p>
+
+<h3>Testes de caracterização: o oráculo é o próprio código</h3>
+<p>Em legado sem testes, a pergunta "o que está certo?" é cara e frequentemente sem resposta (a documentação não existe, quem pediu a regra saiu da empresa). A pergunta que você consegue responder é "<strong>o que o código faz hoje?</strong>". Um teste de caracterização (Feathers) <em>grava a saída observada</em> e a transforma em oráculo: se depois da refatoração qualquer saída mudar, o teste acusa, certa ou errada que fosse a original. Procedimento:</p>
+<ol>
+<li><strong>Escolha entradas</strong> que cubram ramos e bordas: cada limite (9 e 10 itens, 29.999 e 30.000 centavos), cada erro, cada combinação suspeita.</li>
+<li><strong>Observe</strong> a saída do código atual e grave (sem editar à mão: a gravação é automática, para não "corrigir" o oráculo sem querer). No lab: <code>uv run python -m design_lab.cli golden --write</code>.</li>
+<li><strong>Revise com o negócio</strong> o que parecer estranho, mas preserve até haver decisão. Registre como pergunta, não como correção.</li>
+<li><strong>Rode contra o refatorado</strong> a cada passo.</li>
+</ol>
+<p>O arquivo <code>tests/golden/saidas.json</code> guarda 34 casos, com sucessos e erros. Alguns revelam comportamentos que ninguém escolheria no papel e que o refator tem de reproduzir:</p>
+<pre><code>cupom_vazio_nao_e_none         : cupom "" vira {'avisos': ['cupom inválido: '], ...}      (string vazia é "cupom", não ausência)
+expresso_nao_ganha_frete_gratis: pedido de R$ 400,00 com expresso paga frete 3000 (R$ 30,00); a isenção por valor não vale
+expresso_com_cupom_fretegratis : o cupom não zera o frete expresso: apenas o divide por dois
+ouro_expresso_cupom_fretegratis: ouro ainda recebe metade do que sobrou (frete 750)</code></pre>
+<p>Cada uma é uma pergunta para o dono do produto ("expresso deveria ficar de fora da frete grátis?"). A refatoração <strong>não</strong> é o momento de decidir; é o momento de não perder nada. Corrigir comportamento é uma mudança separada, com commit e teste próprios, depois.</p>
+
+<h3>Costuras (seams): fazer o código testável sem reescrevê-lo</h3>
+<p>Uma <strong>costura</strong> é um lugar onde se pode mudar o comportamento sem editar o código naquele ponto (Feathers). O legado do lab lê o relógio em um helper de módulo:</p>
+<pre><code>def _hoje() -&gt; datetime.date:
+    return datetime.date.today()
+# ... no meio de calcular_pedido:
+hoje = _hoje()
+if hoje.month == 11 and hoje.day == 28:      # Black Friday
+    pct = pct + 5</code></pre>
+<p>Sem tocar a função, o teste substitui <code>_hoje</code>:</p>
+<pre><code>def rodar_legado(caso: Caso) -&gt; Saida:
+    with mock.patch.object(legado, "_hoje", return_value=caso.hoje):
+        return _normalizar(lambda: legado.calcular_pedido(...))</code></pre>
+<p>Essa é uma <em>costura de objeto/módulo</em> (monkeypatch). Outras: parâmetro com default (<code>def f(x, relogio=date.today)</code>), subclasse que sobrescreve um método (<em>subclass and override</em>), e injeção no construtor. A hierarquia de preferência é a de menor intrusão que resolve: monkeypatch temporário para a caracterização inicial; e, ao refatorar de verdade, a dependência vira argumento (<code>calcular(pedido, hoje)</code>), que é a costura mais honesta. A regra: <strong>crie a costura antes do refator, com o mínimo de edição no legado</strong>, e use-a para colocar o legado sob teste.</p>
+
+<h3>Passos seguros</h3>
+<p>Refatoração segura é uma sequência de passos que mantêm a suíte verde, cada um commitável. Uma ordem que funciona, usada no laboratório:</p>
+<ol>
+<li><strong>Caracterizar</strong> (golden + costura do relógio). Suíte verde contra o legado.</li>
+<li><strong>Tipar as bordas</strong>: <code>Item</code>, <code>Cliente</code>, <code>Pedido</code>, <code>Resultado</code> como dataclasses imutáveis que validam no <code>__post_init__</code> (obsessão por primitivos). Um adapter (<code>compat.py</code>) recebe os dicionários antigos e produz os tipos, de modo que os chamadores antigos continuam funcionando.</li>
+<li><strong>Extrair regras puras</strong> uma de cada vez (cliente, volume, data, cupom), cada uma devolvendo um <code>Efeito</code>; combinar por soma. Rodar o golden entre extrações.</li>
+<li><strong>Substituir a cadeia de <code>if</code> por tabelas</strong> (cupons, frete regional).</li>
+<li><strong>Ligar o novo no antigo</strong> (ou o contrário) e comparar com o legado em volume: o teste diferencial.</li>
+<li><strong>Remover o legado</strong> só quando o diferencial ficar limpo por tempo suficiente em produção (ou nunca, se o custo de manter for baixo).</li>
+</ol>
+<p>Um detalhe que o refator do lab precisou preservar: a ordem dos efeitos. No legado, o teto de 20% vale <em>depois</em> de somar cliente, volume, data e cupom percentual; o desconto fixo (FIXO20) entra <em>depois</em> do teto; o cupom de frete grátis e a isenção por valor interagem com expresso e com cliente ouro em uma ordem específica (dobra por expresso, depois isenção, depois metade para ouro). Mudar a ordem de aplicação muda o valor. Os testes de caracterização existem para pegar justamente isso.</p>
+
+<h3>Teste diferencial: o refator contra o legado em escala</h3>
+<p>34 casos escolhidos à mão cobrem o que você pensou. O teste diferencial roda <em>as duas implementações</em> sobre milhares de entradas geradas com uma semente fixa e compara as saídas:</p>
+<pre><code>$ uv run python -m design_lab.cli diferencial
+2000 casos aleatórios (seed 2026), 0 divergências</code></pre>
+<p>Como saber que ele não está "verde por inércia"? Pelo <strong>controle negativo</strong>: estrague o refator de propósito e veja se o teste acusa. O laboratório altera <code>TETO_PERCENTUAL</code> de 20 para 25 na cópia de trabalho:</p>
+<pre><code>$ uv run python -m design_lab.cli diferencial
+aleatorio_3: legado={'ok': {... 'desconto': 78761, ... 'avisos': ['black friday', 'desconto limitado a 20%']}} refatorado={'ok': {... 'desconto': 86637, ... 'avisos': ['black friday']}}
+...
+2000 casos aleatórios (seed 2026), 74 divergências        (exit=1)
+$ uv run pytest -q
+FAILED tests/test_caracterizacao.py::test_refatorado_responde_como_o_legado[teto_20pct]
+FAILED tests/test_caracterizacao.py::test_diferencial_2000_casos_sem_divergencia
+2 failed, 163 passed</code></pre>
+<p>Tanto o caso golden da borda quanto o diferencial acusam; a mudança é revertida e a suíte volta a 165 verdes. Uma suíte que nunca viu falhar não prova nada. Teste diferencial tem limites: só cobre o que o gerador sabe produzir, e para ser útil precisa incluir erros e bordas (o lab verifica que 40 a 300 das 2.000 entradas resultam em erro). Variante mais forte: <em>property-based testing</em> (Hypothesis) com o legado como oráculo.</p>
+
+<h3>Refatorar e pedir revisão: separe os commits</h3>
+<p>Um PR que mistura refatoração e mudança de comportamento é impossível de revisar: o revisor não sabe se uma diferença é intencional. Regra de equipe: <strong>commits de refatoração não mudam testes de comportamento</strong>; commits de comportamento não movem código. O chapéu muda de um para o outro (Beck: "dois chapéus"), nunca os dois ao mesmo tempo. O mesmo vale para um agente: peça refatoração e comportamento em tarefas separadas, e rode a suíte de caracterização como critério de aceitação.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Corrigir bugs "de passagem".</strong> Você vê o <code>expresso</code> com isenção estranha, conserta no meio do refator, e o golden quebra; você "atualiza o golden" e perde o único registro do comportamento anterior. Faça o contrário: o golden é congelado; o conserto é um commit posterior que muda <em>conscientemente</em> o caso e cujo diff do golden é o registro da decisão. Outra: <strong>caracterização com dados de produção sem anonimização</strong> (copiar pedidos reais para o repositório). E: <strong>mutar o objeto de entrada</strong> no legado (o lab copia os itens com <code>dict(i)</code> antes de chamar) para que uma chamada não contamine a seguinte.</p>
+</div>
+
+<div class="box">
+<span class="lbl">Trade-offs</span>
+<p>Reescrever do zero parece mais limpo e quase sempre perde regras que só o legado conhece (o "segundo sistema" de Brooks). Refatorar incrementalmente custa mais passos e um período em que há dois caminhos de código, ao preço de nunca perder o sistema funcionando. Caracterizar tudo é caro; caracterize a área que vai mudar. Para uma mudança grande em fronteira de sistema (estrangular um módulo inteiro), use as técnicas do M02A (mudança incremental e reversibilidade); aqui a escala é a função e o módulo.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Refatorar preserva comportamento observável; sem teste que o verifique, é reescrever.<br>
+Caracterização: grave o que o código faz hoje (automaticamente), preserve até decidir, registre dúvidas.<br>
+Costura: ponto onde se troca o comportamento sem editar o código (o relógio do legado); depois, vira parâmetro.<br>
+Passos pequenos com suíte verde; diferencial em volume; controle negativo prova que a rede pega.<br>
+Refatoração e mudança de comportamento em commits (e chapéus) separados.</p>
+</div>
+
+<!-- ============================================ BLOCO 7 -->
+<h2 id="b07">Bloco 7 · TDD</h2>
+
+<h3>Por que isso importa</h3>
+<p>TDD (<em>test-driven development</em>) é frequentemente descrito como "escrever testes antes". Isso é a casca. O que ele faz é transformar o desenho do código em uma sequência de decisões pequenas e verificáveis, com feedback em segundos, e usar a dificuldade de escrever o teste como <strong>sinal</strong> de que o design está ruim. Quem pratica bem escreve menos código especulativo, descobre a interface <em>do ponto de vista de quem chama</em> antes de implementar, e mantém uma rede de segurança para refatorar sem medo (bloco 6). Quem pratica mal escreve testes acoplados à implementação, que quebram a cada refator e que a equipe aprende a ignorar. Com agentes de código, TDD ganha um papel adicional: o teste é a especificação executável que delimita o que o agente pode mudar.</p>
+
+<h3>O ciclo: vermelho, verde, refatorar</h3>
+<ol>
+<li><strong>Vermelho.</strong> Escreva um teste que expressa o próximo comportamento e <em>veja-o falhar pelo motivo certo</em>. Se não falhar, ou ele não testa nada, ou o comportamento já existia. Se falhar por <code>ImportError</code>, falta só a casca; crie-a e veja o teste falhar de verdade.</li>
+<li><strong>Verde.</strong> Escreva o código <em>mais simples</em> que faz passar, mesmo que feio ou óbvio demais (retornar a constante é permitido). A tentação de generalizar já é a de implementar o que ainda não foi pedido.</li>
+<li><strong>Refatorar.</strong> Com tudo verde, limpe duplicação e nomes, em passos pequenos, rodando os testes a cada um. Aqui moram as decisões de design.</li>
+</ol>
+<p>O ritmo é de minutos por volta, não de horas. Cada teste novo força uma decisão: o que a função devolve em caso de erro? Aceita espaço? A ordem importa? Essas decisões ficam <em>escritas como testes</em>.</p>
+
+<h3>Exemplo trabalhado: o kata <code>parse_duration</code></h3>
+<p>O lab traz um kata com oito voltas (<code>tests/test_kata_duration.py</code>, comentadas por volta). Converter <code>"1h30m"</code> em segundos. A sequência mostra como o design emerge:</p>
+<pre><code># volta 1 - o mais simples que pode falhar
+def test_segundos_puros() -&gt; None:
+    assert parse_duration("90s") == 90
+# verde mínimo: casar "(\d+)s" e devolver int(...)
+
+# volta 2 - generalizar a unidade (parametrizado: 5m, 2h, 1d)
+# volta 3 - combinar: "1h30m" == 5400 ; "1d2h3m4s"
+# volta 4 - decisão: espaços entre as partes e ordem livre ("30m1h" == 5400)
+# volta 5 - vazio é erro com mensagem própria ("duração vazia")
+# volta 6 - formato inválido: "abc", "10", "1x", "h", "-5m", "1.5h", "1h30" -&gt; ValueError("inválida")
+# volta 7 - unidade repetida é ambígua: "1h1h" -&gt; ValueError("unidade repetida: h")
+# volta 8 - depois do refator: propriedade com semente fixa (300 combinações d/h/m/s)</code></pre>
+<p>A implementação final tem pouco mais de 20 linhas e um regex de validação do <em>texto inteiro</em> separado do regex que extrai as partes. Note a volta 6: a lista de entradas inválidas inclui <code>"1h30"</code> (número sem unidade no final) e <code>"1.5h"</code>; um regex de extração sozinho (<code>findall</code>) aceitaria lixo em volta silenciosamente. O teste de entrada inválida é o que força a validação completa (<code>fullmatch</code>). A volta 8 é a refatoração: com o comportamento fixado, trocar a implementação por outra é seguro, e o teste de propriedade confere 300 valores aleatórios contra a fórmula direta.</p>
+<pre><code>$ uv run pytest -q tests/test_kata_duration.py
+.................                                                        [100%]
+17 passed in 0.02s</code></pre>
+<p>Dois sinais de bom TDD neste exemplo: cada teste tem <em>um motivo para falhar</em> e um nome que descreve comportamento (não método); e as decisões de borda (espaços, ordem livre, repetição) aparecem como testes, não como suposições no código.</p>
+
+<h3>Test doubles: um vocabulário preciso</h3>
+<p>"Mock" virou sinônimo de qualquer dublê, e a imprecisão custa: cada tipo serve a um propósito e tem um modo de falhar. A taxonomia de Meszaros (<em>xUnit Test Patterns</em>), com os exemplos de <code>tests/test_servico.py</code>:</p>
+<table>
+<thead><tr><th>Dublê</th><th>Faz</th><th>No lab</th></tr></thead>
+<tbody>
+<tr><td><strong>Dummy</strong></td><td>preenche um parâmetro que não é usado</td><td>serviço criado sem ouvintes (<code>test_dummy_ouvintes_nao_sao_necessarios</code>)</td></tr>
+<tr><td><strong>Stub</strong></td><td>devolve respostas prontas</td><td><code>RelogioFixo</code>: sempre a mesma data</td></tr>
+<tr><td><strong>Spy</strong></td><td>registra como foi chamado, para verificar depois</td><td><code>Espiao</code>: lista de registros recebidos</td></tr>
+<tr><td><strong>Fake</strong></td><td>implementação funcional, simplificada</td><td><code>RepositorioEmMemoria</code></td></tr>
+<tr><td><strong>Mock</strong></td><td>verifica <em>interações</em> esperadas</td><td><code>create_autospec(RepositorioPedidos)</code> com <code>assert_called_once()</code></td></tr>
+<tr><td>Injeção de falha</td><td>dublê que falha de propósito</td><td><code>RepositorioQueFalha</code> (<code>OSError("disco cheio")</code>)</td></tr>
+</tbody>
+</table>
+<p>A diferença entre <em>verificação de estado</em> e <em>verificação de interação</em> é o eixo. Com stub, spy e fake você verifica o <strong>resultado</strong> ("o repositório contém o pedido p1"). Com mock você verifica o <strong>diálogo</strong> ("salvar foi chamado uma vez com p1"). Testes de estado sobrevivem a refatorações que mantêm o resultado; testes de interação quebram quando você muda <em>como</em> chega lá. Por isso a regra: <strong>prefira estado; use interação só quando a chamada <em>é</em> o comportamento</strong> (enviar um e-mail, publicar um evento, cobrar o cartão: o efeito no mundo externo).</p>
+<p>Quando usar mock, use <em>com especificação</em>. Um <code>Mock()</code> solto aceita qualquer atributo, e o teste passa enquanto o código de produção chama um método que não existe. O lab prova a diferença:</p>
+<pre><code>repo = mock.create_autospec(RepositorioPedidos, instance=True)
+repo.salvar_tudo()            # AttributeError: o Protocol não tem salvar_tudo</code></pre>
+
+<h3>Quando <em>não</em> mockar</h3>
+<ul>
+<li><strong>Tipos que você é dono e são baratos</strong> (dataclasses, funções puras, o domínio): use os reais. Mockar <code>Pedido</code> testa o mock.</li>
+<li><strong>Coisas que você não é dono</strong> (SDK de nuvem, <code>requests</code>, cliente SQL): não mocke a biblioteca diretamente; envolva-a num adapter (bloco 5), teste o adapter contra o real (ou um servidor local fiel) e use fake do <em>seu</em> contrato nos demais testes. Mockar a biblioteca amarra o teste ao seu uso atual dela: ao trocar <code>requests</code> por <code>httpx</code> todos quebram, sem que o comportamento tenha mudado.</li>
+<li><strong>Banco de dados</strong> quando o que você quer provar é a consulta: use o banco de verdade (SQLite em memória no lab; PostgreSQL em contêiner no M03). Um mock não executa o SQL.</li>
+<li><strong>Quando o mock reproduz a implementação</strong> linha a linha: o teste é o código escrito duas vezes.</li>
+</ul>
+<p>A solução que o lab adota é o <strong>teste de contrato</strong>: uma mesma suíte parametrizada roda contra o fake e contra o adapter real. Se os dois passam em ida-e-volta, inexistente (<code>None</code>), id duplicado (<code>PedidoJaExiste</code>) e listagem ordenada, o fake é um substituto confiável, e os demais testes rápidos que o usam têm base. Sem o teste de contrato, o fake é uma hipótese; com ele, é um fato verificável.</p>
+
+<h3>Testabilidade como sinal de design</h3>
+<p>Se é difícil testar, o código está dizendo algo. Cada sintoma tem uma causa de design e um remédio já visto neste módulo:</p>
+<table>
+<thead><tr><th>Dificuldade no teste</th><th>Sinal de design</th><th>Remédio</th></tr></thead>
+<tbody>
+<tr><td>Preciso de muitos <code>mock.patch</code> para uma função</td><td>dependências escondidas, acoplamento alto</td><td>injetar por construtor/parâmetro (bloco 5)</td></tr>
+<tr><td>O teste depende da data, do relógio, de sorte</td><td>efeito misturado à regra</td><td>passar <code>hoje</code>; núcleo puro (bloco 3)</td></tr>
+<tr><td>O setup tem 40 linhas</td><td>classe com responsabilidades demais</td><td>separar, parameter object (blocos 1 e 4)</td></tr>
+<tr><td>Não consigo verificar o resultado, só o efeito</td><td>função faz e não devolve</td><td>devolver um valor; mover o efeito para a casca</td></tr>
+<tr><td>Para testar a regra preciso do banco</td><td>regra acoplada à persistência</td><td>porta + fake (blocos 4 e 5)</td></tr>
+<tr><td>Quebro 30 testes ao renomear um método interno</td><td>testes acoplados à implementação</td><td>testar comportamento pela interface pública</td></tr>
+</tbody>
+</table>
+<p>Os testes do núcleo de preços no lab dispensam qualquer dublê, porque as regras são funções puras. Só o serviço, a casca, usa fake de repositório e stub de relógio. A fórmula é a do bloco 3: o que decide é testado sem dublês, o que orquestra é testado com poucos.</p>
+
+<h3>Limites e variações do TDD</h3>
+<p>TDD de estilo "londrino" (mockist) projeta de fora para dentro e usa mocks para descobrir colaboradores; o estilo "clássico" (de Detroit) prefere objetos reais e verificação de estado, e usa dublês nas fronteiras. Nenhum é uma verdade; o curso adota o clássico com fakes verificados por contrato, por causa da resistência a refatoração. TDD também <em>não</em> é a ferramenta única: para algoritmos com muitas combinações, <em>property-based testing</em> (Hypothesis) explora o espaço melhor que exemplos (a volta 8 do kata usa a ideia com semente fixa); para UI e exploração de design vago, protótipo descartável antes dos testes é legítimo (o "spike"); e para I/O pesado, testes de integração ocupam o papel central (estratégia de testes por camada, no <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a>, bloco 8).</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Cobertura de linhas como prova.</strong> Um teste que executa todas as linhas sem afirmar nada dá 100% de cobertura e zero proteção; um teste com <code>assert True</code>, ou que repete a implementação, idem. A medida honesta é a <strong>mutação</strong> (alterar o código e ver se algum teste falha), que o lab faz à mão com o teto de 20% mudado para 25. Segunda armadilha: <strong>TDD escrevendo o teste depois "para fingir"</strong>: o teste que nunca foi visto vermelho pode estar verde por razão errada. Terceira: <strong>teste que passa em qualquer ordem só por acaso</strong>; um estado global compartilhado entre testes (o <code>_total_global</code> do bloco 3) cria dependência de ordem. Rode com ordem aleatória de vez em quando.</p>
+</div>
+
+<div class="box">
+<span class="lbl">Trade-offs</span>
+<p>TDD custa tempo no início de cada unidade e devolve em depuração e refator; o ponto de equilíbrio é rápido para lógica de domínio e mais lento para código de colagem. Fakes exigem manutenção: se o contrato muda, o fake e o teste de contrato mudam juntos (e é por isso que valem). Testes de interação rápidos são tentadores e baratos hoje, e caros em cada refator.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Vermelho pelo motivo certo, verde com o mínimo, refatorar com tudo verde; cada teste fixa uma decisão de borda.<br>
+Dummy, stub, spy, fake e mock são coisas diferentes: prefira verificar estado; mock só quando a chamada é o comportamento, e sempre com <code>autospec</code>.<br>
+Não mocke o que você não é dono: envolva em adapter e teste o adapter contra o real.<br>
+Teste de contrato dá ao fake o direito de substituir o real.<br>
+Dificuldade de testar é diagnóstico de design: dependência escondida, responsabilidade demais, efeito misturado à regra.</p>
+</div>
+
+<!-- ============================================ LAB -->
+<h2 id="lab-guiado">Laboratório guiado S01</h2>
+<p>Um legado de preços de pedido e frete (uma função de 98 linhas), testes de caracterização, a versão refatorada (modelos imutáveis, regras puras, tabela de frete, serviço fino com repositório e relógio injetados), um teste diferencial e um kata de TDD. Python 3.14, sem rede, sem serviços e sem conta. As saídas abaixo vêm de execução real em 11/10/2026; os caminhos temporários mudam a cada execução.</p>
+
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigidos: Python 3.14 e <code>uv</code>. Nunca edite a referência em <code>modulos/S01-design-de-codigo/lab/</code>.</p>
+<pre><code>cd modulos/S01-design-de-codigo/lab
+python3 create_working_copy.py
+cd /tmp/s01-xxxx          # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>PowerShell:</strong> <code>cd modulos\S01-design-de-codigo\lab; python create_working_copy.py</code>, depois <code>cd</code> para o caminho impresso e <code>uv sync --frozen</code>. Todos os comandos <code>uv run ...</code> abaixo funcionam igual; o filtro <code>tail</code> não existe no PowerShell (use <code>Select-Object -Last N</code>).</p>
+
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Linha de base (todos os blocos).</strong> Rode a suíte inteira antes de tocar em qualquer coisa.
+<pre><code>$ uv run pytest -q | tail -1
+165 passed in 0.34s</code></pre>
+<p><strong>Resultado esperado:</strong> 165 testes verdes: caracterização, regras puras, serviço, contrato do repositório, exemplos dos blocos e kata. <strong>Se falhar:</strong> <code>No module named design_lab</code> indica que você não está na cópia ou esqueceu o <code>uv sync --frozen</code>; Python abaixo de 3.14 recusa o <code>requires-python</code> e a sintaxe <code>type X = ...</code>.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Medir o legado (bloco 1 e 6).</strong> O medidor do lab reporta ciclomática e aninhamento.
+<pre><code>$ uv run python -m design_lab.cli complexidade src/design_lab/legado.py src/design_lab/pedidos/precificacao.py
+arquivo:funcao                                       linhas ciclo aninh
+src/design_lab/legado.py:calcular_pedido                 98    32     3
+src/design_lab/legado.py:_hoje                            2     1     0
+src/design_lab/pedidos/precificacao.py:calcular          18     2     1</code></pre>
+<p><strong>Resultado esperado:</strong> <code>calcular_pedido</code> com ciclomática 32 e aninhamento 3; o núcleo refatorado com 2 e 1. <strong>Pergunta para você:</strong> por que 32 é um limite inferior de testes e não o número exato? (Resposta: ramos dependentes reduzem as combinações viáveis, mas o mínimo para cobrir caminhos independentes é a ciclomática.)</p></div>
+
+<div class="step"><span class="n">3</span><strong>Caracterização (bloco 6).</strong> Confira o golden congelado contra o legado e leia casos de borda.
+<pre><code>$ uv run python -m design_lab.cli golden
+34/34 casos iguais ao golden
+$ python3 -c "import json;d=json.load(open('tests/golden/saidas.json'));print(d['teto_20pct']);print(d['perecivel_fora_do_alcance'])"
+{'ok': {'avisos': ['desconto limitado a 20%'], 'desconto': 10000, 'frete': 0, 'subtotal': 50000, 'total': 40000}}
+{'erro': 'perecível não é entregue em BA'}</code></pre>
+<p><strong>Resultado esperado:</strong> 34 de 34, sucessos e erros no mesmo arquivo. O comando <code>golden</code> sem <code>--write</code> só verifica; o <code>--write</code> regravaria o arquivo a partir do legado (não o use: o golden é o oráculo). Escolha mais dois casos em <code>golden.py</code> (<code>CASOS</code>) e explique, para cada, qual ramo do legado ele fixa.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Refatorado igual ao legado (bloco 6).</strong> A mesma suíte, agora contra o novo código, e o teste diferencial em volume.
+<pre><code>$ uv run pytest -q tests/test_caracterizacao.py | tail -1
+75 passed in 0.12s
+$ uv run python -m design_lab.cli diferencial
+2000 casos aleatórios (seed 2026), 0 divergências</code></pre>
+<p><strong>Resultado esperado:</strong> zero divergências com a semente padrão; troque <code>--seed 7 --n 5000</code> e confirme. <strong>Se o número de testes diferir:</strong> a quantidade depende de <code>CASOS</code> (34 casos entram em duas parametrizações mais os testes de resumo); o que importa é nenhuma falha.</p></div>
+
+<div class="step"><span class="n">5</span><strong>Controle negativo: estragar o refator (blocos 6 e 7).</strong> Prove que a rede pega. Edite <code>src/design_lab/pedidos/descontos.py</code> e mude <code>TETO_PERCENTUAL = 20</code> para <code>25</code>.
+<pre><code>$ uv run python -m design_lab.cli diferencial
+aleatorio_3: legado={'ok': {'subtotal': 393806, 'desconto': 78761, ...'avisos': ['black friday', 'desconto limitado a 20%']}} refatorado={'ok': {'subtotal': 393806, 'desconto': 86637, ...'avisos': ['black friday']}}
+...
+2000 casos aleatórios (seed 2026), 74 divergências
+$ uv run pytest -q | tail -4
+FAILED tests/test_caracterizacao.py::test_refatorado_responde_como_o_legado[teto_20pct]
+FAILED tests/test_caracterizacao.py::test_diferencial_2000_casos_sem_divergencia
+2 failed, 163 passed in 0.30s</code></pre>
+<p><strong>Resultado esperado:</strong> 74 divergências e dois testes vermelhos. Note: <code>cli golden</code> continua <code>34/34</code>, porque ele observa o <em>legado</em>, não o refator; quem guarda o refator é a suíte e o diferencial. <strong>Reverta</strong> a edição (<code>25</code> para <code>20</code>) e confirme os 165 verdes.</p></div>
+
+<div class="step"><span class="n">6</span><strong>A casca em ação (blocos 3 e 5).</strong> Monte o serviço com repositório em memória e relógio fixo. Crie <code>demo.py</code> na cópia:
+<pre><code>from datetime import date
+from design_lab.pedidos.compat import pedido_de_dict
+from design_lab.pedidos.repositorio import RepositorioEmMemoria
+from design_lab.pedidos.servico import ServicoPedidos
+
+class Fixo:
+    def hoje(self): return date(2026, 11, 28)
+
+visto = []
+s = ServicoPedidos(RepositorioEmMemoria(), Fixo(), [visto.append])
+p = pedido_de_dict([{"sku": "A", "preco": 5000, "qtd": 2, "peso_g": 1500}],
+                   {"tipo": "ouro", "pedidos": 4}, "FIXO20", "SP", True)
+print(s.fechar("p1", p).para_dict())
+print(len(visto), s.consultar("p1").calculado_em)</code></pre>
+<pre><code>$ uv run python demo.py
+{'subtotal': 10000, 'desconto': 3500, 'frete': 2500, 'total': 9000, 'avisos': ['black friday']}
+1 2026-11-28</code></pre>
+<p><strong>Resultado esperado:</strong> confira a conta à mão: subtotal 10.000; desconto percentual ouro 10% + Black Friday 5% = 1.500, mais o fixo de FIXO20 (2.000) = 3.500; frete: 3 kg em SP = 1.500 + 2 × 500 = 2.500, dobrado pelo expresso (5.000), sem isenção (base de 6.500 está abaixo de 30.000), metade para ouro = 2.500; total 9.000. Troque o relógio por outra data e o aviso desaparece: a data vem de fora.</p></div>
+
+<div class="step"><span class="n">7</span><strong>TDD: estender o kata (bloco 7).</strong> Requisito novo: aceitar semanas (<code>"1w"</code> = 604800 s). Escreva o teste <em>primeiro</em> e veja-o falhar.
+<pre><code>$ cat &gt;&gt; tests/test_kata_duration.py &lt;&lt;'EOF'
+
+
+def test_semanas() -&gt; None:
+    assert parse_duration("1w") == 604800
+EOF
+$ uv run pytest -q tests/test_kata_duration.py | tail -5
+E           ValueError: duração inválida: '1w'
+FAILED tests/test_kata_duration.py::test_semanas - ValueError: duração inváli...
+1 failed, 17 passed in 0.01s</code></pre>
+<p>Vermelho pelo motivo certo (a unidade não é aceita, não um erro de importação). Agora o mínimo para o verde, em <code>src/design_lab/kata/duration.py</code>: acrescente <code>"w": 604_800</code> ao dicionário e <code>w</code> às duas classes de caractere dos regex (<code>[wdhms]</code>).</p>
+<pre><code>$ uv run pytest -q tests/test_kata_duration.py | tail -2
+..................                                                       [100%]
+18 passed in 0.01s</code></pre>
+<p><strong>Resultado esperado:</strong> 17 verdes + 1 vermelho, e depois 18 verdes. Refatoração: o dicionário e os regex repetem a lista de unidades; derive os regex do dicionário (<code>"".join(_SEGUNDOS)</code>) e rode de novo. Nenhum teste deve mudar na refatoração.</p></div>
+
+<div class="step"><span class="n">8</span><strong>Gates de qualidade (todos os blocos).</strong>
+<pre><code>$ uv run pytest -q &amp;&amp; uv run ruff check . &amp;&amp; uv run ruff format --check . &amp;&amp; uv run mypy --strict src tests
+165 passed in 0.31s
+All checks passed!
+30 files already formatted
+Success: no issues found in 28 source files</code></pre>
+<p><strong>Resultado esperado:</strong> quatro verdes na referência (com a sua extensão do kata, 166 testes). <code>mypy --strict</code> cobre também os testes; remova o <code>demo.py</code> antes (ele não tem anotações). O <code>legado.py</code> tem exceções de lint declaradas em <code>pyproject.toml</code> (<code>per-file-ignores</code>): o legado é mantido do jeito que é de propósito.</p></div>
+
+<h4>Desafio opcional</h4>
+<p>O legado e o refator concordam em tudo, inclusive no que parece bug (expresso não ganha isenção por valor). Escreva em prosa três perguntas para o dono do produto, proponha a mudança de comportamento em <em>um</em> commit separado, com o golden alterado apenas nos casos afetados, e mostre que o diff do golden é exatamente o conjunto esperado.</p>
+
+<h2>Tabela de Diagnóstico</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Contagem dobrada ao herdar de uma coleção</td><td>o pai chama o método sobrescrito (<code>adicionar_varios</code> para <code>adicionar</code>); acoplamento ao detalhe interno</td><td>composição com delegação; ou documentar e travar o contrato do pai</td></tr>
+<tr><td>Mixin "não roda" em certas combinações</td><td>um elo da MRO esqueceu o <code>super()</code></td><td>imprimir <code>Classe.__mro__</code>; todo método cooperativo chama <code>super()</code></td></tr>
+<tr><td><code>isinstance(x, MeuProtocol)</code> dá <code>True</code> para classe errada</td><td><code>runtime_checkable</code> só verifica nomes</td><td>confiar no mypy; usar ABC se precisar validar em runtime</td></tr>
+<tr><td>Memória cresce com <code>@cache</code> em método</td><td><code>self</code> na chave mantém a instância viva</td><td>função de módulo com valores, ou <code>cached_property</code></td></tr>
+<tr><td>Valor "congelado" que deveria expirar</td><td>memoização de função impura</td><td>cache com TTL e invalidação explícita</td></tr>
+<tr><td><code>frozen=True</code> e o objeto muda mesmo assim</td><td>imutabilidade rasa (campo é uma <code>list</code>)</td><td><code>tuple</code>/<code>frozenset</code>/<code>MappingProxyType</code></td></tr>
+<tr><td>Teste passa com <code>Mock</code> e produção quebra</td><td>mock sem especificação aceita qualquer método</td><td><code>create_autospec</code>; ou fake com teste de contrato</td></tr>
+<tr><td>Golden quebra depois de "melhorar" a regra</td><td>mudança de comportamento misturada ao refator</td><td>reverter; fazer a mudança em commit separado, alterando o golden de propósito</td></tr>
+<tr><td>Diferencial com 0 divergências, mas bug em produção</td><td>gerador não cobre o caso (ou controle negativo nunca foi feito)</td><td>ampliar o gerador; mutar o refator para provar a sensibilidade</td></tr>
+<tr><td>Teste de data quebra em novembro</td><td>regra lê o relógio</td><td>parâmetro <code>hoje</code> ou relógio injetado</td></tr>
+</tbody>
+</table>
+
+<!-- ============================================ CHECKPOINT -->
+<h2 id="checkpoint">Checkpoint S01</h2>
+<div class="box ok">
+<span class="lbl">Avaliação sem consulta — diga "Checkpoint S01" no chat</span>
+<p>Uma pergunta por vez, sem consulta. Cada pergunta é um cenário; a rubrica diz o que basta e o que reprova.</p>
+<ul class="check">
+<li><strong>P1 · Função de 90 linhas.</strong> Revisando um PR, você encontra uma função com ciclomática 28. O autor propõe dividir em 9 funções "passo1..passo9". Aceite ou recuse e justifique com duas medidas. <em>Basta:</em> distinguir ciclomática de aninhamento/abstração; exigir nomes de domínio e entradas/saídas claras; guard clauses e tabelas antes de extrair por extrair. <em>Reprova:</em> aceitar porque "o número caiu".</li>
+<li><strong>P2 · Herança ou composição.</strong> O time quer <code>class CacheRedis(ClienteHttp)</code> para reaproveitar <code>get()</code>. Decida e explique o que quebra quando <code>ClienteHttp</code> mudar. <em>Basta:</em> classe base frágil, dependência de chamadas internas, composição com Protocol; exceção legítima (pai projetado para extensão). <em>Reprova:</em> "herança é sempre ruim".</li>
+<li><strong>P3 · Ordem de <code>super()</code>.</strong> Dadas <code>class A(Base)</code>, <code>class B(Base)</code>, <code>class C(A, B)</code> com <code>super()</code> cooperativo, escreva a MRO e diga o que acontece se <code>B</code> esquecer <code>super()</code>. <em>Basta:</em> <code>C, A, B, Base, object</code>; <code>super()</code> segue a MRO da instância; o que vem depois de <code>B</code> não roda. <em>Reprova:</em> "super chama o pai".</li>
+<li><strong>P4 · Protocol ou ABC.</strong> Um serviço depende de um "repositório". Quem define a interface, e qual mecanismo você usa para erro cedo e para testes? <em>Basta:</em> a interface pertence ao consumidor (DIP); Protocol + mypy; ABC quando há gabarito e hierarquia própria; <code>runtime_checkable</code> só nomes. <em>Reprova:</em> confundir DIP com injeção de dependência.</li>
+<li><strong>P5 · Núcleo e casca.</strong> Dada uma função que lê pedido, aplica descontos pela data, grava e envia e-mail, reorganize em núcleo funcional e casca, listando o que cada um recebe e devolve e como testa. <em>Basta:</em> data como parâmetro; núcleo devolve resultado puro; casca com repositório e notificador injetados; testes do núcleo sem dublês. <em>Reprova:</em> "mockar <code>date.today</code> e <code>smtplib</code>" sem pensar em design.</li>
+<li><strong>P6 · SOLID sob questionamento.</strong> Um colega propõe interface + implementação + factory + container para uma classe com uma só implementação. Argumente contra e diga o que mudaria sua opinião. <em>Basta:</em> pergunta pela mudança concreta que a abstração barateia; abstrair na segunda/terceira variante; fronteiras que se trocam (rede, relógio, banco). <em>Reprova:</em> recusar toda abstração, ou aceitar "por precaução".</li>
+<li><strong>P7 · Refatorar o legado.</strong> Função crítica de cobrança, sem testes, dependente do relógio. Descreva a sequência de passos antes de mudar uma linha, e como prova que não houve regressão. <em>Basta:</em> costura para o relógio, caracterização automática (golden), passos pequenos com suíte verde, diferencial, controle negativo, commits separados. <em>Reprova:</em> reescrever e comparar "por amostragem manual".</li>
+<li><strong>P8 · Mock que mente.</strong> O teste do serviço usa <code>Mock()</code> do repositório e passa; em produção, <code>repo.salvar_tudo()</code> não existe. Explique e dê duas correções, uma mínima e uma de design. <em>Basta:</em> <code>autospec</code>; fake com teste de contrato; estado em vez de interação. <em>Reprova:</em> "falta cobertura".</li>
+</ul>
+<h4>Entregáveis verificados (mostrar rodando)</h4>
+<ol>
+<li>Gates do lab verdes: <code>pytest</code> (165 testes), <code>ruff check</code>, <code>ruff format --check</code>, <code>mypy --strict</code>.</li>
+<li>Golden 34/34 e diferencial com 0 divergências (semente 2026).</li>
+<li>Mutação do <code>TETO_PERCENTUAL</code> rejeitada pela suíte e pelo diferencial (74 divergências) e revertida.</li>
+<li>Extensão do kata com <code>"w"</code>: teste visto vermelho antes do verde.</li>
+</ol>
+</div>
+
+<h2>Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://docs.python.org/3/howto/mro.html">Python 2.3 Method Resolution Order (Michele Simionato)</a> e <a href="https://docs.python.org/3/reference/datamodel.html">Python Data Model</a></td><td>C3, MRO, <code>super()</code>, name mangling (bloco 2)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/abc.html">abc</a>, <a href="https://docs.python.org/3/library/typing.html">typing (Protocol)</a> e <a href="https://peps.python.org/pep-0544/">PEP 544</a></td><td>ABC, Protocol, <code>runtime_checkable</code> (bloco 2)</td><td>oficial / PEP</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/functools.html">functools</a>, <a href="https://docs.python.org/3/library/itertools.html">itertools</a>, <a href="https://docs.python.org/3/library/dataclasses.html">dataclasses</a>, <a href="https://docs.python.org/3/library/types.html">types.MappingProxyType</a></td><td>blocos 3 e 5</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/unittest.mock.html">unittest.mock (create_autospec)</a> e <a href="https://docs.pytest.org/en/stable/">pytest</a></td><td>test doubles, parametrização (bloco 7)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.astral.sh/ruff/rules/">Ruff rules</a> e <a href="https://mypy.readthedocs.io/en/stable/">mypy</a></td><td>B019, C901, <code>--strict</code> (blocos 1, 3 e lab)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td>T. J. McCabe, "A Complexity Measure", <em>IEEE Trans. Software Eng.</em> SE-2(4), 1976</td><td>complexidade ciclomática (bloco 1)</td><td>fonte primária</td><td>—</td></tr>
+<tr><td><a href="https://www.sonarsource.com/resources/cognitive-complexity/">SonarSource, Cognitive Complexity (G. Ann Campbell)</a></td><td>complexidade cognitiva (bloco 1)</td><td>especificação do fornecedor, heurística</td><td>11/10/2026</td></tr>
+<tr><td>B. Liskov e J. Wing, "A Behavioral Notion of Subtyping", <em>ACM TOPLAS</em> 16(6), 1994</td><td>LSP (bloco 4)</td><td>fonte primária</td><td>—</td></tr>
+<tr><td>R. C. Martin, <em>Agile Software Development: Principles, Patterns, and Practices</em> (2002) e <em>Clean Architecture</em> (2017)</td><td>SOLID, SRP por ator (bloco 4)</td><td>livro de praticante</td><td>—</td></tr>
+<tr><td>E. Gamma, R. Helm, R. Johnson, J. Vlissides, <em>Design Patterns</em> (1994)</td><td>strategy, factory, adapter, decorator, observer (bloco 5)</td><td>livro de referência</td><td>—</td></tr>
+<tr><td>M. Fowler, <em>Refactoring</em>, 2ª ed. (2018)</td><td>smells, movimentos, "dois chapéus" (bloco 6)</td><td>livro de praticante</td><td>—</td></tr>
+<tr><td>M. Feathers, <em>Working Effectively with Legacy Code</em> (2004)</td><td>caracterização, costuras (bloco 6)</td><td>livro de praticante</td><td>—</td></tr>
+<tr><td>K. Beck, <em>Test-Driven Development: By Example</em> (2002); G. Meszaros, <em>xUnit Test Patterns</em> (2007)</td><td>ciclo, taxonomia de dublês (bloco 7)</td><td>livro de praticante</td><td>—</td></tr>
+<tr><td><a href="https://martinfowler.com/articles/mocksArentStubs.html">M. Fowler, "Mocks Aren't Stubs"</a></td><td>estado vs interação, escolas clássica e londrina (bloco 7)</td><td>artigo de praticante</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.astral.sh/uv/">uv</a></td><td>lab</td><td>oficial</td><td>11/10/2026</td></tr>
+</tbody>
+</table>
+<p>As saídas vêm de execução real em 11/10/2026 (Python 3.14.7, pytest 9.1.1, ruff 0.17.0). Regras de lint e mensagens de erro mudam entre versões; revalide em até 90 dias. Livros e artigos de praticante são complemento rotulado: as definições normativas estão nos papers e na documentação oficial.</p>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>Legível é custo de leitura baixo: um nível de abstração, guard clauses, nomes de domínio; meça ciclomática e aninhamento.<br>
+Herança é o acoplamento mais forte; composição e <code>Protocol</code> são o padrão, <code>super()</code> segue a MRO da instância.<br>
+Núcleo funcional puro decide, casca imperativa executa; dependências escondidas viram argumentos.<br>
+SOLID são sintomas e remédios, com custo: abstraia fronteiras que você troca, não tudo.<br>
+Padrões em Python são funções, dicionários e decoradores; o que fica é a intenção e o teste de contrato.<br>
+Refatore sob caracterização automática, em passos pequenos, com diferencial e controle negativo.<br>
+TDD fixa decisões de borda; prefira estado a interação, e mock sempre com <code>autospec</code>.<br>
+Dificuldade de testar é diagnóstico de design. Próximo: <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a>, onde essas peças viram fronteiras de sistema.</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="S01"></script>
+</body>
+</html>

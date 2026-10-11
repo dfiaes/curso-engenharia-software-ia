@@ -1,0 +1,97 @@
+# Copie para .github/workflows/deploy.yml. Variáveis do repositório (não são segredos):
+# AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP, AZURE_PREFIX.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run pytest -q
+      - run: >-
+          uv run deploycheck --strict --dockerfile Dockerfile
+          --bicep infra/main.bicep --workflow ci/deploy.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      PREFIX: ${{ vars.AZURE_PREFIX }}
+      SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login (OIDC, sem segredo)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Base de infraestrutura (sem app) e nome do registry
+        run: |
+          az deployment group create -g "$RG" -f infra/main.bicep \
+            -p prefix="$PREFIX" image='' --query properties.outputs -o json > base.json
+          echo "ACR=$(jq -r .acrName.value base.json)" >> "$GITHUB_ENV"
+          echo "LOGIN_SERVER=$(jq -r .acrLoginServer.value base.json)" >> "$GITHUB_ENV"
+
+      - name: Build e push com tag imutável
+        run: |
+          az acr login --name "$ACR"
+          docker build -t "$LOGIN_SERVER/llm-service:$SHA" .
+          docker push "$LOGIN_SERVER/llm-service:$SHA"
+
+      - name: Revisão estável atual (vazia no primeiro deploy)
+        run: |
+          STABLE=$(az containerapp revision list -g "$RG" -n "$PREFIX-app" \
+            --query "[?properties.trafficWeight==\`100\`].name | [0]" -o tsv 2>/dev/null || true)
+          echo "STABLE=$STABLE" >> "$GITHUB_ENV"
+
+      - name: what-if (mostra o diff antes de aplicar)
+        run: |
+          az deployment group what-if -g "$RG" -f infra/main.bicep \
+            -p prefix="$PREFIX" image="$LOGIN_SERVER/llm-service:$SHA" \
+            revisionSuffix="r${SHA::7}" stableRevision="$STABLE" canaryPercent=10
+
+      - name: Deploy com 10% de canário
+        run: |
+          az deployment group create -g "$RG" -f infra/main.bicep \
+            -p prefix="$PREFIX" image="$LOGIN_SERVER/llm-service:$SHA" \
+            revisionSuffix="r${SHA::7}" stableRevision="$STABLE" canaryPercent=10
+
+      # Sufixo de revisão precisa começar com letra: "r" + SHA curto (que pode começar com dígito).
+      - name: Smoke test da revisão nova
+        run: |
+          FQDN=$(az containerapp revision show -g "$RG" -n "$PREFIX-app" \
+            --revision "$PREFIX-app--r${SHA::7}" --query properties.fqdn -o tsv)
+          curl --fail --retry 10 --retry-delay 6 --retry-all-errors "https://$FQDN/readyz"
+
+      - name: Promove para 100%
+        run: |
+          az containerapp ingress traffic set -g "$RG" -n "$PREFIX-app" \
+            --revision-weight "$PREFIX-app--r${SHA::7}=100"
+
+      - name: Rollback automático
+        if: failure() && env.STABLE != ''
+        run: |
+          az containerapp ingress traffic set -g "$RG" -n "$PREFIX-app" \
+            --revision-weight "$STABLE=100"

@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F02 · Python do Zero: Tipos, Coleções, Funções, Erros, Arquivos, Módulos e Testes</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>F02 · Python do zero: tipos, coleções, funções, erros, arquivos, módulos e testes</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas de terminal e os gates do laboratório vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14.7, uv 0.12.13, pytest 9.1.1). <a href="../../STATUS.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
+<p class="meta"><span class="badge">FASE 0</span> &nbsp; 8 blocos · carga estimada ≈ 18 h · pré-requisitos: <a href="../F01-terminal-git/F01.html">F01</a> (terminal, exit codes, Git) · próximo: <a href="../F03-estruturas-dados-algoritmos/F03.html">F03</a>, <a href="../F04-web-redes-http/F04.html">F04</a>, <a href="../F05-sql-bancos-relacionais/F05.html">F05</a> e <a href="../M02-python-profissional/M02.html">M02</a> · <strong>a linguagem que o resto do curso usa</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Todo o curso escreve, lê e depura Python, e um agente de código também: ele propõe uma alteração e você precisa saber, olhando o diff, se ela está certa. Quem aprendeu Python por receitas acerta o caminho feliz e perde horas em defeitos de modelo: o default mutável que "lembra" a chamada anterior, o <code>float</code> que perde um centavo, o arquivo lido na codificação errada, o gerador que se esgota em silêncio, o import circular que só quebra em produção.</p>
+<p>Ao terminar você consegue: (1) explicar o que o CPython faz entre <code>python arquivo.py</code> e o resultado, e ler bytecode com <code>dis</code>; (2) raciocinar com o modelo de objetos (nomes são rótulos, identidade versus igualdade, mutabilidade, passagem por atribuição) e escolher entre <code>int</code>, <code>float</code>, <code>Decimal</code>, <code>str</code> e <code>bytes</code> com critério; (3) usar <code>list</code>, <code>dict</code> e <code>set</code> sabendo o custo de cada operação e por que; (4) escrever iteradores e geradores e explicar a avaliação preguiçosa; (5) desenhar uma hierarquia de exceções, usar <code>raise ... from</code> e escrever um context manager; (6) ler e gravar arquivos com codificação explícita, de forma atômica; (7) navegar o sistema de import e desfazer um ciclo; (8) modelar com <code>dataclass</code> e provar o comportamento com <code>pytest</code>.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não é um catálogo de sintaxe nem um curso de "programação para iniciantes". Cada construção entra como consequência de um mecanismo. Tipagem estática avançada, Pydantic, <code>asyncio</code>, threads, empacotamento e observabilidade ficam no <a href="../M02-python-profissional/M02.html">M02</a>; estruturas de dados clássicas implementadas à mão, análise assintótica formal e algoritmos ficam no <a href="../F03-estruturas-dados-algoritmos/F03.html">F03</a>; orientação a objetos, padrões e refatoração, no <a href="../S01-design-de-codigo/S01.html">S01</a>. Aqui você constrói a base que esses módulos assumem.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça, sem testar. Se acertar todas com segurança (mecanismo, não só o fato), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint">Checkpoint F02</a> e siga adiante. Qualquer resposta hesitante marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> O mesmo arquivo imprime <code>__main__</code> com <code>python m.py</code> e <code>m</code> com <code>import m</code>. Por quê, e para que serve o idioma <code>if __name__ == "__main__":</code>?
+<details><summary>Resposta</summary><p>O interpretador executa o módulo de entrada com o nome <code>__main__</code>; qualquer outro módulo recebe o nome do import. O teste separa "rodar como programa" de "ser importado": sem ele, importar o arquivo executaria o programa inteiro como efeito colateral.</p></details></li>
+<li><strong>(Bloco 2)</strong> <code>a = [1, 2]; b = a; b.append(3)</code>. O que vale <code>a</code>, e o que <code>b = a</code> copiou?
+<details><summary>Resposta</summary><p><code>[1, 2, 3]</code>. A atribuição não copia objeto algum: cria um segundo nome para o mesmo objeto. Variável em Python é um rótulo preso a um objeto, não uma caixa com valor.</p></details></li>
+<li><strong>(Bloco 2)</strong> Por que <code>0.1 + 0.2 == 0.3</code> é <code>False</code>, e o que usar para dinheiro?
+<details><summary>Resposta</summary><p>O <code>float</code> é binário (IEEE 754 de 64 bits) e 0.1 não tem representação finita em base 2; guarda-se o racional mais próximo. Para quantias, <code>Decimal</code> construído a partir de <code>str</code> (ou inteiro de centavos). <code>Decimal(0.1)</code> herda o erro do float.</p></details></li>
+<li><strong>(Bloco 3)</strong> <code>def f(x, acc=[]): acc.append(x); return acc</code>. O que <code>f(1)</code> e <code>f(2)</code> devolvem, e por quê?
+<details><summary>Resposta</summary><p><code>[1]</code> e depois <code>[1, 2]</code>. O default é avaliado uma vez, quando o <code>def</code> executa, e fica guardado em <code>f.__defaults__</code>. Todas as chamadas sem o argumento compartilham aquela lista. O idioma correto é <code>acc=None</code> e criar a lista dentro.</p></details></li>
+<li><strong>(Bloco 4)</strong> Qual o custo de <code>x in lista</code> versus <code>x in conjunto</code>, e de <code>lista.pop(0)</code>?
+<details><summary>Resposta</summary><p>Busca linear O(n) na lista, por hash O(1) esperado no conjunto. <code>pop(0)</code> é O(n): desloca todos os elementos; para fila use <code>collections.deque</code>.</p></details></li>
+<li><strong>(Bloco 5)</strong> Você percorre um gerador duas vezes com <code>list(g)</code>. O que a segunda devolve?
+<details><summary>Resposta</summary><p><code>[]</code>. Um gerador é um iterador de passagem única; esgotado, só levanta <code>StopIteration</code>. Quem precisa percorrer de novo cria outro gerador ou materializa uma lista.</p></details></li>
+<li><strong>(Bloco 6)</strong> Em que ordem rodam <code>try</code>, <code>except</code>, <code>else</code> e <code>finally</code>, e o que <code>raise X from e</code> acrescenta?
+<details><summary>Resposta</summary><p><code>try</code>; se levantou e casa, o <code>except</code>; se não levantou, o <code>else</code>; <code>finally</code> sempre, por último. <code>from e</code> grava <code>__cause__</code> e mantém a causa original no traceback; sem ele o Python registra só o <code>__context__</code> implícito.</p></details></li>
+<li><strong>(Bloco 7)</strong> <code>open("a.txt")</code> sem <code>encoding=</code> funciona na sua máquina e falha na do colega. Por quê?
+<details><summary>Resposta</summary><p>Sem <code>encoding</code>, o Python usa o padrão da localidade/plataforma, que muda de ambiente para ambiente (no Python 3.15 o modo UTF-8 se tornará o padrão, mas hoje não se deve depender disso). Texto exige <code>encoding="utf-8"</code> explícito.</p></details></li>
+<li><strong>(Bloco 8)</strong> O que <code>@dataclass</code> gera por você, e por que <code>tags: list = []</code> é recusado?
+<details><summary>Resposta</summary><p><code>__init__</code>, <code>__repr__</code> e <code>__eq__</code> a partir dos campos anotados (mais <code>__hash__</code> se <code>frozen</code>). O default mutável compartilhado seria a armadilha do bloco 3 por instância, então a classe levanta <code>ValueError</code> e exige <code>field(default_factory=list)</code>.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — Como o Python executa: CPython, bytecode, REPL, script versus módulo, <code>uv</code>/venv e <code>python -m</code></a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Valores, tipos e o modelo de objetos: nomes, identidade, mutabilidade, números, <code>str</code> versus <code>bytes</code></a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Controle de fluxo e funções: <code>match</code>, escopo LEGB, parâmetros, default mutável, closures</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Coleções por dentro: <code>list</code>, <code>dict</code>, <code>set</code>, complexidade, comprehensions, cópia</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Iteração: protocolo, geradores, <code>yield</code>, <code>itertools</code></a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Erros e exceções: hierarquia, <code>else</code>/<code>finally</code>, <code>raise from</code>, context managers</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — Arquivos, texto e módulos: <code>pathlib</code>, encoding, CSV/JSON, sistema de import, ciclos</a></li>
+<li><a href="#b08"><strong>Bloco 8</strong> — Classes básicas e testes: <code>dataclass</code>, dunders, <code>pytest</code></a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado F02</strong> — o pacote <code>expenses</code>: CSV, validação, agregação, JSON atômico e CLI</a></li>
+</ol>
+</div>
+
+<!-- ============================================ BLOCO 1 -->
+<h2 id="b01">Bloco 1 · Como o Python executa</h2>
+
+<h3>Por que isso importa</h3>
+<p>Três falhas que parecem de "ambiente" e são de modelo. Um script chamado <code>random.py</code> quebra qualquer programa vizinho que importe <code>random</code>. O teste passa com <code>python -m pytest</code> e falha com <code>pytest</code>. O <code>pip install</code> "funcionou", mas o <code>import</code> não acha o pacote porque o <code>pip</code> pertence a outro Python. Em todas, ninguém sabia <em>qual interpretador</em> estava rodando, <em>de onde</em> ele carregava código e <em>com que nome</em> o módulo de entrada nascia.</p>
+<p>O modelo cabe em cinco peças: <strong>interpretador</strong> (CPython), <strong>bytecode</strong>, <strong>módulo de entrada</strong> (<code>__main__</code>), <strong>caminho de busca</strong> (<code>sys.path</code>) e <strong>ambiente virtual</strong>.</p>
+
+<h3>CPython: compilador de bytecode mais máquina virtual</h3>
+<p>"Python" é a linguagem; <strong>CPython</strong> é a implementação de referência, escrita em C, e a que o curso usa (existem PyPy, MicroPython e outras com desempenho e compatibilidade diferentes). Contra a intuição de "linguagem interpretada", o CPython <em>compila</em> antes de executar. O caminho do texto ao resultado:</p>
+<ol>
+<li><strong>Tokenização e parsing</strong>: o texto vira uma árvore sintática abstrata (AST). Erros de sintaxe aparecem aqui, antes de qualquer linha rodar.</li>
+<li><strong>Compilação</strong>: a AST vira <strong>bytecode</strong>, uma sequência de instruções para uma máquina de pilha, guardada em um <em>code object</em> por função.</li>
+<li><strong>Execução</strong>: um laço (o <em>eval loop</em>) lê instruções e despacha cada uma. Desde o Python 3.11 o interpretador é <em>adaptativo</em>: instruções quentes são especializadas por tipo observado (por exemplo, soma de dois <code>int</code>), o que explica boa parte do ganho de velocidade das versões recentes.</li>
+</ol>
+<p>Para módulos <em>importados</em>, o bytecode é guardado em <code>__pycache__/nome.cpython-314.pyc</code> e reaproveitado enquanto o código-fonte não mudar (a validade é checada por data e tamanho da fonte, por padrão). O script de entrada <strong>não</strong> é cacheado: é compilado a cada execução. O <code>.pyc</code> é um cache descartável, nunca um artefato de distribuição confiável: ele depende da versão do interpretador, e o nome carrega essa versão (<code>cpython-314</code>).</p>
+<figure>
+<svg viewBox="0 0 760 130" role="img" width="760" height="130" font-family="inherit" font-size="13">
+<title>Pipeline do CPython: fonte, AST, bytecode, máquina virtual, com cache .pyc para módulos importados</title>
+<defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<rect x="8" y="30" width="110" height="46" rx="8"/><rect x="170" y="30" width="110" height="46" rx="8"/><rect x="332" y="30" width="130" height="46" rx="8"/><rect x="514" y="30" width="150" height="46" rx="8"/>
+<rect x="332" y="96" width="130" height="28" rx="6" stroke-dasharray="5 4"/>
+<path d="M118 53 H168" marker-end="url(#a1)"/><path d="M280 53 H330" marker-end="url(#a1)"/><path d="M462 53 H512" marker-end="url(#a1)"/>
+<path d="M397 76 V94" marker-end="url(#a1)" stroke-dasharray="4 3"/>
+</g>
+<g fill="currentColor" text-anchor="middle">
+<text x="63" y="57">texto .py</text><text x="225" y="57">AST</text><text x="397" y="57">bytecode (code object)</text><text x="589" y="57">eval loop (VM)</text>
+<text x="397" y="115" font-size="12">__pycache__/*.pyc</text>
+<text x="143" y="22" font-size="11">parse</text><text x="305" y="22" font-size="11">compile</text><text x="487" y="22" font-size="11">executa</text>
+</g>
+</svg>
+<figcaption>Só módulos importados passam pelo cache <code>.pyc</code>; o script de entrada é recompilado a cada execução.</figcaption>
+</figure>
+
+<h3>Lendo bytecode com <code>dis</code></h3>
+<p>O módulo <code>dis</code> mostra o que o compilador produziu. Não é algo que você usa todo dia; é a ferramenta que encerra discussões sobre "o que o Python faz nessa linha".</p>
+<pre><code>$ cat a.py
+import dis
+def soma(a, b):
+    return a + b * 2
+dis.dis(soma)
+print(soma.__code__.co_consts, soma.__code__.co_varnames)
+$ python a.py
+  2           RESUME                   0
+
+  3           LOAD_FAST_BORROW_LOAD_FAST_BORROW 1 (a, b)
+              LOAD_SMALL_INT           2
+              BINARY_OP                5 (*)
+              BINARY_OP                0 (+)
+              RETURN_VALUE
+(2,) ('a', 'b')</code></pre>
+<p>Leia assim: empilha <code>a</code> e <code>b</code> (variáveis locais, acesso por índice, sem busca por nome), empilha o inteiro 2, multiplica, soma, devolve. Note a ordem: a multiplicação vem antes da soma porque a precedência já foi resolvida na AST. Os nomes exatos das instruções (<code>LOAD_FAST_BORROW_LOAD_FAST_BORROW</code>, <code>LOAD_SMALL_INT</code>) <strong>mudam entre versões menores</strong>: o bytecode é detalhe de implementação, sem garantia de compatibilidade. Use <code>dis</code> para entender, nunca para depender.</p>
+
+<h3>REPL, script e módulo: três jeitos de começar</h3>
+<p>O <strong>REPL</strong> (<code>python</code> sem argumentos) lê uma expressão, avalia e imprime; excelente para explorar uma API (<code>help(obj)</code>, <code>dir(obj)</code>, <code>_</code> guarda o último resultado). Mas estado acumulado no REPL é a fonte clássica de "funciona aqui": um nome definido há duas horas continua vivo. Para qualquer coisa que importe, escreva o arquivo.</p>
+<p>Há duas formas de executar um arquivo, e a diferença é <em>como o módulo de entrada é localizado</em>:</p>
+<pre><code>$ cat m.py
+print("__name__ =", __name__)
+$ python m.py          # caminho de arquivo
+__name__ = __main__
+$ python -m m          # nome de módulo, buscado em sys.path
+__name__ = __main__
+$ python -c "import m"
+__name__ = m</code></pre>
+<p>Nos dois primeiros, o módulo vira <code>__main__</code>; no import, recebe seu nome. Daí o idioma:</p>
+<pre><code>def main() -&gt; int:
+    ...
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())</code></pre>
+<p>Ele separa o que é <em>biblioteca</em> (funções importáveis sem efeito colateral) do que é <em>programa</em>. O <code>main()</code> devolvendo o exit code e o <code>SystemExit</code> ligam este módulo ao F01: o código de saída do processo é o que o shell, o CI e o agente enxergam. É exatamente a estrutura de <code>expenses/__main__.py</code> no laboratório.</p>
+<p>A diferença entre <code>python arquivo.py</code> e <code>python -m pacote.modulo</code> é o <code>sys.path[0]</code>: no primeiro, a <strong>pasta do script</strong> entra no início do caminho de busca; no segundo, o <strong>diretório corrente</strong>. Por isso <code>python -m pytest</code> enxerga o seu código quando o diretório corrente é a raiz do projeto e o <code>pytest</code> solto às vezes não. E por isso <code>python -m pip</code> garante que o <code>pip</code> pertence <em>àquele</em> interpretador.</p>
+<pre><code>$ cat random.py
+print("meu random.py")
+$ cat uso.py
+import random
+print(random.randint(1, 6))
+$ python uso.py
+meu random.py
+Traceback (most recent call last):
+  File "/tmp/f02x/sh/uso.py", line 2, in &lt;module&gt;
+    print(random.randint(1, 6))
+          ^^^^^^^^^^^^^^
+AttributeError: module 'random' has no attribute 'randint' (consider renaming '/tmp/f02x/sh/random.py' since it has the same name as the standard library module named 'random' and prevents importing that standard library module)</code></pre>
+<p>A pasta do script vem <em>antes</em> da biblioteca padrão em <code>sys.path</code>, então o seu <code>random.py</code> ganhou. Note a primeira linha da saída: o <code>print</code> do <em>seu</em> <code>random.py</code> rodou durante o <code>import</code>. As mensagens novas do Python 3.13+ já apontam a causa. Defesas: nunca nomeie arquivo como módulo da stdlib; use <code>python -P</code> (ou <code>PYTHONSAFEPATH=1</code>) para não pôr a pasta do script no caminho; use <code>python -I</code> (modo isolado) para scripts de sistema.</p>
+
+<h3>Ambientes virtuais e <code>uv</code></h3>
+<p>Cada instalação de Python tem um <code>site-packages</code> onde o <code>pip</code> grava dependências. Se todo projeto instalasse no mesmo lugar, as versões colidiriam. Um <strong>ambiente virtual</strong> (venv) é uma pasta com um <code>pyvenv.cfg</code>, um link para o interpretador-base e um <code>site-packages</code> próprio; "ativar" só reordena o <code>PATH</code> do seu shell (F01). Você nunca precisa ativar nada se chamar <code>.venv/bin/python</code> diretamente.</p>
+<p>O curso usa o <strong><code>uv</code></strong>, que reúne instalação de Python, venv, resolução e lockfile em uma ferramenta. O ciclo mínimo:</p>
+<pre><code>$ uv init proj
+Initialized project `proj` at `/tmp/f02x/proj`
+$ cd proj &amp;&amp; cat .python-version
+3.14
+$ grep -E "requires-python|build-backend" pyproject.toml
+requires-python = "&gt;=3.14"
+build-backend = "uv_build"
+$ uv run python -c "import sys; print(sys.prefix != sys.base_prefix, sys.prefix.split('/')[-1])"
+True .venv
+</code></pre>
+<p><code>uv run</code> cria o <code>.venv</code> se não existir, sincroniza com o <code>uv.lock</code> e executa dentro dele. <code>uv sync --frozen</code> instala exatamente o que o lockfile diz, sem reescrevê-lo: é o comando dos labs. (O <code>uv init</code> desta versão gera layout com <code>src/</code> e backend <code>uv_build</code>; o formato do scaffold muda entre versões do <code>uv</code>.) O detalhe de dependências, versões e empacotamento é o primeiro bloco do <a href="../M02-python-profissional/M02.html">M02</a>; aqui basta o modelo: <em>um projeto, um ambiente, um lockfile</em>.</p>
+
+<h3>Exemplo trabalhado: "qual Python é esse?"</h3>
+<p>O sintoma: <code>ModuleNotFoundError: No module named 'pytest'</code> logo depois de um <code>pip install pytest</code> bem-sucedido. Investigue sem instalar nada:</p>
+<pre><code>$ python -c "import sys; print(sys.executable); print(sys.prefix != sys.base_prefix)"
+$ python -m pip --version
+$ python -c "import sys; print(*sys.path, sep='\n')"
+$ command -v -a pip python</code></pre>
+<p>Compare o interpretador que <em>roda</em> (<code>sys.executable</code>) com o dono do <code>pip</code> (a saída de <code>python -m pip --version</code> mostra o caminho do <code>site-packages</code>). Se divergem, o <code>pip</code> do PATH instalou em outro ambiente. A correção é sempre a mesma: chamar o instalador <em>pelo</em> interpretador (<code>python -m pip</code>, ou <code>uv add</code> / <code>uv run</code>), nunca "reinstalar tudo". Este é o mesmo raciocínio do F01 sobre <code>PATH</code> e <code>command -v</code>, agora com <code>sys.path</code> no papel de segundo mapa.</p>
+
+<h3>Decisões e erros comuns</h3>
+<ul>
+<li><strong>Script solto versus pacote com <code>-m</code>.</strong> Script de uma tela: arquivo. Qualquer coisa com mais de um arquivo: pacote e <code>python -m pacote</code> (ou entry point), porque imports relativos e testes dependem do pacote ser importável pelo nome.</li>
+<li><strong><code>pip</code> global.</strong> Instalar no Python do sistema mistura dependências do projeto com as do SO e quebra ferramentas. Use sempre ambiente por projeto.</li>
+<li><strong>Versão do Python implícita.</strong> "Funciona na minha máquina" costuma ser 3.11 contra 3.14. Declare <code>requires-python</code> e <code>.python-version</code>.</li>
+<li><strong>Tratar <code>.pyc</code> como fonte.</strong> Apagar <code>__pycache__</code> é sempre seguro; versioná-lo nunca é (está no <code>.gitignore</code>).</li>
+<li><strong>Desempenho "por intuição".</strong> Meça com <code>python -m timeit</code> e <code>cProfile</code>; o interpretador adaptativo torna palpite sobre custo de instrução pouco confiável.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · a pasta do script entra antes da stdlib em <code>sys.path</code></span>
+<p>Um <code>types.py</code>, <code>logging.py</code>, <code>queue.py</code> ou <code>test.py</code> ao lado do seu código sombreia o módulo padrão, e o erro aparece longe, dentro de <em>outra</em> biblioteca que importa o módulo da stdlib. O traceback aponta para código de terceiros, não para o seu arquivo. Diagnóstico em dez segundos: <code>python -c "import modulo; print(modulo.__file__)"</code>. Se o caminho cai na sua pasta, achou. Prevenção: nomes de módulo próprios nunca coincidem com a stdlib, e scripts de automação rodam com <code>-I</code>.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>CPython compila para bytecode e executa numa máquina de pilha adaptativa; só módulos importados vão para o cache <code>.pyc</code>, e o bytecode é detalhe de versão. O módulo de entrada se chama <code>__main__</code>; <code>python arquivo.py</code> põe a pasta do script em <code>sys.path[0]</code>, <code>python -m</code> põe o diretório corrente. Ambiente virtual é uma pasta com seu <code>site-packages</code>; o <code>uv</code> junta Python, venv e lockfile. Para saber "qual Python", olhe <code>sys.executable</code> e <code>sys.path</code>, não o que você acha que instalou.</p>
+</div>
+
+<!-- ============================================ BLOCO 2 -->
+<h2 id="b02">Bloco 2 · Valores, tipos e o modelo de objetos</h2>
+
+<h3>Por que isso importa</h3>
+<p>A maior parte dos defeitos "misteriosos" de Python vem de um modelo mental herdado de C ou Java: pensar que <code>b = a</code> copia o valor, que uma função recebe "uma cópia" ou "uma referência" do argumento, que <code>float</code> serve para dinheiro, que texto é uma sequência de bytes. Todas essas crenças funcionam em exemplos pequenos e quebram em produção: uma lista alterada à distância, um centavo que some em um total, um acento que vira <code>Ã§</code>.</p>
+
+<h3>Nomes são rótulos presos a objetos</h3>
+<p>Em Python, todo valor é um <strong>objeto</strong> no heap, com três atributos: <em>identidade</em> (nunca muda, no CPython é o endereço; <code>id(x)</code>), <em>tipo</em> (<code>type(x)</code>) e <em>valor</em>. Uma <strong>variável</strong> não contém o objeto: é um <em>nome</em> num espaço de nomes (um dicionário, na prática) que <em>aponta</em> para ele. Atribuir é <strong>ligar um nome a um objeto</strong>, sem copiar nada.</p>
+<figure>
+<svg viewBox="0 0 760 170" role="img" width="760" height="170" font-family="inherit" font-size="13">
+<title>Dois nomes, a e b, ligados ao mesmo objeto lista; um terceiro nome, c, ligado a outra lista igual</title>
+<defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<rect x="40" y="20" width="70" height="30" rx="15"/><rect x="40" y="70" width="70" height="30" rx="15"/><rect x="40" y="120" width="70" height="30" rx="15"/>
+<rect x="320" y="35" width="180" height="50" rx="8"/><rect x="320" y="110" width="180" height="50" rx="8"/>
+<path d="M110 35 L318 55" marker-end="url(#a2)"/><path d="M110 85 L318 70" marker-end="url(#a2)"/><path d="M110 135 L318 135" marker-end="url(#a2)"/>
+</g>
+<g fill="currentColor">
+<text x="68" y="40">a</text><text x="68" y="90">b</text><text x="68" y="140">c</text>
+<text x="335" y="55">list  id=…A1</text><text x="335" y="73" font-size="12">[1, 2, 3]</text>
+<text x="335" y="130">list  id=…B7</text><text x="335" y="148" font-size="12">[1, 2, 3]</text>
+<text x="540" y="62" font-size="12">a is b → True</text><text x="540" y="142" font-size="12">a == c → True · a is c → False</text>
+</g>
+</svg>
+<figcaption><code>b = a</code> liga um segundo nome ao mesmo objeto; <code>c = list(a)</code> cria outro objeto, igual em valor e distinto em identidade.</figcaption>
+</figure>
+<pre><code>&gt;&gt;&gt; a = [1, 2]; b = a; b.append(3)
+&gt;&gt;&gt; a, a is b, id(a) == id(b)
+([1, 2, 3], True, True)</code></pre>
+<p><code>is</code> compara <strong>identidade</strong> (mesmo objeto); <code>==</code> compara <strong>valor</strong> (chama <code>__eq__</code>). Regra: use <code>is</code> só para singletons (<code>None</code>, <code>True</code>, <code>False</code>, sentinelas suas) e <code>==</code> para o resto. O CPython até avisa quando você erra:</p>
+<pre><code>$ python -W default -c "x = 1; print(x is 1)"
+&lt;string&gt;:1: SyntaxWarning: "is" with 'int' literal. Did you mean "=="?
+True</code></pre>
+<p>Esse <code>True</code> é enganoso: inteiros pequenos e constantes iguais no mesmo trecho compilado são reaproveitados por <em>otimização de implementação</em>, não por contrato da linguagem. Dois inteiros iguais vindos de fontes diferentes (<code>int("1000") is int("1000")</code>) dão <code>False</code>. Nunca escreva código cuja correção depende disso.</p>
+<p>O ciclo de vida é por <strong>contagem de referências</strong>: cada nome, elemento de contêiner ou frame que aponta para o objeto soma 1; quando chega a zero, o CPython libera a memória na hora. Um coletor de ciclos cuida dos casos em que objetos apontam entre si. Consequência prática: o <code>__del__</code> e a liberação de arquivos "no fim do escopo" funcionam no CPython, mas não são garantia da linguagem (PyPy difere). Recurso se fecha com <code>with</code> (bloco 6).</p>
+
+<h3>Mutável versus imutável, e a passagem "por atribuição"</h3>
+<table>
+<thead><tr><th>Imutáveis (valor não muda após criado)</th><th>Mutáveis (mudam no lugar)</th></tr></thead>
+<tbody>
+<tr><td><code>int</code>, <code>float</code>, <code>bool</code>, <code>complex</code>, <code>Decimal</code>, <code>str</code>, <code>bytes</code>, <code>tuple</code>, <code>frozenset</code>, <code>None</code></td><td><code>list</code>, <code>dict</code>, <code>set</code>, <code>bytearray</code>, instâncias de classes comuns</td></tr>
+</tbody>
+</table>
+<p>Quando você passa um argumento, o parâmetro é um <em>novo nome</em> ligado ao <em>mesmo objeto</em> (semântica de atribuição). Daí duas consequências opostas que a mesma regra explica:</p>
+<pre><code>def f(lst):
+    lst.append(1)     # muta o objeto compartilhado: o chamador vê
+    lst = [9]         # religa só o nome local: o chamador não vê
+    return lst
+
+&gt;&gt;&gt; q = []; f(q), q
+([9], [1])</code></pre>
+<p>"Python passa por valor" e "passa por referência" estão ambos errados: passa-se a referência <em>por valor</em>, ou, mais limpo, <strong>chamada por atribuição</strong>. Mutar o objeto é visível; religar o nome não é.</p>
+<p>Imutável não significa "profundamente imutável": a tupla guarda <em>referências</em> imutáveis, e o objeto apontado pode ser mutável.</p>
+<pre><code>&gt;&gt;&gt; t = (1, [2, 3])
+&gt;&gt;&gt; t[1] += [4]
+TypeError: 'tuple' object does not support item assignment
+&gt;&gt;&gt; t
+(1, [2, 3, 4])</code></pre>
+<p>O <code>+=</code> executa em duas etapas: primeiro <code>t[1].__iadd__([4])</code>, que muta a lista com sucesso; depois tenta atribuir o resultado em <code>t[1]</code>, o que a tupla proíbe. O erro e o efeito acontecem juntos. Isso também define <strong>hashabilidade</strong>: só objetos cujo valor não muda podem ser chave de <code>dict</code> ou elemento de <code>set</code> (<code>hash([1])</code> levanta <code>TypeError: unhashable type: 'list'</code>), e uma tupla com lista dentro herda a proibição.</p>
+
+<h3>Números: três famílias, três contratos</h3>
+<p><strong><code>int</code> tem precisão arbitrária.</strong> Não existe overflow: <code>2**100</code> é exato (<code>1267650600228229401496703205376</code>) e ocupa só os bytes de que precisa (28 bytes para o 1; 40 para 2**100). O custo é aritmética proporcional ao tamanho, e um limite de segurança: converter inteiros de mais de 4300 dígitos para <code>str</code> levanta <code>ValueError</code> (<code>sys.get_int_max_str_digits()</code>), defesa contra negação de serviço por entrada hostil. A divisão inteira e o módulo seguem o <em>piso</em>: <code>7 // -2</code> é <code>-4</code> e <code>7 % -2</code> é <code>-1</code>, de modo que <code>(a // b) * b + a % b == a</code> sempre. <code>bool</code> é subclasse de <code>int</code> (<code>True + True == 2</code>).</p>
+<p><strong><code>float</code> é o IEEE 754 binário de 64 bits</strong>: 53 bits de mantissa, cerca de 15–17 dígitos decimais significativos. A maioria dos decimais finitos não é representável em base 2, então o <code>float</code> guarda o racional binário mais próximo:</p>
+<pre><code>&gt;&gt;&gt; 0.1 + 0.2, 0.1 + 0.2 == 0.3
+(0.30000000000000004, False)
+&gt;&gt;&gt; (0.1).as_integer_ratio()
+(3602879701896397, 36028797018963968)
+&gt;&gt;&gt; from decimal import Decimal
+&gt;&gt;&gt; Decimal(0.1)
+Decimal('0.1000000000000000055511151231257827021181583404541015625')</code></pre>
+<p>O <code>0.1</code> real armazenado é 3602879701896397 / 2<sup>55</sup>. Comparação com tolerância usa <code>math.isclose</code>, nunca <code>==</code>. Acima de 2<sup>53</sup>, inteiros consecutivos deixam de ser representáveis (<code>float(2**53) + 1 == float(2**53)</code>). Há ainda <code>nan</code> (que não é igual a si mesmo) e <code>inf</code>.</p>
+<p><strong><code>Decimal</code> é aritmética decimal</strong> com precisão e arredondamento configuráveis (padrão: 28 dígitos, <code>ROUND_HALF_EVEN</code>). Regras que importam:</p>
+<ul>
+<li>Construa de <strong><code>str</code></strong> ou <code>int</code>: <code>Decimal("0.1")</code>. De <code>float</code>, herda o erro acima.</li>
+<li>Misturar com <code>float</code> é proibido de propósito: <code>Decimal("1") + 1.5</code> levanta <code>TypeError</code>.</li>
+<li>Arredonde com <code>quantize</code>, escolhendo o modo da regra de negócio:</li>
+</ul>
+<pre><code>&gt;&gt;&gt; from decimal import Decimal, ROUND_HALF_UP
+&gt;&gt;&gt; d = Decimal("2.665")
+&gt;&gt;&gt; d.quantize(Decimal("0.01")), d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+(Decimal('2.66'), Decimal('2.67'))
+&gt;&gt;&gt; round(2.5), round(3.5), round(2.665, 2)
+(2, 4, 2.67)</code></pre>
+<p>O <code>round()</code> embutido também arredonda metade para o par (2.5 vira 2). Em <code>float</code>, <code>round(2.665, 2)</code> dá 2.67 porque o valor binário real é um pouco maior que 2.665, ou seja, o resultado depende da representação, não da regra. Dinheiro pede <code>Decimal</code> (como no laboratório) ou inteiro de centavos; qual regra de arredondamento vale (fiscal, contratual) é decisão de negócio, não de biblioteca. Estatística e ML usam <code>float</code> de propósito: velocidade e erro relativo pequeno importam mais que exatidão decimal.</p>
+
+<h3><code>str</code> versus <code>bytes</code>: texto não é byte</h3>
+<p><code>str</code> é uma sequência imutável de <strong>pontos de código Unicode</strong>. <code>bytes</code> é uma sequência imutável de inteiros 0–255. A ponte é a <strong>codificação</strong>: <code>str.encode(enc)</code> produz bytes; <code>bytes.decode(enc)</code> volta. Sem saber a codificação, bytes não são texto.</p>
+<pre><code>&gt;&gt;&gt; s = "café"
+&gt;&gt;&gt; len(s), len(s.encode("utf-8")), s.encode("utf-8"), s.encode("latin-1")
+(4, 5, b'caf\xc3\xa9', b'caf\xe9')
+&gt;&gt;&gt; b"\xe9".decode("utf-8")
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 0: unexpected end of data
+&gt;&gt;&gt; b"\xe9".decode("utf-8", errors="replace")
+'�'</code></pre>
+<p>O mesmo "é" ocupa 1 byte em Latin-1 e 2 em UTF-8; o byte <code>0xE9</code> não é UTF-8 válido, e a falha explícita é <em>melhor</em> que o <code>errors="replace"</code>, que troca o dado por <code>�</code> e esconde o erro. Há dois fatos de Unicode que um sênior precisa ter à mão:</p>
+<ul>
+<li><strong>Normalização.</strong> "é" pode ser um ponto de código (NFC) ou "e" mais acento combinante (NFD). Visualmente idênticos, <code>==</code> diz <code>False</code> e o comprimento difere (4 contra 5). Chaves, buscas e deduplicação pedem <code>unicodedata.normalize("NFC", s)</code> antes de comparar. O laboratório faz isso em <code>normalize_category</code>.</li>
+<li><strong>Caixa.</strong> Para comparar sem diferenciar maiúsculas use <code>casefold()</code>, não <code>lower()</code>: <code>"ß".casefold() == "ss"</code>, enquanto <code>"ß".lower()</code> continua <code>"ß"</code>.</li>
+</ul>
+<p>E um aviso de modelo: <code>len()</code> conta pontos de código, não "caracteres que o usuário vê". Uma bandeira como 🇧🇷 tem 2 pontos de código; a família 👨‍👩‍👧 tem 5. Cortar uma <code>str</code> no meio desses clusters produz lixo visual; segmentar por grafema exige biblioteca externa.</p>
+
+<h3>Exemplo trabalhado: por que o laboratório rejeita <code>٣٤</code></h3>
+<p>No <code>expenses/parsing.py</code>, o valor é validado com <code>[0-9]+(?:[.,][0-9]{1,2})?</code>, e há um comentário explicando por que não <code>\d</code>. Em padrões de <code>str</code>, <code>\d</code> casa qualquer dígito Unicode, inclusive o árabe-índico, e <code>int("٣")</code> até converte sem erro (<code>"٣".isdigit()</code> é <code>True</code>). Resultado: um campo "valor" com dígitos de outro sistema numérico passaria pela validação e viraria número. Com a classe explícita <code>[0-9]</code>, o dado é recusado na borda com mensagem precisa, que é o comportamento certo para entrada não confiável:</p>
+<pre><code>&gt;&gt;&gt; parse_amount(1, "12,5"), parse_amount(1, " 7 ")
+(Decimal('12.50'), Decimal('7.00'))
+&gt;&gt;&gt; parse_amount(3, "٣٤")
+InvalidRowError: linha 3, campo 'amount': valor inválido: '٣٤'
+&gt;&gt;&gt; sum([0.1] * 10), sum([parse_amount(1, "0.10")] * 10)
+(1.0, Decimal('1.00'))</code></pre>
+<p>A última linha guarda uma surpresa de versão: desde o Python 3.12, o <code>sum()</code> de <code>float</code> usa soma compensada e devolve <code>1.0</code>, enquanto o laço manual <code>t += 0.1</code> dez vezes dá <code>0.9999999999999999</code>. O defeito do float não desapareceu: foi mascarado em <code>sum</code> e continua em qualquer acumulador escrito à mão. Mais um motivo para o tipo certo, em vez de depender de um truque de biblioteca.</p>
+
+<h3>Decisões e erros comuns</h3>
+<ul>
+<li><strong>Dinheiro:</strong> <code>Decimal</code> de <code>str</code> (ou centavos inteiros), com <code>quantize</code> e modo de arredondamento explícitos. <strong>Medida física, estatística, ML:</strong> <code>float</code>, comparando com tolerância.</li>
+<li><strong>Igualdade:</strong> <code>==</code> para valores; <code>is</code> para <code>None</code> e sentinelas.</li>
+<li><strong>Texto:</strong> decodifique na entrada, trabalhe em <code>str</code>, codifique na saída, sempre com <code>encoding=</code> explícito. Normalize antes de comparar chaves.</li>
+<li><strong>Booleanos de contêiner:</strong> <code>if not itens:</code> é idiomático para "vazio"; mas <code>if valor:</code> trata <code>0</code>, <code>""</code>, <code>0.0</code> e <code>[]</code> como falsos, o que é um bug quando <code>0</code> é um valor legítimo. Para ausência use <code>is None</code>.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · <code>Decimal(0.1)</code> e <code>json</code> reintroduzem o erro do float</span>
+<p>Dois caminhos trazem o <code>float</code> de volta sem aviso: construir <code>Decimal</code> a partir de um <code>float</code> (já arredondado em binário) e passar dinheiro por JSON, onde o número é um literal que a maioria dos leitores converte para <code>float</code>. Por isso o <code>report_payload</code> do laboratório serializa os <code>Decimal</code> como <strong>strings</strong>. A regra vale na fronteira: o dado monetário atravessa APIs, CSV e filas como texto decimal (ou centavos inteiros) e só vira <code>Decimal</code> dentro do domínio.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Nome é rótulo; atribuição liga, não copia; argumento é passado por atribuição, então mutar o objeto se vê de fora e religar o nome não. <code>is</code> é identidade, <code>==</code> é valor. Imutável não é profundamente imutável, e só valor estável é hashável. <code>int</code> é exato e ilimitado, <code>float</code> é binário aproximado, <code>Decimal</code> é decimal exato quando construído de <code>str</code>. <code>str</code> é texto Unicode, <code>bytes</code> são bytes, e a codificação é o contrato entre eles; normalize antes de comparar.</p>
+</div>
+
+<!-- ============================================ BLOCO 3 -->
+<h2 id="b03">Bloco 3 · Controle de fluxo e funções</h2>
+
+<h3>Por que isso importa</h3>
+<p>Funções são a unidade de reuso, de teste e de raciocínio do Python. Quase todo defeito sutil desta camada nasce de duas ideias mal absorvidas: <strong>quando</strong> cada coisa é avaliada (o <code>def</code> executa uma vez; a chamada, a cada vez) e <strong>onde</strong> cada nome é procurado (escopo). O default mutável e o <code>lambda</code> dentro de um laço são o mesmo problema visto de dois lados: avaliação adiantada versus avaliação tardia.</p>
+
+<h3>Fluxo: o que tem de específico em Python</h3>
+<p>Blocos são definidos por indentação, e <code>if</code>/<code>elif</code>/<code>else</code> avaliam <em>truthiness</em>: são falsos <code>None</code>, <code>False</code>, zeros numéricos e qualquer contêiner ou texto vazio; todo o resto é verdadeiro. Três recursos fogem do que um veterano de C/Java espera:</p>
+<ul>
+<li><strong><code>for</code> percorre um iterável</strong> (bloco 5), não um contador: <code>for item in itens</code>, <code>for i, item in enumerate(itens)</code>, <code>for a, b in zip(xs, ys)</code>. Prefira <code>zip(xs, ys, strict=True)</code> quando os tamanhos devem ser iguais: sem <code>strict</code>, o mais longo é truncado em silêncio.</li>
+<li><strong><code>for ... else</code> e <code>while ... else</code></strong>: o <code>else</code> roda se o laço terminou <em>sem</em> <code>break</code>. Útil para "procurei e não achei", e confuso para quem lê; comente quando usar.</li>
+<li><strong>Operador morsa <code>:=</code></strong> atribui dentro de uma expressão: <code>if (n := len(dados)) &gt; 10: ...</code>. Use quando evita calcular duas vezes; não use para compactar linhas.</li>
+</ul>
+<p>O <strong><code>match</code></strong> (Python 3.10+) é <em>casamento estrutural</em>, não um <code>switch</code> de igualdade: o padrão descreve a <em>forma</em> do dado e já extrai partes dele.</p>
+<pre><code>def kind(cmd):
+    match cmd:
+        case ["go", ("north" | "south") as d]:
+            return f"go {d}"
+        case ["take", item, *rest] if rest:
+            return f"take {item} +{len(rest)}"
+        case {"type": "pt", "x": x}:
+            return f"pt {x}"
+        case int(n) if n &gt; 0:
+            return "pos"
+        case _:
+            return "?"
+
+&gt;&gt;&gt; kind(["go", "north"]), kind(["take", "a", "b"]), kind({"type": "pt", "x": 3, "y": 1}), kind(5), kind("x")
+('go north', 'take a +1', 'pt 3', 'pos', '?')</code></pre>
+<p>Pontos que enganam: um nome simples em <code>case</code> (<code>case x:</code>) <em>captura</em> qualquer valor, não compara com a variável <code>x</code>; para comparar com constante use nome pontilhado (<code>Cor.VERMELHO</code>) ou literal. Padrões de mapeamento casam com chaves <em>extras</em> (o <code>"y": 1</code> acima não atrapalhou); padrões de sequência não casam com <code>str</code>/<code>bytes</code>. Use <code>match</code> para despachar sobre dados estruturados (mensagens, ASTs, comandos); para uma comparação simples, <code>if</code>.</p>
+
+<h3>Escopo: a regra LEGB</h3>
+<p>Ao ler um nome, o Python procura em quatro escopos, nesta ordem: <strong>L</strong>ocal (a função atual), <strong>E</strong>nclosing (funções que a envolvem), <strong>G</strong>lobal (o módulo) e <strong>B</strong>uilt-in (<code>len</code>, <code>print</code>...). A decisão de qual escopo é <em>estática</em>: o compilador olha o corpo da função inteira e, se há <em>qualquer atribuição</em> ao nome, ele é local em <em>toda</em> a função.</p>
+<pre><code>x = 10
+def g():
+    print(x)     # lê x ... mas x é atribuído abaixo, logo é LOCAL aqui
+    x = 1
+
+&gt;&gt;&gt; g()
+UnboundLocalError: cannot access local variable 'x' where it is not associated with a value</code></pre>
+<p>Para atribuir a um nome de escopo externo é preciso declarar <code>global x</code> (módulo) ou <code>nonlocal x</code> (função envolvente). Ler nunca precisa de declaração; <em>mutar</em> um objeto externo (<code>lista.append</code>) também não, porque não é atribuição ao nome. Variáveis de <code>for</code> e de <code>with</code> vazam para o escopo da função (<code>i</code> existe depois do laço); as de comprehension não (bloco 4).</p>
+
+<h3>Parâmetros: a assinatura completa</h3>
+<p>A forma geral é <code>def f(a, b=2, /, c=3, *args, d, e=5, **kw)</code>. O que cada marca faz:</p>
+<table>
+<thead><tr><th>Parte</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td>antes de <code>/</code></td><td>só posicional (<code>a</code>, <code>b</code>): o nome do parâmetro não faz parte da API pública</td></tr>
+<tr><td>entre <code>/</code> e <code>*</code></td><td>posicional ou por nome (<code>c</code>)</td></tr>
+<tr><td><code>*args</code></td><td>coleta posicionais extras numa <code>tuple</code></td></tr>
+<tr><td>depois de <code>*</code>/<code>*args</code></td><td>só por nome (<code>d</code> obrigatório, <code>e</code> opcional)</td></tr>
+<tr><td><code>**kw</code></td><td>coleta nomeados extras num <code>dict</code></td></tr>
+</tbody>
+</table>
+<pre><code>&gt;&gt;&gt; import inspect; print(inspect.signature(h))
+(a, b=2, /, c=3, *args, d, e=5, **kw)
+&gt;&gt;&gt; h(1, d=4)
+(1, 2, 3, (), 4, 5, {})
+&gt;&gt;&gt; h(1, 2, 3, 4, 5, d=6, z=7)
+(1, 2, 3, (4, 5), 6, 5, {'z': 7})
+&gt;&gt;&gt; g(1, 2, 3)     # def g(a, /, b, *, c)
+TypeError: g() takes 2 positional arguments but 3 were given</code></pre>
+<p>Na chamada, <code>*</code> e <code>**</code> fazem o inverso: espalham um iterável e um mapeamento (<code>f(1, *[2, 3], **{"z": 1})</code>). Boa prática de API: parâmetros booleanos e de configuração como <strong>só-nomeados</strong> (<code>def ler(path, *, encoding="utf-8")</code>, como o <code>scan</code> do laboratório), porque <code>ler(p, True, False)</code> não diz nada ao leitor. Uma função sem <code>return</code> devolve <code>None</code>; uma que às vezes devolve valor e às vezes cai no fim é bug esperando acontecer.</p>
+
+<h3>O default mutável</h3>
+<p>O <code>def</code> é uma instrução executada em tempo de carga: ela cria o objeto função e <strong>avalia os defaults naquele momento, uma vez</strong>, guardando-os em <code>f.__defaults__</code>.</p>
+<pre><code>def add(item, bag=[]):
+    bag.append(item)
+    return bag
+
+&gt;&gt;&gt; add(1), add(2), add.__defaults__
+([1, 2], [1, 2], ([1, 2],))      # as DUAS listas impressas são o MESMO objeto
+
+def add2(item, bag=None):
+    if bag is None:
+        bag = []
+    bag.append(item)
+    return bag
+
+&gt;&gt;&gt; add2(1), add2(2)
+([1], [2])</code></pre>
+<p>Note o primeiro resultado: a tupla de retorno contém o mesmo objeto duas vezes, por isso ambos exibem <code>[1, 2]</code>; a lista só foi impressa depois das duas chamadas. A regra: default só imutável (<code>None</code>, número, string, tupla). Se <code>None</code> for um valor legítimo, use um objeto sentinela próprio (<code>_MISSING = object()</code> e <code>is _MISSING</code>). O mesmo mecanismo faz o <code>dataclass</code> recusar <code>tags: list = []</code> (bloco 8).</p>
+
+<h3>Closures e a ligação tardia</h3>
+<p>Funções são objetos de primeira classe: podem ser atribuídas, passadas e devolvidas. Uma função definida dentro de outra <strong>captura os nomes</strong> da envolvente que usa (<em>variáveis livres</em>), guardados em "células". Capturam-se <em>variáveis</em>, não valores:</p>
+<pre><code>def counter():
+    n = 0
+    def inc():
+        nonlocal n
+        n += 1
+        return n
+    return inc
+
+&gt;&gt;&gt; c = counter(); c(), c(), c.__closure__[0].cell_contents, c.__code__.co_freevars
+(1, 2, 2, ('n',))</code></pre>
+<p>Por capturar a variável, e não o valor do momento, o clássico:</p>
+<pre><code>&gt;&gt;&gt; fs = [lambda: i for i in range(3)]; [f() for f in fs]
+[2, 2, 2]
+&gt;&gt;&gt; fs = [lambda i=i: i for i in range(3)]; [f() for f in fs]
+[0, 1, 2]</code></pre>
+<p>Todas as lambdas leem a mesma célula <code>i</code>, que vale 2 ao fim do laço. A correção trava o valor <em>agora</em> como default (<code>i=i</code>, avaliação adiantada) ou usa <code>functools.partial</code>. É o espelho do default mutável: lá o valor era adiantado demais; aqui, tardio demais.</p>
+<p><code>lambda</code> é apenas uma função anônima de uma única <em>expressão</em>. Ótima como <code>key</code>: <code>sorted(xs, key=lambda t: t[1])</code>. Sem docstring e com nome <code>&lt;lambda&gt;</code> nos tracebacks, então qualquer coisa com mais de uma expressão merece um <code>def</code>.</p>
+
+<h3>Exemplo trabalhado: um decorador que conta chamadas</h3>
+<p>Um decorador é uma função que recebe uma função e devolve outra: o closure aplicado. O <code>@contar</code> abaixo mantém um contador na célula <code>n</code>, e <code>functools.wraps</code> copia nome, docstring e <code>__wrapped__</code> para que a função decorada continue identificável.</p>
+<pre><code>import functools
+
+def contar(fn):
+    n = 0
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        nonlocal n
+        n += 1
+        wrapper.chamadas = n
+        return fn(*args, **kwargs)
+    wrapper.chamadas = 0
+    return wrapper
+
+@contar
+def dobro(x: int) -&gt; int:
+    """Devolve o dobro."""
+    return 2 * x
+
+&gt;&gt;&gt; dobro(2), dobro(5), dobro.chamadas, dobro.__name__, dobro.__doc__, dobro.__wrapped__.__name__
+(4, 10, 2, 'dobro', 'Devolve o dobro.', 'dobro')
+&gt;&gt;&gt; dobro.__code__.co_freevars
+('fn', 'n', 'wrapper')</code></pre>
+<p>Sem o <code>wraps</code>, <code>triplo.__name__</code> seria <code>'w'</code> e a docstring, <code>None</code>: ferramentas de teste, logs e documentação passariam a ver a função errada. A mesma técnica, com cache, está pronta na biblioteca padrão: <code>functools.lru_cache</code> transforma o Fibonacci recursivo de exponencial em linear (<code>fib(80)</code> = 23416728348467685, <code>CacheInfo(hits=78, misses=81, ...)</code>). Atenção: o cache guarda referências aos argumentos, que precisam ser hashable, e vive tanto quanto a função (vazamento de memória em processos longos se a chave cresce sem limite).</p>
+
+<h3>Recursão e anotações</h3>
+<p>O CPython não faz otimização de chamada de cauda; o limite padrão é <code>sys.getrecursionlimit() == 1000</code> e estourá-lo levanta <code>RecursionError</code>. Para estruturas profundas, converta a recursão em laço com pilha explícita (F03). As <strong>anotações de tipo</strong> (<code>x: int</code>, <code>-&gt; int</code>) não são verificadas em execução: são metadados para ferramentas (mypy, editores, Pydantic). No Python 3.14 elas passaram a ser <em>avaliadas sob demanda</em> (PEP 649): uma anotação que nomeia algo ainda não definido não quebra o <code>def</code>.</p>
+<pre><code>&gt;&gt;&gt; def fa(a: Undefined) -&gt; None: ...
+&gt;&gt;&gt; import annotationlib
+&gt;&gt;&gt; annotationlib.get_annotations(fa, format=annotationlib.Format.STRING)
+{'a': 'Undefined', 'return': 'None'}</code></pre>
+<p>O curso usa <code>from __future__ import annotations</code> nos módulos do laboratório por compatibilidade com ferramentas e leitores; a tipagem de verdade (genéricos, <code>Protocol</code>, narrowing) é assunto do <a href="../M02-python-profissional/M02.html">M02</a>.</p>
+
+<h3>Decisões e erros comuns</h3>
+<ul>
+<li><strong>Funções pequenas e puras quando possível</strong>: entrada por parâmetro, saída por <code>return</code>, sem ler/escrever globais. Testam-se sem preparar mundo (bloco 8).</li>
+<li><strong>Retornar vários valores</strong> é devolver uma tupla; passou de três, devolva um <code>dataclass</code>/<code>NamedTuple</code> com nomes.</li>
+<li><strong>Não mute argumentos</strong> sem que o nome da função diga (<code>ordenar_no_lugar</code>); devolva objeto novo ou documente.</li>
+<li><strong>Evite <code>global</code></strong>; estado compartilhado vira parâmetro, atributo de objeto ou closure explícita.</li>
+<li><strong><code>*args/**kwargs</code> "por garantia"</strong> esconde a API: o erro de digitação em um nome passa em silêncio. Use só em decoradores e delegação.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · <code>finally</code> com <code>return</code>/<code>continue</code> engole a exceção e o retorno</span>
+<p>Um <code>return</code>, <code>break</code> ou <code>continue</code> dentro de <code>finally</code> descarta a exceção em voo e o <code>return</code> do <code>try</code>. No Python 3.14, o compilador avisa (PEP 765): <code>SyntaxWarning: 'continue' in a 'finally' block</code>. Em um teste real, uma função com <code>for i in range(2): try: return i finally: continue</code> devolveu <code>None</code>, não <code>0</code>. Código assim passa em revisão distraída e apaga erros de produção. Trate esse <code>SyntaxWarning</code> como erro (<code>-W error</code> nos testes) e deixe o <code>finally</code> só limpar.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p><code>def</code> executa uma vez: defaults são avaliados ali, então só imutáveis, ou <code>None</code> mais criação interna. Um nome é local em toda a função se houver atribuição a ele (LEGB). Closures capturam variáveis, não valores: o <code>lambda</code> no laço lê a última; trave com <code>i=i</code>. Parâmetros só-nomeados deixam a API legível. <code>match</code> casa a forma do dado, não igualdade, e nome simples captura. Anotações são metadados, avaliados sob demanda desde o 3.14.</p>
+</div>
+
+<!-- ============================================ BLOCO 4 -->
+<h2 id="b04">Bloco 4 · Coleções por dentro</h2>
+
+<h3>Por que isso importa</h3>
+<p>Escolher a coleção errada é o erro de desempenho mais comum em código Python de produção: um <code>if x in lista</code> dentro de laço transforma O(n) em O(n²); um <code>pop(0)</code> em "fila" faz cada retirada custar o tamanho da fila; uma lista usada como chave de cache lança <code>TypeError</code> só em runtime. Conhecer o <em>mecanismo</em> de cada estrutura (não só a API) permite prever custo e comportamento. A análise formal de complexidade e as implementações à mão (array dinâmico, tabela de hash, colisões) ficam no <a href="../F03-estruturas-dados-algoritmos/F03.html">F03</a>; aqui o objetivo é o que o CPython faz com as suas estruturas embutidas.</p>
+
+<h3><code>list</code>: um vetor dinâmico de referências</h3>
+<p>Uma <code>list</code> é um array contíguo de <strong>ponteiros</strong> para objetos (nunca os valores em linha), com capacidade reservada além do tamanho. <code>append</code> usa a folga; quando acaba, aloca um bloco maior e copia os ponteiros. O custo é O(1) <em>amortizado</em>: raras cópias grandes diluídas em muitos <code>append</code> baratos. Dá para ver o crescimento em passos:</p>
+<pre><code>&gt;&gt;&gt; import sys
+&gt;&gt;&gt; l = []; prev = -1
+&gt;&gt;&gt; for i in range(40):
+...     l.append(i); s = sys.getsizeof(l)
+...     if s != prev: print(len(l), s, end=" | "); prev = s
+1 88 | 5 120 | 9 184 | 17 248 | 25 312 | 33 376 |</code></pre>
+<p>Em vez de crescer 1 a 1, a capacidade salta (4, 8, 16, 24, 32, 40 posições nesta versão; a fórmula exata é detalhe de implementação). O tamanho em bytes inclui só os ponteiros (8 bytes cada), não os objetos apontados.</p>
+<table>
+<thead><tr><th>Operação</th><th><code>list</code></th><th><code>deque</code></th><th><code>dict</code> / <code>set</code></th></tr></thead>
+<tbody>
+<tr><td>acesso por índice / chave</td><td>O(1)</td><td>O(n) no meio</td><td>O(1) médio</td></tr>
+<tr><td><code>x in c</code></td><td>O(n)</td><td>O(n)</td><td>O(1) médio</td></tr>
+<tr><td>inserir/remover no fim</td><td>O(1) amortizado</td><td>O(1)</td><td>—</td></tr>
+<tr><td>inserir/remover no início</td><td>O(n)</td><td>O(1)</td><td>—</td></tr>
+<tr><td>inserir/remover no meio</td><td>O(n)</td><td>O(n)</td><td>—</td></tr>
+<tr><td>ordenar</td><td>O(n log n)</td><td>—</td><td>—</td></tr>
+</tbody>
+</table>
+<p>Medição ilustrativa (o valor absoluto varia com a máquina; a razão é o ponto), 2000 repetições:</p>
+<pre><code>"9999 in l"  (lista de 10 000)  : 0.0887 s     "9999 in s"  (set): 0.000026 s
+"l.pop(0)"   (lista de 100 000) : 0.2561 s     "q.popleft()" (deque): 0.00025 s</code></pre>
+<p>Três ordens de grandeza: não é micro-otimização, é a diferença entre estruturas. Regra de ouro: se você faz muitas buscas de pertinência, converta uma vez para <code>set</code>/<code>dict</code>; se faz fila, use <code>collections.deque</code>.</p>
+
+<h3><code>dict</code> e <code>set</code>: tabelas de hash</h3>
+<p>Um <code>dict</code> guarda pares chave→valor numa tabela de hash: <code>hash(chave)</code> escolhe uma posição; se há colisão, a sonda segue a sequência de endereçamento aberto; ao achar um slot com hash igual, confirma com <code>==</code>. Daí o contrato que une tudo: <strong>se <code>a == b</code>, então <code>hash(a) == hash(b)</code></strong>, e o hash não pode mudar durante a vida do objeto, razão pela qual só imutáveis (e objetos com <code>__hash__</code> estável) servem como chave. A consequência é por vezes surpreendente:</p>
+<pre><code>&gt;&gt;&gt; {1: "a", 1.0: "b", True: "c"}
+{1: 'c'}
+&gt;&gt;&gt; 1 in {1.0}, hash(1) == hash(1.0)
+(True, True)</code></pre>
+<p><code>1</code>, <code>1.0</code> e <code>True</code> são iguais e têm o mesmo hash, logo são <em>a mesma chave</em>; a primeira chave é mantida e o último valor vence. Desde o Python 3.7, o <code>dict</code> <strong>preserva a ordem de inserção</strong> (garantia da linguagem): re-inserir uma chave removida a coloca no fim.</p>
+<pre><code>&gt;&gt;&gt; d = {"b": 1, "a": 2}; d["c"] = 3; del d["b"]; d["b"] = 9; list(d)
+['a', 'c', 'b']
+&gt;&gt;&gt; for k in d: d[k + "x"] = 1
+RuntimeError: dictionary changed size during iteration</code></pre>
+<p>Alterar o tamanho enquanto se itera é erro detectado; alterar <em>valores</em> de chaves existentes é permitido; para modificar a estrutura, itere sobre uma cópia (<code>list(d)</code>). Atualização e mescla: <code>d.update(...)</code> muta; <code>d1 | d2</code> cria novo, com o da direita vencendo (<code>{"a": 1} | {"a": 3, "b": 2}</code> → <code>{'a': 3, 'b': 2}</code>).</p>
+<p>O <code>set</code> é um <code>dict</code> sem valores: pertinência O(1), álgebra de conjuntos (<code>&amp;</code>, <code>|</code>, <code>-</code>, <code>^</code>) e <em>sem ordem garantida</em>. Não use <code>set</code> para deduplicar quando a ordem importa; use <code>dict.fromkeys(itens)</code>, que deduplica preservando a ordem. Custo de memória: um <code>dict</code> de 1000 itens ocupa cerca de 37 KB neste CPython, bem mais que uma lista; troca-se espaço por tempo. A ordem de iteração de <code>set</code> de <code>str</code> varia entre execuções (hash randomization de texto): nunca dependa dela.</p>
+<p>Na biblioteca padrão, <code>collections</code> acrescenta: <code>deque</code> (fila de duas pontas), <code>Counter</code> (contagem: <code>Counter("abracadabra").most_common(2)</code> → <code>[('a', 5), ('b', 2)]</code>), <code>defaultdict</code> (valor padrão por chave ausente: <code>defaultdict(list)</code>) e <code>OrderedDict</code> (raro hoje). <code>tuple</code> é a sequência imutável: ideal para registros curtos e chaves compostas.</p>
+
+<h3>Ordenação</h3>
+<p><code>sorted(iterável, key=..., reverse=...)</code> devolve nova lista; <code>lista.sort()</code> ordena no lugar e devolve <code>None</code> (confundir os dois é bug clássico: <code>x = x.sort()</code> apaga <code>x</code>). O algoritmo é o Timsort: O(n log n), <strong>estável</strong> (elementos de chave igual mantêm a ordem relativa) e rápido em dados parcialmente ordenados. O <code>key</code> é chamado <em>uma vez por elemento</em> e as chaves é que são comparadas; a estabilidade permite ordenar por vários critérios em passadas, ou usar tupla como chave:</p>
+<pre><code>&gt;&gt;&gt; sorted(["b", "A", "a", "B"])
+['A', 'B', 'a', 'b']
+&gt;&gt;&gt; sorted(["b", "A", "a", "B"], key=str.casefold)
+['A', 'a', 'b', 'B']
+&gt;&gt;&gt; sorted([("x", 2), ("y", 1), ("z", 2)], key=lambda t: -t[1])
+[('x', 2), ('z', 2), ('y', 1)]</code></pre>
+<p>Texto é ordenado por ponto de código (maiúsculas antes de minúsculas, acentuadas depois de <code>z</code>); ordem alfabética "humana" exige <code>locale</code> ou ICU. Veja o uso real em <code>total_by_category</code>, que ordena por <code>(-total, nome)</code>: maior total primeiro, e o nome desempata de forma determinística.</p>
+
+<h3>Comprehensions, unpacking e geradores de coleção</h3>
+<p>Comprehensions constroem coleções a partir de iteráveis numa expressão: <code>[f(x) for x in xs if p(x)]</code>, <code>{k: v for ...}</code>, <code>{x for ...}</code>. Têm <strong>escopo próprio</strong> (a variável não vaza) e, quando o resultado é consumido de uma vez, uma <em>expressão geradora</em> <code>(f(x) for x in xs)</code> evita materializar a lista: <code>sum(x*x for x in xs)</code>. Em memória, a diferença é a de 208 bytes (o gerador) contra 8856 bytes (lista de 1000 quadrados). Legibilidade manda: dois <code>for</code> aninhados na mesma comprehension já são o limite.</p>
+<p>O <strong>desempacotamento</strong> generaliza a atribuição: <code>primeiro, *meio, ultimo = range(5)</code> → <code>0, [1, 2, 3], 4</code>; troca sem temporária <code>a, b = b, a</code>; e em chamadas e literais <code>[*xs, *ys]</code>, <code>{**d1, **d2}</code>.</p>
+
+<h3>Cópia: rasa versus profunda</h3>
+<p>Como contêineres guardam <em>referências</em>, copiar "a lista" copia os ponteiros, não os objetos apontados. <code>lista.copy()</code>, <code>list(lista)</code>, <code>lista[:]</code> e <code>copy.copy</code> são cópias <strong>rasas</strong>; <code>copy.deepcopy</code> percorre recursivamente (e trata ciclos), com custo proporcional ao grafo inteiro.</p>
+<pre><code>&gt;&gt;&gt; import copy
+&gt;&gt;&gt; n = [[1, 2], [3]]; s = n.copy(); d = copy.deepcopy(n)
+&gt;&gt;&gt; n[0].append(9); s, d
+([[1, 2, 9], [3]], [[1, 2], [3]])
+&gt;&gt;&gt; a = [[0] * 2] * 3; a[0][0] = 1; a
+[[1, 0], [1, 0], [1, 0]]
+&gt;&gt;&gt; b = [[0] * 2 for _ in range(3)]; b[0][0] = 1; b
+[[1, 0], [0, 0], [0, 0]]</code></pre>
+<p>A cópia rasa <code>s</code> compartilha a sublista com <code>n</code>; a profunda <code>d</code> não. E <code>[[0]*2]*3</code> repete a <em>mesma</em> sublista três vezes (o <code>*</code> copia a referência): o idioma correto para matriz é a comprehension. O laboratório tem o caso fixado em <code>test_shallow_vs_deep_copy</code>.</p>
+
+<h3>Exemplo trabalhado: agregação do laboratório</h3>
+<p>O núcleo do relatório é uma agregação por categoria. Leia <code>aggregate.py</code> com o que este bloco ensinou:</p>
+<pre><code>def total_by_category(expenses: Iterable[Expense]) -&gt; dict[str, Decimal]:
+    totals: dict[str, Decimal] = {}
+    for expense in expenses:
+        totals[expense.category] = totals.get(expense.category, Decimal(0)) + expense.amount
+    return dict(sorted(totals.items(), key=lambda item: (-item[1], item[0])))
+
+def monthly_totals(expenses: Iterable[Expense]) -&gt; dict[str, Decimal]:
+    def month(expense: Expense) -&gt; str:
+        return f"{expense.date:%Y-%m}"
+    ordered = sorted(expenses, key=month)
+    return {
+        key: sum((e.amount for e in group), start=Decimal(0))
+        for key, group in itertools.groupby(ordered, key=month)
+    }</code></pre>
+<p>Decisões visíveis: o acumulador é um <code>dict</code> com <code>get(chave, 0)</code> (poderia ser <code>defaultdict(Decimal)</code>; o <code>get</code> explícito deixa o valor inicial à vista); recebe qualquer <code>Iterable</code> (uma lista ou o gerador do bloco 5), consumido <em>uma vez</em>; <code>sum(..., start=Decimal(0))</code> evita o <code>0</code> inteiro como ponto de partida; e o <code>sorted</code> antes do <code>groupby</code> é obrigatório, porque o <code>groupby</code> só junta chaves <em>adjacentes</em>. O teste <code>test_groupby_without_sorting_splits_groups</code> prova a falha sem o sort. O retorno é <code>dict(sorted(...))</code>: como o <code>dict</code> mantém a inserção, a ordem do resultado é o contrato que a CLI exibe.</p>
+
+<h3>Decisões e erros comuns</h3>
+<ul>
+<li><strong>Pertinência repetida</strong> → <code>set</code> ou <code>dict</code>. <strong>Fila</strong> → <code>deque</code>. <strong>Contagem</strong> → <code>Counter</code>. <strong>Agrupar</strong> → <code>defaultdict(list)</code>.</li>
+<li><strong>Chave composta</strong> → <code>tuple</code> (ou <code>dataclass(frozen=True)</code>), nunca <code>list</code>.</li>
+<li><strong>Mutar enquanto itera</strong> (<code>for v in lst: lst.remove(v)</code>) pula elementos: removendo pares, <code>[1, 2, 3, 4]</code> dá <code>[1, 3]</code> (certo por acaso), mas <code>[2, 4, 1]</code> dá <code>[4, 1]</code> (errado); filtre numa nova lista.</li>
+<li><strong>Retornar o contêiner interno</strong> de um objeto expõe o estado a mutação externa: devolva cópia, tupla ou iterador.</li>
+<li><strong><code>if lista:</code></strong> versus <code>if len(lista) &gt; 0</code>: o primeiro é idiomático e vale para qualquer contêiner.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · <code>groupby</code> sem ordenar, e o iterador que o <code>groupby</code> entrega</span>
+<p>Dois defeitos com a mesma origem. (1) <code>groupby("aabbaa")</code> produz <em>três</em> grupos (<code>a</code>, <code>b</code>, <code>a</code>), porque agrupa corridas adjacentes, ao contrário do <code>GROUP BY</code> do SQL; sem ordenar, o total por mês sai fragmentado e não dá erro nenhum. (2) Cada <code>grupo</code> é um iterador <em>compartilhado</em> com o <code>groupby</code>: avançar para a próxima chave o invalida. Por isso a comprehension acima consome o grupo imediatamente (<code>sum(... for e in group)</code>); guardar <code>group</code> numa lista de "grupos" para usar depois dá grupos vazios.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p><code>list</code> é vetor de referências com <code>append</code> amortizado; buscar nela é linear e tirar do início é linear. <code>dict</code> e <code>set</code> são tabelas de hash: pertinência O(1) médio, chaves hashable, <code>dict</code> ordenado por inserção. <code>sorted</code> é estável e usa <code>key</code>. Comprehension tem escopo próprio. Cópia rasa compartilha o que está dentro; <code>[[0]*2]*3</code> repete uma só sublista. <code>groupby</code> exige entrada ordenada pela mesma chave.</p>
+</div>
+
+<!-- ============================================ BLOCO 5 -->
+<h2 id="b05">Bloco 5 · Iteração: protocolo, geradores e <code>itertools</code></h2>
+
+<h3>Por que isso importa</h3>
+<p>O laço <code>for</code> é a construção mais usada da linguagem e raramente é entendido por dentro. Quem o entende escreve pipelines que processam arquivos maiores que a memória com poucos KiB, consegue compor transformações sem listas intermediárias, e reconhece de longe os três defeitos do tema: o iterador consumido duas vezes, o gerador que falha só quando alguém o percorre, e o recurso aberto que um gerador abandonado segura. É também a base do que vem depois: <code>async for</code>, streaming de respostas de LLM e leitura de datasets são o mesmo protocolo.</p>
+
+<h3>O protocolo: iterável versus iterador</h3>
+<p>Dois papéis, dois métodos:</p>
+<ul>
+<li>Um <strong>iterável</strong> sabe produzir um iterador: implementa <code>__iter__()</code>. Exemplos: <code>list</code>, <code>str</code>, <code>dict</code>, <code>range</code>, arquivos.</li>
+<li>Um <strong>iterador</strong> entrega os itens um a um: implementa <code>__next__()</code> (devolve o próximo ou levanta <code>StopIteration</code>) e <code>__iter__()</code> devolvendo a si mesmo.</li>
+</ul>
+<p>O laço <code>for x in obj: corpo</code> é, em essência:</p>
+<pre><code>it = iter(obj)            # chama obj.__iter__()
+while True:
+    try:
+        x = next(it)      # chama it.__next__()
+    except StopIteration:
+        break
+    corpo</code></pre>
+<p>A diferença importa porque o iterável é <em>reutilizável</em> (cada <code>iter()</code> dá um cursor novo) e o iterador é <em>de passagem única</em> (o estado do cursor está nele).</p>
+<pre><code>&gt;&gt;&gt; r = iter(range(3)); list(r), list(r)
+([0, 1, 2], [])
+&gt;&gt;&gt; list(range(3)), list(range(3))          # range é iterável: cada list() pede um cursor novo
+([0, 1, 2], [0, 1, 2])
+&gt;&gt;&gt; m = map(str, [1, 2]); list(m), list(m)  # map devolve iterador
+(['1', '2'], [])
+&gt;&gt;&gt; it = iter([1, 2, 3])
+&gt;&gt;&gt; for x in it:
+...     if x == 2: break
+&gt;&gt;&gt; list(it)
+[3]
+</code></pre>
+<p>O último caso é o que pega: o <code>break</code> não "fecha" o iterador; ele já consumiu o 2, e o que sobra é <code>[3]</code>. Um iterador passado para duas funções é dividido entre elas. Um iterador próprio mínimo mostra o contrato (e a razão de <code>__iter__</code> devolver <code>self</code>):</p>
+<pre><code>class Cnt:
+    def __init__(self, n): self.n, self.i = n, 0
+    def __iter__(self): return self
+    def __next__(self):
+        if self.i &gt;= self.n:
+            raise StopIteration
+        self.i += 1
+        return self.i
+
+&gt;&gt;&gt; list(Cnt(3))
+[1, 2, 3]</code></pre>
+
+<h3>Geradores: iteradores escritos como funções</h3>
+<p>Escrever a classe acima à mão é verboso. Uma função com <code>yield</code> no corpo é uma <strong>função geradora</strong>: chamá-la <em>não executa o corpo</em>; devolve um objeto gerador, que implementa o protocolo de iterador. O corpo roda sob demanda, e em cada <code>yield</code> a função <strong>suspende</strong>, preservando variáveis locais e ponto de execução, até o próximo <code>next()</code>.</p>
+<pre><code>def gen():
+    print("start")
+    x = yield 1
+    print("got", x)
+    yield 2
+    print("end")
+
+&gt;&gt;&gt; g = gen()                 # nada impresso: o corpo ainda não rodou
+&gt;&gt;&gt; next(g)
+start
+1
+&gt;&gt;&gt; g.send("oi")              # retoma; "oi" vira o valor da expressão yield
+got oi
+2
+&gt;&gt;&gt; next(g)
+end
+StopIteration</code></pre>
+<p>O gerador passa por estados observáveis (<code>inspect.getgeneratorstate</code>): <code>GEN_CREATED</code>, <code>GEN_SUSPENDED</code>, <code>GEN_RUNNING</code>, <code>GEN_CLOSED</code>. O <code>return</code> do gerador encerra com <code>StopIteration</code>. E, por desenho (PEP 479), um <code>StopIteration</code> <em>levantado dentro</em> do corpo é convertido em erro, para que um bug interno não pareça "fim normal":</p>
+<pre><code>&gt;&gt;&gt; def g():
+...     yield 1
+...     raise StopIteration
+&gt;&gt;&gt; list(g())
+RuntimeError: generator raised StopIteration</code></pre>
+<p>Outros recursos: <code>yield from outro</code> delega a outro iterável (e propaga <code>send</code>/<code>close</code>), ideal para recursão sobre estruturas; <code>g.close()</code> injeta <code>GeneratorExit</code> no ponto suspenso para que blocos <code>finally</code>/<code>with</code> limpem. As <strong>expressões geradoras</strong> <code>(f(x) for x in xs)</code> são a forma curta, e o <code>sum(1 for _ in range(10**6))</code> conta sem criar lista.</p>
+<pre><code>def flat(xs):
+    for x in xs:
+        if isinstance(x, list):
+            yield from flat(x)
+        else:
+            yield x
+
+&gt;&gt;&gt; list(flat([1, [2, [3]], 4]))
+[1, 2, 3, 4]</code></pre>
+<p>Geradores podem ser <strong>infinitos</strong>, porque nada é produzido antes de ser pedido. O consumidor define quando parar:</p>
+<pre><code>def fib():
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+
+&gt;&gt;&gt; list(itertools.takewhile(lambda v: v &lt; 30, fib()))
+[0, 1, 1, 2, 3, 5, 8, 13, 21]</code></pre>
+
+<h3>Preguiça como ferramenta de memória</h3>
+<p>A vantagem central é memória constante: o dado flui um item por vez. Medição real com <code>tracemalloc</code>, contando as linhas de um arquivo de 1 milhão de linhas:</p>
+<pre><code>sum(1 for _ in open(p, encoding="utf-8"))          # pico: 145 KiB
+len(p.read_text(encoding="utf-8").splitlines())    # pico: 59 032 KiB</code></pre>
+<p>Mesmo resultado (1 000 000), com a diferença de ~400 vezes no pico. O arquivo é um iterador de linhas. Em pipelines, cada estágio é um gerador consumindo o anterior (<code>linhas → parse → filtro → agregação</code>), sem lista intermediária. É exatamente a forma do laboratório: <code>scan(path)</code> lê e valida linha a linha, e quem consome decide se agrega, imprime ou para no primeiro erro.</p>
+
+<h3><code>itertools</code>: peças para compor iteração</h3>
+<table>
+<thead><tr><th>Função</th><th>O que faz</th><th>Exemplo</th></tr></thead>
+<tbody>
+<tr><td><code>islice(it, a, b, passo)</code></td><td>fatia sem materializar (não aceita negativos)</td><td><code>list(islice("abcdef", 1, 5, 2))</code> → <code>['b', 'd']</code></td></tr>
+<tr><td><code>chain(*its)</code> / <code>chain.from_iterable</code></td><td>concatena iteráveis</td><td><code>list(chain([1], [2]))</code> → <code>[1, 2]</code></td></tr>
+<tr><td><code>pairwise(it)</code></td><td>pares consecutivos</td><td><code>[('a','b'), ('b','c')]</code></td></tr>
+<tr><td><code>batched(it, n)</code> (3.12+)</td><td>lotes de tamanho n (o último pode ser menor)</td><td><code>list(batched("abcde", 2))</code> → <code>[('a','b'), ('c','d'), ('e',)]</code></td></tr>
+<tr><td><code>accumulate(it)</code></td><td>acumulados parciais</td><td><code>[1, 3, 6]</code> para <code>[1, 2, 3]</code></td></tr>
+<tr><td><code>groupby(it, key)</code></td><td>agrupa corridas <em>adjacentes</em> (ordene antes)</td><td>bloco 4</td></tr>
+<tr><td><code>takewhile</code> / <code>dropwhile</code></td><td>prefixo / resto por predicado</td><td>acima, com <code>fib()</code></td></tr>
+<tr><td><code>product</code> / <code>permutations</code> / <code>combinations</code></td><td>combinatória</td><td><code>product("ab", repeat=2)</code></td></tr>
+<tr><td><code>tee(it, n)</code></td><td>n iteradores independentes (bufferiza o que um consumiu e o outro não)</td><td>use com cuidado em fluxos longos</td></tr>
+</tbody>
+</table>
+<p>O <code>batched</code> é o remédio para "processar em lotes de 500" (inserção em banco, chamadas de API com limite). Antes dele, a solução caseira com fatias de lista falhava em fluxos; hoje: <code>for lote in batched(linhas, 500): ...</code>.</p>
+
+<h3>Exemplo trabalhado: o leitor do laboratório</h3>
+<p>A função <code>scan</code> junta quase tudo deste bloco e do seguinte. Ela é um gerador que <em>devolve erros como valores</em> em vez de levantá-los, porque um erro de linha não deve matar a leitura do resto:</p>
+<pre><code>def scan(path: Path, *, encoding: str = "utf-8") -&gt; Iterator[Expense | InvalidRowError]:
+    try:
+        with path.open(encoding=encoding, newline="") as handle:
+            reader = csv.DictReader(handle)
+            missing = [c for c in REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
+            if missing:
+                raise MissingColumnError(missing)
+            for row in reader:
+                try:
+                    item: Expense | InvalidRowError = parse_row(reader.line_num, row)
+                except InvalidRowError as err:
+                    item = err
+                yield item
+    except UnicodeDecodeError as err:
+        raise EncodingMismatchError(...) from err</code></pre>
+<p>Consequências verificáveis:</p>
+<pre><code>&gt;&gt;&gt; g = scan(Path("nao-existe.csv")); type(g).__name__
+'generator'
+&gt;&gt;&gt; next(g)
+FileNotFoundError: [Errno 2] No such file or directory: 'nao-existe.csv'   # só aqui, no primeiro next(): a chamada não abriu nada</code></pre>
+<p>Primeiro, <strong>criar o gerador não abre o arquivo</strong>; o erro de arquivo inexistente aparece no primeiro <code>next()</code>, longe de onde você chamou <code>scan(...)</code>. Isso é bom para memória e ruim para diagnóstico, e por isso a CLI trata <code>FileNotFoundError</code> no ponto em que consome. Segundo, o <code>with</code> está <em>dentro</em> do gerador: o arquivo fica aberto enquanto o gerador estiver suspenso e fecha quando ele termina, é fechado (<code>close()</code>) ou coletado. O teste <code>test_scan_is_a_generator_and_does_not_open_the_file_early</code> fixa a primeira propriedade; <code>test_strict_reader_is_lazy_and_stops_at_first_bad_row</code>, a segunda. Terceiro, o <code>reader.line_num</code> (e não um contador manual) dá o número de linha <em>física</em> mesmo com campos multilinha entre aspas.</p>
+
+<h3>Decisões e erros comuns</h3>
+<ul>
+<li><strong>Quando materializar:</strong> se precisa de <code>len</code>, indexar, percorrer duas vezes ou ordenar, use <code>list</code>. Se só percorre uma vez, deixe preguiçoso.</li>
+<li><strong>Funções que aceitam <code>Iterable</code></strong> (não <code>list</code>) funcionam com listas, geradores e arquivos; funções que percorrem duas vezes devem exigir <code>Sequence</code> ou materializar no início, documentando.</li>
+<li><strong>Gerador como API pública:</strong> documente que é de passagem única e que erros podem aparecer no consumo.</li>
+<li><strong><code>return</code> no gerador:</strong> o valor vai para o <code>StopIteration.value</code>; raro, e quase sempre um sinal de que uma classe ou tupla final seria mais claro.</li>
+<li><strong>Efeitos colaterais dentro de <code>map</code>/comprehension:</strong> <code>map(print, xs)</code> não imprime nada até alguém consumir.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · o gerador abandonado segura o recurso e o erro vem tarde</span>
+<p>Um gerador que abre arquivo/conexão e é descartado antes de acabar só libera o recurso quando é coletado (imediato no CPython por contagem de referências, indeterminado em outras implementações e quando há referência em traceback ou lista). Em código de produção isso vira "too many open files" intermitente. Duas defesas: consumir dentro de <code>with contextlib.closing(gerador):</code> quando for possível abandonar no meio, e preferir passar o <code>Path</code> ao consumidor final a deixar um gerador aberto circulando. O segundo defeito é o simétrico: como o corpo só roda no consumo, validações e erros de configuração (arquivo ausente, coluna faltando) aparecem no primeiro <code>next()</code>, possivelmente num outro módulo ou thread; se quiser falhar cedo, valide numa função comum que <em>devolve</em> o gerador.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Iterável produz iterador; iterador é de passagem única e levanta <code>StopIteration</code> no fim. O <code>for</code> é <code>iter</code> mais <code>next</code> em laço. Função com <code>yield</code> devolve gerador: o corpo só roda sob demanda e suspende preservando o estado; dá memória constante (145 KiB contra 59 MiB na medição acima) e permite fluxos infinitos. <code>itertools</code> compõe sem listas intermediárias; <code>groupby</code> exige ordenação; <code>batched</code> faz lotes. Erros e abertura de recurso dentro de gerador só ocorrem no consumo.</p>
+</div>
+
+<!-- ============================================ BLOCO 6 -->
+<h2 id="b06">Bloco 6 · Erros e exceções</h2>
+
+<h3>Por que isso importa</h3>
+<p>Software de produção é, em boa parte, tratamento de falha: arquivo ausente, byte inválido, valor fora do domínio, disco cheio. A linguagem oferece exceções; o que separa código robusto de código frágil é <em>quem</em> captura <em>o quê</em>, <em>onde</em>, e <em>que informação sobrevive</em> até o ponto em que alguém pode agir. Dois extremos produzem os piores sistemas: o <code>except: pass</code> que apaga o erro, e o programa que despeja um traceback cru para o usuário.</p>
+
+<h3>O modelo: levantar, desenrolar, capturar</h3>
+<p>Uma exceção é um objeto (instância de <code>BaseException</code>) levantado com <code>raise</code>. Quando isso ocorre, a execução abandona a linha atual e <strong>desenrola a pilha</strong>: sobe frame a frame procurando um <code>except</code> cujo tipo case; se nenhum casa, o programa termina com o traceback e exit code 1 (F01). O objeto carrega a mensagem (<code>args</code>), o <code>__traceback__</code> e, quando encadeado, <code>__cause__</code> e <code>__context__</code>.</p>
+<p>A hierarquia padrão tem uma divisão fundamental:</p>
+<pre><code>BaseException
+ ├─ SystemExit, KeyboardInterrupt, GeneratorExit      (NÃO capture, em geral)
+ └─ Exception
+     ├─ ArithmeticError (ZeroDivisionError, OverflowError)
+     ├─ LookupError (KeyError, IndexError)
+     ├─ OSError (FileNotFoundError, PermissionError, ...)
+     ├─ ValueError (UnicodeError → UnicodeDecodeError)
+     ├─ TypeError, AttributeError, RuntimeError, ...
+     └─ as suas, derivadas de Exception</code></pre>
+<pre><code>&gt;&gt;&gt; [c.__name__ for c in FileNotFoundError.__mro__]
+['FileNotFoundError', 'OSError', 'Exception', 'BaseException', 'object']
+&gt;&gt;&gt; [c.__name__ for c in KeyError.__mro__]
+['KeyError', 'LookupError', 'Exception', 'BaseException', 'object']
+</code></pre>
+<p><code>SystemExit</code> e <code>KeyboardInterrupt</code> ficam fora de <code>Exception</code> de propósito, para que um <code>except Exception</code> não impeça o programa de terminar nem o usuário de interromper com Ctrl+C. Capturar a superclasse captura toda a família: <code>except OSError</code> pega <code>FileNotFoundError</code> e <code>PermissionError</code>; <code>except LookupError</code> pega <code>KeyError</code> e <code>IndexError</code>.</p>
+
+<h3><code>try</code>, <code>except</code>, <code>else</code>, <code>finally</code></h3>
+<table>
+<thead><tr><th>Cláusula</th><th>Executa quando</th><th>Use para</th></tr></thead>
+<tbody>
+<tr><td><code>try</code></td><td>sempre começa</td><td>só o mínimo que pode falhar</td></tr>
+<tr><td><code>except T as e</code></td><td>o <code>try</code> levantou algo que casa com <code>T</code> (primeiro que casar, de cima para baixo)</td><td>tratar ou traduzir o erro</td></tr>
+<tr><td><code>else</code></td><td>o <code>try</code> terminou <em>sem</em> exceção</td><td>o que depende do sucesso e não deve ser protegido pelo <code>except</code></td></tr>
+<tr><td><code>finally</code></td><td>sempre, ao sair do bloco (sucesso, erro, <code>return</code>)</td><td>limpeza que não pode faltar</td></tr>
+</tbody>
+</table>
+<pre><code>def f():
+    try:
+        return "try"
+    finally:
+        print("finally roda")
+
+&gt;&gt;&gt; f()
+finally roda
+'try'</code></pre>
+<p>O <code>finally</code> roda <em>antes</em> do valor ser entregue ao chamador. O <code>else</code> existe para que o escopo do <code>except</code> seja estreito: se você colocar no <code>try</code> também a lógica posterior, um erro nela é capturado pelo handler pensado para outra coisa e mascarado. Regras de higiene:</p>
+<ul>
+<li><strong>Capture o tipo mais específico</strong> que você sabe tratar. <code>except Exception</code> só na fronteira de um processo ou de uma tarefa (para registrar e seguir ou terminar com código de erro), nunca no meio da lógica.</li>
+<li><strong><code>except:</code> sem tipo</strong> captura inclusive <code>KeyboardInterrupt</code>; <code>except Exception: pass</code> apaga evidência. Se não sabe tratar, não capture: deixe subir.</li>
+<li><strong>Mantenha o <code>try</code> curto</strong>: a linha que falha, não a função inteira.</li>
+<li>No Python 3.14 vários tipos podem ser listados sem parênteses (PEP 758): <code>except ValueError, TypeError:</code> (sem <code>as</code>); o formato com parênteses continua válido e é o que funciona em versões anteriores.</li>
+</ul>
+
+<h3>Encadear: <code>raise ... from</code></h3>
+<p>Camadas de código traduzem erros: o parser vê um <code>ValueError</code>; o domínio quer um <code>InvalidRowError</code> com linha e campo. Se você levanta uma nova exceção dentro de um <code>except</code>, o Python guarda a original em <code>__context__</code> ("durante o tratamento de X, ocorreu Y"). Com <code>raise Nova from original</code>, a relação é declarada: grava <code>__cause__</code> ("Y foi causado diretamente por X"), e o traceback mostra as duas.</p>
+<pre><code>&gt;&gt;&gt; try:
+...     try: int("x")
+...     except ValueError as e: raise RuntimeError("config inválida") from e
+... except RuntimeError as e:
+...     print(repr(e), "| cause:", repr(e.__cause__))
+RuntimeError('config inválida') | cause: ValueError("invalid literal for int() with base 10: 'x'")</code></pre>
+<p><code>raise X from None</code> suprime o encadeamento (use quando a causa é ruído, não informação). Para anexar contexto sem trocar de tipo: <code>e.add_note("linha 9 do arquivo")</code> e <code>raise</code> (as notas aparecem no traceback). Para vários erros simultâneos (tarefas concorrentes, validação em lote), existe <code>ExceptionGroup</code> com <code>except*</code>, que separa por tipo:</p>
+<pre><code>&gt;&gt;&gt; try:
+...     raise ExceptionGroup("lote", [ValueError("a"), TypeError("b"), ValueError("c")])
+... except* ValueError as eg: print("VE", [str(e) for e in eg.exceptions])
+... except* TypeError as eg: print("TE", [str(e) for e in eg.exceptions])
+VE ['a', 'c']
+TE ['b']</code></pre>
+<p>O uso principal é em concorrência estruturada (<code>asyncio.TaskGroup</code>, M02).</p>
+
+<h3>Exceções próprias: desenhe a hierarquia</h3>
+<p>Uma biblioteca ou módulo deve ter <strong>uma exceção-base</strong> sua, para que o chamador capture a família inteira sem capturar <code>Exception</code>. As subclasses carregam <em>dados estruturados</em> como atributos, além do texto, porque quem trata precisa de campos, não de <code>regex</code> sobre mensagem. Assim é o <code>errors.py</code> do laboratório:</p>
+<pre><code>class ExpensesError(Exception):
+    """Base class for every error this package raises on purpose."""
+
+class MissingColumnError(ExpensesError):
+    def __init__(self, columns: list[str]) -&gt; None:
+        self.columns = columns
+        super().__init__("colunas obrigatórias ausentes: " + ", ".join(columns))
+
+class InvalidRowError(ExpensesError):
+    def __init__(self, line: int, field: str, message: str) -&gt; None:
+        self.line, self.field, self.message = line, field, message
+        super().__init__(f"linha {line}, campo {field!r}: {message}")</code></pre>
+<p>O nome termina em <code>Error</code>, descreve a falha (não o lugar), e a mensagem está em português porque a CLI a mostra ao usuário. A CLI mapeia a hierarquia para o contrato de exit codes do F01: <code>0</code> tudo válido; <code>1</code> dados inválidos; <code>2</code> problema de uso/ambiente (arquivo ausente, encoding errado, coluna faltando). Sem a base comum, esse mapeamento seria uma lista de tipos; com ela, <code>except ExpensesError</code> cobre o domínio e <code>FileNotFoundError</code> é tratado à parte.</p>
+
+<h3>EAFP versus LBYL</h3>
+<p><strong>LBYL</strong> ("look before you leap") verifica antes: <code>if path.exists(): ler(path)</code>. <strong>EAFP</strong> ("easier to ask forgiveness than permission") tenta e trata: <code>try: ler(path) except FileNotFoundError: ...</code>. Python favorece EAFP, por razões mecânicas: a verificação prévia é uma <em>corrida</em> (o arquivo pode sumir entre o <code>exists()</code> e o <code>open()</code>, TOCTOU), duplica a lógica que o próprio <code>open</code> já faz, e não cobre as outras falhas (permissão, disco). Exceção à regra: quando a verificação é barata, sem corrida e melhora a mensagem (validar entrada de usuário antes de gastar trabalho). Bônus de desempenho: em CPython 3.11+ o <code>try</code> sem exceção custa praticamente zero; levantar custa mais, então use o fluxo normal para o caso comum (<code>dict.get</code> / <code>in</code> quando a ausência é frequente).</p>
+<p>Há também o terceiro modo, usado pelo <code>scan</code>: <em>erros como valores</em>. Quando falhas são esperadas, numerosas e não devem interromper o fluxo (linhas inválidas num CSV), devolver o erro como item do resultado evita um <code>try</code> por elemento e deixa o chamador decidir (estrito ou tolerante). Lançar é melhor para o caso excepcional que torna o resto inútil (coluna ausente).</p>
+
+<h3>Context managers: limpeza como protocolo</h3>
+<p>O <code>with</code> garante que a limpeza ocorra, e é a forma correta de segurar recursos (arquivo, lock, conexão, transação, diretório temporário). O protocolo tem dois métodos: <code>__enter__()</code> (devolve o valor de <code>as</code>) e <code>__exit__(tipo, valor, tb)</code>, chamado <em>sempre</em> ao sair do bloco; se <code>__exit__</code> devolver verdadeiro, a exceção é <strong>suprimida</strong>.</p>
+<pre><code>class A:
+    def __enter__(self): print("enter"); return self
+    def __exit__(self, t, v, tb): print("exit", t.__name__ if t else None); return True
+
+&gt;&gt;&gt; with A(): raise RuntimeError
+enter
+exit RuntimeError
+&gt;&gt;&gt; print("seguiu: __exit__ engoliu")
+seguiu: __exit__ engoliu</code></pre>
+<p>A forma curta é <code>contextlib.contextmanager</code>, em que um gerador com um único <code>yield</code> faz as vezes de enter/exit (o código antes do <code>yield</code> é o enter; o depois, dentro de <code>try/finally</code>, é o exit). <code>contextlib.suppress(FileNotFoundError)</code> ignora um tipo específico de forma explícita, e <code>ExitStack</code> compõe um número dinâmico de contextos.</p>
+<pre><code>from contextlib import contextmanager
+
+@contextmanager
+def cm():
+    print("antes")
+    try:
+        yield 1
+    finally:
+        print("depois")
+
+&gt;&gt;&gt; with cm() as v: print(v)
+antes
+1
+depois</code></pre>
+
+<h3>Exemplo trabalhado: gravar um arquivo de forma atômica</h3>
+<p>Problema: gravar o relatório JSON sem nunca deixar um arquivo pela metade. Com <code>open(alvo, "w")</code>, o arquivo é <em>truncado ao abrir</em>; se o programa falhar no meio, o conteúdo antigo já foi destruído. A solução do laboratório é um context manager que escreve num temporário ao lado e só no fim <strong>renomeia</strong> sobre o alvo (<code>os.replace</code> é atômico no mesmo sistema de arquivos):</p>
+<pre><code>class AtomicWriter:
+    def __init__(self, target: Path, *, encoding: str = "utf-8") -&gt; None:
+        self.target = target
+        self.encoding = encoding
+        self._tmp = target.with_name(target.name + ".tmp")
+        self._handle: TextIO | None = None
+
+    def __enter__(self) -&gt; TextIO:
+        self._handle = self._tmp.open("w", encoding=self.encoding, newline="\n")
+        return self._handle
+
+    def __exit__(self, exc_type, exc, tb) -&gt; None:
+        if self._handle is not None:
+            self._handle.close()
+        if exc_type is None:
+            os.replace(self._tmp, self.target)      # sucesso: troca atômica
+        else:
+            self._tmp.unlink(missing_ok=True)       # falha: descarta o temporário</code></pre>
+<p>Três detalhes de projeto: o <code>__exit__</code> devolve <code>None</code>, então a exceção original <strong>não é suprimida</strong> (um context manager de limpeza nunca deve esconder a falha); o <code>newline="\n"</code> e o <code>encoding</code> explícitos tornam a saída idêntica em qualquer sistema; e <code>write_report</code> traduz <code>OSError</code> para <code>ExportError</code> com <code>raise ... from err</code>, conservando a causa. Os testes cobrem os quatro papéis: caminho feliz (<code>test_atomic_writer_commits_on_success</code>), falha injetada (o corpo levanta <code>RuntimeError("boom")</code> e o arquivo antigo permanece, sem sobra de <code>.tmp</code>) e o <strong>controle negativo</strong>:</p>
+<pre><code>def test_naive_write_would_have_clobbered_the_file(tmp_path):
+    target = tmp_path / "out.txt"; target.write_text("antigo", encoding="utf-8")
+    with pytest.raises(RuntimeError), target.open("w", encoding="utf-8") as handle:
+        handle.write("metade"); raise RuntimeError("boom")
+    assert target.read_text(encoding="utf-8") == "metade"     # o antigo foi destruído</code></pre>
+<p>O controle negativo prova que o teste da versão atômica <em>consegue</em> falhar: a mesma falha, com <code>open</code> comum, destrói o conteúdo. Sem ele, não se sabe se o teste positivo verifica alguma coisa.</p>
+
+<h3>Decisões e erros comuns</h3>
+<ul>
+<li><strong>Traduza na fronteira entre camadas</strong> (<code>OSError</code> → <code>ExportError</code>, <code>ValueError</code> → <code>InvalidRowError</code>), sempre com <code>from</code>.</li>
+<li><strong>Não use exceção para fluxo normal</strong> frequente nem para devolver status; também não devolva <code>None</code>/<code>-1</code>/<code>False</code> para sinalizar erro que o chamador pode esquecer de checar.</li>
+<li><strong><code>assert</code> não é validação de entrada</strong>: some com <code>python -O</code>. Use-o para invariantes internas (e nos testes); valide entrada com <code>if ... raise</code>.</li>
+<li><strong>Log e relance, não log e engula</strong>; e registre a exceção uma vez só, na fronteira.</li>
+<li><strong>Mensagens com dados e ação:</strong> "linha 6, campo 'amount': valor inválido: 'abc'" diz onde e o quê.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · <code>__exit__</code> que devolve verdadeiro, e <code>except</code> largo demais, engolem bugs</span>
+<p>Um <code>__exit__</code> terminado em <code>return True</code> (ou um <code>@contextmanager</code> com <code>except Exception: pass</code> em volta do <code>yield</code>) transforma o bloco <code>with</code> em um buraco negro: qualquer erro do corpo, inclusive um <code>NameError</code> por typo, desaparece e o programa "segue". Revise todo gerenciador de contexto procurando o retorno e o que o <code>except</code> captura. A regra: suprima só um tipo conhecido (<code>suppress(FileNotFoundError)</code>), nunca "tudo". E vale o corolário do bloco 3: <code>return</code>/<code>continue</code> em <code>finally</code> faz o mesmo e hoje gera <code>SyntaxWarning</code>.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Exceção é um objeto que desenrola a pilha até um <code>except</code> que case; <code>BaseException</code> inclui o que não se captura, <code>Exception</code> é a raiz do que é seu. <code>else</code> mantém o <code>try</code> curto, <code>finally</code> sempre limpa. <code>raise Y from X</code> preserva a causa. Defina uma exceção-base por pacote e dê atributos às subclasses. Prefira EAFP; use erros como valores quando falhar é esperado e em volume. Context manager garante limpeza e não deve suprimir o que não conhece.</p>
+</div>
+
+<!-- ============================================ BLOCO 7 -->
+<h2 id="b07">Bloco 7 · Arquivos, texto e módulos</h2>
+
+<h3>Por que isso importa</h3>
+<p>Quase todo programa real lê dados de algum lugar e os escreve em outro, e quase todo defeito dessa fronteira tem uma de três causas: <strong>caminho</strong> montado como texto (separadores, diretório corrente), <strong>codificação</strong> assumida em vez de declarada, e <strong>formato</strong> tratado "na unha" (CSV com vírgula dentro do campo, JSON com número monetário). Do outro lado do mesmo bloco, o sistema de import decide como seu código se divide em arquivos sem se quebrar: quem o desconhece cria ciclos, sombreia a stdlib e depende de ordem de execução.</p>
+
+<h3><code>pathlib</code>: caminhos como objetos</h3>
+<p><code>pathlib.Path</code> representa um caminho como objeto imutável, com o operador <code>/</code> para compor, atributos para decompor e métodos para o sistema de arquivos. Substitui a manipulação de strings e a maior parte do <code>os.path</code>.</p>
+<pre><code>&gt;&gt;&gt; from pathlib import Path
+&gt;&gt;&gt; p = Path("/tmp/f02x/dados") / "sub" / "arq.tar.gz"
+&gt;&gt;&gt; p.name, p.stem, p.suffix, p.suffixes
+('arq.tar.gz', 'arq.tar', '.gz', ['.tar', '.gz'])
+&gt;&gt;&gt; p.parent, p.with_suffix(".zip").name
+(PosixPath('/tmp/f02x/dados/sub'), 'arq.zip')
+&gt;&gt;&gt; Path("a") / "/etc"            # componente absoluto REINICIA o caminho
+PosixPath('/etc')</code></pre>
+<p>O último caso é uma armadilha de segurança: <code>base / nome_do_usuario</code> com <code>nome_do_usuario = "/etc/passwd"</code> escapa da pasta-base (e <code>..</code> também). Para entrada não confiável, resolva e confirme que o resultado continua dentro da base (<code>resolved.is_relative_to(base.resolve())</code>). Os métodos de uso diário: <code>exists()</code>, <code>is_file()</code>, <code>mkdir(parents=True, exist_ok=True)</code>, <code>glob("*.csv")</code>/<code>rglob</code>, <code>iterdir()</code>, <code>read_text(encoding=...)</code>, <code>write_text(...)</code>, <code>read_bytes()</code>, <code>unlink(missing_ok=True)</code>, <code>stat()</code>. Para arquivos temporários, <code>tempfile</code> (e, nos testes, o fixture <code>tmp_path</code>). Caminhos relativos dependem do <strong>diretório corrente</strong> (F01), não da pasta do script: ancore em <code>Path(__file__).parent</code> quando o dado viaja com o código.</p>
+
+<h3>Abrir, ler, escrever: texto versus binário</h3>
+<p><code>open(caminho, modo, encoding=..., newline=...)</code> devolve um objeto de arquivo. Dois mundos, escolhidos pelo modo:</p>
+<ul>
+<li><strong>Texto</strong> (<code>"r"</code>, <code>"w"</code>, <code>"a"</code>): lê/escreve <code>str</code>, decodificando/codificando com <code>encoding</code> e traduzindo fins de linha.</li>
+<li><strong>Binário</strong> (<code>"rb"</code>, <code>"wb"</code>): lê/escreve <code>bytes</code> sem tradução. Para imagens, hashes, protocolos e quando <em>você</em> controla a decodificação.</li>
+</ul>
+<p>Sempre dentro de <code>with</code> (bloco 6) e <strong>sempre com <code>encoding="utf-8"</code> em texto</strong>. Sem o argumento, o Python usa a codificação da localidade (<code>locale.getencoding()</code>), que difere entre máquinas e CI; o resultado é o bug "só falha na máquina do colega". Na versão testada (3.14.7, Linux, locale UTF-8) o padrão acidentalmente coincide, e é por isso que o bug passa nos testes locais. (O PEP 686 torna o modo UTF-8 padrão a partir do Python 3.15; até lá, e para código que precisa rodar em várias versões, declare.)</p>
+<pre><code>&gt;&gt;&gt; f = tmp / "x.txt"; f.write_text("ação\n", encoding="utf-8")
+&gt;&gt;&gt; f.read_bytes(), f.stat().st_size
+(b'a\xc3\xa7\xc3\xa3o\n', 7)
+&gt;&gt;&gt; f.read_text(encoding="latin-1")          # leitura na codificação ERRADA: não falha, corrompe
+'aÃ§Ã£o\n'
+&gt;&gt;&gt; import locale, sys; locale.getencoding(), sys.flags.utf8_mode
+('UTF-8', 0)</code></pre>
+<p>Ler UTF-8 como Latin-1 <em>nunca</em> falha (todo byte é válido em Latin-1), só produz mojibake silencioso; o contrário (Latin-1 lido como UTF-8) normalmente falha alto, com <code>UnicodeDecodeError</code>, o que é desejável. Daí a regra de decisão do laboratório: <strong>decodificação estrita por padrão</strong>, e erro com mensagem útil em vez de <code>errors="replace"</code>.</p>
+<p>Fins de linha: no modo texto, <code>\r\n</code> e <code>\r</code> lidos viram <code>\n</code> (<em>universal newlines</em>) e, na escrita, <code>\n</code> vira o separador da plataforma, a não ser que se passe <code>newline=""</code> (sem tradução) ou <code>newline="\n"</code>. Um byte-order mark (BOM) de UTF-8, comum em CSV exportado do Excel, aparece como <code>﻿</code> grudado no primeiro campo se você abrir com <code>"utf-8"</code>; com <code>"utf-8-sig"</code> ele é removido. O teste <code>test_bom_breaks_utf8_header_but_utf8_sig_reads_it</code> fixa ambos os lados.</p>
+<p>Leitura: <code>for linha in arquivo</code> itera preguiçosamente (bloco 5); <code>.read()</code> carrega tudo; <code>.read(n)</code> lê em blocos. Escrita: <code>.write()</code> não acrescenta <code>\n</code> sozinho. Gravar de forma que a falha no meio não corrompa o destino: bloco 6 (<code>AtomicWriter</code>); para durabilidade contra queda de energia seria preciso também <code>flush()</code> e <code>os.fsync()</code>, que o laboratório omite de propósito (fora de escopo).</p>
+
+<h3>CSV e JSON: nunca na unha</h3>
+<p>O módulo <code>csv</code> trata o que o <code>split(",")</code> erra: campos entre aspas, vírgulas e quebras de linha dentro do campo, aspas escapadas por duplicação.</p>
+<pre><code>&gt;&gt;&gt; import csv, io
+&gt;&gt;&gt; buf = io.StringIO(); csv.writer(buf).writerow(['a,b', 'c"d', 'e\nf']); buf.getvalue()
+'"a,b","c""d","e\nf"\r\n'
+&gt;&gt;&gt; list(csv.reader(io.StringIO('x;y\n"1,5";2\n'), delimiter=";"))
+[['x', 'y'], ['1,5', '2']]</code></pre>
+<p>Dois requisitos: abrir o arquivo com <code>newline=""</code> (para que o <code>csv</code>, e não o modo texto, interprete as quebras dentro de campos) e escolher o <code>delimiter</code> conforme a origem: CSV de Excel em localidade brasileira usa <code>;</code> porque a vírgula é separador decimal, e o valor "12,50" do arquivo de exemplo do laboratório existe por isso. <code>DictReader</code> devolve cada linha como <code>dict</code> pelo cabeçalho; <code>reader.line_num</code> dá a linha física. Tudo que sai do <code>csv</code> é <code>str</code>: converter para número/data/Decimal e validar é o seu trabalho (<code>parsing.py</code>).</p>
+<p>O <code>json</code> converte entre texto e <code>dict</code>/<code>list</code>/<code>str</code>/<code>int</code>/<code>float</code>/<code>bool</code>/<code>None</code>. Comportamentos que viram bug:</p>
+<pre><code>&gt;&gt;&gt; import json
+&gt;&gt;&gt; json.dumps({"s": "ação"}), json.dumps({"s": "ação"}, ensure_ascii=False)
+('{"s": "a\\u00e7\\u00e3o"}', '{"s": "ação"}')
+&gt;&gt;&gt; json.dumps({"d": Decimal("1.1")})
+TypeError: Object of type Decimal is not JSON serializable
+&gt;&gt;&gt; json.loads("1e400"), json.loads("NaN"), json.loads('{"a":1,"a":2}')
+(inf, nan, {'a': 2})
+&gt;&gt;&gt; json.dumps(float("nan"), allow_nan=False)
+ValueError: Out of range float values are not JSON compliant: nan
+&gt;&gt;&gt; json.dumps({1: "a", None: "b"}), json.loads(json.dumps((1, 2)))
+('{"1": "a", "null": "b"}', [1, 2])
+</code></pre>
+<p>Pontos: <code>ensure_ascii=True</code> (padrão) escapa tudo que não é ASCII, válido mas ilegível; use <code>False</code> e grave em UTF-8. O JSON não tem <code>Decimal</code>, datas nem tuplas (viram lista); chaves viram <code>str</code> (<code>1</code> e <code>None</code> → <code>"1"</code>, <code>"null"</code>, e podem colidir); o parser aceita <code>NaN</code>/<code>Infinity</code> (que não são JSON válido pela especificação) e chaves duplicadas (vence a última, em silêncio); números fora da faixa viram <code>inf</code>. Para a fronteira de uma API, a validação estrita é trabalho do Pydantic (M02). No laboratório, a regra é a do bloco 2: dinheiro trafega como <em>string</em> decimal.</p>
+
+<h3>O sistema de import</h3>
+<p><code>import x</code> não é "incluir um arquivo". É uma operação com cache, em quatro passos:</p>
+<ol>
+<li>Procura <code>x</code> em <strong><code>sys.modules</code></strong> (um <code>dict</code> nome → módulo). Se está lá, devolve o objeto: <strong>o código do módulo não roda de novo</strong>.</li>
+<li>Se não, percorre os <em>finders</em> em <code>sys.meta_path</code>, que procuram nos diretórios de <code>sys.path</code> (pasta do script ou diretório corrente, stdlib, <code>site-packages</code> do ambiente, e o que o <code>.pth</code> de uma instalação editável acrescenta).</li>
+<li>Cria o objeto módulo vazio, <strong>registra-o em <code>sys.modules</code></strong> e então</li>
+<li><strong>executa o corpo do arquivo</strong>, de cima a baixo, no espaço de nomes do módulo. As funções e classes que existem são as que o corpo já definiu até aquele ponto.</li>
+</ol>
+<p>Dois corolários: um módulo é <strong>um singleton por interpretador</strong> (estado global de módulo é compartilhado por todos que o importam), e o efeito colateral no topo (conexão, <code>print</code>, leitura de arquivo) acontece uma vez, no primeiro import, na ordem em que ele ocorrer. Mantenha o topo dos módulos só com definições; trabalho vai em funções.</p>
+<pre><code>$ python -c "import sys, pacote.d; print('pacote.d' in sys.modules, sys.modules['pacote.d'].__file__.split('/')[-1])"
+init pacote
+True d.py</code></pre>
+<p>Note <code>init pacote</code>: importar <code>pacote.d</code> importa antes o pacote <code>pacote</code> e executa seu <code>__init__.py</code>. Um <strong>pacote</strong> é uma pasta importável (tradicionalmente com <code>__init__.py</code>, que define a "cara" do pacote: o que reexporta, <code>__all__</code>); um <strong>módulo</strong> é um arquivo <code>.py</code>. <code>__main__.py</code> dentro do pacote é o que roda com <code>python -m pacote</code>. Pastas sem <code>__init__.py</code> viram <em>pacotes de namespace</em>, úteis em casos específicos e fonte de confusão nos demais: inclua o arquivo.</p>
+<p>Duas formas de import: <strong>absoluto</strong> (<code>from expenses.model import Expense</code>, preferido: claro de qualquer lugar) e <strong>relativo</strong> (<code>from .model import Expense</code>, só dentro de pacote). Em projetos reais use o <strong>layout <code>src/</code></strong> (<code>src/expenses/...</code>), como o laboratório: o pacote só é importável depois de instalado (editável, via <code>uv sync</code>), o que impede o teste de passar "por acaso" porque a pasta corrente estava no <code>sys.path</code> e força a existência de um pacote instalável.</p>
+<p>Estilo: <code>import modulo</code> e <code>from pacote import item</code> no <strong>topo do arquivo</strong>, agrupados (stdlib, terceiros, locais; o <code>ruff</code> com regra <code>I</code> ordena). Evite <code>from x import *</code> (polui o espaço de nomes e esconde a origem). Importar dentro de função é legítimo para dependência opcional ou pesada (custo de carga: <code>python -X importtime</code> mostra o tempo por módulo; <code>import json</code> custa ≈2 ms aqui) e para quebrar ciclos.</p>
+
+<h3>Import circular</h3>
+<p>Um ciclo ocorre quando A importa B e B importa A. Como o módulo é registrado em <code>sys.modules</code> <em>antes</em> de seu corpo executar (passo 3), o segundo import encontra um módulo <strong>parcialmente inicializado</strong>. O que acontece depende de <em>como</em> se importa:</p>
+<pre><code># pacote/a.py                         # pacote/b.py
+from pacote import b                   from pacote.a import fa
+def fa(): return "a"                   def fb(): return fa()
+
+$ python -c "import pacote.a"
+  File ".../pacote/a.py", line 1, in &lt;module&gt;
+    from pacote import b
+  File ".../pacote/b.py", line 1, in &lt;module&gt;
+    from pacote.a import fa
+ImportError: cannot import name 'fa' from partially initialized module 'pacote.a'
+(most likely due to a circular import)</code></pre>
+<p>Sequência: <code>a</code> começa e, na linha 1, importa <code>b</code>; <code>b</code> executa e pede o <em>nome</em> <code>fa</code> de <code>a</code>, mas o corpo de <code>a</code> ainda não passou da linha 1, e <code>fa</code> ainda não existe. Já a variante que importa <em>o módulo</em> e acessa o atributo só no momento do uso funciona:</p>
+<pre><code># pacote/c.py                          # pacote/d.py
+import pacote.d as d                   import pacote.c as c
+def fc(): return d.fd()                def fd(): return "d"
+                                       def uso(): return c.fc()
+$ python -c "import pacote.c as c; print(c.fc())"
+init pacote
+d</code></pre>
+<p>Aqui nenhum módulo precisa de um nome do outro <em>durante o import</em>; os atributos só são resolvidos quando as funções rodam, com os dois módulos completos. Mas funcionar não significa estar certo: <strong>o ciclo é sintoma de acoplamento mal desenhado</strong>. Os remédios, em ordem de preferência:</p>
+<ol>
+<li><strong>Extrair</strong> o que ambos precisam para um terceiro módulo que não importe nenhum dos dois (tipos, constantes, exceções). É por isso que <code>errors.py</code> e <code>model.py</code> do laboratório são folhas: todo mundo importa deles, eles não importam ninguém do pacote.</li>
+<li><strong>Inverter a dependência</strong>: A recebe B por parâmetro (ou um <code>Protocol</code>, M02) em vez de importá-lo.</li>
+<li><strong>Adiar o import</strong> para dentro da função que o usa, como paliativo.</li>
+<li>Para anotações de tipo, importar sob <code>if TYPE_CHECKING:</code> (M02).</li>
+</ol>
+<p>Ordem de dependência do laboratório, sem ciclo: <code>errors</code> e <code>model</code> → <code>parsing</code> → <code>reader</code> → <code>aggregate</code>/<code>export</code> → <code>cli</code>.</p>
+
+<h3>Exemplo trabalhado: do arquivo ao domínio</h3>
+<p>Leia o caminho de um dado pelo laboratório, atribuindo cada decisão ao seu bloco: <code>cli.py</code> recebe um <code>Path</code> (argparse, <code>type=Path</code>); <code>scan</code> abre com <code>encoding</code> explícito e <code>newline=""</code> (bloco 7); <code>csv.DictReader</code> separa os campos; <code>parse_row</code> converte texto em <code>Decimal</code>/<code>date</code>/<code>str</code> normalizada (bloco 2) e levanta <code>InvalidRowError</code> com linha e campo (bloco 6); o resultado é um fluxo preguiçoso (bloco 5) agregado em <code>dict</code> (bloco 4); a saída vai em JSON com <code>Decimal</code> como string, via escrita atômica (blocos 2 e 6). Rodando com um arquivo em Latin-1 sem avisar a codificação:</p>
+<pre><code>$ printf 'date,category,amount,description\n2026-01-01,Caf\xe9,1.00,x\n' &gt; lat.csv
+$ python -m expenses report lat.csv; echo "exit=$?"
+expenses: lat.csv não é utf-8 válido (byte 47: invalid continuation byte)
+exit=2
+$ python -m expenses report lat.csv --encoding latin-1; echo "exit=$?"
+café                        1.00
+total                       1.00
+exit=0</code></pre>
+<p>O byte <code>0xE9</code> ("é" em Latin-1) é recusado em UTF-8, o erro é traduzido para <code>EncodingMismatchError</code>, vira exit code 2 (problema de ambiente, não de dado) e a mensagem diz <em>qual</em> byte e <em>onde</em>. Com a codificação certa, o mesmo arquivo é lido, e a categoria é normalizada para <code>café</code>.</p>
+
+<h3>Decisões e erros comuns</h3>
+<ul>
+<li><strong>Caminhos:</strong> <code>Path</code>, não concatenação de strings; ancore dados do pacote em <code>__file__</code>, dados do usuário em argumentos.</li>
+<li><strong>Texto:</strong> <code>encoding="utf-8"</code> explícito em toda leitura/escrita; <code>utf-8-sig</code> só para entrada de Excel; formato de saída decidido por você, não pela plataforma.</li>
+<li><strong>Formatos:</strong> <code>csv</code> e <code>json</code> da stdlib; um parser caseiro vira dívida.</li>
+<li><strong>Arquivos grandes:</strong> iterar linha a linha; <code>read()</code> só quando sabe que cabe.</li>
+<li><strong>Módulos:</strong> topo só com definições; dependências em uma direção; nomes que não colidem com a stdlib.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · <code>importlib.reload</code> e estado de módulo não são o que parecem</span>
+<p>Como o módulo é um singleton em <code>sys.modules</code>, "re-importar" não recarrega nada. <code>importlib.reload(m)</code> re-executa o corpo no <em>mesmo</em> objeto módulo, mas quem fez <code>from m import f</code> continua segurando a função <em>antiga</em>, e instâncias de classes velhas não viram instâncias das novas. Em REPL/notebook isso gera "corrigi o código e o comportamento não mudou" ou, pior, mistura de versões. Em testes, estado global de módulo (cache, singleton, configuração) vaza entre testes: isole com fixtures (<code>monkeypatch</code>) ou elimine o estado global. Reiniciar o processo é a única garantia.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p><code>Path</code> compõe e decompõe caminhos; componente absoluto reinicia o caminho. Texto é <code>str</code> com <code>encoding</code> explícito, nunca o padrão da plataforma; decodificar na codificação errada pode falhar alto (UTF-8) ou corromper em silêncio (Latin-1). Use <code>csv</code> (com <code>newline=""</code>) e <code>json</code>; dinheiro vai como string. <code>import</code> consulta <code>sys.modules</code>, executa o corpo uma vez e registra o módulo antes de terminar de executá-lo, o que explica o ciclo; o remédio é extrair a dependência comum.</p>
+</div>
+
+<!-- ============================================ BLOCO 8 -->
+<h2 id="b08">Bloco 8 · Classes básicas e testes</h2>
+
+<h3>Por que isso importa</h3>
+<p>Uma classe agrupa dados e o comportamento que os acompanha; um teste automatizado prova, repetidamente e sem custo humano, que esse comportamento continua o mesmo. Juntos são o que torna possível mudar código sem medo, e é o que faz um agente de código ser útil em vez de perigoso: sem testes, nem você nem ele sabem se a alteração quebrou algo. Este bloco cobre o mínimo sólido, o suficiente para o resto do curso; princípios de design (herança versus composição, SOLID, padrões, TDD) são o <a href="../S01-design-de-codigo/S01.html">S01</a>.</p>
+
+<h3>Classes: o que o <code>class</code> realmente faz</h3>
+<p>Uma classe é um <strong>objeto</strong> (instância de <code>type</code>) criado pela execução do bloco <code>class</code>; chamá-la cria instâncias. Cada instância tem seu <code>__dict__</code> de atributos; a classe guarda o que é compartilhado. A busca de atributo vai da instância para a classe (e suas bases), e a <strong>atribuição sempre cria/atualiza na instância</strong>:</p>
+<pre><code>class Conta:
+    taxa = 0.1                 # atributo de CLASSE (compartilhado)
+    def __init__(self):
+        self.saldo = 0         # atributo de INSTÂNCIA
+
+&gt;&gt;&gt; c1, c2 = Conta(), Conta(); c1.taxa = 0.5
+&gt;&gt;&gt; Conta.taxa, c1.taxa, c2.taxa, c1.__dict__
+(0.1, 0.5, 0.1, {'saldo': 0, 'taxa': 0.5})
+</code></pre>
+<p>A atribuição <code>c1.taxa = 0.5</code> não mudou a classe: criou um atributo na instância que <em>sombreia</em> o da classe. Um <strong>método</strong> é uma função comum guardada na classe; o acesso por instância produz um <em>método ligado</em> (a instância vira o primeiro argumento, <code>self</code>, por convenção, não por palavra reservada):</p>
+<pre><code>&gt;&gt;&gt; type(Conta.__init__), type(c1.__init__), c1.__init__.__self__ is c1
+(&lt;class 'function'&gt;, &lt;class 'method'&gt;, True)</code></pre>
+<p>Atenção ao mesmo problema do bloco 3 em forma de classe: um atributo de classe mutável (<code>itens = []</code> no corpo) é <strong>compartilhado por todas as instâncias</strong>. Estado por instância se cria no <code>__init__</code>.</p>
+
+<h3>Métodos especiais (dunders): o protocolo de dados do Python</h3>
+<p>Os métodos de nome <code>__x__</code> são os ganchos pelos quais a sintaxe da linguagem chama o seu objeto. Você não os chama; implementa-os, e o resto funciona:</p>
+<table>
+<thead><tr><th>Construção</th><th>Chama</th><th>Observação</th></tr></thead>
+<tbody>
+<tr><td><code>repr(x)</code>, depuração, REPL</td><td><code>__repr__</code></td><td>para o desenvolvedor, idealmente reconstruível</td></tr>
+<tr><td><code>str(x)</code>, <code>print(x)</code></td><td><code>__str__</code> (cai em <code>__repr__</code>)</td><td>para o usuário</td></tr>
+<tr><td><code>a == b</code></td><td><code>__eq__</code></td><td>padrão: identidade</td></tr>
+<tr><td><code>hash(x)</code>, chave de <code>dict</code></td><td><code>__hash__</code></td><td>obrigatório coerente com <code>__eq__</code></td></tr>
+<tr><td><code>len(x)</code>, <code>bool(x)</code></td><td><code>__len__</code>, <code>__bool__</code></td><td>sem <code>__bool__</code>, vazio (<code>len==0</code>) é falso</td></tr>
+<tr><td><code>x[i]</code>, <code>for</code>, <code>in</code></td><td><code>__getitem__</code>, <code>__iter__</code>, <code>__contains__</code></td><td>só <code>__getitem__</code> já basta para iterar</td></tr>
+<tr><td><code>with x</code></td><td><code>__enter__</code>/<code>__exit__</code></td><td>bloco 6</td></tr>
+<tr><td><code>x(...)</code></td><td><code>__call__</code></td><td>objetos "função"</td></tr>
+<tr><td><code>a &lt; b</code>, <code>a + b</code></td><td><code>__lt__</code>, <code>__add__</code></td><td>devolva <code>NotImplemented</code> para tipos desconhecidos</td></tr>
+</tbody>
+</table>
+<pre><code>class V:
+    def __init__(self, x): self.x = x
+    def __repr__(self): return f"V({self.x!r})"
+    def __eq__(self, o): return isinstance(o, V) and self.x == o.x
+
+&gt;&gt;&gt; V(1) == V(1), V.__hash__
+(True, None)
+
+class W:
+    def __init__(self, items): self.items = list(items)
+    def __len__(self): return len(self.items)
+    def __getitem__(self, i): return self.items[i]
+
+&gt;&gt;&gt; w = W("abc"); len(w), w[1], list(w), "b" in w, bool(W([]))
+(3, 'b', ['a', 'b', 'c'], True, False)</code></pre>
+<p>Dois fatos aparecem nessa saída. <strong>Definir <code>__eq__</code> sem <code>__hash__</code> torna a classe não hashable</strong> (<code>__hash__</code> vira <code>None</code>), exatamente para impedir o par incoerente "iguais com hashes diferentes" do bloco 4. E a classe <code>W</code>, com só <code>__len__</code> e <code>__getitem__</code>, ganhou iteração, <code>in</code> e truthiness, porque o Python recorre a esses protocolos de fallback: é a <em>tipagem estrutural</em> em ação ("se anda como sequência..."), tema do <code>Protocol</code> no M02.</p>
+
+<h3><code>dataclass</code>: classes de dados sem repetição</h3>
+<p>Escrever <code>__init__</code>, <code>__repr__</code> e <code>__eq__</code> à mão para cada registro é repetitivo e fonte de desalinhamento (um campo novo, esquecido no <code>__eq__</code>). O decorador <code>@dataclass</code> gera esses métodos a partir dos <strong>campos anotados</strong> no corpo.</p>
+<pre><code>from dataclasses import dataclass, field, replace
+
+@dataclass
+class P:
+    x: int
+    tags: list[str] = field(default_factory=list)
+
+&gt;&gt;&gt; P(1), P(1) == P(1), P.__hash__
+(P(x=1, tags=[]), True, None)
+
+&gt;&gt;&gt; @dataclass
+... class Q:
+...     tags: list = []
+ValueError: mutable default &lt;class 'list'&gt; for field tags is not allowed: use default_factory</code></pre>
+<p>As opções que importam: <code>frozen=True</code> (instâncias imutáveis: atribuir levanta <code>FrozenInstanceError</code>, e como o valor não muda, o <code>__hash__</code> é gerado, permitindo chave de <code>dict</code>); <code>slots=True</code> (sem <code>__dict__</code> por instância: menos memória e atributos novos proibidos, o que apanha erros de digitação); <code>order=True</code> (gera <code>&lt;</code>, <code>&lt;=</code>... comparando campo a campo, na ordem de declaração); <code>kw_only=True</code> (campos só por nome). <code>dataclasses.replace(obj, campo=novo)</code> cria uma cópia modificada: é como se "altera" um objeto imutável. Para validação ou campos derivados, <code>__post_init__</code> roda logo após o <code>__init__</code> gerado. Dataclass não valida tipos em execução (as anotações são metadados); para validação de fronteira há o Pydantic (M02).</p>
+<p>O modelo do laboratório usa exatamente o conjunto defensivo:</p>
+<pre><code>@dataclass(frozen=True, slots=True)
+class Expense:
+    """One validated expense. Frozen: instances are hashable and cannot drift."""
+    date: dt.date
+    category: str
+    amount: Decimal
+    description: str = ""</code></pre>
+<pre><code>&gt;&gt;&gt; e = Expense(dt.date(2026, 1, 5), "x", Decimal("1.00"))
+&gt;&gt;&gt; e
+Expense(date=datetime.date(2026, 1, 5), category='x', amount=Decimal('1.00'), description='')
+&gt;&gt;&gt; e.amount = 1
+dataclasses.FrozenInstanceError: cannot assign to field 'amount'
+&gt;&gt;&gt; hash(e) == hash(dataclasses.replace(e))
+True</code></pre>
+<p>Um <code>Expense</code> validado nunca "deriva" depois: quem o recebe confia nele. É a transposição do princípio do bloco 6 (validar na borda) para a modelagem: <em>parse, don't validate</em>: a borda converte texto bruto em tipos de domínio e, daí em diante, o sistema trabalha com valores que já não podem ser inválidos. Alternativas: <code>NamedTuple</code>/<code>tuple</code> (leves, desempacotáveis, sem nomes de campo ao desempacotar), <code>dict</code> (sem contrato), classe comum (quando há invariantes e comportamento próprios).</p>
+
+<h3>Testes com <code>pytest</code></h3>
+<p>Um teste é uma função cujo nome começa com <code>test_</code> em um arquivo <code>test_*.py</code>; o <code>pytest</code> as descobre, executa e reporta. A ferramenta central é o <code>assert</code> simples: o <code>pytest</code> <em>reescreve</em> o AST dos testes para mostrar, na falha, os valores intermediários.</p>
+<pre><code>$ python -m pytest -q test_x.py
+..FF..                                                                   [100%]
+___ test_soma[2-2-5] ___
+a = 2, b = 2, esperado = 5
+&gt;   def test_soma(a,b,esperado): assert a+b == esperado
+E   assert (2 + 2) == 5
+___ test_lista ___
+&gt;   def test_lista(): assert [1,2,3] == [1,2,4]
+E   assert [1, 2, 3] == [1, 2, 4]
+E     At index 2 diff: 3 != 4
+FAILED test_x.py::test_soma[2-2-5] - assert (2 + 2) == 5
+FAILED test_x.py::test_lista - assert [1, 2, 3] == [1, 2, 4]
+2 failed, 4 passed in 0.01s</code></pre>
+<p>Os quatro recursos que bastam para quase tudo:</p>
+<ul>
+<li><strong><code>pytest.mark.parametrize</code></strong>: o mesmo teste sobre uma tabela de casos; cada linha vira um teste independente com id próprio (<code>test_soma[2-2-5]</code>), então um caso vermelho não esconde os outros. No laboratório, <code>test_parse_amount_rejects_ambiguous_or_exotic_input</code> varre dez entradas (<code>""</code>, <code>"-5"</code>, <code>"1e3"</code>, <code>"NaN"</code>, <code>"1.234,50"</code>, <code>"٣٤"</code>...) com um corpo só.</li>
+<li><strong><code>pytest.raises(Tipo, match="regex")</code></strong>: afirma que o código levanta; <code>as info</code> expõe a exceção para checar atributos (<code>info.value.line == 7</code>) e a causa (<code>__cause__</code>). Sem <code>raises</code>, um teste que "espera erro" passa quando nada falha.</li>
+<li><strong>Fixtures</strong>: funções com <code>@pytest.fixture</code> que preparam (e, com <code>yield</code>, desmontam) o contexto; o teste as recebe <em>pelo nome do parâmetro</em>. As embutidas mais úteis: <code>tmp_path</code> (diretório temporário único por teste), <code>monkeypatch</code> (altera variável de ambiente, atributo ou <code>cwd</code> e desfaz sozinho), <code>capsys</code> (captura <code>stdout</code>/<code>stderr</code>). Fixtures compartilhadas vão em <code>conftest.py</code>; o escopo (<code>function</code> por padrão, <code>module</code>, <code>session</code>) controla o custo de montagem.</li>
+<li><strong>Marcadores e configuração</strong>: <code>--strict-markers</code> e <code>--strict-config</code> (usados no <code>pyproject.toml</code> do lab) transformam marcador/opção com typo em erro, em vez de ser ignorado.</li>
+</ul>
+<pre><code>@pytest.fixture
+def make_csv(tmp_path: Path) -&gt; CsvFactory:
+    """Write a CSV file with the given data lines; encoding is explicit and overridable."""
+    def factory(*lines: str, name: str = "d.csv", encoding: str = "utf-8", header: str = HEADER) -&gt; Path:
+        path = tmp_path / name
+        path.write_bytes((header + "".join(line + "\n" for line in lines)).encode(encoding))
+        return path
+    return factory
+</code></pre>
+<p>Esta fixture é uma <em>fábrica</em>: devolve uma função, de modo que cada teste gera o arquivo que quer, no encoding que quer (<code>make_csv("x,a,1.00,", encoding="latin-1")</code>), dentro do <code>tmp_path</code> que o <code>pytest</code> descarta depois. Os testes ficam curtos e à vista do cenário.</p>
+
+<h3>O que torna um teste bom</h3>
+<ul>
+<li><strong>Estrutura Arrange–Act–Assert</strong>: prepara, executa uma coisa, afirma. Um comportamento por teste; nome que diz o comportamento (<code>test_wrong_encoding_is_reported_not_garbled</code>), não a função.</li>
+<li><strong>Cobrir quatro papéis</strong>: <em>caminho feliz</em> (funciona), <em>borda</em> (vazio, limite, Unicode), <em>falha injetada</em> (o recurso quebra no meio) e <em>controle negativo</em> (prova que o teste consegue falhar). Um teste que nunca falha não prova nada.</li>
+<li><strong>Determinismo</strong>: nenhum teste depende de relógio, rede, ordem de execução, <code>set</code> ou diretório corrente. Datas e arquivos entram por parâmetro/fixture.</li>
+<li><strong>Isolamento</strong>: nada de estado global entre testes (bloco 7); <code>tmp_path</code> em vez de caminhos fixos.</li>
+<li><strong>Testar comportamento observável</strong>, não o jeito de implementar: um teste acoplado a detalhes interna quebra a cada refatoração sem ter achado bug.</li>
+<li><strong>Cobertura (%) é consequência, não objetivo</strong>: 100% de linhas executadas sem asserção significativa vale zero. A pergunta útil é "se eu estragar esta linha, algum teste fica vermelho?" (mutação, passo 6 do laboratório).</li>
+</ul>
+<p>Na pirâmide de testes, a maioria é de <strong>unidade</strong> (rápidos, isolados, como estes); poucos de <strong>integração</strong> (vários módulos, arquivo real, como os testes de CLI do lab); pouquíssimos <strong>ponta a ponta</strong>. A estratégia completa, com contrato, propriedade e testes de aceitação, fica no M02 e no M02A.</p>
+
+<h3>Exemplo trabalhado: o teste da CLI como contrato</h3>
+<p>A CLI é a única parte com interface externa: argumentos, <code>stdout</code>, <code>stderr</code> e exit code (F01). O teste a trata como caixa-preta:</p>
+<pre><code>def test_cli_strict_stops_with_1_and_writes_no_json(make_csv, capsys, tmp_path):
+    path = make_csv("2026-01-05,a,1.00,", "xx,a,1.00,")
+    out = tmp_path / "r.json"
+    assert main(["report", str(path), "--json", str(out)]) == 1
+    assert "linha 3" in capsys.readouterr().err
+    assert not out.exists()</code></pre>
+<p>Chama <code>main(argv)</code> como função (não precisa subprocesso, porque <code>main</code> recebe <code>argv</code> e <em>devolve</em> o código em vez de chamar <code>sys.exit</code>), afirma o exit code, afirma que o JSON <em>não</em> foi escrito no modo estrito e que a mensagem de erro, com o número da linha, foi para o <code>stderr</code>. Essa testabilidade foi decidida no bloco 1 (<code>raise SystemExit(main())</code> só no <code>__main__</code>); projetar para testar é, em grande parte, não esconder efeitos colaterais no corpo do módulo. A única exceção é o erro de uso, em que o <code>argparse</code> chama <code>sys.exit(2)</code> por conta própria; <code>test_cli_usage_error_exits_2_via_argparse</code> o captura com <code>pytest.raises(SystemExit)</code> e confere <code>info.value.code == 2</code>.</p>
+
+<h3>Decisões e erros comuns</h3>
+<ul>
+<li><strong>Classe ou função?</strong> Sem estado compartilhado e sem várias operações sobre o mesmo dado: função. Dados puros: <code>dataclass</code>. Estado mais invariantes mais comportamento: classe.</li>
+<li><strong><code>@dataclass</code> mutável com <code>__hash__</code> manual</strong> é perigoso: use <code>frozen=True</code> ou não use como chave.</li>
+<li><strong>Atributo de classe mutável</strong> compartilhado; <strong><code>__eq__</code> sem <code>__hash__</code></strong> (ou o inverso) quebra <code>set</code>/<code>dict</code>.</li>
+<li><strong>Herança por reuso de código</strong> costuma ser má ideia; composição primeiro (S01).</li>
+<li><strong>Teste que replica a implementação</strong> (calcula o esperado com o mesmo código) é tautologia: use valores esperados escritos à mão.</li>
+<li><strong>Testes dependentes de ordem</strong> e de <code>print</code>: use <code>capsys</code> e asserções.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · teste que não pode falhar</span>
+<p>Três formas comuns: (1) <code>assert</code> sobre tupla não vazia (<code>assert (x, "mensagem")</code> é sempre verdadeiro; o CPython avisa); (2) <code>pytest.raises</code> largo demais (<code>Exception</code>) que passa por causa de um <code>NameError</code> no seu próprio teste; (3) parametrização cujos ids ou valores são calculados a partir do código sob teste. A defesa é o hábito do <em>controle negativo</em> e da <em>mutação manual</em>: estrague de propósito o código de produção e confirme que o teste correspondente fica vermelho (passos 6 e 7 do laboratório). Um agente de código produz testes que passam com facilidade espantosa; a pergunta de revisão é sempre "esse teste falharia se o bug existisse?".</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Classe é objeto; atributo de instância sombreia o de classe; método é função ligada à instância. Dunders ligam a sintaxe ao seu objeto, e <code>__eq__</code> sem <code>__hash__</code> desliga o hash. <code>@dataclass</code> gera <code>__init__</code>/<code>__repr__</code>/<code>__eq__</code>; <code>frozen</code> e <code>slots</code> dão imutabilidade e economia; default mutável exige <code>default_factory</code>. <code>pytest</code>: <code>assert</code> simples, <code>parametrize</code>, <code>raises</code>, fixtures (<code>tmp_path</code>, <code>capsys</code>). Um bom teste cobre feliz, borda, falha injetada e controle negativo, e pode falhar.</p>
+</div>
+
+<!-- ============================================ LAB -->
+<h2 id="lab-guiado">Laboratório guiado F02</h2>
+<p>Um pacote Python 3.14 pequeno e completo, sem rede e sem conta: <code>expenses</code>, uma CLI que lê um CSV de despesas com codificação explícita, valida cada linha com exceções de domínio, agrega com <code>dict</code> e <code>Decimal</code> e exporta JSON de forma atômica. Cada módulo do pacote ilustra um bloco (tabela no <code>README.md</code> do lab): <code>errors</code> (6), <code>model</code> (8), <code>parsing</code> (2, 7), <code>reader</code> (5, 7), <code>aggregate</code> (4), <code>export</code> (6), <code>cli</code> (1, 6). A suíte tem 52 testes cobrindo caminho feliz, borda, falha injetada e controle negativo.</p>
+
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigidos: Python 3.14, <code>uv</code>, shell bash ou zsh. Nunca edite a referência em <code>modulos/F02-python-do-zero/lab/</code>.</p>
+<pre><code>cd modulos/F02-python-do-zero/lab
+python3 create_working_copy.py
+cd /tmp/f02-xxxx          # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>PowerShell:</strong> <code>cd modulos\F02-python-do-zero\lab; python create_working_copy.py</code>, depois <code>cd</code> para o caminho impresso e <code>uv sync --frozen</code>; os comandos <code>uv run ...</code> abaixo são idênticos. <strong>Resultado esperado:</strong> ambiente sincronizado; a cópia pode ser descartada e refeita. Nos exemplos, os caminhos <code>/tmp/...</code> variam.</p>
+
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Modo estrito e exit codes (blocos 1 e 6).</strong> Rode o relatório sobre o arquivo de exemplo, que contém duas linhas ruins de propósito (valor <code>abc</code> e a data impossível 2026-02-30), e leia a ajuda e o erro de uso.
+<pre><code>$ uv run python -m expenses report sample/despesas.csv; echo "exit=$?"
+rejeitada: linha 6, campo 'amount': valor inválido: 'abc'
+exit=1
+$ uv run python -m expenses; echo "exit=$?"
+usage: expenses [-h] {report} ...
+expenses: error: the following arguments are required: command
+exit=2
+$ uv run python -m expenses --help
+usage: expenses [-h] {report} ...
+
+Relatório de despesas
+
+positional arguments:
+  {report}
+    report    agrega um CSV por categoria
+
+options:
+  -h, --help  show this help message and exit</code></pre>
+<p><strong>Resultado esperado:</strong> no modo estrito a leitura <em>para na primeira linha inválida</em> (linha 6) e sai com 1 sem imprimir total; uso errado sai com 2 (o argparse chama <code>sys.exit(2)</code>). Os mesmos 0/1/2 do <code>pgrep</code> do F01. <strong>Se falhar:</strong> <code>No module named expenses</code> significa que você não está na cópia ou esqueceu o <code>uv sync</code>.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Modo tolerante e JSON atômico (blocos 2, 4, 6).</strong> Com <code>--lenient</code> a CLI segue, lista todas as rejeições no <code>stderr</code> e ainda sai com 1, porque houve dado inválido.
+<pre><code>$ uv run python -m expenses report sample/despesas.csv --lenient --json /tmp/f02r.json; echo "exit=$?"
+rejeitada: linha 6, campo 'amount': valor inválido: 'abc'
+rejeitada: linha 8, campo 'date': data inválida: '2026-02-30'
+moradia                  2400.00
+lazer                      89.99
+alimentação                76.00
+transporte                 12.50
+total                    2578.49
+exit=1
+$ cat /tmp/f02r.json
+{
+  "total": "2578.49",
+  "by_category": {
+    "moradia": "2400.00",
+    "lazer": "89.99",
+    "alimentação": "76.00",
+    "transporte": "12.50"
+  },
+  "by_month": {
+    "2026-01": "88.50",
+    "2026-02": "1289.99",
+    "2026-03": "1200.00"
+  },
+  "rejected_rows": 2
+}</code></pre>
+<p><strong>Resultado esperado:</strong> <code>Alimentação</code> e <code>alimentação</code> (linhas 2 e 4 do CSV) foram unidas em <code>alimentação</code> (76.00 = 45.90 + 30.10); a vírgula decimal de <code>"12,50"</code> foi aceita; os totais são strings decimais exatas, em ordem decrescente de valor. <strong>Se falhar:</strong> se o total diverge em centavos, algum acumulador usou <code>float</code> (bloco 2); se as categorias não se unem, a normalização Unicode foi removida (bloco 2).</p></div>
+
+<div class="step"><span class="n">3</span><strong>Codificação (bloco 7).</strong> Crie um arquivo em Latin-1 e leia-o duas vezes.
+<pre><code>$ printf 'date,category,amount,description\n2026-01-01,Caf\xe9,1.00,x\n' &gt; /tmp/lat.csv
+$ uv run python -m expenses report /tmp/lat.csv; echo "exit=$?"
+expenses: lat.csv não é utf-8 válido (byte 47: invalid continuation byte)
+exit=2
+$ uv run python -m expenses report /tmp/lat.csv --encoding latin-1; echo "exit=$?"
+café                        1.00
+total                       1.00
+exit=0</code></pre>
+<p><strong>Resultado esperado:</strong> UTF-8 recusa o byte <code>0xE9</code> com exit 2 e mensagem que localiza o byte; <code>--encoding latin-1</code> lê o mesmo arquivo. <strong>Se falhar:</strong> em zsh, <code>printf</code> com <code>\xe9</code> funciona; no PowerShell crie o arquivo com <code>[IO.File]::WriteAllBytes</code> ou com um script Python de uma linha.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Explorar no REPL (blocos 2, 5 e 8).</strong> Abra <code>uv run python</code> e confira o que os blocos prometeram sobre este código.
+<pre><code>&gt;&gt;&gt; from pathlib import Path
+&gt;&gt;&gt; from expenses.reader import scan
+&gt;&gt;&gt; from expenses.parsing import parse_amount, normalize_category
+&gt;&gt;&gt; g = scan(Path("nao-existe.csv")); type(g).__name__
+'generator'
+&gt;&gt;&gt; next(g)
+Traceback (most recent call last):
+  ...
+FileNotFoundError: [Errno 2] No such file or directory: 'nao-existe.csv'
+&gt;&gt;&gt; parse_amount(1, "12,5"), parse_amount(1, " 7 ")
+(Decimal('12.50'), Decimal('7.00'))
+&gt;&gt;&gt; parse_amount(3, "٣٤")
+Traceback (most recent call last):
+  ...
+expenses.errors.InvalidRowError: linha 3, campo 'amount': valor inválido: '٣٤'
+&gt;&gt;&gt; import unicodedata
+&gt;&gt;&gt; nfd = unicodedata.normalize("NFD", "Alimentação")
+&gt;&gt;&gt; nfd == "Alimentação", normalize_category(nfd) == normalize_category("ALIMENTAÇÃO")
+(False, True)
+&gt;&gt;&gt; import dataclasses, datetime
+&gt;&gt;&gt; from expenses.model import Expense
+&gt;&gt;&gt; e = Expense(datetime.date(2026, 1, 5), "x", parse_amount(1, "1"))
+&gt;&gt;&gt; e.amount = 1
+Traceback (most recent call last):
+  ...
+dataclasses.FrozenInstanceError: cannot assign to field 'amount'
+&gt;&gt;&gt; sum([0.1] * 10), sum([parse_amount(1, "0.10")] * 10)
+(1.0, Decimal('1.00'))</code></pre>
+<p><strong>Resultado esperado:</strong> o gerador existe sem abrir arquivo e só falha no <code>next()</code> (bloco 5); o dígito árabe-índico é recusado (bloco 2); NFD e NFC convergem (bloco 2); o <code>Expense</code> é imutável (bloco 8). Em seguida, <code>import dis; dis.dis(normalize_category)</code> mostra o bytecode da normalização: um <code>split</code>, um <code>join</code>, um <code>normalize</code> e um <code>casefold</code>; os nomes das instruções variam com a versão (bloco 1). <strong>Se falhar:</strong> um nome não é encontrado se você abriu o REPL fora da cópia.</p></div>
+
+<div class="step"><span class="n">5</span><strong>Gates de qualidade.</strong>
+<pre><code>$ uv run pytest -q
+....................................................                     [100%]
+52 passed in 0.04s
+$ uv run ruff check .
+All checks passed!
+$ uv run ruff format --check .
+18 files already formatted
+$ uv run mypy --strict src tests
+Success: no issues found in 16 source files</code></pre>
+<p><strong>Resultado esperado:</strong> tudo verde (52 testes). Qualquer vermelho é defeito do programa, não do ambiente. O tempo de teste varia.</p></div>
+
+<div class="step"><span class="n">6</span><strong>O teste morde (mutação 1: <code>\d</code> no lugar de <code>[0-9]</code>).</strong> Em <code>src/expenses/parsing.py</code>, troque a expressão por <code>re.compile(r"\d+(?:[.,]\d{1,2})?")</code> e rode os testes do bloco 2:
+<pre><code>$ uv run pytest -q --tb=no tests/test_b02_values.py
+...............F...                                                      [100%]
+=========================== short test summary info ============================
+FAILED tests/test_b02_values.py::test_parse_amount_rejects_ambiguous_or_exotic_input[٣٤]
+1 failed, 18 passed in 0.01s</code></pre>
+<p><strong>Resultado esperado:</strong> exatamente um teste vermelho, o do dígito árabe-índico. Desfaça a troca. A mutação prova que a suíte detecta a regressão que um revisor distraído aprovaria ("<code>\d</code> é mais legível").</p></div>
+
+<div class="step"><span class="n">7</span><strong>O teste morde (mutações 2 e 3).</strong> Primeiro, em <code>aggregate.py</code>, troque <code>ordered = sorted(expenses, key=month)</code> por <code>ordered = list(expenses)</code>; depois, em <code>export.py</code>, troque <code>if exc_type is None:</code> por <code>if True:</code> (o <code>AtomicWriter</code> passa a "confirmar" mesmo na falha). Desfaça cada uma antes da seguinte.
+<pre><code>$ uv run pytest -q --tb=no tests/test_b04_collections.py
+...F...                                                                  [100%]
+FAILED tests/test_b04_collections.py::test_monthly_totals_handles_unsorted_input
+1 failed, 6 passed in 0.00s
+$ uv run pytest -q --tb=short tests/test_b06_b08_export_cli.py
+.F.........
+tests/test_b06_b08_export_cli.py:33: in test_atomic_writer_keeps_the_old_file_when_the_body_fails
+    assert target.read_text(encoding="utf-8") == "antigo"
+E   AssertionError: assert 'metade' == 'antigo'
+FAILED tests/test_b06_b08_export_cli.py::test_atomic_writer_keeps_the_old_file_when_the_body_fails
+1 failed, 10 passed in 0.02s</code></pre>
+<p><strong>Resultado esperado:</strong> cada mutação derruba exatamente o teste que protege aquela propriedade: o <code>groupby</code> sem ordenar fragmenta os meses, e o gravador "atômico" sem a guarda deixa meia escrita sobre o arquivo antigo. Depois de desfazer, volte a <code>52 passed</code>.</p></div>
+
+<div class="step"><span class="n">8</span><strong>Extensão (sem saída publicada; a sua é a evidência).</strong> Acrescente a opção <code>--month YYYY-MM</code> que filtra as despesas de um mês antes de agregar. Escreva <em>primeiro</em> os testes: um parametrizado com <code>--month 2026-02</code> (feliz), um com mês sem despesas (borda: total zero e exit 0), um com <code>--month 2026-13</code> (falha: erro de uso, exit 2) e um controle negativo (sem o filtro, o total difere). Depois implemente e rode os quatro gates. <strong>Resultado esperado:</strong> gates verdes, e cada teste novo vermelho quando você sabota o filtro.</div>
+
+<h3>Limpeza e retomada</h3>
+<p>Apague a cópia de trabalho e os arquivos de <code>/tmp</code> quando quiser; cada etapa só depende da cópia sincronizada.</p>
+
+<!-- ============================================ DIAGNÓSTICO -->
+<h2>Tabela de Diagnóstico</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td><code>AttributeError: module 'X' has no attribute ...</code> em módulo da stdlib.</td><td>Arquivo seu com o mesmo nome (<code>random.py</code>, <code>types.py</code>) sombreia a stdlib; a pasta do script vem antes em <code>sys.path</code>.</td><td><code>python -c "import X; print(X.__file__)"</code>; renomeie; use <code>-P</code>/<code>-I</code>.</td></tr>
+<tr><td><code>ModuleNotFoundError</code> logo após <code>pip install</code>.</td><td><code>pip</code> do PATH pertence a outro interpretador/ambiente.</td><td><code>python -m pip</code> ou <code>uv add</code>/<code>uv run</code>; compare <code>sys.executable</code>.</td></tr>
+<tr><td>Lista "lembra" valores entre chamadas.</td><td>Default mutável avaliado uma vez no <code>def</code>.</td><td><code>param=None</code> e criar dentro; em <code>dataclass</code>, <code>default_factory</code>.</td></tr>
+<tr><td>Lambdas/closures em laço todas devolvem o último valor.</td><td>Closure captura a variável, não o valor.</td><td><code>lambda i=i: ...</code> ou <code>functools.partial</code>.</td></tr>
+<tr><td><code>UnboundLocalError</code> numa variável que "existe".</td><td>Atribuição na função a torna local em toda a função.</td><td>Passe por parâmetro, ou declare <code>nonlocal</code>/<code>global</code> se for mesmo necessário.</td></tr>
+<tr><td>Total monetário difere em centavos.</td><td><code>float</code> ou <code>Decimal(float)</code>; arredondamento implícito.</td><td><code>Decimal(str)</code>, <code>quantize</code> com modo explícito; JSON com string.</td></tr>
+<tr><td>Segunda varredura de um gerador/<code>map</code> vem vazia.</td><td>Iterador de passagem única esgotado.</td><td>Materialize com <code>list</code> ou recrie o gerador; aceite <code>Iterable</code> e percorra uma vez.</td></tr>
+<tr><td>Totais por grupo fragmentados com <code>groupby</code>.</td><td>Entrada não ordenada pela chave.</td><td><code>sorted(..., key=chave)</code> antes, com a mesma <code>key</code>.</td></tr>
+<tr><td><code>UnicodeDecodeError</code> / texto com <code>Ã§</code>.</td><td>Codificação assumida diferente da real; ou BOM (<code>﻿</code>) no cabeçalho.</td><td><code>encoding=</code> explícito; <code>utf-8-sig</code> para Excel; nunca <code>errors="replace"</code> sem decisão.</td></tr>
+<tr><td><code>ImportError: cannot import name ... (circular import)</code>.</td><td>Ciclo de imports; módulo parcialmente inicializado.</td><td>Extrair o comum para um módulo-folha; inverter dependência; import local como paliativo.</td></tr>
+<tr><td>Arquivo de saída ficou vazio/pela metade após falha.</td><td><code>open(alvo, "w")</code> trunca ao abrir.</td><td>Escrever em temporário e <code>os.replace</code> (<code>AtomicWriter</code>).</td></tr>
+<tr><td>Teste passa mesmo com o código quebrado.</td><td><code>raises</code> largo, <code>assert</code> sobre tupla, ou nenhum controle negativo.</td><td>Mutação manual; <code>raises(Tipo, match=...)</code>; asserções sobre valores escritos à mão.</td></tr>
+</tbody>
+</table>
+
+<!-- ============================================ CHECKPOINT -->
+<h2 id="checkpoint">Checkpoint F02</h2>
+<div class="box ok">
+<span class="lbl">Avaliação sem consulta — diga "Checkpoint F02" no chat</span>
+<p>Uma pergunta por vez, sem consulta. Cada pergunta é um cenário; a rubrica diz o que basta e o que reprova.</p>
+<ul class="check">
+<li><strong>P1 · Qual Python é esse?</strong> Um colega instala uma dependência, o <code>import</code> falha, e o <code>pytest</code> solto não acha o seu pacote enquanto <code>python -m pytest</code> acha. Explique os dois sintomas e a investigação. <em>Basta:</em> interpretadores/ambientes diferentes (<code>sys.executable</code>, <code>python -m pip</code>); <code>sys.path[0]</code> é diretório corrente com <code>-m</code> e pasta do script com arquivo; menciona <code>uv</code>/venv por projeto. <em>Reprova:</em> "reinstale tudo".</li>
+<li><strong>P2 · Quem mudou a minha lista?</strong> Uma função recebe uma lista e o chamador vê a lista alterada; em outra, atribuir ao parâmetro não altera nada. Explique com o modelo de objetos, e diga o que <code>copy</code> e <code>deepcopy</code> mudam. <em>Basta:</em> nomes como rótulos, chamada por atribuição, mutar versus religar, cópia rasa compartilha o interior. <em>Reprova:</em> "Python passa por referência" ou "por valor" sem mais.</li>
+<li><strong>P3 · O centavo que sumiu.</strong> Um total soma 0,10 dez vezes e o relatório de auditoria difere. Diagnostique, corrija e diga como o valor trafega pelo JSON. <em>Basta:</em> <code>float</code> binário; <code>Decimal</code> de <code>str</code>; <code>quantize</code> com modo escolhido; string/centavos no JSON; ressalva de que <code>sum()</code> mascara o erro desde o 3.12. <em>Reprova:</em> "use <code>round()</code>".</li>
+<li><strong>P4 · O cache que cresce.</strong> Uma função com <code>def f(x, cache={})</code> "funciona" e depois vaza memória e mistura resultados. Explique o mecanismo, a correção e quando <code>lru_cache</code> é a ferramenta certa. <em>Basta:</em> default avaliado uma vez, <code>None</code> como sentinela, <code>lru_cache(maxsize=...)</code> com argumentos hashable e limite. <em>Reprova:</em> não explicar por que o dicionário persiste.</li>
+<li><strong>P5 · Lista ou conjunto?</strong> Um laço de 1 milhão de linhas faz <code>if id in ids_validos</code> com <code>ids_validos</code> lista. Estime o custo, corrija, e diga quando a correção <em>não</em> serve (ordem, elementos não hashable, memória). <em>Basta:</em> O(n) contra O(1) médio, conversão única para <code>set</code>/<code>dict</code>, contrato <code>==</code>/<code>hash</code>, <code>dict.fromkeys</code> para ordem. <em>Reprova:</em> "set é sempre melhor".</li>
+<li><strong>P6 · O gerador mudo.</strong> Uma função devolve um gerador que lê um arquivo; o erro de arquivo inexistente só aparece num módulo distante, e uma segunda varredura vem vazia. Explique ambos e o desenho que corrige. <em>Basta:</em> corpo roda sob demanda; passagem única; validar fora do gerador ou aceitar o custo; <code>closing</code>/<code>with</code> para recurso. <em>Reprova:</em> envolver tudo em <code>try/except Exception</code>.</li>
+<li><strong>P7 · Exceção bem desenhada.</strong> Projete as exceções de um módulo de importação de pedidos (linha inválida, arquivo ilegível, coluna ausente) e a tradução para exit codes. Justifique base comum, atributos, <code>raise ... from</code> e o que <em>não</em> capturar. <em>Basta:</em> hierarquia com raiz própria, dados em atributos, causa preservada, <code>Exception</code> só na fronteira, 0/1/2 coerentes. <em>Reprova:</em> <code>except: pass</code> ou mensagens sem contexto.</li>
+<li><strong>P8 · Texto e arquivo.</strong> Um CSV do Excel brasileiro (ponto e vírgula, Latin-1 ou UTF-8 com BOM, vírgula decimal) precisa ser importado e um relatório gravado sem risco de arquivo pela metade. Descreva leitura, validação e escrita. <em>Basta:</em> <code>encoding</code> explícito/<code>utf-8-sig</code>, <code>newline=""</code>, <code>delimiter=";"</code>, normalização Unicode, escrita atômica com <code>os.replace</code>. <em>Reprova:</em> <code>split(",")</code> e <code>open(..., "w")</code> direto no destino.</li>
+<li><strong>P9 · Import circular.</strong> Dois módulos se importam e a falha só ocorre em um dos pontos de entrada. Explique por que depende do caminho de import e como desfazer o ciclo. <em>Basta:</em> <code>sys.modules</code> e módulo parcialmente inicializado; <code>from m import nome</code> versus <code>import m</code>; extrair módulo-folha ou inverter dependência. <em>Reprova:</em> só mover o import para dentro da função sem discutir o acoplamento.</li>
+<li><strong>P10 · O teste que nunca falha.</strong> Um agente entrega 20 testes verdes para uma função de arredondamento. Como você descobre se eles protegem alguma coisa? <em>Basta:</em> mutação manual, controle negativo, <code>raises</code> com tipo e <code>match</code>, valores esperados escritos à mão, casos de borda, <code>parametrize</code>. <em>Reprova:</em> "a cobertura está em 100%".</li>
+</ul>
+<h4>Entregáveis verificados (mostrar rodando)</h4>
+<ol>
+<li>Gates do lab verdes: <code>pytest</code> (52 testes), <code>ruff check</code>, <code>ruff format --check</code>, <code>mypy --strict</code>.</li>
+<li>Relatório do exemplo em modo estrito (exit 1) e tolerante (exit 1, JSON com <code>rejected_rows: 2</code>), e o caso Latin-1 (exit 2 e depois 0 com <code>--encoding latin-1</code>).</li>
+<li>Mutações 1, 2 e 3 rejeitadas pela suíte e revertidas.</li>
+<li>A extensão <code>--month</code>, testes primeiro, com os quatro tipos de teste e os gates verdes.</li>
+</ol>
+</div>
+
+<!-- ============================================ FONTES -->
+<h2>Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://docs.python.org/3/reference/datamodel.html">Python Language Reference: Data model</a></td><td>objetos, identidade, métodos especiais, hash (blocos 2, 4, 8)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/reference/executionmodel.html">Execution model</a> e <a href="https://docs.python.org/3/reference/import.html">Import system</a></td><td>escopos, nomes, <code>sys.modules</code>, finders, pacotes (blocos 3 e 7)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/reference/compound_stmts.html">Compound statements</a> (<code>try</code>, <code>with</code>, <code>match</code>, <code>def</code>)</td><td>fluxo, exceções, defaults (blocos 3 e 6)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/dis.html">dis</a>, <a href="https://docs.python.org/3/using/cmdline.html">linha de comando e ambiente</a></td><td>bytecode; <code>-m</code>, <code>-I</code>, <code>-P</code>, <code>-X importtime</code> (bloco 1)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/decimal.html">decimal</a>, <a href="https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex">tipos numéricos</a></td><td><code>Decimal</code>, <code>quantize</code>, <code>int</code>/<code>float</code> (bloco 2)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td>D. Goldberg, <a href="https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html">What Every Computer Scientist Should Know About Floating-Point Arithmetic</a> (1991); IEEE 754-2019</td><td>representação binária e erro (bloco 2)</td><td>fonte primária / padrão</td><td>11/10/2026 (link)</td></tr>
+<tr><td><a href="https://docs.python.org/3/howto/unicode.html">Unicode HOWTO</a>, <a href="https://unicode.org/reports/tr15/">UAX #15 (normalização)</a></td><td><code>str</code>/<code>bytes</code>, NFC/NFD (blocos 2 e 7)</td><td>oficial / padrão</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/howto/sorting.html">Sorting HOWTO</a>, <a href="https://docs.python.org/3/library/itertools.html">itertools</a>, <a href="https://docs.python.org/3/library/collections.html">collections</a>, <a href="https://wiki.python.org/moin/TimeComplexity">TimeComplexity (wiki)</a></td><td>ordenação estável, receitas, complexidade (blocos 4 e 5)</td><td>oficial; wiki é referência comunitária</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/tutorial/errors.html">Tutorial: Errors and Exceptions</a>, <a href="https://docs.python.org/3/library/exceptions.html">Built-in exceptions</a>, <a href="https://docs.python.org/3/library/contextlib.html">contextlib</a></td><td>hierarquia, encadeamento, <code>ExceptionGroup</code>, context managers (bloco 6)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/pathlib.html">pathlib</a>, <a href="https://docs.python.org/3/library/csv.html">csv</a>, <a href="https://docs.python.org/3/library/json.html">json</a>, <a href="https://docs.python.org/3/library/functions.html#open">open()</a></td><td>arquivos e formatos (bloco 7)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/dataclasses.html">dataclasses</a></td><td><code>frozen</code>, <code>slots</code>, <code>field</code> (bloco 8)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td>PEPs: <a href="https://peps.python.org/pep-0343/">343</a> (<code>with</code>), <a href="https://peps.python.org/pep-0479/">479</a> (StopIteration em geradores), <a href="https://peps.python.org/pep-0572/">572</a> (<code>:=</code>), <a href="https://peps.python.org/pep-0634/">634</a> (<code>match</code>), <a href="https://peps.python.org/pep-0649/">649</a> (anotações sob demanda), <a href="https://peps.python.org/pep-0686/">686</a> (UTF-8 padrão), <a href="https://peps.python.org/pep-0758/">758</a> (<code>except</code> sem parênteses), <a href="https://peps.python.org/pep-0765/">765</a> (<code>finally</code>)</td><td>origem e justificativa de cada recurso</td><td>especificação</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/whatsnew/3.14.html">What's New in Python 3.14</a> e <a href="https://docs.python.org/3/whatsnew/3.12.html">3.12</a></td><td>mudanças de versão (anotações, <code>except</code>, <code>sum</code> compensado, <code>batched</code>)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.pytest.org/en/stable/">pytest</a>, <a href="https://docs.pytest.org/en/stable/how-to/fixtures.html">fixtures</a>, <a href="https://docs.pytest.org/en/stable/how-to/parametrize.html">parametrize</a></td><td>testes (bloco 8, lab)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.astral.sh/uv/">uv</a></td><td>ambientes, lockfile, <code>uv run</code> (bloco 1, lab)</td><td>oficial (ferramenta)</td><td>11/10/2026</td></tr>
+</tbody>
+</table>
+<p>As saídas vêm de execução real em 11/10/2026 com Python 3.14.7 (aarch64, Linux), uv 0.12.13 e pytest 9.1.1; o texto de mensagens de erro, os nomes de instruções do <code>dis</code>, os tamanhos em bytes e o layout do <code>uv init</code> mudam entre versões menores, e os tempos de <code>timeit</code>/<code>tracemalloc</code> variam por máquina. O PEP 686 (UTF-8 como padrão) tem como alvo o Python 3.15: revalide antes de remover <code>encoding=</code>. Comportamento de <code>uv</code> e de versões do Python é de alto risco: revalidar em até 90 dias.</p>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>CPython compila para bytecode e executa; <code>__main__</code> é o módulo de entrada e <code>sys.path</code> decide o que é importável.<br>
+Nome é rótulo; atribuição liga; mutar é visível de fora, religar não é; <code>is</code> é identidade e <code>==</code> é valor.<br>
+<code>float</code> é binário aproximado, <code>Decimal</code> de <code>str</code> é decimal exato, <code>str</code> é Unicode e <code>bytes</code> depende de codificação explícita.<br>
+O <code>def</code> executa uma vez (default mutável), closures capturam variáveis, e o escopo é decidido pelo compilador (LEGB).<br>
+<code>list</code> é vetor, <code>dict</code>/<code>set</code> são hash: escolha pela operação; <code>sorted</code> é estável; <code>groupby</code> pede entrada ordenada.<br>
+Iteradores são de passagem única, geradores rodam sob demanda e entregam memória constante.<br>
+Exceção tem hierarquia, causa preservada com <code>from</code>, e limpeza garantida por <code>with</code>; grave arquivos de forma atômica.<br>
+<code>dataclass(frozen, slots)</code> modela dados; um teste só vale se puder falhar: feliz, borda, falha injetada e controle negativo.</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="F02"></script>
+</body>
+</html>

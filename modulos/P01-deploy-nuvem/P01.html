@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P01 · Deploy real em nuvem: um serviço com LLM no Azure</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>P01 · Deploy real em nuvem: um serviço com LLM no Azure</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas de terminal e os gates do laboratório vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14.7, uv 0.11.32, Bicep CLI 0.48.1). Nada aqui foi implantado em uma assinatura Azure: o que exige conta está marcado e separado. <a href="../../STATUS.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
+<p class="meta"><span class="badge">FASE 3</span> &nbsp; 6 blocos · carga estimada ≈ 12 h · pré-requisitos: <a href="../LT03-novo/LT03.html">LT03</a> (IaC e plataforma em geral) e <a href="../M05-llm-pratica-gateway-cache/M05.html">M05</a> (chamada de LLM, gateway, custo) · próximo: <a href="../LT04-novo/LT04.html">LT04</a> · <strong>do repositório ao endpoint, sem segredo no caminho</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Um serviço que funciona na sua máquina ainda não é um serviço. Falta decidir onde ele roda, empacotá-lo de forma reproduzível, descrever a infraestrutura como código revisável, dar-lhe uma identidade em vez de chaves, enxergar o que ele faz (e quanto custa) e entregar versões novas sem derrubar quem está usando. Este módulo percorre esse caminho inteiro com um serviço pequeno e real: uma API FastAPI que chama um LLM, com streaming, health checks, logs estruturados e métricas de tokens.</p>
+<p>O alvo é o Azure, porque é onde muitos times de plataforma .NET já operam, mas o módulo ensina <strong>invariantes</strong>: artefato imutável, identidade em vez de segredo, infraestrutura declarativa, sinais antes de alertas, rollback por troca de tráfego. Cada invariante aparece com o nome Azure e, nas tabelas curtas, com o equivalente AWS e GCP. Ao terminar você consegue: (1) escolher entre Container Apps, App Service, Functions e AKS com critérios, não por moda; (2) escrever um Dockerfile multi-stage com <code>uv</code>, usuário sem privilégio e tag imutável; (3) descrever em Bicep o ambiente, o app, o Log Analytics, o Key Vault e a identidade, e ler um <code>what-if</code> antes de aplicar; (4) fazer o serviço chamar o modelo com Entra ID, sem chave, com RBAC mínimo; (5) medir tokens, latência e custo e configurar alertas que valem a pena; (6) montar um pipeline GitHub Actions com OIDC, revisões nomeadas, canário e rollback.</p>
+<p>O laboratório roda <strong>sem conta Azure</strong>: o serviço usa um LLM fake, e uma ferramenta própria, o <code>deploycheck</code>, valida Dockerfile, Bicep e workflow contra regras que você entende e testa. A parte que custa dinheiro é opcional e termina em <code>az group delete</code>.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não é um curso de Azure, nem uma certificação. Não ensina Kubernetes (fica no <a href="../LT03-novo/LT03.html">LT03</a>), Docker e CI básicos (<a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a>), gateway, cache e FinOps de tokens em profundidade (<a href="../M05-llm-pratica-gateway-cache/M05.html">M05</a>), modelagem de ameaças, RLS e quotas por tenant (<a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>), nem gates de release, versionamento e pós-mortem (<a href="../LT04-novo/LT04.html">LT04</a>). Aqui está a costura entre eles: o que muda quando o mesmo serviço sai do <code>localhost</code> e passa a ter endereço, identidade, conta e plantão.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça, sem consultar. Se acertar todas com segurança (mecanismo, não só o nome do serviço), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint-p01">Checkpoint P01</a> e siga para o LT04. Qualquer resposta hesitante marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> Seu serviço recebe rajadas de 0 a 50 req/s, cada resposta faz streaming por 20 a 90 segundos e o gargalo é esperar o provedor de modelo. Por que Container Apps costuma encaixar melhor que Functions ou AKS, e qual métrica deve comandar o escalonamento?
+<details><summary>Resposta</summary><p>O trabalho é de E/S: cada réplica atende muitas requisições simultâneas esperando o provedor, então o sinal de carga é <strong>concorrência de requisições</strong> por réplica, não CPU (que fica baixa). Container Apps entrega isso (regra HTTP com <code>concurrentRequests</code>, escala a partir de zero, ingresso e revisões prontos) sem cluster para operar. Functions é um modelo por gatilho e invocação, com limites de duração por execução, pior para um servidor ASGI com streams longos. AKS resolve, mas você passa a operar o plano de dados do Kubernetes (versões, nós, ingress) sem precisar de nada que ele ofereça a mais.</p></details></li>
+<li><strong>(Bloco 2)</strong> O Dockerfile termina em <code>FROM python:latest</code> sem <code>USER</code>, e o pipeline publica a imagem como <code>app:latest</code>. Liste três problemas e diga se o <code>HEALTHCHECK</code> do Dockerfile ajuda no Container Apps.
+<details><summary>Resposta</summary><p>(1) <code>:latest</code> na base e na publicação são tags mutáveis: o mesmo commit gera imagens diferentes e "voltar para a versão anterior" não tem referente. (2) Sem <code>USER</code>, o processo roda como root: uma falha na aplicação vira controle do container. (3) Build não reproduzível: sem lockfile e sem versão fixa, o resultado depende do dia. O <code>HEALTHCHECK</code> do Dockerfile <strong>não é usado</strong> pelo Container Apps; quem decide saúde ali são as <em>probes</em> declaradas na configuração do app.</p></details></li>
+<li><strong>(Bloco 3)</strong> O <code>what-if</code> do Bicep mostra "nenhuma mudança" e o <code>create</code> falha por falta de cota de modelo. O <code>what-if</code> mentiu?
+<details><summary>Resposta</summary><p>Não: <code>what-if</code> compara o template com o estado atual dos recursos usando o plano do Resource Manager; ele <strong>não prevê</strong> o que só o provedor do recurso decide na hora (cota, política de região, nome indisponível, propagação de permissão). É um diff, não uma garantia de sucesso. Também gera ruído (propriedades que a API normaliza) e precisa ser lido, não só aprovado.</p></details></li>
+<li><strong>(Bloco 4)</strong> A identidade do app tem <code>Contributor</code> no recurso do modelo, o endpoint está certo, e a chamada devolve 401/403. Dê duas causas.
+<details><summary>Resposta</summary><p><code>Contributor</code> e <code>Owner</code> são papéis do plano de controle: gerenciam o recurso, mas não incluem as ações de dados de inferência. Falta o papel de dados (<em>Cognitive Services OpenAI User</em>) no escopo do recurso. Outras causas: o token pede o escopo errado, a identidade <em>user-assigned</em> não foi selecionada (<code>AZURE_CLIENT_ID</code> ausente), o recurso não tem subdomínio personalizado (Entra ID não funciona no endpoint regional) ou a atribuição ainda propaga (pode levar alguns minutos).</p></details></li>
+<li><strong>(Bloco 4)</strong> Você rotaciona um segredo no Key Vault e o app continua usando o valor antigo. Por quê, e o que muda entre referência com e sem versão?
+<details><summary>Resposta</summary><p>O Container Apps resolve a referência ao Key Vault e entrega o valor ao contêiner como variável de ambiente: ele é lido na partida da réplica. Sem versão na URL, a plataforma passa a enxergar a nova versão depois de um intervalo (da ordem de 30 minutos) e reinicia as revisões afetadas; com versão fixa, nada muda até você editar a URL. O processo em execução nunca "relê" a variável por conta própria.</p></details></li>
+<li><strong>(Bloco 5)</strong> A latência p95 subiu e o custo do dia dobrou. Qual a primeira separação a fazer antes de mexer em réplicas?
+<details><summary>Resposta</summary><p>Separar <strong>tempo até o primeiro token</strong> do tempo total, e <strong>tokens por chamada</strong> do número de chamadas. Se os tokens de entrada por chamada dobraram (prompt maior, contexto sem corte), nenhuma réplica nova resolve e mais réplicas só aumentam retentativas contra um provedor que já está limitando. Computação costuma ser a menor parte da conta de um serviço com LLM.</p></details></li>
+<li><strong>(Bloco 6)</strong> O <code>azure/login</code> falha com "No matching federated identity record found for presented assertion". O que isso diz sobre o token?
+<details><summary>Resposta</summary><p>O token OIDC do GitHub foi emitido, mas o campo <code>sub</code> dele (por exemplo <code>repo:org/repo:environment:production</code>) não coincide com nenhuma credencial federada cadastrada na identidade. O erro é de <strong>correspondência de subject</strong> (ambiente versus branch versus pull request, ou nome do repositório), não de permissão nem de segredo expirado, porque não existe segredo.</p></details></li>
+<li><strong>(Bloco 6)</strong> A revisão nova está no ar com 100% do tráfego e quebra. Qual o caminho mais rápido de volta, e o que ele <em>não</em> desfaz?
+<details><summary>Resposta</summary><p>Em modo de revisão múltipla, reapontar o tráfego para a revisão anterior (que continua ativa): segundos, sem build nem deploy. Não desfaz o que a revisão nova já fez fora dela: migrações de banco, mensagens consumidas, mudanças de configuração de escopo de aplicação (segredos, ingresso) ou de recursos como a implantação do modelo.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — Onde rodar: IaaS, PaaS, contêineres, serverless e Kubernetes; por que Container Apps</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Empacotar: Dockerfile multi-stage com uv, usuário sem privilégio, probes, ACR e tags imutáveis</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Infraestrutura como código com Bicep: ambiente, app, logs, Key Vault, identidade e <code>what-if</code></a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Identidade e segredos: managed identity, RBAC mínimo, Key Vault e acesso ao modelo sem chave</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Observabilidade e custo: OpenTelemetry, Application Insights, tokens, alertas, orçamento e escala</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Pipeline: GitHub Actions com OIDC, revisões, divisão de tráfego e rollback</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado P01</strong> — serviço, Dockerfile, Bicep, workflow e o <code>deploycheck</code> (sem conta Azure; parte opcional paga)</a></li>
+</ol>
+</div>
+
+<!-- ============================================ BLOCO 1 -->
+<h2 id="b01">Bloco 1 · Onde rodar: do IaaS ao Kubernetes, e por que Container Apps</h2>
+
+<h3>Por que isso importa</h3>
+<p>A escolha de plataforma é a decisão mais cara de desfazer em um deploy: ela define o formato do artefato, o modelo de escala, a conta no fim do mês e quem acorda às três da manhã. Times costumam escolher pela familiaridade ("já temos AKS") ou pela promessa ("serverless não custa nada parado"). Ambas as razões são verdadeiras e incompletas. O que decide é a <em>forma da carga</em>, e a carga de um serviço com LLM tem uma forma bem particular.</p>
+
+<h3>A forma da carga de um serviço com LLM</h3>
+<p>No <a href="../M05-llm-pratica-gateway-cache/M05.html">M05</a> você viu que a chamada ao modelo é uma requisição HTTP de segundos a minutos, frequentemente em streaming. Do ponto de vista do seu processo, isso significa:</p>
+<ul>
+<li><strong>Quase tudo é espera.</strong> O serviço recebe um prompt, repassa e aguarda tokens. A CPU fica baixa, a memória cresce com o número de conexões abertas. Uma réplica de 0,5 vCPU atende dezenas de streams simultâneos, desde que o código seja assíncrono (o lab é: um produtor por stream, fila limitada, cancelamento no <code>finally</code>).</li>
+<li><strong>O sinal de carga é concorrência, não CPU.</strong> Escalar por CPU reagiria tarde e pouco. A regra natural é "requisições simultâneas por réplica".</li>
+<li><strong>Conexões longas atravessam intermediários.</strong> Ingress, balanceador e proxies têm limites de tempo e de ociosidade. No Container Apps o ingresso HTTP tem tempo máximo de requisição de 240 segundos: um stream mais longo que isso é cortado, e o desenho precisa prever isso (keepalive SSE, retomada, ou resposta assíncrona por job).</li>
+<li><strong>O modelo não roda na sua máquina.</strong> Você paga tokens ao provedor e um pouco de computação à plataforma. Se você hospeda o modelo (GPU, inferência própria), a análise é outra e entra em <a href="../M11-fundamentos-ml-dl-modelos-locais/M11.html">M11</a>; aqui o serviço é um orquestrador fino.</li>
+<li><strong>Estado fora do processo.</strong> Com N réplicas, qualquer contador, cache ou sessão em memória passa a valer por réplica. Um limite de "10 req/min por usuário" em memória vira "10 por réplica", ou seja, 10 × N.</li>
+</ul>
+
+<h3>O espectro de plataformas</h3>
+<p>Cada degrau transfere responsabilidade do seu time para o provedor e, em troca, tira alguma liberdade. As perguntas que ordenam o espectro são: quem aplica patch no sistema operacional, qual é a unidade de escala, como se cobra, o que o processo pode fazer (conexões longas, estado local, portas) e quanto você controla a rede.</p>
+<figure>
+<svg viewBox="0 0 760 230" role="img" aria-labelledby="t1b1" width="760">
+<title id="t1b1">Espectro de plataformas: mais controle e mais operação à esquerda, mais abstração à direita</title>
+<g fill="none" stroke="currentColor" stroke-width="1.4" font-family="sans-serif" font-size="13">
+<rect x="10" y="40" width="130" height="90" rx="8"/><rect x="152" y="40" width="130" height="90" rx="8"/>
+<rect x="294" y="40" width="130" height="90" rx="8" stroke-width="3"/><rect x="436" y="40" width="130" height="90" rx="8"/>
+<rect x="578" y="40" width="172" height="90" rx="8"/>
+</g>
+<g fill="currentColor" font-family="sans-serif" font-size="13" text-anchor="middle">
+<text x="75" y="66" font-weight="700">VM (IaaS)</text><text x="75" y="88">Virtual Machines</text><text x="75" y="106">você: SO, runtime,</text><text x="75" y="122">escala, patches</text>
+<text x="217" y="66" font-weight="700">PaaS web</text><text x="217" y="88">App Service</text><text x="217" y="106">plano fixo de VMs,</text><text x="217" y="122">slots, sem scale-to-0</text>
+<text x="359" y="66" font-weight="700">Contêiner gerenciado</text><text x="359" y="88">Container Apps</text><text x="359" y="106">revisões, KEDA,</text><text x="359" y="122">escala a zero</text>
+<text x="501" y="66" font-weight="700">Serverless</text><text x="501" y="88">Functions</text><text x="501" y="106">gatilho + invocação,</text><text x="501" y="122">limite por execução</text>
+<text x="664" y="66" font-weight="700">Kubernetes</text><text x="664" y="88">AKS</text><text x="664" y="106">você opera nós,</text><text x="664" y="122">upgrades, ingress, CRDs</text>
+<text x="10" y="170" text-anchor="start">mais controle de SO e rede, mais operação</text>
+<text x="750" y="170" text-anchor="end">mais abstração, menos botões</text>
+<text x="359" y="200" font-size="12">escolha deste módulo</text>
+</g>
+<path d="M10 178 H750" stroke="currentColor" stroke-width="1" fill="none"/>
+</svg>
+<figcaption>Kubernetes (AKS) está à direita no eixo "operação própria", embora seja o mais flexível: flexibilidade e carga operacional crescem juntas.</figcaption>
+</figure>
+
+<h3>Por que Container Apps para este serviço</h3>
+<p>O Azure Container Apps é uma plataforma de contêineres sem cluster visível. Por baixo há Kubernetes, KEDA (escala por evento), Envoy (ingresso) e, opcionalmente, Dapr; você não recebe <code>kubectl</code> nem CRDs. Para a forma de carga acima, as peças que importam são:</p>
+<ul>
+<li><strong>Ambiente (<code>managedEnvironments</code>)</strong>: a fronteira de rede e de logs; vários apps compartilham um ambiente.</li>
+<li><strong>Revisões</strong>: cada mudança de <code>template</code> (imagem, variáveis, escala) cria uma revisão imutável e nomeada <code>&lt;app&gt;--&lt;sufixo&gt;</code>. No modo <em>múltiplo</em> várias ficam ativas e você divide o tráfego por porcentagem; no modo <em>único</em> (o padrão) a plataforma só troca para a nova depois que ela passa nas probes. Esse é o mecanismo de canário e rollback do <a href="#b06">bloco 6</a>.</li>
+<li><strong>Escala</strong>: de 0 a 1.000 réplicas por revisão; os padrões, quando você não define regra, são mínimo 0, máximo 10 e a regra HTTP com 10 requisições simultâneas por réplica. Escalar a zero não cobra uso enquanto parado.</li>
+<li><strong>Cobrança por consumo</strong>: o plano Consumption cobra vCPU e memória por segundo, com preço menor para réplica ociosa, mais uma franquia mensal por assinatura (na página oficial: 180.000 vCPU-segundos, 360.000 GiB-segundos e 2 milhões de requisições). Os valores unitários mudam por região e data; <strong>trate qualquer número de preço neste módulo como exemplo</strong>.</li>
+<li><strong>Integrações nativas</strong>: identidade gerenciada, referência a segredo no Key Vault, pull de imagem do ACR por identidade, logs para o Log Analytics.</li>
+</ul>
+<p>O preço da simplicidade são os limites: sem acesso ao plano de controle do Kubernetes, ingresso com o tempo máximo de requisição citado, opções de rede mais restritas que no AKS e arquitetura de contêiner <code>linux/amd64</code> (uma imagem construída em um Mac com Apple Silicon e publicada sem <code>--platform</code> falha na partida com <code>exec format error</code>).</p>
+
+<h3>Quando escolher outra coisa</h3>
+<table>
+<thead><tr><th>Plataforma</th><th>Escolha quando</th><th>Custo que você aceita</th></tr></thead>
+<tbody>
+<tr><td><strong>Container Apps</strong></td><td>API/worker em contêiner, carga irregular, quer revisões e escala a zero sem operar cluster.</td><td>Sem Kubernetes "de verdade"; limites de ingresso e de rede; imagem amd64.</td></tr>
+<tr><td><strong>App Service</strong> (web app, contêiner ou código)</td><td>Time já opera, carga estável e previsível, precisa de <em>deployment slots</em> com swap, integração madura com domínio/certificado e autenticação embutida.</td><td>Paga o plano (VMs) mesmo ocioso; escala em nível de plano; menos granular que revisões.</td></tr>
+<tr><td><strong>Functions</strong></td><td>Trabalho orientado a evento (fila, timer, blob), curto, sem servidor HTTP longo. Também como cola de integração.</td><td>Modelo de execução por invocação e limites de duração; difícil encaixar um servidor ASGI com SSE longo.</td></tr>
+<tr><td><strong>AKS</strong></td><td>Plataforma interna para muitos times, operadores/CRDs, GPU em nós dedicados, malha de serviço, políticas de rede finas, portabilidade para outro Kubernetes.</td><td>Você opera versões, nós, ingress, upgrades e segurança do cluster. O ganho só aparece se você usa o que ele oferece a mais (ver <a href="../LT03-novo/LT03.html">LT03</a>).</td></tr>
+<tr><td><strong>VM</strong></td><td>Software legado, agente que exige acesso ao SO, licença atrelada a máquina.</td><td>Patches, imagem, escala e disponibilidade são seus.</td></tr>
+</tbody>
+</table>
+
+<h3>Equivalentes em AWS e GCP</h3>
+<p>Os invariantes são os mesmos; só mudam os nomes. A tabela abaixo cobre o que este módulo usa. Confira a disponibilidade atual antes de decidir: produtos de nicho mudam de estado com frequência (o AWS App Runner, por exemplo, deixou de aceitar novos clientes, e a AWS indica o ECS Express Mode como caminho).</p>
+<table>
+<thead><tr><th>Papel</th><th>Azure</th><th>AWS</th><th>GCP</th></tr></thead>
+<tbody>
+<tr><td>Contêiner gerenciado, escala a zero ou perto</td><td>Container Apps</td><td>ECS em Fargate (Express Mode para o caso simples)</td><td>Cloud Run</td></tr>
+<tr><td>Web app em plano fixo</td><td>App Service</td><td>Elastic Beanstalk (legado), ECS/Fargate</td><td>App Engine</td></tr>
+<tr><td>Função por evento</td><td>Functions</td><td>Lambda</td><td>Cloud Run functions</td></tr>
+<tr><td>Kubernetes gerenciado</td><td>AKS</td><td>EKS</td><td>GKE</td></tr>
+<tr><td>Registro de imagens</td><td>Azure Container Registry</td><td>ECR</td><td>Artifact Registry</td></tr>
+</tbody>
+</table>
+
+<div class="box fund">
+<span class="lbl">Fundamento · serviço sem estado local</span>
+<p>Plataformas que escalam horizontalmente assumem réplicas intercambiáveis: podem nascer, morrer e ser reiniciadas a qualquer momento, e o balanceador não sabe de nada que esteja só na memória de uma delas. Tudo que precisa sobreviver a isso (sessões, filas, limites por usuário, cache compartilhado, resultado de job) vive em um serviço externo: banco, Redis, fila. O disco do contêiner é efêmero. O lab segue a regra: o serviço não guarda nada entre requisições.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Escolher por cold start sem medir, ou fixar <code>minReplicas: 1</code> "por segurança" sem somar o custo.</strong> Escala a zero é ótimo para um serviço interno usado em horário comercial e ruim para uma API cuja primeira requisição após a madrugada vai esperar a imagem ser puxada e a aplicação subir (segundos). Já uma réplica sempre ligada, mesmo ociosa, cobra por segundo o mês inteiro; a conta pequena se multiplica por revisão ativa, por ambiente e por serviço. Decida com a distribuição real de tráfego e uma medição de partida a frio, e registre a decisão com o número que a sustenta.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Rate limit em memória com várias réplicas.</strong> O teste local passa (um processo), a produção deixa passar N vezes o limite, e o problema só aparece na conta ou no provedor devolvendo 429. Limite por usuário e orçamento de tokens exigem armazenamento compartilhado (<a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>). Neste módulo o contrapeso é <code>maxReplicas</code>, que limita o dano.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Serviço de LLM é E/S pura com conexões longas: escale por concorrência, mantenha-o sem estado e respeite os limites do ingresso. Container Apps entrega revisões, escala por requisições e integração com identidade sem exigir cluster; App Service, Functions e AKS ganham em cenários específicos, que você deve conseguir nomear. A escolha vale o número que a sustenta (tráfego, partida a frio, custo), e os equivalentes AWS/GCP existem para todas as peças.</p>
+</div>
+
+<!-- ============================================ BLOCO 2 -->
+<h2 id="b02">Bloco 2 · Empacotar: Dockerfile multi-stage com uv, usuário sem privilégio e tags imutáveis</h2>
+
+<h3>Por que isso importa</h3>
+<p>A imagem é o contrato entre o seu time e a plataforma: o que foi testado é o que roda, byte a byte, ou não existe garantia nenhuma. Quase todo incidente de "funciona na minha máquina" em contêiner vem de uma de quatro fontes: dependências resolvidas em momentos diferentes, base que mudou por baixo, processo rodando como root e tag que aponta para outra coisa hoje. O Dockerfile do lab fecha as quatro. O <a href="../M03-fastapi-postgres-docker-ci/M03.html#b05">M03</a> cobriu imagens e Compose localmente; aqui o foco é o que muda quando a imagem vai para um registro e para uma plataforma que a executa sem você olhar.</p>
+
+<h3>O Dockerfile do laboratório, linha a linha</h3>
+<pre><code># syntax=docker/dockerfile:1
+# Estágio 1: resolve e instala dependências com uv a partir do uv.lock (build reproduzível).
+FROM python:3.14-slim-bookworm AS build
+COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /usr/local/bin/uv
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
+WORKDIR /app
+# Camada de dependências: só muda quando pyproject.toml/uv.lock mudam.
+COPY pyproject.toml uv.lock README.md ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev --no-install-project --extra azure
+COPY src ./src
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev --no-editable --extra azure
+
+# Estágio 2: imagem final sem uv, sem compilador, sem cache; roda como usuário sem privilégio.
+FROM python:3.14-slim-bookworm AS runtime
+RUN groupadd --system --gid 10001 app \
+    &amp;&amp; useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app
+WORKDIR /app
+COPY --from=build --chown=10001:10001 /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    APP_ENV=prod
+USER 10001:10001
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD ["python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"]
+CMD ["uvicorn", "--factory", "llm_service.app:create_app_from_env", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+<ul>
+<li><strong>Dois estágios.</strong> O estágio <code>build</code> tem o <code>uv</code> e o cache de pacotes; o <code>runtime</code> só recebe o <code>.venv</code> pronto. Resultado: a imagem final não tem gerenciador de pacotes, compilador nem cache, o que reduz tamanho e superfície de ataque e evita que uma ferramenta de build vire ferramenta de invasor.</li>
+<li><strong><code>uv</code> copiado de uma imagem com versão exata</strong> (<code>COPY --from=ghcr.io/astral-sh/uv:0.11.32</code>): a ferramenta de build também é dependência, e <code>uv:latest</code> reintroduziria a não reprodutibilidade que o lockfile resolve. O padrão está descrito no guia oficial do uv para Docker.</li>
+<li><strong><code>uv sync --locked</code></strong> falha se o <code>uv.lock</code> estiver desatualizado em relação ao <code>pyproject.toml</code>, em vez de re-resolver em silêncio. É o equivalente a <code>npm ci</code>: o build instala <em>o que foi revisado</em>.</li>
+<li><strong>Duas sincronizações.</strong> A primeira instala só as dependências (<code>--no-install-project</code>), numa camada que muda raramente; a segunda instala o projeto depois de copiar <code>src</code>. Sem isso, qualquer edição de código invalida a camada de dependências e o build refaz tudo. <code>--mount=type=cache</code> mantém o cache de downloads entre builds sem que ele entre na imagem.</li>
+<li><strong><code>UV_COMPILE_BYTECODE=1</code></strong> compila <code>.pyc</code> no build, reduzindo o tempo de partida a frio (que importa ao escalar a partir de zero). <code>UV_LINK_MODE=copy</code> evita hardlinks entre o cache montado e o venv. <code>--no-editable</code> instala o pacote de verdade no venv, para o estágio final não depender de <code>/app/src</code>.</li>
+<li><strong>Usuário numérico e sem shell.</strong> <code>USER 10001:10001</code> usa UID numérico: políticas como <code>runAsNonRoot</code> do Kubernetes não conseguem verificar um nome simbólico. Criar o usuário como sistema, sem home e com <code>nologin</code>, tira do invasor um shell de graça. O venv é copiado com <code>--chown</code> para o processo conseguir ler; ele não precisa <em>escrever</em> em nada da imagem.</li>
+<li><strong>Variáveis de ambiente.</strong> <code>PYTHONUNBUFFERED=1</code> faz os logs saírem na hora (sem isso, buffer pode perder as últimas linhas num crash); <code>PYTHONDONTWRITEBYTECODE=1</code> evita escrita em disco que o usuário não privilegiado nem teria permissão de fazer. Observe o que <em>não</em> está lá: nenhuma credencial, nenhum endpoint de produção. Configuração entra na plataforma (bloco 3).</li>
+<li><strong><code>CMD</code> em forma de lista (exec form).</strong> O uvicorn vira o PID 1 e recebe <code>SIGTERM</code> direto. Em forma de shell (<code>CMD uvicorn ...</code>), o <code>/bin/sh</code> seria o PID 1 e engoliria o sinal, e a plataforma esperaria o fim da janela de término antes de matar à força, cortando streams em andamento.</li>
+</ul>
+
+<h3>Saúde: HEALTHCHECK de Docker versus probes da plataforma</h3>
+<p>A instrução <code>HEALTHCHECK</code> é do Docker/Compose: o daemon roda o comando e marca o contêiner como <em>healthy</em>. O Container Apps <strong>não a usa</strong>. Ali a saúde vem de <em>probes</em> declaradas na configuração do app, com três papéis distintos que o serviço do lab separa de propósito:</p>
+<table>
+<thead><tr><th>Probe</th><th>Pergunta</th><th>Endpoint do lab</th><th>Se falhar</th></tr></thead>
+<tbody>
+<tr><td><strong>Startup</strong></td><td>Já terminou de subir?</td><td><code>/healthz</code></td><td>Enquanto não passa, liveness e readiness não rodam; permite partida lenta sem matar o processo.</td></tr>
+<tr><td><strong>Liveness</strong></td><td>O processo está vivo (não travado)?</td><td><code>/healthz</code></td><td>Reinício do contêiner.</td></tr>
+<tr><td><strong>Readiness</strong></td><td>Pode receber tráfego agora?</td><td><code>/readyz</code></td><td>Sai do balanceamento, sem reiniciar.</td></tr>
+</tbody>
+</table>
+<p>A regra que evita incidentes em cascata: <strong>liveness não consulta dependências</strong>. Se <code>/healthz</code> chamasse o provedor de modelo e ele ficasse lento, todas as réplicas falhariam a liveness ao mesmo tempo, seriam reiniciadas juntas e transformariam uma degradação externa em indisponibilidade total. O <code>/healthz</code> do lab só responde <code>{"status":"ok"}</code>; o <code>/readyz</code> verifica configuração e adapter prontos, também <em>sem chamada de rede</em>. Verificar a conectividade real com o provedor é papel de um teste sintético externo, com alerta, não de uma probe que reinicia.</p>
+
+<h3>Registro e tags imutáveis</h3>
+<p>O Azure Container Registry (ACR) guarda as imagens. O Bicep do lab cria o SKU <code>Basic</code> com <code>adminUserEnabled: false</code>: a conta de administrador é uma senha compartilhada de longa vida, exatamente o que o módulo evita. Quem puxa a imagem é a <em>identidade</em> do app, com o papel <code>AcrPull</code> (bloco 4); quem envia é o pipeline, com identidade própria (bloco 6).</p>
+<p>Uma tag é um ponteiro mutável: <code>app:v1</code> hoje e <code>app:v1</code> amanhã podem ser imagens diferentes se alguém reenviar. Para que "o que foi testado é o que roda" valha, três camadas:</p>
+<ol>
+<li><strong>Tag derivada do commit</strong>: o pipeline publica <code>llm-service:${{ github.sha }}</code>. Um commit, uma imagem, rastreável do pod ao código.</li>
+<li><strong>Nunca <code>:latest</code> em implantação.</strong> O <code>deploycheck</code> reprova <code>:latest</code> no Dockerfile, no Bicep e no workflow (regras <code>XR002</code> e <code>XR008</code>).</li>
+<li><strong>Digest como verdade final.</strong> O digest (<code>sha256:...</code>) identifica o conteúdo e não pode ser reapontado. Para impedir sobrescrita da tag, o ACR permite travar o repositório ou a tag (<code>az acr repository update --write-enabled false</code>); para a base, fixe por digest e deixe uma ferramenta (Dependabot, Renovate) propor a atualização revisável.</li>
+</ol>
+
+<h3>Exemplo trabalhado: o que o build entrega e o que você valida</h3>
+<p>O ambiente em que este módulo foi escrito não tem Docker, então o <code>Dockerfile</code> foi validado <strong>estaticamente</strong> (<code>deploycheck</code>, regras XR001, XR002, XR003 e XR010) e o serviço foi executado diretamente com o <code>uv</code>, não dentro da imagem. Quando você tiver Docker, a verificação do que importa é curta:</p>
+<pre><code>docker build --platform linux/amd64 -t llm-service:dev .
+docker run --rm -d -p 8000:8000 --name svc llm-service:dev
+docker exec svc id                                  # uid=10001(app) gid=10001(app): não é root
+curl -s localhost:8000/healthz                      # {"status":"ok"}
+docker inspect --format '{{.State.Health.Status}}' svc   # healthy (após o start-period)
+docker stop svc                                     # deve encerrar em segundos: SIGTERM chegou ao uvicorn</code></pre>
+<p>Se o <code>docker stop</code> demora dez segundos, o sinal não está chegando ao processo (forma shell no <code>CMD</code>, ou um <code>entrypoint.sh</code> sem <code>exec</code>).</p>
+
+<div class="box net">
+<span class="lbl">Alternativas e trade-offs</span>
+<p><strong>Imagem base.</strong> <code>python:3.14-slim-bookworm</code> (Debian) é o equilíbrio padrão: glibc, wheels binários funcionam, tamanho moderado. <em>Alpine</em> (musl) é menor, mas pacotes com extensões nativas muitas vezes não têm wheel e compilam no build ou quebram. <em>Distroless</em> remove shell e gerenciador de pacotes: ótimo para superfície de ataque, ruim para depurar (você depende de contêiner efêmero de depuração). <strong>Build.</strong> Construir no runner do CI e enviar com <code>docker push</code> é o caminho mais portável; o ACR Tasks (<code>az acr build</code>) constrói na nuvem sem Docker local, mas está sujeito a restrições de assinatura (algumas ofertas gratuitas o bloqueiam). <strong>Segredos de build.</strong> Se o build precisa de credencial (índice privado de pacotes), use <code>RUN --mount=type=secret</code>; <code>ARG</code> e <code>ENV</code> ficam gravados no histórico da imagem e <code>docker history</code> os mostra.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>"Usuário não-root" que não é.</strong> Três variações: (1) o <code>USER</code> aparece só no estágio de build e o final continua root (o <code>deploycheck</code> avalia o <em>último</em> estágio, porque <code>USER</code> não herda entre estágios); (2) o processo é não-root, mas o diretório de trabalho é gravável por ele e a aplicação grava arquivos de usuário ali, anulando a vantagem; (3) <code>USER app</code> por nome, que políticas de admissão do Kubernetes não conseguem verificar. A checagem de verdade é <code>docker exec svc id</code> na imagem construída, não a leitura do Dockerfile.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Imagem arm64 em plataforma amd64.</strong> O build no notebook com Apple Silicon "funciona", o push funciona, a revisão fica em <em>Failed</em> com <code>exec format error</code> nos logs do sistema. Fixe <code>--platform linux/amd64</code> no build, ou construa só no CI (que é amd64) e proíba push de máquina de desenvolvedor.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Multi-stage com <code>uv sync --locked</code> mantém build reprodutível e imagem enxuta; usuário numérico sem privilégio e <code>CMD</code> em forma exec fecham as duas falhas operacionais mais comuns. No Container Apps a saúde vem das probes (liveness sem dependências, readiness sem rede), não do <code>HEALTHCHECK</code>. Publique por tag derivada do commit, nunca <code>:latest</code>, e trate o digest como a identidade real da imagem.</p>
+</div>
+
+<!-- ============================================ BLOCO 3 -->
+<h2 id="b03">Bloco 3 · Infraestrutura como código com Bicep: ambiente, app, logs, Key Vault, identidade e <code>what-if</code></h2>
+
+<h3>Por que isso importa</h3>
+<p>Infraestrutura criada no portal não tem histórico, revisão nem repetição. Quando o ambiente de produção diverge do de homologação, ninguém sabe qual clique causou a diferença. IaC troca cliques por um arquivo em Git: a mudança vira pull request, o estado desejado é legível, e o ambiente pode ser recriado do zero (o que é a única prova de que você sabe recriá-lo). O <a href="../LT03-novo/LT03.html#b04">LT03</a> trata IaC, estado, drift e ciclo de vida em geral; aqui vai o essencial aplicado ao Azure, com um arquivo real que o laboratório compila.</p>
+
+<h3>Bicep: o que é e o que não é</h3>
+<p>Bicep é uma linguagem declarativa que <strong>compila para templates ARM</strong> (JSON), o formato que o Azure Resource Manager (ARM) executa. Não há servidor nem arquivo de estado do Bicep: o estado é o próprio Azure. Você descreve o que deve existir; o ARM compara com o que existe e cria, atualiza ou, em modo completo, remove. Três propriedades guiam tudo:</p>
+<ul>
+<li><strong>Idempotência.</strong> Aplicar o mesmo arquivo duas vezes resulta no mesmo ambiente. Isso permite rodar o deploy a cada commit sem medo.</li>
+<li><strong>Grafo de dependências implícito.</strong> Quando um recurso referencia outro por nome simbólico (<code>identity.properties.principalId</code>), o Bicep deduz a ordem. <code>dependsOn</code> explícito só entra quando a dependência não aparece em nenhuma expressão (o lab usa para garantir que as atribuições de papel existam antes do app).</li>
+<li><strong>Modo incremental por padrão.</strong> Em implantação de grupo de recursos, recursos que existem no grupo mas não estão no template são <em>mantidos</em>. Remover um recurso do arquivo não o apaga. Para apagar o que sai do código, existem o modo completo (perigoso) e as <em>deployment stacks</em>, que rastreiam o que o template criou.</li>
+</ul>
+
+<div class="box net">
+<span class="lbl">Terraform em uma caixa</span>
+<p>Terraform (provedor <code>azurerm</code>, ou <code>azapi</code> para recursos novos) resolve o mesmo problema com outro modelo: guarda o <strong>estado</strong> num arquivo (no Azure, tipicamente num container de Storage com bloqueio), compara <em>código × estado × realidade</em> no <code>plan</code> e aplica no <code>apply</code>. Vantagens: mesma linguagem para vários provedores (a tabela de equivalentes do bloco 1 vira módulos do mesmo repositório), ecossistema de módulos e <code>plan</code> maduro. Custos: o estado é um ativo sensível que precisa de backend, bloqueio e controle de acesso, e recursos Azure muito novos podem demorar a aparecer no provedor. Bicep ganha em simplicidade e em cobertura imediata de qualquer recurso Azure; Terraform ganha em multi-nuvem e em equipes que já o dominam. Para o aluno vindo de .NET/Azure, Bicep é o caminho mais curto; os conceitos de plano, estado e drift que você aprende no LT03 se transferem.</p>
+</div>
+
+<h3>O mapa do que o lab cria</h3>
+<figure>
+<svg viewBox="0 0 760 330" role="img" aria-labelledby="t1b3" width="760">
+<title id="t1b3">Recursos criados pelo main.bicep e como se ligam: o app usa a identidade, que recebe papéis nos recursos</title>
+<g fill="none" stroke="currentColor" stroke-width="1.4" font-family="sans-serif" font-size="13">
+<rect x="10" y="10" width="740" height="310" rx="10" stroke-dasharray="6 4"/>
+<rect x="300" y="30" width="180" height="56" rx="8" stroke-width="3"/>
+<rect x="300" y="130" width="180" height="56" rx="8"/>
+<rect x="40" y="130" width="170" height="56" rx="8"/>
+<rect x="570" y="130" width="150" height="56" rx="8"/>
+<rect x="40" y="250" width="130" height="50" rx="8"/><rect x="190" y="250" width="130" height="50" rx="8"/>
+<rect x="340" y="250" width="130" height="50" rx="8"/><rect x="490" y="250" width="130" height="50" rx="8"/><rect x="630" y="250" width="110" height="50" rx="8"/>
+<path d="M390 86 V130 M300 158 H210 M480 158 H570"/>
+<path d="M105 186 V250 M255 186 L255 250 M405 186 V250 M555 186 V250" stroke-dasharray="4 3"/>
+</g>
+<g fill="currentColor" font-family="sans-serif" font-size="13" text-anchor="middle">
+<text x="390" y="54" font-weight="700">Container App</text><text x="390" y="74">revisões + probes + escala</text>
+<text x="390" y="154" font-weight="700">Managed Environment</text><text x="390" y="174">logs → Log Analytics</text>
+<text x="125" y="154" font-weight="700">Identidade (user-assigned)</text><text x="125" y="174">sem segredo</text>
+<text x="645" y="154" font-weight="700">App Insights</text><text x="645" y="174">workspace-based</text>
+<text x="105" y="272" font-weight="700">ACR</text><text x="105" y="290">AcrPull</text>
+<text x="255" y="272" font-weight="700">Key Vault</text><text x="255" y="290">Secrets User</text>
+<text x="405" y="272" font-weight="700">Azure OpenAI</text><text x="405" y="290">OpenAI User</text>
+<text x="555" y="272" font-weight="700">Log Analytics</text><text x="555" y="290">retenção 30 d</text>
+<text x="685" y="272" font-weight="700">Budget</text><text x="685" y="290">alerta de custo</text>
+<text x="170" y="236" font-size="11">papéis (RBAC)</text>
+</g>
+</svg>
+<figcaption>Linhas tracejadas: papéis concedidos à identidade. Nenhuma chave circula: o app apresenta a identidade e cada recurso decide pelo papel.</figcaption>
+</figure>
+
+<h3>Peças do arquivo, em ordem de importância</h3>
+<p><strong>Parâmetros com decoradores.</strong> <code>@minLength</code>, <code>@maxLength</code>, <code>@minValue</code> e <code>@description</code> transformam erro de implantação (nome inválido que só estoura depois de dois minutos) em erro de validação imediato. Nomes únicos vêm de <code>uniqueString(resourceGroup().id)</code>: determinístico para o mesmo grupo, diferente entre grupos, o que evita colisão em recursos de nome global (ACR, Key Vault, subdomínio do OpenAI).</p>
+<p><strong>O ambiente e os logs.</strong> O ambiente envia logs do console e do sistema para o Log Analytics por <em>configuração de diagnóstico</em> (destino <code>azure-monitor</code>), em vez de receber a chave compartilhada do workspace no template. Isso evita o <code>listKeys()</code>, que colocaria uma credencial no corpo da implantação (e o <code>deploycheck</code> reprova, regra <code>XR009</code>). <code>logAnalyticsDestinationType: 'Dedicated'</code> grava em tabelas específicas do recurso, mais baratas de consultar que o esquema genérico.</p>
+
+<p><strong>O app.</strong> Estas são as decisões que o laboratório inteiro verifica:</p>
+<pre><code>var traffic = empty(stableRevision)
+  ? [
+      { latestRevision: true, weight: 100 }
+    ]
+  : [
+      { revisionName: stableRevision, weight: 100 - canaryPercent }
+      { latestRevision: true, weight: canaryPercent }
+    ]
+
+resource app 'Microsoft.App/containerApps@2024-03-01' = if (!empty(image)) {
+  name: '${prefix}-app'
+  location: location
+  tags: tags
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: { '${identity.id}': {} }
+  }
+  properties: {
+    environmentId: env.id
+    workloadProfileName: 'Consumption'
+    configuration: {
+      activeRevisionsMode: 'Multiple'
+      ingress: {
+        external: true
+        targetPort: 8000
+        transport: 'auto'
+        traffic: traffic
+      }
+      registries: [
+        { server: acr.properties.loginServer, identity: identity.id }
+      ]
+      secrets: appSecrets
+    }
+    template: {
+      revisionSuffix: revisionSuffix
+      containers: [
+        {
+          name: 'llm-service'
+          image: image
+          resources: { cpu: json('0.5'), memory: '1Gi' }
+          env: concat(baseEnv, secretEnv)
+          probes: [
+            {
+              type: 'Startup'
+              httpGet: { path: '/healthz', port: 8000 }
+              periodSeconds: 3
+              failureThreshold: 20
+            }
+            {
+              type: 'Liveness'
+              httpGet: { path: '/healthz', port: 8000 }
+              periodSeconds: 10
+              failureThreshold: 3
+            }
+            {
+              type: 'Readiness'
+              httpGet: { path: '/readyz', port: 8000 }
+              periodSeconds: 5
+              failureThreshold: 3
+            }
+          ]
+        }
+      ]
+      scale: {
+        minReplicas: minReplicas
+        maxReplicas: maxReplicas
+        rules: [
+          {
+            name: 'http-concurrency'
+            http: { metadata: { concurrentRequests: '10' } }
+          }
+        ]
+      }
+    }
+  }
+  dependsOn: [
+    pullImages
+    readSecrets
+    callModel
+  ]
+}</code></pre>
+<ul>
+<li><code>identity</code> do tipo <code>UserAssigned</code> e <code>registries</code> com <code>identity</code>: o pull da imagem usa a identidade, sem usuário/senha do ACR.</li>
+<li><code>activeRevisionsMode: 'Multiple'</code> + <code>revisionSuffix</code> (SHA curto do commit): cada implantação gera uma revisão nomeada e as anteriores continuam ativas, o que viabiliza canário e rollback instantâneo.</li>
+<li><code>traffic</code> parametrizado: com <code>stableRevision</code> vazio, 100% vai para a última revisão; com a estável informada, <code>canaryPercent</code> vai para a nova e o resto fica na estável.</li>
+<li>Três probes (startup, liveness, readiness) apontando para os endpoints que o serviço realmente expõe.</li>
+<li>Regra de escala por <code>concurrentRequests</code>, com <code>maxReplicas</code> como teto de custo e de pressão sobre o provedor.</li>
+<li>O recurso do app é <strong>condicional</strong> (<code>if (!empty(image))</code>): a primeira implantação cria só a base (registro, identidade, cofre, modelo, ambiente) e devolve o nome do ACR; o pipeline então envia a imagem e implanta de novo com <code>image</code> preenchido. Isso resolve o ovo e a galinha "o app precisa da imagem, a imagem precisa do registro".</li>
+</ul>
+<p>Para ler o arquivo inteiro e compilá-lo, veja o <a href="#lab-guiado">laboratório</a>. O resultado de <code>bicep build</code> com a CLI 0.48.1 foi um JSON ARM com 14 recursos e nenhum aviso.</p>
+
+<h3>Antes de aplicar: <code>what-if</code></h3>
+<p><code>az deployment group what-if</code> pede ao ARM a lista de mudanças que a implantação causaria, sem executá-la. Cada recurso vem com um símbolo: <code>+</code> criar, <code>~</code> modificar (com o diff por propriedade), <code>-</code> excluir, <code>=</code> sem mudança, <code>*</code> ignorado (recurso fora do escopo do template, por exemplo em modo incremental), <code>!</code> implantado sem previsão (o ARM não consegue prever). O pipeline do bloco 6 roda o <code>what-if</code> antes do <code>create</code> e o registra no log do job; em ambientes sensíveis ele vira etapa de aprovação.</p>
+<p>Leia o diff procurando o que <em>não deveria</em> estar ali: uma exclusão, uma troca de SKU, <code>publicNetworkAccess</code> mudando, uma identidade sendo recriada (o que invalida os papéis atribuídos a ela). Três limites que sustentam a pergunta 3 do diagnóstico: (1) há ruído, pois a API normaliza propriedades e aparecem modificações que são no-ops; (2) ele não prevê falhas decididas na hora pelo provedor do recurso, como cota, política de região ou nome já usado; (3) ele não prevê o que depende de outro recurso ainda inexistente, e marca como "implantado" sem detalhar.</p>
+
+<h3>Exemplo trabalhado: o primeiro deploy, passo a passo</h3>
+<ol>
+<li><strong>Base.</strong> <code>az deployment group create -g rg-p01 -f infra/main.bicep -p prefix=p01lab image=''</code> cria registro, identidade, cofre, conta e implantação do modelo, ambiente e logs. Não cria o app. Saídas: <code>acrName</code>, <code>acrLoginServer</code>, <code>identityClientId</code>.</li>
+<li><strong>Imagem.</strong> Build e push para <code>&lt;acr&gt;.azurecr.io/llm-service:&lt;sha&gt;</code> (bloco 2).</li>
+<li><strong>App.</strong> O mesmo comando, agora com <code>image=&lt;acr&gt;.azurecr.io/llm-service:&lt;sha&gt;</code> e <code>revisionSuffix=&lt;sha7&gt;</code>. As atribuições de papel já existem (criadas no passo 1), então o pull da imagem e a chamada ao modelo funcionam desde a primeira revisão.</li>
+<li><strong>Deploys seguintes.</strong> Só o passo 3, com <code>stableRevision</code> e <code>canaryPercent</code> (bloco 6).</li>
+</ol>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Segredo em saída ou em parâmetro sem <code>@secure()</code>.</strong> O histórico de implantações do grupo de recursos guarda parâmetros e saídas em texto legível por quem tem leitura no grupo. Uma <code>output</code> com chave ou string de conexão vira credencial exposta a todo leitor. Parâmetros sensíveis levam <code>@secure()</code>; saídas nunca carregam segredo (devolva o <em>nome</em> do cofre e leia o valor em tempo de execução). O lab não tem nenhum parâmetro secreto porque nada precisa de um: é o objetivo do bloco 4.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Reaplicar o template pode mexer no tráfego.</strong> As propriedades <code>ingress.traffic</code> e <code>revisionSuffix</code> fazem parte do que o Bicep declara. Uma implantação "só de infraestrutura" que passa <code>stableRevision</code> vazio devolve 100% do tráfego à última revisão, desfazendo um canário em andamento ou um rollback manual. O pipeline do lab trata isso lendo a revisão estável antes de cada deploy; um deploy manual fora do pipeline precisa fazer o mesmo. Em geral: o que o código declara, o código dono sobrescreve.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Proteção contra purga e nomes que não voltam.</strong> O Key Vault do lab tem <code>enablePurgeProtection: true</code> (boa prática de produção, e irreversível depois de ligada): <code>az group delete</code> remove o cofre para o estado "excluído suavemente", e ele permanece por 7 dias com o nome reservado. A conta do modelo também fica em exclusão suave até ser purgada. Em laboratório, use nomes derivados de <code>uniqueString</code> (como o lab) e saiba que "apaguei tudo" não libera esses nomes imediatamente.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Bicep descreve o estado desejado, compila para ARM e usa o Azure como estado; a ordem sai das referências entre recursos. Torne o app condicional à imagem para resolver o ovo e a galinha do registro, passe tudo que varia por parâmetro com validação e leia o <code>what-if</code> como um diff que não garante sucesso. Segredos nunca em saída, o template é dono do que declara (inclusive o tráfego), e Terraform é uma alternativa legítima com o custo de gerenciar estado.</p>
+</div>
+
+<!-- ============================================ BLOCO 4 -->
+<h2 id="b04">Bloco 4 · Identidade e segredos: managed identity, RBAC mínimo, Key Vault e acesso ao modelo sem chave</h2>
+
+<h3>Por que isso importa</h3>
+<p>Uma chave de API em variável de ambiente resolve o problema de autenticar e cria quatro novos: ela vaza (log, <code>docker history</code>, captura de tela, repositório), não expira, não diz <em>quem</em> a usou e dá o mesmo poder a quem a copiar. O padrão de nuvem para isso é trocar "algo que você sabe" por "algo que você é": a plataforma atesta a identidade do seu workload, e o recurso de destino decide por papel o que essa identidade pode fazer. O resultado é um serviço sem segredo para o modelo, para o registro e para o cofre. É o que o <a href="../M12-producao-seguranca-sre-billing/M12.html#b3">M12</a> chama de identidade como fronteira; aqui está a prática no Azure.</p>
+
+<h3>Como funciona uma managed identity</h3>
+<p>Uma <em>managed identity</em> é um principal de serviço no Microsoft Entra ID cujo ciclo de vida e credenciais a plataforma gerencia: você nunca vê o segredo. Existem dois tipos:</p>
+<table>
+<thead><tr><th></th><th>System-assigned</th><th>User-assigned</th></tr></thead>
+<tbody>
+<tr><td>Ciclo de vida</td><td>Nasce e morre com o recurso (o app).</td><td>Recurso próprio, independente do app.</td></tr>
+<tr><td>Compartilhamento</td><td>Um recurso, uma identidade.</td><td>Vários recursos podem usá-la.</td></tr>
+<tr><td>Quando existe</td><td>Só depois que o app é criado.</td><td>Antes de tudo: dá para conceder papéis primeiro.</td></tr>
+<tr><td>Seleção no SDK</td><td>Automática.</td><td>Exige o <code>client_id</code> (<code>AZURE_CLIENT_ID</code>) se houver mais de uma.</td></tr>
+</tbody>
+</table>
+<p>O lab usa <strong>user-assigned</strong> por uma razão operacional que pega muita gente: o app precisa do papel <code>AcrPull</code> <em>para criar a primeira revisão</em> (puxar a imagem) e do acesso ao Key Vault para resolver os segredos. Com identidade de sistema, o principal só existe depois do app, e a primeira revisão falha por falta de permissão, num ciclo sem saída. Com a identidade criada antes e os papéis atribuídos antes, o app já nasce com tudo.</p>
+
+<figure>
+<svg viewBox="0 0 760 270" role="img" aria-labelledby="t1b4" width="760">
+<title id="t1b4">Fluxo de autenticação sem chave: o contêiner pede um token à plataforma, apresenta o token ao recurso e o RBAC decide</title>
+<g fill="none" stroke="currentColor" stroke-width="1.4" font-family="sans-serif" font-size="13">
+<rect x="10" y="90" width="170" height="80" rx="8" stroke-width="3"/>
+<rect x="260" y="20" width="200" height="70" rx="8"/>
+<rect x="260" y="180" width="200" height="70" rx="8"/>
+<rect x="560" y="90" width="190" height="80" rx="8"/>
+<path d="M180 115 L260 65 M180 150 L260 205 M460 215 L560 150 M460 55 L560 112"/>
+</g>
+<g fill="currentColor" font-family="sans-serif" font-size="13" text-anchor="middle">
+<text x="95" y="124" font-weight="700">Contêiner</text><text x="95" y="144">DefaultAzureCredential</text>
+<text x="360" y="48" font-weight="700">Endpoint de identidade</text><text x="360" y="68">da plataforma → Entra ID</text>
+<text x="360" y="208" font-weight="700">Token (JWT, ~1 h)</text><text x="360" y="228">aud/escopo do recurso</text>
+<text x="655" y="124" font-weight="700">Recurso de modelo</text><text x="655" y="144">valida token + papel</text>
+<text x="205" y="62" font-size="12">1 pede token</text><text x="205" y="212" font-size="12">2 recebe</text>
+<text x="520" y="215" font-size="12">3 Authorization: Bearer</text><text x="470" y="62" font-size="12">RBAC</text>
+</g>
+</svg>
+<figcaption>Nenhuma credencial estática entra no contêiner. O token é curto, tem destinatário (escopo) e é renovado pelo SDK.</figcaption>
+</figure>
+
+<h3>No código: um adapter que nunca vê uma chave</h3>
+<p>O adapter do laboratório fala com o endpoint compatível com OpenAI (<code>/openai/v1/</code>) usando um <code>Authorization: Bearer</code> obtido de um <em>token provider</em> assíncrono. O mesmo código roda na sua máquina (a credencial vem do <code>az login</code>) e na nuvem (vem da identidade), porque <code>DefaultAzureCredential</code> tenta uma cadeia de fontes em ordem. A versão assíncrona de <code>azure.identity.aio</code> é importante: a síncrona bloquearia o event loop, e todas as requisições em voo, durante cada renovação.</p>
+<pre><code>def build_token_provider(scope: str) -&gt; TokenProvider:
+    """Token provider assíncrono via `azure.identity.aio` (extra opcional `azure`).
+
+    `DefaultAzureCredential` assíncrono não bloqueia o event loop ao renovar o token; a versão
+    síncrona bloquearia todas as requisições em voo durante a renovação.
+    """
+    try:
+        identity = importlib.import_module("azure.identity.aio")
+    except ModuleNotFoundError as exc:
+        raise ConfigError("instale o extra opcional: uv sync --extra azure") from exc
+    credential = identity.DefaultAzureCredential()
+    provider: TokenProvider = identity.get_bearer_token_provider(credential, scope)
+    return provider
+</code></pre>
+<p>Três detalhes de contrato que os testes do lab garantem (<code>tests/test_llm_azure.py</code>): o cabeçalho é <code>Bearer</code> e <em>não</em> há <code>api-key</code>; 429/5xx/timeout viram <code>LLMUnavailable</code> (com <code>Retry-After</code> repassado à resposta 503, retentável) e 401/403 viram um erro <strong>não retentável</strong> cuja mensagem aponta para o RBAC, porque tentar de novo uma permissão ausente só atrasa o diagnóstico; e a resposta fora do formato esperado vira <code>LLMError</code> sem vazar o corpo do provedor ao cliente.</p>
+
+<h3>RBAC mínimo: o que a identidade pode</h3>
+<p>No Azure, papéis atribuídos a um principal sobre um <em>escopo</em> (assinatura, grupo de recursos ou recurso) definem as ações permitidas. O Bicep do lab dá à identidade do app exatamente três papéis, cada um no menor escopo possível (o próprio recurso):</p>
+<table>
+<thead><tr><th>Papel</th><th>Escopo</th><th>Para quê</th></tr></thead>
+<tbody>
+<tr><td><code>AcrPull</code></td><td>o registro</td><td>puxar imagens; não envia, não apaga.</td></tr>
+<tr><td><code>Key Vault Secrets User</code></td><td>o cofre</td><td>ler o valor de segredos; não cria nem altera.</td></tr>
+<tr><td><code>Cognitive Services OpenAI User</code></td><td>a conta do modelo</td><td>chamar inferência (chat, embeddings); não cria implantações nem lê chaves.</td></tr>
+</tbody>
+</table>
+<p>Os GUIDs dos papéis internos são fixos e públicos (<code>7f951dda-...</code>, <code>4633458b-...</code>, <code>5e0bd9bd-...</code>, conferidos na documentação de papéis internos em 11/10/2026); o Bicep usa o GUID em vez do nome porque o nome é texto de portal. Na atribuição, <code>principalType: 'ServicePrincipal'</code> evita uma falha clássica: o principal acabou de ser criado, ainda não replicou no diretório e a atribuição falha com "principal não encontrado". Informar o tipo dispensa a consulta ao diretório.</p>
+
+<div class="box fund">
+<span class="lbl">Fundamento · plano de controle e plano de dados</span>
+<p>Todo recurso Azure tem dois planos. O <strong>plano de controle</strong> (criar, configurar, apagar o recurso) é regido por papéis como <code>Owner</code> e <code>Contributor</code>. O <strong>plano de dados</strong> (o que o recurso faz para seus clientes: inferência, ler segredo, puxar imagem) é regido por papéis de dados, com <em>DataActions</em>. Ser <code>Owner</code> da conta do modelo não permite chamá-lo; ter <code>Cognitive Services OpenAI User</code> não permite alterá-lo. É por isso que o 403 com "tenho Contributor" do diagnóstico faz sentido, e é a base do mínimo privilégio: o app recebe apenas ações de dados, nunca de controle.</p>
+</div>
+
+<h3>Acesso ao modelo por Entra ID: o que precisa estar certo</h3>
+<ol>
+<li><strong>Subdomínio personalizado.</strong> O endpoint no formato <code>https://&lt;nome&gt;.openai.azure.com/openai/v1/</code> exige que a conta tenha <code>customSubDomainName</code>; o endpoint regional genérico não aceita tokens Entra. O Bicep define o subdomínio igual ao nome da conta.</li>
+<li><strong>Escopo do token.</strong> A documentação atual usa <code>https://ai.azure.com/.default</code> para o endpoint <code>/openai/v1/</code>. O escopo é configurável no lab (<code>AZURE_OPENAI_SCOPE</code>) justamente porque ele já mudou entre versões de documentação e SDK; confirme na página de managed identity do serviço antes de depender dele.</li>
+<li><strong>Chaves desligadas.</strong> <code>disableLocalAuth: true</code> na conta desabilita autenticação por chave: depois disso, uma chave vazada deixa de existir como categoria de risco, e o <code>deploycheck</code> reprova <code>disableLocalAuth: false</code> (XR009).</li>
+<li><strong>Papel de dados no escopo da conta</strong> e paciência: atribuições levam alguns minutos para valer. Um 403 nos primeiros minutos depois de um deploy novo costuma ser propagação, não erro.</li>
+<li><strong>Seleção da identidade.</strong> Com identidade user-assigned, o SDK só a escolhe se receber o <code>client_id</code>; o Bicep injeta <code>AZURE_CLIENT_ID</code>.</li>
+</ol>
+<p>Nome do produto: o serviço que hospeda modelos OpenAI no Azure fica sob a marca <strong>Microsoft Foundry</strong> (antes Azure AI Foundry; o recurso "Azure OpenAI" continua existindo como tipo <code>Microsoft.CognitiveServices/accounts</code> com <code>kind: OpenAI</code>). Os nomes de portal e de documentação mudam mais depressa que os tipos de recurso do ARM; no código de IaC, confie no tipo e na versão de API.</p>
+
+<h3>Key Vault: o que ainda precisa de segredo</h3>
+<p>Com identidade, o modelo, o registro e o próprio cofre não precisam de segredo. Sobram credenciais que o seu serviço <em>não controla</em>: a chave de um parceiro, o token de um SaaS, um certificado. Para essas, o Key Vault guarda o valor e o Container Apps o referencia:</p>
+<ul>
+<li>No Bicep, <code>secrets: [{ name, keyVaultUrl, identity }]</code> declara a referência; no <code>env</code>, <code>secretRef</code> a expõe como variável. O valor nunca aparece no template, no <code>what-if</code> nem no repositório; ele é criado fora do código (<code>az keyvault secret set</code>).</li>
+<li>O cofre usa <strong>RBAC</strong> (<code>enableRbacAuthorization: true</code>), não as <em>access policies</em> antigas: a mesma mecânica de papéis do resto do Azure, auditável, com escopo por segredo.</li>
+<li><strong>Com versão ou sem versão na URL.</strong> Sem versão, a plataforma passa a usar a versão mais recente depois de um intervalo e reinicia as revisões afetadas; com versão, o valor é fixo até você mudar a URL. Rotação automática exige a primeira forma e um processo que aguenta reinício; controle fino de "quando troca" exige a segunda. Seja qual for, o contêiner lê a variável na partida: não há "reler".</li>
+<li>Soft-delete e proteção contra purga ficam ligados: segredo apagado por engano é recuperável, e um invasor com acesso de exclusão não consegue destruir o cofre de vez.</li>
+</ul>
+<p>No lab, o par <code>PARTNER_API_KEY</code>/<code>partner-api-key</code> existe atrás do parâmetro <code>useKeyVaultSecret</code> (padrão <code>false</code>), porque a referência a um segredo que ainda não existe faz a criação do app falhar. Ordem correta: criar o cofre, gravar o valor, depois implantar o app com o parâmetro em <code>true</code>.</p>
+
+<h3>Equivalentes em AWS e GCP</h3>
+<table>
+<thead><tr><th>Invariante</th><th>Azure</th><th>AWS</th><th>GCP</th></tr></thead>
+<tbody>
+<tr><td>Identidade do workload</td><td>Managed identity</td><td>Papel IAM da tarefa/função (task role)</td><td>Service account anexada ao serviço</td></tr>
+<tr><td>Acesso ao modelo sem chave</td><td>Entra ID + <code>Cognitive Services OpenAI User</code></td><td>Bedrock via IAM (<code>bedrock:InvokeModel</code>)</td><td>Vertex AI via IAM (<code>roles/aiplatform.user</code>)</td></tr>
+<tr><td>Segredos</td><td>Key Vault (RBAC)</td><td>Secrets Manager / Parameter Store</td><td>Secret Manager</td></tr>
+<tr><td>Federação do CI (sem segredo)</td><td>Credencial federada + <code>azure/login</code></td><td>Provedor OIDC + <code>configure-aws-credentials</code> (role-to-assume)</td><td>Workload Identity Federation + <code>google-github-actions/auth</code></td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>A chave "temporária" que fica.</strong> Para destravar uma demonstração, alguém liga a autenticação por chave na conta do modelo e põe a chave numa variável. A demo passa; a chave permanece; seis meses depois ela está em um log de CI. Se a conta de produção tem <code>disableLocalAuth: false</code>, qualquer vazamento de chave é um vazamento do recurso inteiro e <em>nada</em> no RBAC o contém. Trave a propriedade em IaC (e em política do Azure, para que o portal também não consiga ligá-la) e trate o pedido de "só uma chave por hoje" como um incidente evitado.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Papel largo na identidade para "funcionar".</strong> Diante de um 403, a tentação é <code>Contributor</code> no grupo de recursos. Além de não resolver o 403 (plano de controle), concede ao app o poder de alterar ou apagar o próprio ambiente, e agora qualquer injeção de comando ou SSRF no serviço vira controle de infraestrutura. O diagnóstico certo é ler a mensagem, identificar qual ação de dados falta e conceder só essa, no escopo do recurso.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Endpoint público sem autenticação de chamador.</strong> A identidade resolve como o <em>serviço</em> fala com a nuvem, não quem fala com o <em>serviço</em>. O Bicep do lab publica o ingresso externo e a API não exige credencial: qualquer pessoa com a URL consome seus tokens. Em produção, coloque autenticação na frente (Easy Auth/Entra, API Management, ingress privado com VNet, ou chave de cliente validada pelo serviço, com o segredo no Key Vault) e quota por chamador (<a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>). No laboratório pago, restrinja o ingresso ao seu IP.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Identidade gerenciada elimina a chave: o contêiner pede um token à plataforma, o recurso valida o papel. Use user-assigned para conceder papéis antes de o app existir, dê só papéis de dados no menor escopo e desligue a autenticação local do recurso de modelo. O Key Vault guarda o que você não controla, entrega o valor na partida (rotação exige reinício) e funciona por RBAC. Identidade do serviço não substitui autenticação do chamador.</p>
+</div>
+
+<!-- ============================================ BLOCO 5 -->
+<h2 id="b05">Bloco 5 · Observabilidade e custo: OpenTelemetry, Application Insights, tokens, alertas, orçamento e escala</h2>
+
+<h3>Por que isso importa</h3>
+<p>Em produção você não depurará com um depurador; depurará com o que o serviço emitiu antes de falhar. E em um serviço com LLM há duas contas correndo ao mesmo tempo: a de latência e erro (a que o SRE vê) e a de tokens (a que o financeiro vê). Uma mudança de prompt que dobra os tokens de entrada não derruba nada, não dispara nenhum alerta clássico e dobra a fatura. O <a href="../M06-evals-observabilidade/M06.html">M06</a> trata a observabilidade de qualidade (evals, traces de agentes); este bloco trata o que o <em>deploy</em> precisa entregar: sinais operacionais e de custo, ligados ao Azure.</p>
+
+<h3>Três sinais, uma linguagem: OpenTelemetry</h3>
+<p>OpenTelemetry (OTel) é o padrão aberto para <strong>traces</strong> (a história de uma requisição), <strong>métricas</strong> (números agregados) e <strong>logs</strong>. A vantagem para quem opera em nuvem é a separação entre <em>instrumentar</em> (no código, neutro de fornecedor) e <em>exportar</em> (configuração, trocável). O Azure Monitor oferece uma distribuição OTel para Python, o pacote <code>azure-monitor-opentelemetry</code>, que liga a exportação para o Application Insights lendo a variável <code>APPLICATIONINSIGHTS_CONNECTION_STRING</code>. O Application Insights atual é <em>baseado em workspace</em>: guarda os dados no mesmo Log Analytics onde ficam os logs de console, o que permite consultar tudo com uma linguagem só (KQL).</p>
+<p>No laboratório (<code>llm_service/telemetry.py</code>), a ligação é deliberadamente pequena e opcional: uma função chama <code>configure_azure_monitor(connection_string=...)</code> só quando a variável existe.</p>
+
+<p>Sem connection string nada é importado (o teste <code>test_telemetry_off_without_connection_string_and_never_imports</code> garante); com a string e sem o extra instalado, o erro diz exatamente o que fazer (<code>uv sync --extra azure</code>). Em desenvolvimento e nos testes, o serviço roda sem nenhuma dependência de Azure.</p>
+
+<h3>O que medir em um serviço com LLM</h3>
+<p>O lab emite dois tipos de sinal, escolhidos para responder perguntas específicas:</p>
+<table>
+<thead><tr><th>Sinal</th><th>Onde</th><th>Responde a</th></tr></thead>
+<tbody>
+<tr><td>Histograma <code>gen_ai.client.token.usage</code> (tipo <code>input</code>/<code>output</code>, modelo)</td><td>métrica OTel</td><td>Quantos tokens por chamada? Mudou depois do deploy?</td></tr>
+<tr><td>Histograma <code>gen_ai.client.operation.duration</code></td><td>métrica OTel</td><td>Quanto demora a chamada ao modelo (p50/p95/p99)?</td></tr>
+<tr><td>Contador <code>llm_service.upstream.errors</code> (tipo: <code>unavailable</code>/<code>upstream</code>)</td><td>métrica OTel</td><td>Quanto do erro é 429/5xx do provedor?</td></tr>
+<tr><td>Uma linha JSON por requisição: <code>request_id</code>, rota, status, <code>duration_ms</code>, modelo, tokens, <code>ttft_ms</code>, erro</td><td>stdout → Log Analytics</td><td>O que aconteceu <em>nesta</em> requisição? Quem consumiu os tokens?</td></tr>
+</tbody>
+</table>
+<p>Os nomes dos dois primeiros vêm das <em>convenções semânticas de GenAI</em> do OpenTelemetry. Elas ainda estão em evolução (atributos e nomes já mudaram entre versões e o projeto as moveu para um repositório próprio); use-as como convenção, mas fixe a versão do SDK e trate renomeações como mudança de contrato, porque os alertas e dashboards dependem dos nomes.</p>
+<p>O <strong>tempo até o primeiro token</strong> (<code>ttft_ms</code>) é medido no serviço e registrado no log da requisição, não na duração da chamada: em streaming, a duração total mistura a latência do provedor com o tempo que o modelo leva para gerar a resposta inteira, e é o primeiro token que o usuário sente. Os dois números contam histórias diferentes e precisam ser lidos separadamente.</p>
+<p>O log por requisição é a fonte de verdade para custo por rota/cliente, porque carrega tokens e <code>request_id</code>, o mesmo valor devolvido ao cliente no cabeçalho <code>x-request-id</code>. Duas decisões de projeto, testadas em <code>test_access_log_has_tokens_and_never_the_prompt</code>: o <strong>conteúdo do prompt nunca entra no log</strong> (privacidade, e também custo de ingestão), e o <code>request_id</code> recebido do cliente só é aceito se casar com um padrão estrito (<code>^[A-Za-z0-9._-]{1,64}$</code>); caso contrário, o servidor gera um novo, o que impede injeção de linhas falsas no log por um cabeçalho malicioso.</p>
+
+
+<h3>Consultar o que o serviço emitiu</h3>
+<p>Com a configuração de diagnóstico do bloco 3, os logs do contêiner caem em tabelas do workspace (no formato dedicado, <code>ContainerAppConsoleLogs</code> e <code>ContainerAppSystemLogs</code>). Como cada linha é JSON, o KQL abre o campo e agrega por modelo:</p>
+<pre><code>ContainerAppConsoleLogs
+| where TimeGenerated &gt; ago(1h)
+| extend e = parse_json(Log)                      // a coluna do texto da linha pode ter outro nome no seu esquema
+| where e.event == "request" and e.path == "/v1/complete"
+| summarize chamadas = count(),
+            tokens_in = sum(toint(e.input_tokens)),
+            tokens_out = sum(toint(e.output_tokens)),
+            p95_ms = percentile(todouble(e.duration_ms), 95),
+            erros = countif(toint(e.status) &gt;= 500)
+  by modelo = tostring(e.model), bin(TimeGenerated, 5m)</code></pre>
+<p>O nome exato da coluna e da tabela depende do tipo de destino configurado; confira no seu workspace antes de salvar a consulta em um alerta. É o tipo de coisa que quebra em silêncio: um alerta sobre uma coluna renomeada continua "verde" porque não encontra linhas.</p>
+
+<h3>Alertas que valem a pena</h3>
+<p>Alerta é um contrato com uma pessoa acordada. Cada alerta precisa responder "o que eu faço agora?". Para este serviço, um conjunto pequeno cobre quase tudo, ordenado por urgência:</p>
+<table>
+<thead><tr><th>Alerta</th><th>Sinal</th><th>Primeira ação</th></tr></thead>
+<tbody>
+<tr><td>Disponibilidade</td><td>taxa de 5xx &gt; limiar por 5 min, ou teste sintético de <code>/v1/complete</code> falhando</td><td>revisão nova? rollback por tráfego (bloco 6).</td></tr>
+<tr><td>Provedor limitando</td><td>fração de 429/<code>unavailable</code> acima do normal</td><td>cota do modelo (TPM), retentativa em cascata, quem está consumindo.</td></tr>
+<tr><td>Latência percebida</td><td>p95 do <code>ttft_ms</code> acima do SLO</td><td>região do modelo, tamanho do prompt, saturação de réplicas.</td></tr>
+<tr><td>Queima de tokens</td><td>tokens/hora acima de N× a média do mesmo horário</td><td>prompt mudou? cliente em laço? chave de parceiro vazada?</td></tr>
+<tr><td>Saturação</td><td>réplicas no <code>maxReplicas</code> por mais de X min</td><td>aumentar o teto ou reduzir carga; conferir a cota do modelo antes.</td></tr>
+<tr><td>Orçamento</td><td>real ≥ 80%, previsão ≥ 100% (recurso <code>Microsoft.Consumption/budgets</code>)</td><td>revisar o consumo da semana; ver abaixo o que o orçamento <em>não</em> faz.</td></tr>
+</tbody>
+</table>
+<p>No Azure Monitor, alertas de <em>métrica</em> (réplicas, requisições) são baratos e quase em tempo real; alertas de <em>consulta de log</em> (KQL) são mais flexíveis, têm latência e custo por avaliação. Ambos disparam um <em>action group</em> (e-mail, webhook, pager). Alerte sobre sintomas que o usuário sente, não sobre causas prováveis: CPU alta sem impacto não deve acordar ninguém.</p>
+
+<h3>Custo: tokens, computação e logs</h3>
+<p>Em um serviço de LLM, a ordem de grandeza costuma ser: tokens ≫ computação ≈ logs. O lab traz a aritmética em <code>llm_service/cost.py</code>, com todos os preços como <strong>parâmetro</strong>: você informa os valores vigentes da sua região e modelo. Com preços de exemplo (0,15 e 0,60 por milhão de tokens de entrada e saída), 2.000 chamadas por dia de 1.200 tokens de entrada e 300 de saída:</p>
+<pre><code>$ uv run python -m llm_service.cost --requests-per-day 2000 --input-tokens 1200 --output-tokens 300 --price-in 0.15 --price-out 0.60
+por chamada: 0.000360
+por mês (30 dias): 21.60</code></pre>
+<p>A mesma carga multiplicada por dez (20.000/dia) dá 216,00. Para a computação, uma réplica de 0,5 vCPU e 1 GiB, ativa 10% do mês e ociosa nos 90% restantes, com taxas de exemplo na ordem de grandeza das tabelas públicas de consumo (ativa: 0,000024 por vCPU-s e 0,000003 por GiB-s; ociosa: 0,000003 e 0,000003), custa cerca de 14,39 no mês antes da franquia gratuita, e três revisões ativas com réplica mínima 1 somariam cerca de 43,16. <strong>Esses números ilustram proporção, não orçam nada</strong>: o que o exemplo ensina é que (1) um mês de tokens pode superar a computação por uma ordem de grandeza ou ser menor que ela, dependendo do volume; (2) réplicas mínimas deixadas em revisões antigas custam sem servir ninguém; e (3) a franquia mensal de vCPU-segundos é por assinatura, não por app.</p>
+<p>Logs também custam por GB ingerido no Log Analytics. Dois controles simples: nunca logar corpo de prompt/resposta (privacidade e volume) e manter retenção curta no que não é auditoria (o Bicep usa 30 dias). O Application Insights permite amostragem de traces; amostrar demais esconde exatamente os erros raros que você quer ver, então amostre traces de sucesso e mantenha 100% dos erros e das métricas.</p>
+
+<h3>Escala: o teto é uma decisão de custo e de proteção</h3>
+<p>A regra HTTP do lab (<code>concurrentRequests: '10'</code>) adiciona uma réplica quando a média de requisições simultâneas por réplica passa de 10, medida em janelas de 15 segundos. O valor certo vem de medir: quantas conexões uma réplica de 0,5 vCPU sustenta antes de a latência subir? O que importa entender:</p>
+<ul>
+<li><strong><code>maxReplicas</code> é um disjuntor financeiro.</strong> Um laço de cliente com mil requisições simultâneas escala até o teto e para. O padrão da plataforma é 10 réplicas e o máximo configurável é 1.000: subir o teto "por segurança" para centenas transforma o próximo incidente de tráfego em incidente de fatura.</li>
+<li><strong>Mais réplicas não criam mais cota de modelo.</strong> A cota (tokens por minuto da implantação, o <code>modelCapacity</code> do Bicep) é do recurso de modelo. Se ela é o gargalo, escalar o serviço aumenta o número de requisições recebendo 429, e as retentativas amplificam a carga. O sintoma é "mais réplicas, mais erros". O remédio é cota, fila, limite por chamador ou um gateway com fallback entre implantações (<a href="../M05-llm-pratica-gateway-cache/M05.html#b06">M05, bloco 6</a>), não mais contêineres.</li>
+<li><strong>Escala a zero versus <code>minReplicas: 1</code></strong> (bloco 1): o custo de uma réplica ociosa contra a latência da primeira requisição.</li>
+<li><strong>Encerramento de réplica com streams em voo.</strong> Ao reduzir réplicas, a plataforma envia <code>SIGTERM</code> e espera a janela de término; streams mais longos que ela são cortados. Se isso ocorre, o cliente precisa saber repetir a requisição; um stream cortado no meio não é uma resposta parcial utilizável.</li>
+</ul>
+
+<h3>Orçamento: o que ele faz e o que não faz</h3>
+<p>O recurso <code>Microsoft.Consumption/budgets</code> do lab (condicional a <code>budgetAmount &gt; 0</code> e a um e-mail) notifica em 80% do realizado e em 100% da <em>previsão</em>. Ele <strong>não bloqueia gasto</strong>: avisa, com atraso de horas, depois que o custo já ocorreu. O freio real é o conjunto de tetos que você configurou antes: <code>maxReplicas</code>, cota do modelo (TPM), limite por chamador no serviço e, em último caso, uma ação automatizada disparada pelo aviso (escalar para zero, revogar o papel). Orçamento sem teto é um relatório de dano.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Média esconde a cauda.</strong> Um painel com "latência média" de 800 ms convive com 5% das requisições levando 40 s. Em histogramas, olhe p95 e p99, por modelo e por rota. E em métricas, <strong>cardinalidade explode custo</strong>: um atributo como <code>user_id</code> ou o texto do prompt em uma métrica cria uma série por valor e gera uma conta de ingestão proporcional. Identificadores de alta cardinalidade ficam no log por requisição (onde se consulta), não nos rótulos da métrica (onde se agrega).</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Alerta sobre tabela que ainda não tem dados.</strong> Você cria o alerta de erro antes de o serviço receber tráfego, a consulta não retorna linhas, e "nenhum resultado" é lido como "tudo bem". Configure a regra para tratar ausência de dados como condição (alerta de <em>heartbeat</em> ou volume mínimo de requisições) e teste cada alerta provocando a falha de propósito em homologação, com o procedimento anotado no runbook.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Instrumente com OpenTelemetry e exporte para o Application Insights por configuração; registre tokens, latência, TTFT e erros por requisição, sem o prompt. Alerte sobre sintomas (5xx, 429, TTFT, queima de tokens, saturação), cada um com a ação seguinte. Tokens costumam dominar o custo, mais réplicas não aumentam a cota do modelo, <code>maxReplicas</code> e a cota são os freios reais, e o orçamento só avisa.</p>
+</div>
+
+<!-- ============================================ BLOCO 6 -->
+<h2 id="b06">Bloco 6 · Pipeline: GitHub Actions com OIDC, revisões, divisão de tráfego e rollback</h2>
+
+<h3>Por que isso importa</h3>
+<p>O pipeline de deploy é a credencial mais poderosa da sua organização: quem controla o job controla a produção. Historicamente ele guardava um <em>service principal</em> com segredo de longa vida num cofre do CI, com permissões largas e sem data para expirar. Ele é o alvo preferido de ataques à cadeia de suprimentos. A resposta moderna tem duas partes: trocar o segredo por federação (OIDC) e transformar "colocar no ar" numa sequência de passos reversíveis. O gate de release, versionamento e pós-mortem é tema do <a href="../LT04-novo/LT04.html">LT04</a>; aqui está o pipeline que o LT04 vai governar.
+</p>
+
+<h3>OIDC: como o GitHub prova quem é sem um segredo</h3>
+<p>Quando um job tem <code>permissions: id-token: write</code>, o GitHub emite para ele, a pedido, um <strong>JWT assinado</strong> (OpenID Connect) que afirma de onde ele vem. O <code>azure/login</code> apresenta esse token ao Microsoft Entra ID, que o valida contra uma <strong>credencial federada</strong> cadastrada previamente na identidade e, se casar, devolve um token de acesso do Azure de vida curta. Nada de longa duração existe no GitHub: o que você guarda como variáveis do repositório são <em>identificadores</em> (client-id, tenant-id, subscription-id), públicos por natureza, não segredos.</p>
+<p>O que o Entra compara é o conjunto de <em>claims</em> do token com a credencial cadastrada: o emissor (<code>https://token.actions.githubusercontent.com</code>), a audiência (<code>api://AzureADTokenExchange</code>) e, o mais importante, o <strong><code>sub</code></strong> (subject), cujo formato depende de como o job foi disparado:</p>
+<table>
+<thead><tr><th>Disparo</th><th>Subject</th><th>Uso recomendado</th></tr></thead>
+<tbody>
+<tr><td>Job com <code>environment: production</code></td><td><code>repo:ORG/REPO:environment:production</code></td><td><strong>Produção.</strong> Regras de proteção do ambiente (revisores obrigatórios, branches permitidos) passam a ser parte da autorização.</td></tr>
+<tr><td>Push em branch</td><td><code>repo:ORG/REPO:ref:refs/heads/main</code></td><td>Homologação automática.</td></tr>
+<tr><td>Pull request</td><td><code>repo:ORG/REPO:pull_request</code></td><td>Evite para qualquer identidade com escrita: código de PR não revisado pediria token.</td></tr>
+</tbody>
+</table>
+<p>Cadastre uma credencial por subject; o erro "No matching federated identity record" do diagnóstico é uma diferença nessa string (ambiente <code>Production</code> versus <code>production</code>, repositório renomeado, job sem <code>environment</code>). A identidade e a credencial podem ser criadas pelo Bicep (<code>userAssignedIdentities/federatedIdentityCredentials</code>) ou pela CLI:</p>
+<pre><code>az identity create -g rg-p01 -n id-deployer
+az identity federated-credential create -g rg-p01 --identity-name id-deployer \
+  --name gh-production --issuer https://token.actions.githubusercontent.com \
+  --subject repo:ORG/REPO:environment:production --audiences api://AzureADTokenExchange</code></pre>
+
+<h3>Duas identidades, dois níveis de poder</h3>
+<p>Não reutilize a identidade do app como identidade do pipeline. São princípios opostos:</p>
+<table>
+<thead><tr><th></th><th>Identidade de runtime (app)</th><th>Identidade de deploy (pipeline)</th></tr></thead>
+<tbody>
+<tr><td>Faz</td><td>Chama modelo, lê segredos, puxa imagem.</td><td>Cria e altera recursos, envia imagens, atribui papéis.</td></tr>
+<tr><td>Papéis</td><td>Só de dados, por recurso.</td><td>Plano de controle no <em>grupo de recursos</em> (por exemplo <code>Contributor</code>), mais permissão de atribuir papéis, idealmente restrita (<em>Role Based Access Control Administrator</em> com condições) já que o Bicep cria atribuições.</td></tr>
+<tr><td>Exposição</td><td>Exposta a tráfego de internet.</td><td>Exposta ao código do repositório e a quem edita workflows.</td></tr>
+<tr><td>Se vazar</td><td>Acesso a modelo e cofre.</td><td>Controle do ambiente.</td></tr>
+</tbody>
+</table>
+<p>Escope a identidade de deploy a <strong>um grupo de recursos</strong>, nunca à assinatura, e proteja o ambiente <code>production</code> do GitHub com revisores obrigatórios: sem isso, qualquer commit em <code>main</code> executa o deploy de produção sem um humano ver o <code>what-if</code>.</p>
+
+<h3>O pipeline do laboratório</h3>
+<p>Dois jobs: <code>test</code> (sem acesso à nuvem: instala pelo lockfile, roda os testes e o <code>deploycheck --strict</code>) e <code>deploy</code> (depende do primeiro, usa o ambiente protegido e é o único com <code>id-token: write</code>). O topo do arquivo tem <code>permissions: contents: read</code> e <code>concurrency</code> sem cancelamento: dois deploys simultâneos no mesmo ambiente são sempre um erro.</p>
+<pre><code>  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      PREFIX: ${{ vars.AZURE_PREFIX }}
+      SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login (OIDC, sem segredo)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Base de infraestrutura (sem app) e nome do registry
+        run: |
+          az deployment group create -g "$RG" -f infra/main.bicep \
+            -p prefix="$PREFIX" image='' --query properties.outputs -o json &gt; base.json
+          echo "ACR=$(jq -r .acrName.value base.json)" &gt;&gt; "$GITHUB_ENV"
+          echo "LOGIN_SERVER=$(jq -r .acrLoginServer.value base.json)" &gt;&gt; "$GITHUB_ENV"
+
+      - name: Build e push com tag imutável
+        run: |
+          az acr login --name "$ACR"
+          docker build -t "$LOGIN_SERVER/llm-service:$SHA" .
+          docker push "$LOGIN_SERVER/llm-service:$SHA"
+
+      - name: Revisão estável atual (vazia no primeiro deploy)
+        run: |
+          STABLE=$(az containerapp revision list -g "$RG" -n "$PREFIX-app" \
+            --query "[?properties.trafficWeight==\`100\`].name | [0]" -o tsv 2&gt;/dev/null || true)
+          echo "STABLE=$STABLE" &gt;&gt; "$GITHUB_ENV"
+
+      - name: what-if (mostra o diff antes de aplicar)
+        run: |
+          az deployment group what-if -g "$RG" -f infra/main.bicep \
+            -p prefix="$PREFIX" image="$LOGIN_SERVER/llm-service:$SHA" \
+            revisionSuffix="r${SHA::7}" stableRevision="$STABLE" canaryPercent=10
+
+      - name: Deploy com 10% de canário
+        run: |
+          az deployment group create -g "$RG" -f infra/main.bicep \
+            -p prefix="$PREFIX" image="$LOGIN_SERVER/llm-service:$SHA" \
+            revisionSuffix="r${SHA::7}" stableRevision="$STABLE" canaryPercent=10
+
+      # Sufixo de revisão precisa começar com letra: "r" + SHA curto (que pode começar com dígito).
+      - name: Smoke test da revisão nova
+        run: |
+          FQDN=$(az containerapp revision show -g "$RG" -n "$PREFIX-app" \
+            --revision "$PREFIX-app--r${SHA::7}" --query properties.fqdn -o tsv)
+          curl --fail --retry 10 --retry-delay 6 --retry-all-errors "https://$FQDN/readyz"
+
+      - name: Promove para 100%
+        run: |
+          az containerapp ingress traffic set -g "$RG" -n "$PREFIX-app" \
+            --revision-weight "$PREFIX-app--r${SHA::7}=100"
+
+      - name: Rollback automático
+        if: failure() &amp;&amp; env.STABLE != ''
+        run: |
+          az containerapp ingress traffic set -g "$RG" -n "$PREFIX-app" \
+            --revision-weight "$STABLE=100"</code></pre>
+<p>Leia a sequência como uma máquina de estados com três estados de tráfego: <em>estável 100%</em> → <em>canário 10/90</em> → <em>nova 100%</em>, e a saída de emergência de volta ao primeiro.</p>
+<ol>
+<li><strong>Base.</strong> Idempotente: se tudo já existe, não muda nada; devolve o nome do registro.</li>
+<li><strong>Build com o SHA do commit como tag.</strong> A mesma tag vai para o <code>what-if</code> e o <code>create</code>: o que é revisado é o que é implantado.</li>
+<li><strong>Revisão estável</strong> lida do próprio Azure (a que tem 100%) antes de qualquer mudança, em vez de guardada em arquivo: a nuvem é a fonte da verdade.</li>
+<li><strong><code>what-if</code> e <code>create</code></strong> com <code>canaryPercent=10</code>: a nova revisão nasce com 10% e a estável mantém 90%. O sufixo <code>r&lt;sha7&gt;</code> começa com letra porque a plataforma exige que o sufixo comece com letra, e um SHA curto pode começar com dígito.</li>
+<li><strong>Smoke test na revisão nova</strong>, pelo FQDN <em>da revisão</em> (não pelo FQDN do app, que mistura 90% de tráfego da antiga): <code>/readyz</code> com retentativas.</li>
+<li><strong>Promoção</strong>: 100% para a nova. As anteriores seguem ativas e sem tráfego (rollback imediato possível).</li>
+<li><strong>Rollback automático</strong> se qualquer passo anterior falhar e existir uma estável: o tráfego volta a ela em segundos, sem rebuild.</li>
+</ol>
+
+<h3>Revisões, tráfego e rollback no Container Apps</h3>
+<p>Revisão é imutável; o que muda é a <em>tabela de tráfego</em>. Rollback, portanto, é reescrever a tabela, não reimplantar. Os comandos do dia de incidente:</p>
+<pre><code>az containerapp revision list -g rg-p01 -n p01lab-app -o table          # quais revisões, ativas, % de tráfego
+az containerapp ingress traffic set -g rg-p01 -n p01lab-app \
+  --revision-weight p01lab-app--r1a2b3c4=100                             # volta tudo para a estável
+az containerapp revision deactivate -g rg-p01 -n p01lab-app \
+  --revision p01lab-app--r9f8e7d6                                        # desativa a ruim (libera réplicas e custo)</code></pre>
+<p>Duas propriedades importam. Primeiro, o modo de revisão: em <strong>modo único</strong> (padrão), a plataforma só passa o tráfego para a nova depois que ela fica saudável e desprovisiona a anterior, o que dá segurança básica, mas impede canário e deixa o rollback para um novo deploy. Em <strong>modo múltiplo</strong>, você controla tudo, e também a limpeza: revisões antigas ativas continuam consumindo réplica mínima. Segundo, o escopo da mudança: alterações em <code>template</code> (imagem, variáveis, escala) criam revisão; alterações em <code>configuration</code> (segredos, ingresso, tráfego, modo de revisão) valem para o app inteiro e não criam revisão. Um segredo trocado atinge a revisão "estável" também, e ela precisa reiniciar para vê-lo.</p>
+
+<h3>Segurança do próprio pipeline</h3>
+<ul>
+<li><strong>Fixe actions por SHA de commit</strong> em repositórios de produção. Tags como <code>@v4</code> são móveis: em março de 2025, a action <code>tj-actions/changed-files</code> foi comprometida e as tags existentes foram redirecionadas para código que despejava segredos nos logs. O <code>deploycheck</code> reprova refs flutuantes (<code>@main</code>, <code>@master</code>, sem ref: XR007); apontar para SHA é o passo seguinte, que o lab deixa como exercício por legibilidade.</li>
+<li><strong><code>permissions</code> mínimas</strong> no topo (<code>contents: read</code>) e elevação por job. <code>write-all</code> é reprovado (XR012).</li>
+<li><strong>Nada de segredo em <code>env</code> literal</strong> e nada de <code>creds:</code> com JSON de service principal no <code>azure/login</code> (XR006): o ponto da federação é que não há o que vazar.</li>
+<li><strong>Cuidado com <code>pull_request_target</code> e com workflows que executam código de forks</strong> com acesso a credenciais; a identidade de deploy só deve ser alcançável de um ambiente protegido.</li>
+</ul>
+
+<div class="box net">
+<span class="lbl">Alternativas e trade-offs</span>
+<p><strong>Canário percentual versus blue-green.</strong> O percentual expõe pouca gente cedo, mas mistura versões no mesmo usuário (sessões, caches, formatos de resposta diferentes) e exige compatibilidade entre as duas. Blue-green troca tudo de uma vez com rollback igualmente rápido e testa a nova com tráfego sintético antes; custa o dobro de réplicas durante a troca. <strong>Pipeline imperativo versus GitOps.</strong> O workflow acima <em>empurra</em> mudanças para o Azure; em GitOps um agente dentro do ambiente <em>puxa</em> o estado desejado do repositório e o reconcilia (LT03, bloco 5), o que remove a necessidade de credenciais de escrita fora do ambiente. No Container Apps o modelo comum é o empurrado.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>O smoke test que não testa o que quebra.</strong> <code>/readyz</code> valida configuração e adapter, sem chamar o modelo (de propósito, pela regra do bloco 2). Logo, um deploy com o papel de dados ausente passa no smoke, recebe 10% do tráfego e devolve 502 para um décimo dos usuários. O canário só protege se algo <em>decide</em> com base nos sinais: neste lab o passo de promoção é incondicional após o smoke. O próximo degrau, que o LT04 desenvolve, é uma chamada sintética real ao modelo (com prompt barato e <code>max_tokens</code> baixo) e uma consulta ao Application Insights que compare erro e TTFT da revisão nova com a estável antes de promover.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Rollback de código não é rollback de estado.</strong> Voltar o tráfego restaura o comportamento do serviço; não desfaz uma migração de banco já aplicada, mensagens já consumidas, e-mails enviados, nem uma mudança de implantação de modelo ou de prompt versionado fora da imagem. Faça migrações em duas fases compatíveis com a versão anterior (expandir, migrar, contrair), de modo que "voltar uma revisão" seja sempre seguro por construção. E um caso do próprio lab: se o runner morrer entre o canário e a promoção, nenhuma revisão tem 100% e o próximo deploy vê a estável vazia, comportamento que o pipeline não trata. Em produção, trate esse estado com um passo explícito de reconciliação antes do deploy.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>OIDC troca o segredo do CI por uma prova de origem de vida curta, casada pelo <em>subject</em>; use ambiente protegido para produção e duas identidades separadas (runtime com papéis de dados, deploy com plano de controle em um grupo de recursos). O pipeline é uma sequência reversível: tag por SHA, <code>what-if</code>, canário, verificação, promoção e rollback por tabela de tráfego. Fixe actions por SHA, mantenha permissões mínimas e lembre que o rollback devolve o código, não o estado.</p>
+</div>
+
+<!-- ============================================ LAB -->
+<h2 id="lab-guiado">Laboratório guiado P01</h2>
+<p>Um serviço FastAPI com LLM fake, o <code>Dockerfile</code>, o <code>main.bicep</code>, o workflow de exemplo e o <code>deploycheck</code>, a ferramenta que valida os três. <strong>Nada aqui exige conta Azure.</strong> Os passos 1 a 9 rodam offline em Python 3.14; a seção final, opcional e <strong>paga</strong>, usa os mesmos arquivos numa assinatura real e termina em <code>az group delete</code>. Os resultados abaixo vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14.7, uv 0.11.32). Os hashes e o relógio não aparecem; valores como <code>request_id</code> e datas mudam a cada execução.</p>
+
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigidos: Python 3.14 e <code>uv</code>. Opcionais: Bicep CLI (ou <code>az bicep</code>) para o passo 6, Docker para validar a imagem. Nunca edite a referência em <code>modulos/P01-deploy-nuvem/lab/</code>.</p>
+<pre><code>cd modulos/P01-deploy-nuvem/lab
+python3 create_working_copy.py
+cd /tmp/p01-xxxx          # o caminho impresso
+uv sync --frozen</code></pre>
+<p>O conteúdo do lab: <code>src/llm_service/</code> (o serviço), <code>src/deploycheck/</code> (um módulo por artefato: <code>dockerfile.py</code>, <code>bicep.py</code>, <code>workflow.py</code>, mais <code>secrets.py</code> e <code>cli.py</code>), <code>Dockerfile</code>, <code>infra/main.bicep</code>, <code>ci/deploy.yml</code> e <code>tests/</code>.</p>
+
+<div class="step"><span class="n">1</span><strong>Suba o serviço e exercite os endpoints (blocos 2 e 5).</strong>
+<p><em>Objetivo:</em> ver liveness e readiness separados, a resposta com uso de tokens, o stream SSE e o log estruturado por requisição, tudo contra o LLM fake.</p>
+<pre><code>$ uv run uvicorn --factory llm_service.app:create_app_from_env --port 8765 &amp;
+$ curl -s -i localhost:8765/healthz | head -1; curl -s localhost:8765/healthz; echo
+HTTP/1.1 200 OK
+{"status":"ok"}
+$ curl -s localhost:8765/readyz; echo
+{"status":"ready","backend":"fake"}
+$ curl -s -X POST localhost:8765/v1/complete -H 'content-type: application/json' -d '{"prompt":"ola nuvem"}'; echo
+{"text":"eco: ola nuvem","model":"fake-echo","usage":{"input_tokens":2,"output_tokens":3},"request_id":"df0bc48610554f72b7ca51a1891df5af"}
+$ curl -sN -X POST localhost:8765/v1/stream -H 'content-type: application/json' -d '{"prompt":"a b"}'
+event: token
+data: {"text": "eco: "}
+
+event: token
+data: {"text": "a "}
+
+event: token
+data: {"text": "b "}
+
+event: done
+data: {"usage": {"input_tokens": 2, "output_tokens": 3}}</code></pre>
+<p>No terminal do servidor, uma linha JSON por requisição, com tokens e sem o prompt:</p>
+<pre><code>{"ts":"2026-10-11T22:01:55.496+00:00","level":"INFO","event":"request","request_id":"df0bc48610554f72b7ca51a1891df5af","method":"POST","path":"/v1/complete","status":200,"duration_ms":0.8,"model":"fake-echo","input_tokens":2,"output_tokens":3}
+{"ts":"2026-10-11T22:01:55.531+00:00","level":"INFO","event":"request","request_id":"48d0062698bf4e0d9226c1700687c30f","method":"POST","path":"/v1/stream","status":200,"duration_ms":31.0,"model":"fake-echo","input_tokens":2,"output_tokens":3,"ttft_ms":0.1}</code></pre>
+<p><em>Diagnóstico:</em> porta ocupada → troque <code>--port</code>. O <code>request_id</code> da resposta é o mesmo do cabeçalho <code>x-request-id</code> e da linha de log: é o fio que liga o cliente ao Log Analytics. Encerre o servidor (<code>kill %1</code>) antes de seguir.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Falha de configuração é na partida, e legível (bloco 3).</strong>
+<pre><code>$ LLM_BACKEND=azure uv run python -c "from llm_service.app import create_app_from_env; create_app_from_env()" 2&gt;&amp;1 | tail -1
+llm_service.config.ConfigError: AZURE_OPENAI_ENDPOINT deve começar com https:// quando LLM_BACKEND=azure; AZURE_OPENAI_DEPLOYMENT é obrigatório quando LLM_BACKEND=azure</code></pre>
+<p><em>Por quê:</em> todos os problemas aparecem de uma vez e o contêiner nem passa na probe de startup, em vez de falhar na primeira requisição de um usuário. Com o extra instalado, <code>uv run --extra azure python -c "import azure.monitor.opentelemetry as m, azure.identity.aio as i; print(hasattr(m,'configure_azure_monitor'), hasattr(i,'get_bearer_token_provider'), hasattr(i,'DefaultAzureCredential'))"</code> imprime <code>True True True</code>: as três APIs que o código usa existem nas versões travadas.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Rode a suíte (blocos 4 e 5).</strong>
+<pre><code>$ uv run pytest -q
+....................................................................................   [100%]
+84 passed, 1 warning in 0.80s</code></pre>
+<p>O aviso é uma depreciação do Starlette sobre o cliente de teste com <code>httpx</code>; não é do lab. A distribuição: 13 testes do serviço (health/ready, erros 413/422/502/503 com <code>Retry-After</code>, SSE, keepalive, <strong>cancelamento do provedor quando o cliente desconecta</strong>, log sem prompt, métricas), 10 do adapter Azure (Bearer sem <code>api-key</code>, 429/5xx/timeout retentáveis, 401/403 não retentável, stream), 11 de configuração, custo e telemetria, e 50 do <code>deploycheck</code>.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Valide os artefatos reais com o deploycheck (blocos 2, 3 e 6).</strong>
+<pre><code>$ uv run deploycheck --strict --dockerfile Dockerfile --bicep infra/main.bicep --workflow ci/deploy.yml
+0 erro(s), 0 aviso(s)
+$ echo $?
+0</code></pre>
+<p>O código de saída é o contrato com o CI: 0 passa, 1 reprova (<code>--strict</code> também reprova avisos). As regras, todas com testes positivos e negativos:</p>
+<table>
+<thead><tr><th>Regra</th><th>Artefato</th><th>Reprova quando</th></tr></thead>
+<tbody>
+<tr><td>XR001</td><td>Dockerfile</td><td>o estágio <em>final</em> não tem <code>USER</code> ou é <code>root</code>/<code>0</code>.</td></tr>
+<tr><td>XR002</td><td>Dockerfile</td><td>imagem base (ou <code>COPY --from</code> de imagem) sem tag fixa ou com <code>:latest</code>; digest e referência a estágio são aceitos.</td></tr>
+<tr><td>XR003</td><td>todos</td><td>segredo literal: nome tipo <code>*_KEY/TOKEN/PASSWORD</code> com valor literal, ou valor com formato de credencial (<code>sk-</code>, <code>ghp_</code>, <code>AccountKey=</code>, chave PEM).</td></tr>
+<tr><td>XR004</td><td>Bicep</td><td>variável de ambiente que o serviço não lê (typo): checada contra <code>KNOWN_ENV</code>.</td></tr>
+<tr><td>XR005</td><td>Bicep</td><td>probe Liveness/Readiness ausente ou apontando para outro caminho que não <code>/healthz</code> e <code>/readyz</code>.</td></tr>
+<tr><td>XR006</td><td>workflow</td><td><code>azure/login</code> sem <code>id-token: write</code>, sem <code>client-id/tenant-id/subscription-id</code>, ou com <code>creds</code>/<code>client-secret</code>.</td></tr>
+<tr><td>XR007</td><td>workflow</td><td>action em ref flutuante (<code>@main</code>, <code>@master</code>, sem ref).</td></tr>
+<tr><td>XR008</td><td>Bicep, workflow</td><td><code>:latest</code> em implantação.</td></tr>
+<tr><td>XR009</td><td>Bicep</td><td><code>listKeys()</code>, <code>disableLocalAuth: false</code>, container app sem <code>identity</code>.</td></tr>
+<tr><td>XR010 (aviso)</td><td>Dockerfile</td><td>sem <code>HEALTHCHECK</code> no estágio final.</td></tr>
+<tr><td>XR012</td><td>workflow</td><td><code>permissions: write-all</code> no topo.</td></tr>
+</tbody>
+</table></div>
+
+<div class="step"><span class="n">5</span><strong>Quebre de propósito e veja a ferramenta apontar (blocos 2 a 6).</strong>
+<p>Em uma cópia de trabalho, faça cinco estragos: remova o <code>USER</code>, troque a base final por <code>python:latest</code>, injete <code>OPENAI_API_KEY=sk-...</code> num <code>ENV</code>, erre o nome <code>AZURE_OPENAI_DEPLOYMENT</code> no Bicep e o caminho do readiness, e no workflow troque <code>id-token: write</code> por <code>none</code> e <code>actions/checkout@v4</code> por <code>@main</code>.</p>
+<pre><code>$ uv run deploycheck --dockerfile Dockerfile --bicep infra/main.bicep --workflow ci/deploy.yml
+Dockerfile:18: error XR001 estágio final sem USER: o container roda como root
+Dockerfile:18: error XR002 imagem base 'python:latest' sem tag fixa (ou :latest); use tag exata ou digest
+Dockerfile:23: error XR003 segredo literal em ENV OPENAI_API_KEY (chave sk- de provedor de modelo); imagens vazam o que carregam
+ci/deploy.yml:21: error XR007 'actions/checkout@main' em ref flutuante; fixe versão (vN) ou, melhor, SHA do commit
+ci/deploy.yml:41: error XR007 'actions/checkout@main' em ref flutuante; fixe versão (vN) ou, melhor, SHA do commit
+ci/deploy.yml:44: error XR006 job 'deploy' usa azure/login sem 'permissions: id-token: write'
+infra/main.bicep:1: error XR005 probe Readiness aponta para /ready; o serviço expõe /readyz
+infra/main.bicep:187: error XR004 variável 'AZURE_OPENAI_DEPLOYMET' não é lida pelo serviço (typo? ver KNOWN_ENV)
+8 erro(s), 0 aviso(s)
+$ echo $?
+1</code></pre>
+<p><em>Diagnóstico:</em> as linhas do Dockerfile e do Bicep são as do arquivo editado (os números dependem do seu estrago). A mensagem do XR007 aparece duas vezes porque há dois usos (um por job), cada um com a sua linha. As regras do Bicep são por varredura de texto, não um parser: <code>az bicep build</code> continua sendo o juiz da sintaxe, o <code>deploycheck</code> o juiz das <em>propriedades de produção</em>.</p></div>
+
+<div class="step"><span class="n">6</span><strong>O teste morde? Mutação no verificador (todos os blocos).</strong>
+<p>Um verificador que aprova tudo é pior do que nenhum. Em <code>src/deploycheck/dockerfile.py</code>, troque <code>if name in {"root", "0"}:</code> por <code>if name in {"root"}:</code> (esquece o UID 0) e rode a suíte do verificador:</p>
+<pre><code>$ uv run pytest -q tests/test_deploycheck.py
+FAILED tests/test_deploycheck.py::test_xr001_explicit_root[0] - AssertionErro...
+FAILED tests/test_deploycheck.py::test_xr001_explicit_root[0:0] - AssertionEr...
+2 failed, 48 passed in 0.08s</code></pre>
+<p>Reverta a mudança e a suíte volta a 84 verdes. <em>Por quê:</em> o teste parametrizado cobre <code>root</code>, <code>0</code>, <code>0:0</code> e <code>ROOT</code>; é o controle negativo que prova que a regra reprova o que diz reprovar. Outros controles negativos do lab: o próprio Dockerfile/Bicep/workflow passam <em>limpos</em> (positivo), segredo dentro de comentário é ignorado, <code>USER</code> no estágio de build não vale para o final, e um arquivo ausente vira achado <code>XR000</code> em vez de exceção.</p></div>
+
+<div class="step"><span class="n">7</span><strong>Compile o Bicep (bloco 3).</strong>
+<p>Se tiver a Bicep CLI (<code>az bicep install</code> ou o binário do GitHub):</p>
+<pre><code>$ bicep build infra/main.bicep --outfile /tmp/main.json; echo "rc=$?"
+rc=0
+$ bicep build-params infra/main.bicepparam --outfile /tmp/p.json; echo "rc=$?"
+rc=0</code></pre>
+<p>Sem avisos (versão 0.48.1). Uma execução anterior apontou dois avisos úteis, que o arquivo atual já corrigiu: <code>no-unnecessary-dependson</code> (dependência já implícita) e <code>BCP318</code> (acesso a propriedade de um recurso condicional que pode ser nulo, resolvido com <code>app.?properties... ?? ''</code>). Compilar não prova que a implantação vai passar; prova que o arquivo é válido e tipado contra os esquemas da API.</p></div>
+
+<div class="step"><span class="n">8</span><strong>Meça o custo antes de implantar (bloco 5).</strong>
+<pre><code>$ uv run python -m llm_service.cost --requests-per-day 2000 --input-tokens 1200 --output-tokens 300 --price-in 0.15 --price-out 0.60
+por chamada: 0.000360
+por mês (30 dias): 21.60
+$ uv run python -m llm_service.cost --requests-per-day 20000 --input-tokens 1200 --output-tokens 300 --price-in 0.15 --price-out 0.60
+por chamada: 0.000360
+por mês (30 dias): 216.00
+</code></pre>
+<p>Para a computação, <code>replica_cost</code> recebe vCPU, GiB, segundos ativos e ociosos e as quatro taxas, todas por parâmetro. Com taxas de exemplo, 0,5 vCPU e 1 GiB, 10% do mês ativo: <code>14.39</code>; três réplicas assim: <code>43.16</code>. <em>Exercício:</em> troque os preços pelos da sua região e modelo e responda: com quantas chamadas por dia a conta de tokens passa a conta de computação do seu desenho?</p></div>
+
+<div class="step"><span class="n">9</span><strong>Gates de qualidade.</strong>
+<pre><code>$ uv run pytest -q &amp;&amp; uv run ruff check . &amp;&amp; uv run ruff format --check . &amp;&amp; uv run mypy --strict src tests
+84 passed, 1 warning in 0.80s
+All checks passed!
+23 files already formatted
+Success: no issues found in 21 source files</code></pre>
+<p>Tudo verde é o critério de entrega do laboratório. Os artefatos de nuvem (Dockerfile, Bicep, workflow) não são cobertos por esses gates, e sim pelo <code>deploycheck</code> do passo 4 e pelo <code>bicep build</code> do passo 7; o que <em>nenhum</em> deles prova é a execução real, para a qual existe a parte seguinte.</p></div>
+
+<h3>Opcional · custa dinheiro: o mesmo código numa assinatura Azure</h3>
+<div class="box warn">
+<span class="lbl">Leia antes de executar</span>
+<p>Estes comandos <strong>não foram executados na escrita do módulo</strong> (sem conta Azure disponível); são o roteiro direto dos arquivos acima. Criam recursos cobrados (modelo, Log Analytics, ACR, réplicas mínimas) e um endpoint público sem autenticação de chamador, que qualquer um com a URL pode usar para gastar seus tokens. Faça com orçamento configurado, <strong>restrinja o ingresso ao seu IP</strong> e apague tudo ao final. Disponibilidade de modelo, versão e cota variam por região e data: ajuste <code>modelName</code>, <code>modelVersion</code> e <code>modelCapacity</code> no <code>main.bicepparam</code> conforme o catálogo da sua assinatura.</p>
+</div>
+<pre><code>az login
+az account set --subscription &lt;id&gt;
+az provider register --namespace Microsoft.App            # e Microsoft.OperationalInsights, Microsoft.CognitiveServices
+az group create -n rg-p01 -l &lt;região-com-cota-do-modelo&gt;
+
+# 1) base (sem app): registro, identidade, cofre, modelo, ambiente, logs
+az deployment group what-if -g rg-p01 -f infra/main.bicep -p prefix=p01lab image=''
+az deployment group create  -g rg-p01 -f infra/main.bicep -p prefix=p01lab image='' \
+  --query properties.outputs -o json &gt; base.json
+ACR=$(jq -r .acrName.value base.json); LOGIN=$(jq -r .acrLoginServer.value base.json)
+
+# 2) imagem com tag imutável (amd64!)
+az acr login -n "$ACR"
+TAG=$(git rev-parse --short=7 HEAD)
+docker build --platform linux/amd64 -t "$LOGIN/llm-service:$TAG" .
+docker push "$LOGIN/llm-service:$TAG"
+
+# 3) app (primeira revisão: sem estável, 100% na nova)
+az deployment group create -g rg-p01 -f infra/main.bicep \
+  -p prefix=p01lab image="$LOGIN/llm-service:$TAG" revisionSuffix="r$TAG"
+
+# 4) restringir o ingresso ao seu IP ANTES de testar
+az containerapp ingress access-restriction set -g rg-p01 -n p01lab-app \
+  --rule-name meu-ip --ip-address "$(curl -s ifconfig.me)/32" --action Allow
+
+# 5) testar (a primeira chamada ao modelo pode falhar por alguns minutos: propagação do RBAC)
+FQDN=$(jq -r '.appFqdn.value' &lt;(az deployment group show -g rg-p01 -n main --query properties.outputs))
+curl -s "https://$FQDN/readyz"
+curl -s -X POST "https://$FQDN/v1/complete" -H 'content-type: application/json' -d '{"prompt":"diga olá"}'
+az containerapp logs show -g rg-p01 -n p01lab-app --follow --tail 20</code></pre>
+<p>Experimentos que valem a conta: (a) tire o papel <code>Cognitive Services OpenAI User</code> e observe o 502 do serviço com o motivo "RBAC" no log (<code>az role assignment delete</code>), depois devolva e meça quanto demora a propagar; (b) implante uma segunda revisão com <code>stableRevision</code> e <code>canaryPercent=10</code> e veja <code>az containerapp revision list</code> dividindo o tráfego; (c) reaponte 100% para a primeira e meça o tempo de rollback; (d) consulte o KQL do bloco 5 e compare os tokens por modelo com a fatura do dia seguinte.</p>
+<pre><code># LIMPEZA - não esqueça
+az group delete -n rg-p01 --yes --no-wait
+# o Key Vault (proteção contra purga) e a conta do modelo ficam em exclusão suave:
+az keyvault list-deleted -o table
+az cognitiveservices account list-deleted -o table
+az cognitiveservices account purge -g rg-p01 -l &lt;região&gt; -n &lt;nome-da-conta&gt;   # a conta; o cofre com purge protection só expira sozinho (7 dias)</code></pre>
+
+<!-- ============================================ DIAGNÓSTICO -->
+<h2 id="diagnostico-p01">Tabela de Diagnóstico</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Revisão em <em>Failed</em>; logs do sistema com <code>exec format error</code>.</td><td>Imagem arm64 (build em Apple Silicon) em plataforma amd64.</td><td><code>docker build --platform linux/amd64</code>, ou só construir no CI.</td></tr>
+<tr><td>Revisão não sobe: <code>ImagePullBackOff</code>/falha ao puxar do ACR.</td><td>Identidade sem <code>AcrPull</code>; papel criado depois do app; <code>registries.identity</code> ausente.</td><td>Atribuir <code>AcrPull</code> no registro <em>antes</em> do app (identidade user-assigned) e referenciar a identidade em <code>registries</code>.</td></tr>
+<tr><td>Probe de startup/liveness falha; reinícios em laço.</td><td>Porta errada em <code>targetPort</code>/probe; app lento para subir; liveness dependente de rede.</td><td>Alinhar <code>8000</code>; usar startup probe com <code>failureThreshold</code> maior; liveness só do processo.</td></tr>
+<tr><td>Serviço no ar, <code>/readyz</code> 200, chamada ao modelo devolve 502 com "RBAC".</td><td>Falta <code>Cognitive Services OpenAI User</code> no escopo da conta; <code>AZURE_CLIENT_ID</code> ausente; propagação.</td><td>Conferir papel e escopo, variável de ambiente e esperar alguns minutos; <code>Contributor</code> não resolve.</td></tr>
+<tr><td>401 ao chamar o modelo, mesmo com papel.</td><td>Escopo do token errado ou endpoint regional sem subdomínio personalizado.</td><td>Escopo conforme a documentação atual; <code>customSubDomainName</code> na conta; <code>AZURE_OPENAI_SCOPE</code> para ajustar.</td></tr>
+<tr><td>Criação do app falha ao resolver segredo do Key Vault.</td><td>Segredo ainda não existe; identidade sem <code>Key Vault Secrets User</code>.</td><td>Gravar o segredo antes, só então <code>useKeyVaultSecret=true</code>; conferir papel no cofre.</td></tr>
+<tr><td>Segredo rotacionado, app usa o valor antigo.</td><td>Variável lida na partida; URL com versão fixa.</td><td>URL sem versão (e aguardar) ou reiniciar a revisão; planejar o reinício.</td></tr>
+<tr><td><code>azure/login</code>: "No matching federated identity record".</td><td><code>sub</code> do token não casa com a credencial (ambiente, branch, repo, caixa).</td><td>Ler o <code>sub</code> no erro, criar/ajustar a credencial federada para ele.</td></tr>
+<tr><td><code>azure/login</code>: "Unable to get ACTIONS_ID_TOKEN_REQUEST_URL".</td><td>Falta <code>permissions: id-token: write</code> no job.</td><td>Declarar a permissão no job de deploy (<code>deploycheck</code> XR006).</td></tr>
+<tr><td>Deploy do Bicep: "revision suffix inválido".</td><td>Sufixo começando com dígito (SHA curto) ou com <code>--</code>.</td><td>Prefixar com letra (<code>r${SHA::7}</code>).</td></tr>
+<tr><td>Canário desfeito sozinho após "só mudar infraestrutura".</td><td>Redeploy do Bicep com <code>stableRevision</code> vazio devolve 100% à última revisão.</td><td>Ler a estável antes de todo deploy; deploys manuais usam o mesmo script.</td></tr>
+<tr><td>Mais réplicas, mais erros 429.</td><td>Cota (TPM) do modelo é o gargalo; retentativas amplificam.</td><td>Aumentar cota ou balancear implantações; limitar concorrência/chamador; reduzir <code>maxReplicas</code>.</td></tr>
+<tr><td>Custo do dia dobrou, sem erro nem alerta.</td><td>Tokens por chamada aumentaram (prompt/contexto) ou cliente em laço.</td><td>KQL por modelo/rota/<code>request_id</code>; alerta de queima de tokens; limite por chamador.</td></tr>
+<tr><td>Orçamento disparou depois do estouro.</td><td>Orçamento só notifica, com atraso.</td><td>Tetos prévios (<code>maxReplicas</code>, TPM, quota por chamador) e ação automática no aviso.</td></tr>
+<tr><td>Recriar o ambiente falha por nome em uso (Key Vault / conta de modelo).</td><td>Exclusão suave e proteção contra purga mantêm o nome.</td><td>Nomes com <code>uniqueString</code>; <code>purge</code> da conta; aguardar o fim da retenção do cofre.</td></tr>
+</tbody>
+</table>
+
+<!-- ============================================ CHECKPOINT -->
+<h2 id="checkpoint-p01">Checkpoint P01</h2>
+<div class="box ok">
+<span class="lbl">Avaliação sem consulta — diga "Checkpoint P01" no chat</span>
+<p>Uma pergunta por vez, sem consulta. Cada pergunta é um cenário; a rubrica diz o que basta e o que reprova.</p>
+<ul class="check">
+<li><strong>P1 · Escolha de plataforma.</strong> Um serviço com LLM para 8 times internos, tráfego só em horário comercial, respostas em streaming de até 60 s. A diretoria sugere AKS "porque é padrão". Defenda ou refute com critérios. <em>Basta:</em> forma da carga (E/S, concorrência, streams longos), custo de operar cluster, escala a zero versus partida a frio medida, limite de 240 s do ingresso e o que justificaria AKS (CRDs, GPU, malha, multi-times). <em>Reprova:</em> "serverless é sempre mais barato" ou "Kubernetes é sempre melhor".</li>
+<li><strong>P2 · Imagem confiável.</strong> Dois deploys do mesmo commit rodam comportamentos diferentes. Liste as causas possíveis na construção e na publicação e as correções. <em>Basta:</em> base e ferramenta sem versão, <code>uv sync</code> sem <code>--locked</code>, tag mutável, push de máquina de dev; correções: lockfile, versão/digest, tag por SHA, build só no CI, tag travada no ACR. <em>Reprova:</em> "use :latest para sempre ter a mais nova".</li>
+<li><strong>P3 · Probes.</strong> O provedor de modelo degrada e todas as réplicas reiniciam juntas, piorando o incidente. Diagnostique e conserte. <em>Basta:</em> liveness dependente de rede externa; liveness só do processo, readiness sem chamada de rede, verificação de conectividade em teste sintético com alerta. <em>Reprova:</em> "aumentar o timeout da probe".</li>
+<li><strong>P4 · Sem chave.</strong> Explique, de ponta a ponta, como o contêiner chama o modelo sem nenhuma chave, e dê três causas de 403 com a identidade "certa". <em>Basta:</em> identidade gerenciada, token Entra com escopo, papel de dados no recurso, plano de controle versus plano de dados, propagação, <code>AZURE_CLIENT_ID</code>, subdomínio, <code>disableLocalAuth</code>. <em>Reprova:</em> "dar Contributor no grupo".</li>
+<li><strong>P5 · Segredos que sobram.</strong> Um parceiro exige uma chave de API. Onde ela vive, quem a lê, como entra no app e o que acontece na rotação? <em>Basta:</em> Key Vault com RBAC, referência no app por identidade, variável lida na partida, URL com/sem versão e reinício; segredo criado fora do código; nunca em saída ou parâmetro sem <code>@secure()</code>. <em>Reprova:</em> variável no workflow ou no template.</li>
+<li><strong>P6 · IaC e <code>what-if</code>.</strong> Seu <code>what-if</code> mostra uma exclusão de identidade e um <code>~</code> em <code>publicNetworkAccess</code>. O que você faz antes de aprovar, e por que "o what-if passou" não garante o deploy? <em>Basta:</em> identidade recriada perde papéis; análise do diff; limites do what-if (cota, política, nomes, propagação); modo incremental. <em>Reprova:</em> aprovar porque "é só um diff".</li>
+<li><strong>P7 · Pipeline com OIDC.</strong> Desenhe o fluxo e o modelo de confiança do deploy, incluindo as duas identidades e o ambiente protegido. <em>Basta:</em> <code>id-token: write</code>, JWT, credencial federada por subject, variáveis não secretas, ambiente com revisores, deploy com escopo de grupo de recursos, runtime só com papéis de dados, actions fixadas. <em>Reprova:</em> service principal com segredo no repositório, ou uma identidade para tudo.</li>
+<li><strong>P8 · Fatura e incidente.</strong> O custo dobrou e o p95 subiu, sem erro. Conduza a investigação e proponha os controles permanentes. <em>Basta:</em> separar TTFT de total e tokens de contagem de chamadas, KQL por modelo/rota/request_id, causa em prompt ou cliente, teto de réplicas e TPM, orçamento como aviso (não bloqueio), alerta de queima de tokens, rollback por tráfego se a causa for uma revisão. <em>Reprova:</em> "aumentar réplicas".</li>
+</ul>
+<h4>Entregáveis verificados (mostrar rodando)</h4>
+<ol>
+<li>Gates do lab verdes: <code>pytest</code> (84 testes), <code>ruff check</code>, <code>ruff format --check</code>, <code>mypy --strict</code>.</li>
+<li><code>deploycheck --strict</code> com 0 erros nos três artefatos, e as 8 falhas reais da edição quebrada do passo 5.</li>
+<li>Mutação da regra XR001 rejeitada pela suíte (2 falhas) e revertida.</li>
+<li><code>bicep build</code> sem avisos do <code>main.bicep</code> e do <code>main.bicepparam</code>.</li>
+<li>Opcional: deploy real com rollback medido e <code>az group delete</code> confirmado.</li>
+</ol>
+</div>
+
+<h2>Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://learn.microsoft.com/azure/container-apps/overview">Azure Container Apps: visão geral</a></td><td>modelo da plataforma (bloco 1)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://learn.microsoft.com/azure/container-apps/revisions">Container Apps: revisões</a> e <a href="https://learn.microsoft.com/azure/container-apps/ingress-overview">ingresso</a></td><td>modos de revisão, sufixo, tráfego, timeout de 240 s (blocos 1, 3, 6)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://learn.microsoft.com/azure/container-apps/scale-app">Container Apps: escala</a></td><td>padrões 0/10 réplicas, regra HTTP, 10 requisições (bloco 5)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://learn.microsoft.com/azure/container-apps/manage-secrets">Container Apps: segredos</a></td><td>referência ao Key Vault, versão e atualização (bloco 4)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://azure.microsoft.com/en-us/pricing/details/container-apps/">Preços do Container Apps</a></td><td>franquia mensal; valores unitários variam e não são citados como fato</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://learn.microsoft.com/azure/ai-foundry/openai/how-to/managed-identity">Azure OpenAI/Foundry: managed identity</a> e <a href="https://learn.microsoft.com/azure/developer/ai/keyless-connections">keyless connections</a></td><td>papel de dados, escopo do token, endpoint <code>/openai/v1/</code> (bloco 4)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://learn.microsoft.com/azure/role-based-access-control/built-in-roles/security">Papéis internos: segurança</a>, <a href="https://learn.microsoft.com/azure/role-based-access-control/built-in-roles/ai-machine-learning">IA e ML</a> e <a href="https://learn.microsoft.com/azure/role-based-access-control/built-in-roles/containers">contêineres</a></td><td>GUIDs de Key Vault Secrets User, OpenAI User e AcrPull (bloco 4)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview">Bicep</a> e <a href="https://learn.microsoft.com/azure/azure-resource-manager/templates/deploy-what-if">what-if</a></td><td>linguagem, modos de implantação, símbolos do diff (bloco 3)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://github.com/Azure/bicep/releases">Bicep: releases</a></td><td>CLI 0.48.1 usada nos testes de compilação</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs">Provedor azurerm (Terraform)</a></td><td>alternativa ao Bicep (bloco 3)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-enable">Azure Monitor OpenTelemetry</a> e <a href="https://pypi.org/project/azure-monitor-opentelemetry/">azure-monitor-opentelemetry</a></td><td>distro, connection string, <code>configure_azure_monitor</code> (bloco 5)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/">OpenTelemetry: convenções semânticas de GenAI</a></td><td>nomes das métricas de tokens e duração (bloco 5); em evolução</td><td>padrão aberto</td><td>11/10/2026 (índice)</td></tr>
+<tr><td><a href="https://learn.microsoft.com/azure/cost-management-billing/costs/tutorial-acm-create-budgets">Cost Management: orçamentos</a></td><td>orçamento e alertas (bloco 5)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://learn.microsoft.com/azure/developer/github/connect-from-azure-openid-connect">Azure: conectar-se do GitHub com OIDC</a> e <a href="https://github.com/Azure/login">azure/login</a></td><td>federação, <code>id-token: write</code>, entradas da action (bloco 6)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect">GitHub: OIDC em Actions</a></td><td>claims e formatos de subject (bloco 6)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.astral.sh/uv/guides/integration/docker/">uv: integração com Docker</a></td><td>padrão do Dockerfile (bloco 2)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.aws.amazon.com/apprunner/latest/dg/apprunner-availability-change.html">AWS App Runner: mudança de disponibilidade</a> e <a href="https://cloud.google.com/run/docs">Cloud Run</a></td><td>equivalentes AWS/GCP (bloco 1)</td><td>oficial</td><td>11/10/2026</td></tr>
+</tbody>
+</table>
+<p>As saídas de terminal vêm de execução real em 11/10/2026 (Python 3.14.7, uv 0.11.32, Bicep 0.48.1). <strong>Não foram verificados por execução</strong>: o build da imagem (sem Docker no ambiente), qualquer implantação (sem assinatura Azure), o <code>what-if</code> e o fluxo de OIDC. Nomes de produto, escopos de token, versões de modelo, cotas e preços de nuvem são de alto risco: revalidar em até 90 dias, e sempre antes de uma implantação real.</p>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>Serviço de LLM é E/S com conexões longas: escale por concorrência, sem estado local, e respeite os limites do ingresso.<br>
+Container Apps cobre o caso comum sem cluster; App Service, Functions e AKS têm cenários próprios e nomeáveis.<br>
+A imagem é o contrato: multi-stage, lockfile, usuário numérico sem privilégio, tag por commit, nunca <code>:latest</code>.<br>
+Bicep descreve o estado desejado; leia o <code>what-if</code> como diff, não como garantia, e nunca ponha segredo em saída.<br>
+Identidade em vez de chave: papéis de dados no menor escopo, autenticação local desligada, Key Vault só para o que você não controla.<br>
+Observe tokens, TTFT, 429 e saturação; alerte sobre sintomas; o orçamento avisa, os tetos protegem.<br>
+OIDC troca o segredo do CI por prova de origem; duas identidades, ambiente protegido, actions fixadas.<br>
+Rollback é trocar a tabela de tráfego, e só devolve o código, não o estado.</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="P01"></script>
+</body>
+</html>

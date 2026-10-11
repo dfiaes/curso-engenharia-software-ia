@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F03 · Estruturas de Dados, Algoritmos e Complexidade</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>F03 · Estruturas de dados, algoritmos e complexidade</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas de terminal e os gates do laboratório vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14.7, uv 0.12.13). <a href="../../STATUS.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
+<p class="meta"><span class="badge">FASE 0</span> &nbsp; 7 blocos · carga estimada ≈ 16 h · pré-requisito: <a href="../F02-python-do-zero/F02.html">F02</a> · próximos: <a href="../M10-graph-engineering-saude-arquitetural/M10.html">M10</a> (grafos em produção), <a href="../M11-fundamentos-ml-dl-modelos-locais/M11.html">M11</a> · <strong>o vocabulário de custo que o resto do curso assume</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Um agente de IA que escreve código escolhe estruturas de dados o tempo todo, e escolhe errado com a mesma facilidade que uma pessoa apressada: <code>x in lista</code> dentro de um laço, <code>lista.pop(0)</code> como fila, uma chave mutável num dicionário, uma recursão que passa de mil níveis. O código passa nos testes pequenos e derrete com dados reais. Quem revisa precisa enxergar o custo antes de rodar, e saber medir quando a intuição não basta.</p>
+<p>Ao terminar você consegue: (1) estimar o custo de um trecho em tempo e memória, distinguir pior caso, caso médio e custo amortizado, e confirmar com medição honesta; (2) escolher entre lista, deque, dict, set, heap, árvore e grafo pelo padrão de acesso, e explicar o que o CPython faz por baixo; (3) escrever busca binária, two pointers e janela deslizante com invariantes, sem erro de borda; (4) modelar um problema como grafo e escolher BFS, DFS, ordenação topológica ou Dijkstra; (5) reconhecer quando um problema pede recursão, programação dinâmica, guloso ou backtracking, e seguir um roteiro quando o problema é novo.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não é preparação de maratona nem catálogo de 200 problemas. Cada técnica entra como consequência de um modelo de custo. Entrevistas e prática repetida ficam no <a href="../E05-carreira/E05.html">E05</a>; grafos de workflow, checkpoint e grafo de conhecimento ficam no <a href="../M10-graph-engineering-saude-arquitetural/M10.html">M10</a>. As coleções do ponto de vista de uso (compreensões, <code>collections</code>, protocolos) já foram apresentadas no <a href="../F02-python-do-zero/F02.html">F02</a>; aqui você olha para dentro delas.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça, sem testar. Se acertar todas com segurança (mecanismo, não só o nome), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint">Checkpoint F03</a> e siga. Qualquer resposta hesitante marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> <code>list.append</code> às vezes copia a lista inteira. Por que dizemos que é O(1)?
+<details><summary>Resposta</summary><p>Custo amortizado: a capacidade cresce por um fator proporcional, então a soma dos custos de n inserções é O(n) e a média por inserção é constante. Cada chamada individual não tem esse limite; o pior caso de uma única chamada é O(n). Isso importa em sistemas com latência máxima (p99), não em vazão total.</p></details></li>
+<li><strong>(Bloco 1)</strong> Um algoritmo O(n log n) pode perder para um O(n²) em dados reais? Dê um motivo além de "n pequeno".
+<details><summary>Resposta</summary><p>Sim. A notação esconde a constante e o padrão de acesso à memória. Um laço sequencial sobre array contíguo aproveita cache e prefetch; percorrer o mesmo número de elementos em ordem aleatória pode custar várias vezes mais (medido no bloco 1). Em Python há ainda a diferença entre trabalho feito em C (<code>sorted</code>, <code>bisect</code>) e em bytecode.</p></details></li>
+<li><strong>(Bloco 2)</strong> Por que <code>fila.pop(0)</code> numa lista de 80 mil itens é um problema, e qual a troca de uma linha?
+<details><summary>Resposta</summary><p>A lista é um array de ponteiros; remover o primeiro desloca todos os outros (<code>memmove</code>), O(n) por chamada e O(n²) para esvaziar. Troque por <code>collections.deque</code> e <code>popleft()</code>, O(1).</p></details></li>
+<li><strong>(Bloco 3)</strong> Duas chaves têm <code>__eq__</code> igual mas <code>__hash__</code> diferente. O que quebra num <code>dict</code>?
+<details><summary>Resposta</summary><p>O contrato "a == b implica hash(a) == hash(b)" foi violado. O dict só compara chaves cujo hash cai na mesma sequência de sondagem, então a busca pela chave "igual" não encontra a outra, e o conjunto passa a ter duplicatas silenciosas.</p></details></li>
+<li><strong>(Bloco 4)</strong> Você precisa dos 10 maiores de um fluxo de 100 milhões de itens que não cabe em memória. Qual estrutura e qual custo?
+<details><summary>Resposta</summary><p>Um min-heap de tamanho 10: a raiz é o décimo maior até agora; cada item novo é comparado com a raiz e, se maior, substitui-a. Tempo O(n log k), memória O(k).</p></details></li>
+<li><strong>(Bloco 5)</strong> Por que busca binária é famosa por erros de borda, e qual ferramenta mental os elimina?
+<details><summary>Resposta</summary><p>Porque as condições de parada e os passos (<code>mid+1</code> versus <code>mid</code>) são decididos de cabeça. Escreva o invariante ("tudo em <code>a[:lo]</code> é menor que x, tudo em <code>a[hi:]</code> é maior ou igual") e derive cada atualização dele; o invariante também diz o que o laço devolve.</p></details></li>
+<li><strong>(Bloco 6)</strong> BFS e DFS visitam os mesmos nós. Quando a escolha muda a resposta?
+<details><summary>Resposta</summary><p>BFS explora por distância em arestas, então dá o caminho com menos arestas em grafo não ponderado. DFS dá a estrutura de profundidade: ciclos, componentes, ordem de término (base da ordenação topológica). Em grafo ponderado nenhum dos dois dá menor custo: aí é Dijkstra (pesos não negativos).</p></details></li>
+<li><strong>(Bloco 7)</strong> Moedas {1, 3, 4}, valor 6. O guloso devolve 3 moedas. O que isso ensina sobre quando o guloso vale?
+<details><summary>Resposta</summary><p>A resposta ótima é 3+3 (2 moedas). O guloso só é correto quando a escolha local nunca impede o ótimo global (propriedade de escolha gulosa), o que vale para 1/5/10/25 mas não para qualquer sistema. Sem prova, use programação dinâmica ou desconfie.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — Complexidade: O/Θ/Ω, casos, custo amortizado, espaço, constantes, cache e medição com timeit</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Sequências lineares: array dinâmico, lista ligada, pilha, fila e deque</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Hashing: colisões, endereçamento aberto, dict do CPython, fator de carga e contrato hash/eq</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Árvores e heaps: BST, balanceamento, B-tree e bancos, heap, top-k e trie</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Ordenação e busca: merge, quick, Timsort, estabilidade, limite n log n, busca binária, two pointers, janela deslizante</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Grafos: representações, BFS, DFS, ordenação topológica, Dijkstra e aplicações</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — Técnicas: recursão, divisão e conquista, programação dinâmica, guloso, backtracking e roteiro para problema novo</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado F03</strong></a>, <a href="#diagnostico">Tabela de Diagnóstico</a>, <a href="#checkpoint">Checkpoint</a>, <a href="#fontes">Fontes e versões</a></li>
+</ol>
+</div>
+
+<div class="box net">
+<span class="lbl">Como ler os números deste módulo</span>
+<p>Toda medição de tempo no texto foi feita no laboratório (<code>python -m algos.bench</code>) numa máquina específica: Linux aarch64, 4 núcleos, CPython 3.14.7, uma execução em 11/10/2026. Cada tabela vem rotulada como <em>medido nesta máquina</em>. Os <em>valores absolutos</em> mudam na sua; as <em>razões</em> e a <em>forma de crescimento</em> (quanto o tempo multiplica quando n dobra) é que são o conteúdo. Se a sua razão for muito diferente, isso é informação, não erro.</p>
+</div>
+
+<h2 id="b01">Bloco 1 · Complexidade: o vocabulário de custo</h2>
+
+<h3>Por que isso importa</h3>
+<p>Complexidade é a linguagem em que se discute desempenho antes de existir perfil. Quando um revisor diz "isso é quadrático", ele afirma que o custo cresce com o quadrado do tamanho da entrada: dobrar a entrada quadruplica o tempo. Num pipeline de RAG que compara cada trecho novo com todos os já indexados, ou num agente que reavalia todo o histórico a cada passo, essa frase separa "funciona no demo" de "funciona com 10 milhões de documentos". O custo de ignorá-la aparece como conta de nuvem, não como erro.</p>
+
+<h3>O mecanismo: o que a notação diz e o que esconde</h3>
+<p>Seja <code>T(n)</code> o número de operações elementares de um algoritmo para entrada de tamanho n. As três notações são afirmações sobre <em>limites</em> de uma função, não sobre "casos":</p>
+<ul>
+<li><strong>O(f)</strong>: limite superior assintótico. <code>T(n) ≤ c·f(n)</code> para algum c &gt; 0 e todo n ≥ n₀.</li>
+<li><strong>Ω(f)</strong>: limite inferior. <code>T(n) ≥ c·f(n)</code> a partir de algum n₀.</li>
+<li><strong>Θ(f)</strong>: os dois ao mesmo tempo; a ordem de crescimento exata.</li>
+</ul>
+<p>O erro de vocabulário mais comum é misturar essas notações com os casos. "Pior caso", "melhor caso" e "caso médio" descrevem <em>qual entrada</em> você analisa; O, Ω e Θ descrevem <em>que tipo de limite</em> você afirma sobre aquela análise. Dá para dizer "o pior caso do quicksort é Θ(n²)" e "o caso médio é Θ(n log n)". Dizer apenas "o quicksort é O(n log n)" é uma afirmação sobre o caso médio ou esperado e omite o pior caso; é por isso que a escolha do pivô aparece como defeito de segurança em entradas adversariais.</p>
+
+<table>
+<thead><tr><th>Ordem</th><th>Nome</th><th>Exemplo em Python</th><th>n dobra: tempo multiplica por</th></tr></thead>
+<tbody>
+<tr><td>O(1)</td><td>constante</td><td><code>d[k]</code>, <code>lista[i]</code>, <code>pilha.append(x)</code> (amortizado)</td><td>1</td></tr>
+<tr><td>O(log n)</td><td>logarítmica</td><td><code>bisect_left</code>, operações de heap</td><td>soma de uma constante</td></tr>
+<tr><td>O(n)</td><td>linear</td><td><code>x in lista</code>, <code>sum(lista)</code></td><td>2</td></tr>
+<tr><td>O(n log n)</td><td>quase linear</td><td><code>sorted(lista)</code></td><td>pouco mais de 2</td></tr>
+<tr><td>O(n²)</td><td>quadrática</td><td>laços aninhados, <code>pop(0)</code> repetido, concatenar string em laço (ingênuo)</td><td>4</td></tr>
+<tr><td>O(2ⁿ), O(n!)</td><td>exponencial, fatorial</td><td>subconjuntos, permutações, backtracking sem poda</td><td>inviável a partir de n ≈ 25–30</td></tr>
+</tbody>
+</table>
+
+<h3>Casos e custo amortizado</h3>
+<p>Três perguntas distintas costumam ser confundidas:</p>
+<ul>
+<li><strong>Pior caso</strong>: a entrada mais cruel de tamanho n. É a garantia. Importa quando a entrada é controlada por terceiros (um serviço exposto) ou quando há SLA de latência.</li>
+<li><strong>Caso médio / esperado</strong>: a média sobre uma distribuição de entradas <em>ou</em> sobre as escolhas aleatórias do próprio algoritmo. O quicksort com pivô aleatório é O(n log n) <em>esperado</em> para qualquer entrada, porque a aleatoriedade está no algoritmo, não nos dados.</li>
+<li><strong>Amortizado</strong>: o custo médio por operação numa <em>sequência</em> de operações, no pior caso da sequência. Não há probabilidade envolvida. <code>list.append</code> é O(1) amortizado: algumas chamadas custam O(n) (realocação), mas n chamadas custam O(n) no total.</li>
+</ul>
+<p>O argumento do array dinâmico é curto. Se a capacidade dobra ao encher, as cópias custam 1 + 2 + 4 + … + n/2 &lt; n; somadas às n escritas, o total é &lt; 3n, ou seja, menos de 3 operações por inserção. No CPython a lista não dobra: cresce cerca de 12,5% mais uma constante (fórmula em <code>list_resize</code>), e o argumento vale do mesmo jeito para qualquer fator &gt; 1; só muda a constante. O que muda é o <em>pico</em> de uma única chamada, que continua O(n). Você pode ver os pontos de realocação:</p>
+<pre><code>$ uv run python -m algos.bench --growth | head -8
+len  bytes (sys.getsizeof) at each reallocation of a list built by append
+  0  56
+  1  88
+  5  120
+  9  184
+ 17  248
+ 25  312
+ 33  376</code></pre>
+<p class="clock">Medido nesta máquina (CPython 3.14.7, aarch64). A lista vazia ocupa 56 bytes; a primeira realocação reserva 4 ponteiros de 8 bytes (88 = 56 + 32), a seguinte 8 (120), depois 16 (184). Os saltos mudam entre versões; o padrão "poucas realocações, espaçadas por fator" não.</p>
+
+<h3>Espaço, e o que "O(1) de memória" realmente promete</h3>
+<p>Complexidade de espaço conta memória <em>auxiliar</em> além da entrada. Três armadilhas de contagem: (a) a pilha de chamadas é memória: uma recursão de profundidade n é O(n) de espaço mesmo sem alocar nada explícito; (b) fatiar cria cópia (<code>a[:mid]</code> custa O(mid) tempo e espaço, e esconde um fator no merge sort do tipo "ingênuo"); (c) em Python o "elemento" é um ponteiro de 8 bytes para um objeto que tem cabeçalho próprio: uma lista de um milhão de <code>int</code> pequenos ocupa muito mais que 8 MB quando os inteiros não são os interned (−5 a 256). Para dados numéricos densos, <code>array.array</code> ou NumPy mudam a constante em uma ordem de grandeza (mais no <a href="../M11-fundamentos-ml-dl-modelos-locais/M11.html">M11</a>).</p>
+
+<h3>Constantes e cache: onde o assintótico mente</h3>
+<p>A notação joga fora constantes porque elas não afetam a <em>forma</em> da curva. Mas você paga as constantes. Duas fontes dominam em Python:</p>
+<ol>
+<li><strong>Quem executa.</strong> Trabalho em C (<code>sorted</code>, <code>bisect</code>, <code>in</code> sobre <code>set</code>) roda dezenas de vezes mais rápido que o mesmo trabalho em bytecode. Um merge sort escrito em Python é O(n log n) e ainda assim de 14 a 18 vezes mais lento que <code>sorted</code> (tabela do bloco 5).</li>
+<li><strong>Localidade de memória.</strong> CPUs leem memória em linhas de cache (tipicamente 64 bytes) e prefetcham sequências previsíveis. O mesmo número de leituras custa muito mais quando os endereços saltam. O laboratório mede isso lendo um array de índices na ordem original versus embaralhada:</li>
+</ol>
+<table>
+<thead><tr><th>n</th><th>ordem sequencial (ms)</th><th>ordem embaralhada (ms)</th><th>embaralhada / sequencial</th></tr></thead>
+<tbody>
+<tr><td>250.000</td><td>3,92</td><td>11,90</td><td>3,03x</td></tr>
+<tr><td>1.000.000</td><td>16,73</td><td>155,54</td><td>9,30x</td></tr>
+<tr><td>4.000.000</td><td>68,06</td><td>664,86</td><td>9,77x</td></tr>
+</tbody>
+</table>
+<p class="clock">Medido nesta máquina. Mesmo trabalho aritmético, mesma quantidade de leituras; só a ordem muda. Em 250 mil elementos tudo cabe nas caches mais próximas e a diferença é 3x; passando de alguns milhões o acesso aleatório vai à memória principal e a razão satura perto de 10x.</p>
+<p>Consequência de projeto: estruturas contíguas (array, <code>list</code>, <code>array.array</code>) vencem estruturas com ponteiros (lista ligada, árvore binária) por uma constante grande, mesmo quando a assintótica empata. É um dos motivos de o heap usar um array e de bancos de dados usarem árvores com nós largos (bloco 4).</p>
+
+<h3>Medir com <code>timeit</code>: o mínimo de rigor</h3>
+<p>Perfil responde "onde está o tempo"; micro-medição responde "qual alternativa é mais rápida aqui". Para a segunda, use <code>timeit</code> (ou <code>pyperf</code> para decisões sérias) e siga três regras: (1) <strong>reinicialize o estado</strong> a cada repetição, senão você mede a segunda execução sobre dados já alterados (<code>pop(0)</code> sobre lista que encolheu); (2) <strong>reporte o mínimo de várias repetições</strong>, não a média, porque o ruído do sistema só soma tempo (por isso <code>timeit.repeat</code> e <code>min</code>); (3) <strong>varie n</strong> e olhe a razão entre tamanhos consecutivos, porque é ela que revela a ordem de crescimento.</p>
+<pre><code>import timeit
+
+def custo(stmt, setup, n_exec=200, repeticoes=5):
+    """melhor tempo por execução, em microssegundos"""
+    melhor = min(timeit.repeat(stmt, setup, number=n_exec, repeat=repeticoes))
+    return melhor / n_exec * 1e6
+
+for n in (1_000, 10_000, 100_000):
+    setup = f"a = list(range({n})); alvo = {n - 1}"
+    print(n, f"{custo('alvo in a', setup):.1f} us")   # dobrar n ≈ dobrar o tempo → O(n)</code></pre>
+<p>No laboratório, a primeira tabela do <code>bench</code> mostra o resultado esperado para "achar uma chave perto do fim" (microssegundos por busca, <em>medido nesta máquina</em>): <code>x in lista</code> 4,2 → 45 → 465 → 4.545 para n = 10³…10⁶ (cresce 10x a cada 10x de n: linear); <code>bisect_left</code> em C 0,05 → 0,09 (quase constante: logarítmico); <code>x in set</code> 0,01 (constante). O mesmo problema, quatro ordens de grandeza de diferença em n = 10⁶.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Complexidade da operação não é complexidade do uso.</strong> <code>s += "x"</code> é "O(1)" por linha, mas dentro de um laço pode copiar a string toda a cada passo (o CPython às vezes otimiza <code>+=</code> de string com contagem de referência 1, o que torna o comportamento dependente de implementação; <code>"".join(partes)</code> é a forma garantida). Do mesmo modo, <code>lista.insert(0, x)</code>, <code>x in lista</code>, <code>lista.index(x)</code>, <code>a + b</code> (concatenação de listas) e fatias são O(n) escondidos em uma linha curta. Quando revisar, procure o <em>operador de custo linear dentro de um laço</em>: é o O(n²) que ninguém declarou.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Amortizado não protege a cauda de latência.</strong> Uma estrutura com inserção O(1) amortizada pode ter uma chamada rara que custa O(n). Em um serviço com p99 apertado, uma tabela hash que se reconstrói com 50 milhões de entradas congela aquela requisição por segundos. Remédios: pré-dimensionar, reconstrução incremental (como o Redis faz com rehash gradual) ou estruturas de pior caso limitado.</p>
+</div>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Declarar "O(n log n)" sem dizer em quê: n é o número de elementos, bytes, linhas, arestas? Num grafo, o custo é função de V e E, não de "n".</li>
+<li>Otimizar a ordem de crescimento de algo que roda 10 vezes. A ordem importa onde n é grande <em>e</em> o trecho é quente.</li>
+<li>Comparar tempos de uma única execução, ou com o coletor de lixo ligado em um lado só.</li>
+<li>Esquecer a constante do tamanho: comparar o custo de hash de strings longas (O(comprimento) na primeira vez) como se fosse O(1).</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>O, Ω, Θ são limites de uma função; pior/médio/amortizado dizem qual entrada se analisa. Amortizado garante a soma de uma sequência, não cada chamada. Espaço inclui a pilha de chamadas e as cópias de fatias. A constante vem de quem executa (C ou bytecode) e da localidade de memória; meça com repetição, mínimo e vários n, e olhe a razão entre tamanhos.</p>
+</div>
+
+<h2 id="b02">Bloco 2 · Sequências lineares: array dinâmico, lista ligada, pilha, fila, deque</h2>
+
+<h3>Por que isso importa</h3>
+<p>Quase toda estrutura mais elaborada é uma sequência com uma regra de acesso: pilha (último a entrar, primeiro a sair), fila (primeiro a entrar, primeiro a sair), deque (as duas pontas). A escolha do contêiner por trás dessa regra decide se a operação é O(1) ou O(n). O erro típico em código gerado e em código humano é o mesmo: usar <code>list</code> para tudo, inclusive como fila de tarefas. Funciona com cem itens e trava com cem mil.</p>
+
+<h3>O mecanismo: <code>list</code> é um array de ponteiros</h3>
+<p>Uma <code>list</code> do CPython é um bloco contíguo de ponteiros para objetos (<code>PyObject **ob_item</code>), mais o tamanho usado e a capacidade alocada. Isso explica a tabela inteira de custos:</p>
+<table>
+<thead><tr><th>Operação</th><th>Custo</th><th>Por quê</th></tr></thead>
+<tbody>
+<tr><td><code>a[i]</code>, <code>a[i] = x</code></td><td>O(1)</td><td>endereço = base + i·8</td></tr>
+<tr><td><code>a.append(x)</code></td><td>O(1) amortizado</td><td>escreve no fim; realoca raramente</td></tr>
+<tr><td><code>a.pop()</code></td><td>O(1)</td><td>decrementa o tamanho</td></tr>
+<tr><td><code>a.pop(0)</code>, <code>a.insert(0, x)</code></td><td>O(n)</td><td>desloca todos os ponteiros (um <code>memmove</code>)</td></tr>
+<tr><td><code>x in a</code>, <code>a.index(x)</code>, <code>a.remove(x)</code></td><td>O(n)</td><td>varredura com <code>==</code></td></tr>
+<tr><td><code>a[i:j]</code></td><td>O(j−i)</td><td>copia os ponteiros (e incrementa as contagens de referência)</td></tr>
+</tbody>
+</table>
+
+<p>O <code>memmove</code> é rápido (copia memória em bloco), por isso o custo de <code>pop(0)</code> só aparece com tamanho. O laboratório esvazia um contêiner pela frente e mede o tempo total:</p>
+<table>
+<thead><tr><th>n</th><th><code>list.pop(0)</code> (ms)</th><th><code>deque.popleft</code> (ms)</th><th><code>CircularDeque.popleft</code> do lab (ms)</th><th>lista / deque</th></tr></thead>
+<tbody>
+<tr><td>10.000</td><td>5,31</td><td>0,14</td><td>1,77</td><td>38x</td></tr>
+<tr><td>20.000</td><td>23,10</td><td>0,25</td><td>3,90</td><td>92x</td></tr>
+<tr><td>40.000</td><td>109,22</td><td>0,54</td><td>7,36</td><td>203x</td></tr>
+<tr><td>80.000</td><td>448,20</td><td>1,03</td><td>15,30</td><td>434x</td></tr>
+</tbody>
+</table>
+<p class="clock">Medido nesta máquina. Observe o fator quando n dobra: a lista multiplica por ≈4,3 / 4,7 / 4,1 (quadrático); o deque por ≈1,8 / 2,2 / 1,9 (linear). A versão em Python puro do lab (<code>CircularDeque</code>) também é linear, mas com constante ~7x maior que o deque em C: a ordem vence a constante só a partir de um certo n, e o deque em C vence nos dois.</p>
+
+<h3>Lista ligada: a estrutura que ensina mais do que serve</h3>
+<p>Numa lista ligada cada nó guarda o valor e um ponteiro para o próximo. Inserir ou remover <em>numa posição já conhecida</em> é O(1) (troca de ponteiros), mas achar a posição é O(n), e o acesso por índice também. Em linguagens com ponteiros ela tem lugar (listas intrusivas em kernels, listas de blocos livres). Em Python quase nunca: cada nó é um objeto com cabeçalho (dezenas de bytes por elemento), cada passo é um salto de memória que derrota o cache (bloco 1) e <code>deque</code> já cobre o caso útil. O que vale levar é a ideia: <strong>O(1) de inserção exige já ter o ponteiro para a posição</strong>. É o princípio de um cache LRU, onde um <code>dict</code> guarda a chave e aponta para o nó numa lista duplamente ligada para mover-para-frente em O(1) (a <code>collections.OrderedDict</code> faz exatamente isso).</p>
+
+<h3>Pilha, fila e deque</h3>
+<ul>
+<li><strong>Pilha</strong>: use <code>list</code> com <code>append</code>/<code>pop</code>. Aplicações: chamadas de função, desfazer, validação de parênteses, DFS iterativa, avaliação de expressões.</li>
+<li><strong>Fila</strong>: use <code>collections.deque</code> com <code>append</code>/<code>popleft</code>. Aplicações: BFS, filas de tarefas em memória, buffers de eventos. Para concorrência entre threads existe <code>queue.Queue</code>, que acrescenta travas e bloqueio (e custa mais); entre corrotinas, <code>asyncio.Queue</code>.</li>
+<li><strong>Deque</strong>: as duas pontas em O(1). Com <code>maxlen</code> vira janela deslizante que descarta o mais antigo (útil para "últimas N mensagens" de uma conversa com o modelo).</li>
+</ul>
+<p>O <code>deque</code> do CPython é uma lista duplamente ligada de <em>blocos</em> de 64 ponteiros: mistura as duas ideias e dá O(1) nas pontas, mas acesso <code>d[i]</code> no meio é O(n) (anda pelos blocos). Quem precisa de acesso aleatório e pontas ao mesmo tempo precisa de outra estrutura, e normalmente a resposta é perguntar de novo qual é o padrão de acesso.</p>
+
+<h3>Exemplo trabalhado: um anel (ring buffer) com redimensionamento</h3>
+<p>A forma clássica de fazer fila O(1) em array é o <strong>buffer circular</strong>: guarde o índice da cabeça e o tamanho; o i-ésimo elemento está em <code>(cabeça + i) mod capacidade</code>. Nada se desloca. O <code>CircularDeque</code> do laboratório usa capacidade potência de dois (então o módulo vira máscara de bits), dobra quando enche e <em>reduz à metade quando fica com um quarto</em>:</p>
+<pre><code>def _slot(self, offset: int) -> int:
+    # capacidade é potência de dois: "% capacidade" vira máscara de bits
+    return (self._head + offset) &amp; (len(self._buf) - 1)
+
+def popleft(self) -> T:
+    ...
+    item = self._buf[self._head]
+    self._buf[self._head] = None            # solta a referência (coletor de lixo)
+    self._head = (self._head + 1) &amp; (len(self._buf) - 1)
+    self._size -= 1
+    self._shrink_if_sparse()
+    return item</code></pre>
+<pre><code>$ uv run python -m algos.demo deque
+append 1: len=1 capacity=4
+...
+append 5: len=5 capacity=8
+popleft -> 1: len=4 capacity=8
+popleft -> 2: len=3 capacity=8
+popleft -> 3: len=2 capacity=4
+after appendleft(0): [0, 4, 5]</code></pre>
+<p>Por que reduzir a <em>um quarto</em> e não à metade? Se encolhesse ao chegar em metade, uma sequência "um push, um pop" na fronteira (50% de ocupação) redimensionaria a cada operação: O(n) por chamada, o chamado <em>thrashing</em>. Com dobrar em 100% e encolher em 25%, depois de cada redimensionamento a estrutura fica em 50% e precisa de pelo menos n/2 operações antes do próximo: o custo O(n) do redimensionamento é pago por esse crédito, e a operação continua O(1) amortizada. Esse é o raciocínio de "método do potencial" em versão operacional: guarde crédito proporcional ao quão longe a estrutura está do ponto de reorganização.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Fila com <code>list</code> e um índice de cabeça "para não deslocar".</strong> A variação esperta (<code>i += 1</code> em vez de <code>pop(0)</code>) resolve o tempo e cria vazamento de memória: os elementos consumidos ficam vivos na lista até alguém recortar. Se o fluxo é longo, a memória cresce sem limite. O anel do lab faz <code>self._buf[self._head] = None</code> justamente para soltar a referência. Outra: <code>deque</code> com <code>maxlen</code> descarta <em>silenciosamente</em> o item mais antigo ao inserir; se a perda de mensagem for um erro de domínio, você precisa de um limite explícito que levante exceção ou aplique contrapressão.</p>
+</div>
+
+<h3>Trade-offs</h3>
+<table>
+<thead><tr><th>Preciso de…</th><th>Use</th><th>Custo a saber</th></tr></thead>
+<tbody>
+<tr><td>acesso por índice, iteração rápida, cauda como pilha</td><td><code>list</code></td><td>frente e meio são O(n)</td></tr>
+<tr><td>fila ou janela com as duas pontas</td><td><code>deque</code></td><td>índice no meio é O(n)</td></tr>
+<tr><td>números densos, muita memória</td><td><code>array.array</code> / NumPy</td><td>tipo homogêneo; operações vetorizadas só em NumPy</td></tr>
+<tr><td>fila entre threads</td><td><code>queue.Queue</code></td><td>travas; bloqueia; <code>task_done</code>/<code>join</code></td></tr>
+<tr><td>mover itens para a frente por uso (LRU)</td><td><code>OrderedDict</code> ou <code>dict</code> + lista ligada</td><td>memória extra por nó</td></tr>
+</tbody>
+</table>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p><code>list</code> é um array de ponteiros: índice e fim são rápidos, frente e meio são O(n) (<code>pop(0)</code> medido: 448 ms contra 1 ms em 80 mil itens). Fila e janela pedem <code>deque</code>. Lista ligada vale pela ideia (O(1) com o ponteiro na mão), não pela implementação em Python. Redimensionar por fator, com histerese (dobrar em 100%, encolher em 25%), mantém o O(1) amortizado.</p>
+</div>
+
+<h2 id="b03">Bloco 3 · Hashing: tabelas, colisões e o dict do CPython</h2>
+
+<h3>Por que isso importa</h3>
+<p>Dicionários e conjuntos são a estrutura mais usada de Python, e a base de memoização, deduplicação, índices invertidos, contagem, cache e junções em memória. Entender o mecanismo diz quando o O(1) é verdadeiro, quando ele degenera, e por que chaves mutáveis são proibidas. Em IA, é também a estrutura de dados do pré-processamento (vocabulário de tokens, deduplicação de corpus) e dos caches de resposta de LLM, onde a chave é um hash do prompt.</p>
+
+<h3>O mecanismo</h3>
+<p>Uma tabela hash guarda pares chave/valor num array de <em>slots</em>. Uma função hash transforma a chave num inteiro; o índice inicial é o inteiro reduzido ao tamanho do array. Duas chaves diferentes podem cair no mesmo slot (colisão: inevitável pelo princípio da casa dos pombos, já que o universo de chaves é maior que o array). Há duas famílias de solução:</p>
+<ul>
+<li><strong>Encadeamento (chaining)</strong>: cada slot guarda uma lista (ou árvore) das entradas que caíram nele. Simples, tolera fator de carga &gt; 1, mas cada entrada é um nó separado (ponteiros, cache ruim). É o que Java <code>HashMap</code> faz (com árvores nos baldes longos).</li>
+<li><strong>Endereçamento aberto (open addressing)</strong>: a entrada fica <em>dentro</em> do array; se o slot está ocupado, anda-se por uma sequência de sondagem determinística até achar um livre. Melhor localidade, sem alocação por entrada, mas exige fator de carga &lt; 1, e a remoção é sutil (lápides). É o que o CPython faz.</li>
+</ul>
+<p>O <strong>fator de carga</strong> α = ocupados / capacidade controla o custo. Com sondagem uniforme, o número esperado de slots inspecionados numa busca <em>sem sucesso</em> é cerca de 1/(1−α): com α = 0,5 são 2; com 0,9 são 10; com 0,99 são 100. Por isso a tabela cresce antes de encher: o dict do CPython mantém no máximo 2/3 dos slots usados, e o crescimento reconstrói a tabela inteira (O(n) em uma inserção, amortizado O(1) como no array dinâmico).</p>
+
+<h3>Como o <code>dict</code> do CPython é feito (visão de 3.6+)</h3>
+<p>Desde o CPython 3.6 o dict é <em>compacto</em>: dois arrays. Um array pequeno de <strong>índices</strong> (bytes, depois inteiros de 16/32/64 bits conforme o tamanho) é a tabela de hash propriamente dita; ele aponta para um array denso de <strong>entradas</strong> <code>(hash, chave, valor)</code> em <em>ordem de inserção</em>. Isso economizou memória e deu de brinde a ordem de iteração garantida pela linguagem desde o 3.7. A sondagem não é linear: usa a recorrência</p>
+<pre><code>perturb = hash
+i = perturb &amp; mask
+repita:
+    inspeciona slot i
+    perturb &gt;&gt;= 5
+    i = (i * 5 + perturb + 1) &amp; mask</code></pre>
+<p>O termo <code>5*i + 1</code> percorre todos os slots de uma tabela de tamanho potência de dois (passo de período completo), e <code>perturb</code> injeta os bits altos do hash nos primeiros passos, para que hashes que diferem só nos bits altos (comuns em endereços de memória e inteiros em passo) se separem. A comparação em cada slot é escalonada de propósito: primeiro o hash armazenado (inteiro, barato), depois identidade (<code>is</code>), e só por último <code>__eq__</code>, que pode ser caro ou ter efeitos colaterais.</p>
+<div class="box net">
+<span class="lbl">Lab: simplificação consciente</span>
+<p>O <code>OpenAddressingTable</code> do laboratório usa <strong>a mesma recorrência de sondagem</strong> e a mesma comparação escalonada, mas guarda tudo num único array de tuplas <code>(hash, chave, valor)</code>; por isso a iteração sai em ordem de slot e não de inserção, e o limiar é 2/3 de ocupação contando lápides. O layout de dois arrays do CPython (índices + entradas) é uma otimização de memória e de ordem; a lógica de colisão é a do lab.</p>
+</div>
+<pre><code>$ uv run python -m algos.demo table
+start: capacity=8
+insert #6: capacity 8 -> 16 (rebuild)
+insert #11: capacity 16 -> 32 (rebuild)
+insert #22: capacity 32 -> 64 (rebuild)
+24 keys: capacity=64 load=0.375
+deleted 10: live=14 tombstones=10
+after one insert: live=15 tombstones=10
+300 distinct hashes: worst lookup inspects 1
+300 equal hashes:    last key inspects    300</code></pre>
+<p>Leia a saída: a tabela de capacidade 8 reconstrói no sexto elemento (limite 2/3 de 8 = 5,33); a reconstrução escolhe uma capacidade em que o resultado fique com no máximo metade de ocupação, por isso os saltos de 8 para 16 e depois 16 para 32 e 64. Remover 10 chaves deixa 10 <em>lápides</em>: o slot não volta a "vazio" porque isso cortaria a cadeia de sondagem de outras chaves que passaram por ali. A lápide só é consumida quando uma nova chave a reaproveita ou numa reconstrução. Na última linha, 300 chaves com o mesmo hash viram uma varredura linear de 300 passos.</p>
+
+<h3>O contrato <code>__hash__</code> / <code>__eq__</code></h3>
+<p>Três regras formam o contrato; violá-las produz bugs silenciosos, não exceções:</p>
+<ol>
+<li><code>a == b</code> implica <code>hash(a) == hash(b)</code>. (A volta não vale: colisões são permitidas.)</li>
+<li>O hash <strong>não pode mudar</strong> enquanto o objeto estiver numa tabela. Por isso <code>list</code>, <code>dict</code> e <code>set</code> são não-hasheáveis (<code>TypeError</code>) e <code>tuple</code> só é hasheável se todos os componentes forem.</li>
+<li>Definir <code>__eq__</code> sem <code>__hash__</code> num <code>class</code> torna a instância não-hasheável (Python define <code>__hash__ = None</code> implicitamente) justamente para você não quebrar a regra 1 sem querer. <code>@dataclass(frozen=True)</code> (ou <code>eq=True, frozen=True</code>) gera os dois de forma consistente.</li>
+</ol>
+<pre><code>class Ponto:
+    def __init__(self, x, y): self.x, self.y = x, y
+    def __eq__(self, o): return isinstance(o, Ponto) and (self.x, self.y) == (o.x, o.y)
+    def __hash__(self): return hash((self.x, self.y))   # mesmos campos que o __eq__
+
+p = Ponto(1, 2); d = {p: "a"}
+p.x = 99          # mutou um campo que entra no hash
+p in d            # False: procura no slot errado; o item "sumiu" e continua ocupando memória</code></pre>
+<p>O lab tem o controle negativo dessa última situação (<code>test_control_mutating_a_key_after_insertion_loses_it</code>) e o do hash constante (<code>test_control_same_hash_degrades_to_linear_probing_cost</code>).</p>
+<p>O custo de degradação é medido. Construir um dict com n chaves cujo hash é sempre o mesmo, contra n chaves com hashes distintos:</p>
+<table>
+<thead><tr><th>n</th><th>hashes distintos (ms)</th><th>mesmo hash (ms)</th><th>lentidão</th></tr></thead>
+<tbody>
+<tr><td>500</td><td>0,01</td><td>4,40</td><td>708x</td></tr>
+<tr><td>1.000</td><td>0,01</td><td>17,94</td><td>1.393x</td></tr>
+<tr><td>2.000</td><td>0,02</td><td>71,96</td><td>3.367x</td></tr>
+<tr><td>4.000</td><td>0,05</td><td>288,70</td><td>6.363x</td></tr>
+</tbody>
+</table>
+<p class="clock">Medido nesta máquina, com chaves de classe Python com <code>__hash__</code> constante (o <code>dict</code> real do CPython). Dobrar n multiplica por ≈4: o custo total deixou de ser linear e virou quadrático, porque cada inserção varre a cadeia inteira e chama <code>__eq__</code> em Python a cada passo.</p>
+
+<h3>Aplicações que valem reconhecer</h3>
+<ul>
+<li><strong>Contagem e agrupamento</strong>: <code>Counter</code>, <code>defaultdict(list)</code>. Um único passe O(n) substitui um laço aninhado O(n²).</li>
+<li><strong>Deduplicação</strong>: <code>set</code> de chaves normalizadas; para dados que não cabem em memória, hash do conteúdo (SHA-256) como chave de arquivo/chunk.</li>
+<li><strong>Memoização</strong>: <code>functools.cache</code> guarda resultado por argumentos (que precisam ser hasheáveis).</li>
+<li><strong>Índice invertido</strong>: dict de termo para lista de documentos, núcleo da busca lexical (BM25) que complementa a busca vetorial no <a href="../M07-rag-de-verdade/M07.html">M07</a>.</li>
+<li><strong>Complemento em uma passada</strong>: "existem dois números que somam alvo?" em O(n) com dict de valores já vistos (<code>two_sum_hash</code> do lab).</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>O hash de <code>str</code> e <code>bytes</code> é aleatorizado por processo</strong> (<code>PYTHONHASHSEED</code>), uma defesa contra ataques de colisão forçada (HashDoS) em que um cliente envia chaves escolhidas para degradar seu dict a O(n²). Consequências práticas: (1) nunca use <code>hash()</code> como identificador persistente ou entre processos (cache em disco, particionamento de dados, chave em banco): o valor muda a cada execução; use <code>hashlib</code> ou outro hash determinístico; (2) a ordem de iteração de um <code>set</code> de strings varia entre execuções, então teste que dependa dela é instável; (3) <code>hash(-1) == hash(-2) == -2</code> em CPython (o valor -1 é reservado para sinalizar erro em C), um detalhe que prova que o hash é detalhe de implementação, não propriedade do dado.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Igualdade numérica atravessa tipos.</strong> <code>1 == 1.0 == True</code>, e os hashes coincidem de propósito; logo <code>{1: "a", True: "b", 1.0: "c"}</code> tem <em>uma</em> chave (a primeira inserida, com o último valor). Do mesmo modo, <code>float('nan') != float('nan')</code> embora seja o mesmo objeto: no dict a verificação de identidade vem primeiro, então um <code>nan</code> reaproveitado é achado e dois <code>nan</code> distintos são chaves diferentes. Conjuntos e dicionários com float como chave merecem desconfiança.</p>
+</div>
+
+<h3>Trade-offs</h3>
+<p>Tabela hash vence quando a pergunta é de <em>igualdade exata</em>. Ela não ordena, não responde "menor chave maior que x" nem "tudo no intervalo [a,b]": para isso, árvore ou array ordenado com busca binária (blocos 4 e 5). Em memória, o dict gasta bem mais que uma lista de pares; para milhões de pequenos registros, dataclasses com <code>slots=True</code>, tuplas nomeadas ou colunas em arrays reduzem muito.</p>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Hash transforma chave em índice; colisões são inevitáveis e resolvidas por encadeamento ou por endereçamento aberto (CPython). O fator de carga mantém o custo esperado constante e a reconstrução é amortizada. O contrato exige que iguais tenham o mesmo hash e que o hash não mude; hash constante ou chave mutada degradam ou perdem dados. Hash de string é aleatorizado por processo: nunca persista <code>hash()</code>.</p>
+</div>
+
+<h2 id="b04">Bloco 4 · Árvores e heaps: ordem, balanceamento, bancos, top-k e trie</h2>
+
+<h3>Por que isso importa</h3>
+<p>A tabela hash responde igualdade. Quase toda pergunta de dados reais tem ordem: "o menor", "os 10 maiores", "tudo entre 10h e 11h", "todas as palavras que começam com <code>pre</code>". Árvores e heaps respondem a essas perguntas em tempo logarítmico, e são a estrutura por trás de índices de banco de dados, filas de prioridade em escalonadores e agentes (próxima tarefa a executar), e busca aproximada de vizinhos em vetores (o HNSW é um grafo em camadas, mas o top-k que ele devolve passa por um heap).</p>
+
+<h3>Árvore binária de busca (BST)</h3>
+<p>Cada nó tem uma chave, um filho esquerdo com chaves menores e um direito com chaves maiores. Buscar, inserir e remover descem um caminho da raiz: custo proporcional à <strong>altura</strong> h. Uma árvore equilibrada com n nós tem h ≈ log₂ n; uma árvore degenerada tem h = n (é uma lista ligada disfarçada). A altura depende da <em>ordem de inserção</em>:</p>
+<pre><code>$ uv run python -m algos.demo heap     # trecho final
+BST height, 1000 keys inserted in order:    1000
+BST height, 1000 keys inserted shuffled:    20</code></pre>
+<p class="clock">Resultado determinístico (semente fixa no demo). Mil chaves inseridas em ordem crescente produzem altura 1000; embaralhadas, 20 (o mínimo teórico seria 10; o esperado numa BST aleatória é cerca de 2·ln n ≈ 14 de profundidade média e alturas em torno de 20–25).</p>
+<p>Isso quer dizer que "BST é O(log n)" é verdade só <em>em média, sob inserção aleatória</em>. Dados reais chegam ordenados (ids sequenciais, timestamps), que é o pior caso. A implementação do lab é iterativa de propósito: uma árvore degenerada de 100 mil nós custa tempo, mas com recursão estouraria o limite de profundidade do Python (bloco 7).</p>
+
+<h3>Balanceamento: o conceito, sem decorar rotações</h3>
+<p>Árvores balanceadas (AVL, rubro-negra, treap, skip list) garantem h = O(log n) mantendo um invariante local e corrigindo-o com <em>rotações</em>, que reorganizam três ponteiros preservando a ordem. AVL: as alturas dos dois filhos diferem em no máximo 1 (busca mais rápida, mais rotações). Rubro-negra: coloração que limita o caminho mais longo a 2x o mais curto (menos rotações na escrita; usada em <code>std::map</code> e no TreeMap do Java). Você não vai implementá-las em trabalho real, mas precisa saber três coisas: (1) elas existem para fechar o pior caso da BST; (2) custam constante e ponteiros; (3) em Python a biblioteca padrão não traz nenhuma: o substituto é <strong>array ordenado + <code>bisect</code></strong> (leitura O(log n), inserção O(n) por <code>memmove</code>, ótimo até centenas de milhares de itens) ou o pacote <code>sortedcontainers</code> (lista de listas, de terceiros) quando há muita escrita.</p>
+
+<h3>B-tree: por que bancos de dados não usam árvore binária</h3>
+<p>Um disco (ou SSD) lê em páginas de 4–16 KB; ler 1 byte custa o mesmo que ler a página. Uma árvore binária de 100 milhões de chaves tem altura ≈ 27: 27 leituras de página para uma busca. A B-tree põe <em>centenas de chaves por nó</em>, ajustado ao tamanho da página: com 500 filhos por nó, 100 milhões de chaves cabem em altura 3 ou 4 (500³ = 125 milhões). As duas primeiras camadas ficam em cache de memória, então uma busca custa 1–2 leituras de disco.</p>
+<figure>
+<svg viewBox="0 0 640 230" role="img" aria-labelledby="t-btree" width="640">
+<title id="t-btree">B-tree com três níveis: nó raiz com duas chaves, três filhos e folhas encadeadas</title>
+<g fill="none" stroke="currentColor" stroke-width="1.5">
+<rect x="250" y="20" width="140" height="34" rx="4"/><line x1="320" y1="20" x2="320" y2="54"/>
+<rect x="60" y="100" width="140" height="34" rx="4"/><line x1="130" y1="100" x2="130" y2="134"/>
+<rect x="250" y="100" width="140" height="34" rx="4"/><line x1="320" y1="100" x2="320" y2="134"/>
+<rect x="440" y="100" width="140" height="34" rx="4"/><line x1="510" y1="100" x2="510" y2="134"/>
+<line x1="285" y1="54" x2="130" y2="100"/><line x1="320" y1="54" x2="320" y2="100"/><line x1="355" y1="54" x2="510" y2="100"/>
+<rect x="30" y="180" width="100" height="30" rx="4"/><rect x="150" y="180" width="100" height="30" rx="4"/>
+<rect x="270" y="180" width="100" height="30" rx="4"/><rect x="390" y="180" width="100" height="30" rx="4"/><rect x="510" y="180" width="100" height="30" rx="4"/>
+<line x1="95" y1="134" x2="80" y2="180"/><line x1="165" y1="134" x2="200" y2="180"/><line x1="285" y1="134" x2="320" y2="180"/><line x1="355" y1="134" x2="440" y2="180"/><line x1="510" y1="134" x2="560" y2="180"/>
+</g>
+<g fill="currentColor" font-size="12" text-anchor="middle" font-family="sans-serif">
+<text x="285" y="42">k₁</text><text x="355" y="42">k₂</text>
+<text x="95" y="122">…</text><text x="165" y="122">…</text><text x="285" y="122">…</text><text x="355" y="122">…</text><text x="475" y="122">…</text><text x="545" y="122">…</text>
+<text x="80" y="200">folha</text><text x="200" y="200">folha</text><text x="320" y="200">folha</text><text x="440" y="200">folha</text><text x="560" y="200">folha</text>
+</g>
+<g stroke="currentColor" stroke-dasharray="4 3" fill="none"><line x1="130" y1="195" x2="150" y2="195"/><line x1="250" y1="195" x2="270" y2="195"/><line x1="370" y1="195" x2="390" y2="195"/><line x1="490" y1="195" x2="510" y2="195"/></g>
+</svg>
+<figcaption>Cada retângulo é uma página de disco com muitas chaves (desenhado com poucas). Nos bancos (B+tree) os valores ficam nas folhas, e as folhas são encadeadas (tracejado): uma consulta por intervalo desce uma vez e depois anda pela lista.</figcaption>
+</figure>
+<p>O que isso explica no seu dia a dia de banco: (1) <code>CREATE INDEX</code> em PostgreSQL ou SQL Server cria uma B+tree; (2) consulta por intervalo (<code>BETWEEN</code>, <code>ORDER BY</code>) é barata porque as folhas estão em ordem; (3) índice em coluna de baixa seletividade ou com função aplicada (<code>WHERE lower(nome) = ...</code> sem índice funcional) não é usado; (4) inserir ids aleatórios (UUID v4) como chave primária espalha as escritas por páginas arbitrárias e fragmenta, enquanto ids ordenados (UUID v7, sequências) anexam na página da direita. Detalhes de planos de execução ficam no <a href="../F05-sql-bancos-relacionais/F05.html">F05</a>. Bancos LSM (RocksDB, Cassandra) trocam B-tree por escritas sequenciais em memória/arquivos ordenados mesclados depois: melhor escrita, leitura mais cara.</p>
+
+<h3>Heap: a árvore que mora num array</h3>
+<p>Um heap binário (min-heap) é uma árvore binária <em>completa</em> em que cada pai é menor ou igual aos filhos. Não há ponteiros: com índices a partir de 0, os filhos de <code>i</code> estão em <code>2i+1</code> e <code>2i+2</code>, e o pai em <code>(i-1)//2</code>. Só a raiz é garantidamente o menor; os irmãos não têm ordem entre si, e é isso que torna as operações baratas:</p>
+<ul>
+<li><code>push</code>: coloca no fim e <em>sobe</em> trocando com o pai enquanto for menor: O(log n).</li>
+<li><code>pop</code>: tira a raiz, move o último elemento para o topo e o <em>desce</em> trocando com o menor filho: O(log n).</li>
+<li><code>heapify</code> de n elementos: O(n) (não O(n log n)), porque a maioria dos nós está perto das folhas e desce pouco.</li>
+</ul>
+<figure>
+<svg viewBox="0 0 560 200" role="img" aria-labelledby="t-heap" width="560">
+<title id="t-heap">Min-heap com seis elementos, desenhado como árvore e como array</title>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<circle cx="280" cy="28" r="18"/><circle cx="170" cy="82" r="18"/><circle cx="390" cy="82" r="18"/>
+<circle cx="115" cy="136" r="18"/><circle cx="225" cy="136" r="18"/><circle cx="335" cy="136" r="18"/>
+<line x1="268" y1="42" x2="182" y2="68"/><line x1="292" y1="42" x2="378" y2="68"/>
+<line x1="160" y1="97" x2="125" y2="121"/><line x1="180" y1="97" x2="215" y2="121"/><line x1="380" y1="97" x2="345" y2="121"/>
+</g>
+<g fill="currentColor" font-size="13" text-anchor="middle" font-family="sans-serif">
+<text x="280" y="33">1</text><text x="170" y="87">3</text><text x="390" y="87">2</text>
+<text x="115" y="141">5</text><text x="225" y="141">9</text><text x="335" y="141">8</text>
+</g>
+<g fill="none" stroke="currentColor" stroke-width="1.2">
+<rect x="150" y="168" width="40" height="26"/><rect x="190" y="168" width="40" height="26"/><rect x="230" y="168" width="40" height="26"/>
+<rect x="270" y="168" width="40" height="26"/><rect x="310" y="168" width="40" height="26"/><rect x="350" y="168" width="40" height="26"/>
+</g>
+<g fill="currentColor" font-size="13" text-anchor="middle" font-family="sans-serif">
+<text x="170" y="186">1</text><text x="210" y="186">3</text><text x="250" y="186">2</text><text x="290" y="186">5</text><text x="330" y="186">9</text><text x="370" y="186">8</text>
+<text x="70" y="186" text-anchor="end">array:</text>
+</g>
+</svg>
+<figcaption>O array <code>[1, 3, 2, 5, 9, 8]</code> é exatamente o estado do heap do demo depois de seis <code>push</code>. O pai do índice 4 (valor 9) é o índice 1 (valor 3).</figcaption>
+</figure>
+<pre><code>$ uv run python -m algos.demo heap     # trecho inicial
+push 5: [5]
+push 3: [3, 5]
+push 8: [3, 5, 8]
+push 1: [1, 3, 8, 5]
+push 9: [1, 3, 8, 5, 9]
+push 2: [1, 3, 2, 5, 9, 8]
+pops: [1, 2, 3, 5, 8, 9]</code></pre>
+
+<h3>Exemplo trabalhado: top-k em fluxo</h3>
+<p>"Os k maiores de n itens" tem três soluções com custos distintos: ordenar tudo (O(n log n) tempo, O(n) memória), selecionar com quickselect (O(n) esperado, destrói a ordem, exige tudo em memória), ou um <strong>min-heap de tamanho k</strong> (O(n log k) tempo, O(k) memória, uma passada, funciona em fluxo). O heap guarda os k melhores vistos; a raiz é o <em>pior dos melhores</em>, o item a ser batido:</p>
+<pre><code>def top_k(items, k):
+    heap = BinaryHeap()
+    for item in items:
+        if len(heap) &lt; k:
+            heap.push(item)
+        elif heap.peek() &lt; item:       # bate o pior dos k melhores
+            heap.pop(); heap.push(item)
+    resultado = []
+    while len(heap): resultado.append(heap.pop())
+    resultado.reverse()                # do maior para o menor
+    return resultado</code></pre>
+<pre><code>top_k([31, 4, 15, 92, 6, 53, 58, 97, 93, 23], 3)  ->  [97, 93, 92]</code></pre>
+<p>Em produção use <code>heapq.nlargest(k, it)</code> (é o mesmo algoritmo, em C, e <code>heapq.merge</code> para fundir listas ordenadas). Duas ressalvas de <code>heapq</code>: é só um min-heap (para max-heap, negue as chaves ou empacote <code>(-prioridade, contador, item)</code>); e itens com a mesma prioridade são comparados pelo elemento seguinte da tupla, que pode nem ser comparável. O <em>contador de desempate</em> evita o <code>TypeError</code> e dá ordem FIFO entre iguais. O heap do lab foi escrito para falhar com segurança: toda operação <em>lê</em> o destino do elemento primeiro (única parte que chama <code>&lt;</code>, que pode lançar exceção) e só então <em>escreve</em>, de modo que uma comparação que falha deixa o heap intacto (<code>test_heap_bst_trie.py</code> injeta o erro).</p>
+
+<h3>Trie: árvore sobre o prefixo</h3>
+<p>Uma trie guarda strings pelo caminho de caracteres: cada nó tem filhos indexados por caractere e uma marca de "fim de palavra". Inserir ou buscar uma palavra de comprimento L custa O(L), independentemente de quantas palavras existem; listar tudo com um prefixo desce o prefixo (O(L)) e enumera a subárvore. Aplicações: autocompletar, roteamento por prefixo (rotas de URL, tabelas de IP com a variante Patricia), dicionários de tokenização (a divisão de texto em tokens por maior prefixo conhecido, em tokenizadores como WordPiece, usa estruturas desse tipo). O preço é memória: um nó por caractere, cada um com um dict; árvores radix comprimem cadeias sem ramificação.</p>
+<pre><code>t = Trie()
+for w in ("casa", "caso", "cacau", "cesta"): t.add(w)
+t.with_prefix("cas")   # ['casa', 'caso']</code></pre>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Heap não é lista ordenada.</strong> Iterar sobre <code>heapq</code> ou imprimir a lista interna não dá ordem; só <code>heappop</code> dá. E a "atualização de prioridade" que parece natural (mudar a prioridade de um item que já está no heap) não existe em <code>heapq</code>: a técnica padrão é <em>remoção preguiçosa</em>: insira a nova entrada, marque a antiga como inválida (por um dicionário de versões) e descarte ao dar pop. Dijkstra (bloco 6) usa exatamente esse truque, e esquecê-lo leva a uma versão que ou é incorreta ou é lenta.</p>
+</div>
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>"A busca é O(log n)" só vale com a árvore balanceada e a comparação barata.</strong> Chaves de string comparam em O(L) no pior caso; um índice sobre texto longo tem constante diferente de um índice sobre inteiros. E uma BST sem balanceamento alimentada por dados ordenados é uma lista ligada: o pior caso é o caso comum quando as chaves são ids crescentes.</p>
+</div>
+
+<h3>Trade-offs</h3>
+<table>
+<thead><tr><th>Pergunta</th><th>Estrutura</th><th>Custo</th></tr></thead>
+<tbody>
+<tr><td>igualdade exata</td><td>dict / set</td><td>O(1) esperado</td></tr>
+<tr><td>menor/maior elemento, extração repetida</td><td>heap</td><td>pop O(log n), peek O(1)</td></tr>
+<tr><td>vizinho mais próximo, intervalo, ordem</td><td>árvore balanceada ou array ordenado + bisect</td><td>O(log n) + saída</td></tr>
+<tr><td>dados maiores que a memória, intervalos</td><td>B+tree (índice de banco)</td><td>poucas leituras de página</td></tr>
+<tr><td>prefixo</td><td>trie / radix / índice de texto</td><td>O(L)</td></tr>
+</tbody>
+</table>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>BST custa a altura, que depende da ordem de inserção (medido: 1000 em ordem crescente, 20 embaralhado). Balanceamento fecha o pior caso; B-trees ajustam o nó à página de disco, por isso bancos as usam. Heap é uma árvore completa em array: raiz mínima, push e pop em O(log n), top-k em O(n log k) com O(k) de memória. Trie dá custo por comprimento da chave e consulta por prefixo.</p>
+</div>
+
+<h2 id="b05">Bloco 5 · Ordenação e busca: merge, quick, Timsort, busca binária, two pointers e janela deslizante</h2>
+
+<h3>Por que isso importa</h3>
+<p>Ordenar é a operação que transforma problemas O(n²) em O(n log n): depois de ordenado, duplicatas ficam adjacentes, intersecções viram uma varredura, "o mais próximo" vira busca binária. Você quase nunca implementa um sort em trabalho real; precisa saber o que o <code>sorted</code> garante (estabilidade, custo, comportamento com dados já ordenados), reconhecer os padrões de busca que dispensam ordenar de novo (binária, dois ponteiros, janela), e escrevê-los sem erro de borda, porque um agente de código erra justamente os limites.</p>
+
+<h3>Merge sort: dividir, ordenar, fundir</h3>
+<p>Divida ao meio, ordene cada metade recursivamente, funda as duas metades ordenadas em uma varredura. A recorrência é <code>T(n) = 2T(n/2) + O(n)</code>, que resolve para Θ(n log n) em <em>todos</em> os casos (log₂ n níveis, cada um com trabalho linear). Usa O(n) de memória auxiliar. É <strong>estável</strong> por um detalhe, e só um: na fusão, em caso de empate sai o elemento da metade <em>esquerda</em>:</p>
+<pre><code>def _merge(left, right):
+    out = []; i = j = 0
+    while i &lt; len(left) and j &lt; len(right):
+        if right[j][0] &lt; left[i][0]:     # estrito: empate mantém o da esquerda primeiro
+            out.append(right[j]); j += 1
+        else:
+            out.append(left[i]); i += 1
+    out.extend(left[i:]); out.extend(right[j:])
+    return out</code></pre>
+<p>Trocar esse <code>&lt;</code> por <code>&lt;=</code> deixa o algoritmo correto como ordenação e destrói a estabilidade, sem que nenhum teste de "está ordenado?" perceba. No laboratório essa mutação é a primeira experiência do passo 6, e só o teste de estabilidade a pega.</p>
+<p><strong>Estabilidade</strong> significa que registros com a mesma chave mantêm a ordem relativa original. Importa quando você ordena em várias passadas ("ordene por nome, depois por departamento": o resultado final está ordenado por departamento e, dentro de cada um, por nome, <em>se</em> o segundo sort for estável). O <code>sorted</code> e o <code>list.sort</code> do Python são estáveis por garantia da linguagem.</p>
+
+<h3>Quicksort: partição in-loco, e o pior caso que é decisão sua</h3>
+<p>Escolha um pivô, particione em "menores", "iguais", "maiores", e ordene recursivamente os lados. Tempo esperado O(n log n), memória O(log n) se você sempre recursa no lado menor, não estável. O custo depende de o pivô dividir bem. Com pivô fixo (o último elemento) e entrada <em>já ordenada</em> (caso comum!), cada partição tira um elemento: Θ(n²). O laboratório mede:</p>
+<table>
+<thead><tr><th>n</th><th>quicksort pivô aleatório (ms)</th><th>quicksort pivô = último (ms)</th><th><code>sorted()</code> (ms)</th></tr></thead>
+<tbody>
+<tr><td>1.000</td><td>0,58</td><td>15,99</td><td>0,00</td></tr>
+<tr><td>2.000</td><td>1,22</td><td>65,54</td><td>0,01</td></tr>
+<tr><td>4.000</td><td>2,77</td><td>268,20</td><td>0,01</td></tr>
+</tbody>
+</table>
+<p class="clock">Medido nesta máquina, entrada já ordenada. Dobrar n multiplica o pivô-último por ≈4,1 (quadrático) e o aleatório por ≈2,1. O <code>sorted</code> aparece com 0,00–0,01 ms: ele detecta que a entrada é uma única sequência crescente e termina em O(n). Com 100 mil itens ordenados, o pivô-último faria 10⁴ vezes mais trabalho que com 1.000.</p>
+<p>Dois detalhes do lab valem como boa prática. (1) <strong>Partição em três vias</strong> (menor/igual/maior, o "problema da bandeira holandesa"): uma lista com muitas chaves repetidas deixa de ser quadrática. (2) <strong>Pilha explícita que adia o lado maior</strong>: a pilha nunca passa de O(log n) intervalos, então nem o pior caso de tempo estoura a recursão do Python nem a memória.</p>
+
+<h3>Timsort: o que o Python realmente faz</h3>
+<p>O <code>list.sort</code> usa Timsort (Tim Peters, 2002), um merge sort adaptativo pensado para dados reais, que raramente são aleatórios: costumam ter trechos já ordenados. Ele (1) varre a entrada procurando <em>runs</em>: sequências já crescentes (ou estritamente decrescentes, que ele inverte); (2) estende runs curtos até um tamanho mínimo (<code>minrun</code>, entre 32 e 64) com <em>insertion sort</em> binário, eficiente em pedaços pequenos; (3) funde runs adjacentes seguindo uma política de pilha que mantém as fusões equilibradas (desde o CPython 3.11, a política de <em>powersort</em>); (4) usa <em>galloping</em> na fusão: quando um lado vence várias vezes seguidas, troca a comparação linear por busca exponencial, o que torna a fusão de dados com blocos quase disjuntos sublinear. Resultado: O(n) em entrada ordenada ou quase, Θ(n log n) no pior caso, estável, com até n/2 de memória auxiliar.</p>
+<p>Consequência prática: <strong>reordenar dados "quase ordenados" é barato</strong>, e acrescentar poucos itens a uma lista ordenada e chamar <code>sort()</code> de novo é razoável, melhor do que parece. Também: <code>key=</code> é avaliada uma vez por elemento (decorate-sort-undecorate embutido); <code>reverse=True</code> preserva a estabilidade (não é "ordenar e inverter"); comparar tipos incomparáveis levanta <code>TypeError</code>.</p>
+
+<h3>O limite inferior: por que não existe sort por comparação melhor que n log n</h3>
+<p>Qualquer algoritmo que só descubra a ordem comparando pares pode ser visto como uma <em>árvore de decisão</em> binária: cada nó interno é uma comparação, cada folha uma permutação possível da entrada. Há n! permutações, então a árvore precisa de pelo menos n! folhas e, sendo binária, de altura ≥ log₂(n!) = n·log₂ n − O(n) (aproximação de Stirling). Logo, no pior caso, são Ω(n log n) comparações. Merge sort e heap sort são ótimos nesse modelo.</p>
+<p>O limite vale <em>só para comparações</em>. Se você sabe algo sobre as chaves, pode escapar: <strong>counting sort</strong> (chaves inteiras em faixa pequena k: O(n + k)), <strong>radix sort</strong> (chaves de d dígitos: O(d·(n + base))), <strong>bucket sort</strong> (distribuição conhecida). Os escapes pagam em memória e em restrição de tipo, e só ganham quando k ou d são pequenos perto de log n; para a maioria dos casos em Python, <code>sorted</code> em C vence qualquer implementação em Python desses métodos.</p>
+<table>
+<thead><tr><th>n</th><th><code>sorted()</code> em C (ms)</th><th>merge sort do lab (ms)</th><th>quicksort aleatório do lab (ms)</th></tr></thead>
+<tbody>
+<tr><td>10.000</td><td>0,54</td><td>9,61</td><td>8,14</td></tr>
+<tr><td>20.000</td><td>1,29</td><td>20,60</td><td>17,86</td></tr>
+<tr><td>40.000</td><td>3,16</td><td>44,29</td><td>37,32</td></tr>
+</tbody>
+</table>
+<p class="clock">Medido nesta máquina, inteiros aleatórios. As três curvas dobram um pouco acima de 2x quando n dobra (n log n). A lacuna de 14–18x entre C e Python é constante, não ordem de crescimento.</p>
+
+<h3>Busca binária com invariante</h3>
+<p>Busca binária em array ordenado é O(log n), e a fonte clássica de bugs: Knuth registra que a primeira publicação é de 1946 e a primeira versão sem erro de borda, de 1962. A defesa é escrever o <strong>invariante</strong> do laço antes do código e derivar tudo dele. Para <code>lower_bound</code> (primeira posição onde o elemento não é menor que x; é o <code>bisect_left</code>):</p>
+<pre><code>def lower_bound(a, x):
+    """Invariante: a[:lo] &lt; x  e  a[hi:] &gt;= x   (a cada iteração)."""
+    lo, hi = 0, len(a)             # a[:0] e a[len:] são vazios: invariante vale por vacuidade
+    while lo &lt; hi:
+        mid = (lo + hi) // 2       # lo &lt;= mid &lt; hi
+        if a[mid] &lt; x:
+            lo = mid + 1           # a[:mid+1] &lt; x, mantém o invariante
+        else:
+            hi = mid               # a[mid:] &gt;= x, mantém o invariante
+    return lo                      # lo == hi: a[:lo] &lt; x e a[lo:] &gt;= x  →  ponto de inserção</code></pre>
+<p>Cada atualização tem uma justificativa de uma linha, e a saída sai do invariante quando <code>lo == hi</code>. O intervalo é semiaberto <code>[lo, hi)</code>; <code>hi = mid</code> (e não <code>mid - 1</code>) e <code>lo = mid + 1</code> decorrem disso. A terminação vem de a distância <code>hi − lo</code> diminuir estritamente a cada passo (porque <code>lo ≤ mid &lt; hi</code>). Com ele, <code>upper_bound</code> (primeiro elemento <em>maior</em> que x) é simétrico, e "x existe?" é <code>i &lt; len(a) and a[i] == x</code> depois de <code>lower_bound</code>. A contagem de ocorrências de x é <code>upper_bound − lower_bound</code>.</p>
+<p><strong>Busca binária sobre a resposta.</strong> O padrão mais valioso: quando a pergunta "a resposta é ≤ k?" é <em>monótona</em> (falso…falso verdadeiro…verdadeiro), você não precisa de array nenhum, só de um predicado. O <code>first_true(lo, hi, pred)</code> do lab implementa isso. Exemplos: o menor tamanho de lote que processa a fila dentro do prazo, a menor taxa de requisições por segundo que satura o serviço, a primeira versão de commit que quebra (o <code>git bisect</code> do <a href="../F01-terminal-git/F01.html">F01</a> é exatamente isto).</p>
+<div class="box net">
+<span class="lbl">Em Python, na prática</span>
+<p>Use <code>bisect.bisect_left</code>/<code>bisect_right</code> (em C, com <code>key=</code> desde o 3.10). A tabela do bloco 1 mostra a diferença para a versão em Python do lab: 0,56 µs contra 0,08 µs em 10⁵ itens. Escreva a sua só para aprender, ou quando o predicado não é um array. Em linguagens com inteiros de largura fixa, <code>(lo + hi) // 2</code> pode estourar; escreva <code>lo + (hi - lo) // 2</code>. O erro apareceu na biblioteca padrão do Java durante anos.</p>
+</div>
+
+<h3>Dois ponteiros</h3>
+<p>Em dados <em>ordenados</em>, dois índices que andam um em direção ao outro eliminam um laço aninhado. O raciocínio é sempre "este elemento não pode fazer parte de nenhuma resposta, descarte-o". Em <code>two_sum_sorted</code>: se <code>a[i] + a[j] &lt; alvo</code>, então <code>a[i]</code> é pequeno demais até com o maior parceiro restante; ande <code>i</code>. Se for maior, <code>a[j]</code> é grande demais até com o menor parceiro; recue <code>j</code>. Cada passo descarta um elemento: O(n) tempo, O(1) espaço, contra O(n²) da força bruta. Se a entrada <em>não</em> está ordenada, ordenar custa O(n log n); a alternativa é o dicionário de valores vistos (O(n) tempo, O(n) espaço, <code>two_sum_hash</code>): a escolha é um trade-off tempo × espaço × se você pode alterar a entrada. Outros usos: remover duplicatas in-loco, particionar (a bandeira holandesa do quicksort), mesclar duas listas ordenadas, verificar palíndromo, o "maior recipiente de água".</p>
+
+<h3>Janela deslizante</h3>
+<p>Para "melhor subsequência contígua": em vez de recalcular cada janela do zero (O(n·k)), atualize incrementalmente: some o que entra, subtraia o que sai. Com tamanho fixo k, <code>max_window_sum</code>:</p>
+<pre><code>janela = sum(a[:k]); melhor = janela
+for i in range(k, len(a)):
+    janela += a[i] - a[i - k]       # entra a[i], sai a[i-k]
+    melhor = max(melhor, janela)</code></pre>
+<p>Com tamanho variável (o maior trecho sem caractere repetido), a janela é <code>[inicio, i]</code>, e o dicionário de última posição de cada caractere empurra o início quando surge uma repetição dentro da janela:</p>
+<pre><code>for i, ch in enumerate(texto):
+    if ch in ultimo and ultimo[ch] &gt;= inicio:   # repetido DENTRO da janela atual
+        inicio = ultimo[ch] + 1
+    ultimo[ch] = i
+    melhor = max(melhor, i - inicio + 1)</code></pre>
+<p>O argumento de custo é de <em>amortização</em> (bloco 1): cada ponteiro só avança, nunca recua; 2n movimentos no total, O(n). Em fluxos (últimas N mensagens, taxa por minuto), a janela vira um <code>deque</code> ou uma estrutura monotônica (deque de candidatos a máximo).</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>O teste <code>ultimo[ch] &gt;= inicio</code> é o que separa a solução correta da quase-correta.</strong> Sem ele, uma repetição <em>fora</em> da janela (já descartada) puxa o início para trás, e a janela volta a incluir caracteres repetidos. Para "abba", a versão sem a condição devolve a resposta errada no segundo "a". É um bug de invariante: a janela deve conter só elementos distintos <em>e</em> o dicionário guarda posições que podem estar obsoletas. Os testes do lab incluem esse caso.</p>
+</div>
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Ordenar com comparador inconsistente.</strong> Uma função <code>key</code> que devolve tipos mistos (<code>None</code> e <code>int</code>), ou um <code>__lt__</code> que não é uma ordem total (<code>NaN</code> em floats: toda comparação com NaN é falsa), não levanta erro e produz uma ordem sem sentido, que pode variar com o tamanho da entrada. Antes de ordenar dados externos, normalize: remova ou isole NaN, e converta chaves para um tipo único.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Merge sort é Θ(n log n) e estável pela regra do empate à esquerda; quicksort é rápido em média, mas pivô fixo em entrada ordenada é quadrático (medido: 268 ms contra 2,8 ms em 4.000 itens); Timsort aproveita runs e é O(n) em dados ordenados. Por comparação, n log n é o piso. Busca binária se escreve a partir do invariante; vale para respostas monótonas, não só arrays. Dois ponteiros e janela deslizante derivam seu O(n) de nunca recuar os ponteiros.</p>
+</div>
+
+<h2 id="b06">Bloco 6 · Grafos: representações, BFS, DFS, ordenação topológica e Dijkstra</h2>
+
+<h3>Por que isso importa</h3>
+<p>Grafo é a forma de dizer "coisas e relações entre elas": dependências de pacotes, chamadas entre funções, páginas e links, passos de um workflow de agente, entidades e relações num grafo de conhecimento, redes viárias. Muitos problemas que não parecem grafos (planejar uma ordem de build, achar o menor número de trocas, detectar um ciclo de dependência) ficam simples depois da modelagem. Este bloco dá os algoritmos e o custo; <em>como</em> usar grafos para executar agentes com estado, checkpoint e para guardar conhecimento (GraphRAG) está no <a href="../M10-graph-engineering-saude-arquitetural/M10.html">M10</a>, que assume este bloco.</p>
+
+<h3>Vocabulário e representações</h3>
+<p>Um grafo G = (V, E): vértices (nós) e arestas (pares de nós). Arestas podem ser <em>direcionadas</em> ou não, e podem ter <em>peso</em>. Um <em>caminho</em> é uma sequência de arestas; um <em>ciclo</em> é um caminho que volta ao início; um <em>DAG</em> é um grafo direcionado sem ciclos. Mede-se o custo em função de <strong>V e E</strong>, nunca de "n". O grafo é <em>esparso</em> quando E ≈ V (redes viárias, dependências) e <em>denso</em> quando E ≈ V².</p>
+<table>
+<thead><tr><th>Representação</th><th>Memória</th><th>aresta (u,v) existe?</th><th>vizinhos de u</th><th>Quando</th></tr></thead>
+<tbody>
+<tr><td>lista de adjacência (<code>dict[nó, list]</code>)</td><td>O(V + E)</td><td>O(grau de u) (ou O(1) com set)</td><td>O(grau de u)</td><td>padrão; grafos esparsos</td></tr>
+<tr><td>matriz de adjacência</td><td>O(V²)</td><td>O(1)</td><td>O(V)</td><td>denso; V pequeno; álgebra linear</td></tr>
+<tr><td>lista de arestas</td><td>O(E)</td><td>O(E)</td><td>O(E)</td><td>ordenar por peso (Kruskal); entrada/saída</td></tr>
+</tbody>
+</table>
+<p>Para um milhão de nós com cinco arestas cada, a lista de adjacência guarda cinco milhões de entradas; a matriz guardaria um trilhão de células. Em Python, <code>dict</code> de listas é quase sempre a resposta (o <code>Graph</code> do lab é exatamente isso); para grafos grandes numéricos, matrizes esparsas (SciPy CSR) ou bibliotecas (NetworkX para prototipar; igraph, graph-tool ou um banco de grafos para escala).</p>
+
+<h3>BFS: busca em largura</h3>
+<p>Uma fila, e uma regra: visitar primeiro tudo a distância 1, depois 2, depois 3. Custo O(V + E). A propriedade que importa: <strong>em grafo não ponderado, a BFS descobre cada nó pelo caminho com menos arestas</strong>; guardando o predecessor de cada nó, reconstrói-se o caminho mais curto. O erro clássico é marcar o nó como visitado ao <em>retirar</em> da fila e não ao <em>inserir</em>: o mesmo nó entra várias vezes e, em grafos densos, a fila cresce e o custo explode.</p>
+<pre><code>def shortest_path_unweighted(g, start, goal):
+    parent = {start: None}                 # parent também serve de conjunto "visto"
+    queue = deque([start])
+    while queue:
+        node = queue.popleft()             # deque: O(1); list.pop(0) seria O(n)
+        if node == goal:
+            ...reconstrói de goal até start por parent...
+        for nxt in g.neighbors(node):
+            if nxt not in parent:          # marca ao ENFILEIRAR
+                parent[nxt] = node
+                queue.append(nxt)</code></pre>
+<p>Aplicações: menor número de saltos, distância em redes sociais, "quantos cliques até a página", propagação por camadas, resolução de labirintos, BFS multi-origem (enfileire várias origens de uma vez: distância ao ponto de interesse mais próximo).</p>
+
+<h3>DFS: busca em profundidade</h3>
+<p>Uma pilha (explícita, ou a pilha de chamadas): siga um caminho até o fim, volte, tente o próximo. Também O(V + E). A DFS não dá caminhos mais curtos, mas dá <em>estrutura</em>: tempos de entrada e saída de cada nó respondem a perguntas sobre ciclos, componentes conexos, pontes e articulações, e a ordem de saída, invertida, é uma ordenação topológica. A versão recursiva é a mais legível e a mais perigosa em Python: a profundidade da recursão é o comprimento do maior caminho, e o limite padrão é 1000 chamadas. O lab traz as duas versões, e o teste que mostra a recursiva estourando num grafo-caminho de milhares de nós. Em produção, DFS iterativa com pilha explícita:</p>
+<pre><code>stack = [start]; seen = set(); order = []
+while stack:
+    node = stack.pop()
+    if node in seen: continue              # aqui marca-se ao DESEMPILHAR: o nó pode estar na pilha 2x
+    seen.add(node); order.append(node)
+    stack.extend(reversed(g.neighbors(node)))   # reversed: o 1º vizinho sai primeiro</code></pre>
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Onde marcar "visitado" é diferente em BFS e DFS iterativa, e copiar um código para o outro quebra.</strong> Na BFS, marque ao enfileirar (uma entrada por nó, garante o caminho mais curto). Na DFS iterativa com pilha, a forma simples empilha vizinhos ainda não vistos e marca ao desempilhar, aceitando duplicatas na pilha (até O(E) entradas). Se você marcar ao empilhar na DFS, a ordem de visita deixa de ser a de uma DFS verdadeira (o grafo é percorrido por outra ordem e a ordem de término, base do topológico, fica errada).</p>
+</div>
+
+<h3>Ordenação topológica</h3>
+<p>Em um DAG, uma ordenação topológica coloca cada nó depois de todos os seus pré-requisitos. É a resposta para "em que ordem compilo/instalo/executo?" e a espinha de qualquer motor de workflow (Airflow, Make, Bazel, o próprio grafo de um agente com dependências entre etapas). Só existe se <strong>não há ciclo</strong>; detectar o ciclo é parte do problema. O algoritmo de Kahn: calcule, para cada nó, quantos pré-requisitos faltam; enfileire os que têm zero; ao processar um nó, decremente os dependentes e enfileire quem chegou a zero. Se ao fim sobraram nós, há ciclo. O(V + E).</p>
+<pre><code>$ uv run python -m algos.demo graph      # trecho
+build order: ['core', 'lib', 'util', 'app', 'tests']
+error: dependency cycle: app -> tests -> core -> lib -> app</code></pre>
+<p>Note a mensagem de erro: o lab não diz apenas "há ciclo"; devolve <em>um ciclo concreto</em> (cada nó que sobrou tem um pré-requisito que também sobrou; seguir esses elos tem que repetir um nó). Uma mensagem acionável é a diferença entre "o build falhou" e "remova a dependência de <code>core</code> para <code>tests</code>". Mais de uma ordem válida costuma existir; o resultado depende do desempate (use ordenação por nome se precisar de determinismo, por exemplo para reproduzir builds).</p>
+
+<h3>Dijkstra: menor caminho com pesos</h3>
+<p>Quando as arestas têm custo (distância, latência, preço), contar arestas deixa de servir. Dijkstra mantém, para cada nó, a melhor distância conhecida, e a cada passo <em>fixa</em> o nó não fixado de menor distância (via heap) e relaxa seus vizinhos: se <code>dist[u] + w &lt; dist[v]</code>, atualiza. A correção depende de <strong>pesos não negativos</strong>: com uma aresta negativa, um nó já fixado poderia ser melhorado depois, e o argumento "a menor distância pendente já é definitiva" cai. Para pesos negativos use Bellman–Ford (O(V·E)); para todos os pares, Floyd–Warshall (O(V³)); com bom palpite de direção, A*. Custo com heap binário: O((V + E) log V).</p>
+<p>Como <code>heapq</code> não tem "diminuir chave", o lab usa a remoção preguiçosa (bloco 4): insere uma entrada nova a cada melhoria e descarta as obsoletas ao retirá-las; o contador desempata para o heap nunca comparar dois nós.</p>
+<pre><code>$ uv run python -m algos.demo graph      # trecho final
+distances from A: {'A': 0.0, 'B': 3.0, 'C': 2.0, 'D': 8.0}
+path A -> D: ['A', 'C', 'B', 'D']</code></pre>
+<p>A aresta direta A–B custa 4, mas A→C→B custa 2 + 1 = 3: a BFS (menos arestas) escolheria o caminho errado. O lab também rejeita pesos negativos com <code>ValueError</code>: falhar alto é melhor que devolver um número plausível e errado.</p>
+
+<h3>Aplicações e escolha do algoritmo</h3>
+<table>
+<thead><tr><th>Pergunta</th><th>Algoritmo</th><th>Custo</th></tr></thead>
+<tbody>
+<tr><td>menor número de saltos</td><td>BFS</td><td>O(V + E)</td></tr>
+<tr><td>está conectado? quantos componentes?</td><td>BFS/DFS (ou union-find)</td><td>O(V + E)</td></tr>
+<tr><td>há ciclo? qual ordem respeita dependências?</td><td>topológica (Kahn/DFS)</td><td>O(V + E)</td></tr>
+<tr><td>menor custo, pesos ≥ 0</td><td>Dijkstra</td><td>O((V + E) log V)</td></tr>
+<tr><td>menor custo, pesos negativos</td><td>Bellman–Ford</td><td>O(V·E)</td></tr>
+<tr><td>conectar tudo com custo mínimo</td><td>árvore geradora mínima (Kruskal/Prim)</td><td>O(E log V)</td></tr>
+<tr><td>relevância por estrutura de links</td><td>PageRank (iteração de potência)</td><td>O(E) por iteração</td></tr>
+</tbody>
+</table>
+<p>Em sistemas de IA: dependências entre etapas de um pipeline (topológica), alcance de impacto de uma mudança no código (BFS no grafo de chamadas), expansão de vizinhança em GraphRAG (BFS limitado a k saltos), roteamento de custo/latência entre provedores de modelo (Dijkstra), detecção de ciclos em agentes que se chamam mutuamente (DFS com cores). Tudo isso reaparece no <a href="../M10-graph-engineering-saude-arquitetural/M10.html">M10</a>.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Grafos reais não cabem nas premissas do livro.</strong> (1) <em>Super-nós</em>: um nó com milhões de vizinhos (uma biblioteca importada por todo o projeto) faz o "k saltos" explodir; limite o grau ou o orçamento de nós por consulta. (2) <em>Identidade de nó</em>: se a mesma entidade aparece com dois nomes, o grafo se parte em dois e todo caminho "mais curto" mente; normalize antes de modelar. (3) <em>Pesos de natureza diferente</em> (latência + preço) não se somam sem decisão de negócio. (4) Em grafos que mudam, recalcular tudo a cada consulta é o O(V + E) que ninguém previu: existem algoritmos incrementais, mas medir primeiro quase sempre mostra que o cache por versão do grafo resolve.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Modele como G = (V, E) e meça em V e E. Lista de adjacência é o padrão. BFS dá o menor número de arestas (marque ao enfileirar); DFS dá estrutura, e a versão iterativa evita o limite de recursão. Kahn ordena um DAG e deve devolver um ciclo concreto quando falha. Dijkstra exige pesos não negativos e usa heap com remoção preguiçosa: O((V + E) log V).</p>
+</div>
+
+<h2 id="b07">Bloco 7 · Técnicas: recursão, divisão e conquista, programação dinâmica, guloso, backtracking</h2>
+
+<h3>Por que isso importa</h3>
+<p>Os seis blocos anteriores dão estruturas e algoritmos prontos. Problemas novos não vêm com rótulo; vêm como "dado este histórico de conversa, escolha quais mensagens manter no contexto dentro de um orçamento de tokens" (mochila), "qual a menor sequência de edições entre dois textos" (programação dinâmica), "escalone etapas com prazo" (guloso ou DP), "gere todas as combinações válidas de configuração" (backtracking). Este bloco dá cinco técnicas de projeto e um roteiro para escolher entre elas.</p>
+
+<h3>Recursão e o limite do Python</h3>
+<p>Recursão é definir a solução em termos de instâncias menores do mesmo problema: um caso base e um passo que reduz. Cada chamada ocupa um <em>quadro</em> de pilha (variáveis locais, endereço de retorno), então a profundidade é memória. O CPython limita a profundidade (<code>sys.getrecursionlimit()</code>, padrão 1000) e levanta <code>RecursionError</code> ao exceder; ele não faz otimização de chamada em cauda, por decisão de design (preservar rastros de pilha legíveis). O laboratório mostra:</p>
+<pre><code>$ uv run python -m algos.demo recursion
+recursion limit: 1000
+depth reached by a trivial function (varies by interpreter state): 994
+RecursionError: maximum recursion depth exceeded</code></pre>
+<p>A profundidade atingível (994) é menor que 1000 porque o interpretador e as chamadas anteriores já ocupam quadros. Três saídas, em ordem de preferência: (1) <strong>transformar em laço com pilha explícita</strong> (como a DFS iterativa do bloco 6; a pilha vive no heap do processo e só é limitada pela memória); (2) <strong>reformular de baixo para cima</strong> (programação dinâmica iterativa, abaixo); (3) aumentar o limite com <code>sys.setrecursionlimit</code>, que é um paliativo: troca <code>RecursionError</code> limpo por consumo de memória e, em chamadas que passam por C (<code>__eq__</code> recursivo, <code>repr</code>, <code>json</code>), por uma falha do processo. Em dados de tamanho controlado por terceiros, é uma negação de serviço pronta: um JSON profundamente aninhado derruba o parser recursivo.</p>
+
+<h3>Divisão e conquista</h3>
+<p>Divida em subproblemas <em>independentes</em> do mesmo tipo, resolva cada um, combine. O custo vem da recorrência <code>T(n) = a·T(n/b) + f(n)</code>, e o Teorema Mestre compara f(n) com n^(log_b a): se a combinação domina, T = Θ(f); se as folhas dominam, T = Θ(n^(log_b a)); se empatam, multiplica-se por log n. Casos que você reconhece sem fazer conta:</p>
+<table>
+<thead><tr><th>Algoritmo</th><th>Recorrência</th><th>Custo</th></tr></thead>
+<tbody>
+<tr><td>busca binária</td><td>T(n) = T(n/2) + O(1)</td><td>O(log n)</td></tr>
+<tr><td>potência por quadrados</td><td>T(n) = T(n/2) + O(1)</td><td>O(log n) multiplicações</td></tr>
+<tr><td>merge sort</td><td>T(n) = 2T(n/2) + O(n)</td><td>O(n log n)</td></tr>
+<tr><td>soma de lista por metades</td><td>T(n) = 2T(n/2) + O(1)</td><td>O(n)</td></tr>
+</tbody>
+</table>
+<p>O exemplo do lab é a <strong>potência modular</strong>: <code>7**2026 mod 1000</code> sem formar o número de ~1700 dígitos, elevando ao quadrado a cada bit do expoente (≈11 multiplicações em vez de 2026). Reaparece em criptografia (RSA, troca de chaves) e em hashes de string:</p>
+<pre><code>$ uv run python -m algos.demo dp       # última linha
+fast_power(7, 2026, 1000) = 649 | pow: 649</code></pre>
+<p>A condição "subproblemas <em>independentes</em>" é o que distingue esta técnica da seguinte. Se os subproblemas se sobrepõem, a divisão e conquista ingênua recalcula os mesmos casos exponencialmente.</p>
+
+<h3>Programação dinâmica</h3>
+<p>Programação dinâmica (DP) resolve problemas com duas propriedades: <strong>subestrutura ótima</strong> (a solução ótima contém soluções ótimas de subproblemas) e <strong>subproblemas sobrepostos</strong> (os mesmos subproblemas aparecem muitas vezes). A ideia é calcular cada subproblema uma vez e guardar. O exemplo mínimo é Fibonacci, medido nesta máquina em CPython 3.14.7:</p>
+<table>
+<thead><tr><th>Versão</th><th>chamadas para <code>fib(30)</code></th><th>tempo (nesta máquina)</th></tr></thead>
+<tbody>
+<tr><td>recursiva ingênua</td><td>2.692.537</td><td>85 ms</td></tr>
+<tr><td><code>@functools.cache</code> (top-down)</td><td>31</td><td>14 µs</td></tr>
+</tbody>
+</table>
+<p>A diferença é de crescimento: a ingênua cresce com φⁿ (≈1,6ⁿ); com <code>fib(40)</code> seriam 330 milhões de chamadas. A versão memoizada faz uma chamada por valor de n.</p>
+<h4>Receita em quatro passos</h4>
+<ol>
+<li><strong>Defina o estado</strong>: que parâmetros identificam um subproblema? (<code>d[i][j]</code> = custo de transformar <code>a[:i]</code> em <code>b[:j]</code>.)</li>
+<li><strong>Escreva a recorrência</strong> com os casos base.</li>
+<li><strong>Conte estados × custo por estado</strong>: é a complexidade (edit distance: m·n estados, O(1) cada → O(m·n)).</li>
+<li><strong>Escolha a ordem</strong>: top-down (recursão com memo) ou bottom-up (tabela preenchida por ordem de dependência).</li>
+</ol>
+<h4>Exemplo trabalhado: distância de edição</h4>
+<p>Menor número de inserções, remoções e substituições que transformam <code>a</code> em <code>b</code>. Recorrência: se os últimos caracteres coincidem, <code>d(i,j) = d(i-1,j-1)</code>; senão, <code>1 + min(d(i-1,j), d(i,j-1), d(i-1,j-1))</code> (remover, inserir, substituir). Casos base: <code>d(i,0) = i</code>, <code>d(0,j) = j</code>. Cada célula depende da de cima, da da esquerda e da diagonal, então só a linha anterior precisa ficar na memória:</p>
+<pre><code>def edit_distance(a, b):
+    if len(a) &lt; len(b): a, b = b, a             # a tabela tem len(b)+1 colunas: faça b a menor
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i] + [0] * len(b)
+        for j, cb in enumerate(b, 1):
+            cur[j] = min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (ca != cb))
+        prev = cur
+    return prev[-1]</code></pre>
+<pre><code>edit_distance('kitten', 'sitting') = 3</code></pre>
+<p>Tempo O(m·n), memória O(min(m, n)). A versão top-down com <code>@cache</code> é mais curta e igualmente correta (<code>edit_distance_memo</code> no lab), mas recorre até <code>len(a)+len(b)</code> níveis. Medido: duas strings de 400 caracteres passam (54 ms); de 600, a versão top-down levanta <code>RecursionError</code>, enquanto a bottom-up resolve 1000 × 1000 em 74 ms. Esse é o critério prático: <strong>top-down para escrever e verificar rápido; bottom-up quando o tamanho pode exceder a pilha ou você quer reduzir a memória</strong>. Usos reais: diff de texto, correção ortográfica, alinhamento de sequências (genômica), métricas de avaliação de transcrição (WER), mochila para escolher o que cabe no orçamento de contexto.</p>
+
+<h3>Guloso</h3>
+<p>Uma estratégia gulosa faz, a cada passo, a melhor escolha local e nunca volta atrás. É a mais simples e mais rápida, e só é correta quando o problema tem a <strong>propriedade de escolha gulosa</strong> (existe uma solução ótima que contém a escolha local) mais subestrutura ótima. Casos comprovados: seleção de intervalos por menor tempo de término (agendar o máximo de reuniões sem sobreposição), Huffman, Dijkstra e Prim/Kruskal, troco com moedas "canônicas". O lab confronta guloso e DP no troco:</p>
+<pre><code>$ uv run python -m algos.demo dp       # trecho
+coins=[1, 5, 10, 25] amount=63: greedy=6 dp=6
+coins=[1, 3, 4] amount=6: greedy=3 dp=2
+coins=[4, 3] amount=6: greedy=None dp=2</code></pre>
+<p>Com {1,5,10,25} o guloso acerta. Com {1,3,4} e valor 6 ele pega 4+1+1 (3 moedas) e perde 3+3 (2). Com {4,3} e valor 6 o guloso pega o 4 e fica com resto 2, que nenhuma moeda cobre: devolve <em>falha</em> quando existe solução. Moral: quem aplica guloso sem provar a propriedade está apostando. A técnica de prova padrão é o <em>argumento de troca</em>: tome uma solução ótima qualquer e mostre que trocar sua primeira escolha pela gulosa não a piora. Sem prova nem contraexemplo exaustivo (compare com força bruta em entradas pequenas aleatórias, ou com a DP), use DP.</p>
+
+<h3>Backtracking</h3>
+<p>Construa a solução passo a passo, escolhendo entre candidatos; se uma escolha não pode levar a uma solução válida, <em>desfaça</em> e tente a próxima. É busca em profundidade sobre o espaço de decisões, com <strong>poda</strong>: cortar o ramo assim que uma restrição é violada. Sem poda, é força bruta (2ⁿ subconjuntos, n! permutações). O padrão é sempre: escolher, recursar, desfazer.</p>
+<pre><code>def place(row):
+    if row == n: return 1
+    total = 0
+    for col in range(n):
+        if col in cols or row - col in diag or row + col in anti:
+            continue                      # poda: este ramo já é inválido
+        cols.add(col); diag.add(row - col); anti.add(row + col)    # escolhe
+        total += place(row + 1)                                    # recursa
+        cols.remove(col); diag.remove(row - col); anti.remove(row + col)   # desfaz
+    return total</code></pre>
+<p>As N rainhas, com conjuntos de colunas e diagonais ocupadas, contam as soluções: 4 para n = 6, 92 para n = 8, 724 para n = 10 (medido: 22 ms, em vez dos 10¹⁰ posicionamentos da força bruta ingênua). A qualidade da poda decide tudo; a ordem em que você testa as restrições (a mais restritiva primeiro) também. Aplicações: satisfação de restrições (sudoku, configuração), geração de combinações com regras, resolução de dependências de versão (resolvedores de pacotes são backtracking com poda inteligente). Quando o espaço é grande demais mesmo com poda, as saídas são heurísticas e busca local; ou alterar o modelo.</p>
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Estado compartilhado e não desfeito.</strong> O bug clássico de backtracking é anexar à lista de resultados a <em>mesma lista mutável</em> (<code>found.append(chosen)</code>) em vez de uma cópia (<code>list(chosen)</code>): ao final todos os resultados apontam para a mesma lista, já vazia. O outro é esquecer um dos "desfaz": o código funciona nos primeiros ramos e produz respostas erradas depois. Teste sempre contra a força bruta em entradas pequenas e compare as contagens.</p>
+</div>
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong><code>@cache</code> sem limite é vazamento de memória, e <code>lru_cache</code> em método prende o <code>self</code>.</strong> <code>functools.cache</code> guarda todo resultado para sempre; em um serviço de longa duração com argumentos variados, a memória cresce sem fim. Use <code>lru_cache(maxsize=N)</code> e meça a taxa de acerto (<code>cache_info()</code>). Em métodos, o cache referencia <code>self</code> e impede a coleta do objeto; prefira um cache no nível do módulo ou por instância. E a memoização exige argumentos hasheáveis e funções puras: uma função que lê relógio, arquivo ou banco devolve resultado velho.</p>
+</div>
+
+<h3>Roteiro para um problema novo</h3>
+<p>Antes de escrever código, percorra a lista abaixo. Ela é o que um sênior faz, mais rápido, de cabeça:</p>
+<ol>
+<li><strong>Reformule.</strong> Entrada, saída, restrições de tamanho (n = 10³ ou 10⁷?), o que é "ótimo". Escreva 2–3 exemplos pequenos, incluindo o vazio e o de um elemento. O tamanho de n já elimina famílias inteiras: n ≈ 10⁵ pede O(n log n) ou menos; n ≈ 20 aceita 2ⁿ.</li>
+<li><strong>Faça a solução bruta e correta.</strong> Mesmo que lenta. Ela é seu oráculo para testar a versão rápida com entradas aleatórias pequenas.</li>
+<li><strong>Procure o gargalo da bruta.</strong> Onde ela repete trabalho? Busca linear repetida → dict/set ou busca binária. Mínimo/máximo repetido → heap. Subcálculos repetidos → DP/memo. Pares de elementos → ordenar + dois ponteiros, ou hash.</li>
+<li><strong>Reconheça o padrão.</strong> "Menor número de passos" → BFS. "Ordem com dependências" → topológica. "Menor custo com pesos" → Dijkstra. "Melhor entre trechos contíguos" → janela. "Todas as soluções válidas" → backtracking. "Contar/otimizar com subproblemas repetidos" → DP. "Escolha local óbvia" → guloso, <em>com prova ou contraexemplo testado</em>. "Resposta monótona" → busca binária sobre a resposta.</li>
+<li><strong>Declare o custo e o trade-off.</strong> Tempo e memória em função dos tamanhos relevantes; o que você está pagando e por quê.</li>
+<li><strong>Teste contra o oráculo</strong> e contra bordas (vazio, um elemento, tudo igual, já ordenado, ordenado ao contrário, ciclo, desconexo, entrada máxima).</li>
+<li><strong>Meça se importa.</strong> Só otimize constantes depois de provar que o trecho é quente.</li>
+</ol>
+<p>Esse roteiro é também o prompt de revisão para código gerado por IA: peça a solução bruta, o custo declarado, o teste contra o oráculo e as bordas. Um modelo costuma entregar a segunda e a quinta sem pedir; é você quem exige a primeira e a sexta.</p>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Recursão custa um quadro de pilha por nível e o Python limita a 1000: converta em laço com pilha explícita ou em DP iterativa. Divisão e conquista exige subproblemas independentes; DP resolve os sobrepostos guardando cada estado uma vez (medido: 2,7 milhões de chamadas viram 31). Guloso só vale com prova (moedas {1,3,4} desmentem). Backtracking é busca com escolha, recursão, desfaz e poda. Para um problema novo: reformule, faça a bruta, ache o gargalo, reconheça o padrão, declare o custo, teste contra a bruta.</p>
+</div>
+
+<h2 id="lab-guiado">Laboratório guiado F03</h2>
+<p>O laboratório é o pacote <code>algos</code> (<code>lab/</code>): estruturas e algoritmos do módulo escritos do zero, sem dependências de execução, com <strong>58 testes</strong>, tipagem estrita e um conjunto de micro-benchmarks. Você trabalha numa <em>cópia descartável</em>; a referência não é alterada. Todas as saídas abaixo são de execução real em 11/10/2026 (Linux aarch64, CPython 3.14.7, uv 0.12.13). Os tempos dos benchmarks são os da <em>máquina onde foram medidos</em>; os seus serão diferentes, as razões devem ser parecidas.</p>
+
+<div class="step"><p><span class="n">1</span><strong>Crie a cópia de trabalho e instale.</strong></p>
+<pre><code>$ cd modulos/F03-estruturas-dados-algoritmos/lab
+$ python3 create_working_copy.py
+/tmp/f03-r2_0f5am                       # o nome do diretório muda
+$ cd /tmp/f03-r2_0f5am && uv sync</code></pre>
+<p><em>Diagnóstico:</em> "destino não está vazio" se você passou <code>--dest</code> para um diretório com arquivos; use outro.</p></div>
+
+<div class="step"><p><span class="n">2</span><strong>Rode os gates.</strong> Quatro verificações, todas devem passar.</p>
+<pre><code>$ uv run pytest -q
+..........................................................               [100%]
+58 passed in 3.08s
+$ uv run ruff check . &amp;&amp; uv run ruff format --check .
+All checks passed!
+24 files already formatted
+$ uv run mypy --strict src tests
+Success: no issues found in 22 source files</code></pre></div>
+
+<div class="step"><p><span class="n">3</span><strong>Meça o custo da fila ruim (blocos 1–2).</strong></p>
+<pre><code>$ uv run python -m algos.bench            # cerca de 20 s; use --quick para tamanhos pequenos
+Drain a container from the front (total ms)
+     n  list.pop(0)  deque.popleft  CircularDeque.popleft  list / deque
+ 10,000         5.31           0.14                   1.77           38x
+ 80,000       448.20           1.03                  15.30          434x</code></pre>
+<p><em>O que verificar:</em> quando n dobra, <code>list.pop(0)</code> deve multiplicar por ≈4 e o deque por ≈2. Se as duas colunas crescerem igual, você mediu o setup e não a operação (reveja se a lista é recriada a cada repetição).</p></div>
+
+<div class="step"><p><span class="n">4</span><strong>Veja a tabela hash degradar (bloco 3).</strong></p>
+<pre><code>$ uv run python -m algos.demo table
+...
+300 distinct hashes: worst lookup inspects 1
+300 equal hashes:    last key inspects    300</code></pre>
+<p>Edite <code>SameHash.__hash__</code> no demo para devolver <code>self.value</code>: a última linha deve cair para 1 (ou próximo). Depois rode os testes de controle: <code>uv run pytest -q tests/test_hash_table.py</code>.</p></div>
+
+<div class="step"><p><span class="n">5</span><strong>Compare heap, BST e grafo (blocos 4 e 6).</strong></p>
+<pre><code>$ uv run python -m algos.demo heap | tail -3
+top_k(data, 3): [97, 93, 92]
+BST height, 1000 keys inserted in order:    1000
+BST height, 1000 keys inserted shuffled:    20
+$ uv run python -m algos.demo graph
+build order: ['core', 'lib', 'util', 'app', 'tests']
+error: dependency cycle: app -> tests -> core -> lib -> app
+distances from A: {'A': 0.0, 'B': 3.0, 'C': 2.0, 'D': 8.0}
+path A -> D: ['A', 'C', 'B', 'D']</code></pre>
+<p><em>Exercício:</em> troque o peso da aresta <code>("C","B",1)</code> por <code>-1</code> no demo e confirme que <code>dijkstra</code> levanta <code>ValueError</code> em vez de devolver distâncias.</p></div>
+
+<div class="step"><p><span class="n">6</span><strong>Teste os testes: três mutações (blocos 3 e 5).</strong> Uma suíte vale o que reprova. Em cada mutação, altere uma linha na cópia de trabalho, rode <code>uv run pytest -q</code>, observe a falha e <em>desfaça</em> a edição.</p>
+<pre><code># (a) sorting.py: troque  if right[j][0] &lt; left[i][0]:   por   &lt;=
+FAILED tests/test_sorting_searching.py::test_merge_sort_is_stable
+1 failed, 57 passed
+
+# (b) searching.py, em lower_bound: troque  hi = mid   por   hi = mid - 1
+FAILED tests/test_sorting_searching.py::test_lower_and_upper_bound_match_bisect
+1 failed, 57 passed
+
+# (c) hash_table.py, em __delitem__: troque  = _TOMBSTONE   por   = None
+FAILED tests/test_hash_table.py::test_deleting_the_head_of_a_collision_chain_keeps_the_tail_reachable
+FAILED tests/test_hash_table.py::test_reinsert_after_delete_reuses_a_tombstone
+2 failed, 56 passed</code></pre>
+<p><em>Nota de honestidade:</em> na primeira versão do lab, a mutação (c) era pega por um único teste, sobre a contagem de lápides; nenhum verificava que uma chave <em>atrás</em> da removida continuava alcançável. O teste de cadeia com <code>SameHash</code> foi acrescentado justamente por isso: a mutação mostrou uma lacuna que a cobertura de linhas não mostraria.</p></div>
+
+<div class="step"><p><span class="n">7</span><strong>Prove o limite de recursão (bloco 7).</strong></p>
+<pre><code>$ uv run python -m algos.demo recursion
+recursion limit: 1000
+depth reached by a trivial function (varies by interpreter state): 994
+RecursionError: maximum recursion depth exceeded
+$ uv run python -m algos.demo dp | head -6
+edit_distance('kitten', 'sitting') = 3
+coins=[1, 5, 10, 25] amount=63: greedy=6 dp=6
+coins=[1, 3, 4] amount=6: greedy=3 dp=2
+coins=[4, 3] amount=6: greedy=None dp=2</code></pre>
+<p><em>Exercício:</em> escreva um script que chame <code>edit_distance_memo</code> com strings de tamanho 300, 500, 700 e anote onde passa a falhar; compare com <code>edit_distance</code> e com o limite.</p></div>
+
+<div class="box ok">
+<span class="lbl">Entregáveis verificados (mostrar rodando)</span>
+<ol>
+<li>Gates verdes: <code>pytest</code> (58 testes), <code>ruff check</code>, <code>ruff format --check</code>, <code>mypy --strict</code>.</li>
+<li>Tabela de benchmark da fila com razões ≈4 (lista) e ≈2 (deque) quando n dobra.</li>
+<li>Três mutações rejeitadas pela suíte e revertidas.</li>
+<li>Ciclo de dependência reportado como caminho concreto; Dijkstra recusando peso negativo.</li>
+</ol>
+</div>
+
+<h2 id="diagnostico">Tabela de Diagnóstico</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Serviço lento só com volume real; teste pequeno passa</td><td>operador O(n) dentro de laço (<code>in lista</code>, <code>pop(0)</code>, <code>insert(0,…)</code>, fatia, <code>+</code> de listas)</td><td>troque por set/dict/deque/bisect; confirme medindo com n crescente e olhando a razão</td></tr>
+<tr><td><code>dict</code> ou <code>set</code> de objetos próprios fica quadrático</td><td><code>__hash__</code> constante ou fraco (poucos valores distintos)</td><td>hash a partir dos mesmos campos de <code>__eq__</code> (<code>hash((a, b))</code>); <code>frozen=True</code> em dataclass</td></tr>
+<tr><td>Item inserido "sumiu" do dict/set</td><td>campo que entra no hash foi mutado depois da inserção</td><td>chave imutável; reinsira após mudar; nunca use objeto mutável como chave</td></tr>
+<tr><td>Resultado difere entre execuções (ordem de set, <code>hash()</code>)</td><td>hash de <code>str</code>/<code>bytes</code> aleatorizado por processo</td><td>não persista nem compare <code>hash()</code> entre processos; use <code>hashlib</code>; ordene antes de comparar</td></tr>
+<tr><td>Memória cresce sem parar num serviço com memoização</td><td><code>@cache</code> sem limite, ou cache preso em <code>self</code></td><td><code>lru_cache(maxsize=…)</code>, cache por módulo, monitore <code>cache_info()</code></td></tr>
+<tr><td>Busca binária em laço infinito ou fora por um</td><td>intervalo/atualização escolhidos sem invariante (<code>mid</code> vs <code>mid+1</code>)</td><td>escreva o invariante; use <code>[lo, hi)</code>; compare com <code>bisect</code> em teste aleatório</td></tr>
+<tr><td>Ordenação multi-chave sai embaralhada</td><td>passadas em ordem errada, ou sort instável</td><td>ordene da chave menos para a mais significativa com <code>sorted</code> (estável), ou uma tupla como <code>key</code></td></tr>
+<tr><td><code>RecursionError</code> em DFS/DP/parser</td><td>profundidade &gt; ~1000 (grafo longo, entrada aninhada)</td><td>pilha explícita ou DP bottom-up; limite de profundidade na entrada não confiável</td></tr>
+<tr><td>BFS devolve caminho mais longo / fila gigante</td><td>nó marcado ao desenfileirar, ou grafo ponderado</td><td>marque ao enfileirar; com pesos, Dijkstra</td></tr>
+<tr><td>Dijkstra devolve distância "plausível" errada</td><td>aresta de peso negativo</td><td>valide pesos na entrada; Bellman–Ford se negativos forem reais</td></tr>
+<tr><td>Guloso passa nos exemplos e falha em produção</td><td>sem propriedade de escolha gulosa; testes só em casos "bonitos"</td><td>compare com DP/força bruta em entradas aleatórias pequenas</td></tr>
+<tr><td>Backtracking devolve resultados repetidos ou vazios</td><td>lista mutável compartilhada sem cópia; "desfaz" faltando</td><td><code>list(chosen)</code> ao registrar; pareie cada escolha com seu desfazer</td></tr>
+<tr><td>Quicksort próprio trava em dados ordenados ou repetidos</td><td>pivô fixo; partição em duas vias com muitos iguais</td><td>pivô aleatório/mediana de três, partição em três vias; na prática, <code>sorted</code></td></tr>
+</tbody>
+</table>
+
+<h2 id="checkpoint">Checkpoint F03</h2>
+<p>Responda por escrito, em poucas linhas, e confira com a rubrica. Para cada cenário, "Basta" é o mínimo para seguir; "Reprova" é a resposta que indica que o bloco precisa ser relido.</p>
+
+<h4>1 · Fila de tarefas lenta (blocos 1–2)</h4>
+<p>Um worker consome tarefas de uma <code>list</code> com <code>fila.pop(0)</code>. Com 5 mil tarefas, está ótimo; com 500 mil, passa de minutos. Explique a causa, dê a correção, e diga que medição provaria a hipótese.</p>
+<p><strong>Basta:</strong> <code>pop(0)</code> é O(n) (desloca todos os ponteiros), logo esvaziar a fila é O(n²); trocar por <code>deque.popleft()</code>; medir o tempo para n e 2n e ver razão ≈4 contra ≈2. <strong>Reprova:</strong> "o Python é lento", "usar threads", ou propor um índice de cabeça sem tratar a retenção de memória e sem medir.</p>
+
+<h4>2 · Chave de dicionário (bloco 3)</h4>
+<p>Uma classe <code>Pedido</code> define <code>__eq__</code> comparando <code>id</code> e <code>itens</code>, e <code>__hash__</code> como <code>hash(self.id)</code>. Alguém adiciona itens a um pedido já inserido num dict. O que acontece, o contrato está violado e como desenhar melhor?</p>
+<p><strong>Basta:</strong> o contrato (iguais ⇒ mesmo hash) <em>não</em> é violado, porque o hash usa só <code>id</code>, que é imutável; o problema é outro: <code>__eq__</code> mutável faz dois pedidos "iguais" passarem a ser diferentes sem mudar de lugar, então o dict segue funcionando, mas a semântica de igualdade muda sob os pés do contêiner. Melhor: chave pelo <code>id</code> (imutável) e o pedido como valor; ou dataclass congelada. <strong>Reprova:</strong> dizer que o hash precisa incluir todos os campos, ou que o dict "se reorganiza sozinho" ao mutar.</p>
+
+<h4>3 · Os 20 mais frequentes (blocos 3–4)</h4>
+<p>Há um arquivo de log de 80 GB. Você precisa dos 20 IPs mais frequentes, com uma máquina de 16 GB. Descreva a estratégia e o custo.</p>
+<p><strong>Basta:</strong> contar em passada única com <code>Counter</code> se o número de IPs <em>distintos</em> couber em memória (o arquivo não precisa caber); depois <code>heapq.nlargest(20, …)</code>, O(d log 20). Se os distintos não couberem: particionar por hash do IP em N arquivos, contar cada partição e mesclar os top-20 locais (o top global está na união dos top-20 de cada partição, porque os IPs são disjuntos). <strong>Reprova:</strong> carregar o arquivo inteiro ou ordenar tudo sem justificar; ou propor top-20 por amostragem sem dizer o erro.</p>
+
+<h4>4 · Busca binária sem erro (bloco 5)</h4>
+<p>Escreva (ou descreva) a busca do primeiro índice com <code>a[i] &gt;= x</code> em array ordenado, com o invariante, e diga como contar as ocorrências de x.</p>
+<p><strong>Basta:</strong> intervalo <code>[lo, hi)</code>; invariante <code>a[:lo] &lt; x</code> e <code>a[hi:] &gt;= x</code>; <code>lo = mid+1</code> se <code>a[mid] &lt; x</code>, senão <code>hi = mid</code>; devolve <code>lo</code>; contagem = <code>upper_bound(x) − lower_bound(x)</code>. <strong>Reprova:</strong> código sem justificativa de cada atualização, ou que funcione só em entradas "normais" (vazio, um elemento, x menor que tudo, maior que tudo).</p>
+
+<h4>5 · Ordem de build (bloco 6)</h4>
+<p>Um monorepo tem 400 pacotes com dependências declaradas. Diga como calcular a ordem de build, como reportar um ciclo de forma útil e como reconstruir só o que mudou.</p>
+<p><strong>Basta:</strong> grafo direcionado pré-requisito → dependente; Kahn em O(V+E); ao falhar, extrair e mostrar <em>um ciclo concreto</em> entre os nós remanescentes; para o incremental, BFS/DFS sobre as arestas inversas a partir dos pacotes alterados, para achar os dependentes transitivos. <strong>Reprova:</strong> tentar ordenar por nome/profundidade sem tratar ciclos, ou "rodar tudo em paralelo".</p>
+
+<h4>6 · Escolha de técnica (bloco 7)</h4>
+<p>Você precisa escolher mensagens para caber num contexto de 8.000 tokens maximizando a relevância somada, onde cada mensagem tem custo em tokens e uma pontuação. Guloso por pontuação/custo resolve? O que fazer?</p>
+<p><strong>Basta:</strong> é mochila 0/1; o guloso por razão pontuação/custo não é ótimo em geral (pode desperdiçar espaço com um item grande e valioso); DP pseudo-polinomial O(n·W) para a solução exata (com W = 8.000), ou guloso como aproximação declarada, comparado com a DP em amostras. Mencionar que mensagens contíguas e a recência mudam o modelo. <strong>Reprova:</strong> afirmar que o guloso é ótimo sem prova, ou força bruta sobre 2ⁿ subconjuntos.</p>
+
+<h4>7 · Revisão de código de IA (todo o módulo)</h4>
+<p>Um agente gerou uma função que "encontra os documentos duplicados" com dois laços aninhados sobre uma lista de 200 mil documentos e testes com 10 itens. Faça o roteiro de revisão do bloco 7.</p>
+<p><strong>Basta:</strong> declarar o O(n²) (≈2·10¹⁰ comparações); propor chave de igualdade (hash do conteúdo normalizado) e agrupamento em dict em O(n); manter a versão de dois laços como oráculo em testes com entradas aleatórias pequenas; testar bordas (vazio, todos iguais, quase iguais); medir com n crescente. <strong>Reprova:</strong> aceitar porque os testes passam, ou "otimizar" trocando a lista por um array NumPy sem mudar a ordem de crescimento.</p>
+
+<h2 id="fontes">Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://docs.python.org/3/library/stdtypes.html#lists">Python: tipos de sequência (list)</a> e <a href="https://docs.python.org/3/library/collections.html#collections.deque">collections.deque</a></td><td>operações e garantias (blocos 1–2)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/heapq.html">heapq</a> e <a href="https://docs.python.org/3/library/bisect.html">bisect</a></td><td>heap, desempate, top-k, busca binária (blocos 4–5)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/timeit.html">timeit</a></td><td>medição (bloco 1)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/reference/datamodel.html#object.__hash__">Modelo de dados: object.__hash__</a></td><td>contrato hash/eq (bloco 3)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://github.com/python/cpython/blob/main/Objects/dictobject.c">CPython: Objects/dictobject.c</a> e <a href="https://github.com/python/cpython/blob/main/Objects/listobject.c">listobject.c</a></td><td>sondagem do dict, crescimento da lista (blocos 1, 3)</td><td>código-fonte</td><td>11/10/2026 (leitura dos comentários; detalhes mudam entre versões)</td></tr>
+<tr><td><a href="https://github.com/python/cpython/blob/main/Objects/listsort.txt">CPython: Objects/listsort.txt</a></td><td>descrição do Timsort por Tim Peters (bloco 5)</td><td>código-fonte</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/functools.html#functools.cache">functools.cache / lru_cache</a> e <a href="https://docs.python.org/3/library/sys.html#sys.setrecursionlimit">sys.setrecursionlimit</a></td><td>memoização e limite de recursão (bloco 7)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td>T. Cormen, C. Leiserson, R. Rivest, C. Stein, <em>Introduction to Algorithms</em>, 4ª ed., MIT Press, 2022</td><td>notações, limite n log n, Dijkstra, DP, guloso, Teorema Mestre (blocos 1–7)</td><td>livro de referência</td><td>—</td></tr>
+<tr><td>D. Knuth, <em>The Art of Computer Programming</em>, vol. 3 (Sorting and Searching)</td><td>história da busca binária; ordenação (bloco 5)</td><td>livro de referência</td><td>—</td></tr>
+<tr><td>R. Sedgewick, K. Wayne, <em>Algorithms</em>, 4ª ed., Addison-Wesley, 2011</td><td>grafos, tries, filas de prioridade (blocos 4, 6)</td><td>livro de referência</td><td>—</td></tr>
+<tr><td>J. Bloch, "Extra, Extra – Read All About It: Nearly All Binary Searches and Mergesorts are Broken", Google Research Blog, 2006</td><td>estouro de <code>(lo+hi)/2</code> em linguagens de inteiro fixo (bloco 5)</td><td>artigo</td><td>—</td></tr>
+<tr><td>R. Bayer, E. McCreight, "Organization and maintenance of large ordered indexes", <em>Acta Informatica</em> 1, 1972</td><td>B-tree (bloco 4)</td><td>fonte primária</td><td>—</td></tr>
+<tr><td><a href="https://docs.astral.sh/uv/">uv</a>, <a href="https://docs.pytest.org/">pytest</a>, <a href="https://docs.astral.sh/ruff/">ruff</a>, <a href="https://mypy.readthedocs.io/">mypy</a></td><td>lab</td><td>oficial</td><td>11/10/2026</td></tr>
+</tbody>
+</table>
+<p>Medições e saídas vêm de execução real em 11/10/2026 (Linux aarch64, 4 núcleos, CPython 3.14.7, uma execução por tabela): reproduzíveis na forma, não nos valores absolutos. Detalhes internos do CPython (fator de crescimento da lista, layout do dict, política de fusão do Timsort) mudam entre versões menores: revalide em até 90 dias ou ao trocar de versão do interpretador.</p>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>Complexidade descreve a forma do crescimento; a constante vem de quem executa e da localidade de memória; meça com repetição e vários n.<br>
+<code>list</code> é array de ponteiros: frente e meio custam O(n); fila e janela pedem <code>deque</code>.<br>
+Hash dá O(1) esperado se o contrato hash/eq vale e o fator de carga fica baixo; chave mutável ou hash constante quebra tudo.<br>
+Heap resolve "o próximo menor" e top-k em O(n log k); árvores resolvem ordem e intervalo; B-trees casam com páginas de disco.<br>
+Sort por comparação não passa de n log n; Timsort aproveita ordem existente; busca binária nasce do invariante.<br>
+Grafo se mede em V e E: BFS para menos arestas, topológica para dependências, Dijkstra para pesos não negativos.<br>
+Recursão tem teto em Python: troque por pilha explícita ou DP bottom-up; guloso só com prova.<br>
+Problema novo: bruta correta, gargalo, padrão, custo declarado, teste contra a bruta.</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="F03"></script>
+</body>
+</html>

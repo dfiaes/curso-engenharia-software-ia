@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F04 · Como a web funciona: redes, DNS, TLS, HTTP, JSON e APIs REST</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>F04 · Como a web funciona: redes, DNS, TLS, HTTP, JSON e APIs REST</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas de terminal e os gates do laboratório vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14.7, uv 0.12.13, OpenSSL 3.5.8). <a href="../../STATUS.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
+<p class="meta"><span class="badge">FASE 0</span> &nbsp; 5 blocos · carga estimada ≈ 10 h · pré-requisitos: <a href="../F02-python-do-zero/F02.html">F02</a> (Python, funções, exceções, testes) · depois: <a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a> (FastAPI) e <a href="../LT01-novo/LT01.html">LT01</a> (redes e runtime em profundidade)</p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Toda integração do curso é uma conversa entre dois processos por uma rede: o seu serviço chamando um provedor de modelo, um agente chamando uma ferramenta, um navegador chamando a sua API. Quando algo falha, a causa quase sempre está numa camada que o código não mostra: um nome que resolveu para o endereço velho, um certificado sem a cadeia completa, uma resposta em cache, um <em>retry</em> que cobrou duas vezes.</p>
+<p>Ao terminar você consegue: (1) explicar o que acontece, em ordem, entre digitar uma URL e receber o primeiro byte, e estimar quantos <em>round trips</em> isso custa; (2) distinguir <code>connection refused</code>, <em>timeout</em> e erro de certificado pela camada onde nascem; (3) escrever e ler uma requisição HTTP à mão, com a semântica correta de métodos, status, cache e <em>cookies</em>; (4) desenhar uma API REST com paginação por cursor, erros em Problem Details, concorrência otimista e <em>idempotency keys</em>; (5) escolher entre sessão e token, descrever o fluxo <em>authorization code</em> com PKCE e apontar as armadilhas de JWT; (6) reconhecer as três falhas web que mais derrubam sistemas: controle de acesso quebrado, injeção e SSRF.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não é um curso de redes de computadores nem de segurança ofensiva. Aqui entra o mínimo de cada camada para você raciocinar sobre falhas de uma aplicação web. Ferramentas de diagnóstico (<code>ss</code>, <code>tcpdump</code>, <code>iptables</code>), containers e redes de nuvem ficam no <a href="../LT01-novo/LT01.html">LT01</a>; implantação com TLS real e DNS gerenciado, no <a href="../P01-deploy-nuvem/P01.html">P01</a>; segurança de produção (WAF, gestão de segredos, auditoria), no <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>. O servidor do laboratório usa só a biblioteca padrão de propósito: o framework entra no <a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a>, quando você já sabe o que ele esconde.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça, sem testar. Se acertar todas com segurança (mecanismo, não só o nome), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint">Checkpoint F04</a> e siga adiante. Qualquer resposta hesitante marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> <code>connect()</code> devolveu sucesso para <code>10.0.0.5:8080</code>. O servidor já está processando a sua requisição?
+<details><summary>Resposta</summary><p>Não necessariamente. O handshake de três vias é concluído pelo <em>kernel</em> do servidor, que enfileira a conexão até a aplicação chamar <code>accept()</code>. Sucesso no <code>connect()</code> prova que há um socket em <code>listen</code> naquele endereço, não que o processo está saudável.</p></details></li>
+<li><strong>(Bloco 1)</strong> Um cliente a 150 ms de RTT abre uma conexão nova, faz o TLS e baixa 2 KB. Onde está o custo?
+<details><summary>Resposta</summary><p>Em <em>round trips</em>, não em banda: resolução de nome, handshake TCP, handshake TLS 1.3 e a requisição somam quatro idas e voltas antes do primeiro byte útil, perto de 600 ms. Reutilizar a conexão elimina três delas.</p></details></li>
+<li><strong>(Bloco 2)</strong> Você trocou o IP de um registro A cujo TTL era 86400. Por quanto tempo clientes ainda podem usar o IP antigo?
+<details><summary>Resposta</summary><p>Até 24 h depois da troca, no pior caso, porque cada resolvedor guarda a resposta pelo TTL que viu. A migração correta baixa o TTL com antecedência igual ao TTL antigo, troca e só então o sobe de novo.</p></details></li>
+<li><strong>(Bloco 2)</strong> O navegador abre o site sem aviso, mas o seu script Python falha com <code>unable to get local issuer certificate</code>. Qual é a causa mais provável?
+<details><summary>Resposta</summary><p>O servidor envia só o certificado folha, sem o intermediário. O navegador baixa o intermediário pela extensão AIA; a biblioteca TLS do Python não. O conserto é no servidor (enviar a cadeia completa), não no cliente.</p></details></li>
+<li><strong>(Bloco 3)</strong> Um <code>POST</code> deu <em>timeout</em> de leitura. Reenviar é seguro? E um <code>PUT</code>?
+<details><summary>Resposta</summary><p><code>PUT</code> é idempotente por definição: reenviar converge para o mesmo estado. <code>POST</code> não é: pode ter sido processado. Só é seguro reenviar com uma <em>idempotency key</em> que o servidor honre.</p></details></li>
+<li><strong>(Bloco 3)</strong> O navegador acusa erro de CORS, mas o <code>curl</code> funciona. Quem está bloqueando, e o que o servidor precisa mudar?
+<details><summary>Resposta</summary><p>O navegador bloqueia a <em>leitura</em> da resposta por JavaScript, porque o servidor não declarou a origem permitida em <code>Access-Control-Allow-Origin</code>. O servidor não bloqueou nada; o <code>curl</code> não aplica a política. CORS é relaxamento opt-in da política de mesma origem, não mecanismo de segurança do servidor.</p></details></li>
+<li><strong>(Bloco 4)</strong> Por que paginação por <code>offset</code> duplica ou pula itens numa lista que recebe inserções, e o que a evita?
+<details><summary>Resposta</summary><p>O <code>offset</code> conta posições, e posições se deslocam quando linhas entram ou saem antes do cursor de leitura. Paginação por cursor (<em>keyset</em>: "ids maiores que o último visto") ancora a página num valor, não numa posição, e ainda usa o índice.</p></details></li>
+<li><strong>(Bloco 5)</strong> Um JWT chega com assinatura válida. Isso basta para aceitá-lo?
+<details><summary>Resposta</summary><p>Não. É preciso fixar o algoritmo no verificador (não confiar no <code>alg</code> do cabeçalho) e checar <code>exp</code>, <code>nbf</code>, <code>iss</code> e <code>aud</code>. Assinatura válida só prova que alguém com a chave emitiu o token, não que ele é para esta API, agora.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — Redes do zero: camadas, IP, portas, TCP e UDP, handshake, sockets, latência e banda</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — DNS e TLS: resolução, registros, TTL; handshake TLS 1.3, certificados e erros comuns</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — HTTP a fundo: mensagens, métodos, status, cache, cookies, versões e CORS</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — JSON e APIs REST: recursos, versionamento, paginação, Problem Details, idempotência e OpenAPI</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Autenticação e segurança web: sessão e token, OAuth/OIDC com PKCE, JWT, senhas e OWASP</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado F04</strong> — cliente HTTP cru, API REST, DNS no fio e primitivas de autenticação</a></li>
+</ol>
+</div>
+
+<h2 id="b01">Bloco 1 · Redes do zero: camadas, IP, portas, TCP e UDP, handshake, sockets, latência e banda</h2>
+
+<h3>Por que isso importa</h3>
+<p>Três sintomas que parecem o mesmo problema e têm causas em lugares diferentes: <code>Connection refused</code> (chegou ao host, ninguém escuta naquela porta), <code>timed out</code> (os pacotes sumiram no caminho, ou o outro lado parou de responder) e <code>Connection reset by peer</code> (a conexão existia e o outro lado a derrubou). Quem não distingue os três abre chamado para a equipe errada. O bloco dá o modelo mínimo para distinguir: quem endereça o quê, o que o TCP garante e o que não garante, e quanto tempo cada ida e volta custa.</p>
+
+<h3>O modelo em camadas, sem folclore</h3>
+<p>Uma camada oferece um serviço à de cima e consome o da de baixo. O que importa para uma aplicação são quatro, a pilha TCP/IP:</p>
+<table>
+<tr><th>Camada</th><th>Identifica</th><th>Unidade</th><th>Exemplo</th></tr>
+<tr><td>Aplicação</td><td>mensagem com significado</td><td>requisição, resposta</td><td>HTTP, DNS, TLS (entre aplicação e transporte)</td></tr>
+<tr><td>Transporte</td><td>processo ou conexão no host (porta)</td><td>segmento TCP, datagrama UDP</td><td>TCP, UDP, QUIC (sobre UDP)</td></tr>
+<tr><td>Internet</td><td>host (endereço IP)</td><td>pacote</td><td>IPv4, IPv6, ICMP</td></tr>
+<tr><td>Enlace</td><td>interface no mesmo segmento (MAC)</td><td>quadro</td><td>Ethernet, Wi-Fi</td></tr>
+</table>
+<p>A requisição <code>GET /notes</code> vira bytes, que o TCP corta em segmentos, que o IP embrulha em pacotes, que o enlace embrulha em quadros. Cada camada acrescenta um cabeçalho (<em>encapsulamento</em>) e o receptor desfaz na ordem inversa. O roteador no meio olha só até o cabeçalho IP; ele não sabe que aquilo é HTTP, e por isso um roteador não consegue "consertar" nada do protocolo de aplicação.</p>
+
+<figure>
+<svg viewBox="0 0 560 190" role="img" aria-labelledby="t-enc" style="max-width:560px">
+<title id="t-enc">Encapsulamento: dados da aplicação dentro de segmento TCP, dentro de pacote IP, dentro de quadro Ethernet</title>
+<rect x="10" y="10" width="540" height="40" fill="none" stroke="currentColor"/><text x="20" y="35" font-size="13" fill="currentColor">Quadro: cabeçalho Ethernet | pacote IP | trailer (FCS)</text>
+<rect x="60" y="60" width="440" height="40" fill="none" stroke="currentColor"/><text x="70" y="85" font-size="13" fill="currentColor">Pacote: cabeçalho IP (origem, destino, TTL) | segmento</text>
+<rect x="110" y="110" width="340" height="40" fill="none" stroke="currentColor"/><text x="120" y="135" font-size="13" fill="currentColor">Segmento: cabeçalho TCP (portas, seq, ack) | dados</text>
+<rect x="160" y="158" width="240" height="26" fill="var(--net-soft)" stroke="var(--net)"/><text x="170" y="176" font-size="12" fill="currentColor">GET /notes HTTP/1.1 ...</text>
+</svg>
+<figcaption>Cada camada embrulha a de cima. Um roteador abre só o envelope IP.</figcaption>
+</figure>
+
+<h3>IP e porta: dois endereços para duas perguntas</h3>
+<p>O endereço IP responde "qual máquina (interface)?"; a porta (16 bits, 0 a 65535) responde "qual conversa dentro dela?". Uma conexão TCP é identificada pela quíntupla <code>(protocolo, IP origem, porta origem, IP destino, porta destino)</code>. O servidor usa sempre a porta 443 e atende milhares de clientes porque cada cliente chega com uma porta de origem <em>efêmera</em> diferente (no Linux, por padrão, de 32768 a 60999; veja <code>net.ipv4.ip_local_port_range</code>). Consequência prática: um cliente que abre conexões demais contra o mesmo destino esgota portas efêmeras, e o sintoma é erro de <code>bind</code>/<code>connect</code> sem nenhuma falha de rede de verdade; o remédio é reutilizar conexões (<em>keep-alive</em>, <em>pool</em>).</p>
+<p>IPv4 tem 32 bits (≈4,3 bilhões de endereços), IPv6 tem 128. Faixas privadas (<code>10.0.0.0/8</code>, <code>172.16.0.0/12</code>, <code>192.168.0.0/16</code>, no IPv6 <code>fc00::/7</code>) não são roteadas na internet pública; o NAT traduz o par privado para um público. <code>127.0.0.0/8</code> é loopback (a própria máquina) e <code>169.254.0.0/16</code> é <em>link-local</em>, onde nuvens costumam expor o serviço de metadados, detalhe que volta no bloco 5 (SSRF). A notação <code>/24</code> (CIDR) diz quantos bits iniciais identificam a rede: <code>192.168.1.0/24</code> tem 256 endereços.</p>
+
+<h3>TCP e UDP: o que cada um promete</h3>
+<p><strong>UDP</strong> entrega datagramas independentes, sem conexão: pode perder, duplicar e reordenar, e só preserva as fronteiras da mensagem. <strong>TCP</strong> entrega um <em>fluxo de bytes</em> confiável e ordenado, com controle de fluxo (não afogar o receptor) e de congestionamento (não afogar a rede). A palavra decisiva é "fluxo": o TCP <em>não preserva fronteiras de mensagem</em>. Se você envia 100 bytes e depois 50, o outro lado pode ler 150 de uma vez, ou 30, 120. Todo protocolo sobre TCP precisa dizer onde a mensagem termina: HTTP faz isso com <code>Content-Length</code> ou <code>Transfer-Encoding: chunked</code>, e é exatamente isso que o cliente do laboratório implementa.</p>
+
+<div class="box net">
+<span class="lbl">Handshake de três vias</span>
+<pre><code>cliente                        servidor
+  |  SYN  seq=x                 |   1 RTT:
+  |---------------------------&gt; |   o cliente só pode mandar dados
+  |  SYN+ACK seq=y ack=x+1      |   depois de receber o SYN+ACK
+  |&lt;---------------------------|   (o ACK final já pode levar dados)
+  |  ACK  ack=y+1               |
+  |---------------------------&gt; |</code></pre>
+<p>O custo de abrir uma conexão é <strong>uma ida e volta (RTT)</strong> antes do primeiro byte de aplicação. É por isso que reutilizar conexões importa tanto.</p>
+</div>
+
+<p>O encerramento usa <code>FIN</code> de cada lado, e quem fecha primeiro fica em <code>TIME_WAIT</code> (tipicamente 60 s no Linux) para absorver pacotes atrasados. Um servidor que fecha milhares de conexões curtas acumula <code>TIME_WAIT</code>; é normal, e só vira problema combinado com esgotamento de portas efêmeras no lado cliente. Um <code>RST</code> aborta a conexão sem cerimônia: é o que um host devolve ao receber um SYN para porta fechada (<em>refused</em>), e o que um balanceador envia ao derrubar uma conexão ociosa (<em>reset</em>).</p>
+<p>Escolha entre os dois: precisa de ordem e entrega garantida (quase tudo na web) → TCP. Tolera perda e prefere frescor a completude (voz, jogos, DNS com consulta pequena) ou quer controlar a recuperação de perdas por conta própria (QUIC, que é a base do HTTP/3) → UDP.</p>
+
+<h3>Sockets: a fronteira com o seu código</h3>
+<p>Um <em>socket</em> é o objeto do sistema operacional que representa uma ponta de comunicação. O servidor faz <code>bind</code> (reserva IP:porta), <code>listen</code> (aceita pedidos de conexão numa fila de tamanho limitado, o <em>backlog</em>) e <code>accept</code> (devolve um novo socket para cada cliente). O cliente faz <code>connect</code>. Depois, <code>send</code>/<code>recv</code>. Duas armadilhas sempre presentes: <code>recv(n)</code> devolve <em>até</em> n bytes (nunca "a mensagem"), e <code>send</code> pode escrever só parte, por isso <code>sendall</code>. O laboratório isola isso em três funções: <code>build_request</code> monta os bytes, <code>fetch</code> abre o socket e envia, <code>parse_response</code> lê da conexão até o limite da mensagem.</p>
+<pre><code>import socket
+
+with socket.create_connection(("127.0.0.1", 8765), timeout=5) as sock:   # connect (+ DNS, se nome)
+    sock.sendall(b"GET /health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n")
+    chunks = []
+    while data := sock.recv(4096):          # b"" = o outro lado fechou (FIN)
+        chunks.append(data)
+print(b"".join(chunks).split(b"\r\n", 1)[0])    # b'HTTP/1.1 200 OK'</code></pre>
+<p>Dois detalhes do exemplo: o <code>timeout</code> vale para cada operação de socket (não para o total), e ler até receber <code>b""</code> só funciona porque pedimos <code>Connection: close</code>. Em conexão persistente não há fim de fluxo; é preciso saber o tamanho da resposta pelo cabeçalho.</p>
+
+<h3>Latência e banda: duas grandezas, dois remédios</h3>
+<p><strong>Latência</strong> é quanto leva um bit para ir e voltar (RTT); é limitada pela velocidade da luz na fibra (≈200 000 km/s) mais filas e processamento. São Paulo–Virgínia dá no mínimo ~120 ms de RTT por física e rota, sem nenhum erro de configuração. <strong>Banda</strong> é quantos bits por segundo cabem no canal. O produto banda × RTT (<em>bandwidth-delay product</em>) é quanto dado precisa estar "no ar" para encher o canal: 100 Mbit/s × 100 ms = 1,25 MB. O TCP começa devagar (<em>slow start</em>): a janela inicial é de 10 segmentos, ≈14 KB (RFC 6928), e dobra a cada RTT enquanto não há perda. Resultado: uma resposta de 50 KB num canal de 1 Gbit/s ainda leva alguns RTTs, e dobrar a banda não muda quase nada. Resposta pequena é dominada por latência; transferência grande, por banda. Os remédios são distintos: para latência, menos viagens (reutilizar conexão, cache, CDN perto do usuário, menos chamadas em sequência); para banda, menos bytes (compressão, paginação, formatos compactos).</p>
+
+<div class="box fund">
+<span class="lbl">Exemplo trabalhado: quantas viagens até o primeiro byte?</span>
+<p>Cliente a 80 ms de RTT do servidor, nada em cache, <code>https://api.exemplo.com/notes</code>:</p>
+<table>
+<tr><th>Passo</th><th>RTTs</th><th>Acumulado (80 ms/RTT)</th></tr>
+<tr><td>DNS (resolvedor recursivo próximo, sem cache): ≈1 RTT até ele, mais o que ele consulta</td><td>≥1 (RTT menor, p. ex. 20 ms)</td><td>≥ 20 ms</td></tr>
+<tr><td>TCP SYN / SYN+ACK</td><td>1</td><td>100 ms</td></tr>
+<tr><td>TLS 1.3 (ClientHello / ServerHello…Finished)</td><td>1</td><td>180 ms</td></tr>
+<tr><td>HTTP: requisição e primeiros bytes da resposta</td><td>1</td><td>260 ms + tempo do servidor</td></tr>
+</table>
+<p>Mais de 250 ms antes de o código do servidor executar uma linha. Com TLS 1.2 seriam 2 RTTs de TLS (340 ms). Com HTTP/3 sobre QUIC, transporte e criptografia se negociam juntos (1 RTT em vez de 2), e numa conexão <em>retomada</em> o cliente pode enviar dados já no primeiro voo (0-RTT, com risco de repetição, bloco 2). Uma segunda requisição na mesma conexão custa só o último passo.</p>
+</div>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Conexão longa × curta.</strong> Longa amortiza handshakes, mas segura recursos no servidor e sofre com balanceadores que derrubam ociosas (configure <em>keep-alive</em> do cliente abaixo do <em>idle timeout</em> do balanceador).</li>
+<li><strong>Timeouts.</strong> Sem timeout, uma chamada de rede espera para sempre. Separe <em>connect timeout</em> (curto: o destino responde ou não), <em>read timeout</em> (entre bytes) e um prazo total da operação.</li>
+<li><strong>Nagle e ACK atrasado.</strong> Por padrão o TCP agrupa escritas pequenas; protocolos de requisição/resposta com duas escritas seguidas podem ganhar ~40 ms. <code>TCP_NODELAY</code> desliga o agrupamento; bibliotecas HTTP modernas já o ligam.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Tratar <code>recv</code> como "uma mensagem" e testar só com payload pequeno e rede local, onde ele parece funcionar.</li>
+<li>Chamar de "erro de rede" o que é recusa ativa: <code>ECONNREFUSED</code> volta rápido (RST); <em>timeout</em> demora o prazo inteiro, e a diferença no tempo de falha já aponta a camada.</li>
+<li>Escrever <code>localhost</code> no contêiner e esperar alcançar a máquina hospedeira (isso é LT01).</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><code>localhost</code> resolve para <code>::1</code> (IPv6) e <code>127.0.0.1</code>. Um servidor que escuta só em <code>127.0.0.1</code> recusa a tentativa em <code>::1</code>. Com recusa (RST) o cliente cai para IPv4 em milissegundos; a lentidão aparece quando o pacote é <em>descartado</em> (regra de firewall, proxy mal configurado) e o cliente espera o timeout da primeira família antes de tentar a segunda. É o clássico "lento só na minha máquina". Quando o primeiro byte demora de forma inexplicável, confira para quais famílias o nome resolve, quais o servidor atende e qual o cliente tenta primeiro. O laboratório fixa <code>127.0.0.1</code> de propósito.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Camadas encapsulam; IP acha o host, a porta acha a conversa; TCP dá fluxo confiável sem fronteiras de mensagem, então o protocolo de cima precisa delimitar. Abrir conexão custa um RTT; latência e banda têm remédios diferentes. <em>Refused</em> é recusa ativa, <em>timeout</em> é silêncio, <em>reset</em> é queda de conexão existente. Defina sempre timeouts de conexão e leitura.</p>
+</div>
+
+<h2 id="b02">Bloco 2 · DNS e TLS: resolução, registros, TTL; handshake TLS 1.3, certificados e erros comuns</h2>
+
+<h3>Por que isso importa</h3>
+<p>Duas classes de incidente que se repetem em toda empresa: "o deploy foi para o servidor novo mas metade do tráfego continua indo para o velho" (DNS e TTL) e "às 3 h da manhã todos os clientes passaram a falhar com erro de certificado" (expiração, cadeia incompleta). Ambos são previsíveis se você sabe o que o sistema guarda, por quanto tempo, e quem confere o quê.</p>
+
+<h3>DNS: o que é e como uma consulta anda</h3>
+<p>O DNS é um banco de dados hierárquico e distribuído que mapeia nomes para registros. Três papéis: o <em>stub resolver</em> (a biblioteca no seu processo, via <code>getaddrinfo</code>), o <em>resolvedor recursivo</em> (o do provedor, da empresa ou público, que faz o trabalho e guarda cache) e os servidores <em>autoritativos</em> (que de fato possuem a zona). Para <code>api.exemplo.com</code> sem nada em cache, o recursivo pergunta a um servidor raiz, que indica os servidores de <code>.com</code>; estes indicam os autoritativos de <code>exemplo.com</code>; estes respondem com o registro. O resultado fica em cache no recursivo (e no sistema operacional, e em alguns runtimes) pelo <strong>TTL</strong> do registro.</p>
+<p>Na maioria das vezes a consulta vai por UDP, porta 53, num único datagrama. Se a resposta não cabe, o servidor marca o bit TC (<em>truncated</em>) e o cliente refaz por TCP; extensões (EDNS0) elevam o limite UDP para algo em torno de 1232 bytes. O laboratório constrói esse pacote byte a byte (<code>dnswire.py</code>) para que o formato deixe de ser mágico.</p>
+
+<h4>Registros que você realmente usa</h4>
+<table>
+<tr><th>Tipo</th><th>Faz</th><th>Detalhe que morde</th></tr>
+<tr><td><code>A</code> / <code>AAAA</code></td><td>nome → IPv4 / IPv6</td><td>vários registros = balanceamento rudimentar por rodízio; o cliente escolhe</td></tr>
+<tr><td><code>CNAME</code></td><td>apelido para outro nome</td><td>não pode coexistir com outros registros no mesmo nome, logo não vale no apex (<code>exemplo.com</code>); provedores oferecem "ALIAS/ANAME" proprietário</td></tr>
+<tr><td><code>MX</code></td><td>servidor de e-mail, com prioridade</td><td>menor número = preferido; aponta para nome, nunca para CNAME</td></tr>
+<tr><td><code>TXT</code></td><td>texto livre</td><td>SPF, DKIM, DMARC e provas de posse de domínio vivem aqui</td></tr>
+<tr><td><code>NS</code> / <code>SOA</code></td><td>delegação / metadados da zona</td><td>o último campo do SOA governa por quanto tempo uma resposta <em>negativa</em> (NXDOMAIN) fica em cache (RFC 2308)</td></tr>
+<tr><td><code>CAA</code></td><td>quais CAs podem emitir certificado para o domínio</td><td>CAs são obrigadas a consultá-lo antes de emitir</td></tr>
+<tr><td><code>SRV</code>, <code>HTTPS</code>/<code>SVCB</code></td><td>serviço, porta e parâmetros (p. ex. suporte a HTTP/3)</td><td>o tipo HTTPS permite ao cliente descobrir h3 antes de conectar</td></tr>
+</table>
+
+<h4>TTL: a mudança que não acontece quando você quer</h4>
+<p>O TTL é um contrato de cache: "pode reutilizar esta resposta por N segundos". Trocar o IP de um registro com TTL 3600 significa que, na pior hipótese, clientes vão ao IP antigo por até uma hora <em>depois</em> da mudança, e cada recursivo expira num instante diferente, daí a migração "meio a meio". A prática: baixar o TTL (p. ex. 60 s) <em>pelo menos um TTL antigo antes</em> da mudança, trocar, observar, e só depois subir o TTL de novo. Cache negativo é o espelho: consultar um nome que ainda não existe (NXDOMAIN) pode grudar por minutos mesmo depois de você criá-lo.</p>
+
+<div class="box fund">
+<span class="lbl">Exemplo trabalhado: o pacote DNS por dentro</span>
+<p>O comando <code>dns-query example.com A</code> do lab imprime os 29 bytes da consulta. Decodifique à mão:</p>
+<pre><code>12 34            id da transação (o cliente casa resposta com pergunta)
+01 00            flags: RD=1 (recursão desejada)
+00 01            1 pergunta
+00 00 00 00 00 00   0 respostas, 0 autoridade, 0 adicionais
+07 'example' 03 'com' 00   nome: rótulos com prefixo de tamanho, terminado em 0
+00 01            QTYPE  A
+00 01            QCLASS IN</code></pre>
+<p>Na resposta, o nome do registro volta como <code>c0 0c</code>: dois bits <code>11</code> seguidos de um deslocamento (12) significam "o nome está no byte 12 da mensagem" (<em>compressão de nomes</em>). O decodificador precisa recusar ponteiros que apontam para frente ou formam laço, senão um pacote malicioso o prende num loop infinito; o teste correspondente está em <code>test_dnswire.py</code>.</p>
+</div>
+
+<h3>TLS: o que ele garante e como</h3>
+<p>TLS entrega ao TCP (ou ao QUIC) três propriedades: <strong>confidencialidade</strong> (terceiros não leem), <strong>integridade</strong> (ninguém altera sem ser detectado) e <strong>autenticação do servidor</strong> (você fala com o dono do nome que pediu). A terceira é a que a maioria esquece, e sem ela as duas primeiras valem pouco: criptografar para o atacante é perfeitamente possível.</p>
+
+<h4>Handshake do TLS 1.3 (RFC 8446), em uma volta</h4>
+<pre><code>cliente                                         servidor
+ClientHello  (versões, cifras, SNI, ALPN,
+              key_share = chave pública ECDHE)  -----&gt;
+                                           ServerHello (key_share)
+                              {EncryptedExtensions, Certificate,
+                               CertificateVerify, Finished}
+             &lt;-----------------------------------------
+{Finished}   -----&gt;
+[dados da aplicação]  &lt;-----------------------&gt;  [dados da aplicação]</code></pre>
+<p>O cliente já manda no primeiro voo sua metade do acordo de chaves (Diffie-Hellman de curva elíptica). Com a resposta, ambos derivam as mesmas chaves de sessão sem tê-las transmitido. O resto da conversa do servidor (inclusive o certificado) já vai cifrado. O servidor prova que possui a chave privada do certificado assinando o histórico do handshake (<code>CertificateVerify</code>). Como a chave de sessão vem de troca efêmera, vazar a chave privada do servidor <em>depois</em> não decifra tráfego gravado antes (<em>forward secrecy</em>). TLS 1.2 gastava duas voltas e permitia suítes sem essa propriedade; hoje 1.3 é o padrão e 1.2 o piso aceitável.</p>
+<p>Três extensões que você vai ver em logs: <strong>SNI</strong> (<em>Server Name Indication</em>): o cliente informa o nome desejado no ClientHello, em claro, para que um IP único hospede muitos certificados (o ECH, <em>Encrypted Client Hello</em>, cifra isso, mas a adoção ainda é parcial). <strong>ALPN</strong>: negocia o protocolo de aplicação (<code>h2</code>, <code>http/1.1</code>) dentro do próprio handshake, sem volta extra. <strong>Retomada de sessão</strong>: um ticket de sessão permite handshake abreviado, e com <em>0-RTT</em> o cliente envia dados já no primeiro voo; esses dados <em>podem ser repetidos por um atacante</em>, então só requisições idempotentes devem ser aceitas assim (ligação direta com o bloco 4).</p>
+
+<h4>Certificados e cadeia de confiança</h4>
+<p>Um certificado X.509 liga um nome (e uma chave pública) a uma assinatura de uma CA. O nome que vale é o do campo <em>Subject Alternative Name</em> (SAN); o antigo <em>Common Name</em> é ignorado por clientes modernos. A validação, feita pelo cliente, verifica: (1) a assinatura sobe por uma <strong>cadeia</strong> (folha → intermediária(s) → raiz) até uma raiz presente no <em>trust store</em> do sistema; (2) o nome pedido casa com um SAN (com curinga <code>*.exemplo.com</code> cobrindo um nível só); (3) a data está dentro da validade; (4) o uso da chave permite autenticar servidor; (5) opcionalmente, o certificado não foi revogado (OCSP/CRL, na prática pouco confiável). Raízes não ficam online; assinam intermediárias, e estas assinam as folhas. O servidor deve <strong>enviar a folha e as intermediárias</strong>; a raiz o cliente já tem.</p>
+<p>A tendência é encurtar a vida dos certificados para reduzir a janela de dano de uma chave vazada: o CA/Browser Forum aprovou redução gradual do máximo permitido para certificados públicos (200 dias em 2026, 100 em 2027, 47 em 2029), o que torna a renovação automática (ACME, o protocolo do Let's Encrypt) obrigatória, não opcional.</p>
+
+<table>
+<tr><th>Erro visto pelo cliente</th><th>Causa típica</th><th>Onde olhar</th></tr>
+<tr><td><code>certificate has expired</code></td><td>renovação automática falhou</td><td>data de validade; job de renovação</td></tr>
+<tr><td><code>unable to get local issuer certificate</code></td><td>servidor não enviou a intermediária (navegador "funciona" porque a tem em cache, o cliente de linha de comando não)</td><td>cadeia enviada pelo servidor</td></tr>
+<tr><td><code>hostname mismatch</code> / <code>no alternative names match</code></td><td>acessou por IP, ou nome fora dos SANs</td><td>SANs do certificado</td></tr>
+<tr><td><code>self-signed certificate</code></td><td>CA interna que o cliente não conhece</td><td>trust store do cliente (contêiner minimalista sem <code>ca-certificates</code>)</td></tr>
+<tr><td><code>handshake failure</code> / <code>protocol version</code></td><td>sem versão ou cifra em comum</td><td>versões mínimas de cliente e servidor</td></tr>
+</table>
+<pre><code>$ openssl s_client -connect exemplo.com:443 -servername exemplo.com -showcerts &lt;/dev/null
+# -servername envia o SNI; sem ele, um IP com vários sites devolve o certificado "padrão"
+$ openssl x509 -noout -subject -issuer -dates -ext subjectAltName   # lê um certificado PEM</code></pre>
+
+<h3>Trade-offs e decisões</h3>
+<ul>
+<li><strong>Terminar TLS no balanceador ou no serviço.</strong> No balanceador: certificado em um lugar só, inspeção de HTTP; o trecho interno trafega em claro, a menos que você recifre (mTLS). No serviço: ponta a ponta, mais certificados para operar.</li>
+<li><strong>mTLS</strong> (cliente também apresenta certificado) autentica serviços entre si sem segredos em cabeçalho; custa uma PKI interna e rotação automatizada.</li>
+<li><strong>Fixar certificado (<em>pinning</em>)</strong> reduz o risco de CA comprometida, mas uma rotação mal coordenada derruba o app inteiro; hoje se prefere Certificate Transparency e monitoramento.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>"Resolver" erro de certificado com <code>verify=False</code> / <code>-k</code>. Isso desliga a autenticação, e o TLS vira cifra para um interlocutor desconhecido. Instale a CA correta no trust store.</li>
+<li>Cachear a resolução DNS para sempre num processo de longa duração (algumas bibliotecas e JVMs fazem isso por padrão), então o failover de DNS nunca chega a ele.</li>
+<li>Esquecer que certificado de teste interno também expira, e que o relógio errado de uma máquina (data no passado) quebra TLS inteiro.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Colocar um nome de produção atrás de um CNAME de terceiros (um SaaS, um CDN) e depois remover o recurso no provedor, deixando o CNAME no seu DNS, abre <em>subdomain takeover</em>: qualquer pessoa que registre aquele recurso no provedor passa a servir conteúdo sob o seu domínio, com seu cookie de domínio e, para muitos fluxos, até certificado válido. Remova o registro DNS <em>antes</em> de apagar o recurso, e audite CNAMEs pendentes.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>DNS é cache hierárquico regido por TTL: planeje migrações baixando o TTL antes. O pacote DNS é pequeno, em UDP, com nomes em rótulos e compressão por ponteiro. TLS 1.3 negocia chaves efêmeras em 1 RTT e, mais importante, autentica o servidor pelo certificado: nome nos SANs, validade, cadeia completa até uma raiz confiável. 0-RTT só para operações idempotentes. Nunca desligue a verificação para "fazer funcionar".</p>
+</div>
+
+<h2 id="b03">Bloco 3 · HTTP a fundo: mensagens, métodos, status, cache, cookies, versões e CORS</h2>
+
+<h3>Por que isso importa</h3>
+<p>HTTP é o protocolo de todo serviço que você vai construir ou consumir, de uma API REST a uma chamada a provedor de modelo com resposta em <em>streaming</em>. A maior parte dos bugs "de API" não está na lógica de negócio, e sim em semântica mal usada: um <code>GET</code> que altera estado e é repetido por um <em>prefetch</em>; um <code>POST</code> reenviado pelo <em>retry</em> do cliente que cobra duas vezes; uma resposta de erro cacheada por um proxy; um <code>401</code> usado onde cabia <code>403</code>. A referência é a RFC 9110 (semântica), 9111 (cache) e 9112 (HTTP/1.1 no fio).</p>
+
+<h3>A mensagem, byte a byte</h3>
+<p>HTTP/1.1 é texto sobre um fluxo TCP. Uma requisição é: linha de requisição, cabeçalhos, linha em branco, corpo opcional. Cada linha termina em CRLF (<code>\r\n</code>).</p>
+<pre><code>POST /notes HTTP/1.1\r\n
+Host: 127.0.0.1:8765\r\n
+Content-Type: application/json\r\n
+Content-Length: 30\r\n
+\r\n
+{"title":"redes","body":"tcp"}
+
+HTTP/1.1 201 Created\r\n
+Content-Type: application/json; charset=utf-8\r\n
+Location: /notes/1\r\n
+Content-Length: 55\r\n
+\r\n
+{"id":1,"title":"redes","body":"tcp","href":"/notes/1"}</code></pre>
+<p>O cabeçalho <code>Host</code> é obrigatório no HTTP/1.1 (é o que permite hospedagem virtual: o IP identifica a máquina, o <code>Host</code> escolhe o site). <strong>Onde o corpo termina</strong> é o ponto onde o protocolo falha de modos graves: (1) se há <code>Content-Length</code>, são esses bytes; (2) se há <code>Transfer-Encoding: chunked</code>, o corpo vem em blocos <code>tamanho-em-hex CRLF dados CRLF</code>, terminando em bloco de tamanho 0; (3) em resposta sem nenhum dos dois, vale até a conexão fechar; (4) respostas a <code>HEAD</code>, <code>204</code> e <code>304</code> nunca têm corpo, mesmo que declarem <code>Content-Length</code>. Quando dois componentes na cadeia (proxy e servidor) discordam sobre onde uma mensagem termina, o excedente vira o início da "próxima requisição" de outro usuário: é o <em>HTTP request smuggling</em>. A defesa no parser é recusar ambiguidade: <code>Content-Length</code> e <code>Transfer-Encoding</code> juntos, <code>Content-Length</code> repetido com valores diferentes, valor não numérico. O <code>httpclient.py</code> do laboratório e o servidor de <code>api.py</code> fazem exatamente essas recusas, com testes.</p>
+<p>Nomes de cabeçalho não diferenciam maiúsculas; valores podem se repetir (<code>Set-Cookie</code> é a exceção que não pode ser combinada com vírgula). Injeção de cabeçalho (CRLF dentro de um valor vindo do usuário) permite forjar cabeçalhos e respostas inteiras; por isso <code>build_request</code> recusa CR, LF e NUL.</p>
+
+<h3>Métodos: o que cada um promete</h3>
+<table>
+<tr><th>Método</th><th>Seguro</th><th>Idempotente</th><th>Uso</th></tr>
+<tr><td><code>GET</code>, <code>HEAD</code>, <code>OPTIONS</code></td><td>sim</td><td>sim</td><td>ler; <code>HEAD</code> = só cabeçalhos; <code>OPTIONS</code> = capacidades / preflight de CORS</td></tr>
+<tr><td><code>PUT</code></td><td>não</td><td>sim</td><td>substituir o recurso inteiro</td></tr>
+<tr><td><code>DELETE</code></td><td>não</td><td>sim</td><td>remover</td></tr>
+<tr><td><code>POST</code></td><td>não</td><td><strong>não</strong></td><td>criar em coleção, ações, qualquer processamento</td></tr>
+<tr><td><code>PATCH</code></td><td>não</td><td>não (depende)</td><td>alteração parcial (RFC 5789)</td></tr>
+</table>
+<p><strong>Seguro</strong> significa que o cliente não pede nem espera efeito de estado; por isso crawlers, prefetchers e caches podem chamar <code>GET</code> livremente. <strong>Idempotente</strong> significa que N chamadas idênticas deixam o servidor no mesmo estado que uma só; é a propriedade que torna <em>retry</em> automático legítimo. Um <code>DELETE</code> repetido pode devolver <code>204</code> e depois <code>404</code>: a resposta muda, o estado final não, e isso é idempotência. <code>POST</code> não é idempotente, e por isso bibliotecas sérias não repetem <code>POST</code> automaticamente; como torná-lo seguro para retry é assunto do bloco 4.</p>
+
+<h3>Status: a família diz o que o cliente deve fazer</h3>
+<table>
+<tr><th>Faixa</th><th>Significa</th><th>Os que você precisa saber de cor</th></tr>
+<tr><td>2xx</td><td>funcionou</td><td><code>200</code>, <code>201</code> (+<code>Location</code>), <code>202</code> (aceito, processa depois), <code>204</code> (sem corpo)</td></tr>
+<tr><td>3xx</td><td>vá a outro lugar / use o cache</td><td><code>301</code>/<code>308</code> permanente, <code>302</code>/<code>307</code> temporário (307/308 preservam método e corpo; 301/302 historicamente trocam POST por GET), <code>304</code> não modificado</td></tr>
+<tr><td>4xx</td><td>o cliente errou; mudar a requisição</td><td><code>400</code>, <code>401</code> (não autenticado; exige <code>WWW-Authenticate</code>), <code>403</code> (autenticado, sem permissão), <code>404</code>, <code>405</code> (+<code>Allow</code>), <code>409</code> (conflito de estado), <code>412</code> (pré-condição falhou), <code>415</code>, <code>422</code>, <code>428</code> (pré-condição exigida), <code>429</code> (+<code>Retry-After</code>)</td></tr>
+<tr><td>5xx</td><td>o servidor falhou; repetir pode funcionar</td><td><code>500</code>, <code>502</code> (resposta inválida do upstream), <code>503</code> (indisponível, +<code>Retry-After</code>), <code>504</code> (upstream não respondeu a tempo)</td></tr>
+</table>
+<p>A distinção 4xx × 5xx decide o comportamento de retry de todo cliente: 4xx não se repete sem mudar algo (exceto <code>429</code> e <code>408</code>); 5xx pode ser transitório. Devolver <code>200</code> com <code>{"error": ...}</code> no corpo quebra monitoramento, caches e clientes genéricos. <code>401</code> vs <code>403</code>: "não sei quem você é" vs "sei quem é e não pode". Para esconder a existência de um recurso de quem não pode vê-lo, <code>404</code> é uma escolha legítima.</p>
+
+<h3>Cache e validação condicional</h3>
+<p>Dois mecanismos, frequentemente confundidos. <strong>Frescor</strong>: <code>Cache-Control: max-age=N</code> autoriza reutilizar a resposta por N segundos sem perguntar nada ao servidor. <strong>Validação</strong>: depois de velha (ou com <code>no-cache</code>), o cache pergunta "mudou?" enviando o validador que guardou, e o servidor responde <code>304</code> sem corpo se não mudou. O validador mais comum é o <code>ETag</code>, um identificador opaco da versão da representação.</p>
+<pre><code>GET /notes/1                      →  200 OK, ETag: "0996f450b0c7959c", Cache-Control: no-cache
+GET /notes/1
+If-None-Match: "0996f450b0c7959c" →  304 Not Modified   (sem corpo; economiza banda, não RTT)</code></pre>
+<table>
+<tr><th>Diretiva</th><th>Efeito</th></tr>
+<tr><td><code>no-store</code></td><td>não guarde em lugar nenhum (dados sensíveis, respostas de erro)</td></tr>
+<tr><td><code>no-cache</code></td><td>pode guardar, mas <strong>revalide</strong> antes de usar (nome enganoso)</td></tr>
+<tr><td><code>max-age=N</code></td><td>fresco por N s; <code>s-maxage</code> vale só para caches compartilhados</td></tr>
+<tr><td><code>private</code> / <code>public</code></td><td>só o navegador do usuário / também proxies e CDNs</td></tr>
+<tr><td><code>immutable</code></td><td>nunca mudará durante o frescor: assets com hash no nome (<code>app.3fa9.js</code>) com <code>max-age=31536000</code></td></tr>
+<tr><td><code>stale-while-revalidate=N</code></td><td>serve o velho enquanto busca o novo em segundo plano (RFC 5861)</td></tr>
+</table>
+<p>Também <code>Vary</code>: se a resposta depende de um cabeçalho de requisição (<code>Accept-Encoding</code>, <code>Accept-Language</code>, <code>Origin</code>), o cache precisa saber disso, ou entrega a versão em português para quem pediu inglês. O mesmo ETag serve a <em>concorrência otimista</em>: <code>If-Match</code> num <code>PUT</code> faz o servidor recusar com <code>412</code> se a versão mudou desde a leitura, evitando o <em>lost update</em>. A comparação difere: <code>If-None-Match</code> usa comparação fraca (ignora o prefixo <code>W/</code>), <code>If-Match</code> exige comparação forte; o lab implementa e testa as duas.</p>
+
+<h3>Cookies: estado que o navegador carrega por você</h3>
+<p>O servidor envia <code>Set-Cookie: sid=abc; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=3600</code>; dali em diante o navegador envia <code>Cookie: sid=abc</code> em toda requisição que case com o escopo. Os atributos são o controle de segurança: <code>Secure</code> (só sobre HTTPS), <code>HttpOnly</code> (JavaScript não lê, mitiga roubo de sessão por XSS), <code>SameSite</code> (<code>Strict</code>/<code>Lax</code>/<code>None</code>: se vai em requisições originadas em outro site, mitiga CSRF), <code>Domain</code>/<code>Path</code> (escopo) e <code>Max-Age</code>/<code>Expires</code> (vida). O prefixo <code>__Host-</code> obriga <code>Secure</code>, <code>Path=/</code> e proíbe <code>Domain</code>, impedindo que um subdomínio comprometido sobrescreva o cookie. Note a assimetria que dá origem ao CSRF: o navegador anexa o cookie <em>automaticamente</em>, também quando a requisição foi disparada por outra página. Autenticação por cookie exige, portanto, <code>SameSite</code> e/ou token anti-CSRF; autenticação por cabeçalho <code>Authorization</code> posto explicitamente pelo código não tem esse problema.</p>
+
+<h3>HTTP/1.1, HTTP/2 e HTTP/3</h3>
+<table>
+<tr><th></th><th>HTTP/1.1</th><th>HTTP/2 (RFC 9113)</th><th>HTTP/3 (RFC 9114)</th></tr>
+<tr><td>Formato</td><td>texto</td><td>binário, quadros; cabeçalhos comprimidos (HPACK)</td><td>binário; QPACK</td></tr>
+<tr><td>Transporte</td><td>TCP</td><td>TCP + TLS</td><td>QUIC (UDP), TLS 1.3 embutido</td></tr>
+<tr><td>Paralelismo</td><td>uma requisição por conexão por vez; navegadores abrem ~6 conexões</td><td>muitos <em>streams</em> multiplexados numa conexão</td><td>idem, com perda isolada por stream</td></tr>
+<tr><td>Bloqueio de cabeça de fila</td><td>na aplicação (pipeline não é usado)</td><td>desapareceu na aplicação, mas <strong>persiste no TCP</strong>: um pacote perdido para todos os streams</td><td>some: perda só atrasa o stream afetado</td></tr>
+<tr><td>Handshake</td><td>TCP + TLS: 2 RTT (TLS 1.3)</td><td>idem</td><td>1 RTT (0-RTT em retomada); migra de rede sem recomeçar</td></tr>
+</table>
+<p>A semântica (métodos, status, cabeçalhos) é a mesma nas três; muda a forma de transportar. Seu código de aplicação quase nunca vê a diferença. Ela aparece em desempenho (menos conexões, menos cabeçalho repetido) e em operação: o navegador descobre HTTP/3 por <code>Alt-Svc</code> ou pelo registro DNS <code>HTTPS</code>, e cai para h2 se UDP estiver bloqueado. Para <em>streaming</em> de respostas (SSE, tokens de um LLM), HTTP/1.1 com <code>chunked</code> e HTTP/2 funcionam; proxies que fazem buffer da resposta inteira são o inimigo conhecido.</p>
+
+<h3>CORS: uma regra do navegador, não do servidor</h3>
+<p>A <em>same-origin policy</em> impede que o JavaScript de <code>https://app.com</code> leia respostas de <code>https://api.com</code> (origem = esquema + host + porta). <strong>CORS</strong> é o mecanismo pelo qual a API <em>autoriza</em> certas origens a ler. Requisições "simples" (GET/HEAD/POST com tipos de conteúdo de formulário) saem direto, e o navegador decide se entrega a resposta ao JavaScript conforme o <code>Access-Control-Allow-Origin</code>. Qualquer coisa fora disso (<code>PUT</code>, <code>DELETE</code>, <code>Content-Type: application/json</code>, <code>Authorization</code>) dispara antes um <em>preflight</em>:</p>
+<pre><code>OPTIONS /notes/1
+Origin: https://app.com
+Access-Control-Request-Method: PUT
+Access-Control-Request-Headers: content-type, if-match
+
+→ 204
+Access-Control-Allow-Origin: https://app.com
+Access-Control-Allow-Methods: PUT
+Access-Control-Allow-Headers: content-type, if-match
+Access-Control-Max-Age: 600
+Vary: Origin</code></pre>
+<p>Com cookies (<code>credentials: "include"</code>), o servidor deve responder com a origem exata (nunca <code>*</code>) e <code>Access-Control-Allow-Credentials: true</code>. Responda <code>Vary: Origin</code> sempre que o valor depender da origem.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>CORS não protege o servidor. A requisição <em>chega e é executada</em>; o que o navegador bloqueia é a leitura da resposta pelo script. Um <code>POST</code> simples com cookie vindo de página maliciosa executa no servidor mesmo sem CORS liberado (por isso existe CSRF e <code>SameSite</code>). E <code>curl</code> não implementa CORS: "funciona no curl, falha no navegador" é CORS quase sempre. Duas más soluções comuns: refletir o cabeçalho <code>Origin</code> recebido como se fosse permitido (equivale a <code>*</code> com credenciais) e liberar <code>*</code> em API que usa cookie. A allowlist de origens explícitas é a única forma segura.</p>
+</div>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Mutação em <code>GET</code> (link "excluir" que um <em>prefetch</em> aciona).</li>
+<li>Responder 404 em HTML para cliente de API: use sempre o mesmo formato de erro (bloco 4).</li>
+<li>Ignorar <code>Retry-After</code> em <code>429</code>/<code>503</code> e martelar o servidor, ou repetir sem <em>backoff</em> exponencial com jitter.</li>
+<li>Confiar em <code>Content-Type</code> do cliente sem validar, ou em <code>Content-Length</code> sem teto: o lab devolve <code>415</code>, <code>411</code> e <code>413</code> respectivamente.</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Uma mensagem HTTP/1.1 é texto com limites rígidos; ambiguidade sobre onde o corpo termina é vulnerabilidade, então o parser recusa. Métodos seguros e idempotentes determinam o que pode ser cacheado e repetido; a faixa do status determina o retry. Cache é frescor (<code>max-age</code>) mais validação (<code>ETag</code>/<code>304</code>); <code>no-cache</code> não é "não guarde". Cookies exigem <code>Secure</code>, <code>HttpOnly</code> e <code>SameSite</code>. HTTP/2 e 3 mudam o transporte, não a semântica. CORS é política do navegador sobre leitura de resposta, não controle de acesso.</p>
+</div>
+
+<h2 id="b04">Bloco 4 · JSON e APIs REST: recursos, versionamento, paginação, Problem Details, idempotência e OpenAPI</h2>
+
+<h3>Por que isso importa</h3>
+<p>Uma API é um contrato que você não consegue recolher: depois que um cliente depende de um campo, de um código de status ou da ordem de uma lista, mudar vira quebra. As decisões deste bloco (como nomear, paginar, errar, repetir) são as que mais custam caro depois, e as que mais se repetem quando você consome a API de um provedor de modelo e quando expõe a sua.</p>
+
+<h3>JSON: simples, com cantos afiados</h3>
+<p>JSON (RFC 8259) tem objetos, arrays, strings, números, <code>true</code>/<code>false</code> e <code>null</code>; texto em UTF-8; sem comentários, sem vírgula final. O formato é pequeno, mas cada linguagem o lê de um jeito:</p>
+<ul>
+<li><strong>Números.</strong> A especificação não fixa precisão; JavaScript e muitos clientes usam <em>double</em> IEEE 754, que só representa inteiros exatos até 2<sup>53</sup> (9 007 199 254 740 992). IDs de 64 bits (Snowflake IDs, por exemplo) corrompem silenciosamente num cliente JavaScript: serialize-os como string. Dinheiro também: <code>"19.90"</code> como string decimal ou inteiro em centavos, nunca <code>float</code>.</li>
+<li><strong>Chaves duplicadas</strong> são sintaticamente válidas e semanticamente indefinidas: Python fica com a última, outro parser com a primeira, e uma camada de validação que lê uma enquanto o backend lê outra é um vetor clássico de bypass.</li>
+<li><strong><code>null</code> × ausente.</strong> "Não enviei" e "enviei vazio" são intenções diferentes em atualização parcial. Decida e documente.</li>
+<li><strong>Datas</strong> não existem em JSON: use strings RFC 3339 (<code>2026-10-11T14:30:00Z</code>) em UTC. Duração, em segundos inteiros ou ISO 8601, mas escolha um.</li>
+<li><strong>Python aceita mais que o padrão:</strong> <code>json.loads("NaN")</code> devolve <code>nan</code> e <code>Infinity</code> também. Para entrada não confiável, passe <code>parse_constant</code> que levante erro, ou valide com Pydantic (M03).</li>
+</ul>
+<pre><code>&gt;&gt;&gt; import json
+&gt;&gt;&gt; json.loads('{"a": 1, "a": 2}')
+{'a': 2}
+&gt;&gt;&gt; json.loads('[NaN]')
+[nan]
+&gt;&gt;&gt; json.loads('[NaN]', parse_constant=lambda c: (_ for _ in ()).throw(ValueError(c)))
+ValueError: NaN</code></pre>
+
+<h3>Recursos, não procedimentos</h3>
+<p>"REST" no uso corrente significa: modelar o domínio como <strong>recursos</strong> identificados por URL (substantivos), manipulados pelos métodos HTTP com sua semântica, representados em JSON, sem estado de sessão no servidor entre requisições. A tabela do laboratório:</p>
+<table>
+<tr><th>Operação</th><th>Requisição</th><th>Sucesso</th><th>Falhas típicas</th></tr>
+<tr><td>listar</td><td><code>GET /notes?limit=20&amp;after=40</code></td><td>200</td><td>400 (parâmetro inválido)</td></tr>
+<tr><td>criar</td><td><code>POST /notes</code></td><td>201 + <code>Location</code></td><td>400, 415, 422</td></tr>
+<tr><td>ler</td><td><code>GET /notes/1</code></td><td>200 / 304</td><td>404</td></tr>
+<tr><td>substituir</td><td><code>PUT /notes/1</code> + <code>If-Match</code></td><td>200</td><td>404, 412, 428</td></tr>
+<tr><td>remover</td><td><code>DELETE /notes/1</code></td><td>204</td><td>404</td></tr>
+</table>
+<p>Convenções que reduzem atrito: coleções no plural; hierarquia só quando o filho não existe sem o pai (<code>/orders/7/items</code>), nunca profunda além de dois níveis; ações que não cabem em CRUD viram sub-recurso criado por <code>POST</code> (<code>POST /payments/9/refunds</code>), não verbos soltos na URL; resposta de criação traz o recurso e o <code>Location</code>. Para alterações parciais, <code>PATCH</code> com JSON Merge Patch (RFC 7396, <code>null</code> remove o campo) é o mais simples; JSON Patch (RFC 6902) é a operação-por-operação. O lab usa <code>PUT</code> com <code>If-Match</code> por ser o caso que ensina concorrência.</p>
+<p>REST puro (HATEOAS: hipermídia guiando o cliente) é raro na prática. O ponto mínimo que vale adotar é o campo <code>href</code> ou <code>next</code> já pronto na resposta, para que o cliente siga links em vez de montar URLs.</p>
+
+<h3>Versionamento: a regra é não precisar dele</h3>
+<p>Evolua de forma <strong>aditiva</strong>: campos novos opcionais não quebram clientes que os ignoram (isto obriga clientes a tolerar campos desconhecidos, a <em>regra de Postel</em> aplicada com critério). Quebra de verdade é remover/renomear campo, mudar tipo, tornar obrigatório o que era opcional, mudar semântica de status. Quando é inevitável, três lugares para a versão:</p>
+<table>
+<tr><th>Onde</th><th>Exemplo</th><th>Prós e contras</th></tr>
+<tr><td>caminho</td><td><code>/v2/notes</code></td><td>visível, fácil de rotear e de cachear; versiona a API toda e multiplica manutenção</td></tr>
+<tr><td>cabeçalho / tipo de mídia</td><td><code>Accept: application/vnd.exemplo.v2+json</code></td><td>URL estável; invisível em logs e no navegador, mais difícil de testar</td></tr>
+<tr><td>data (estilo de alguns provedores)</td><td><code>Api-Version: 2026-10-01</code></td><td>pequenas mudanças datadas por cliente; exige camada de compatibilidade no servidor</td></tr>
+</table>
+<p>Seja qual for a escolha, anuncie descontinuação com antecedência (cabeçalhos <code>Deprecation</code> e <code>Sunset</code> existem para isso) e meça quem ainda usa a versão velha antes de desligá-la.</p>
+
+<h3>Paginação: offset × cursor</h3>
+<p>Nunca devolva coleção sem limite. <strong>Offset</strong> (<code>?page=3&amp;size=20</code>, SQL <code>OFFSET 40</code>) é simples, permite "ir à página 7", mas tem dois defeitos: o banco precisa percorrer e descartar as linhas puladas (custo cresce com a página) e, se um item é inserido ou removido entre duas requisições, a lista desloca e o cliente <em>pula ou repete</em> itens. <strong>Cursor</strong> (<em>keyset</em>) usa o valor do último item visto como âncora: <code>?after=40&amp;limit=20</code> vira <code>WHERE id &gt; 40 ORDER BY id LIMIT 21</code>. Usa o índice, tem custo constante, e é estável sob inserção e remoção. O truque do <code>LIMIT n+1</code> descobre se há próxima página sem fazer <code>COUNT(*)</code> (caro em tabelas grandes). A chave de ordenação precisa ser única e estável; para ordenar por um campo não único (data de criação), o cursor vira o par <code>(data, id)</code>. Cursores opacos (codificados) deixam você mudar a implementação depois. O lab devolve <code>{"items": [...], "next": "/notes?limit=2&amp;after=2"}</code>, com <code>next: null</code> na última página, e há um teste mostrando que apagar um item anterior não desloca a leitura.</p>
+
+<h3>Erros: Problem Details (RFC 9457)</h3>
+<p>Um formato único de erro, legível por máquina, evita que cada cliente escreva um parser por endpoint. O RFC 9457 (que substitui o 7807) define o tipo de mídia <code>application/problem+json</code> com os membros <code>type</code> (URI que identifica a classe do problema), <code>title</code> (resumo estável, igual para todo problema do mesmo tipo), <code>status</code>, <code>detail</code> (explicação desta ocorrência) e <code>instance</code> (identifica esta ocorrência); extensões livres, como <code>errors</code>. Saída real do lab para um <code>limit=0</code>:</p>
+<pre><code>HTTP/1.1 400 Bad Request
+Content-Type: application/problem+json
+
+{"type": "/problems/bad-query", "title": "Parâmetros inválidos", "status": 400,
+ "instance": "/notes?limit=0",
+ "errors": [{"field": "limit", "message": "inteiro entre 1 e 100"}]}</code></pre>
+<p>O cliente decide por <code>type</code> (estável), mostra <code>title</code>, registra <code>detail</code>. Nunca vazar internals em <code>detail</code>: o teste <code>test_unexpected_exception_is_500_without_leaking</code> garante que uma exceção inesperada vira <code>500</code> genérico, com a stack só no log do servidor. Note também que o lab converte os erros do próprio <code>http.server</code> (linha de requisição malformada, método desconhecido) em Problem Details, em vez da página HTML padrão.</p>
+
+<h3>Idempotency keys: retry seguro para <code>POST</code></h3>
+<p>O problema: o cliente envia <code>POST /payments</code>, o servidor processa, a resposta se perde (timeout, queda de conexão). O cliente não sabe se funcionou. Repetir pode cobrar duas vezes; não repetir pode perder o pedido. A solução é o cliente gerar uma chave única por <em>intenção</em> (UUID) e enviá-la em <code>Idempotency-Key</code>; o servidor guarda <code>chave → (impressão do corpo, resposta)</code>:</p>
+<ul>
+<li>chave nova: executa e guarda a resposta;</li>
+<li>mesma chave, mesmo corpo: devolve a resposta guardada, sem executar de novo (o lab marca <code>Idempotency-Replayed: true</code>);</li>
+<li>mesma chave, corpo diferente: <code>422</code>, é bug do cliente;</li>
+<li>mesma chave <em>em voo</em> em duas requisições simultâneas: só uma executa (no lab, o lock cobre checagem e escrita juntas; há teste com concorrência).</li>
+</ul>
+<p>Em produção, a chave e o efeito precisam ser gravados na <strong>mesma transação</strong> do banco (senão há janela entre executar e registrar), com expiração (24 h é comum). O cabeçalho ainda é rascunho do IETF (<code>draft-ietf-httpapi-idempotency-key-header</code>), mas é prática consolidada em provedores de pagamento. Ele e o ETag resolvem problemas diferentes: a chave protege contra <em>repetição</em> da mesma intenção; o <code>If-Match</code> protege contra <em>concorrência</em> de intenções diferentes.</p>
+
+<div class="box fund">
+<span class="lbl">Exemplo trabalhado: o ciclo completo no laboratório</span>
+<pre><code>POST /notes  (Idempotency-Key: k1, {"title":"redes","body":"tcp"})  → 201, Location: /notes/1
+POST /notes  (mesma chave, mesmo corpo)                              → 201, Idempotency-Replayed: true
+                                                                        (continua só a nota 1)
+GET  /notes/1                                                        → 200, ETag: "0996f450b0c7959c"
+GET  /notes/1  (If-None-Match: "0996f450b0c7959c")                   → 304
+PUT  /notes/1  (sem If-Match)                                        → 428 Precondition Required
+PUT  /notes/1  (If-Match: "0000")                                    → 412 Precondition Failed</code></pre>
+<p>Cada linha corresponde a um passo do laboratório guiado, com a saída real do servidor.</p>
+</div>
+
+<h3>OpenAPI: o contrato em forma de dado</h3>
+<p>OpenAPI (3.1) descreve paths, métodos, parâmetros, corpos e respostas em YAML/JSON, com JSON Schema para os tipos. Rende três coisas: documentação navegável, geração de clientes e de testes de contrato, e validação automática. Duas abordagens: <em>contract-first</em> (você escreve o contrato, revisa com os consumidores e gera o esqueleto) e <em>code-first</em> (o framework deduz do código; FastAPI faz isso a partir dos tipos Pydantic, no M03). Code-first é mais rápido; contract-first força a discussão antes do código. Em qualquer caso, o arquivo OpenAPI entra no CI, e uma mudança que remove campo ou endurece validação deve ser detectada como <em>breaking change</em> por uma ferramenta de comparação, não por um cliente em produção.</p>
+<pre><code>paths:
+  /notes/{id}:
+    get:
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        "200": {description: ok, content: {application/json: {schema: {$ref: "#/components/schemas/Note"}}}}
+        "404": {description: não encontrada, content: {application/problem+json: {}}}</code></pre>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>REST × RPC × GraphQL.</strong> REST casa com recursos e cache HTTP; RPC (gRPC, JSON-RPC) com operações e baixa latência entre serviços; GraphQL com clientes variados que montam a própria consulta, ao custo de cache e de controle de custo por consulta mais difíceis. Para a API pública de um produto, REST+OpenAPI é a aposta de menor surpresa.</li>
+<li><strong>Estrito × tolerante na entrada.</strong> Rejeitar campos desconhecidos em requisições evita erros silenciosos de digitação; tolerá-los facilita evolução. Seja tolerante ao <em>ler</em> respostas, estrito ao <em>validar</em> requisições críticas.</li>
+<li><strong>Ordem de chaves e ETag.</strong> O ETag do lab é o hash de JSON canônico (chaves ordenadas); se dois processos serializam em ordem diferente, o mesmo conteúdo gera ETags diferentes e o cache nunca valida.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Verbos na URL (<code>/getUser</code>, <code>/deleteNote</code>) e <code>POST</code> para tudo.</li>
+<li>Retornar <code>200</code> com corpo de erro; ou <code>404</code> para "lista vazia" (lista vazia é <code>200</code> com <code>[]</code>).</li>
+<li>Paginar por offset sobre dados que mudam, e depois "descobrir" duplicatas num relatório.</li>
+<li>Gerar a idempotency key <em>por tentativa</em> em vez de <em>por intenção</em>: então cada retry cria uma chave nova e a proteção some.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Idempotency key só protege se o servidor tratar o <em>fingerprint</em> do corpo e a concorrência. Implementações ingênuas fazem <code>if key in cache: return cache[key]</code> e depois executam: duas requisições simultâneas com a mesma chave passam ambas pelo <code>if</code> antes de qualquer uma gravar. Outra falha comum: guardar a resposta só em caso de sucesso, de modo que uma chave que falhou por erro transitório executa de novo, o que é desejável, mas uma que falhou <em>depois</em> do efeito colateral executa o efeito duas vezes. A regra é gravar o início da operação e o efeito atomicamente.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>JSON tem cantos afiados: precisão numérica, chaves duplicadas, <code>NaN</code> em Python, <code>null</code> × ausente. Modele recursos, evolua de forma aditiva e evite versionar. Pagine por cursor, com limite máximo. Erros em Problem Details com <code>type</code> estável. <code>Idempotency-Key</code> torna <code>POST</code> repetível; <code>ETag</code>+<code>If-Match</code> evita atualização perdida. OpenAPI é o contrato versionado, verificado no CI.</p>
+</div>
+
+<h2 id="b05">Bloco 5 · Autenticação e segurança web: sessão e token, OAuth/OIDC com PKCE, JWT, senhas e OWASP</h2>
+
+<h3>Por que isso importa</h3>
+<p>Autenticação responde "quem é você?"; autorização responde "o que você pode fazer?". Quase todo vazamento relevante vem da segunda, não da primeira: o sistema sabia quem era o usuário e deixou-o ler o dado de outro. Este bloco dá o vocabulário e os mecanismos para as duas, além das três falhas que mais aparecem em revisão de código de API: acesso quebrado, injeção e SSRF. Segurança de produção (WAF, gestão de segredos, auditoria) fica no M12.</p>
+
+<h3>Sessão de servidor × token autocontido</h3>
+<table>
+<tr><th></th><th>Sessão (cookie com ID opaco)</th><th>Token autocontido (JWT no cabeçalho)</th></tr>
+<tr><td>Estado</td><td>no servidor (memória, Redis, banco)</td><td>dentro do token, assinado</td></tr>
+<tr><td>Revogar</td><td>apaga a sessão: efeito imediato</td><td>difícil: vale até expirar (precisa lista de revogação, que reintroduz estado)</td></tr>
+<tr><td>Escala</td><td>exige armazenamento compartilhado</td><td>qualquer instância valida sem consultar</td></tr>
+<tr><td>Riscos</td><td>CSRF (cookie automático), fixação de sessão</td><td>XSS se guardado em JS acessível; tokens longos vazam</td></tr>
+<tr><td>Bom para</td><td>aplicação web própria, mesma origem</td><td>entre serviços, APIs consumidas por terceiros</td></tr>
+</table>
+<p>A pergunta que decide: <em>preciso revogar já?</em> Se sim (conta comprometida, demissão, logout real), sessão com ID opaco é mais simples e mais segura. Quando usar token, mantenha o <em>access token</em> curto (minutos) e use um <em>refresh token</em> de vida longa, guardado com mais cuidado e rotacionado a cada uso. Em navegador, a combinação mais defensável é sessão em cookie <code>__Host-</code>, <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>.</p>
+
+<h3>OAuth 2 e OpenID Connect em um parágrafo cada</h3>
+<p><strong>OAuth 2</strong> (RFC 6749) é um protocolo de <em>delegação de autorização</em>: o usuário (<em>resource owner</em>) permite que um aplicativo (<em>client</em>) acesse recursos dele em uma API (<em>resource server</em>) sem entregar a senha, via um <em>authorization server</em> que emite tokens com <em>escopos</em>. Ele diz o que o app pode fazer, <strong>não quem é o usuário</strong>. <strong>OpenID Connect (OIDC)</strong> é a camada de identidade sobre OAuth: acrescenta o <em>ID token</em> (um JWT que afirma "este é o usuário X, autenticado agora por este emissor, para este client") e o endpoint <code>userinfo</code>. "Login com Google/Microsoft" é OIDC.</p>
+
+<h4>Authorization code com PKCE</h4>
+<p>É o fluxo para aplicativos web, móveis e de página única (a BCP atual, RFC 9700, o torna o padrão e deprecia o <em>implicit</em> e o <em>password grant</em>).</p>
+<pre><code>1. cliente gera code_verifier (aleatório, 43–128 car.) e
+   code_challenge = BASE64URL( SHA256(code_verifier) ), method S256, e também um `state`
+2. navegador → servidor de autorização:
+   /authorize?response_type=code&amp;client_id=…&amp;redirect_uri=…&amp;scope=openid%20profile
+              &amp;state=…&amp;code_challenge=…&amp;code_challenge_method=S256
+3. usuário autentica e consente; redireciona para redirect_uri?code=…&amp;state=…
+4. cliente confere `state`; POST /token { code, code_verifier, redirect_uri, client_id }
+5. servidor recalcula SHA256(code_verifier) e compara com o challenge guardado no passo 2
+   → só então emite access token (e ID token, se openid)</code></pre>
+<p>Por que PKCE existe: o <code>code</code> viaja pelo navegador (URL, histórico, logs, apps maliciosos que registram o mesmo esquema de URL no celular). Quem o interceptar não consegue trocá-lo por token sem o <code>code_verifier</code>, que nunca saiu do cliente. O <code>state</code> amarra a resposta à sessão que a iniciou (anti-CSRF no <em>callback</em>); o <code>redirect_uri</code> precisa casar <em>exatamente</em> com o cadastrado. No OIDC, o <code>nonce</code> amarra o ID token à requisição. O lab implementa o cálculo e a verificação do PKCE e valida contra o vetor do Apêndice B da RFC 7636.</p>
+
+<h3>JWT: o que é e onde falha</h3>
+<p>JWT (RFC 7519) são três partes base64url separadas por ponto: <code>cabeçalho.payload.assinatura</code>. O payload é <strong>apenas codificado, não cifrado</strong>: qualquer um lê. A assinatura (HMAC com segredo compartilhado, HS256; ou RSA/ECDSA com chave privada, RS256/ES256) só garante integridade e origem. Claims padrão: <code>iss</code> (emissor), <code>sub</code> (sujeito), <code>aud</code> (destinatário), <code>exp</code>/<code>nbf</code>/<code>iat</code> (tempos), <code>jti</code> (identificador).</p>
+<p>As falhas conhecidas (RFC 8725) são todas de <em>verificação</em>, não de criptografia:</p>
+<ul>
+<li><strong><code>alg: none</code></strong> e confusão de algoritmo: o verificador lê o <code>alg</code> do cabeçalho do próprio token e aceita <code>none</code>, ou trata a chave pública RSA como segredo HMAC. Regra: o servidor <em>fixa</em> o algoritmo esperado; o cabeçalho não escolhe.</li>
+<li>Cabeçalhos que apontam a chave (<code>jwk</code>, <code>jku</code>, <code>x5u</code>, <code>x5c</code>): o atacante inclui a própria chave. Ignore ou recuse; resolva a chave por <code>kid</code> numa lista que você controla.</li>
+<li>Não checar <code>exp</code>, <code>iss</code>, <code>aud</code>: um token válido emitido para <em>outra</em> API aceito na sua (<em>confused deputy</em>).</li>
+<li>Comparar assinatura com <code>==</code> (use comparação em tempo constante, <code>hmac.compare_digest</code>).</li>
+<li>Segredo HS256 curto ou previsível: quebrável offline; use 256 bits aleatórios.</li>
+<li>Dados sensíveis no payload, ou tokens de vida longa sem como revogar.</li>
+</ul>
+<pre><code>&gt;&gt;&gt; authn.verify_jwt(token, key, issuer="a", audience="api", now=1000)
+{'iss': 'a', 'aud': 'api', 'exp': 2000, 'sub': 'u1'}
+&gt;&gt;&gt; authn.verify_jwt(token, key, issuer="a", audience="api", now=3000)
+TokenError: token expirado
+&gt;&gt;&gt; authn.verify_jwt(token, key, issuer="a", audience="outra", now=1000)
+TokenError: audiência inesperada
+&gt;&gt;&gt; authn.verify_jwt(token_alg_none, key, issuer="a", audience="api", now=1000)
+TokenError: algoritmo não permitido: 'none'</code></pre>
+<p>Note que <code>verify_jwt</code> recebe <code>now</code> explicitamente: relógio injetado é o que permite testar expiração sem <code>sleep</code>, e o motivo de <code>leeway</code> existir (pequena tolerância para relógios dessincronizados entre emissor e verificador). A mensagem do <code>TokenError</code> serve ao log; ao cliente, devolva só <code>401</code>, sem dizer qual verificação falhou.</p>
+
+<h3>Senhas: hash lento, com sal, nunca criptografia</h3>
+<p>Nunca guarde a senha, nem cifrada (quem rouba o banco costuma roubar a chave). Guarde um <strong>hash lento e com sal</strong>: o sal (16+ bytes aleatórios por usuário) impede que a mesma senha produza o mesmo hash e inutiliza tabelas pré-computadas; a lentidão (e, em scrypt/Argon2, o consumo de memória) torna cara a tentativa em massa com GPUs. Funções gerais como SHA-256 são rápidas demais para isso, justamente o defeito. Opções aceitas hoje (OWASP Password Storage Cheat Sheet): <strong>Argon2id</strong> (primeira escolha; mínimo de 19 MiB de memória, 2 iterações, paralelismo 1), <strong>scrypt</strong> (N=2<sup>17</sup>, r=8, p=1, o padrão do lab, vem na biblioteca padrão), <strong>bcrypt</strong> (custo ≥ 10; trunca senha em 72 bytes). O resultado é guardado num formato autodescritivo, <code>scrypt$131072$8$1$sal$hash</code>, que carrega os parâmetros. Isso permite <em>subir o custo</em> depois: no login bem-sucedido, se <code>needs_rehash</code> indica parâmetros fracos, recalcule e grave o hash novo. Compare em tempo constante. Parâmetro de custo vindo de dentro do hash armazenado é entrada não confiável: o lab recusa valores que consumiriam memória absurda.</p>
+
+<h3>OWASP essencial</h3>
+<p>O OWASP Top 10 é uma lista de categorias de risco, atualizada a cada poucos anos; use como roteiro de revisão, não como checklist de conformidade. Três categorias dão a maior parte do retorno para quem escreve APIs.</p>
+
+<h4>1. Controle de acesso quebrado</h4>
+<p>A categoria nº 1 há anos. A forma típica é o <strong>BOLA/IDOR</strong> (<em>broken object level authorization</em>): <code>GET /orders/1042</code> verifica que o usuário está logado, mas não que o pedido 1042 é <em>dele</em>. Trocar o número no URL entrega dado alheio. IDs não adivinháveis (UUID) atrapalham a enumeração, mas não substituem a checagem. Correções estruturais: (a) toda consulta a dado de usuário filtra pelo dono (<code>WHERE id = :id AND owner_id = :uid</code>), de modo que "não existe" e "não é seu" são a mesma resposta (<code>404</code>); (b) autorização feita no servidor, a cada requisição, nunca confiando em campo oculto, cabeçalho ou papel enviados pelo cliente; (c) negar por padrão; (d) checar também <em>propriedades</em>: o usuário pode editar o próprio perfil, mas não o campo <code>is_admin</code> (<em>mass assignment</em>: aceite apenas os campos que o endpoint declara).</p>
+
+<h4>2. Injeção</h4>
+<p>Dados do usuário interpretados como código: SQL, shell, LDAP, templates, JSON/HTML. A causa é sempre a mesma, concatenar entrada na linguagem de destino; a correção também: <strong>separar código de dado</strong> com consultas parametrizadas, argumentos em lista (sem shell) e escape contextual na saída.</p>
+<pre><code># vulnerável: a entrada vira SQL
+cur.execute(f"SELECT * FROM notes WHERE title = '{title}'")      # title = "x' OR '1'='1"
+# correto: o driver envia consulta e valores separados
+cur.execute("SELECT * FROM notes WHERE title = ?", (title,))
+
+# vulnerável: shell interpreta metacaracteres
+subprocess.run(f"convert {name} out.png", shell=True)           # name = "a; rm -rf ~"
+# correto: sem shell, argv como lista
+subprocess.run(["convert", name, "out.png"], check=True)</code></pre>
+<p>Em saída HTML, o equivalente é o <em>XSS</em>: escape de saída pelo motor de templates (autoescape ligado), <code>Content-Security-Policy</code> como defesa em profundidade. Para integrações com LLM, o paralelo é a injeção de prompt, tratada nos módulos de segurança de IA: o mesmo princípio de que dado e instrução não podem compartilhar canal sem fronteira.</p>
+
+<h4>3. SSRF (<em>server-side request forgery</em>)</h4>
+<p>Seu servidor busca uma URL fornecida pelo usuário (pré-visualização de link, <em>webhook</em>, importação, e agora ferramentas de agente que "navegam"). O atacante informa <code>http://169.254.169.254/latest/meta-data/</code> (serviço de metadados da nuvem, que entrega credenciais da instância) ou <code>http://localhost:6379</code> (Redis interno) e o seu servidor, dentro da rede confiável, faz a requisição por ele. A defesa ingênua, comparar o texto da URL com uma lista negra, falha por variações: <code>http://0x7f000001</code>, <code>http://2130706433</code>, <code>http://[::ffff:127.0.0.1]</code>, nome DNS que resolve para IP interno, redirecionamento <code>302</code> para endereço interno, e <em>DNS rebinding</em> (o nome resolve para IP público na checagem e para interno na conexão). A defesa em camadas:</p>
+<ol>
+<li>Allowlist de esquemas (<code>https</code>) e, quando possível, de destinos.</li>
+<li>Resolver o nome <em>uma vez</em>, validar <strong>todos</strong> os IPs obtidos (público = <code>is_global</code>), e conectar neles diretamente (com <code>Host</code>/SNI do nome original), sem nova resolução.</li>
+<li>Não seguir redirecionamentos automaticamente, ou revalidar cada salto.</li>
+<li>Limitar tamanho e tempo da resposta; não devolver o corpo bruto ao usuário.</li>
+<li>Camada de rede: o serviço que busca URLs roda sem rota para a rede interna e para o endereço de metadados (que na AWS tem ainda a versão IMDSv2, exigindo token de sessão).</li>
+</ol>
+<p><code>ssrf.py</code> implementa o passo 2 e devolve os IPs validados para o chamador conectar neles. Ele bloqueia <code>10.0.0.5</code>, <code>169.254.169.254</code>, <code>::ffff:127.0.0.1</code> (IPv4 mapeado em IPv6 é desembrulhado antes de testar), credenciais na URL (<code>https://user:senha@host</code>) e esquemas fora da lista; e basta <em>um</em> IP interno entre vários para bloquear o nome inteiro, que é o caso do rebinding por múltiplos registros.</p>
+
+<h3>Mais cinco hábitos de baixo custo</h3>
+<ul>
+<li><strong>Limite de taxa</strong> por usuário/IP e na rota de login, com <code>429</code> e <code>Retry-After</code>; bloqueio progressivo, não permanente (permanente vira ataque de negação de serviço contra a vítima).</li>
+<li><strong>Mensagens de login iguais</strong> para "usuário não existe" e "senha errada"; e, se possível, tempo igual (faça o hash mesmo quando o usuário não existe).</li>
+<li><strong>Cabeçalhos de segurança:</strong> <code>Strict-Transport-Security</code>, <code>X-Content-Type-Options: nosniff</code>, <code>Content-Security-Policy</code>, <code>Referrer-Policy</code>.</li>
+<li><strong>Segredos fora do código:</strong> variáveis de ambiente ou cofre; nunca em repositório, log, URL (aparecem em histórico, <code>Referer</code> e logs de proxy) ou mensagem de erro.</li>
+<li><strong>Dependências e atualização:</strong> varredura automatizada e arquivo de travamento (<code>uv.lock</code>); a cadeia de suprimentos é hoje uma das categorias de risco do Top 10.</li>
+</ul>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Autorização centralizada × espalhada.</strong> Uma política única (função, middleware ou motor de políticas) é auditável; checagens ad hoc em cada rota esquecem uma. O custo da centralização é a indireção.</li>
+<li><strong>JWT assimétrico × simétrico.</strong> RS256/ES256 permite que muitos serviços <em>verifiquem</em> sem poder <em>emitir</em> (chave pública distribuída via JWKS); HS256 é mais simples, mas todo verificador pode forjar tokens. O lab usa HS256 por estar na biblioteca padrão; em produção entre serviços, prefira assimétrico.</li>
+<li><strong>Delegar login (OIDC com provedor) × próprio.</strong> Delegar elimina guardar senhas, MFA, recuperação de conta, mas cria dependência e lock-in da identidade; guardar senhas é responsabilidade permanente.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Guardar JWT em <code>localStorage</code> com XSS possível: qualquer script lê. Prefira cookie <code>HttpOnly</code>.</li>
+<li>Autenticar na borda e confiar em <code>X-User-Id</code> nos serviços internos sem verificar que o cabeçalho veio do gateway.</li>
+<li>Misturar <code>401</code> e <code>403</code>, ou responder <code>200</code> com "erro de permissão" no corpo.</li>
+<li>Escrever o próprio esquema criptográfico quando existe um padrão revisado.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Validar a URL e depois entregá-la a um cliente HTTP que resolve de novo é o erro mais sutil do SSRF: o <em>check</em> e o <em>use</em> enxergam respostas DNS diferentes (TOCTOU). Outro: validar o host mas deixar a biblioteca seguir redirecionamentos, e a requisição termina em <code>http://169.254.169.254</code> sem passar pela sua checagem. A função de validação precisa devolver os IPs, e o conector precisa usá-los.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Autenticação é "quem", autorização é "o quê", e a segunda falha mais. Sessão serve a revogação imediata; token serve a distribuição, com vida curta. OAuth delega acesso; OIDC acrescenta identidade; authorization code com PKCE é o fluxo padrão e o <code>state</code> e o <code>redirect_uri</code> exato fecham brechas. JWT: fixe o algoritmo e confira <code>exp</code>, <code>iss</code>, <code>aud</code>. Senha: Argon2id ou scrypt, com sal e custo ajustável. Cheque dono do objeto em toda consulta, parametrize tudo que vira código e valide todos os IPs antes de buscar URL externa.</p>
+</div>
+
+<h2 id="lab-guiado">Laboratório guiado F04</h2>
+<p>Cinco peças em Python 3.14, só com a biblioteca padrão, sem rede externa e sem conta: um cliente HTTP/1.1 montado sobre <code>socket</code>, uma API REST em <code>http.server</code>, o formato DNS no fio com um resolvedor UDP, primitivas de autenticação (scrypt, JWT HS256, PKCE) e uma guarda contra SSRF. Servidores escutam em <code>127.0.0.1</code>; os testes de DNS usam um servidor UDP falso no loopback. As saídas abaixo vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14.7, uv 0.12.13); linhas <code>Date:</code> variam a cada execução.</p>
+
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigidos: Python 3.14, <code>uv</code>, bash ou zsh. Nunca edite a referência em <code>modulos/F04-web-redes-http/lab/</code>.</p>
+<pre><code>cd modulos/F04-web-redes-http/lab
+python3 create_working_copy.py
+cd /tmp/f04-xxxx          # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>PowerShell:</strong> <code>cd modulos\F04-web-redes-http\lab; python create_working_copy.py</code>, depois <code>cd</code> para o caminho impresso e <code>uv sync --frozen</code>. Os passos com <code>&amp;</code> em segundo plano precisam de dois terminais (use duas janelas no lugar de <code>&amp;</code>).</p>
+
+<h3>Etapas</h3>
+
+<div class="step"><span class="n">1</span><strong>Gates de referência (todos os blocos).</strong> Antes de mexer, confirme que a cópia está verde.
+<pre><code>$ uv run pytest -q
+133 passed in 2.41s
+$ uv run ruff check . &amp;&amp; uv run ruff format --check . &amp;&amp; uv run mypy --strict src tests
+All checks passed!
+16 files already formatted
+Success: no issues found in 14 source files</code></pre>
+<p><strong>Resultado esperado:</strong> 133 testes verdes (o tempo varia) e os três verificadores limpos. <strong>Se falhar:</strong> <code>requires-python</code> não satisfeito: o <code>uv</code> não encontrou Python 3.14 (<code>uv python install 3.14</code>).</p></div>
+
+<div class="step"><span class="n">2</span><strong>Requisição escrita à mão (blocos 1 e 3).</strong> Suba a API num terminal e chame-a no outro. O cliente imprime a requisição que montou (<code>&gt;</code>) e a resposta (<code>&lt;</code>).
+<pre><code>$ uv run python -m web_http_lab.cli serve --port 8765 &amp;
+ouvindo em http://127.0.0.1:8765
+$ uv run python -m web_http_lab.cli request GET http://127.0.0.1:8765/health
+&gt; GET /health HTTP/1.1
+&gt; Host: 127.0.0.1:8765
+&gt; Connection: close
+&gt;
+&lt; HTTP/1.1 200 OK
+&lt; Server: web-http-lab/0.1
+&lt; Date: Sun, 11 Oct 2026 21:56:31 GMT
+&lt; Content-Type: application/json; charset=utf-8
+&lt; ETag: "a29ee2b15c494311"
+&lt; Cache-Control: no-store
+&lt; Content-Length: 15
+&lt;
+{"status":"ok"}</code></pre>
+<p><strong>Resultado esperado:</strong> status 200, <code>Content-Length: 15</code> igual aos bytes de <code>{"status":"ok"}</code>, <code>Cache-Control: no-store</code> (saúde nunca se cacheia). O código de saída do comando é 0 para status &lt; 400 e 1 para 4xx/5xx. <strong>Se falhar:</strong> <code>Connection refused</code>: o servidor não subiu ou a porta está ocupada (use <code>--port</code> outra); é o <em>refused</em> do bloco 1.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Criação e <em>idempotency key</em> (bloco 4).</strong> Envie o mesmo <code>POST</code> duas vezes com a mesma chave.
+<pre><code>$ uv run python -m web_http_lab.cli request POST http://127.0.0.1:8765/notes \
+    -H 'Content-Type: application/json' -H 'Idempotency-Key: k1' \
+    --data '{"title":"redes","body":"tcp"}'
+&gt; POST /notes HTTP/1.1
+&gt; Host: 127.0.0.1:8765
+&gt; Connection: close
+&gt; Content-Type: application/json
+&gt; Idempotency-Key: k1
+&gt; Content-Length: 30
+...
+&lt; HTTP/1.1 201 Created
+&lt; ETag: "0996f450b0c7959c"
+&lt; Location: /notes/1
+...
+{"id":1,"title":"redes","body":"tcp","href":"/notes/1"}</code></pre>
+<p>Repita o mesmo comando: a resposta continua <code>201 Created</code> com <code>Idempotency-Replayed: true</code> e <code>GET /notes</code> mostra uma única nota. Troque o corpo mantendo <code>k1</code> e a resposta é <code>422</code>. <strong>Resultado esperado:</strong> <code>Content-Length: 30</code> na requisição (o tamanho de <code>{"title":"redes","body":"tcp"}</code>), <code>Location: /notes/1</code>, repetição sem duplicar. <strong>Se falhar:</strong> <code>415</code> significa <code>Content-Type</code> ausente ou errado; <code>411</code>, falta de <code>Content-Length</code>.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Validação condicional (bloco 3).</strong> Leia o <code>ETag</code> e peça de novo com <code>If-None-Match</code>.
+<pre><code>$ uv run python -m web_http_lab.cli request GET http://127.0.0.1:8765/notes/1 \
+    -H 'If-None-Match: "0996f450b0c7959c"'
+...
+&lt; HTTP/1.1 304 Not Modified
+&lt; ETag: "0996f450b0c7959c"
+&lt; Cache-Control: no-cache
+&lt;</code></pre>
+<p><strong>Resultado esperado:</strong> 304, sem <code>Content-Length</code> e sem corpo. O RTT foi gasto; só a banda foi poupada. <strong>Se falhar:</strong> 200 com corpo: as aspas fazem parte do ETag e precisam ir no cabeçalho; sem elas o validador não casa.</p></div>
+
+<div class="step"><span class="n">5</span><strong>Concorrência otimista e erros em Problem Details (blocos 3 e 4).</strong>
+<pre><code>$ ... request PUT http://127.0.0.1:8765/notes/1 -H 'Content-Type: application/json' --data '{"title":"x","body":"y"}'
+&lt; HTTP/1.1 428 Precondition Required
+&lt; Content-Type: application/problem+json
+{"type": "/problems/precondition-required", "title": "If-Match obrigatório", "status": 428, "instance": "/notes/1", "detail": "Leia a nota, guarde o ETag e envie-o em If-Match."}
+$ ... request PUT .../notes/1 -H 'Content-Type: application/json' -H 'If-Match: "0000"' --data '{"title":"x","body":"y"}'
+&lt; HTTP/1.1 412 Precondition Failed
+{"type": "/problems/precondition-failed", "title": "Versão desatualizada", "status": 412, ...}
+$ ... request GET 'http://127.0.0.1:8765/notes?limit=0'
+&lt; HTTP/1.1 400 Bad Request
+{"type": "/problems/bad-query", ..., "errors": [{"field": "limit", "message": "inteiro entre 1 e 100"}]}
+$ ... request POST .../notes -H 'Content-Type: text/plain' --data 'oi'
+&lt; HTTP/1.1 415 Unsupported Media Type
+{"type": "/problems/unsupported-media-type", "title": "Use Content-Type: application/json", ..., "detail": "text/plain"}</code></pre>
+<p><strong>Resultado esperado:</strong> 428, 412, 400 e 415, todos com <code>application/problem+json</code>. Para ver o <code>PUT</code> dar certo, envie o ETag de <code>GET /notes/1</code> em <code>If-Match</code> (200 e novo ETag). <strong>Se falhar:</strong> 405 com <code>Allow</code>: método errado para o caminho.</p></div>
+
+<div class="step"><span class="n">6</span><strong>Bytes crus e recusa de ambiguidade (blocos 1 e 3).</strong> Encerre o servidor do passo 2 (<code>kill %1</code>) e use o servidor em thread do próprio lab, enviando bytes que nenhum cliente decente produziria.
+<pre><code>$ uv run python - &lt;&lt;'PY'
+from web_http_lab.api import running_server
+from web_http_lab.httpclient import send_raw
+with running_server() as s:
+    ambiguo = (b"POST /notes HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\n"
+               b"Content-Length: 5\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n")
+    print(send_raw("127.0.0.1", s.port, ambiguo).decode().split("\r\n")[0])
+    print(send_raw("127.0.0.1", s.port, b"GET /health HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n").decode().split("\r\n")[0])
+    print(send_raw("127.0.0.1", s.port, b"BREW /pot HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n").decode().split("\r\n")[0])
+PY
+HTTP/1.1 501 Not Implemented
+HTTP/1.1 200 OK
+HTTP/1.1 501 Not Implemented</code></pre>
+<p><strong>Resultado esperado:</strong> a mensagem com <code>Content-Length</code> e <code>Transfer-Encoding</code> juntos é recusada, e a conexão é fechada (nada do excedente vira "próxima requisição"); o <code>GET</code> bem formado passa; o método desconhecido também recebe Problem Details, não HTML. <strong>Se falhar:</strong> <code>ModuleNotFoundError: web_http_lab</code>: você não está na cópia de trabalho ou esqueceu o <code>uv sync --frozen</code>; <code>running_server</code> usa porta efêmera, então não colide com o servidor do passo 2.</p></div>
+
+<div class="step"><span class="n">7</span><strong>DNS no fio (bloco 2).</strong>
+<pre><code>$ uv run python -m web_http_lab.cli dns-query example.com A
+29 bytes
+0000  12 34 01 00 00 01 00 00 00 00 00 00 07 65 78 61
+0010  6d 70 6c 65 03 63 6f 6d 00 00 01 00 01
+$ uv run python -m web_http_lab.cli dns-demo
+resposta: 95 bytes
+0000  12 34 81 80 00 01 00 02 00 00 00 00 07 65 78 61
+0010  6d 70 6c 65 03 63 6f 6d 00 00 0f 00 01 c0 0c 00
+...
+id=0x1234 resposta=True rcode=0
+example.com  3600  IN  MX  10 mail.example.com
+example.com  3600  IN  MX  20 backup.example.com</code></pre>
+<p><strong>Resultado esperado:</strong> localize no dump <code>07 'example' 03 'com' 00</code> (nome em rótulos), <code>00 01 00 01</code> (tipo A, classe IN) e, na resposta, <code>c0 0c</code> (ponteiro de compressão para o byte 12), <code>81 80</code> (flags: resposta, recursão desejada e disponível) e <code>0e 10</code> (TTL = 3600). <strong>Se falhar:</strong> contagem de bytes diferente: confira o nome digitado; cada rótulo soma 1 byte de tamanho.</p></div>
+
+<div class="step"><span class="n">8</span><strong>Autenticação e SSRF (bloco 5).</strong> Salve como <code>demo_auth.py</code> na cópia e rode com <code>uv run python demo_auth.py</code>.
+<pre><code>from web_http_lab import authn, ssrf
+
+h = authn.hash_password("correct horse")
+print(h.split("$")[:4], authn.verify_password("correct horse", h), authn.verify_password("wrong", h))
+key = b"k" * 32
+tok = authn.sign_jwt({"iss": "a", "aud": "api", "exp": 2000, "sub": "u1"}, key)
+print(authn.verify_jwt(tok, key, issuer="a", audience="api", now=1000))
+for kw in ({"now": 3000}, {"now": 1000, "audience": "outra"}):
+    args = {"issuer": "a", "audience": "api"} | kw
+    try:
+        authn.verify_jwt(tok, key, **args)
+    except authn.TokenError as e:
+        print("recusado:", e)
+print(authn.code_challenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"))
+public = lambda host: ["93.184.216.34"]
+for url in ("https://169.254.169.254/latest", "https://[::ffff:127.0.0.1]/",
+            "http://example.com/", "https://user:p@example.com/", "https://10.0.0.5/"):
+    try:
+        ssrf.check_public_url(url, resolver=public)
+    except ssrf.UnsafeUrl as e:
+        print("bloqueado:", e)
+print(ssrf.check_public_url("https://exemplo.test/", resolver=public))</code></pre>
+<pre><code>['scrypt', '131072', '8', '1'] True False
+{'iss': 'a', 'aud': 'api', 'exp': 2000, 'sub': 'u1'}
+recusado: token expirado
+recusado: audiência inesperada
+E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM
+bloqueado: 169.254.169.254 resolve para endereço não público: 169.254.169.254
+bloqueado: ::ffff:127.0.0.1 resolve para endereço não público: 127.0.0.1
+bloqueado: esquema não permitido: 'http'
+bloqueado: credenciais na URL (userinfo) não são aceitas
+bloqueado: 10.0.0.5 resolve para endereço não público: 10.0.0.5
+['93.184.216.34']</code></pre>
+<p><strong>Resultado esperado:</strong> o <em>challenge</em> PKCE é exatamente o do Apêndice B da RFC 7636 (<code>E9Melhoa2…</code>); o hash tem os parâmetros no próprio texto; o IPv4 mapeado em IPv6 é desembrulhado e bloqueado. <strong>Se falhar:</strong> <code>MemoryError</code>/lentidão no hash: o scrypt com N=2<sup>17</sup> usa ≈128 MiB; num ambiente com pouca memória, passe <code>n=2**14</code> só no experimento.</p></div>
+
+<div class="step"><span class="n">9</span><strong>Controle negativo: quebre a guarda e veja os testes reagirem (bloco 5).</strong> Na cópia de trabalho, desligue a fixação de algoritmo do JWT e rode a suíte.
+<pre><code>$ sed -i 's/if header.get("alg") != "HS256":/if False:/' src/web_http_lab/authn.py
+$ uv run pytest -q
+FAILED tests/test_authn.py::test_jwt_algorithm_is_pinned[RS256] - AssertionError ...
+FAILED tests/test_authn.py::test_jwt_algorithm_is_pinned[hs256] - AssertionError ...
+FAILED tests/test_authn.py::test_jwt_algorithm_is_pinned[] - AssertionError ...
+6 failed, 127 passed in 2.53s</code></pre>
+<p><strong>Resultado esperado:</strong> seis falhas, todas em <code>test_jwt_algorithm_is_pinned</code>. Reparou na mensagem: o token <code>alg: none</code> agora é recusado por "assinatura inválida" em vez de "algoritmo não permitido"; neste lab a barreira cai para a segunda linha de defesa, o que esconde o defeito do usuário. Teste que só confere "levantou exceção" não pegaria isso; o teste confere a <em>mensagem</em>. Restaure o arquivo (<code>cp</code> da referência) e confirme os 133 verdes. <strong>Se falhar:</strong> nenhuma falha: o <code>sed</code> não casou (o texto da linha mudou); abra o arquivo e edite à mão.</p></div>
+
+<h2 id="diagnostico">Tabela de Diagnóstico</h2>
+<table>
+<tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr>
+<tr><td><code>Connection refused</code> imediato</td><td>host alcançado, nada escutando na porta (RST)</td><td>subir o serviço; conferir porta e interface (<code>0.0.0.0</code> × <code>127.0.0.1</code>)</td></tr>
+<tr><td>Chamada trava até o timeout</td><td>pacotes descartados (firewall, grupo de segurança, IP errado) ou servidor sem resposta</td><td>testar conexão TCP separadamente; revisar regras; definir connect/read timeout</td></tr>
+<tr><td><code>Connection reset by peer</code> no meio de uma resposta</td><td>balanceador fechou conexão ociosa; processo caiu</td><td>keep-alive do cliente abaixo do idle timeout; retry só em idempotentes</td></tr>
+<tr><td>Metade do tráfego no servidor antigo após trocar IP</td><td>TTL alto em cache nos recursivos e clientes</td><td>baixar TTL antes da mudança; aguardar um TTL antigo</td></tr>
+<tr><td>Funciona no navegador, falha no <code>curl</code>/serviço com "unable to get local issuer"</td><td>servidor não envia a intermediária</td><td>servir cadeia completa (folha + intermediárias)</td></tr>
+<tr><td>Erro de certificado em contêiner</td><td>imagem sem <code>ca-certificates</code> ou CA interna ausente</td><td>instalar a CA no trust store; jamais <code>verify=False</code></td></tr>
+<tr><td>"Funciona no curl, falha no navegador" em API</td><td>CORS (o <code>curl</code> não aplica)</td><td>allowlist de origens, tratar <code>OPTIONS</code>, <code>Vary: Origin</code></td></tr>
+<tr><td>Usuários veem versão antiga de recurso</td><td><code>max-age</code> longo sem revalidação, ou <code>Vary</code> ausente</td><td><code>no-cache</code>+ETag para dados; nomes com hash e <code>immutable</code> para assets</td></tr>
+<tr><td>Cobrança/registro duplicado após timeout</td><td>retry de <code>POST</code> sem chave de idempotência</td><td><code>Idempotency-Key</code> por intenção, gravada junto do efeito</td></tr>
+<tr><td>Itens repetidos ou faltando na paginação</td><td>offset sobre dados mutáveis</td><td>paginação por cursor com chave única e estável</td></tr>
+<tr><td>Edição de um usuário apaga a de outro</td><td>sem concorrência otimista</td><td><code>ETag</code> + <code>If-Match</code> (412/428)</td></tr>
+<tr><td>Token válido aceito na API errada</td><td><code>aud</code>/<code>iss</code> não verificados</td><td>checar <code>exp</code>, <code>nbf</code>, <code>iss</code>, <code>aud</code>; algoritmo fixo</td></tr>
+<tr><td>Usuário lê dado de outro mudando o ID na URL</td><td>checagem de dono ausente (BOLA)</td><td>filtrar por dono em toda consulta; 404 uniforme</td></tr>
+<tr><td>Servidor busca URL e acessa a rede interna</td><td>SSRF: validação por texto, redirecionamento ou rebinding</td><td>validar todos os IPs resolvidos, conectar neles, não seguir redirects</td></tr>
+</table>
+
+<h2 id="checkpoint">Checkpoint F04</h2>
+<p>Responda sem consulta. Cada cenário tem rubrica: <strong>Basta</strong> é o mínimo para seguir; <strong>Reprova</strong> indica lacuna que volta a morder nos módulos de serviço (M03) e de produção (M12).</p>
+<ol>
+<li><strong>Latência.</strong> Um cliente a 100 ms de RTT chama <code>https://api.exemplo.com</code> pela primeira vez (TLS 1.3, sem cache). Quanto tempo mínimo até o primeiro byte da resposta, ignorando DNS e processamento? O que muda na segunda chamada pela mesma conexão e com HTTP/3?
+<p><strong>Basta:</strong> ≈300 ms (TCP 1 RTT + TLS 1.3 1 RTT + requisição 1 RTT); segunda chamada na mesma conexão ≈100 ms; HTTP/3 junta transporte e TLS: ≈200 ms na primeira. <strong>Reprova:</strong> contar só a requisição, ou dizer que dobrar a banda resolve.</p></li>
+<li><strong>Camada.</strong> Três falhas: <code>ECONNREFUSED</code> em 2 ms, timeout após 30 s, <code>certificate has expired</code>. Em que camada nasce cada uma e quem você aciona?
+<p><strong>Basta:</strong> recusa (transporte: ninguém escuta, ou RST) → dono do serviço; timeout (rede/rota/firewall, ou serviço travado) → rede/infra; certificado (TLS/aplicação) → dono do certificado e da renovação. <strong>Reprova:</strong> tratar as três como "rede fora".</p></li>
+<li><strong>DNS.</strong> Você vai trocar o IP de <code>api.exemplo.com</code>, hoje com TTL de 1 h. Descreva o plano e o que acontece se pular o primeiro passo.
+<p><strong>Basta:</strong> baixar o TTL ≥ 1 h antes; trocar; observar tráfego nos dois destinos; manter o antigo vivo até esgotar; subir o TTL depois. Sem o passo 1, parte dos clientes vai ao IP velho por até 1 h. <strong>Reprova:</strong> "trocar de madrugada e pronto".</p></li>
+<li><strong>HTTP.</strong> Um cliente repete automaticamente <code>PUT /notes/1</code> e <code>POST /payments</code> após timeout. Qual repetição é segura, por quê, e o que torna a outra segura?
+<p><strong>Basta:</strong> <code>PUT</code> é idempotente por definição; <code>POST</code> não é: precisa de <code>Idempotency-Key</code> com fingerprint do corpo e gravação atômica com o efeito. <strong>Reprova:</strong> "<code>POST</code> nunca deve ser repetido" sem oferecer solução, ou ignorar a janela entre executar e registrar.</p></li>
+<li><strong>Cache.</strong> Explique a diferença entre <code>no-cache</code> e <code>no-store</code>, e desenhe os cabeçalhos para (a) <code>app.3fa9.js</code>, (b) <code>GET /me</code>, (c) <code>GET /notes/1</code>.
+<p><strong>Basta:</strong> <code>no-cache</code> guarda e revalida; <code>no-store</code> não guarda. (a) <code>public, max-age=31536000, immutable</code>; (b) <code>private, no-store</code> (ou <code>private, no-cache</code>); (c) <code>no-cache</code> + <code>ETag</code>, resposta <code>304</code>. <strong>Reprova:</strong> trocar as duas diretivas, ou cachear <code>/me</code> em cache compartilhado.</p></li>
+<li><strong>CORS.</strong> A SPA em <code>https://app.com</code> recebe erro de CORS ao chamar sua API com cookie. O colega propõe responder <code>Access-Control-Allow-Origin: *</code>. Avalie.
+<p><strong>Basta:</strong> com credenciais o navegador rejeita <code>*</code>; usar allowlist de origens exatas, <code>Allow-Credentials: true</code>, <code>Vary: Origin</code>, responder preflight; CORS não protege o servidor, e o cookie exige <code>SameSite</code>/anti-CSRF. <strong>Reprova:</strong> refletir <code>Origin</code> sem checar, ou achar que CORS impede a requisição de chegar.</p></li>
+<li><strong>API.</strong> Projete a listagem de <code>/orders</code> para 50 milhões de linhas com inserções constantes e o formato de erro. Que paginação, que limite, que corpo de erro?
+<p><strong>Basta:</strong> cursor/keyset sobre chave única e estável, <code>limit</code> com máximo, <code>LIMIT n+1</code>, link <code>next</code>; erros em <code>application/problem+json</code> com <code>type</code> estável e lista de campos inválidos. <strong>Reprova:</strong> <code>OFFSET</code>, <code>COUNT(*)</code> a cada página, ou 200 com erro no corpo.</p></li>
+<li><strong>JWT.</strong> Uma API aceita qualquer JWT com assinatura válida. Liste ao menos quatro verificações que faltam e um ataque possível para cada duas.
+<p><strong>Basta:</strong> algoritmo fixo (<code>alg: none</code>, confusão RS/HS), <code>exp</code>/<code>nbf</code>, <code>iss</code>, <code>aud</code> (token de outra API aceito), cabeçalhos <code>jwk/jku</code> (chave do atacante), comparação em tempo constante. <strong>Reprova:</strong> "a assinatura basta".</p></li>
+<li><strong>Autorização.</strong> <code>GET /invoices/77</code> retorna a fatura de qualquer usuário logado. Nomeie a falha, corrija a consulta e diga o status ao acessar fatura alheia.
+<p><strong>Basta:</strong> BOLA/IDOR (controle de acesso quebrado); <code>WHERE id=:id AND owner_id=:uid</code>; 404 (ou 403 se a existência não for segredo). UUID não resolve. <strong>Reprova:</strong> propor só IDs aleatórios ou checar no front-end.</p></li>
+<li><strong>SSRF.</strong> Seu serviço gera pré-visualização de links. Descreva três bypasses de uma lista negra por texto e a defesa correta.
+<p><strong>Basta:</strong> IP em decimal/hex/IPv6 mapeado, nome DNS que resolve para interno, redirecionamento, rebinding; defesa: esquema permitido, resolver uma vez, validar todos os IPs como públicos, conectar neles, sem redirects automáticos, limite de tamanho/tempo, isolamento de rede. <strong>Reprova:</strong> filtrar <code>localhost</code> e <code>127.0.0.1</code> como strings.</p></li>
+</ol>
+
+<h2 id="fontes">Fontes e versões</h2>
+<p>Verificadas em 11/10/2026. Especificações primeiro; versões de ferramentas são as do laboratório (Python 3.14.7, uv 0.12.13, OpenSSL 3.5.8, pytest 9.1.1, ruff 0.17.0).</p>
+<ul>
+<li>IETF: <a href="https://www.rfc-editor.org/rfc/rfc9110">RFC 9110</a> (semântica HTTP), <a href="https://www.rfc-editor.org/rfc/rfc9111">9111</a> (cache), <a href="https://www.rfc-editor.org/rfc/rfc9112">9112</a> (HTTP/1.1), <a href="https://www.rfc-editor.org/rfc/rfc9113">9113</a> (HTTP/2), <a href="https://www.rfc-editor.org/rfc/rfc9114">9114</a> (HTTP/3), <a href="https://www.rfc-editor.org/rfc/rfc9000">9000</a> (QUIC), <a href="https://www.rfc-editor.org/rfc/rfc8446">8446</a> (TLS 1.3).</li>
+<li>DNS: <a href="https://www.rfc-editor.org/rfc/rfc1035">RFC 1035</a> (formato), <a href="https://www.rfc-editor.org/rfc/rfc2308">2308</a> (cache negativo).</li>
+<li>Cookies e JSON: <a href="https://www.rfc-editor.org/rfc/rfc6265">RFC 6265</a>, <a href="https://www.rfc-editor.org/rfc/rfc8259">RFC 8259</a>, <a href="https://www.rfc-editor.org/rfc/rfc7396">7396</a> (Merge Patch), <a href="https://www.rfc-editor.org/rfc/rfc6902">6902</a> (JSON Patch).</li>
+<li>API: <a href="https://www.rfc-editor.org/rfc/rfc9457">RFC 9457</a> (Problem Details), <a href="https://spec.openapis.org/oas/v3.1.0">OpenAPI 3.1</a>. O cabeçalho <code>Idempotency-Key</code> segue como <em>Internet-Draft</em> do grupo httpapi do IETF.</li>
+<li>Autenticação: <a href="https://www.rfc-editor.org/rfc/rfc6749">RFC 6749</a> (OAuth 2.0), <a href="https://www.rfc-editor.org/rfc/rfc7636">7636</a> (PKCE), <a href="https://www.rfc-editor.org/rfc/rfc9700">9700</a> (OAuth 2.0 Security BCP), <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>, <a href="https://www.rfc-editor.org/rfc/rfc7519">7519</a> (JWT), <a href="https://www.rfc-editor.org/rfc/rfc8725">8725</a> (JWT BCP).</li>
+<li>Segurança prática (complemento de praticante, rotulado): <a href="https://owasp.org/www-project-top-ten/">OWASP Top 10</a> e <a href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html">Password Storage Cheat Sheet</a> (parâmetros de Argon2id, scrypt e bcrypt citados acima).</li>
+<li>Certificados: <a href="https://cabforum.org/">CA/Browser Forum</a> (Baseline Requirements; o calendário de redução da validade é de alto risco de mudança, consulte a versão vigente).</li>
+<li>Python: documentação de <code>socket</code>, <code>http.server</code>, <code>hashlib.scrypt</code>, <code>hmac</code> e <code>ipaddress</code> da biblioteca padrão.</li>
+</ul>
+<p>Separação entre invariante, padrão aberto e adapter: o formato de mensagem HTTP, o handshake TCP e o formato de pacote DNS são invariantes; OAuth/OIDC/PKCE e Problem Details são padrões abertos; HS256 em biblioteca padrão e <code>http.server</code> são adapters didáticos (em produção entram o framework do M03 e um provedor de identidade).</p>
+
+<div class="box ok">
+<span class="lbl">Conclusão</span>
+<p>Você agora tem o modelo para quando uma chamada de rede dá errado: a camada onde a falha nasce, o custo em RTTs, o que o cache e o DNS lembram e por quanto tempo, e quais promessas HTTP permitem repetir, cachear e conciliar. Também tem o mínimo de segurança web para não construir os três defeitos mais caros. Próximos passos: <a href="../F05-sql-bancos-relacionais/F05.html">F05</a> (dados), depois o <a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a>, onde FastAPI e Pydantic automatizam parte do que você escreveu à mão aqui, e o <a href="../LT01-novo/LT01.html">LT01</a>, que aprofunda a rede e o runtime. Segurança de produção continua no <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>.</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="F04"></script>
+</body>
+</html>

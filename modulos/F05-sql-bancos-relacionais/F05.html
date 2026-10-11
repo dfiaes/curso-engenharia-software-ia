@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F05 · Bancos Relacionais, SQL e Modelagem de Dados</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>F05 · Bancos relacionais, SQL e modelagem de dados</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas de terminal e os gates do laboratório vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14.7, SQLite 3.53.1, uv 0.12.13). <a href="../../STATUS.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
+<p class="meta"><span class="badge">FASE 0</span> &nbsp; 6 blocos · carga estimada ≈ 12 h · pré-requisito: <a href="../F02-python-do-zero/F02.html">F02</a> · depois: <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a> (transações em nível sênior), <a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a> (SQLAlchemy + PostgreSQL), <a href="../M07-rag-de-verdade/M07.html">M07</a> (pgvector) · <strong>a base de dados que todo o resto assume</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Quase todo sistema com IA guarda estado em um banco relacional: usuários, conversas, execuções de agentes, custos, avaliações, metadados de documentos. As falhas mais caras ali não são de sintaxe. São linhas órfãs porque uma restrição não existia, um relatório que "perde" registros por causa de <code>NULL</code>, uma consulta que passa em desenvolvimento e derruba produção com 10 milhões de linhas, um estoque que vai a −1 porque duas requisições leram o mesmo valor. Este módulo trata o banco como um sistema com regras próprias, não como um lugar onde se joga dado.</p>
+<p>Ao terminar você consegue: (1) modelar um domínio até a 3FN, dizer qual anomalia cada forma normal impede e quando desnormalizar de propósito; (2) escrever e <em>prever o resultado</em> de consultas com todos os tipos de JOIN, agregações, subqueries e <code>NULL</code> (lógica de três valores), seguindo a ordem lógica de execução; (3) usar CTEs, CTEs recursivas, window functions, <code>UPSERT</code> e <code>RETURNING</code> onde elas simplificam de verdade; (4) ler um plano de execução, escolher a ordem das colunas de um índice composto, saber quando um índice não será usado e detectar N+1; (5) raciocinar sobre ACID, níveis de isolamento, <em>lost update</em>, <em>write skew</em>, locks, MVCC e <em>deadlock</em>, e escolher a defesa certa; (6) acessar o banco por Python com parâmetros, demonstrar e evitar SQL injection, versionar o schema com migrations e decidir quando um banco não relacional ou vetorial é a ferramenta certa.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">SQLite no laboratório, PostgreSQL na vida real</span>
+<p>O laboratório usa <code>sqlite3</code>, da biblioteca padrão do Python: zero instalação, zero rede, resultados idênticos em qualquer máquina. O banco que você vai operar em produção no curso é o PostgreSQL (<a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a>). O texto marca cada ponto em que os dois divergem (tipagem, isolamento, locks, <code>EXPLAIN</code>, DDL). Onde o SQLite não consegue demonstrar um fenômeno do PostgreSQL, o texto diz isso e o laboratório mostra o que o SQLite faz no lugar, sem fingir equivalência. Este módulo não ensina administração de servidor, replicação nem tuning de configuração.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça, sem testar. Se acertar todas com segurança (o mecanismo, não só a regra decorada), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint">Checkpoint F05</a> e siga para o <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a>. Qualquer resposta hesitante marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> Uma tabela guarda <code>pedido(id, produto_id, nome_produto, preco_produto)</code>. Que anomalia aparece ao renomear um produto, e que forma normal é violada?
+<details><summary>Resposta</summary><p>Anomalia de atualização: o nome fica repetido em cada pedido e uma atualização parcial deixa o mesmo produto com dois nomes. <code>nome_produto</code> depende de <code>produto_id</code>, que não é a chave (<code>id</code>): dependência transitiva, violação da 3FN. A correção é uma tabela <code>produto</code>.</p></details></li>
+<li><strong>(Bloco 2)</strong> <code>SELECT * FROM t WHERE x NOT IN (SELECT y FROM u)</code> retorna zero linhas, embora existam valores de <code>x</code> ausentes em <code>u.y</code>. Por quê?
+<details><summary>Resposta</summary><p>Há pelo menos um <code>NULL</code> em <code>u.y</code>. <code>x NOT IN (1, NULL)</code> equivale a <code>x &lt;&gt; 1 AND x &lt;&gt; NULL</code>; o segundo termo é <code>UNKNOWN</code>, o <code>AND</code> nunca chega a <code>TRUE</code> e o <code>WHERE</code> só deixa passar <code>TRUE</code>. <code>NOT EXISTS</code> não sofre disso.</p></details></li>
+<li><strong>(Bloco 2)</strong> Em um <code>LEFT JOIN</code>, qual a diferença entre colocar <code>b.copias &gt; 1</code> no <code>ON</code> ou no <code>WHERE</code>?
+<details><summary>Resposta</summary><p>No <code>ON</code> o filtro decide quais linhas da direita casam, e as linhas da esquerda sem par sobrevivem com <code>NULL</code>. No <code>WHERE</code> o filtro roda depois do join e descarta as linhas com <code>NULL</code>, convertendo o <code>LEFT JOIN</code> em <code>INNER JOIN</code>. No lab: 5 linhas contra 2.</p></details></li>
+<li><strong>(Bloco 3)</strong> Por que não se pode escrever <code>WHERE ROW_NUMBER() OVER (...) = 1</code>?
+<details><summary>Resposta</summary><p>Window functions são avaliadas depois de <code>WHERE</code>, <code>GROUP BY</code> e <code>HAVING</code>, na fase do <code>SELECT</code>. O filtro precisa de uma subquery ou CTE que materialize o resultado da janela antes.</p></details></li>
+<li><strong>(Bloco 4)</strong> Existe um índice em <code>(member_id, loaned_on)</code>. Ele ajuda em <code>WHERE loaned_on = ?</code> sozinho? E em <code>WHERE member_id = ?</code>?
+<details><summary>Resposta</summary><p>Não no primeiro caso: um índice composto só serve a prefixos à esquerda; sem <code>member_id</code> a consulta faz varredura completa (<code>SCAN</code>). Sim no segundo: <code>member_id</code> é o prefixo.</p></details></li>
+<li><strong>(Bloco 5)</strong> Duas transações leem <code>copies = 3</code>, cada uma grava <code>3 - 1</code>. O estoque final é 2 e uma venda desapareceu. Que anomalia é essa e qual a correção mais simples?
+<details><summary>Resposta</summary><p><em>Lost update</em> (read-modify-write no aplicativo). A correção mais simples é empurrar a conta para o banco: <code>UPDATE book SET copies = copies - 1 WHERE id = ? AND copies &gt; 0</code>, que é atômico. Alternativas: <code>SELECT ... FOR UPDATE</code>, coluna de versão (otimista) ou isolamento mais forte com retry.</p></details></li>
+<li><strong>(Bloco 5)</strong> Duas transações em <code>REPEATABLE READ</code> verificam "há pelo menos 2 médicos de plantão" e cada uma tira um médico diferente. Ambas confirmam. Que anomalia é essa, e <code>REPEATABLE READ</code> do PostgreSQL a impede?
+<details><summary>Resposta</summary><p><em>Write skew</em>: leituras que se sobrepõem, escritas em linhas distintas, invariante violada. O <code>REPEATABLE READ</code> do PostgreSQL (isolamento por snapshot) <strong>não</strong> a impede; <code>SERIALIZABLE</code> (SSI) sim, abortando uma delas com erro 40001, que o aplicativo precisa repetir.</p></details></li>
+<li><strong>(Bloco 6)</strong> <code>cursor.execute(f"... WHERE email = '{email}'")</code> e <code>cursor.execute("... WHERE email = ?", (email,))</code>: qual a diferença no nível do protocolo, e o que o parâmetro <em>não</em> protege?
+<details><summary>Resposta</summary><p>Na primeira, a entrada vira parte do texto SQL e é analisada como programa; na segunda, o texto SQL é fixo e o valor viaja separado como dado. Parâmetros não substituem identificadores (nomes de tabela/coluna, direção de <code>ORDER BY</code>): esses exigem lista de permissão.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — Modelo relacional: chaves, restrições, normalização 1FN–3FN com anomalias e desnormalização consciente</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — SQL de consulta: JOINs, agregação, subqueries, EXISTS vs IN, NULL e a ordem lógica de execução</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — SQL avançado: CTE, CTE recursiva, window functions, UPSERT e RETURNING</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Índices e desempenho: B-tree, índice composto, seletividade, cobertura, EXPLAIN e N+1</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Transações: ACID, isolamento e anomalias, locks, MVCC e deadlock</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Do modelo ao código: domínio, migrations, sqlite3 com parâmetros, injection e quando não usar relacional</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado F05</strong> — esquema de biblioteca, dez consultas, planos, N+1, injection e concorrência</a></li>
+</ol>
+</div>
+
+<!-- ============================================ BLOCO 1 -->
+<h2 id="b01">Bloco 1 · Modelo relacional: chaves, restrições, normalização e desnormalização consciente</h2>
+
+<h3>Por que isso importa</h3>
+<p>O esquema é a única parte do sistema que sobrevive a todas as versões do código. Cada aplicativo, script, notebook e job de ETL que tocar o banco passa pelas mesmas tabelas; as regras que você declara ali valem para todos, inclusive para o código que ainda não foi escrito e para o <code>UPDATE</code> manual de madrugada. Regra que vive só no aplicativo vale para o aplicativo. Quem modela bem gasta menos em consultas, migrations e correção de dados; quem modela mal paga juros em cada módulo seguinte.</p>
+
+<h3>O mecanismo: relação, chave, restrição</h3>
+<p>No modelo de Codd (1970), uma <strong>relação</strong> é um conjunto de tuplas com os mesmos atributos. Duas consequências que o SQL só implementa pela metade: conjuntos não têm ordem (sem <code>ORDER BY</code>, nenhuma ordem é garantida) e não têm duplicatas (o SQL admite duplicatas em tabelas sem chave e em resultados sem <code>DISTINCT</code>; é por isso que toda tabela precisa de chave). O resultado de uma consulta é outra relação, o que torna as operações composáveis.</p>
+<ul>
+<li><strong>Superchave, chave candidata, chave primária.</strong> Uma chave candidata é um conjunto <em>mínimo</em> de atributos que identifica cada linha. Você escolhe uma como primária; as demais viram <code>UNIQUE NOT NULL</code> (no lab, <code>book.isbn</code> e <code>member.email</code> são chaves candidatas além do <code>id</code>).</li>
+<li><strong>Chave natural vs substituta.</strong> Natural vem do domínio (ISBN, CPF); substituta é gerada (<code>id</code> inteiro, UUID). Natural muda (e-mail, razão social), tem formato que o mundo corrige, e vaza para chaves estrangeiras que você terá de reescrever. Substituta é estável e barata de referenciar, mas não impede duplicata do mundo real: <strong>coloque a chave substituta como primária e declare a natural como <code>UNIQUE</code></strong>. As duas, não uma delas. Em PostgreSQL, prefira <code>GENERATED ALWAYS AS IDENTITY</code> a <code>SERIAL</code> (padrão SQL, sem o acoplamento com uma sequence solta); no SQLite, <code>INTEGER PRIMARY KEY</code> é um apelido do <code>rowid</code>.</li>
+<li><strong>Chave estrangeira.</strong> <code>REFERENCES author (id)</code> garante integridade referencial: não existe livro de autor inexistente, e não se apaga autor com livros (ação padrão <code>NO ACTION</code>/<code>RESTRICT</code>). <code>ON DELETE CASCADE</code> apaga os filhos junto: útil para dependentes que não fazem sentido sozinhos (itens de um pedido), perigoso em dados com valor próprio (apagar um autor levando os empréstimos junto). <code>ON DELETE SET NULL</code> exige coluna anulável. <strong>PostgreSQL não cria índice na coluna da chave estrangeira</strong>; sem ele, apagar um pai varre a tabela filha e os joins por essa coluna ficam lentos (bloco 4).</li>
+<li><strong><code>NOT NULL</code>, <code>CHECK</code>, <code>UNIQUE</code>, <code>DEFAULT</code>.</strong> São o contrato da coluna. <code>CHECK (copies &gt;= 0)</code> rejeita o estado impossível em qualquer caminho de escrita. Armadilha lateral: <code>CHECK</code> rejeita só o que avalia para <code>FALSE</code>; <code>NULL</code> passa (veja o bloco 2). E <code>UNIQUE</code> trata cada <code>NULL</code> como distinto na maior parte dos bancos (PostgreSQL 15 adicionou <code>UNIQUE NULLS NOT DISTINCT</code>).</li>
+</ul>
+
+<h3>Exemplo trabalhado: o domínio da biblioteca</h3>
+<p>Este é o esquema da migration <code>001_initial.sql</code> do laboratório (a forma final, em 3FN):</p>
+<pre><code>CREATE TABLE author (
+    id        INTEGER PRIMARY KEY,
+    name      TEXT NOT NULL UNIQUE,
+    born_year INTEGER CHECK (born_year BETWEEN 1000 AND 2100)
+);
+CREATE TABLE category (
+    id        INTEGER PRIMARY KEY,
+    name      TEXT NOT NULL,
+    parent_id INTEGER REFERENCES category (id)       -- hierarquia (bloco 3)
+);
+CREATE TABLE book (
+    id             INTEGER PRIMARY KEY,
+    isbn           TEXT NOT NULL UNIQUE,
+    title          TEXT NOT NULL,
+    author_id      INTEGER NOT NULL REFERENCES author (id),
+    category_id    INTEGER REFERENCES category (id),  -- livro sem categoria é permitido
+    published_year INTEGER,
+    copies         INTEGER NOT NULL DEFAULT 1 CHECK (copies &gt;= 0)
+);
+CREATE TABLE member (
+    id          INTEGER PRIMARY KEY,
+    email       TEXT NOT NULL UNIQUE,
+    name        TEXT NOT NULL,
+    joined_on   TEXT NOT NULL,
+    referred_by INTEGER REFERENCES member (id)        -- auto-relacionamento
+);
+CREATE TABLE loan (
+    id          INTEGER PRIMARY KEY,
+    book_id     INTEGER NOT NULL REFERENCES book (id),
+    member_id   INTEGER NOT NULL REFERENCES member (id),
+    loaned_on   TEXT NOT NULL,
+    due_on      TEXT NOT NULL,
+    returned_on TEXT,                                 -- NULL = ainda emprestado
+    CHECK (due_on &gt;= loaned_on)
+);</code></pre>
+<p>Leia as decisões, não só a sintaxe. <code>loan</code> é uma relação <strong>muitos-para-muitos</strong> entre <code>book</code> e <code>member</code> resolvida por tabela associativa, e ela carrega atributos próprios (datas), o que a torna entidade, não apenas "tabela de junção". <code>returned_on IS NULL</code> codifica "empréstimo aberto": <code>NULL</code> aqui significa "ainda não aconteceu", um uso legítimo. <code>category_id</code> anulável e <code>referred_by</code> anulável significam "não se aplica". Cada <code>NULL</code> deve ter um significado único e documentado; "desconhecido", "não se aplica" e "ainda não" misturados na mesma coluna são o início de bugs de relatório.</p>
+<p>O teste do laboratório prova que as restrições mordem: linha válida entra; <code>copies = -1</code>, <code>due_on</code> anterior a <code>loaned_on</code>, ISBN duplicado e autor inexistente são rejeitados; apagar um autor referenciado é bloqueado. E há um <strong>controle negativo</strong> que mostra a pegadinha do SQLite: sem <code>PRAGMA foreign_keys = ON</code> na conexão, órfãos entram sem erro. No SQLite a verificação de chave estrangeira é <em>por conexão</em> e vem desligada por herança histórica; no PostgreSQL ela é sempre ativa. O <code>connect()</code> do lab liga o pragma.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Tipagem flexível do SQLite. Um <code>INTEGER</code> aceita <code>'abc'</code> sem reclamar (afinidade, não tipo estrito), e datas são <code>TEXT</code> sem validação: o lab guarda ISO-8601 e depende de a comparação lexicográfica coincidir com a cronológica. Isso funciona <em>só</em> porque o formato é fixo. No PostgreSQL use <code>DATE</code>/<code>TIMESTAMPTZ</code> e deixe o tipo rejeitar lixo. Se precisar de rigor no SQLite, use tabelas <code>STRICT</code> (3.37+). Quem testa o schema no SQLite e implanta no PostgreSQL descobre, na migração, as linhas inválidas que o primeiro aceitava.</p>
+</div>
+
+<h3>Normalização: dependências, anomalias e as três formas</h3>
+<p>Normalizar é eliminar redundância <em>derivável</em> de dependências funcionais: "X determina Y" quando não existem duas linhas com o mesmo X e Y diferente. Redundância não é só desperdício de espaço. É a causa das três <strong>anomalias</strong>:</p>
+<ul>
+<li><strong>Atualização:</strong> o mesmo fato aparece em N linhas; mudar em N−1 deixa o dado se contradizendo.</li>
+<li><strong>Inserção:</strong> não dá para registrar um fato sem outro (um autor sem livros não cabe numa tabela que só tem linhas de empréstimo).</li>
+<li><strong>Remoção:</strong> apagar um fato leva outro junto (apagar o último empréstimo de um livro apaga o único registro de que o livro existe).</li>
+</ul>
+<p>Comece de uma planilha, a tabela "plana" que todo mundo constrói primeiro:</p>
+<pre><code>loan_flat(loan_id, member_name, member_email, book_title, author_name, author_born, loaned_on)</code></pre>
+<table>
+<thead><tr><th>Forma</th><th>Regra</th><th>Violação em <code>loan_flat</code></th><th>Correção</th></tr></thead>
+<tbody>
+<tr><td><strong>1FN</strong></td><td>Valores atômicos, sem grupos repetidos, linhas identificáveis por chave.</td><td>Uma coluna <code>autores = "Ana, Bia"</code> ou <code>tel1, tel2, tel3</code>: não dá para consultar, indexar nem restringir cada valor.</td><td>Uma linha por fato; tabela filha para o grupo repetido.</td></tr>
+<tr><td><strong>2FN</strong></td><td>1FN + todo atributo não-chave depende da chave <em>inteira</em> (só importa com chave composta).</td><td>Chave composta <code>(loan_id, book_title)</code> e <code>author_born</code> depende só do livro.</td><td>Separar o que depende de parte da chave.</td></tr>
+<tr><td><strong>3FN</strong></td><td>2FN + nenhum atributo não-chave depende de outro não-chave (sem dependência transitiva).</td><td><code>loan_id → book_title → author_name → author_born</code>: o nascimento depende do autor, que depende do livro, que depende do empréstimo.</td><td>Uma tabela por entidade: <code>author</code>, <code>book</code>, <code>member</code>, <code>loan</code>.</td></tr>
+</tbody>
+</table>
+<p>O mnemônico clássico: cada atributo depende "da chave, de toda a chave e de nada além da chave". A <strong>forma normal de Boyce-Codd</strong> (BCNF) fecha uma brecha da 3FN quando há várias chaves candidatas sobrepostas; na prática, quem chega à 3FN com chaves bem identificadas quase sempre já está em BCNF. As formas 4FN e 5FN tratam dependências multivaloradas e de junção, que aparecem raramente fora de tabelas de relacionamento ternário.</p>
+<p>O lab demonstra a anomalia de atualização com dois empréstimos de <em>Dom Casmurro</em> numa tabela plana. Atualizar o nome do autor só no <code>loan_id = 1</code> deixa o mesmo livro com dois autores (<code>COUNT(DISTINCT author_name) = 2</code>). No esquema normalizado, o mesmo <code>UPDATE author SET name = 'M. de Assis' WHERE id = 1</code> toca <strong>uma</strong> linha e a consulta pelos empréstimos enxerga um nome só. A fonte da verdade é única.</p>
+
+<h3>Desnormalização consciente</h3>
+<p>Normalização é o ponto de partida, não a religião. Desnormalizar é aceitar redundância em troca de leitura mais barata, e só é "consciente" se você responde a quatro perguntas: (1) qual consulta medida é lenta *e* não se resolve com índice ou reescrita? (2) quem mantém a cópia consistente: trigger, a mesma transação, job de reconciliação? (3) qual a defasagem aceitável? (4) como detectar e corrigir divergência? Padrões legítimos:</p>
+<ul>
+<li><strong>Contadores e totais pré-calculados</strong> (<code>order.total</code>, <code>book.copies</code>): mantidos na mesma transação que altera as linhas filhas. O próprio <code>copies</code> do lab é desnormalização do tipo "estoque derivável de entradas e saídas".</li>
+<li><strong>Snapshot histórico:</strong> copiar o preço e o nome do produto para <code>order_item</code> no momento da compra. Aqui a "cópia" <em>não é redundância</em>: o fato é "quanto custou naquele dia", que muda de natureza. Tratar isso como violação da 3FN e fazer join com o preço atual falsifica a história.</li>
+<li><strong>Tabelas de leitura / views materializadas</strong> para relatórios: o dado normalizado continua sendo a fonte; a cópia é recriável.</li>
+<li><strong>Colunas JSON</strong> para atributos esparsos e sem consulta relacional (bloco 6).</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Desnormalizar <em>antes</em> de medir. A leitura "cara" que justificou a cópia muitas vezes some com um índice (bloco 4) ou com a reescrita de um join. A cópia, porém, fica: cada escrita futura carrega o custo de mantê-la, e cada bug de consistência é de um tipo que a 3FN tornaria impossível. O inverso também morde: normalizar o que é <em>fato histórico</em> (preço da venda, endereço de entrega no pedido) e perder a capacidade de reproduzir o passado.</p>
+</div>
+
+<h3>Trade-offs e erros comuns</h3>
+<ul>
+<li><strong>Tabela "EAV"</strong> (<code>entidade, atributo, valor</code>) para fugir de migrations: perde tipo, restrição, índice útil e legibilidade. Use colunas, ou <code>JSONB</code> deliberado.</li>
+<li><strong>Uma tabela com 80 colunas e metade <code>NULL</code></strong>: normalmente é herança mal modelada (subtipos). Considere tabelas por subtipo ou uma tabela de atributos específicos com chave compartilhada.</li>
+<li><strong>Soft delete (<code>deleted_at</code>) em tudo:</strong> toda consulta passa a precisar do filtro; <code>UNIQUE</code> deixa de valer (o e-mail "apagado" continua ocupando o lugar). Se precisar, use índice único parcial (<code>WHERE deleted_at IS NULL</code>) e uma view.</li>
+<li><strong>Chave composta em tudo vs <code>id</code> substituto:</strong> chave composta natural em tabela de junção pura é ótima; propagar chaves de três colunas por seis níveis de filhos é doloroso.</li>
+<li><strong>Cascade como atalho.</strong> Declarar <code>ON DELETE CASCADE</code> "para facilitar a limpeza de testes" põe em produção a capacidade de apagar o histórico inteiro com um comando.</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Relação é conjunto de fatos; a chave diz o que é um fato. Declare no banco o que é invariante (<code>NOT NULL</code>, <code>UNIQUE</code>, <code>CHECK</code>, chave estrangeira): vale para todo cliente. Normalize até a 3FN para que cada fato exista uma vez e as três anomalias fiquem impossíveis; desnormalize só com medição, dono da consistência e plano de reconciliação, e nunca confunda cópia redundante com snapshot histórico. No SQLite ligue <code>foreign_keys</code> por conexão e lembre que a tipagem é frouxa.</p>
+</div>
+
+<!-- ============================================ BLOCO 2 -->
+<h2 id="b02">Bloco 2 · SQL de consulta: JOINs, agregação, subqueries, NULL e ordem lógica de execução</h2>
+
+<h3>Por que isso importa</h3>
+<p>SQL é declarativo: você descreve <em>o que</em> quer e o otimizador escolhe <em>como</em>. A consequência é que escrever uma consulta correta exige um modelo mental do significado lógico, que é diferente da ordem em que o texto aparece. Quem não tem esse modelo erra de três maneiras previsíveis: filtros no lugar errado de um <code>LEFT JOIN</code>, contagens infladas por joins que multiplicam linhas, e comparações com <code>NULL</code> que descartam dados em silêncio. As três produzem resultado plausível e errado, o pior tipo de bug.</p>
+
+<h3>A ordem lógica de execução</h3>
+<p>O texto começa por <code>SELECT</code>, mas a semântica começa por <code>FROM</code>. Pense em cada fase como uma função que recebe uma relação e devolve outra:</p>
+<figure>
+<svg viewBox="0 0 760 120" role="img" aria-labelledby="t-ord" style="max-width:760px">
+<title id="t-ord">Ordem lógica de execução: FROM e JOIN, WHERE, GROUP BY, HAVING, funções de janela, SELECT, DISTINCT, ORDER BY, LIMIT</title>
+<g fill="none" stroke="currentColor" stroke-width="1.4" font-family="sans-serif" font-size="12" text-anchor="middle">
+<rect x="6" y="40" width="74" height="40" rx="6"/><text x="43" y="64" fill="currentColor" stroke="none">FROM/JOIN</text>
+<rect x="92" y="40" width="64" height="40" rx="6"/><text x="124" y="64" fill="currentColor" stroke="none">WHERE</text>
+<rect x="168" y="40" width="80" height="40" rx="6"/><text x="208" y="64" fill="currentColor" stroke="none">GROUP BY</text>
+<rect x="260" y="40" width="70" height="40" rx="6"/><text x="295" y="64" fill="currentColor" stroke="none">HAVING</text>
+<rect x="342" y="40" width="74" height="40" rx="6"/><text x="379" y="64" fill="currentColor" stroke="none">janelas</text>
+<rect x="428" y="40" width="70" height="40" rx="6"/><text x="463" y="64" fill="currentColor" stroke="none">SELECT</text>
+<rect x="510" y="40" width="80" height="40" rx="6"/><text x="550" y="64" fill="currentColor" stroke="none">DISTINCT</text>
+<rect x="602" y="40" width="82" height="40" rx="6"/><text x="643" y="64" fill="currentColor" stroke="none">ORDER BY</text>
+<rect x="696" y="40" width="58" height="40" rx="6"/><text x="725" y="64" fill="currentColor" stroke="none">LIMIT</text>
+<path d="M80 60h12M156 60h12M248 60h12M330 60h12M416 60h12M498 60h12M590 60h12M684 60h12" marker-end="none"/>
+</g>
+<g font-family="sans-serif" font-size="11" fill="currentColor" text-anchor="middle">
+<text x="124" y="28">filtra linhas</text><text x="295" y="28">filtra grupos</text><text x="463" y="28">cria aliases</text>
+<text x="124" y="104">não vê aliases do SELECT*</text><text x="643" y="104">vê aliases</text>
+</g>
+</svg>
+<figcaption>Cada fase só enxerga o que as anteriores produziram. *O SQLite aceita alias no WHERE; o PostgreSQL e o padrão não.</figcaption>
+</figure>
+<p>Consequências diretas, todas cobradas em entrevista e em produção: <code>WHERE</code> não enxerga aliases criados no <code>SELECT</code> (no PostgreSQL é erro; o SQLite deixa passar, e por isso o lab usa subquery nos testes); <code>WHERE</code> não filtra agregados (para isso existe <code>HAVING</code>); funções de janela não podem aparecer em <code>WHERE</code> (rodam depois); <code>ORDER BY</code> é a única cláusula, além do <code>SELECT</code>, que enxerga aliases. O otimizador pode reordenar tudo, desde que o resultado seja o mesmo que a ordem lógica daria.</p>
+
+<h3>Todos os JOINs, por conjuntos</h3>
+<p>Um join começa pelo produto cartesiano (<code>CROSS JOIN</code>: |A| × |B| linhas; no lab, 5 autores × 7 categorias = 35) e o predicado <code>ON</code> escolhe as combinações. O tipo de join define o que acontece com as linhas sem par:</p>
+<table>
+<thead><tr><th>Join</th><th>Resultado</th><th>No lab (dados pequenos)</th></tr></thead>
+<tbody>
+<tr><td><code>INNER JOIN</code></td><td>Só pares que satisfazem o <code>ON</code>.</td><td><code>author JOIN book</code> = 8 linhas</td></tr>
+<tr><td><code>LEFT [OUTER] JOIN</code></td><td>Todas da esquerda; sem par na direita, colunas da direita viram <code>NULL</code>.</td><td><code>author LEFT JOIN book</code> = 9 (o autor 5 não tem livro)</td></tr>
+<tr><td><code>RIGHT [OUTER] JOIN</code></td><td>Espelho do <code>LEFT</code>. Raro: reescreva trocando a ordem das tabelas.</td><td><code>category RIGHT JOIN book</code> = 8 (todo livro, com ou sem categoria)</td></tr>
+<tr><td><code>FULL [OUTER] JOIN</code></td><td>Todas de ambos os lados, <code>NULL</code> onde não houver par.</td><td><code>category FULL JOIN book</code> = 13 (7 pares + 1 livro sem categoria + 5 categorias sem livro)</td></tr>
+<tr><td><code>CROSS JOIN</code></td><td>Produto cartesiano, sem <code>ON</code>.</td><td>35</td></tr>
+<tr><td>Self join</td><td>A tabela contra ela mesma, com dois aliases.</td><td><code>member m LEFT JOIN member r ON r.id = m.referred_by</code></td></tr>
+</tbody>
+</table>
+<p><code>RIGHT</code> e <code>FULL JOIN</code> só existem no SQLite desde a 3.39; o lab marca esses testes como ignorados em versões anteriores. MySQL não tem <code>FULL JOIN</code> (emula-se com <code>UNION</code>). Também existem <code>NATURAL JOIN</code> e <code>USING</code>: o primeiro junta por <em>todas</em> as colunas de mesmo nome e quebra silenciosamente quando alguém adiciona uma coluna; evite.</p>
+
+<h4>ON versus WHERE em joins externos</h4>
+<pre><code>-- (a) filtro da direita no ON: 5 linhas (todos os autores continuam)
+SELECT COUNT(*) FROM author a LEFT JOIN book b ON b.author_id = a.id AND b.copies &gt; 1;
+-- (b) o mesmo filtro no WHERE: 2 linhas (autores sem livro com copies &gt; 1 somem)
+SELECT COUNT(*) FROM author a LEFT JOIN book b ON b.author_id = a.id WHERE b.copies &gt; 1;</code></pre>
+<p>Em (b) as linhas "preservadas" têm <code>b.copies = NULL</code>; <code>NULL &gt; 1</code> é <code>UNKNOWN</code>; o <code>WHERE</code> descarta. O <code>LEFT JOIN</code> virou <code>INNER JOIN</code> sem aviso. Regra: predicado sobre a tabela preservada vai no <code>WHERE</code>; predicado sobre a tabela opcional que não deve eliminar a esquerda vai no <code>ON</code>. Se você *quer* eliminar, escreva <code>INNER JOIN</code> e deixe a intenção explícita.</p>
+
+<h4>O join que multiplica</h4>
+<p>Um join um-para-muitos repete a linha do lado "um" por cada filho. Somar uma coluna do lado "um" depois do join conta o valor várias vezes. Exemplo: <code>SUM(book.copies)</code> sobre <code>book JOIN loan</code> soma o estoque de um livro <em>uma vez por empréstimo</em>. Cure com agregação em subquery/CTE antes do join (agrupe os empréstimos por livro, depois junte) ou calcule cada agregado separadamente. Dois joins um-para-muitos independentes na mesma consulta (livro → empréstimos e livro → avaliações) produzem o produto das contagens: 3 empréstimos × 4 avaliações = 12 linhas por livro.</p>
+
+<h3>Agregação: GROUP BY e HAVING</h3>
+<p><code>GROUP BY</code> particiona as linhas em grupos; cada coluna do <code>SELECT</code> precisa ser uma coluna do grupo ou um agregado (PostgreSQL impõe; o MySQL antigo e o SQLite aceitam colunas "soltas" e devolvem uma linha arbitrária do grupo: outro motivo para rodar a CI contra o mesmo banco da produção). <code>HAVING</code> filtra <em>grupos</em> pelo resultado de agregados; filtros que não dependem de agregado pertencem ao <code>WHERE</code>, que roda antes e reduz o trabalho. A consulta <code>q04</code> do lab usa os dois:</p>
+<pre><code>SELECT m.name AS member,
+       COUNT(*) AS overdue_loans,
+       CAST(MAX(julianday(:today) - julianday(l.due_on)) AS INTEGER) AS max_days_late
+FROM loan AS l
+JOIN member AS m ON m.id = l.member_id
+WHERE l.returned_on IS NULL AND l.due_on &lt; :today       -- filtra linhas
+GROUP BY m.id, m.name
+HAVING COUNT(*) &gt;= 1                                    -- filtra grupos
+ORDER BY max_days_late DESC, m.name;</code></pre>
+<pre><code>$ uv run python -m sqllab.cli run q04_overdue_by_member
+member  overdue_loans  max_days_late
+------  -------------  -------------
+Bruno   1              27
+Carla   1              15
+Diego   1              4
+(3 row(s))</code></pre>
+<p>Note <code>GROUP BY m.id, m.name</code>: agrupa-se pela chave (<code>id</code>) para não fundir dois membros homônimos; <code>name</code> entra só para o <code>SELECT</code> ser legal em bancos estritos (o PostgreSQL aceita apenas <code>m.id</code> quando <code>id</code> é chave primária, por dependência funcional). A data fixa <code>:today</code> (parâmetro nomeado) torna o resultado reprodutível: consulta que lê o relógio não pode ser verificada em teste.</p>
+
+<h3>Subqueries, EXISTS e IN</h3>
+<p>Uma subquery pode ser <em>escalar</em> (uma linha, uma coluna, usada como valor), de <em>lista</em> (<code>IN</code>), de <em>existência</em> (<code>EXISTS</code>) ou <em>derivada</em> (no <code>FROM</code>). Pode ser <strong>correlacionada</strong> (referencia a consulta externa) ou não. Para "livros que nunca foram emprestados" há três formulações, com semânticas diferentes:</p>
+<pre><code>-- 1) anti-join com LEFT JOIN ... IS NULL
+SELECT b.id FROM book b LEFT JOIN loan l ON l.book_id = b.id WHERE l.id IS NULL;
+-- 2) NOT EXISTS (q03 do lab)
+SELECT b.id, b.title FROM book b
+WHERE NOT EXISTS (SELECT 1 FROM loan l WHERE l.book_id = b.id);
+-- 3) NOT IN: correto SÓ se a subquery nunca produz NULL
+SELECT b.id FROM book b WHERE b.id NOT IN (SELECT book_id FROM loan);</code></pre>
+<pre><code>$ uv run python -m sqllab.cli run q03_books_never_loaned
+id  title
+--  -----------------
+7   Capitães da Areia
+8   O Alienista
+(2 row(s))</code></pre>
+<p><strong>EXISTS vs IN.</strong> <code>EXISTS</code> testa se a subquery produz alguma linha, sem se importar com o conteúdo (por isso <code>SELECT 1</code>); para e devolve verdadeiro na primeira correspondência, e é imune a <code>NULL</code> na lista. <code>IN</code> compara um valor com um conjunto. Os otimizadores modernos transformam os dois em semi-join e, para <code>IN</code>/<code>EXISTS</code> positivos, o plano costuma ser idêntico: escolha pela clareza e pela segurança com <code>NULL</code>. Para a forma negativa, <strong>prefira <code>NOT EXISTS</code></strong> (ou o anti-join): <code>NOT IN</code> é o único dos três que muda de significado quando surge um <code>NULL</code>.</p>
+
+<h3>NULL e a lógica de três valores</h3>
+<p>Em SQL, <code>NULL</code> não é um valor: é "valor ausente ou desconhecido". Toda comparação com ele é <code>UNKNOWN</code>, o terceiro valor lógico. As tabelas-verdade acrescentam <code>UNKNOWN</code> com a regra "se o desconhecido pudesse ser qualquer coisa, o resultado ainda seria o mesmo?":</p>
+<table>
+<thead><tr><th>Expressão</th><th>Resultado</th><th>Raciocínio</th></tr></thead>
+<tbody>
+<tr><td><code>NULL = NULL</code></td><td>UNKNOWN (<code>NULL</code>)</td><td>dois desconhecidos podem ou não ser iguais</td></tr>
+<tr><td><code>NULL IS NULL</code></td><td>TRUE</td><td>o predicado específico para testar ausência</td></tr>
+<tr><td><code>TRUE OR UNKNOWN</code></td><td>TRUE</td><td>qualquer valor do desconhecido dá TRUE</td></tr>
+<tr><td><code>FALSE AND UNKNOWN</code></td><td>FALSE</td><td>idem</td></tr>
+<tr><td><code>TRUE AND UNKNOWN</code></td><td>UNKNOWN</td><td>depende do desconhecido</td></tr>
+<tr><td><code>NOT UNKNOWN</code></td><td>UNKNOWN</td><td>negar a dúvida não a resolve</td></tr>
+</tbody>
+</table>
+<p>E o ponto que decide tudo: <code>WHERE</code>, <code>ON</code>, <code>HAVING</code> e a cláusula <code>WHEN</code> do <code>CASE</code> só deixam passar <code>TRUE</code>. <code>FALSE</code> e <code>UNKNOWN</code> são ambos descartados, mas <code>CHECK</code> aceita <code>UNKNOWN</code> (rejeita só <code>FALSE</code>). Medido no lab (SQLite 3.53.1): <code>SELECT NULL = NULL</code> devolve <code>NULL</code>; <code>NOT NULL</code> devolve <code>NULL</code>; <code>NULL AND 0</code> devolve <code>0</code>; <code>1 IN (1, NULL)</code> devolve <code>1</code>; <code>5 IN (1, NULL)</code> e <code>5 NOT IN (1, NULL)</code> devolvem ambos <code>NULL</code>.</p>
+<p>Consequências para o código do dia a dia:</p>
+<ul>
+<li><code>WHERE category_id = NULL</code> nunca retorna linha (0 no lab); use <code>IS NULL</code>. <code>WHERE category_id &lt;&gt; 2</code> também <strong>perde</strong> a linha de <code>category_id</code> nulo: 7 livros têm categoria, 1 não tem; a consulta devolve 2 (os com categoria diferente de 2), não 3. Para incluir os nulos, <code>IS DISTINCT FROM</code> (PostgreSQL; no SQLite, <code>IS NOT</code>) ou <code>OR category_id IS NULL</code>.</li>
+<li><strong>Agregados ignoram <code>NULL</code></strong>: <code>COUNT(*)</code> conta linhas (8), <code>COUNT(category_id)</code> conta não-nulos (7), <code>COUNT(DISTINCT category_id)</code> conta valores distintos não-nulos (2). <code>AVG(1, NULL, 3)</code> é 2.0, não 1.33. <code>SUM</code> de conjunto vazio é <code>NULL</code>, não 0: use <code>COALESCE(SUM(x), 0)</code>.</li>
+<li><code>GROUP BY</code> e <code>DISTINCT</code> tratam todos os <code>NULL</code> como iguais entre si (exceção à regra do <code>=</code>); <code>UNIQUE</code> trata-os como distintos (exceto <code>NULLS NOT DISTINCT</code>). Três regras para a mesma coisa, todas padronizadas.</li>
+<li><code>ORDER BY</code> coloca <code>NULL</code> no começo ou no fim conforme o banco: PostgreSQL ordena <code>NULL</code> como o maior valor (fim em <code>ASC</code>), SQLite como o menor. Use <code>NULLS FIRST/LAST</code> quando importar.</li>
+</ul>
+
+<h3>NOT IN com NULL, demonstrado</h3>
+<pre><code>-- categorias sem nenhum livro. book.category_id TEM um NULL (o livro sem categoria).
+SELECT name FROM category WHERE id NOT IN (SELECT category_id FROM book);
+-- (0 linhas!)  id NOT IN (2, 3, 2, NULL, ...) => id&lt;&gt;2 AND id&lt;&gt;3 AND ... AND id&lt;&gt;NULL
+--              o último termo é UNKNOWN, então a conjunção nunca é TRUE.
+
+SELECT c.id FROM category c
+WHERE NOT EXISTS (SELECT 1 FROM book b WHERE b.category_id = c.id) ORDER BY c.id;
+-- 1, 4, 5, 6, 7   (as categorias que de fato não têm livro)</code></pre>
+<p>Os dois testes do laboratório fixam isso: a versão com <code>NOT IN</code> devolve lista vazia; a versão com <code>NOT EXISTS</code>, e a com <code>NOT IN (... WHERE category_id IS NOT NULL)</code>, devolvem as mesmas cinco categorias. O bug é traiçoeiro porque a consulta *funciona* até o dia em que alguém insere o primeiro livro sem categoria; a partir daí o relatório de "categorias vazias" passa a mostrar zero, sem erro nenhum.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><code>COUNT(*)</code> depois de um <code>LEFT JOIN</code>. Para contar empréstimos por livro, <code>LEFT JOIN</code> + <code>COUNT(*)</code> dá 1 para o livro que nunca foi emprestado (a linha com <code>NULL</code> existe e é contada). O correto é <code>COUNT(l.id)</code>, que ignora o <code>NULL</code>. A consulta <code>q09</code> do lab faz exatamente isso, e o livro "O Alienista" aparece com 0 e não 1. Variante: <code>HAVING COUNT(*) &gt; 0</code> sobre um join externo nunca filtra nada.</p>
+</div>
+
+<h3>Trade-offs e erros comuns</h3>
+<ul>
+<li><strong><code>SELECT *</code> em código de aplicação</strong>: acopla o código à ordem e ao conjunto de colunas, impede índices de cobertura (bloco 4) e transfere colunas grandes à toa. Em exploração, ok.</li>
+<li><strong><code>DISTINCT</code> para "consertar" duplicatas</strong> quase sempre mascara um join que multiplica. Descubra por que há duplicata em vez de escondê-la.</li>
+<li><strong><code>LIMIT</code> sem <code>ORDER BY</code></strong> devolve linhas arbitrárias, e o conjunto muda entre execuções e versões do banco. Paginação por <code>OFFSET</code> degrada linearmente (o banco gera e descarta as N primeiras); para páginas profundas use paginação por chave (<code>WHERE id &gt; :ultimo ORDER BY id LIMIT 50</code>).</li>
+<li><strong>Funções sobre a coluna filtrada</strong> (<code>WHERE lower(email) = ?</code>, <code>WHERE strftime('%Y', loaned_on) = '2025'</code>) impedem o uso do índice da coluna (bloco 4).</li>
+<li><strong>Comparar datas como texto em formatos mistos</strong>: <code>'10/06/2026'</code> ordena antes de <code>'2/06/2026'</code>. Padronize em ISO-8601 ou use tipos temporais.</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>A ordem lógica é <code>FROM/JOIN → WHERE → GROUP BY → HAVING → janelas → SELECT → DISTINCT → ORDER BY → LIMIT</code>; cada fase só vê o que a anterior produziu. Join externo + filtro da tabela opcional no <code>WHERE</code> vira join interno. <code>NULL</code> torna a lógica de três valores: só <code>TRUE</code> passa; <code>NOT IN</code> com um único <code>NULL</code> na lista não devolve nada; agregados ignoram <code>NULL</code>, <code>COUNT(*)</code> não. Prefira <code>NOT EXISTS</code> a <code>NOT IN</code>, <code>COUNT(coluna_da_direita)</code> em joins externos e jamais use <code>DISTINCT</code> para esconder multiplicação de linhas.</p>
+</div>
+
+<!-- ============================================ BLOCO 3 -->
+<h2 id="b03">Bloco 3 · SQL avançado: CTE, CTE recursiva, window functions, UPSERT e RETURNING</h2>
+
+<h3>Por que isso importa</h3>
+<p>Este bloco é o que separa o SQL que "busca linhas" do SQL que responde perguntas de negócio em uma ida ao banco: "o último empréstimo de cada membro", "o acumulado por mês", "a cadeia de indicações até a raiz", "grave ou atualize, e me devolva o id". Cada uma dessas tarefas, feita no aplicativo, vira laço com N consultas (bloco 4), estado compartilhado entre requisições (bloco 5) ou os dois. Feita no banco, é uma instrução, atômica e otimizável.</p>
+
+<h3>CTE: nomear uma consulta</h3>
+<p>Uma <em>Common Table Expression</em> (<code>WITH nome AS (...)</code>) dá nome a um resultado intermediário que a consulta principal usa como se fosse uma tabela. Ganho principal: legibilidade, porque a consulta lê de cima para baixo em passos nomeados em vez de subqueries aninhadas de dentro para fora. Ganho técnico: uma CTE referenciada várias vezes é escrita uma vez.</p>
+<p>Em desempenho, o que importa é a fronteira de otimização. Até o PostgreSQL 11, toda CTE era uma <em>barreira</em>: executada isoladamente, materializada, sem que filtros da consulta externa descessem para dentro. Desde o PostgreSQL 12, uma CTE não recursiva, sem efeitos colaterais e referenciada uma única vez é <em>inlined</em> como se fosse subquery; se for referenciada mais de uma vez, é materializada. Você controla com <code>AS MATERIALIZED</code> / <code>AS NOT MATERIALIZED</code>. O SQLite também decide por inlining. Portanto, "CTE é mais lenta" ou "CTE é mais rápida" são afirmações sem versão: meça com o plano.</p>
+
+<h3>CTE recursiva: hierarquias e grafos em SQL</h3>
+<p>Uma CTE recursiva tem duas partes ligadas por <code>UNION ALL</code>: o <strong>membro âncora</strong> (a semente, executada uma vez) e o <strong>membro recursivo</strong> (que referencia a própria CTE e é reexecutado sobre as linhas novas da iteração anterior, até não produzir nenhuma). O resultado é a união de todas as iterações. É o mecanismo para árvores de categorias, organogramas, cadeias de indicação, grafos de dependência e listas de materiais.</p>
+<pre><code>-- q05: a árvore de categorias, das raízes para baixo
+WITH RECURSIVE tree (id, name, depth, path) AS (
+    SELECT id, name, 0, name                      -- âncora: as raízes
+    FROM category WHERE parent_id IS NULL
+    UNION ALL
+    SELECT c.id, c.name, t.depth + 1, t.path || ' &gt; ' || c.name   -- passo: filhos de quem já está em tree
+    FROM category AS c JOIN tree AS t ON c.parent_id = t.id
+)
+SELECT id, depth, path FROM tree ORDER BY path;</code></pre>
+<pre><code>$ uv run python -m sqllab.cli run q05_category_tree
+id  depth  path
+--  -----  ----------------------------------------
+1   0      Literatura
+3   1      Literatura &gt; Conto
+2   1      Literatura &gt; Romance
+4   2      Literatura &gt; Romance &gt; Romance histórico
+5   0      Não ficção
+6   1      Não ficção &gt; Ciência
+7   2      Não ficção &gt; Ciência &gt; Computação
+(7 row(s))</code></pre>
+<p>A mesma ideia para cima (<code>q06</code>): a âncora é um membro específico e o passo segue <code>referred_by</code> até a raiz. Para a Elisa (id 5) a cadeia é Elisa ← Diego ← Bruno ← Ana:</p>
+<pre><code>$ uv run python -m sqllab.cli run q06_referral_chain --member-id 5
+depth  id  name
+-----  --  -----
+0      5   Elisa
+1      4   Diego
+2      2   Bruno
+3      1   Ana
+(4 row(s))</code></pre>
+<p><strong>Riscos que você precisa conhecer.</strong> (1) <em>Ciclos</em>: se os dados têm um ciclo (A indicou B, B indicou A), a recursão nunca termina. Defesas: acumular o caminho e rejeitar quem já visitou (<code>WHERE NOT instr(path, ...)</code>, ou array com <code>ANY</code> no PostgreSQL), limitar <code>depth &lt; 20</code>, usar <code>UNION</code> (sem <code>ALL</code>, que descarta linhas já vistas) ou a cláusula <code>CYCLE</code> do PostgreSQL 14. (2) <em>Custo</em>: a recursão em tabela grande sem índice na coluna de ligação (<code>parent_id</code>) faz uma varredura por iteração. (3) <em>Modelagem</em>: se a hierarquia é lida muito mais do que escrita, considere caminho materializado, conjuntos aninhados ou uma tabela de fechamento transitivo, que trocam custo de escrita por leitura simples. No PostgreSQL existem ainda o tipo <code>ltree</code> e recursos de <code>WITH RECURSIVE ... SEARCH</code> para ordenar por profundidade/largura.</p>
+
+<h3>Window functions: agregar sem colapsar</h3>
+<p><code>GROUP BY</code> colapsa N linhas em uma. Uma <strong>função de janela</strong> calcula sobre um conjunto de linhas relacionadas à linha atual <em>sem remover nenhuma</em>. A sintaxe tem três partes na cláusula <code>OVER (...)</code>:</p>
+<ul>
+<li><code>PARTITION BY</code>: divide em grupos independentes (como um <code>GROUP BY</code> que não colapsa). Omitido, a tabela inteira é uma partição.</li>
+<li><code>ORDER BY</code>: ordena dentro da partição; define "anterior", "próximo" e acumulados.</li>
+<li><strong>Moldura</strong> (<code>ROWS|RANGE|GROUPS BETWEEN ...</code>): o subconjunto de linhas da partição que a função enxerga para a linha atual.</li>
+</ul>
+<table>
+<thead><tr><th>Família</th><th>Funções</th><th>Uso típico</th></tr></thead>
+<tbody>
+<tr><td>Ranking</td><td><code>ROW_NUMBER</code>, <code>RANK</code>, <code>DENSE_RANK</code>, <code>NTILE</code></td><td>"top N por grupo", deduplicação, quartis</td></tr>
+<tr><td>Deslocamento</td><td><code>LAG</code>, <code>LEAD</code>, <code>FIRST_VALUE</code>, <code>LAST_VALUE</code></td><td>comparar com a linha anterior/seguinte</td></tr>
+<tr><td>Agregado como janela</td><td><code>SUM</code>, <code>AVG</code>, <code>COUNT</code>, <code>MAX</code> com <code>OVER</code></td><td>acumulados, médias móveis, % do total</td></tr>
+</tbody>
+</table>
+<p>A consulta <code>q07</code> do lab calcula, por membro, quantos empréstimos até aquela data e quantos dias desde o anterior:</p>
+<pre><code>SELECT member_id, id AS loan_id, loaned_on,
+       COUNT(*) OVER (PARTITION BY member_id ORDER BY loaned_on, id) AS loans_so_far,
+       CAST(julianday(loaned_on) - julianday(
+           LAG(loaned_on) OVER (PARTITION BY member_id ORDER BY loaned_on, id)) AS INTEGER) AS days_since_previous
+FROM loan ORDER BY member_id, loaned_on, id;</code></pre>
+<pre><code>member_id  loan_id  loaned_on   loans_so_far  days_since_previous
+---------  -------  ----------  ------------  -------------------
+1          1        2026-05-01  1             None
+1          2        2026-05-12  2             11
+1          7        2026-06-15  3             34
+1          9        2026-06-26  4             11
+2          3        2026-05-20  1             None
+3          4        2026-06-01  1             None
+3          5        2026-06-10  2             9
+...</code></pre>
+<p>A primeira linha de cada partição não tem "anterior": <code>LAG</code> devolve <code>NULL</code> (aqui impresso como <code>None</code>), que se propaga para a subtração. <code>LAG(col, n, padrão)</code> aceita deslocamento e valor default.</p>
+
+<h4>ROW_NUMBER, RANK e DENSE_RANK nos empates</h4>
+<pre><code>$ uv run python -m sqllab.cli run q09_book_popularity
+title                            loans  row_number  rank  dense_rank
+-------------------------------  -----  ----------  ----  ----------
+A Hora da Estrela                2      1           1     1
+Dom Casmurro                     2      2           1     1
+Gabriela, Cravo e Canela         2      3           1     1
+Laços de Família                 1      4           4     2
+Memórias Póstumas de Brás Cubas  1      5           4     2
+Vidas Secas                      1      6           4     2
+Capitães da Areia                0      7           7     3
+O Alienista                      0      8           7     3</code></pre>
+<p>Três livros empatam com 2 empréstimos. <code>ROW_NUMBER</code> numera 1, 2, 3 e quebra o empate arbitrariamente (por isso a consulta inclui <code>title</code> como desempate: sem isso o resultado não é determinístico). <code>RANK</code> dá 1, 1, 1 e <strong>salta</strong> para 4. <code>DENSE_RANK</code> dá 1, 1, 1 e continua em 2, sem lacunas. Escolha pela pergunta: "exatamente um por grupo" é <code>ROW_NUMBER</code>; "todos os empatados no topo" é <code>RANK</code> = 1.</p>
+
+<h4>Top-1 por grupo: a janela dentro de uma CTE</h4>
+<pre><code>-- q08: o empréstimo mais recente de cada membro
+WITH ranked AS (
+    SELECT member_id, id AS loan_id, book_id, loaned_on,
+           ROW_NUMBER() OVER (PARTITION BY member_id ORDER BY loaned_on DESC, id DESC) AS rn
+    FROM loan
+)
+SELECT member_id, loan_id, book_id, loaned_on FROM ranked WHERE rn = 1 ORDER BY member_id;</code></pre>
+<p>O resultado da janela só existe depois da fase <code>SELECT</code>, por isso o filtro <code>rn = 1</code> tem de ficar fora, na consulta que lê a CTE (PostgreSQL ainda oferece <code>DISTINCT ON</code> e <code>LATERAL</code> como alternativas). O lab devolve 5 linhas: membros 1 a 5, empréstimos 9, 3, 5, 6 e 8. A alternativa "ingênua", <code>WHERE loaned_on = (SELECT MAX(loaned_on) ...)</code> correlacionada, é mais lenta e devolve duas linhas se houver empate de data.</p>
+
+<h4>A moldura padrão que engana</h4>
+<p>Com <code>ORDER BY</code> e sem moldura explícita, o padrão é <code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code>: da primeira linha da partição até a linha atual <em>e todos os seus pares</em> (linhas com mesmo valor de ordenação). Funciona para somas acumuladas. Quebra em <code>LAST_VALUE</code>. Medido no lab com os empréstimos do membro 1:</p>
+<pre><code>LAST_VALUE(id) OVER (ORDER BY loaned_on)
+  -&gt; [(1, 1), (2, 2), (7, 7), (9, 9)]            -- "último" = a própria linha: inútil
+LAST_VALUE(id) OVER (ORDER BY loaned_on ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+  -&gt; [(1, 9), (2, 9), (7, 9), (9, 9)]            -- agora sim: o último da partição</code></pre>
+
+<h3>UPSERT e RETURNING</h3>
+<p>"Insira; se já existir, atualize" feito em duas instruções (<code>SELECT</code>, depois <code>INSERT</code> ou <code>UPDATE</code>) tem uma janela de corrida: duas requisições veem "não existe" e ambas inserem, uma falha com violação de unicidade. O <strong>UPSERT</strong> resolve no banco, atomicamente, apoiado numa restrição única:</p>
+<pre><code>INSERT INTO book (isbn, title, author_id, copies) VALUES (?, ?, ?, ?)
+ON CONFLICT (isbn) DO UPDATE SET copies = copies + excluded.copies
+RETURNING id, copies;</code></pre>
+<p>Duas coisas a ler com cuidado. <code>ON CONFLICT (isbn)</code> declara <em>qual</em> restrição única é o alvo (exige índice/constraint única nessa coluna). Dentro do <code>DO UPDATE</code>, <code>copies</code> é o valor atual da linha existente e <code>excluded.copies</code> é o valor que se tentou inserir; <code>copies + excluded.copies</code> soma sem ler o valor no aplicativo, o que também evita o <em>lost update</em> do bloco 5. <code>DO NOTHING</code> ignora o conflito (idempotência de importações). <code>RETURNING</code> devolve as colunas da linha afetada (inserida ou atualizada), evitando um segundo <code>SELECT</code> para descobrir o <code>id</code> gerado ou o valor final. No lab, o repositório faz o <code>upsert_book</code> assim: primeira chamada insere e devolve o estoque inicial; segunda com o mesmo ISBN soma as cópias, e o teste confirma o par <code>(id, copies)</code> devolvido (em um ensaio manual sobre os dados pequenos, o ISBN do <em>Dom Casmurro</em> com 2 cópias + 2 resultou em <code>(1, 4)</code>).</p>
+<table>
+<thead><tr><th>Recurso</th><th>PostgreSQL</th><th>SQLite</th><th>Outros</th></tr></thead>
+<tbody>
+<tr><td>UPSERT</td><td><code>ON CONFLICT (...) DO UPDATE/NOTHING</code> (9.5+)</td><td>mesma sintaxe (3.24+)</td><td>MySQL: <code>ON DUPLICATE KEY UPDATE</code>; padrão SQL: <code>MERGE</code> (PostgreSQL 15+, SQL Server, Oracle)</td></tr>
+<tr><td><code>RETURNING</code></td><td>desde sempre, em <code>INSERT/UPDATE/DELETE</code></td><td>3.35+</td><td>SQL Server usa <code>OUTPUT</code>; MySQL não tem (até MariaDB 10.5 em <code>INSERT/DELETE</code>)</td></tr>
+<tr><td><code>FULL JOIN</code></td><td>sim</td><td>3.39+</td><td>MySQL não tem</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>UPSERT não é "grátis de corrida" para qualquer lógica. A atomicidade é da linha-alvo e da restrição única declarada. Se o <code>DO UPDATE</code> tem <code>WHERE</code> que impede a atualização, a linha existente permanece e o <code>RETURNING</code> não devolve nada (zero linhas), o que quebra código que assume sempre uma linha. No PostgreSQL, cada tentativa de inserção que conflita consome um valor da sequence (lacunas em <code>id</code> são normais e inofensivas, mas assustam quem as usa como contador). E <code>ON CONFLICT</code> trata um alvo só; conflito em <em>outra</em> restrição única continua sendo erro.</p>
+</div>
+
+<h3>Trade-offs e erros comuns</h3>
+<ul>
+<li><strong>Encadear dez CTEs</strong> deixa a consulta legível e o plano ilegível; depure testando cada CTE isoladamente. Se uma CTE é reutilizada por várias consultas, é uma <code>VIEW</code> esperando para nascer.</li>
+<li><strong>Janela sem determinismo:</strong> <code>ROW_NUMBER() OVER (ORDER BY created_at)</code> com timestamps iguais escolhe uma linha arbitrária, e o resultado muda entre execuções. Acrescente o desempate (<code>, id</code>).</li>
+<li><strong>Janela onde um <code>GROUP BY</code> bastava</strong> custa ordenação e memória; use janela quando precisar manter o detalhe ao lado do agregado.</li>
+<li><strong>Recursão para dados que já têm profundidade fixa e pequena</strong> (dois níveis): um self join resolve e o plano é mais simples.</li>
+<li><strong>UPSERT em lote</strong>: uma instrução com muitas linhas pode conter duas vezes a mesma chave (PostgreSQL: "ON CONFLICT DO UPDATE command cannot affect row a second time"). Deduplique antes.</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>CTE nomeia passos; desde o PostgreSQL 12 ela não é mais barreira de otimização por padrão. A CTE recursiva (âncora + passo, <code>UNION ALL</code>) percorre árvores e grafos, mas exige proteção contra ciclos e índice na coluna de ligação. Janelas calculam sem colapsar linhas e só podem ser filtradas por quem as enxerga depois (subquery/CTE); cuidado com empates (<code>ROW_NUMBER</code> vs <code>RANK</code> vs <code>DENSE_RANK</code>) e com a moldura padrão. UPSERT + <code>RETURNING</code> fazem o "grava ou atualiza" de forma atômica, em uma ida ao banco.</p>
+</div>
+
+<!-- ============================================ BLOCO 4 -->
+<h2 id="b04">Bloco 4 · Índices e desempenho: B-tree, índice composto, seletividade, cobertura, EXPLAIN e N+1</h2>
+
+<h3>Por que isso importa</h3>
+<p>Com 100 linhas, qualquer consulta é rápida e nenhum erro de modelagem aparece. Com 50 milhões, a diferença entre uma busca por índice e uma varredura completa é a diferença entre milissegundos e minutos, e entre um serviço de pé e um banco saturado que derruba tudo que depende dele. Desempenho de banco é, em grande parte, um problema de <em>caminho de acesso</em>: quantas páginas o banco precisa ler para responder. Índice é a ferramenta principal; plano de execução é o instrumento de medição; N+1 é o erro de aplicação que nenhum índice conserta.</p>
+
+<h3>O mecanismo: a B-tree</h3>
+<p>O banco armazena a tabela em páginas (blocos de 4 a 16 KB). Sem índice, achar as linhas com <code>member_id = 7</code> exige ler todas as páginas (<em>full scan</em>, custo O(N)). Um índice B-tree mantém as chaves <strong>ordenadas</strong> numa árvore balanceada de páginas, com poucos níveis (três ou quatro cobrem bilhões de entradas, porque cada página guarda centenas de chaves): a busca desce da raiz às folhas em O(log N) leituras; as folhas, encadeadas, permitem percorrer um intervalo em ordem.</p>
+<figure>
+<svg viewBox="0 0 640 230" role="img" aria-labelledby="t-bt" style="max-width:640px">
+<title id="t-bt">B-tree: raiz com separadores, folhas ordenadas e encadeadas apontando para linhas da tabela</title>
+<g fill="none" stroke="currentColor" stroke-width="1.4" font-family="sans-serif" font-size="12" text-anchor="middle">
+<rect x="250" y="14" width="140" height="34" rx="6"/><text x="320" y="36" fill="currentColor" stroke="none">raiz: 400 | 800</text>
+<rect x="30" y="100" width="170" height="34" rx="6"/><text x="115" y="122" fill="currentColor" stroke="none">ramo: 100 | 200 | 300</text>
+<rect x="235" y="100" width="170" height="34" rx="6"/><text x="320" y="122" fill="currentColor" stroke="none">ramo: 500 | 600 | 700</text>
+<rect x="440" y="100" width="170" height="34" rx="6"/><text x="525" y="122" fill="currentColor" stroke="none">ramo: 900 | 950</text>
+<path d="M290 48L130 100M320 48L320 100M350 48L520 100"/>
+<rect x="20" y="180" width="90" height="30" rx="5"/><text x="65" y="199" fill="currentColor" stroke="none">1..99</text>
+<rect x="125" y="180" width="90" height="30" rx="5"/><text x="170" y="199" fill="currentColor" stroke="none">100..199</text>
+<rect x="230" y="180" width="90" height="30" rx="5"/><text x="275" y="199" fill="currentColor" stroke="none">200..299</text>
+<rect x="335" y="180" width="90" height="30" rx="5"/><text x="380" y="199" fill="currentColor" stroke="none">300..399</text>
+<path d="M115 134L65 180M115 134L170 180M115 134L275 180M115 134L380 180" stroke-dasharray="3 3"/>
+<path d="M110 195h15M215 195h15M320 195h15" stroke-width="2"/>
+</g>
+<text x="500" y="196" font-family="sans-serif" font-size="12" fill="currentColor">folhas encadeadas: percorrem intervalos em ordem</text>
+</svg>
+<figcaption>Ilustração esquemática (nem todos os ramos desenhados). Buscar 250: raiz → ramo 200..299 → folha → ponteiro para a linha.</figcaption>
+</figure>
+<p>O que a B-tree entrega e o que não: igualdade (<code>=</code>), intervalo (<code>&lt;, &gt;, BETWEEN</code>), ordenação (<code>ORDER BY</code> sem passo extra de sort), prefixo de texto (<code>LIKE 'abc%'</code>, sob certas regras de collation), <code>MIN/MAX</code>. Não entrega busca por sufixo ou substring (<code>LIKE '%abc'</code>), busca em texto livre, JSON interno ou vetores: para isso, outros tipos (PostgreSQL: GIN, GiST, BRIN, hash; e <code>pgvector</code> com HNSW/IVFFlat no <a href="../M07-rag-de-verdade/M07.html">M07</a>).</p>
+<p>Custos, sempre: cada índice ocupa espaço, é atualizado em <strong>toda</strong> escrita que toque suas colunas (um <code>INSERT</code> numa tabela com 6 índices faz 7 escritas), e disputa memória de cache. Índice é troca explícita de custo de escrita por custo de leitura. No PostgreSQL, atualizações também geram versões novas de linha (MVCC, bloco 5) que o <code>VACUUM</code> precisa limpar, e um índice a mais pode impedir a otimização <em>HOT update</em>.</p>
+
+<h3>Índice composto e a regra do prefixo à esquerda</h3>
+<p>Um índice em <code>(member_id, loaned_on)</code> ordena primeiro por <code>member_id</code> e, dentro de cada membro, por <code>loaned_on</code> (como uma agenda telefônica: sobrenome, depois nome). Isso define o que ele consegue fazer:</p>
+<table>
+<thead><tr><th>Consulta</th><th>Plano medido no lab (SQLite)</th><th>Por quê</th></tr></thead>
+<tbody>
+<tr><td><code>WHERE member_id = 7</code></td><td><code>SEARCH ... USING INDEX (member_id=?)</code></td><td>prefixo à esquerda</td></tr>
+<tr><td><code>WHERE member_id = 7 AND loaned_on &gt;= '2025-06-01'</code></td><td><code>SEARCH ... (member_id=? AND loaned_on&gt;?)</code></td><td>igualdade no 1º, intervalo no 2º: usa as duas colunas</td></tr>
+<tr><td><code>WHERE loaned_on = '2025-06-01'</code></td><td><code>SCAN loan</code></td><td>sem o prefixo, as entradas com essa data estão espalhadas por todos os membros</td></tr>
+<tr><td><code>WHERE strftime('%Y', loaned_on) = '2025'</code></td><td><code>SCAN loan</code></td><td>função sobre a coluna: o índice guarda <code>loaned_on</code>, não o ano</td></tr>
+<tr><td><code>WHERE loaned_on LIKE '2025-06%'</code></td><td><code>SCAN loan</code></td><td>sem o prefixo <code>member_id</code>; (e <code>LIKE</code> no SQLite exige collation compatível)</td></tr>
+</tbody>
+</table>
+<p><strong>Como ordenar as colunas.</strong> Regra prática, com exceções: primeiro as colunas comparadas por <em>igualdade</em>, depois a coluna de <em>intervalo</em> ou de <em>ordenação</em>. Entre colunas de igualdade, a mais seletiva primeiro ajuda quando a consulta usa só o prefixo; mas a consulta mais frequente manda: um índice <code>(status, created_at)</code> serve a "todos os pendentes por data", enquanto <code>(created_at, status)</code> não. Depois de uma coluna com intervalo, as colunas seguintes deixam de ser usadas para posicionar a busca (podem ainda filtrar dentro do índice). Um índice composto <code>(a, b)</code> torna redundante um índice isolado em <code>(a)</code>.</p>
+
+<h3>Seletividade e quando o otimizador ignora o índice</h3>
+<p><strong>Seletividade</strong> é a fração de linhas que um predicado seleciona: baixa fração = muito seletivo = bom candidato. Um índice em <code>returned_on</code> (95% das linhas fechadas, 5% nulas) é pouco útil para <code>returned_on IS NOT NULL</code>: ler 95% da tabela via índice, com salto aleatório a cada linha, custa mais do que a varredura sequencial. O otimizador sabe disso <em>se tiver estatísticas atualizadas</em> (<code>ANALYZE</code>; no PostgreSQL, o autovacuum faz isso, mas após cargas grandes vale rodar manualmente) e escolhe a varredura por conta própria. Daí três consequências:</p>
+<ul>
+<li>"O índice existe e não é usado" muitas vezes não é bug; é decisão correta por custo. Ou estatísticas desatualizadas; ou um predicado não-sargável.</li>
+<li><strong>Predicados não-sargáveis</strong> (que o índice não consegue usar): função sobre a coluna, conversão implícita de tipo (<code>WHERE phone = 5511...</code> comparando texto com inteiro), <code>LIKE '%x'</code>, <code>OR</code> entre colunas diferentes, negações. Conserto: reescrever (comparar intervalos de datas em vez de extrair o ano) ou criar <strong>índice de expressão</strong> (<code>CREATE INDEX ON t (lower(email))</code>, suportado por PostgreSQL e SQLite).</li>
+<li><strong>Índice parcial</strong> indexa só o subconjunto que importa. O lab tem <code>idx_loan_open ON loan (due_on) WHERE returned_on IS NULL</code>: guarda só os empréstimos abertos (cerca de 6% nos 20 mil dados), sendo pequeno e barato de manter, e atende "o que está vencido?". Medido sobre os 20 mil empréstimos: <code>WHERE returned_on IS NULL AND due_on &lt; '2025-06-01'</code> faz <code>SEARCH ... USING INDEX idx_loan_open (due_on&lt;?)</code>; <code>WHERE returned_on IS NULL</code> sozinho faz <code>SCAN loan USING INDEX idx_loan_open</code>, percorrendo só as entradas dos abertos em vez da tabela inteira; já <code>WHERE due_on &lt; '2025-06-01'</code> <em>sem</em> o predicado de abertos cai em <code>SCAN loan</code>, porque o índice parcial não contém os empréstimos fechados e usá-lo perderia linhas. O otimizador só emprega um índice parcial quando consegue provar que o filtro da consulta implica o filtro do índice</li>
+</ul>
+
+<h3>Índice de cobertura</h3>
+<p>Quando todas as colunas que a consulta precisa estão no próprio índice, o banco responde sem tocar na tabela. No SQLite o plano mostra <code>USING COVERING INDEX</code>; no PostgreSQL, <code>Index Only Scan</code> (que ainda consulta o mapa de visibilidade e só é realmente "sem acesso à tabela" para páginas marcadas como visíveis, mantido pelo <code>VACUUM</code>). Medido: com o índice <code>(member_id, loaned_on)</code>, <code>SELECT loaned_on FROM loan WHERE member_id = 7</code> usa <code>COVERING INDEX</code>; <code>SELECT *</code> com o mesmo filtro usa o índice mas precisa ir à tabela buscar as demais colunas. O PostgreSQL permite incluir colunas só de carga com <code>CREATE INDEX ... INCLUDE (col)</code> (11+), sem ordená-las nem exigir unicidade sobre elas. O preço: índices largos custam espaço e escrita. Cubra as consultas quentes, não todas.</p>
+
+<h3>Ler um plano: EXPLAIN</h3>
+<p>Plano é a árvore de operações que o banco escolheu. Ler planos é a competência central de tuning, e o que muda entre bancos é o vocabulário, não a ideia:</p>
+<table>
+<thead><tr><th>Ideia</th><th>SQLite <code>EXPLAIN QUERY PLAN</code></th><th>PostgreSQL <code>EXPLAIN</code></th></tr></thead>
+<tbody>
+<tr><td>varredura completa</td><td><code>SCAN loan</code></td><td><code>Seq Scan on loan</code></td></tr>
+<tr><td>busca por índice</td><td><code>SEARCH loan USING INDEX i (member_id=?)</code></td><td><code>Index Scan</code> / <code>Bitmap Index Scan</code> + <code>Bitmap Heap Scan</code></td></tr>
+<tr><td>só índice</td><td><code>USING COVERING INDEX</code></td><td><code>Index Only Scan</code></td></tr>
+<tr><td>ordenação extra</td><td><code>USE TEMP B-TREE FOR ORDER BY</code></td><td><code>Sort</code> (com <code>Sort Method: external merge</code> se transbordar para disco)</td></tr>
+<tr><td>custo e linhas estimados</td><td>não mostra</td><td><code>cost=0.29..8.31 rows=1 width=...</code></td></tr>
+<tr><td>execução real</td><td>não há</td><td><code>EXPLAIN (ANALYZE, BUFFERS)</code>: tempo, linhas reais, páginas lidas</td></tr>
+</tbody>
+</table>
+<p><code>EXPLAIN ANALYZE</code> do PostgreSQL <strong>executa a consulta de verdade</strong> (inclusive <code>INSERT/UPDATE/DELETE</code>: envolva em <code>BEGIN; ... ROLLBACK;</code>). A leitura útil é comparar as linhas estimadas com as reais em cada nó: uma estimativa 1000 vezes menor do que a real indica estatística ruim, e é a origem de quase todo plano catastrófico (nested loop escolhido para milhões de linhas).</p>
+<p>O laboratório mede o antes e o depois da migration <code>002</code> sobre 20 mil empréstimos (gerados deterministicamente), para a consulta de histórico de um membro:</p>
+<pre><code>SELECT id, book_id, loaned_on FROM loan WHERE member_id = ? ORDER BY loaned_on DESC;
+
+$ uv run python -m sqllab.cli plan
+-- before migration 002
+SCAN loan
+USE TEMP B-TREE FOR ORDER BY
+-- after migration 002
+SEARCH loan USING INDEX idx_loan_member_loaned (member_id=?)</code></pre>
+<p>Antes: lê as 20 mil linhas e ainda ordena num B-tree temporário. Depois: desce o índice até o membro e, como o índice está ordenado por <code>(member_id, loaned_on)</code>, as linhas já saem na ordem (o índice é percorrido de trás para frente para o <code>DESC</code>): <strong>a linha de ordenação desapareceu do plano</strong>. Um índice bem escolhido elimina trabalho, não só acelera.</p>
+
+<h3>O problema N+1</h3>
+<p>Padrão: uma consulta traz N itens; um laço executa uma consulta extra por item para buscar dados relacionados. São 1 + N viagens ao banco, cada uma com latência de rede, parse, planejamento e bloqueio de conexão. Em desenvolvimento (10 linhas, banco local) parece instantâneo; em produção (10 mil linhas, banco em outra zona) são 10 mil idas e voltas. Nenhum índice resolve, porque cada consulta individual já é rápida. O lab conta as instruções que chegam ao SQLite com <code>set_trace_callback</code>:</p>
+<pre><code>$ uv run python -m sqllab.cli nplus1
+N+1: 9 statements
+JOIN: 1 statement</code></pre>
+<p>São 8 livros: 1 consulta para a lista + 8 para os autores = 9. A versão com <code>JOIN</code> faz o mesmo em uma. Em ORMs (SQLAlchemy no <a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a>) o N+1 nasce do <em>lazy loading</em>: acessar <code>livro.autor</code> dentro de um laço dispara uma consulta por iteração, sem que o código pareça fazer consulta. Curas: <code>JOIN</code>/<code>joinedload</code> (um-para-um e muitos-para-um), <code>selectinload</code> ou <code>WHERE id IN (...)</code> em lote (um-para-muitos, evita a explosão cartesiana), e <strong>teste que conta as consultas</strong> (afirme "no máximo 3 instruções" para o endpoint). Sem teste, N+1 volta no primeiro refactor.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Criar índice em produção sem pensar no bloqueio. No PostgreSQL, <code>CREATE INDEX</code> comum toma um lock que bloqueia escritas na tabela durante toda a construção; em tabela grande, isso é uma indisponibilidade de escrita. Use <code>CREATE INDEX CONCURRENTLY</code> (mais lento, não bloqueia escritas, não roda dentro de transação, e deixa um índice <code>INVALID</code> se falhar, que precisa ser removido e refeito). A segunda armadilha: índice que ninguém usa e que cobra escrita; <code>pg_stat_user_indexes.idx_scan = 0</code> por semanas é candidato a remoção. A terceira: <code>EXPLAIN</code> em banco de desenvolvimento pequeno recomenda <code>Seq Scan</code> e engana; planos só valem com volume e distribuição parecidos com os de produção.</p>
+</div>
+
+<h3>Trade-offs e erros comuns</h3>
+<ul>
+<li><strong>Indexar tudo "por garantia".</strong> Cada índice taxa as escritas. Indexe a partir das consultas medidas.</li>
+<li><strong>Esquecer o índice da chave estrangeira.</strong> Join e <code>DELETE</code> no pai varrem a tabela filha. O lab cria <code>idx_loan_book</code> e <code>idx_loan_member_loaned</code> exatamente para as chaves de <code>loan</code>.</li>
+<li><strong>Medir uma vez.</strong> A primeira execução paga cache frio; meça várias e compare planos, não só tempos.</li>
+<li><strong>Otimizar a consulta errada.</strong> Antes de afinar, ache as mais custosas no agregado (<code>pg_stat_statements</code> no PostgreSQL): uma consulta de 5 ms executada 2 mil vezes por segundo pesa mais do que uma de 2 s executada uma vez por dia.</li>
+<li><strong><code>OFFSET</code> grande e <code>COUNT(*)</code> exato em tabelas gigantes:</strong> ambos leem muito; use paginação por chave e contagens aproximadas quando o negócio aceitar.</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>B-tree guarda chaves ordenadas: serve igualdade, intervalo e ordenação em O(log N), com custo de espaço e escrita. Índice composto obedece ao prefixo à esquerda: igualdades primeiro, intervalo/ordenação depois. O otimizador pode (e deve) ignorar índice pouco seletivo; função sobre a coluna o inutiliza, e índices parciais, de expressão e de cobertura atacam esses casos. Leia o plano antes e depois, com volume realista. N+1 é erro de aplicação: conte as instruções em teste e traga os dados em lote.</p>
+</div>
+
+<!-- ============================================ BLOCO 5 -->
+<h2 id="b05">Bloco 5 · Transações: ACID, isolamento e anomalias, locks, MVCC e deadlock</h2>
+
+<h3>Por que isso importa</h3>
+<p>Com um único usuário, uma consulta lê e escreve sem surpresa. Com dois usuários, cada instrução correta isoladamente pode produzir um estado impossível: estoque negativo, saldo duplicado, plantão vazio, pedido cobrado duas vezes. Esses bugs só aparecem sob concorrência, não repetem em teste, somem quando você olha, e custam dinheiro. A transação é a abstração do banco para raciocinar sobre isso; entender o que ela promete (e o que <em>não</em> promete por padrão) é a competência que mais pesa em sistemas de produção. O <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a> (bloco 5) retoma o tema no nível de arquitetura: fronteiras transacionais, sagas e consistência entre serviços. Aqui você fica com o mecanismo dentro de um banco.</p>
+
+<h3>ACID, letra por letra</h3>
+<ul>
+<li><strong>Atomicidade:</strong> todas as operações da transação acontecem ou nenhuma. Se a instrução 3 de 5 falha, as duas primeiras são desfeitas (<code>ROLLBACK</code>). É implementada por log de desfazer/refazer (<em>write-ahead log</em>). No lab, <code>checkout</code> insere o empréstimo e decrementa o estoque; se não há cópia, a exceção <code>OutOfStock</code> desfaz o <code>INSERT</code> também (teste: <code>test_checkout_without_stock_rolls_back_the_loan</code>).</li>
+<li><strong>Consistência:</strong> a transação leva o banco de um estado válido a outro, <em>segundo as restrições declaradas</em>. O banco garante o que você declarou (<code>CHECK</code>, <code>FOREIGN KEY</code>, <code>UNIQUE</code>); invariantes que só existem na sua cabeça ("pelo menos um médico de plantão") são problema seu. Este "C" é diferente do "C" do teorema CAP.</li>
+<li><strong>Isolamento:</strong> transações concorrentes não enxergam os estados intermediários umas das outras, ao grau definido pelo nível de isolamento. É a propriedade negociável, e quase todo o resto deste bloco trata dela.</li>
+<li><strong>Durabilidade:</strong> depois do <code>COMMIT</code> confirmado, o dado sobrevive a falha do processo e queda de energia. Implementada por gravar o log em disco (<code>fsync</code>) antes de confirmar. Desligar isso (<code>synchronous_commit = off</code> no PostgreSQL, <code>PRAGMA synchronous = OFF</code> no SQLite) troca durabilidade por velocidade, com risco explícito de perder as últimas transações.</li>
+</ul>
+<p>Duas ressalvas operacionais. DDL é transacional no PostgreSQL e no SQLite (uma migration que falha no meio desfaz tudo) e <em>não</em> no MySQL (cada <code>ALTER</code> confirma implicitamente). E "autocommit" significa que cada instrução é sua própria transação: duas instruções relacionadas em autocommit <em>não são atômicas</em>. O módulo abre a conexão com <code>autocommit=True</code> (Python 3.12+) e abre transações explícitas com <code>BEGIN</code>/<code>COMMIT</code>, em vez de depender do comportamento legado do módulo <code>sqlite3</code> de abrir transações implicitamente antes de <code>INSERT/UPDATE/DELETE</code>.</p>
+
+<h3>Anomalias de concorrência</h3>
+<p>Isolamento total (serializável) significa que o resultado equivale a executar as transações uma após a outra, em alguma ordem. Níveis mais fracos permitem anomalias, e cada anomalia é um bug que você escolheu aceitar ou precisa evitar à mão:</p>
+<table>
+<thead><tr><th>Anomalia</th><th>O que acontece</th><th>Exemplo</th></tr></thead>
+<tbody>
+<tr><td><strong>Leitura suja</strong> (dirty read)</td><td>Lê dado não confirmado de outra transação, que depois sofre rollback.</td><td>Mostra saldo de um depósito que foi desfeito.</td></tr>
+<tr><td><strong>Leitura não repetível</strong></td><td>Lê a mesma linha duas vezes na transação e obtém valores diferentes (outra confirmou entre as leituras).</td><td>Relatório de duas somas que não batem.</td></tr>
+<tr><td><strong>Fantasma</strong> (phantom)</td><td>Repete uma consulta por predicado e aparecem linhas novas/sumidas.</td><td><code>COUNT(*)</code> muda dentro da transação.</td></tr>
+<tr><td><strong>Lost update</strong></td><td>Duas transações leem, calculam e gravam; a segunda sobrescreve a primeira.</td><td>Dois checkouts leem <code>copies = 3</code> e gravam 2.</td></tr>
+<tr><td><strong>Write skew</strong></td><td>Duas transações leem um conjunto sobreposto, cada uma grava em linhas <em>diferentes</em>; cada uma é válida sozinha, a soma viola a invariante.</td><td>Dois médicos saem de plantão, ficando zero.</td></tr>
+</tbody>
+</table>
+<p>O padrão SQL define os níveis pelas três primeiras anomalias. É uma definição incompleta (lost update e write skew não estão lá), e as implementações divergem: o nome do nível não garante o comportamento entre bancos.</p>
+<table>
+<thead><tr><th>Nível</th><th>PostgreSQL</th><th>MySQL/InnoDB</th><th>SQLite</th></tr></thead>
+<tbody>
+<tr><td><code>READ UNCOMMITTED</code></td><td>Comporta-se como <code>READ COMMITTED</code> (nunca há leitura suja).</td><td>Permite leitura suja.</td><td>Só com cache compartilhado e o pragma <code>read_uncommitted</code>; raramente usado.</td></tr>
+<tr><td><code>READ COMMITTED</code></td><td><strong>Padrão.</strong> Cada <em>instrução</em> vê um snapshot dos dados confirmados até o início dessa instrução. Permite não repetível e fantasma, lost update (no read-modify-write do aplicativo) e write skew.</td><td>Disponível.</td><td>—</td></tr>
+<tr><td><code>REPEATABLE READ</code></td><td>Snapshot único por <em>transação</em> (isolamento por snapshot). Sem não repetível, <strong>sem fantasma</strong>; um <code>UPDATE</code> em linha alterada por outra transação aborta (40001). <strong>Write skew continua possível.</strong></td><td><strong>Padrão.</strong> Leituras consistentes por snapshot; <code>locking reads</code> usam <em>gap locks</em>.</td><td>—</td></tr>
+<tr><td><code>SERIALIZABLE</code></td><td>Serializable Snapshot Isolation (SSI): detecta dependências perigosas e aborta uma transação (40001). Exige <strong>retry</strong>.</td><td>Transforma leituras em leituras com lock compartilhado.</td><td>Efetivamente o único modo: um escritor por vez no banco todo.</td></tr>
+</tbody>
+</table>
+
+<h3>MVCC, conceitualmente</h3>
+<p><em>Multi-Version Concurrency Control</em> é a razão de leitores não bloquearem escritores no PostgreSQL, no Oracle e no InnoDB. Em vez de modificar uma linha no lugar, o <code>UPDATE</code> cria uma <strong>nova versão</strong> e marca a antiga como substituída. No PostgreSQL, cada versão carrega <code>xmin</code> (id da transação que a criou) e <code>xmax</code> (a que a removeu/substituiu); cada transação enxerga o snapshot de "quais transações já tinham confirmado quando comecei" e escolhe, por linha, a versão visível. Consequências práticas:</p>
+<ul>
+<li>Leitura não bloqueia escrita e escrita não bloqueia leitura. <strong>Escrita bloqueia escrita</strong> na mesma linha: o segundo <code>UPDATE</code> espera o primeiro confirmar ou desfazer.</li>
+<li>Versões antigas acumulam; o <code>VACUUM</code> as remove. Uma transação aberta por horas (ou "idle in transaction") segura o horizonte do snapshot e impede a limpeza: a tabela incha (<em>bloat</em>) e tudo fica lento. <strong>Transação curta é requisito operacional</strong>: nunca deixe uma transação aberta enquanto chama uma API externa ou espera o usuário.</li>
+<li>O InnoDB guarda a versão antiga num <em>undo log</em>; o PostgreSQL guarda na própria tabela. O efeito conceitual é o mesmo, o custo operacional não.</li>
+</ul>
+<p>O SQLite no modo WAL oferece um modelo parecido: leitores enxergam um snapshot fixado ao início da leitura e não bloqueiam o escritor, mas só existe <strong>um escritor por vez</strong> no arquivo inteiro. O lab mostra o snapshot:</p>
+<pre><code>$ uv run python -m sqllab.cli concurrency
+...
+snapshot: first=1 same-txn=1 after-commit=2</code></pre>
+<p>O leitor abre a transação e conta 1 livro; outra conexão insere um segundo livro e confirma; o leitor, ainda na mesma transação, continua contando 1 (seu snapshot); só depois do seu <code>COMMIT</code> vê 2.</p>
+
+<h3>Lost update: a anomalia cotidiana</h3>
+<p>O padrão mais comum de bug transacional é ler no aplicativo, calcular e gravar de volta:</p>
+<pre><code># ERRADO: duas requisições leem 3, ambas gravam 2
+copies = db.execute("SELECT copies FROM book WHERE id = 1").fetchone()[0]
+db.execute("UPDATE book SET copies = ? WHERE id = 1", (copies - 1,))</code></pre>
+<pre><code>$ uv run python -m sqllab.cli concurrency
+lost update: read-modify-write -> 2, atomic UPDATE -> 1 (expected 1)</code></pre>
+<p>Duas retiradas de um estoque de 3 deveriam deixar 1. O read-modify-write deixa 2: uma retirada sumiu. (Honestidade sobre o laboratório: o SQLite não tem como "fazer" o lost update acontecer em isolamento <em>serializável</em> porque a unidade de bloqueio é o banco todo; o demo intercala duas conexões em autocommit, ou seja, sem transação envolvendo a leitura e a escrita, que é exatamente como o bug nasce em aplicações reais.) As defesas, da mais simples à mais pesada:</p>
+<ol>
+<li><strong>Empurrar a conta para o banco:</strong> <code>UPDATE book SET copies = copies - 1 WHERE id = ? AND copies &gt; 0</code>. A instrução é atômica por linha (o segundo <code>UPDATE</code> espera o primeiro e reavalia a condição). Confira <code>rowcount</code>: zero linhas afetadas significa "sem estoque". É a solução do <code>checkout</code> do lab. Quando a regra cabe numa expressão, esta é a melhor.</li>
+<li><strong>Lock pessimista:</strong> <code>SELECT ... FOR UPDATE</code> bloqueia as linhas lidas até o fim da transação; os concorrentes esperam. Variantes: <code>NOWAIT</code> (erro imediato) e <code>SKIP LOCKED</code> (pula linhas travadas: ótimo para filas de trabalho no banco, em que cada worker pega uma tarefa diferente).</li>
+<li><strong>Lock otimista:</strong> coluna <code>version</code>; <code>UPDATE ... SET ..., version = version + 1 WHERE id = ? AND version = ?</code> e <code>rowcount = 0</code> significa "alguém mudou antes de você": releia e tente de novo (ou mostre o conflito ao usuário). Bom quando conflitos são raros e a "transação" atravessa a interação humana (a tela de edição ficou aberta dez minutos; você não segura lock por isso).</li>
+<li><strong>Isolamento mais forte com retry:</strong> <code>REPEATABLE READ</code> faz o PostgreSQL abortar o segundo <code>UPDATE</code> de uma linha alterada concorrentemente (erro 40001); o aplicativo repete a transação inteira.</li>
+</ol>
+
+<h3>Write skew: o que o isolamento por snapshot não pega</h3>
+<p>Regra de negócio: sempre pelo menos um médico de plantão. Duas transações, cada uma lê "2 de plantão" e tira um médico <em>diferente</em>. As escritas não colidem (linhas distintas), então nenhum lock de linha as serializa:</p>
+<figure>
+<svg viewBox="0 0 700 230" role="img" aria-labelledby="t-ws" style="max-width:700px">
+<title id="t-ws">Write skew: duas transações leem 2 médicos de plantão, cada uma remove um diferente e ambas confirmam, restando zero</title>
+<g fill="none" stroke="currentColor" stroke-width="1.4" font-family="sans-serif" font-size="12">
+<path d="M90 40h590M90 130h590"/>
+<text x="10" y="45" fill="currentColor" stroke="none">T1 (Ana)</text><text x="10" y="135" fill="currentColor" stroke="none">T2 (Bia)</text>
+<rect x="110" y="26" width="150" height="28" rx="5"/><text x="118" y="45" fill="currentColor" stroke="none">lê: 2 de plantão</text>
+<rect x="290" y="26" width="140" height="28" rx="5"/><text x="298" y="45" fill="currentColor" stroke="none">Ana: on_call=0</text>
+<rect x="470" y="26" width="90" height="28" rx="5"/><text x="480" y="45" fill="currentColor" stroke="none">COMMIT</text>
+<rect x="140" y="116" width="150" height="28" rx="5"/><text x="148" y="135" fill="currentColor" stroke="none">lê: 2 de plantão</text>
+<rect x="320" y="116" width="140" height="28" rx="5"/><text x="328" y="135" fill="currentColor" stroke="none">Bia: on_call=0</text>
+<rect x="500" y="116" width="90" height="28" rx="5"/><text x="510" y="135" fill="currentColor" stroke="none">COMMIT</text>
+</g>
+<text x="90" y="200" font-family="sans-serif" font-size="13" fill="currentColor">Resultado em snapshot isolation: 0 médicos de plantão. Cada transação, sozinha, estava correta.</text>
+<text x="90" y="220" font-family="sans-serif" font-size="12" fill="currentColor">Linhas escritas diferentes ⇒ nenhum conflito escrita-escrita detectado.</text>
+</svg>
+<figcaption>Eixo horizontal: tempo. A invariante "≥ 1 de plantão" vive só na cabeça do programador.</figcaption>
+</figure>
+<p>Defesas: (a) <code>SERIALIZABLE</code> (PostgreSQL SSI) com retry; (b) bloquear o <em>conjunto lido</em> (<code>SELECT ... FROM doctor WHERE on_call = 1 FOR UPDATE</code> trava as linhas que formam a invariante, serializando as duas transações); (c) materializar o conflito: uma linha única "escala do dia" que ambas atualizam, e então o conflito escrita-escrita aparece; (d) restrição declarativa, quando possível (constraint de exclusão, <code>CHECK</code> em tabela agregadora, índice único parcial).</p>
+<p><strong>O que o SQLite faz no lugar</strong>, demonstrado pelo lab: as duas conexões leem 2 de plantão, T1 remove a Ana e confirma; T2, com snapshot agora obsoleto, tenta remover a Bia e é recusada, porque num banco de um escritor só a conexão cujo snapshot ficou velho não consegue passar a escrever:</p>
+<pre><code>write skew: second writer -&gt; 'database is locked', on call = 1
+two writers: 'database is locked'</code></pre>
+<p>Ou seja: o SQLite evita o write skew por ser mais restritivo (serializa escritores), e não por ter um mecanismo sofisticado. Não conclua que "write skew não acontece": no PostgreSQL em <code>REPEATABLE READ</code> as duas confirmam, e o resultado é zero. O lab não consegue reproduzir isso sem um servidor; o diagrama acima é o que você verá lá. A segunda linha do resultado mostra a outra face: com <code>BEGIN IMMEDIATE</code>, o segundo escritor é recusado já no início da transação, não no <code>COMMIT</code>. Em aplicativos, trate esse erro como "ocupado" e use <code>timeout</code> (espera) e retry.</p>
+
+<h3>Locks, deadlock e retry</h3>
+<p>Tipos que você precisa distinguir: lock de <em>linha</em> (<code>FOR UPDATE</code>, <code>UPDATE</code>), de <em>tabela</em> (DDL, <code>LOCK TABLE</code>), <em>advisory</em> (PostgreSQL: lock cooperativo por número, útil para "só um job por vez") e, no InnoDB, de <em>intervalo</em>. Locks são retidos até o fim da transação, e é por isso que transação longa é perigosa.</p>
+<p><strong>Deadlock</strong>: T1 trava a linha A e pede a B; T2 travou B e pede A; ninguém avança. O PostgreSQL detecta o ciclo (após <code>deadlock_timeout</code>, 1 s por padrão), aborta uma delas com <code>40P01</code> e deixa a outra seguir. Prevenção e tratamento:</p>
+<ul>
+<li><strong>Ordem global de aquisição:</strong> sempre travar recursos na mesma ordem (por <code>id</code> crescente). Uma transferência entre contas A→B e B→A deve ordenar as duas contas antes de travar.</li>
+<li><strong>Transações curtas e com poucas linhas</strong>; tocar o mínimo possível.</li>
+<li><strong>Retry com a transação inteira:</strong> <code>40001</code> (serialização) e <code>40P01</code> (deadlock) são falhas esperadas, não bugs. O aplicativo deve repetir a transação <em>inteira</em> (inclusive as leituras), com limite de tentativas e <em>backoff</em> com jitter. E as operações dentro dela devem ser seguras para repetir (nada de enviar e-mail antes do <code>COMMIT</code>; veja outbox no <a href="../M02A-engenharia-software-senior/M02A.html">M02A</a>).</li>
+</ul>
+
+<h3>Exemplo trabalhado: o checkout do lab</h3>
+<pre><code>def checkout(self, member_id, book_id, on, days=14) -&gt; int:
+    with transaction(self._conn, immediate=True):          # BEGIN IMMEDIATE ... COMMIT/ROLLBACK
+        loan = self._conn.execute(
+            "INSERT INTO loan (book_id, member_id, loaned_on, due_on) VALUES (?, ?, ?, ?) RETURNING id",
+            (book_id, member_id, on.isoformat(), (on + timedelta(days=days)).isoformat())).fetchone()
+        stock = self._conn.execute(
+            "UPDATE book SET copies = copies - 1 WHERE id = ? AND copies &gt; 0", (book_id,))
+        if stock.rowcount == 0:
+            raise OutOfStock(f"book {book_id} has no copy available")   # desfaz o INSERT também
+    return int(loan["id"])</code></pre>
+<p>Quatro decisões, todas deste bloco: atomicidade (empréstimo e estoque juntos); decremento atômico no banco (sem lost update); verificação por <code>rowcount</code>; e <code>BEGIN IMMEDIATE</code> para pegar o lock de escrita no início (no PostgreSQL o equivalente é deixar o <code>UPDATE</code> fazer o trabalho; não há "immediate"). Defesa em profundidade: se alguém remover o <code>AND copies &gt; 0</code>, o <code>CHECK (copies &gt;= 0)</code> do esquema ainda barra o estoque negativo, e o teste continua falhando (você fará essa mutação no laboratório).</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Achar que <code>REPEATABLE READ</code> ou "usar transação" resolve concorrência. Uma transação em <code>READ COMMITTED</code> (o padrão do PostgreSQL) que faz <code>SELECT</code>, decide no aplicativo e faz <code>UPDATE</code> continua com lost update e write skew: a transação garante atomicidade, não que o que você <em>leu</em> continue verdadeiro quando você escrever. Para cada leitura-que-fundamenta-escrita, pergunte: o que impede alguém de mudar isso entre as duas instruções? A resposta tem de ser um mecanismo concreto (expressão atômica, <code>FOR UPDATE</code>, versão, <code>SERIALIZABLE</code> com retry, restrição), nunca "é improvável".</p>
+</div>
+
+<h3>Trade-offs e erros comuns</h3>
+<ul>
+<li><strong><code>SERIALIZABLE</code> em tudo:</strong> correto por construção, mas gera abortos que precisam de retry em todo ponto de entrada, e sob contenção a vazão cai. Use onde a invariante é complexa; use expressões atômicas e restrições onde der.</li>
+<li><strong>Retry sem idempotência:</strong> repetir uma transação que já tinha efeito externo (cobrança, e-mail) duplica o efeito.</li>
+<li><strong>Transação aberta ao redor de I/O externo</strong> (chamada de LLM, HTTP): segura locks e snapshot por segundos; sob carga, esgota conexões do pool.</li>
+<li><strong>Engolir a exceção de transação</strong> e continuar: no PostgreSQL, após um erro a transação fica <em>abortada</em> e rejeita toda instrução até o <code>ROLLBACK</code> (ou <code>ROLLBACK TO SAVEPOINT</code>).</li>
+<li><strong>Misturar o nível de isolamento de teste e produção:</strong> SQLite em teste esconde lost update e write skew que o PostgreSQL permite. Testes de concorrência valem contra o banco real (<a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a>, bloco 6).</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>ACID: atomicidade e durabilidade vêm do log; consistência é o que você declarou como restrição; isolamento é negociável e o padrão do PostgreSQL (<code>READ COMMITTED</code>) admite lost update e write skew em read-modify-write. MVCC deixa leitor e escritor em paz, ao custo de versões a limpar e de transações longas que prejudicam todos. Defenda-se por ordem de simplicidade: expressão atômica no <code>UPDATE</code>, restrição declarativa, lock da linha (<code>FOR UPDATE</code>/<code>SKIP LOCKED</code>), versão otimista, <code>SERIALIZABLE</code> com retry. Deadlock se previne com ordem global de locks; <code>40001</code> e <code>40P01</code> pedem retry da transação inteira.</p>
+</div>
+
+<!-- ============================================ BLOCO 6 -->
+<h2 id="b06">Bloco 6 · Do modelo ao código: domínio, migrations, sqlite3 com parâmetros, injection e quando não usar relacional</h2>
+
+<h3>Por que isso importa</h3>
+<p>Os cinco blocos anteriores dão o vocabulário. Este fecha o ciclo que acontece em todo projeto real: partir de um domínio em linguagem natural, chegar a um esquema, evoluí-lo sem perder dados, acessá-lo a partir do Python sem abrir uma vulnerabilidade, e saber reconhecer quando o relacional não é a ferramenta certa. É também o bloco que liga este módulo ao <a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a> (SQLAlchemy, Alembic, PostgreSQL) e ao <a href="../M07-rag-de-verdade/M07.html">M07</a> (busca vetorial).</p>
+
+<h3>Modelar um domínio, em passos</h3>
+<p>Procedimento que funciona em qualquer domínio, aplicado à biblioteca do lab:</p>
+<ol>
+<li><strong>Liste os substantivos e verbos do requisito.</strong> "Membros pegam livros emprestados; livros têm autor e categoria; categorias formam uma hierarquia; membros podem ser indicados por outros." Substantivos viram candidatos a entidade; verbos viram relacionamentos.</li>
+<li><strong>Para cada relacionamento, defina cardinalidade e opcionalidade:</strong> autor 1—N livro (todo livro tem um autor: <code>NOT NULL</code>); livro N—M membro (via <code>loan</code>); categoria 0..1 pai (auto-relacionamento anulável); livro 0..1 categoria. A opcionalidade vira <code>NULL</code>/<code>NOT NULL</code>, a cardinalidade decide onde fica a chave estrangeira (no lado "N") ou se precisa de tabela associativa (N—M).</li>
+<li><strong>Escolha as chaves:</strong> substituta como primária, natural como <code>UNIQUE</code> (ISBN, e-mail).</li>
+<li><strong>Declare as invariantes no banco:</strong> estoque não negativo, vencimento não anterior ao empréstimo, e-mail único.</li>
+<li><strong>Cheque a normalização:</strong> para cada coluna, "depende da chave, de toda a chave e de nada além da chave?".</li>
+<li><strong>Liste as consultas que o sistema fará</strong> (acessos por membro, por livro, empréstimos abertos) e crie os índices que elas pedem. Modelo e padrões de acesso se influenciam: é aqui, e não antes, que se decide uma desnormalização.</li>
+<li><strong>Pergunte "e o histórico?":</strong> o que precisa ser congelado no momento do evento (preço, endereço, nome do autor na edição) em vez de referenciado ao valor corrente.</li>
+</ol>
+<p>Teste de qualidade do modelo: se uma regra de negócio nova exige mudar o esquema em mais de um lugar, ou se uma pergunta razoável do negócio só se responde com um <code>CASE</code> gigante, o modelo está contando a história errada.</p>
+
+<h3>Migrations: o esquema também é código</h3>
+<p>O esquema muda: uma coluna nova, um índice, uma tabela. A mudança precisa ser reprodutível (qualquer ambiente chega ao mesmo estado), versionada (revisada em PR, com histórico) e aplicada em ordem. Uma <strong>migration</strong> é um script numerado; o banco guarda a versão atual (no lab, <code>PRAGMA user_version</code>; em Alembic/Flyway, uma tabela de controle) e aplica as pendentes. O <code>db.py</code> do lab faz isso em ~25 linhas e os dois arquivos reais são <code>001_initial.sql</code> (o esquema) e <code>002_loan_indexes.sql</code> (os três índices). Cada script roda numa transação junto com o aumento da versão:</p>
+<pre><code>script = f"BEGIN;\n{sql}\nPRAGMA user_version = {version};\nCOMMIT;"
+conn.executescript(script)</code></pre>
+<p>Como o DDL é transacional no SQLite (e no PostgreSQL), uma migration que falha no meio deixa o banco na versão anterior, inteiro. O lab prova isso com falha injetada: uma migration 003 com um <code>CREATE TABLE</code> válido seguido de uma instrução quebrada. O teste confirma que a versão continua 2 e que <code>half_done</code> não existe. Em MySQL isso não vale: o primeiro <code>CREATE</code> já foi confirmado, e você tem um banco meio migrado.</p>
+<p>Regras de processo que evitam incidentes:</p>
+<ul>
+<li><strong>Nunca edite uma migration já aplicada em outro ambiente.</strong> Crie outra. Editar a antiga cria bancos que divergem em silêncio.</li>
+<li><strong>Migração "só para frente" é o padrão realista.</strong> Rollback de dados raramente é possível (uma coluna apagada não volta); em vez de confiar no <code>downgrade</code>, planeje a reversibilidade pelo desenho em etapas.</li>
+<li><strong>Padrão expand/contract</strong> para mudanças sem parada: (1) <em>expand</em>: adicione a coluna nova anulável, sem quebrar o código antigo; (2) o código passa a escrever nos dois lugares; (3) <em>backfill</em> dos dados antigos em lotes; (4) o código passa a ler só do novo; (5) <em>contract</em>: remova o antigo numa migration posterior. Renomear coluna numa única migration quebra a versão antiga do aplicativo que ainda está rodando durante o deploy.</li>
+<li><strong>PostgreSQL, tabelas grandes:</strong> <code>ALTER TABLE ... ADD COLUMN</code> com <code>DEFAULT</code> constante é rápido desde a versão 11, mas adicionar <code>NOT NULL</code> ou uma chave estrangeira varre a tabela com lock. Adicione a restrição como <code>NOT VALID</code> (não valida linhas existentes, vale para as novas), depois <code>VALIDATE CONSTRAINT</code> (lock mais leve). Índices com <code>CREATE INDEX CONCURRENTLY</code>, fora de transação (bloco 4). Defina <code>lock_timeout</code> na migration para que ela falhe rápido em vez de enfileirar todo o tráfego atrás de um lock.</li>
+<li><strong>Migração de dados e de esquema em scripts separados</strong>, porque têm perfis de risco e de duração diferentes.</li>
+</ul>
+<p>Em projetos Python reais, você usará o Alembic (junto com SQLAlchemy) para isso no <a href="../M03-fastapi-postgres-docker-ci/M03.html">M03</a>. A ideia é a mesma; a ferramenta gera o esqueleto e mantém a tabela de versões.</p>
+
+<h3>sqlite3 com parâmetros: o contrato do driver</h3>
+<p>O módulo <code>sqlite3</code> implementa a DB-API 2.0 (PEP 249), que o <code>psycopg</code> do PostgreSQL também implementa: <code>connect()</code>, <code>cursor()</code>, <code>execute(sql, params)</code>, <code>fetchone/fetchall</code>, <code>commit/rollback</code>. O que muda entre drivers é o estilo do marcador (<code>paramstyle</code>): o <code>sqlite3</code> usa <code>?</code> (qmark) e <code>:nome</code> (named); o <code>psycopg</code> usa <code>%s</code> e <code>%(nome)s</code>. A ideia é idêntica.</p>
+<pre><code>conn = sqlite3.connect(path, autocommit=True)          # Python 3.12+: você controla BEGIN/COMMIT
+conn.row_factory = sqlite3.Row                         # acesso por nome: row["email"]
+conn.execute("PRAGMA foreign_keys = ON")               # por conexão!
+
+conn.execute("SELECT id, email FROM member WHERE email = ?", (email,))            # posicional
+conn.execute("SELECT ... WHERE l.due_on &lt; :today AND l.member_id = :m",
+             {"today": "2026-06-30", "m": 5})                                      # nomeado
+conn.executemany("INSERT INTO loan (book_id, member_id, loaned_on, due_on) VALUES (?, ?, ?, ?)", rows)</code></pre>
+<p>Pontos que não aparecem em tutoriais: o contexto <code>with conn:</code> do <code>sqlite3</code> confirma/desfaz a transação mas <strong>não fecha</strong> a conexão. Use <code>contextlib.closing</code> ou o seu próprio gerenciador. A tupla de um só parâmetro precisa da vírgula (<code>(email,)</code>); <code>(email)</code> é uma string, e o driver tentaria ligar cada caractere. E o resultado de <code>execute</code> é um cursor <em>preguiçoso</em>: se você alterar a tabela enquanto itera, o comportamento depende do banco; materialize com <code>fetchall()</code> quando for escrever no mesmo laço.</p>
+
+<h3>SQL injection: demonstração e defesa</h3>
+<p>Quando você monta o SQL por concatenação ou <code>f-string</code>, a entrada do usuário deixa de ser <em>dado</em> e passa a fazer parte do <em>programa</em>. O módulo <code>unsafe.py</code> do lab é vulnerável de propósito, em 4 linhas:</p>
+<pre><code>def find_member_unsafe(conn, email):
+    sql = "SELECT id, email, name FROM member WHERE email = '" + email + "'"
+    return [tuple(row) for row in conn.execute(sql).fetchall()]</code></pre>
+<pre><code>$ uv run python -m sqllab.cli injection
+payload: ' OR '1'='1
+unsafe rows: 6
+safe member: None</code></pre>
+<p>O payload fecha a aspa do literal e acrescenta uma tautologia: o texto executado é <code>... WHERE email = '' OR '1'='1'</code>, verdadeiro para todas as linhas, e a consulta devolve os 6 membros. A versão parametrizada (<code>WHERE email = ?</code>) envia o texto SQL fixo e o valor separado: o banco compila a instrução <em>antes</em> de ver o valor, que será sempre um dado (aqui, um e-mail estranho que não existe: <code>None</code>). Outros testes do lab: um payload com <code>UNION SELECT id, isbn, title FROM book --</code> vaza dados de <em>outra tabela</em> pela mesma consulta (o ataque que realmente interessa: ler o que não é seu); uma simples apóstrofe legítima (<code>o'brien@example.com</code>) já quebra a versão concatenada com erro de sintaxe, sem nenhum atacante; e <code>x'; DROP TABLE member; --</code> é barrado pelo <code>sqlite3</code> porque o driver executa uma instrução por chamada, mas isso é um acaso do driver, <strong>não defesa</strong>: drivers de outros bancos podem aceitar várias instruções, e a injeção por <code>UNION</code> não precisa de segunda instrução.</p>
+
+<h4>O que parâmetros protegem, e o que não</h4>
+<table>
+<thead><tr><th>Situação</th><th>Parâmetro resolve?</th><th>O que fazer</th></tr></thead>
+<tbody>
+<tr><td>Valor em <code>WHERE</code>, <code>VALUES</code>, <code>SET</code>, <code>LIMIT</code></td><td>Sim</td><td><code>?</code> / <code>:nome</code> sempre</td></tr>
+<tr><td>Nome de tabela ou coluna, direção do <code>ORDER BY</code></td><td><strong>Não</strong>: identificador não é valor</td><td>Lista de permissão (mapa do nome externo para o identificador real). O lab: <code>BOOK_ORDER_COLUMNS</code>; entrada fora do mapa levanta <code>ValueError</code></td></tr>
+<tr><td><code>IN (?, ?, ?)</code> com tamanho variável</td><td>Sim, mas o <em>número</em> de marcadores é texto</td><td>Gere só <code>?</code> (<code>",".join("?" * n)</code>), nunca os valores. PostgreSQL: <code>= ANY(%s)</code> com uma lista</td></tr>
+<tr><td><code>LIKE</code> com entrada do usuário</td><td>Protege contra injeção, mas <code>%</code> e <code>_</code> do usuário continuam curingas</td><td>Escape os curingas (<code>ESCAPE '\'</code>) se a busca deve ser literal</td></tr>
+<tr><td>Conteúdo salvo e reutilizado depois ("injeção de segunda ordem")</td><td>Só se <em>toda</em> consulta que o reutiliza também parametrizar</td><td>Nunca confie em "já está no meu banco, então é seguro"</td></tr>
+</tbody>
+</table>
+<p>Defesas em camadas: (1) parâmetros sempre; (2) lista de permissão para identificadores; (3) <em>menor privilégio</em>: a conta do aplicativo não precisa de <code>DROP</code>, <code>CREATE</code> nem acesso a tabelas alheias, de modo que uma injeção bem-sucedida alcance pouco; (4) validação de formato na borda (Pydantic, <a href="../M02-python-profissional/M02.html">M02</a>) como higiene, nunca como a defesa principal; (5) revisão e análise estática que sinalizem <code>execute(f"...")</code>. ORMs parametrizam por construção, mas todo ORM tem uma saída "texto cru" (<code>text()</code> no SQLAlchemy) e é ali que a injeção reaparece. Isso importa em sistemas com LLM: texto gerado por modelo é entrada não confiável, e um agente que monta SQL por concatenação a partir do que o modelo produz herda exatamente este defeito. O padrão seguro é o modelo escolher uma consulta/ferramenta de um conjunto fixo e os argumentos viajarem como parâmetros (módulos de agentes e de segurança retomam).</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>"Higienizar" a entrada em vez de parametrizar: trocar <code>'</code> por <code>''</code>, filtrar palavras como <code>DROP</code>. Escapar à mão depende de conhecer as regras do banco, da codificação e do contexto (dentro de string, de número, de identificador), e falha em casos de borda (aspas de outro charset, barras invertidas no MySQL, concatenações que reintroduzem o caractere filtrado). Parâmetro não é "uma forma mais bem escapada": é uma separação de canais, estrutural, que dispensa raciocinar sobre o conteúdo. A segunda armadilha: uma <code>f-string</code> "só com valores internos" (<code>f"... WHERE id = {user_id}"</code> onde <code>user_id</code> vem de <code>int(request...)</code>) funciona até alguém reutilizar a função com outro tipo. O hábito sem exceções é mais barato do que auditar exceções.</p>
+</div>
+
+<h3>Quando o relacional não é a resposta</h3>
+<p>O relacional é o padrão sensato: modelo flexível para consultas que você ainda não imaginou, integridade declarativa e transações. Os outros modelos otimizam um eixo específico, trocando algo em contrapartida. Decida pelo <strong>padrão de acesso</strong> e pelos requisitos de consistência, não pela moda:</p>
+<table>
+<thead><tr><th>Modelo</th><th>Bom para</th><th>Você abre mão de</th><th>Exemplos</th></tr></thead>
+<tbody>
+<tr><td>Relacional</td><td>Dados estruturados com relacionamentos, integridade, consultas ad hoc, transações multi-linha</td><td>Escala horizontal de escrita simples; esquema rígido exige migrations</td><td>PostgreSQL, MySQL, SQLite</td></tr>
+<tr><td>Chave-valor</td><td>Cache, sessões, filas leves, contadores; acesso apenas por chave, latência mínima</td><td>Consulta por outros atributos, joins</td><td>Redis, DynamoDB (também documento)</td></tr>
+<tr><td>Documento</td><td>Agregados hierárquicos lidos/escritos como um todo; esquema que varia por registro</td><td>Joins e integridade entre documentos; análises transversais</td><td>MongoDB, Firestore; <code>JSONB</code> no PostgreSQL cobre muitos casos</td></tr>
+<tr><td>Colunar / wide-column</td><td>Analítica sobre muitas linhas e poucas colunas; séries temporais em escala enorme</td><td>Escritas pontuais e transações</td><td>ClickHouse, BigQuery, Cassandra, Parquet</td></tr>
+<tr><td>Grafo</td><td>Travessias profundas e padrões de relacionamento (recomendação, fraude)</td><td>Agregações tabulares gerais</td><td>Neo4j; CTE recursiva atende muitos casos pequenos</td></tr>
+<tr><td>Busca de texto</td><td>Relevância, filtros facetados, texto livre</td><td>Ser fonte da verdade transacional</td><td>Elasticsearch/OpenSearch; <code>tsvector</code> no PostgreSQL</td></tr>
+<tr><td>Vetorial</td><td>Vizinhos mais próximos por similaridade de embeddings (RAG, recomendação)</td><td>Resultado exato (a busca é aproximada: recall &lt; 100%), igualdade/ordem clássicas</td><td>pgvector, Qdrant, Pinecone</td></tr>
+</tbody>
+</table>
+<p>Três regras de decisão. (1) <strong>Comece no PostgreSQL</strong> e só adicione outro armazenamento quando uma necessidade medida (latência, volume, tipo de consulta) não couber: ele guarda JSON indexável (<code>JSONB</code> + GIN), busca textual, séries temporais razoáveis e vetores (<code>pgvector</code>), e tudo na mesma transação. (2) <strong>Cada sistema adicional é uma fonte de inconsistência</strong>: dois armazenamentos sem transação comum exigem estratégia de sincronização (outbox, reconstrução a partir da fonte da verdade). Declare qual é a fonte da verdade e trate os demais como derivados recriáveis. (3) "NoSQL escala" é meia verdade: abre mão de garantias (joins, transações, consistência) para particionar; um PostgreSQL bem indexado e com réplicas de leitura atende, em geral, uma ordem de grandeza maior do que o produto médio alcança.</p>
+<p>No <a href="../M07-rag-de-verdade/M07.html">M07</a>, o <code>pgvector</code> aparece exatamente por isso: os embeddings ficam numa coluna <code>vector</code> da mesma tabela/transação dos metadados, e a consulta de similaridade combina com <code>WHERE</code> relacional (tenant, permissão, data). O que você aprendeu aqui sobre índices vale ali: um índice aproximado (HNSW/IVFFlat) é, como qualquer índice, uma troca de custo de escrita e de exatidão por velocidade de leitura, e precisa ser medido com o <code>EXPLAIN</code>.</p>
+
+<h3>Trade-offs e erros comuns</h3>
+<ul>
+<li><strong>ORM como substituto de entender SQL:</strong> o ORM gera o SQL; a lentidão, o N+1 e o bloqueio continuam sendo seus. Leia o SQL que ele emite (log de statements) e os planos.</li>
+<li><strong>Repositório que expõe a conexão por toda parte</strong> e deixa cada chamador decidir fronteira de transação. Dono da transação deve ser claro (no lab, cada método público do repositório abre a sua; não aninhe).</li>
+<li><strong>Esquema só no ORM, sem restrições no banco:</strong> as invariantes passam a valer só para o código que usa o ORM.</li>
+<li><strong>Guardar tudo como <code>TEXT</code>/JSON "para ser flexível":</strong> flexibilidade que se paga com validação espalhada e relatórios impossíveis.</li>
+<li><strong>Usar SQLite em teste e PostgreSQL em produção sem camada de integração real:</strong> tipos, isolamento, <code>ORDER BY</code> de <code>NULL</code>, agrupamento permissivo e planos divergem. Para testes unitários de lógica, ok; para o que toca o banco, rode contra o banco real.</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Do domínio ao esquema: entidades, cardinalidades, chaves (substituta + natural única), invariantes declaradas, normalização, índices a partir das consultas, histórico congelado onde precisa. Migrations versionadas e transacionais, nunca editadas depois de aplicadas, em etapas expand/contract para evitar parada. No código, parâmetros sempre (valores) e lista de permissão (identificadores), mais menor privilégio; escapar à mão não é defesa. Relacional é o padrão; troque ou some outro armazenamento quando o padrão de acesso medido pedir, e declare uma fonte única da verdade.</p>
+</div>
+
+<!-- ============================================ LAB -->
+<h2 id="lab-guiado">Laboratório guiado F05</h2>
+<p>Um pacote Python 3.14 (<code>sqllab</code>) sobre <code>sqlite3</code> da biblioteca padrão, sem rede, sem servidor e sem conta. Ele traz o esquema da biblioteca em duas migrations, dez consultas <code>.sql</code> (joins, anti-joins, <code>GROUP BY/HAVING</code>, CTEs recursivas, janelas), a leitura de planos antes/depois de um índice, a contagem de N+1, um repositório com parâmetros, <code>UPSERT</code>, <code>RETURNING</code> e transações, um módulo vulnerável de propósito para a injeção e demos de concorrência. Os dados pequenos são fixos e conferidos à mão nos testes; os dados em volume (20 mil empréstimos) são gerados por um gerador congruencial determinístico, de modo que planos e contagens são <strong>idênticos</strong> aos seus. São 79 testes: caminho feliz, bordas, falha injetada (migration quebrada, estoque zero, e-mail duplicado) e controles negativos (sem <code>PRAGMA foreign_keys</code>; sem índice).</p>
+
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigidos: Python 3.14 e <code>uv</code>. SQLite 3.39 ou mais novo para os testes de <code>RIGHT/FULL JOIN</code> (em versões anteriores eles são ignorados com mensagem). Nunca edite a referência em <code>modulos/F05-sql-bancos-relacionais/lab/</code>.</p>
+<pre><code>cd modulos/F05-sql-bancos-relacionais/lab
+python3 create_working_copy.py
+cd /tmp/f05-xxxx          # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>PowerShell:</strong> <code>cd modulos\F05-sql-bancos-relacionais\lab; python create_working_copy.py</code>, depois <code>cd</code> para o caminho impresso e <code>uv sync --frozen</code>; os demais comandos são iguais. <strong>Resultado esperado:</strong> ambiente sincronizado; a cópia pode ser descartada e refeita. A CLI dos passos abaixo é <code>uv run python -m sqllab.cli &lt;comando&gt;</code>.</p>
+
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Esquema e restrições (bloco 1).</strong> Rode os testes de esquema e leia o controle negativo.
+<pre><code>$ uv run pytest -q tests/test_schema.py
+...........                                                              [100%]
+11 passed in 0.02s</code></pre>
+<p>Abra <code>tests/test_schema.py</code>: <code>copies = -1</code>, vencimento antes do empréstimo, ISBN repetido e autor inexistente são rejeitados; <code>test_control_negative_without_foreign_key_pragma_orphans_are_accepted</code> mostra o órfão entrando quando o pragma não é ligado; <code>test_update_anomaly_...</code> reproduz a anomalia de atualização da tabela plana. <strong>Resultado esperado:</strong> 11 passam (o tempo varia). <strong>Se falhar:</strong> <code>No module named sqllab</code>: você não está na cópia, ou faltou <code>uv sync --frozen</code>.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Joins, anti-joins e agregação (bloco 2).</strong> Liste as consultas e rode três delas.
+<pre><code>$ uv run python -m sqllab.cli queries
+q01_loans_with_titles
+q02_authors_without_books
+q03_books_never_loaned
+q04_overdue_by_member
+q05_category_tree
+q06_referral_chain
+q07_running_loans
+q08_latest_loan_per_member
+q09_book_popularity
+q10_referrals_self_join
+$ uv run python -m sqllab.cli run q02_authors_without_books
+id  name
+--  ------------------
+5   Conceição Evaristo
+(1 row(s))
+$ uv run python -m sqllab.cli run q03_books_never_loaned
+id  title
+--  -----------------
+7   Capitães da Areia
+8   O Alienista
+(2 row(s))
+$ uv run python -m sqllab.cli run q04_overdue_by_member
+member  overdue_loans  max_days_late
+------  -------------  -------------
+Bruno   1              27
+Carla   1              15
+Diego   1              4
+(3 row(s))</code></pre>
+<p><strong>Exercício antes de rodar:</strong> olhe a lista de empréstimos em <code>seed.py</code> e preveja quem aparece em <code>q04</code> para a data fixa <code>2026-06-30</code>. <strong>Resultado esperado:</strong> exatamente a saída acima. <strong>Se divergir:</strong> a consulta lê <code>:today</code>; o <code>cli run</code> passa a data fixa do seed, e não a do relógio.</p></div>
+
+<div class="step"><span class="n">3</span><strong>NULL e NOT IN (bloco 2).</strong>
+<pre><code>$ uv run pytest -q tests/test_joins_and_nulls.py
+...........                                                              [100%]
+11 passed in 0.02s</code></pre>
+<p>Leia <code>test_not_in_with_a_null_returns_nothing</code> ao lado de <code>test_not_exists_and_filtered_not_in_return_the_right_rows</code>, e <code>test_on_vs_where_in_a_left_join</code> (5 contra 2). <strong>Controle negativo para fazer:</strong> no seu <code>sqlite3</code> interativo (<code>uv run python -c ...</code>) rode <code>SELECT 5 NOT IN (1, NULL)</code>: o resultado é <code>None</code>, não <code>1</code>.</p></div>
+
+<div class="step"><span class="n">4</span><strong>CTE recursiva e janelas (bloco 3).</strong>
+<pre><code>$ uv run python -m sqllab.cli run q06_referral_chain --member-id 5
+depth  id  name
+-----  --  -----
+0      5   Elisa
+1      4   Diego
+2      2   Bruno
+3      1   Ana
+(4 row(s))
+$ uv run python -m sqllab.cli run q08_latest_loan_per_member
+member_id  loan_id  book_id  loaned_on
+---------  -------  -------  ----------
+1          9        3        2026-06-26
+2          3        3        2026-05-20
+3          5        5        2026-06-10
+4          6        5        2026-06-12
+5          8        4        2026-06-25
+(5 row(s))
+$ uv run python -m sqllab.cli run q09_book_popularity</code></pre>
+<p>O resultado de <code>q09</code> é a tabela do bloco 3: três livros empatados em 2 empréstimos recebem <code>rank</code> 1, 1, 1 e depois 4, enquanto <code>dense_rank</code> segue 1, 1, 1, 2. <strong>Exercício:</strong> edite a cópia de <code>q08</code> trocando <code>ORDER BY loaned_on DESC, id DESC</code> por <code>ORDER BY loaned_on DESC</code> e explique por que o resultado deixa de ser garantido se dois empréstimos do mesmo membro tiverem a mesma data.</p></div>
+
+<div class="step"><span class="n">5</span><strong>Plano antes e depois do índice (bloco 4).</strong>
+<pre><code>$ uv run python -m sqllab.cli plan
+-- before migration 002
+SCAN loan
+USE TEMP B-TREE FOR ORDER BY
+-- after migration 002
+SEARCH loan USING INDEX idx_loan_member_loaned (member_id=?)</code></pre>
+<p><strong>Resultado esperado:</strong> a varredura e o <code>TEMP B-TREE</code> viram uma única busca por índice, sem ordenação. <strong>Exercício:</strong> escreva uma consulta que filtre só por <code>loaned_on</code> e confirme com <code>sqllab.plans.explain</code> que cai em <code>SCAN</code> (prefixo à esquerda); depois que <code>WHERE member_id = ? AND loaned_on &gt;= ?</code> usa as duas colunas do índice. No PostgreSQL você faria o mesmo com <code>EXPLAIN (ANALYZE, BUFFERS)</code>.</p></div>
+
+<div class="step"><span class="n">6</span><strong>N+1 medido (bloco 4).</strong>
+<pre><code>$ uv run python -m sqllab.cli nplus1
+N+1: 9 statements
+JOIN: 1 statement</code></pre>
+<p>Oito livros: 1 + 8 = 9. Reflita: com 5 mil livros e 2 ms de latência por ida ao banco, qual o custo só de viagens? (10 s contra 2 ms.)</p></div>
+
+<div class="step"><span class="n">7</span><strong>Concorrência (bloco 5).</strong>
+<pre><code>$ uv run python -m sqllab.cli concurrency
+lost update: read-modify-write -> 2, atomic UPDATE -> 1 (expected 1)
+snapshot: first=1 same-txn=1 after-commit=2
+write skew: second writer -> 'database is locked', on call = 1
+two writers: 'database is locked'</code></pre>
+<p><strong>Leia com honestidade:</strong> a primeira linha é um lost update real (2 em vez de 1); a segunda mostra o snapshot; a terceira mostra o <em>SQLite</em> recusando o segundo escritor, o que <strong>não</strong> é o que o PostgreSQL em <code>REPEATABLE READ</code> faria (lá as duas confirmam e restam 0 médicos). <strong>Resultado esperado:</strong> exatamente essas quatro linhas (a mensagem de erro é a do SQLite 3.x).</p></div>
+
+<div class="step"><span class="n">8</span><strong>Injection (bloco 6).</strong>
+<pre><code>$ uv run python -m sqllab.cli injection
+payload: ' OR '1'='1
+unsafe rows: 6
+safe member: None
+$ uv run pytest -q tests/test_injection.py
+......                                                                   [100%]
+6 passed in 0.02s</code></pre>
+<p><strong>Exercício:</strong> acrescente em <code>tests/test_injection.py</code> um payload que tente um <code>ORDER BY</code> injetado via <code>list_books</code> (por exemplo, <code>"title; DROP TABLE book"</code>) e verifique que o repositório levanta <code>ValueError</code>, porque o identificador passa pela lista de permissão.</p></div>
+
+<div class="step"><span class="n">9</span><strong>Migrations e falha injetada (bloco 6).</strong>
+<pre><code>$ uv run python -c "from sqllab.db import *; c=connect(); print(schema_version(c)); migrate(c, target=1); print(schema_version(c)); migrate(c); print(schema_version(c))"
+0
+1
+2
+$ uv run pytest -q tests/test_migrations.py
+.....                                                                    [100%]
+5 passed in 0.01s</code></pre>
+<p><code>test_failing_migration_rolls_back_ddl_and_version</code> injeta uma migration 003 quebrada e prova que a versão permanece em 2 e que a tabela parcial não existe.</p></div>
+
+<div class="step"><span class="n">10</span><strong>O teste morde (mutação).</strong> Em <code>src/sqllab/repository.py</code>, no método <code>checkout</code>, remova a condição de estoque do <code>UPDATE</code>: troque <code>"UPDATE book SET copies = copies - 1 WHERE id = ? AND copies &gt; 0"</code> por <code>"UPDATE book SET copies = copies - 1 WHERE id = ?"</code> e rode:
+<pre><code>$ uv run pytest -q tests/test_repository.py
+...
+E           sqlite3.IntegrityError: CHECK constraint failed: copies &gt;= 0
+src/sqllab/repository.py:80: IntegrityError
+FAILED tests/test_repository.py::test_checkout_without_stock_rolls_back_the_loan
+1 failed, 10 passed</code></pre>
+<p><strong>Resultado esperado:</strong> a suíte rejeita a mutação (1 falha, 10 passes). Observe o detalhe: sem a condição, a regra só é pega porque o <code>CHECK (copies &gt;= 0)</code> do esquema reage; o erro muda de <code>OutOfStock</code> (o contrato) para <code>IntegrityError</code> (a rede de segurança), o que o teste detecta. Reverta a edição.</p></div>
+
+<div class="step"><span class="n">11</span><strong>Gates de qualidade.</strong>
+<pre><code>$ uv run pytest -q
+.......................................................................  [ 91%]
+.......                                                                  [100%]
+79 passed in 0.33s
+$ uv run ruff check .
+All checks passed!
+$ uv run ruff format --check .
+22 files already formatted
+$ uv run mypy --strict src tests
+Success: no issues found in 20 source files</code></pre>
+<p><strong>Resultado esperado:</strong> tudo verde (79 testes). Qualquer vermelho é defeito do programa, não do ambiente.</p></div>
+
+<h3>Limpeza e retomada</h3>
+<p>Apague a cópia de trabalho quando quiser; cada etapa depende só da cópia sincronizada. Os bancos dos passos usam memória ou diretórios temporários removidos ao fim.</p>
+
+<!-- ============================================ DIAGNÓSTICO -->
+<h2>Tabela de Diagnóstico</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Relatório "esvaziou": consulta com <code>NOT IN</code> retorna 0 linhas.</td><td>A subquery passou a produzir <code>NULL</code>.</td><td><code>NOT EXISTS</code>, ou filtre <code>IS NOT NULL</code> na subquery; declare <code>NOT NULL</code> na coluna se o <code>NULL</code> não tem sentido.</td></tr>
+<tr><td><code>LEFT JOIN</code> "não traz" linhas sem par.</td><td>Filtro da tabela opcional no <code>WHERE</code>.</td><td>Mova a condição para o <code>ON</code>, ou assuma <code>INNER JOIN</code> de propósito.</td></tr>
+<tr><td>Total somado maior que o real.</td><td>Join um-para-muitos multiplicou a linha do lado "um".</td><td>Agregue o lado "muitos" em CTE/subquery antes do join; <code>COUNT(DISTINCT ...)</code> só como último recurso.</td></tr>
+<tr><td>Contagem 1 para quem tem 0 itens.</td><td><code>COUNT(*)</code> depois de <code>LEFT JOIN</code>.</td><td><code>COUNT(coluna_da_direita)</code>.</td></tr>
+<tr><td>Índice criado e <code>EXPLAIN</code> mostra <code>Seq Scan</code>/<code>SCAN</code>.</td><td>Falta o prefixo à esquerda; função sobre a coluna; seletividade baixa; estatísticas velhas; tabela pequena em dev.</td><td>Reordene colunas; índice de expressão; <code>ANALYZE</code>; teste com volume realista.</td></tr>
+<tr><td>Endpoint rápido com 10 itens e lento com 10 mil.</td><td>N+1 (lazy loading ou laço com consulta).</td><td><code>JOIN</code>/<code>selectinload</code>/<code>IN</code> em lote; teste que conta instruções.</td></tr>
+<tr><td>Estoque/saldo errado só sob carga.</td><td>Read-modify-write no aplicativo (lost update).</td><td><code>UPDATE x = x - 1 WHERE ... AND x &gt; 0</code>, <code>FOR UPDATE</code>, versão ou <code>SERIALIZABLE</code> com retry.</td></tr>
+<tr><td>Invariante violada sem erro (plantão vazio) em <code>REPEATABLE READ</code>.</td><td>Write skew: snapshot não detecta conflito entre linhas diferentes.</td><td><code>SERIALIZABLE</code> + retry, lock do conjunto lido, ou materializar o conflito numa linha.</td></tr>
+<tr><td><code>deadlock detected</code> (40P01) ou <code>could not serialize</code> (40001).</td><td>Locks em ordens diferentes; conflito de serialização.</td><td>Ordem global de aquisição; transação curta; retry da transação inteira com backoff.</td></tr>
+<tr><td><code>database is locked</code> no SQLite.</td><td>Outro escritor ativo, ou snapshot obsoleto tentando escrever.</td><td><code>timeout</code>, <code>BEGIN IMMEDIATE</code> em read-then-write, modo WAL, transações curtas.</td></tr>
+<tr><td>Órfãos entram no SQLite sem erro.</td><td><code>PRAGMA foreign_keys</code> não ligado nessa conexão.</td><td>Ligue em todo <code>connect()</code> (como o lab faz).</td></tr>
+<tr><td>Tabela PostgreSQL incha, consultas pioram.</td><td>Transação longa/"idle in transaction" segura o horizonte do <code>VACUUM</code>.</td><td>Encurte transações; <code>idle_in_transaction_session_timeout</code>.</td></tr>
+<tr><td>Consulta quebra com apóstrofo no dado, ou devolve linhas demais.</td><td>SQL montado por concatenação.</td><td>Parâmetros para valores; lista de permissão para identificadores.</td></tr>
+<tr><td>Migration falhou e o banco ficou meio migrado.</td><td>DDL não transacional (MySQL) ou script sem transação.</td><td>Transação por migration quando o banco permite; migrations pequenas; expand/contract.</td></tr>
+</tbody>
+</table>
+
+<!-- ============================================ CHECKPOINT -->
+<h2 id="checkpoint">Checkpoint F05</h2>
+<div class="box ok">
+<span class="lbl">Avaliação sem consulta — diga "Checkpoint F05" no chat</span>
+<p>Uma pergunta por vez, sem consulta. Cada pergunta é um cenário; a rubrica diz o que basta e o que reprova.</p>
+<ul class="check">
+<li><strong>P1 · Modelar e justificar.</strong> Um sistema de agentes de IA guarda conversas, mensagens, chamadas de ferramenta e custo por chamada de modelo. Esboce as tabelas, chaves, cardinalidades e três restrições declarativas; diga o que você copiaria (snapshot) e o que referenciaria. <em>Basta:</em> conversa 1—N mensagem; chave substituta + única natural onde houver; <code>NOT NULL</code>/<code>CHECK</code> (custo ≥ 0); congela o preço por token usado na chamada em vez de referenciar o preço atual. <em>Reprova:</em> tabela única com JSON de tudo, sem chaves.</li>
+<li><strong>P2 · Prever o resultado.</strong> <code>categoria</code> tem 5 linhas; <code>livro.categoria_id</code> contém os valores 1, 2 e <code>NULL</code>. Prediga o resultado de <code>WHERE id NOT IN (SELECT categoria_id FROM livro)</code> e da versão com <code>NOT EXISTS</code>, e o de <code>COUNT(*)</code> vs <code>COUNT(categoria_id)</code>. <em>Basta:</em> zero linhas no primeiro (lógica de três valores) e as categorias 3, 4, 5 no segundo; <code>COUNT(*)</code> conta linhas, <code>COUNT(col)</code> ignora <code>NULL</code>. <em>Reprova:</em> "as duas devolvem 3, 4, 5".</li>
+<li><strong>P3 · Reescrever.</strong> Dado um <code>LEFT JOIN</code> com <code>WHERE b.status = 'ativo'</code> que "perde" autores sem livros, explique a causa e dê duas correções com a diferença semântica de cada. <em>Basta:</em> filtro no <code>WHERE</code> vira inner join; mover para o <code>ON</code> (preserva) ou assumir <code>INNER JOIN</code>. <em>Reprova:</em> trocar por <code>FULL JOIN</code> "para garantir".</li>
+<li><strong>P4 · Top-N por grupo.</strong> Escreva (em SQL ou pseudo-SQL fiel) "os 3 empréstimos mais recentes de cada membro" e diga o que acontece com empates na data. <em>Basta:</em> <code>ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ... DESC, id)</code> numa CTE e filtro <code>rn &lt;= 3</code> fora; menciona desempate determinístico e que <code>RANK</code> mudaria o número de linhas. <em>Reprova:</em> filtrar a janela no <code>WHERE</code> da mesma consulta.</li>
+<li><strong>P5 · Plano e índice.</strong> A consulta <code>WHERE status = 'pendente' ORDER BY criado_em LIMIT 50</code> está lenta numa tabela de 40 milhões de linhas em que 98% são <code>'concluido'</code>. Proponha o índice, justifique a ordem das colunas, nomeie o nó do plano que prova a melhora e o risco de criar o índice em produção. <em>Basta:</em> índice parcial <code>(criado_em) WHERE status = 'pendente'</code> ou composto <code>(status, criado_em)</code>; elimina o sort; <code>Index Scan</code> sem <code>Sort</code>; <code>CREATE INDEX CONCURRENTLY</code>. <em>Reprova:</em> "indexar todas as colunas".</li>
+<li><strong>P6 · Concorrência.</strong> Um endpoint faz <code>SELECT saldo</code>, valida no Python e faz <code>UPDATE saldo = :novo</code>. Sob duas requisições simultâneas, descreva a anomalia e dê três correções com o custo de cada. <em>Basta:</em> lost update; <code>UPDATE saldo = saldo - :v WHERE saldo &gt;= :v</code> + <code>rowcount</code>; <code>FOR UPDATE</code>; versão otimista; <code>SERIALIZABLE</code> + retry. <em>Reprova:</em> "colocar numa transação" sem mais.</li>
+<li><strong>P7 · Write skew e deadlock.</strong> Dê um exemplo de write skew que o <code>REPEATABLE READ</code> do PostgreSQL não impede e explique por que o SQLite do laboratório não o reproduz; depois, como evitar deadlock em transferências entre duas contas. <em>Basta:</em> invariante sobre um conjunto lido (plantão); SQLite serializa escritores; ordem global de locks, transação curta, retry em 40P01. <em>Reprova:</em> "o SQLite é mais seguro que o PostgreSQL".</li>
+<li><strong>P8 · Código seguro.</strong> Revise <code>cursor.execute(f"SELECT * FROM {tabela} WHERE nome = '{nome}' ORDER BY {coluna}")</code>. Aponte as três injeções possíveis e corrija cada uma. <em>Basta:</em> valor por parâmetro; tabela e coluna por lista de permissão; menor privilégio como camada extra. <em>Reprova:</em> "trocar aspas simples por duplas".</li>
+<li><strong>P9 · Escolha do armazenamento.</strong> Uma equipe quer adicionar um banco vetorial e um documento para "guardar tudo do RAG". Quais perguntas você faz antes, e o que propõe como padrão? <em>Basta:</em> padrão de acesso, volume, consistência, fonte da verdade; começar no PostgreSQL (<code>JSONB</code>, <code>pgvector</code>) e adicionar sistema só com necessidade medida, tratando o resto como derivado recriável. <em>Reprova:</em> "NoSQL escala melhor".</li>
+</ul>
+<h4>Entregáveis verificados (mostrar rodando)</h4>
+<ol>
+<li>Gates do lab verdes: <code>pytest</code> (79 testes), <code>ruff check</code>, <code>ruff format --check</code>, <code>mypy --strict</code>.</li>
+<li>Plano antes/depois da migration 002 e a contagem N+1 (9 contra 1).</li>
+<li>Demonstração de injection (6 linhas vs <code>None</code>) e a lista de permissão rejeitando <code>"title; DROP TABLE book"</code>.</li>
+<li>Mutação do <code>checkout</code> rejeitada pela suíte e revertida; as quatro linhas do demo de concorrência explicadas, com a ressalva sobre o PostgreSQL.</li>
+</ol>
+</div>
+
+<h2>Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td>E. F. Codd, "A Relational Model of Data for Large Shared Data Banks", <em>Communications of the ACM</em> 13(6), 1970</td><td>modelo relacional, chaves, normalização (bloco 1)</td><td>fonte primária</td><td>—</td></tr>
+<tr><td>H. Berenson et al., "A Critique of ANSI SQL Isolation Levels", SIGMOD 1995</td><td>anomalias além das três do padrão, snapshot isolation, write skew (bloco 5)</td><td>fonte primária</td><td>—</td></tr>
+<tr><td>D. Ports e K. Grittner, "Serializable Snapshot Isolation in PostgreSQL", VLDB 2012</td><td>SSI do PostgreSQL (bloco 5)</td><td>fonte primária</td><td>—</td></tr>
+<tr><td><a href="https://www.postgresql.org/docs/current/transaction-iso.html">PostgreSQL: Transaction Isolation</a> e <a href="https://www.postgresql.org/docs/current/mvcc.html">Concurrency Control (MVCC)</a></td><td>níveis, anomalias, <code>40001</code>, locks (bloco 5)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://www.postgresql.org/docs/current/explicit-locking.html">PostgreSQL: Explicit Locking</a></td><td><code>FOR UPDATE</code>, <code>SKIP LOCKED</code>, deadlock, advisory locks (bloco 5)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://www.postgresql.org/docs/current/queries-with.html">PostgreSQL: WITH Queries (CTE)</a>, <a href="https://www.postgresql.org/docs/current/tutorial-window.html">Window Functions</a>, <a href="https://www.postgresql.org/docs/current/sql-insert.html">INSERT ... ON CONFLICT</a></td><td>bloco 3 (materialização de CTE, recursão e <code>CYCLE</code>, moldura, UPSERT)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://www.postgresql.org/docs/current/indexes.html">PostgreSQL: Indexes</a>, <a href="https://www.postgresql.org/docs/current/using-explain.html">Using EXPLAIN</a>, <a href="https://www.postgresql.org/docs/current/sql-createindex.html">CREATE INDEX</a></td><td>bloco 4 (B-tree, compostos, parciais, <code>CONCURRENTLY</code>, <code>INCLUDE</code>, planos)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://www.postgresql.org/docs/current/errcodes-appendix.html">PostgreSQL: Error Codes</a></td><td><code>40001</code>, <code>40P01</code> (bloco 5)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://sqlite.org/lang_upsert.html">SQLite: UPSERT</a>, <a href="https://sqlite.org/lang_returning.html">RETURNING</a>, <a href="https://sqlite.org/lang_with.html">WITH</a>, <a href="https://sqlite.org/windowfunctions.html">Window Functions</a></td><td>lab (blocos 3 e 6) e versões mínimas</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://sqlite.org/eqp.html">SQLite: EXPLAIN QUERY PLAN</a>, <a href="https://sqlite.org/partialindex.html">Partial Indexes</a>, <a href="https://sqlite.org/foreignkeys.html">Foreign Keys</a>, <a href="https://sqlite.org/isolation.html">Isolation</a>, <a href="https://sqlite.org/wal.html">WAL</a>, <a href="https://sqlite.org/transactional.html">Atomic Commit</a>, <a href="https://sqlite.org/stricttables.html">STRICT tables</a>, <a href="https://sqlite.org/nulls.html">NULL handling</a></td><td>blocos 1, 4, 5, 6 e lab</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/sqlite3.html">Python: sqlite3</a> e <a href="https://peps.python.org/pep-0249/">PEP 249 (DB-API 2.0)</a></td><td>parâmetros, <code>autocommit</code>, transações (bloco 6, lab)</td><td>oficial / PEP</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://owasp.org/www-community/attacks/SQL_Injection">OWASP: SQL Injection</a> e <a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html">SQL Injection Prevention Cheat Sheet</a></td><td>parâmetros, lista de permissão, menor privilégio (bloco 6)</td><td>referência de segurança</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html">MySQL 8.4: InnoDB Transaction Isolation Levels</a></td><td>contraste de padrões entre bancos (bloco 5)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td>M. Kleppmann, <em>Designing Data-Intensive Applications</em>, 2ª ed., O'Reilly (caps. sobre modelos de dados, índices e transações)</td><td>complemento conceitual (blocos 4 a 6)</td><td>livro (prática / síntese)</td><td>—</td></tr>
+<tr><td><a href="https://docs.astral.sh/uv/">uv</a>, <a href="https://alembic.sqlalchemy.org/">Alembic</a> e <a href="https://github.com/pgvector/pgvector">pgvector</a></td><td>lab; migrations e vetores (links para M03 e M07)</td><td>oficial</td><td>11/10/2026</td></tr>
+</tbody>
+</table>
+<p>As saídas vêm de execução real em 11/10/2026 com SQLite 3.53.1 e Python 3.14.7. Mensagens de erro, planos e a disponibilidade de recursos (<code>RIGHT/FULL JOIN</code> a partir da 3.39, <code>RETURNING</code> a partir da 3.35, <code>STRICT</code> a partir da 3.37) variam por versão do SQLite. Comportamentos do PostgreSQL descritos aqui valem para as versões 12 a 17 (<code>MERGE</code>: 15+; <code>CYCLE</code>: 14+; <code>UNIQUE NULLS NOT DISTINCT</code>: 15+) e devem ser revalidados em até 90 dias. Sem servidor PostgreSQL disponível no laboratório, as afirmações sobre ele vêm da documentação oficial, não de execução local.</p>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>O esquema é o contrato que todo cliente herda: declare chaves e restrições no banco e normalize até a 3FN, desnormalizando só com medição e dono da consistência.<br>
+SQL tem ordem lógica própria (<code>FROM → WHERE → GROUP BY → HAVING → janelas → SELECT → ORDER BY → LIMIT</code>); filtro de tabela opcional no <code>WHERE</code> mata o <code>LEFT JOIN</code>.<br>
+<code>NULL</code> é desconhecido, a lógica tem três valores e só <code>TRUE</code> passa: <code>NOT IN</code> com <code>NULL</code> devolve nada; prefira <code>NOT EXISTS</code>.<br>
+CTE nomeia, a recursiva percorre hierarquias (proteja de ciclos), janelas calculam sem colapsar, UPSERT + <code>RETURNING</code> gravam atomicamente.<br>
+Índice é troca de escrita por leitura: prefixo à esquerda, seletividade, cobertura; leia o plano com volume real; N+1 se conta e se evita em lote.<br>
+Transação garante atomicidade; o isolamento padrão admite lost update e write skew. Expressão atômica, lock, versão ou <code>SERIALIZABLE</code> com retry.<br>
+Migrations são versionadas, transacionais e em etapas; valores vão por parâmetro, identificadores por lista de permissão.<br>
+Comece no relacional; some outro armazenamento por necessidade medida e com fonte única da verdade.</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="F05"></script>
+</body>
+</html>
