@@ -1,85 +1,85 @@
 # Currículo — Engenharia de Software e IA em Python
 
-**Principal:** 15 módulos + quatro laboratórios transversais; 152 blocos. **Apêndice opcional:** ML01–ML07, 48 blocos. Python 3.14; português; sem pressupor outra stack. As 304h da baseline anterior são estimativa histórica, não prazo ou carga validada do acervo ampliado.
+Uma trilha única, em cinco fases, do nível júnior ao nível de especialista e líder técnico em sistemas com IA. Python 3.14, material em português, labs executáveis sem conta paga.
 
-O [`index.html`](index.html) é a porta de entrada oficial da Prévia Editorial v1. Ele apresenta primeiro a trilha curada de dez etapas e mantém seu progresso exportável separado dos 152 blocos locais. Os links diretos abaixo continuam válidos como fallback.
+**Como usar.** Siga as fases em ordem. Cada módulo abre com um **diagnóstico rápido**: se você acerta tudo, leia só a conclusão, faça o checkpoint e siga em frente. Quem já atua na área costuma passar rápido pela Fase 0 e parar exatamente nos pontos que a rotina deixou enferrujados. Comece pelo [nivelamento](docs/nivelamento.md) para decidir onde entrar.
 
-Para estudar pela sequência atual, use o [roteiro de estudo curado](docs/ROTEIRO-ESTUDO-GRATUITO.md). Suas dez etapas seguem o manifesto do portal na mesma ordem, com sínteses originais, leituras essenciais, aprofundamentos e atividades opcionais. A prática usa Codex e OpenCode; Claude Code e Cursor entram como comparação documental. Leituras essenciais não exigem pagamento, e chamadas de API, nuvem, assinaturas e certificados não são requisitos.
+As cargas são estimativas para quem estuda o módulo inteiro e faz o lab. Estado de cada módulo: [`STATUS.md`](STATUS.md).
 
-A trilha curada ensina agentes de programação antes de Python e sistemas com LLMs. O acervo local preserva os 19 módulos e laboratórios como referência secundária mais extensa. M11 é aprofundamento opcional sobre modelos locais e fundamentos de ML/DL; ML01–ML07 formam um apêndice opcional de ML tabular, treinamento, validação e MLOps. Nenhum deles é pré-requisito da trilha nem bloqueia leitura. Conceitos matemáticos indispensáveis são explicados no próprio percurso principal.
+## Fase 0 · Fundamentos (≈ 90 h)
 
-O material combina explicação profunda e laboratório pequeno: problema → mecanismo → exemplo resolvido → decisão → falha/diagnóstico → transferência. Labs ficam ao final, seguidos do checkpoint separado. Blocos organizam conteúdo, não sessões obrigatórias. Não há relógio, quota, diário ou commit exigidos para estudar.
+O que todo engenheiro precisa dominar antes de qualquer framework: a máquina, o versionamento, a linguagem, os algoritmos, a rede e o banco.
 
-Consulte a [prontidão atual](docs/STATUS-IMPLEMENTACAO-CURSO.md) antes de tratar material como certificado. O checklist individual da trilha, os gates editoriais v4 e a automação de produção são registros separados; acesso livre ou conclusão de uma etapa não promove módulo nem gate.
+| Módulo | Assunto | Carga | Pré-requisito |
+|---|---|---:|---|
+| [F01](modulos/F01-terminal-git/F01.html) | Terminal, sistema de arquivos, processos e Git a fundo | 12 h | — |
+| [F02](modulos/F02-python-do-zero/F02.html) | Python do zero: tipos, coleções, funções, erros, arquivos, módulos e testes | 18 h | F01 |
+| [F03](modulos/F03-estruturas-dados-algoritmos/F03.html) | Estruturas de dados, algoritmos e complexidade | 16 h | F02 |
+| [F04](modulos/F04-web-redes-http/F04.html) | Como a web funciona: redes, DNS, TLS, HTTP, JSON e APIs REST | 10 h | F02 |
+| [F05](modulos/F05-sql-bancos-relacionais/F05.html) | Bancos relacionais, SQL e modelagem de dados | 12 h | F02 |
+| [M02](modulos/M02-python-profissional/M02.html) | Python profissional: tipagem, Pydantic, async, empacotamento, observabilidade | 16 h | F02 |
 
-Para consultar sintaxe que M00 e M01 usam antes do ensino aprofundado de Python, há uma [ponte de entrada opcional](modulos/apoio/entrada.html). Ela não é uma unidade avaliativa nem condição para começar o percurso.
+## Fase 1 · Engenharia de software (≈ 100 h)
 
-## Trilha curada principal
+Da escrita de código à engenharia: design, decisões, contratos, dados, concorrência, testes e serviço em produção local.
 
-| Etapa | Tema | Acervo local relacionado |
-|---:|---|---|
-| 1 | Trabalhar com um agente de programação | M00, M01 |
-| 2 | Configurar Codex e OpenCode | M00, M04 |
-| 3 | Criar Skills e usar MCP com segurança | M00, M09 |
-| 4 | Ponte de Python para quem já programa | M02 |
-| 5 | Construir o primeiro app com LLM | M05 |
-| 6 | Transformar a chamada em serviço | M03, M04 |
-| 7 | Avaliar e observar antes de aumentar a complexidade | M06 |
-| 8 | RAG com recuperação e evidências | M07 |
-| 9 | Workflows primeiro; agentes quando fizer sentido | M08, M09 |
-| 10 | Segurança, operação e projeto de integração | M12, M13 |
+| Módulo | Assunto | Carga | Pré-requisito |
+|---|---|---:|---|
+| [S01](modulos/S01-design-de-codigo/S01.html) | Design de código: OO, funcional, padrões, refatoração e TDD | 14 h | M02 |
+| [M02A](modulos/M02A-engenharia-software-senior/M02A.html) | Engenharia de software sênior: requisitos, arquitetura, dados, concorrência, falha parcial, testes | 30 h | S01, F05 |
+| [M03](modulos/M03-fastapi-postgres-docker-ci/M03.html) | Serviço real: FastAPI, PostgreSQL, Docker e CI | 16 h | M02A, F04 |
+| [M04](modulos/M04-design-docs-com-ia/M04.html) | Design docs, ADR, C4 e documentação como contexto de agente | 8 h | M03 |
+| [LT01](modulos/LT01-novo/LT01.html) | Runtime, Linux e redes em profundidade | 12 h | F04, M03 |
 
-O [guia da trilha](docs/ROTEIRO-ESTUDO-GRATUITO.md) contém as sínteses, fontes e atividades. A tabela fixa somente ordem, escopo e correspondência; não transforma os módulos locais em pré-requisitos.
+## Fase 2 · AI Engineering (≈ 120 h)
 
-## Acervo local secundário
+Construir com modelos de linguagem: trabalhar com agentes de programação, chamar modelos, avaliar, recuperar, orquestrar e integrar.
 
-| Unidade | Blocos | Assunto | Material |
-|---|---:|---|---|
-| M00 | 5 | Harness engineering e trabalho seguro com IA | [M00](modulos/M00-ferramental/M00.html) |
-| M01 | 5 | SDD, harness engineering e execução paralela segura | [M01](modulos/M01-workflow-ia-driven/M01.html) |
-| M02 | 8 | Python 3.14 para engenharia profissional | [M02](modulos/M02-python-para-dev-dotnet/M02.html) |
-| M02A | 15 | Engenharia de Software Sênior em 2026 | [M02A](modulos/M02A-engenharia-software-senior/M02A.html) |
-| M03 | 8 | especificação de escopo e evidência | [M03](modulos/M03-fastapi-postgres-docker-ci/M03.html) |
-| M04 | 4 | especificação de escopo e evidência | [M04](modulos/M04-design-docs-com-ia/M04.html) |
-| M05 | 7 | especificação de escopo e evidência | [M05](modulos/M05-llm-pratica-gateway-cache/M05.html) |
-| M06 | 6 | especificação de escopo e evidência | [M06](modulos/M06-evals-observabilidade/M06.html) |
-| M07 | 8 | especificação de escopo e evidência | [M07](modulos/M07-rag-de-verdade/M07.html) |
-| M08 | 8 | especificação de escopo e evidência | [M08](modulos/M08-agentes-e-context-engineering/M08.html) |
-| M09 | 7 | especificação de escopo e evidência | [M09](modulos/M09-protocolos-mcp-e-a2a/M09.html) |
-| M10 | 10 | especificação de escopo e evidência | [M10](modulos/M10-graph-engineering-saude-arquitetural/M10.html) |
-| M11 | 8 | especificação de escopo e evidência | [M11](modulos/M11-fundamentos-ml-dl-modelos-locais/M11.html) |
-| M12 | 9 | Produção, segurança, multi-tenancy, billing e SRE | [M12](modulos/M12-producao-seguranca-sre-billing/M12.html) |
-| M13 | 20 | Capstone Cartógrafo | [M13](modulos/M13-capstone/M13.html) |
-| LT01 | 6 | Runtime, Linux e redes | [LT01](modulos/LT01-novo/LT01.html) |
-| LT02 | 6 | Sistemas distribuídos, dados e mensageria | [LT02](modulos/LT02-novo/LT02.html) |
-| LT03 | 6 | Cloud-native, IaC, GitOps e plataforma | [LT03](modulos/LT03-novo/LT03.html) |
-| LT04 | 6 | Release engineering: versão, gates, rollback, sinais, comunicação e pós-mortem | [LT04](modulos/LT04-novo/LT04.html) |
+| Módulo | Assunto | Carga | Pré-requisito |
+|---|---|---:|---|
+| [M00](modulos/M00-ferramental/M00.html) | Trabalhar com agentes de programação: harness, contexto, permissões e evidência | 10 h | Fase 1 |
+| [M01](modulos/M01-workflow-ia-driven/M01.html) | Desenvolvimento orientado a especificação e execução paralela com IA | 10 h | M00 |
+| [M05](modulos/M05-llm-pratica-gateway-cache/M05.html) | LLM na prática: tokens, structured output, tool calling, streaming, cache, gateway e custo | 14 h | M03 |
+| [M06](modulos/M06-evals-observabilidade/M06.html) | Evals e observabilidade de sistemas com LLM | 12 h | M05 |
+| [M07](modulos/M07-rag-de-verdade/M07.html) | RAG de verdade: embeddings, chunking, pgvector, busca híbrida, reranking, ACL | 16 h | M06 |
+| [M08](modulos/M08-agentes-e-context-engineering/M08.html) | Agentes e context engineering | 16 h | M07 |
+| [M09](modulos/M09-protocolos-mcp-e-a2a/M09.html) | Protocolos: MCP na prática | 12 h | M08 |
+| [M10](modulos/M10-graph-engineering-saude-arquitetural/M10.html) | Grafos: workflows com estado, human-in-the-loop e grafo de conhecimento | 14 h | M08 |
 
-Dependências conceituais do acervo: M00/M01 → M02 → M02A → M03/M04 → M05/M06 → M07/M08/M09/M10 → M11/M12 → M13. Elas organizam a coleção local, não substituem nem ampliam a ordem das dez etapas. LT01 acompanha a base HTTP/runtime; LT02 aprofunda dados e falha distribuída; LT03 cobre plataforma; LT04 fecha o recorte de release engineering. Qualidade avançada, supply chain e governança de IA permanecem extensão de certificação v4, não promessa cumprida pela prévia. Use a especificação local para os pré-requisitos exatos; navegar fora da ordem não exige aprovação.
+## Fase 3 · Produção (≈ 80 h)
 
-O Capstone Cartógrafo liga as peças por uma jornada pequena: ingerir corpus autorizado, consultar com evidência e operar com controles. Não precisa virar uma plataforma grande para ensinar conceitos profundos. Quando a promessa envolver PostgreSQL, rede ou processo, a prova usa o componente real em sandbox. Detalhe: [produto final](docs/projeto-final.md).
+Levar sistemas com IA para produção com segurança, confiabilidade e operação.
 
-## Apêndice opcional de ML — planejado
+| Módulo | Assunto | Carga | Pré-requisito |
+|---|---|---:|---|
+| [M12](modulos/M12-producao-seguranca-sre-billing/M12.html) | Produção: threat modeling agêntico, contenção, identidade, multi-tenancy, idempotência, quotas, SRE | 18 h | Fase 2 |
+| [LT02](modulos/LT02-novo/LT02.html) | Sistemas distribuídos, dados e mensageria | 12 h | M02A |
+| [LT03](modulos/LT03-novo/LT03.html) | Cloud-native, IaC, GitOps e plataforma | 12 h | M03 |
+| [P01](modulos/P01-deploy-nuvem/P01.html) | Deploy real em nuvem (Azure): container, segredos, observabilidade e custo de um serviço com LLM | 12 h | LT03, M05 |
+| [LT04](modulos/LT04-novo/LT04.html) | Release engineering: versão, gates, rollback, sinais e pós-mortem | 12 h | P01 |
 
-Não há material HTML novo publicado: os links abaixo apontam a especificações de produção. Seus estados e aceites são independentes do principal.
+## Fase 4 · Especialista e líder (≈ 130 h)
 
-| Unidade | Blocos | Conhecimento | Especificação |
-|---|---:|---|---|
-| ML01 | 6 | Matemática e estatística para decisões | [ML01](docs/especificacoes/ML01-ESPECIFICACAO.md) |
-| ML02 | 6 | Dados e formulação de problemas | [ML02](docs/especificacoes/ML02-ESPECIFICACAO.md) |
-| ML03 | 8 | Aprendizado supervisionado e validação | [ML03](docs/especificacoes/ML03-ESPECIFICACAO.md) |
-| ML04 | 6 | Estrutura, tempo e recomendação | [ML04](docs/especificacoes/ML04-ESPECIFICACAO.md) |
-| ML05 | 8 | Deep learning e representação | [ML05](docs/especificacoes/ML05-ESPECIFICACAO.md) |
-| ML06 | 8 | MLOps e operação de modelos | [ML06](docs/especificacoes/ML06-ESPECIFICACAO.md) |
-| ML07 | 6 | Projeto integrado de ML | [ML07](docs/especificacoes/ML07-ESPECIFICACAO.md) |
+O que separa o especialista: desenhar sistemas inteiros, entender e adaptar modelos, responder por risco e regulação, liderar pessoas e decisões, e provar tudo num produto.
 
-ML01 ensina a matemática necessária. ML02 organiza dados; ML03 aprende e valida modelos; ML04 amplia para estrutura/tempo/recomendação; ML05 aprofunda redes; ML06 opera modelos; ML07 integra um produto tabular pequeno. Exercícios com dados sintéticos não são apresentados como validação real de negócio.
+| Módulo | Assunto | Carga | Pré-requisito |
+|---|---|---:|---|
+| [E01](modulos/E01-system-design-ia/E01.html) | System design de sistemas com IA | 14 h | Fase 3 |
+| [M11](modulos/M11-fundamentos-ml-dl-modelos-locais/M11.html) | Fundamentos de ML/DL, transformer por dentro e modelos locais | 16 h | F03, M05 |
+| [E02](modulos/E02-adaptacao-de-modelos/E02.html) | Adaptação de modelos: fine-tuning, LoRA, destilação, modelos de raciocínio e multimodal | 14 h | M11 |
+| [E03](modulos/E03-governanca-regulacao/E03.html) | Governança, regulação e IA responsável: LGPD, EU AI Act, NIST AI RMF | 8 h | M12 |
+| [E04](modulos/E04-lideranca-tecnica/E04.html) | Liderança técnica na era da IA | 12 h | E01 |
+| [M13](modulos/M13-capstone/M13.html) | Capstone Cartógrafo: o produto que integra o curso | 40 h | E01 |
+| [E05](modulos/E05-carreira/E05.html) | Carreira: portfólio, entrevistas de AI engineering e próximos passos | 6 h | M13 |
 
-## Consulta e autoria
+## Capstone
 
-- [Mapa conceitual](docs/mapa-conceitual.md): vocabulário de sistemas de IA; revisão de claims permanece sujeita aos gates.
-- [Como estudar](docs/como-estudar.md): navegação e retomada em ritmo livre.
-- [Especificação de profundidade e didática](docs/especificacoes/FORMACAO-SOFTWARE-IA-ML-ESPECIFICACAO.md).
-- [Backlog executável por cartão](docs/BACKLOG-OPERACIONAL-V4.md).
+O [Cartógrafo](docs/projeto-final.md) atravessa o curso: cada fase acrescenta uma peça (contratos e dados, chamada ao modelo, avaliação, recuperação, agentes, segurança, operação). O M13 integra e defende o produto.
 
-Extensões de pesquisa (robótica, RL profundo, treinamento de fronteira e infraestrutura GPU multinó) não estão prometidas. O foco é compreensão transferível, exemplos honestos e decisões verificáveis. A versão curricular anterior foi [arquivada](docs/historico/2026-09-21/snapshots/CURRICULO.md), sem reger o escopo atual.
+## Fora do escopo
+
+Pesquisa de fronteira (pré-treino de modelos grandes, RL profundo, robótica, infraestrutura GPU multinó) não faz parte do curso. ML tabular clássico aparece apenas no necessário dentro do M11.
+
+## Consulta
+
+- [Nivelamento](docs/nivelamento.md) · [Como estudar](docs/como-estudar.md) · [Mapa conceitual](docs/mapa-conceitual.md) · [Leituras complementares por fase](docs/leituras-complementares.md)

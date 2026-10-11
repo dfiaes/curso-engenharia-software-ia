@@ -1,55 +1,48 @@
-# Software and AI Engineering with Python
+# Engenharia de Software e IA em Python
 
-A course for learners from different software backgrounds. Python 3.14 is the canonical language; no knowledge of another stack is required. Lessons explain new concepts before using them.
+Curso em português que leva do nível júnior ao nível de especialista e líder técnico em sistemas com IA. Cinco fases, módulos HTML autossuficientes e laboratórios executáveis em Python 3.14, sem exigir conta paga ou API comercial.
 
-**Curated route: 10 stages. Local collection: 15 modules + 4 transversal labs, 152 content blocks. Optional ML appendix: 7 planned units, 48 blocks.** The curated route is the current starting point. The local modules remain available as a deeper secondary collection; M11 and ML01–ML07 are optional and never block the route or the learner. The former 304-hour estimate applies to the original scope only. Blocks organize topics, not study sessions. Teaching material is in Portuguese; there is no mandatory schedule.
+## Por onde começar
 
-## Find your material
+1. Abra o [portal do curso](index.html): ele lista as fases e guarda seu progresso no navegador.
+2. Faça o [nivelamento](docs/nivelamento.md) para saber onde entrar. Quem já trabalha na área pode passar rápido pela Fase 0 usando o diagnóstico de cada módulo.
+3. Siga o [currículo](CURRICULO.md) em ordem.
 
-- [Course portal](index.html): the official entry point; it presents the 10-stage curated route first and keeps progress separate from the local collection.
-- [Free curated study route](docs/ROTEIRO-ESTUDO-GRATUITO.md): the same 10 stages as the portal, with original syntheses, essential readings, optional deepening and optional activities.
-- [Course map](CURRICULO.md): the curated sequence and the secondary local collection, with prerequisites and intended outcomes.
-- [Implementation status](docs/STATUS-IMPLEMENTACAO-CURSO.md): what is ready, incomplete or blocked. Existing HTML does not imply verified material.
-- [M00](modulos/M00-ferramental/M00.html): entry module; visual review remains open.
-- [Concept map](docs/mapa-conceitual.md): vocabulary reference when useful.
-- [Capstone](docs/projeto-final.md): the product connecting the modules.
+| Fase | Foco | Módulos |
+|---|---|---|
+| 0 · Fundamentos | Terminal e Git, Python, algoritmos, web e HTTP, SQL | F01–F05, M02 |
+| 1 · Engenharia de software | Design de código, engenharia sênior, serviço real, docs e decisões, runtime e redes | S01, M02A, M03, M04, LT01 |
+| 2 · AI Engineering | Agentes de programação, LLM na prática, evals, RAG, agentes, MCP, grafos | M00, M01, M05–M10 |
+| 3 · Produção | Segurança e SRE, sistemas distribuídos, plataforma, deploy em nuvem, release | M12, LT02, LT03, P01, LT04 |
+| 4 · Especialista e líder | System design de IA, ML/DL, adaptação de modelos, governança, liderança, capstone, carreira | E01, M11, E02, E03, E04, M13, E05 |
 
-The route starts with direct practice in Codex and OpenCode, compares Claude Code and Cursor through their official documentation, then moves through Python and applications with LLMs. Essential readings are free to access; paid APIs, cloud resources, subscriptions and certificates are not required. Use the contents and section links to read, consult an example or resume where you stopped. Activities are optional. Guided labs in the local collection can span several sessions, and assessments do not lock access to reading. Notes and the [personal study log](PROGRESSO.md) are optional aids.
+## Como cada módulo funciona
 
-The portal stores reading progress only in the current browser and can export or import it as JSON. Curated-route progress is independent from the 152 local blocks. Personal progress is also separate from editorial readiness: completing a stage or block does not promote a technical gate, and an unverified lab does not block reading the preview. The v4 gates and paused editorial automation are tracked only in the [implementation status](docs/STATUS-IMPLEMENTACAO-CURSO.md).
+Diagnóstico rápido → blocos de conteúdo (problema, mecanismo, exemplo, decisão, falha) → laboratório guiado → tabela de diagnóstico → checkpoint. O laboratório fica em `modulos/<módulo>/lab/` e sempre roda numa cópia temporária:
 
-## Contribute to the course
-
-Read [AGENTS.md](AGENTS.md) before changing a module. Each document has one maintained responsibility:
-
-| Responsibility | Canonical location |
-|---|---|
-| Permanent authoring and tutoring rules | [CLAUDE.md](CLAUDE.md) |
-| Technical and teaching quality; authoring workflow | [Quality standard](docs/PADRAO-QUALIDADE-TECNICA-DIDATICA.md) |
-| Sources, versions and neutrality | [Source policy](docs/POLITICA-FONTES-E-AGNOSTICISMO.md) |
-| Curriculum and boundaries | [CURRICULO.md](CURRICULO.md) |
-| Active work, blockers, migration backlog and decisions | [Implementation status](docs/STATUS-IMPLEMENTACAO-CURSO.md) |
-| Competency-to-evidence map | [Traceability matrix](docs/MATRIZ-RASTREABILIDADE.md) |
-| Detailed module scope | `docs/especificacoes/` |
-| Module evidence and gate decisions | `modulos/*/RASTREABILIDADE.md`, `docs/auditorias/` and lab evidence |
-| Actual learning history | [PROGRESSO.md](PROGRESSO.md); never update during editorial work |
-
-## Work on one bounded task
-
-Read the active task in the status, then obtain its packet:
-
-```text
-python3 tools/backlog_tasks.py --task FIX-01 --prompt
-python3 tools/backlog_tasks.py --task ML03-B05-L --bundle
-python3 tools/validate_backlog.py
+```bash
+cd modulos/F02-python-do-zero/lab
+python3 create_working_copy.py      # imprime o caminho da cópia
+cd <caminho impresso>
+uv sync && uv run pytest -q
 ```
 
-The [backlog](docs/BACKLOG-OPERACIONAL-V4.md) and [depth specification](docs/especificacoes/FORMACAO-SOFTWARE-IA-ML-ESPECIFICACAO.md) define detailed instructions, examples, failure cases and review criteria. Main-course and optional-appendix release graphs are separate. Prefer a small lab that proves the concept; do not equate infrastructure size with depth.
+Para estudar com um assistente de IA, as regras de tutoria estão em [`CLAUDE.md`](CLAUDE.md) (ex.: `Explique Y`, `Revise meu código`, `Checkpoint F03`, `Voltei`).
 
-Historical reports are in [the archive](docs/historico/README.md). Do not load that directory or the entire task catalog as default context; retrieve only a cited record when needed. Current curriculum, status and traceability documents supersede the archived snapshots.
+## Manutenção
 
-Keep curriculum, evidence and learner history separate. Consolidate new decisions into the relevant canonical document instead of creating another overlapping plan. Retain audit records that support gate decisions, executable fixtures, and personal work.
+| O quê | Onde |
+|---|---|
+| Regras de autoria e tutoria | [`CLAUDE.md`](CLAUDE.md) |
+| Sequência e cargas | [`CURRICULO.md`](CURRICULO.md) |
+| Estado de cada módulo | [`STATUS.md`](STATUS.md) |
+| Padrão de qualidade e fontes | [`docs/PADRAO-QUALIDADE-TECNICA-DIDATICA.md`](docs/PADRAO-QUALIDADE-TECNICA-DIDATICA.md), [`docs/POLITICA-FONTES-E-AGNOSTICISMO.md`](docs/POLITICA-FONTES-E-AGNOSTICISMO.md) |
+| Escopo detalhado dos módulos originais | `docs/especificacoes/` |
+| Seu diário de estudo | [`PROGRESSO.md`](PROGRESSO.md) |
 
-## Editorial checks
+```bash
+python3 tools/build_course_portal.py   # regenera index.html a partir de portal/course-source.json
+python3 tools/check_course.py          # links e âncoras
+```
 
-Run `python3 tools/build_course_portal.py --check` to verify that the embedded portal manifest matches the 19 units and 152 block anchors. Run `python3 tools/check_course.py` from the repository root (or `python tools/check_course.py` on Windows) for active Markdown/HTML links, anchors and structural errors. Use `--include-history` to inspect the archive too. These checks do not execute module labs, validate external sources, or certify accessibility and teaching quality.
+O estado anterior à reestruturação em 5 fases está preservado na tag git `pre-reestruturacao-2026-10-11`.

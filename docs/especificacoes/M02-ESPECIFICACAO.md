@@ -2,7 +2,7 @@
 
 **Versão:** 1.1 · **Data-base:** 15/08/2026 · **Estado:** G0 APROVADO · **Carga:** 8 blocos / 16h
 
-**Baseline de execução de 15/08/2026:** o orquestrador aprovou G0–G6 e os 38 cenários daquela edição; os comandos e saídas são evidência histórica em `modulos/M02-python-para-dev-dotnet/RASTREABILIDADE.md`. A edição editorial de setembro requer revalidação, especialmente G6; consulte `docs/STATUS-IMPLEMENTACAO-CURSO.md` para o estado operacional atual. Esta especificação preserva o registro de agosto e não promove gate.
+**Baseline de execução de 15/08/2026:** o orquestrador aprovou G0–G6 e os 38 cenários daquela edição; os comandos e saídas são evidência histórica em `modulos/M02-python-profissional/RASTREABILIDADE.md`. A edição editorial de setembro requer revalidação, especialmente G6; consulte `docs/STATUS-IMPLEMENTACAO-CURSO.md` para o estado operacional atual. Esta especificação preserva o registro de agosto e não promove gate.
 
 ## 1. Decisão de escopo
 
@@ -49,7 +49,7 @@ Ao concluir o M02, o aluno deve construir, empacotar, testar, medir e diagnostic
 ## 4. Arquitetura do laboratório
 
 ```text
-modulos/M02-python-para-dev-dotnet/
+modulos/M02-python-profissional/
 ├── M02.html
 ├── README.md
 ├── RASTREABILIDADE.md

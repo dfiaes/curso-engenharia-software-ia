@@ -8,7 +8,7 @@ Abra PowerShell na raiz do curso. Guarde a raiz para voltar depois e crie uma c√
 
 ```powershell
 $courseRoot = (Get-Location).Path
-Set-Location .\modulos\M02-python-para-dev-dotnet\lab
+Set-Location .\modulos\M02-python-profissional\lab
 $workdir = python .\create_working_copy.py
 Set-Location $workdir
 Get-Content -Raw -LiteralPath .\.course-lab-workspace
