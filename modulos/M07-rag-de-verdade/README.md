@@ -1,6 +1,6 @@
-**Status:** G0 approved; B01–B08 in didactic review with local executable lab (Python corpus). G1–G6 pending orchestrator review.
-
 # M07 · RAG de verdade
+
+**Fase 2** · Pré-requisito: M06. Estado: [STATUS](../../STATUS.md).
 
 ## Visão geral
 
@@ -11,8 +11,7 @@ O módulo termina com o entregável que o M10 consome: **três perguntas que o R
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M07.html`](M07.html) — abra no navegador
-- **Especificação:** [`docs/especificacoes/M07-ESPECIFICACAO.md`](../../docs/especificacoes/M07-ESPECIFICACAO.md) — G0 aprovado
-- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Especificação:** [`docs/especificacoes/M07-ESPECIFICACAO.md`](../../docs/especificacoes/M07-ESPECIFICACAO.md)
 - **Laboratório:** [`lab/`](lab/) — pipeline local com fakes, sem rede/banco/modelo real
 - **Carga:** 8 blocos de conteúdo (16h)
 - **Pré-requisito:** M06

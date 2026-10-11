@@ -12,7 +12,6 @@ Protocolos como contratos entre processos: MCP (agente↔ferramenta/dado, com de
 
 - **Material principal (HTML):** [`M09.html`](M09.html) — abra no navegador
 - **Especificação:** [`docs/especificacoes/M09-ESPECIFICACAO.md`](../../docs/especificacoes/M09-ESPECIFICACAO.md) — G0 aprovado
-- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
 - **Laboratório:** [`lab/`](lab/) — núcleo + 3 transportes locais, sem rede/conta/SDK
 - **Carga:** 7 blocos de conteúdo (14h)
 - **Pré-requisito:** M08

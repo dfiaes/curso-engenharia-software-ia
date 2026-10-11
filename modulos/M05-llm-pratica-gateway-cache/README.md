@@ -1,6 +1,6 @@
-**Status:** G0 approved; B01–B07 in didactic review with executable lab (local fakes). G1–G6 pending orchestrator review.
-
 # M05 · LLM na prática: contrato, custo, gateway, cache
+
+**Fase 2** · Pré-requisito: M03. Estado: [STATUS](../../STATUS.md).
 
 ## Visão geral
 
@@ -9,11 +9,10 @@ Início da segunda transformação do currículo: sair de "usar IA para construi
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M05.html`](M05.html) — abra no navegador
-- **Especificação:** [`docs/especificacoes/M05-ESPECIFICACAO.md`](../../docs/especificacoes/M05-ESPECIFICACAO.md) — G0 aprovado
-- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Especificação:** [`docs/especificacoes/M05-ESPECIFICACAO.md`](../../docs/especificacoes/M05-ESPECIFICACAO.md)
 - **Laboratório:** [`lab/`](lab/) — gateway com fakes locais, sem rede/conta/crédito
 - **Carga:** 7 blocos de conteúdo (14h)
-- **Pré-requisito:** M04; usa Pydantic, asyncio e fronteira de confiança do M02 (com links para o ponto onde foram ensinados)
+- **Pré-requisito:** M03; usa Pydantic, asyncio e fronteira de confiança do M02 (com links para o ponto onde foram ensinados)
 
 ## Estrutura dos blocos
 

@@ -110,10 +110,10 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco transforma o vocabulário do Bloco 1 em objeto manipulado. Cinco resultados saem daqui:</p>
 <ul>
 <li>descrever tensor por forma, tipo e dispositivo, e aplicar a convenção B/T/C na leitura de qualquer forma;</li>
-<li>aplicar as três operações — produto escalar, multiplicação de matrizes, broadcasting — e detectar a expansão silenciosa (AT-005) e a junção com forma errada (AT-006);</li>
-<li>explicar autograd como grafo dinâmico por passagem direta, e por que <code>backward()</code> soma no <code>.grad</code> existente (AT-002);</li>
+<li>aplicar as três operações — produto escalar, multiplicação de matrizes, broadcasting — e detectar a expansão silenciosa e a junção com forma errada;</li>
+<li>explicar autograd como grafo dinâmico por passagem direta, e por que <code>backward()</code> soma no <code>.grad</code> existente;</li>
 <li>executar o loop de cinco passos com <code>nn.Linear</code>, <code>MSELoss</code> e SGD, e dizer o que Adam e AdamW mudam no passo;</li>
-<li>prever quando profundidade colapsa sem ativação (AT-007) e quando parar por overfitting, com ponte ao Bloco 4.</li>
+<li>prever quando profundidade colapsa sem ativação e quando parar por overfitting, com ponte ao Bloco 4.</li>
 </ul>
 <p><strong>Pré-requisitos.</strong> Bloco 1 (tensor, inferência × treino, logprobs como instrumento). Cada termo novo é definido no ponto de uso. Todo exemplo é Python. Nenhuma outra stack é pressuposta.</p>
 <p><strong>Saída observável.</strong> Ao fim da leitura, você lê formas como <code>(4, 16, 32)</code> sem hesitar, explica por que a limpeza de gradiente decide entre convergir e divergir, e lê as duas referências executáveis — <code>lab/regressao.py</code> e <code>lab/nao_linear.py</code> — sabendo o que cada linha prova. A execução pertence ao <code>Laboratório guiado M11</code>, ao final do módulo.</p>
@@ -144,7 +144,7 @@ assert lote.shape == torch.Size([4, 16, 32])</code></pre>
 </tbody>
 </table>
 <div class="box warn">
-<p><span class="lbl">Contraste</span><strong>Forma certa não garante conta certa.</strong> <code>(4, 16) + (16,)</code> funciona: o vetor é tratado como <code>(1, 16)</code> e replicado por 4 linhas. <code>(4, 16) + (4,)</code> falha: 4 não casa com 16 na última posição. O caso que queima tempo é o que passa: <code>(4, 1) + (1, 4)</code> devolve <code>(4, 4)</code> sem erro, quando o esperado era um vetor de 4. O treino converge para algo errado sem levantar exceção. A disciplina que cobre os três casos: comentar a forma esperada nas junções e checar com <code>assert</code> antes do treino (AT-005, AT-006).</p>
+<p><span class="lbl">Contraste</span><strong>Forma certa não garante conta certa.</strong> <code>(4, 16) + (16,)</code> funciona: o vetor é tratado como <code>(1, 16)</code> e replicado por 4 linhas. <code>(4, 16) + (4,)</code> falha: 4 não casa com 16 na última posição. O caso que queima tempo é o que passa: <code>(4, 1) + (1, 4)</code> devolve <code>(4, 4)</code> sem erro, quando o esperado era um vetor de 4. O treino converge para algo errado sem levantar exceção. A disciplina que cobre os três casos: comentar a forma esperada nas junções e checar com <code>assert</code> antes do treino.</p>
 </div>
 <p><strong>Trecho conceitual — expansão silenciosa e guarda.</strong> Ilustra a regra; os oráculos com falha injetada pertencem à folha L:</p>
 <pre><code>import torch
@@ -170,7 +170,7 @@ y = x ** 2 + 5.0 * x  # registra pow, mul, add
 y.backward()  # dy/dx = 2x + 5 = 11.0
 assert x.grad is not None</code></pre>
 <div class="box warn">
-<p><span class="lbl">Contraste</span><strong>"Acumular gradiente é sempre bug" — não.</strong> <code>backward()</code> soma no <code>.grad</code> existente em vez de sobrescrever. Sem limpeza por iteração, gradientes de passos antigos se somam aos novos e a perda diverge — até <code>nan</code>, conforme taxa e passos (AT-002). Esse é o bug por esquecimento. A mesma soma, feita de propósito, simula um lote grande quando a memória não comporta o lote de uma vez: acumula-se por K mini-lotes e só então se atualiza. O critério separa os dois: acumulação sem chamada correspondente a <code>zero_grad()</code> no ritmo certo é acidente; acumulação contada e zerada no ponto marcado é técnica.</p>
+<p><span class="lbl">Contraste</span><strong>"Acumular gradiente é sempre bug" — não.</strong> <code>backward()</code> soma no <code>.grad</code> existente em vez de sobrescrever. Sem limpeza por iteração, gradientes de passos antigos se somam aos novos e a perda diverge — até <code>nan</code>, conforme taxa e passos. Esse é o bug por esquecimento. A mesma soma, feita de propósito, simula um lote grande quando a memória não comporta o lote de uma vez: acumula-se por K mini-lotes e só então se atualiza. O critério separa os dois: acumulação sem chamada correspondente a <code>zero_grad()</code> no ritmo certo é acidente; acumulação contada e zerada no ponto marcado é técnica.</p>
 </div>
 
 <h3>O loop de cinco passos</h3>
@@ -205,9 +205,9 @@ assert x.grad is not None</code></pre>
 </div>
 
 <h3>Sem ativação, profundidade colapsa</h3>
-<p><strong>Ativação</strong> é uma função não linear aplicada entre camadas, como <code>Tanh</code>. Sem ela, duas camadas lineares em série equivalem a uma só: <code>(xW1)W2 = x(W1W2)</code>. O produto <code>W1W2</code> é outra matriz; nenhuma profundidade linear cria função nova. A ativação quebra a linearidade e dá poder expressivo ao empilhamento (AT-007). A referência <code>nao_linear.py</code> mostra o colapso na prática: a reta não acompanha o seno, o MLP com <code>Tanh</code> acompanha.</p>
+<p><strong>Ativação</strong> é uma função não linear aplicada entre camadas, como <code>Tanh</code>. Sem ela, duas camadas lineares em série equivalem a uma só: <code>(xW1)W2 = x(W1W2)</code>. O produto <code>W1W2</code> é outra matriz; nenhuma profundidade linear cria função nova. A ativação quebra a linearidade e dá poder expressivo ao empilhamento. A referência <code>nao_linear.py</code> mostra o colapso na prática: a reta não acompanha o seno, o MLP com <code>Tanh</code> acompanha.</p>
 <h3>Overfitting: o critério de parada, com ponte ao Bloco 4</h3>
-<p><strong>Overfitting</strong> é decorar o treino e piorar fora dele. A perda de treino continua caindo enquanto a perda em dados separados — <strong>validação</strong>, o conjunto que o modelo não usa para atualizar peso — para de cair e começa a subir. O ponto de virada é o critério de parada: interromper ali preserva generalização (<strong>early stopping</strong>). O Bloco 4 torna o fenômeno visível com treino e validação separados sobre código (AT-014). A regra atravessa domínios: nunca valide um sistema só com os dados que o construíram.</p>
+<p><strong>Overfitting</strong> é decorar o treino e piorar fora dele. A perda de treino continua caindo enquanto a perda em dados separados — <strong>validação</strong>, o conjunto que o modelo não usa para atualizar peso — para de cair e começa a subir. O ponto de virada é o critério de parada: interromper ali preserva generalização (<strong>early stopping</strong>). O Bloco 4 torna o fenômeno visível com treino e validação separados sobre código. A regra atravessa domínios: nunca valide um sistema só com os dados que o construíram.</p>
 <h3>Exemplo trabalhado: referência executável</h3>
 <p><strong>Estatuto do código.</strong> Os dois blocos abaixo são referência executável: o contrato que a folha B02-L implementa verbatim em <code>lab/</code>. Leitura aqui; execução no <code>Laboratório guiado M11</code>. Nomes de módulo, funções e comportamento estão congelados. Trechos anteriores rotulados como conceituais ilustram mecanismo; só estes dois são programa completo.</p>
 <p><strong>Referência executável 1 — <code>lab/regressao.py</code>.</strong> Aprende <code>y = 3x + 2</code> com ruído, semente fixa, loop de cinco passos e impressão periódica. Tipagem estrita, só CPU:</p>
@@ -276,7 +276,7 @@ def main() -&gt; None:
 
 if __name__ == "__main__":
     main()</code></pre>
-<p><strong>Variante de quebra.</strong> A mesma referência com <code>limpar_grad=False</code> é o caso negativo: o caminho feliz converge para perto de <code>w = 3</code> e <code>b = 2</code>; sem limpeza o acumulado diverge. A folha L executa os dois caminhos a partir deste único parâmetro (AT-002).</p>
+<p><strong>Variante de quebra.</strong> A mesma referência com <code>limpar_grad=False</code> é o caso negativo: o caminho feliz converge para perto de <code>w = 3</code> e <code>b = 2</code>; sem limpeza o acumulado diverge. A folha L executa os dois caminhos a partir deste único parâmetro.</p>
 <p><strong>Referência executável 2 — <code>lab/nao_linear.py</code>.</strong> O seno separa o que é linear do que exige ativação: baseline <code>Linear</code> contra MLP <code>Linear-Tanh-Linear</code>. Tipagem estrita, só CPU:</p>
 <pre><code>"""Seno: reta contra MLP com ativacao.
 
@@ -347,7 +347,7 @@ if __name__ == "__main__":
     main()</code></pre>
 <p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> No caminho feliz, a perda impressa desce ao longo dos passos e os pesos se aproximam de 3 e 2; na variante sem limpeza, a sequência diverge. No seno, a perda final do MLP fica abaixo da reta por margem clara. Formatos ilustrativos. A folha L mede no ambiente real e registra os números observados; nenhum valor aqui é prova.</p>
 <div class="box">
-<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B02-L constrói em <code>lab/</code>.</strong> <code>lab/regressao.py</code> e <code>lab/nao_linear.py</code> com estes contratos verbatim; prova AT-001 (mesma semente reproduz a sequência, semente solta diverge); prova AT-002 (caminho com <code>limpar_grad=True</code> converge, com <code>False</code> diverge); oráculo AT-005 (assert de forma detecta <code>(4, 1) + (1, 4) -&gt; (4, 4)</code>); oráculo AT-006 (junção com forma errada falha antes do treino); oráculo AT-007 (MLP sem ativação equivale à reta, com <code>Tanh</code> acompanha o seno). CPU é o baseline; GPU opcional só acelera. Nenhum passo de construção ou execução vive neste bloco: o passo a passo mora no <code>Laboratório guiado M11</code>.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B02-L constrói em <code>lab/</code>.</strong> <code>lab/regressao.py</code> e <code>lab/nao_linear.py</code> com estes contratos verbatim; prova (mesma semente reproduz a sequência, semente solta diverge); prova (caminho com <code>limpar_grad=True</code> converge, com <code>False</code> diverge); oráculo (assert de forma detecta <code>(4, 1) + (1, 4) -&gt; (4, 4)</code>); oráculo (junção com forma errada falha antes do treino); oráculo (MLP sem ativação equivale à reta, com <code>Tanh</code> acompanha o seno). CPU é o baseline; GPU opcional só acelera. Nenhum passo de construção ou execução vive neste bloco: o passo a passo mora no <code>Laboratório guiado M11</code>.</p>
 </div>
 <div class="box ok">
 <p><span class="lbl">Síntese</span><strong>Bloco 2 em seis frases.</strong></p>
@@ -371,11 +371,11 @@ if __name__ == "__main__":
 <div class="box">
 <p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco abre a peça que decide custo e qualidade no transformer: a atenção. Cinco resultados saem daqui:</p>
 <ul>
-<li>explicar por que um vetor fixo por token falha (polissemia) e o que a mistura contextual muda na representação (AT-008);</li>
+<li>explicar por que um vetor fixo por token falha (polissemia) e o que a mistura contextual muda na representação;</li>
 <li>ler <code>softmax(QKᵀ/√d)V</code> peça por peça, com formas, e dizer onde nasce o O(n²);</li>
-<li>aplicar a máscara causal e prever a falha quando ela é invertida (AT-008) e quando a escala some (saturação);</li>
-<li>distinguir a implementação oficial (SDPA) do kernel otimizado (FlashAttention): o que economiza memória, o que mantém computação, e por que dobrar o contexto multiplica o tempo por ~4× (AT-009, AT-010);</li>
-<li>descrever multi-head sem loop, com a cabeça como dimensão de lote, e a exigência de <code>contiguous()</code> após <code>transpose</code> (AT-011).</li>
+<li>aplicar a máscara causal e prever a falha quando ela é invertida e quando a escala some (saturação);</li>
+<li>distinguir a implementação oficial (SDPA) do kernel otimizado (FlashAttention): o que economiza memória, o que mantém computação, e por que dobrar o contexto multiplica o tempo por ~4×;</li>
+<li>descrever multi-head sem loop, com a cabeça como dimensão de lote, e a exigência de <code>contiguous()</code> após <code>transpose</code>.</li>
 </ul>
 <p><strong>Pré-requisitos.</strong> Bloco 2 (leitura B/T/C, produto escalar, matmul, broadcasting, <code>nn.Linear</code> como <code>xW + b</code>). Cada termo novo — query, key, value, máscara causal, softmax, SDPA, TTFT — é definido no ponto de uso. Todo exemplo é Python. Nenhuma outra stack é pressuposta.</p>
 <p><strong>Saída observável.</strong> Ao fim da leitura, você deriva a forma de cada etapa sem consultar tabela, explica cada divisão e cada <code>-inf</code>, prevê três falhas por inspeção (máscara invertida, escala ausente, <code>view</code> sem <code>contiguous</code>) e lê as três referências executáveis — <code>lab/atencao.py</code>, <code>lab/custo_quadratico.py</code>, <code>lab/multihead.py</code> — sabendo o que cada nome prova. A execução pertence ao <code>Laboratório guiado M11</code>, ao final do módulo.</p>
@@ -403,9 +403,9 @@ assert escores.shape == torch.Size([2, 3])</code></pre>
 <table>
 <thead><tr><th>Peça</th><th>Forma</th><th>O que faz</th><th>Por que existe</th></tr></thead>
 <tbody>
-<tr><td><code>Q @ K.T</code></td><td><code>(B, T, T)</code></td><td>Concordância de cada posição com cada posição.</td><td>É a matriz de atenção. Aqui nasce o O(n²): T linhas × T colunas por lote e por cabeça (AT-010).</td></tr>
+<tr><td><code>Q @ K.T</code></td><td><code>(B, T, T)</code></td><td>Concordância de cada posição com cada posição.</td><td>É a matriz de atenção. Aqui nasce o O(n²): T linhas × T colunas por lote e por cabeça.</td></tr>
 <tr><td><code>/ sqrt(d)</code></td><td><code>(B, T, T)</code></td><td>Reduz a magnitude antes de normalizar.</td><td>Sem a escala, produtos em dimensão alta saturam o softmax em quase one-hot e o gradiente some.</td></tr>
-<tr><td>máscara causal</td><td><code>(T, T)</code></td><td>Escreve <code>-inf</code> acima da diagonal principal.</td><td>Geração é causal: a posição 3 não consulta a posição 7. <code>-inf</code> vira peso zero após o softmax. Máscara invertida prende o treino em <code>ln(vocab)</code> (AT-008).</td></tr>
+<tr><td>máscara causal</td><td><code>(T, T)</code></td><td>Escreve <code>-inf</code> acima da diagonal principal.</td><td>Geração é causal: a posição 3 não consulta a posição 7. <code>-inf</code> vira peso zero após o softmax. Máscara invertida prende o treino em <code>ln(vocab)</code>.</td></tr>
 <tr><td><code>softmax</code></td><td><code>(B, T, T)</code></td><td>Normaliza cada linha para somar 1.</td><td>Converte escores em pesos de mistura. Preserva ordem e exagera diferenças: o maior continua maior, com margem ampliada.</td></tr>
 <tr><td><code>@ V</code></td><td><code>(B, T, d)</code></td><td>Soma ponderada dos valores.</td><td>É a saída: cada posição carrega a mistura do contexto permitido.</td></tr>
 </tbody>
@@ -430,14 +430,14 @@ def softmax_estavel(x: torch.Tensor) -&gt; torch.Tensor:
     return e / e.sum(dim=-1, keepdim=True)</code></pre>
 
 <h3>A implementação oficial e o que o kernel otimizado economiza</h3>
-<p><code>torch.nn.functional.scaled_dot_product_attention</code> (SDPA) é a implementação oficial da fórmula: recebe Q, K e V e aplica escala, máscara causal opcional e mistura em caminho otimizado. A referência <code>lab/atencao.py</code> escreve a conta passo a passo e prova equivalência contra SDPA com tolerância explícita (AT-009). SDPA é o oráculo; a versão manual é o instrumento de entendimento.</p>
+<p><code>torch.nn.functional.scaled_dot_product_attention</code> (SDPA) é a implementação oficial da fórmula: recebe Q, K e V e aplica escala, máscara causal opcional e mistura em caminho otimizado. A referência <code>lab/atencao.py</code> escreve a conta passo a passo e prova equivalência contra SDPA com tolerância explícita. SDPA é o oráculo; a versão manual é o instrumento de entendimento.</p>
 <p><strong>FlashAttention</strong> é o kernel otimizado que SDPA seleciona quando o hardware permite. A economia é de memória: em vez de materializar a matriz <code>T×T</code> inteira, processa em blocos e recomputa no backward. A contagem de operações continua quadrática. Em serving, o cache de chaves e valores evita refazer o prefixo estável; organizar esse cache em páginas responde por throughput (PagedAttention). Nenhuma dessas técnicas remove o termo dominante do prefill: dobrar a entrada continua multiplicando o trabalho por quatro (tempo ≈4× por dobra onde a computação domina; em contextos curtos o overhead de lançamento domina).</p>
 <div class="box warn">
-<p><span class="lbl">Contraste</span><strong>"FlashAttention elimina o O(n²)" — não.</strong> FlashAttention elimina a materialização da matriz <code>T×T</code> em memória; não elimina as comparações par a par que definem a atenção. Confundir pico de memória com contagem de operações leva a dimensionar contexto por VRAM e descobrir o estouro no relógio: cabe na placa, não cabe no TTFT. A decisão que decorre do contraste: medir tempo por dobra de contexto (AT-010) em vez de inferir custo por consumo de memória.</p>
+<p><span class="lbl">Contraste</span><strong>"FlashAttention elimina o O(n²)" — não.</strong> FlashAttention elimina a materialização da matriz <code>T×T</code> em memória; não elimina as comparações par a par que definem a atenção. Confundir pico de memória com contagem de operações leva a dimensionar contexto por VRAM e descobrir o estouro no relógio: cabe na placa, não cabe no TTFT. A decisão que decorre do contraste: medir tempo por dobra de contexto em vez de inferir custo por consumo de memória.</p>
 </div>
 
 <h3>O custo quadrático e a decisão no gateway</h3>
-<p>O prefill (processar o prompt de entrada) cresce com o quadrado do comprimento: cada token novo compara-se com todos os anteriores. A referência <code>lab/custo_quadratico.py</code> varre comprimentos crescentes com repetição e aquecimento e publica a razão entre dobras sucessivas (AT-010). CPU é o baseline; GPU opcional só acelera. A implicação atravessa o gateway do M05: tempo até o primeiro token (TTFT) dispara com prompts longos, enquanto a cobrança por token sugere crescimento linear. O cache de prompt evita refazer o trabalho quadrático sobre o prefixo estável; o orçamento de atenção do M08 poda o contexto porque cada token cortado remove uma linha e uma coluna da matriz.</p>
+<p>O prefill (processar o prompt de entrada) cresce com o quadrado do comprimento: cada token novo compara-se com todos os anteriores. A referência <code>lab/custo_quadratico.py</code> varre comprimentos crescentes com repetição e aquecimento e publica a razão entre dobras sucessivas. CPU é o baseline; GPU opcional só acelera. A implicação atravessa o gateway do M05: tempo até o primeiro token (TTFT) dispara com prompts longos, enquanto a cobrança por token sugere crescimento linear. O cache de prompt evita refazer o trabalho quadrático sobre o prefixo estável; o orçamento de atenção do M08 poda o contexto porque cada token cortado remove uma linha e uma coluna da matriz.</p>
 <div class="box">
 <p><span class="lbl">Decisão</span><strong>Cortar 30% do contexto corta ~51% do trabalho de atenção.</strong> A conta é direta: <code>0.7² = 0.49</code>. Podar prefixo estável, histórico redundante e instrumento verboso antes de chamar o modelo reduz o termo dominante do prefill; completar com cache quando o prefixo se repete reduz o restante. A referência de medição publica células <code>T×T</code> ao lado do tempo para a causa ficar visível: de 128 para 1024 tokens, as células crescem 64× para 8× mais tokens. Números ilustrativos seguem como exemplo variável; a folha L mede na máquina local.</p>
 </div>
@@ -456,7 +456,7 @@ assert por_cabeca.shape == torch.Size([B, H, T, D])
 junta = por_cabeca.transpose(1, 2).contiguous().view(B, T, H * D)
 assert junta.shape == x.shape</code></pre>
 <div class="box warn">
-<p><span class="lbl">Contraste</span><strong><code>view</code> após <code>transpose</code> exige <code>contiguous()</code> — sem exceção silenciosa.</strong> <code>view</code> e <code>transpose</code> devolvem visões sobre o mesmo buffer, com passos (strides) distintos; após <code>transpose</code> os elementos não estão em ordem linear, e <code>view</code> exige ordem linear. Omitir <code>contiguous()</code> levanta erro de stride em vez de conta errada (AT-011). O diagnóstico é direto: erro de <code>view</code> após <code>transpose</code> pede <code>contiguous()</code> entre os dois; laço por cabeça em vez de dimensão de lote pede a reorganização acima.</p>
+<p><span class="lbl">Contraste</span><strong><code>view</code> após <code>transpose</code> exige <code>contiguous()</code> — sem exceção silenciosa.</strong> <code>view</code> e <code>transpose</code> devolvem visões sobre o mesmo buffer, com passos (strides) distintos; após <code>transpose</code> os elementos não estão em ordem linear, e <code>view</code> exige ordem linear. Omitir <code>contiguous()</code> levanta erro de stride em vez de conta errada. O diagnóstico é direto: erro de <code>view</code> após <code>transpose</code> pede <code>contiguous()</code> entre os dois; laço por cabeça em vez de dimensão de lote pede a reorganização acima.</p>
 </div>
 <h3>Exemplo trabalhado: referências executáveis</h3>
 <p><strong>Estatuto do código.</strong> Os três blocos abaixo são referência executável: o contrato que a folha B03-L implementa verbatim em <code>lab/</code>. Leitura aqui; execução no <code>Laboratório guiado M11</code>. Nomes de módulo, classes, funções e comportamento estão congelados. Trechos anteriores rotulados como conceituais ilustram mecanismo; só estes três são programa completo.</p>
@@ -644,7 +644,7 @@ if __name__ == "__main__":
     main()</code></pre>
 <p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> No caminho feliz, a prova de equivalência publica erro máximo na casa de <code>1e-7</code> ou melhor (neste lab, 0.0) dentro de tolerância <code>1e-5</code>; a varredura publica razão próxima de <code>4×</code> a cada dobra de contexto onde a computação domina; a multi-head preserva a forma de entrada e publica a contagem de parâmetros das quatro projeções sem viés. Formatos ilustrativos. A folha L mede no ambiente real e registra os números observados; nenhum valor aqui é prova.</p>
 <div class="box">
-<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B03-L constrói em <code>lab/</code>.</strong> <code>lab/atencao.py</code> com o contrato acima; prova AT-009 (mesma semente, mesma entrada, <code>allclose</code> com <code>atol=1e-5</code>, erro máximo publicado); caso negativo AT-008 (máscara trocada prende a perda em <code>ln(vocab)</code>); <code>lab/custo_quadratico.py</code> com o contrato acima; prova AT-010 (tabela tokens, tempo, células, razão por dobra); <code>lab/multihead.py</code> com o contrato acima; prova AT-011 (forma preservada, erro de stride sem <code>contiguous()</code>, divisão indivisível rejeitada). CPU é o baseline; GPU opcional só acelera. Nenhum passo de construção ou execução vive neste bloco: o passo a passo mora no <code>Laboratório guiado M11</code>.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B03-L constrói em <code>lab/</code>.</strong> <code>lab/atencao.py</code> com o contrato acima; prova (mesma semente, mesma entrada, <code>allclose</code> com <code>atol=1e-5</code>, erro máximo publicado); caso negativo (máscara trocada prende a perda em <code>ln(vocab)</code>); <code>lab/custo_quadratico.py</code> com o contrato acima; prova (tabela tokens, tempo, células, razão por dobra); <code>lab/multihead.py</code> com o contrato acima; prova (forma preservada, erro de stride sem <code>contiguous()</code>, divisão indivisível rejeitada). CPU é o baseline; GPU opcional só acelera. Nenhum passo de construção ou execução vive neste bloco: o passo a passo mora no <code>Laboratório guiado M11</code>.</p>
 </div>
 <div class="box ok">
 <p><span class="lbl">Síntese</span><strong>Bloco 3 em seis frases.</strong></p>
@@ -669,11 +669,11 @@ if __name__ == "__main__":
 <div class="box">
 <p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco monta o transformer a partir das peças dos Blocos 2 e 3 e mostra o treino até o diagnóstico. Cinco resultados saem daqui:</p>
 <ul>
-<li>explicar BPE como fusão por frequência e prever por que dígitos vizinhos caem em segmentos distintos (AT-012);</li>
+<li>explicar BPE como fusão por frequência e prever por que dígitos vizinhos caem em segmentos distintos;</li>
 <li>descrever residual, LayerNorm, MLP e embedding posicional, com a forma preservada que permite empilhar blocos;</li>
-<li>ler <code>gerar()</code> como recorte, reponderação por temperatura e sorteio por <code>multinomial</code>, sem confundir amostra com escolha (AT-013);</li>
-<li>distinguir encoder-only, decoder-only e encoder-decoder por máscara e tarefa, e prever a degradação ao trocá-las (AT-015);</li>
-<li>declarar overfitting por treino contra validação separada e aplicar holdout com parada antecipada (AT-014).</li>
+<li>ler <code>gerar()</code> como recorte, reponderação por temperatura e sorteio por <code>multinomial</code>, sem confundir amostra com escolha;</li>
+<li>distinguir encoder-only, decoder-only e encoder-decoder por máscara e tarefa, e prever a degradação ao trocá-las;</li>
+<li>declarar overfitting por treino contra validação separada e aplicar holdout com parada antecipada.</li>
 </ul>
 <p><strong>Pré-requisitos.</strong> Bloco 2 (tensor B/T/C, loop de cinco passos, ativação, validação) e Bloco 3 (<code>AtencaoMultiCabeca</code>, máscara causal, custo quadrático). Cada termo novo — token, vocabulário, residual, LayerNorm, holdout — é definido no ponto de uso. Todo exemplo é Python. Nenhuma outra stack é pressuposta.</p>
 <p><strong>Saída observável.</strong> Ao fim da leitura, você explica por que aritmética falha por tokenização, deriva a forma em cada ponto do bloco, descreve cada arquitetura pela máscara que usa e lê as três referências executáveis — <code>lab/bpe_mini.py</code>, <code>lab/gpt.py</code>, <code>lab/treinar.py</code> — sabendo o que cada nome prova. A execução pertence ao <code>Laboratório guiado M11</code>, ao final do módulo.</p>
@@ -691,7 +691,7 @@ if __name__ == "__main__":
 <pre><code>pares = Counter(zip(simbolos, simbolos[1:]))  # frequência decide
 a, b = max(pares, key=pares.get)  # par vencedor vira símbolo novo
 novo = a + b  # fusão registrada na ordem aprendida</code></pre>
-<p>Com a tabela pronta, segmentar aplica as fusões na ordem aprendida sobre a sequência de caracteres. Ordem importa: a mesma string se quebra de modo distinto conforme o corpus. O oráculo da folha L prova o caso crítico: <code>1234</code> e <code>1235</code> caem em segmentos distintos, com dígitos vizinhos em pedaços distintos (AT-012).</p>
+<p>Com a tabela pronta, segmentar aplica as fusões na ordem aprendida sobre a sequência de caracteres. Ordem importa: a mesma string se quebra de modo distinto conforme o corpus. O oráculo da folha L prova o caso crítico: <code>1234</code> e <code>1235</code> caem em segmentos distintos, com dígitos vizinhos em pedaços distintos.</p>
 <div class="box warn">
 <p><span class="lbl">Contraste</span><strong>"Mais dados consertam a aritmética" — não.</strong> Humano soma por algoritmo posicional sobre dígitos. O modelo recebe símbolos como <code>123</code> e <code>4</code>, cuja relação numérica é estatística, aprendida de coocorrência, sem estrutura posicional garantida. Ele prediz a continuação mais provável de sequência que se parece com soma; acerta o frequente e erra o raro. O espaço de somas é infinito e a entrada não carrega o algoritmo, por isso volume de treino não remove a falha.</p>
 </div>
@@ -721,14 +721,14 @@ x = x + mlp(ln2(x))  # processa por posição</code></pre>
 <tr><td><strong>Encoder-decoder</strong></td><td>Livre no encoder, causal no decoder, com atenção cruzada</td><td>Transformar sequência em sequência com fronteira nítida: tradução e sumarização clássica.</td></tr>
 </tbody>
 </table>
-<p>Arquiteturas não intercambiam porque máscara e objetivo divergem (AT-015). Encoder-only nunca aprende a prever o próximo token sem ver o futuro; posto para gerar, usa contexto proibido no treino e degrada fora da tarefa. Decoder-only gera por construção, mas como embedding perde contexto à direita e entrega vetor pior para busca. A teoria prevê a degradação nos dois sentidos.</p>
+<p>Arquiteturas não intercambiam porque máscara e objetivo divergem. Encoder-only nunca aprende a prever o próximo token sem ver o futuro; posto para gerar, usa contexto proibido no treino e degrada fora da tarefa. Decoder-only gera por construção, mas como embedding perde contexto à direita e entrega vetor pior para busca. A teoria prevê a degradação nos dois sentidos.</p>
 <div class="box warn">
 <p><span class="lbl">Contraste</span><strong>"Encoder gera texto se pedir" — não.</strong> Pedir não cria cabeça de saída sobre o vocabulário nem remove a visão do futuro embutida nos pesos. A saída parece texto e viola causalidade: condiciona em posição que geração real ainda não produziu. A folha L executa o oráculo mecânico sobre <code>lab/gpt.py</code>: mesmos pesos e mesma semente, máscara causal ligada contra desligada; sem causalidade a posição futura contamina a predição e a geração degrada.</p>
 </div>
 
 <h3>Gerar: recorte, temperatura, sorteio</h3>
 <p>Geração autoregressiva repete um passo: recorte de janela com os últimos <code>contexto</code> tokens, passagem direta, leitura só de <code>logits[-1]</code>, divisão por temperatura <code>T</code>, softmax e sorteio. Recorte impõe a janela literal: nada além dos últimos tokens condiciona o próximo. Temperatura repondera sem inverter a ordem: <code>T &lt; 1</code> afia, <code>T &gt; 1</code> achata, com a massa redistribuída sobre a mesma ordenação. O Bloco 5 mede esse efeito por entropia.</p>
-<p><code>torch.multinomial</code> sorteia da distribuição (AT-013). A mesma entrada e os mesmos pesos produzem continuações distintas entre chamadas, porque a saída é amostra, não máximo. Confundir amostra com escolha troca o objeto de estudo do próximo bloco.</p>
+<p><code>torch.multinomial</code> sorteia da distribuição. A mesma entrada e os mesmos pesos produzem continuações distintas entre chamadas, porque a saída é amostra, não máximo. Confundir amostra com escolha troca o objeto de estudo do próximo bloco.</p>
 <p><strong>Trecho conceitual — o passo de geração.</strong> Ilustra a ordem; o programa completo pertence à referência <code>lab/gpt.py</code>:</p>
 <pre><code>recorte = idx[:, -contexto:]  # janela literal
 passo = logits[:, -1, :] / T  # só a última posição, reponderada
@@ -826,7 +826,7 @@ if __name__ == "__main__":
 
 <h3>Generalização, overfitting, holdout</h3>
 <p><strong>Generalização</strong> é acertar fora do treino; <strong>overfitting</strong> é decorar o treino e piorar fora dele. O sinal é a divergência: perda de treino segue caindo enquanto perda em dados separados para de cair e começa a subir. O conjunto separado é a <strong>validação</strong>; o conjunto reservado para o fim é o <strong>holdout</strong>. Nenhum dos dois atualiza peso. A decisão é parada antecipada: interromper no ponto onde a validação vira.</p>
-<p>A disciplina atravessa domínios: nunca valide um sistema só com os dados que o construíram. É a mesma razão do holdout nos evals do M06. A folha L declara overfitting com treino e validação impressos lado a lado e critério explícito (AT-014).</p>
+<p>A disciplina atravessa domínios: nunca valide um sistema só com os dados que o construíram. É a mesma razão do holdout nos evals do M06. A folha L declara overfitting com treino e validação impressos lado a lado e critério explícito.</p>
 <p><strong>Referência executável 2 — <code>lab/treinar.py</code>.</strong> Corpus local em <code>lab/fixtures/corpus.txt</code> com split treino/validação 90/10, tokenizador char-level local como default offline; tiktoken ou HF só em trilha opcional com cache declarado, nunca default. Treino curto em CPU com impressão de perda de treino e validação, mais demo de overfitting. Tipagem estrita, só CPU:</p>
 <pre><code>"""Treino curto CPU do GPT mínimo sobre corpus local.
 
@@ -896,7 +896,7 @@ def main() -&gt; None:
 if __name__ == "__main__":
     main()</code></pre>
 
-<p><strong>Referência executável 3 — <code>lab/bpe_mini.py</code>.</strong> BPE mínimo em Python puro sobre corpus-toy local; prova <code>1234</code> contra <code>1235</code> em segmentos distintos, oráculo offline de AT-012, sem tiktoken e sem rede. Tipagem estrita, só CPU:</p>
+<p><strong>Referência executável 3 — <code>lab/bpe_mini.py</code>.</strong> BPE mínimo em Python puro sobre corpus-toy local; prova <code>1234</code> contra <code>1235</code> em segmentos distintos, oráculo offline, sem tiktoken e sem rede. Tipagem estrita, só CPU:</p>
 <pre><code>"""BPE mínimo em Python puro sobre corpus-toy local.
 
 Referencia executavel do Bloco 4.
@@ -970,7 +970,7 @@ if __name__ == "__main__":
 <p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> No caminho feliz, a perda impressa parte de perto de <code>ln(vocab)</code> e desce com treino e validação próximos; na demo de overfitting, o treino segue descendo para patamar baixo enquanto a validação para de cair e sobe. A prova BPE publica um segmento para <code>1234</code> e dois segmentos distintos para <code>1235</code>. Formatos ilustrativos. A folha L mede no ambiente real e registra os números observados; nenhum valor aqui é prova.</p>
 
 <div class="box">
-<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B04-L constrói em <code>lab/</code>.</strong> <code>lab/gpt.py</code> com o contrato acima, reutilizando <code>AtencaoMultiCabeca</code> do B03 sem alteração; prova AT-013 (mesma semente, duas gerações distintas pelo sorteio) e oráculo AT-015 (máscara ligada contra desligada, mesmos pesos). <code>lab/treinar.py</code> com o contrato acima sobre <code>lab/fixtures/corpus.txt</code>; prova AT-014 (treino desce, validação sobe, parada declarada). <code>lab/bpe_mini.py</code> com o contrato acima; prova AT-012 (<code>1234</code> contra <code>1235</code> em segmentos distintos, sem rede). CPU é o baseline; GPU opcional só acelera.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B04-L constrói em <code>lab/</code>.</strong> <code>lab/gpt.py</code> com o contrato acima, reutilizando <code>AtencaoMultiCabeca</code> do B03 sem alteração; prova (mesma semente, duas gerações distintas pelo sorteio) e oráculo (máscara ligada contra desligada, mesmos pesos). <code>lab/treinar.py</code> com o contrato acima sobre <code>lab/fixtures/corpus.txt</code>; prova (treino desce, validação sobe, parada declarada). <code>lab/bpe_mini.py</code> com o contrato acima; prova (<code>1234</code> contra <code>1235</code> em segmentos distintos, sem rede). CPU é o baseline; GPU opcional só acelera.</p>
 </div>
 <div class="box ok">
 <p><span class="lbl">Síntese</span><strong>Bloco 4 em seis frases.</strong></p>

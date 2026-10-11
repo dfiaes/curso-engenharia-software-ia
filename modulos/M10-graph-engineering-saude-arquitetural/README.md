@@ -21,7 +21,6 @@ E fecha com a terceira aplicação de grafo: **métricas de saúde arquitetural*
 
 - **Material principal (HTML):** [`M10.html`](M10.html) — abra no navegador
 - **Especificação:** [`docs/especificacoes/M10-ESPECIFICACAO.md`](../../docs/especificacoes/M10-ESPECIFICACAO.md) — G0 aprovado
-- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
 - **Laboratório:** [`lab/`](lab/) — workflow, grafo e métricas locais, sem rede/banco/framework
 - **Carga:** 10 blocos de conteúdo (20h)
 - **Pré-requisito:** M09

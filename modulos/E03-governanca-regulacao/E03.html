@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E03 · Governança, Regulação e IA Responsável</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>E03 · Governança, regulação e IA responsável</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas de terminal e os gates do laboratório vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14, uv). Datas legislativas e regulatórias foram verificadas em 11/10/2026 e <strong>mudam</strong>; a seção <a href="#fontes">Fontes e versões</a> diz o que conferir. <a href="../../STATUS.md">Consultar andamento</a>.</p><p><strong>Formação técnica, não aconselhamento jurídico.</strong> Este módulo ensina a traduzir obrigações em requisitos de engenharia e a conversar com o jurídico em termos precisos. Ele não substitui parecer de advogado, DPO ou autoridade competente; classificação de risco e base legal de um sistema real são decisões jurídicas que a engenharia documenta e implementa.</p></aside>
+<p class="meta"><span class="badge">FASE 4</span> &nbsp; 5 blocos · carga estimada ≈ 8 h · pré-requisito: <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a> (segurança técnica, PII) · relacionado: <a href="../M06-evals-observabilidade/M06.html">M06</a> (evals) · <strong>obrigação vira requisito, requisito vira teste</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Até aqui o curso tratou de fazer o sistema funcionar, ser seguro e ser medido. Este módulo trata de uma pergunta que, em empresa regulada, vem antes do deploy: <em>podemos operar isto, sob quais condições, e como provamos que cumprimos?</em> Sênior e líder técnico são quem responde com artefatos (inventário, avaliação de impacto, retenção, trilha de auditoria), não com a frase "estamos em conformidade".</p>
+<p>Ao terminar você consegue: (1) tratar governança como problema de engenharia, com categorias de risco, papéis e evidências verificáveis; (2) mapear a LGPD em cada ponto onde um sistema com LLM toca dado pessoal (prompt, log, embedding, fine-tuning, cache, provedor no exterior) e projetar o direito de apagar até o vector store; (3) dizer, sem ler a lei na hora, o que o EU AI Act exige, o que já vigora, o que foi adiado e quando ele alcança uma empresa brasileira; (4) usar NIST AI RMF, o perfil de IA generativa e a ISO/IEC 42001 como vocabulário e checklist, sabendo o que cada um é e não é; (5) montar governança mínima viável que roda no CI, sem comitê paralisante; (6) escrever e aplicar, no laboratório, um <strong>registro de sistema de IA validado por Pydantic com regras de lacunas</strong> e um <strong>detector de PII brasileira com redação</strong>.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não é curso de direito, não decide base legal nem enquadramento de risco por você e não promete que "passar nas regras do laboratório" equivale a conformidade. As regras do lab checam que o risco <em>declarado</em> tem os artefatos que ele implica; quem decide o risco declarado é gente responsável. Segurança técnica (injeção, secrets, isolamento) está no <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>; métricas, graders e o gate de evals estão no <a href="../M06-evals-observabilidade/M06.html">M06</a>. Aqui você os usa como evidência, sem reensiná-los.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça. Se acertar todas com segurança (mecanismo, não só o nome do artigo), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint">Checkpoint E03</a> e siga. Resposta hesitante marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> Um colega diz "usamos API de terceiro, então a responsabilidade é do provedor". Por que isso quase nunca é verdade?
+<details><summary>Resposta</summary><p>Quem decide finalidade e meios do tratamento é o controlador, e a LGPD o responsabiliza (art. 42) mesmo que o operador seja o provedor. O contrato com o provedor reparte custo e obrigações operacionais; não transfere o dever de ter base legal, de atender o titular e de avaliar o risco. No EU AI Act a divisão é parecida: provedor do modelo e implantador (<em>deployer</em>) têm deveres distintos, e ambos existem.</p></details></li>
+<li><strong>(Bloco 2)</strong> O CPF do cliente aparece num prompt. Em quantos lugares ele pode estar armazenado depois da resposta?
+<details><summary>Resposta</summary><p>Potencialmente em: log da aplicação, tracing/observabilidade, cache semântico, histórico de conversa, dataset de avaliação, retenção de abuso no provedor, backup de tudo isso e, se o texto virou chunk, no vector store e nos embeddings. Governança de dado pessoal em LLM é um problema de <em>mapeamento de cópias</em> antes de ser de política.</p></details></li>
+<li><strong>(Bloco 2)</strong> O titular pede eliminação dos seus dados. Basta apagar a linha no Postgres?
+<details><summary>Resposta</summary><p>Não. Os trechos dele podem estar em chunks, embeddings, índices, caches e logs. Sem identificador de titular nos metadados de cada chunk, "apagar um titular do vector store" vira reindexação total. Em fine-tuning, apagar o dataset não remove o que o modelo memorizou; o conserto real é re-treinar ou não treinar com dado pessoal identificável.</p></details></li>
+<li><strong>(Bloco 2)</strong> "Legítimo interesse" serve como base legal para tratar dado sensível?
+<details><summary>Resposta</summary><p>Não. O art. 11 da LGPD lista hipóteses próprias para dado sensível (consentimento específico e destacado, ou as do inciso II); contrato, legítimo interesse e proteção do crédito são bases do art. 7 que não aparecem ali. É a regra AIG-002 do laboratório.</p></details></li>
+<li><strong>(Bloco 3)</strong> Sua empresa fica no Brasil, o produto só tem usuários brasileiros e o cliente final de um parceiro europeu consome a saída do seu modelo. O EU AI Act pode alcançá-la?
+<details><summary>Resposta</summary><p>Pode. O alcance é extraterritorial: além de quem coloca sistemas no mercado da UE, o regulamento abrange fornecedores e implantadores de países terceiros quando a <em>saída</em> do sistema é usada na União. É por isso que o registro do lab tem o campo <code>eu_exposure</code>. A análise final é jurídica.</p></details></li>
+<li><strong>(Bloco 3)</strong> O EU AI Act "entrou em vigor em 2024 e tudo vale em agosto de 2026". Correto?
+<details><summary>Resposta</summary><p>Incorreto, e a data de 2 de agosto de 2026 foi parcialmente alterada. Proibições valem desde fev/2025 e obrigações de modelos de uso geral desde ago/2025; as obrigações de alto risco foram adiadas pelo "Digital Omnibus" (Bloco 3 traz as datas verificadas e o que conferir).</p></details></li>
+<li><strong>(Bloco 4)</strong> ISO/IEC 42001 e NIST AI RMF são "certificações de IA responsável"?
+<details><summary>Resposta</summary><p>A 42001 é norma de <em>sistema de gestão</em> certificável: certifica que a organização tem processos de gestão de IA, não que um modelo é seguro. O NIST AI RMF é framework voluntário, não certificável. Nenhum dos dois atesta propriedades de um produto específico.</p></details></li>
+<li><strong>(Bloco 5)</strong> Como colocar governança no CI sem criar burocracia?
+<details><summary>Resposta</summary><p>Registro versionado no repositório, validado por schema e regras a cada PR, com saída em formato de anotação do CI; exceção só por decisão registrada. O que é checável por máquina sai do comitê; o comitê fica só com o que exige julgamento.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — Governança como problema de engenharia: categorias de risco, papéis e evidências</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — LGPD aplicada a LLM: prompts, logs, embeddings, fine-tuning, bases legais, direitos do titular, transferência e ANPD</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — EU AI Act: níveis de risco, GPAI, cronograma verificado e alcance sobre empresas brasileiras</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Frameworks: NIST AI RMF, perfil GenAI, ISO/IEC 42001 e os artefatos (inventário, impacto, model card, datasheet, registro de riscos)</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Governança no dia a dia: mínimo viável, red teaming, incidentes de IA, CI/release e diálogo com o jurídico</a></li>
+<li><a href="#lab-guiado">Laboratório guiado E03</a> · <a href="#diagnostico">Tabela de Diagnóstico</a> · <a href="#checkpoint">Checkpoint E03</a> · <a href="#fontes">Fontes e versões</a></li>
+</ol>
+</div>
+
+<h2 id="b01">Bloco 1 · Governança como problema de engenharia</h2>
+
+<h3>Por que isso importa</h3>
+<p>Governança de IA costuma chegar à engenharia como PDF de política: princípios bonitos, nenhum critério de aceite. O resultado é previsível. Ou o time ignora o PDF, ou cria um comitê que revisa tudo e atrasa tudo. Há uma terceira saída, e ela é de engenharia: tratar obrigações como <strong>requisitos com dono, evidência e verificação</strong>, do mesmo modo que tratamos latência ou disponibilidade. Um requisito sem teste é desejo; uma obrigação sem evidência é, na prática, uma obrigação descumprida na hora da auditoria.</p>
+<p>Para o sênior que revisa fundamentos, a mudança de mentalidade é esta: governança não é uma camada sobre o sistema, é uma <em>propriedade</em> do sistema, como segurança. Ela se projeta (quais dados entram, onde ficam, quanto tempo), se mede (existe avaliação, está atual?) e se opera (quem é acionado quando o modelo causa dano?).</p>
+
+<h3>O mecanismo: risco declarado implica artefatos</h3>
+<p>O modelo mental que organiza o módulo inteiro cabe em uma frase: <strong>classificar o sistema (risco, dados, papel da organização) determina quais artefatos precisam existir; cada artefato tem dono, prazo de validade e forma de verificação</strong>. A classificação é feita por pessoas, com apoio jurídico. A checagem de que os artefatos existem é automatizável. Separar essas duas coisas é o que evita tanto a burocracia (humanos conferindo o que máquina confere) quanto a falsa segurança (máquina "decidindo" o que é decisão jurídica).</p>
+<figure>
+<svg viewBox="0 0 760 170" role="img" aria-labelledby="t1">
+<title id="t1">Fluxo: classificar o sistema, derivar artefatos obrigatórios, verificar no CI, operar e revisar</title>
+<g fill="none" stroke="currentColor" stroke-width="1.5">
+<rect x="10" y="40" width="150" height="70" rx="8"/><rect x="195" y="40" width="150" height="70" rx="8"/><rect x="380" y="40" width="150" height="70" rx="8"/><rect x="565" y="40" width="185" height="70" rx="8"/>
+<path d="M160 75h35M345 75h35M530 75h35" marker-end="url(#a)"/>
+<path d="M657 110v30H85v-30" stroke-dasharray="5 4"/>
+</g>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+<g fill="currentColor" font-size="13" text-anchor="middle">
+<text x="85" y="68">1. Classificar</text><text x="85" y="88" font-size="11">risco, dados, papel</text>
+<text x="270" y="68">2. Derivar</text><text x="270" y="88" font-size="11">artefatos exigidos</text>
+<text x="455" y="68">3. Verificar</text><text x="455" y="88" font-size="11">schema + regras no CI</text>
+<text x="657" y="68">4. Operar e revisar</text><text x="657" y="88" font-size="11">incidente, validade, mudança</text>
+<text x="380" y="158" font-size="11">mudou modelo, dado, finalidade ou provedor: volta ao passo 1</text>
+</g></svg>
+<figcaption>Humanos decidem o passo 1 e julgam exceções; máquina executa os passos 2 e 3.</figcaption>
+</figure>
+
+<h3>Categorias de risco: três eixos, não um</h3>
+<p>"Risco" em IA responsável é uma palavra que esconde pelo menos três eixos independentes, e confundi-los é o erro de classificação mais comum.</p>
+<table>
+<tr><th>Eixo</th><th>Pergunta</th><th>Quem define</th><th>Exemplo de efeito</th></tr>
+<tr><td>Risco regulatório do <em>uso</em></td><td>A finalidade cai numa categoria que a lei trata de forma especial (proibida, alto risco, transparência)?</td><td>Lei (EU AI Act, futuro marco brasileiro)</td><td>Triagem de currículos é alto risco; chatbot exige aviso de que é IA.</td></tr>
+<tr><td>Risco de <em>dados</em></td><td>Há dado pessoal, sensível, de criança? Para onde vai?</td><td>LGPD e, se aplicável, GDPR</td><td>RIPD, base legal, transferência internacional.</td></tr>
+<tr><td>Risco técnico/operacional</td><td>O modelo pode errar, vazar, ser manipulado ou derivar?</td><td>Engenharia, com M06 e M12</td><td>Eval, red team, monitoramento, plano de incidente.</td></tr>
+</table>
+<p>Um chatbot interno de TI pode ser mínimo em todos os três. Um gerador de resumos de prontuário é baixo no primeiro eixo se não decide nada, altíssimo no segundo (dado de saúde é sensível) e médio no terceiro. O registro do laboratório separa esses eixos de propósito: <code>risk_tier</code> e <code>risk_rationale</code> para o primeiro, o bloco <code>personal_data</code> e <code>stores</code> para o segundo, <code>assessments</code> para o terceiro. Um campo só chamado "risco" perderia a informação que as regras precisam.</p>
+<p>O <code>RiskTier</code> do lab (<code>prohibited</code>, <code>high</code>, <code>limited</code>, <code>minimal</code>) é <em>modelado</em> nos níveis do EU AI Act por ser a taxonomia mais conhecida. É um rótulo interno; o fato de a empresa escrever "limited" não torna o sistema legalmente de risco limitado. Daí o campo obrigatório <code>risk_rationale</code>: quem classificou escreve o porquê, e a revisão discute o porquê, não o rótulo.</p>
+
+<h3>Quem responde por quê: papéis</h3>
+<p>Antes de qualquer artefato, é preciso saber quem é quem em cada cadeia. As leis usam vocabulários diferentes para papéis parecidos:</p>
+<table>
+<tr><th>Papel</th><th>LGPD</th><th>EU AI Act</th><th>Em um produto com LLM de terceiro</th></tr>
+<tr><td>Decide finalidade e meios</td><td>Controlador</td><td>Implantador (<em>deployer</em>) ou, se desenvolve e coloca no mercado, provedor</td><td>Sua empresa que faz o produto.</td></tr>
+<tr><td>Trata em nome de outro</td><td>Operador</td><td>-</td><td>O provedor de API, quando só processa seus dados sob suas instruções.</td></tr>
+<tr><td>Desenvolve/coloca o sistema ou o modelo no mercado</td><td>-</td><td>Provedor (<em>provider</em>); provedor de modelo de uso geral é categoria própria</td><td>O fabricante do modelo; você também, se empacota um sistema próprio.</td></tr>
+<tr><td>Pessoa de contato com titulares e ANPD</td><td>Encarregado (DPO)</td><td>-</td><td>Quem recebe pedidos de acesso e apagamento.</td></tr>
+</table>
+<p>Duas consequências práticas. Primeira: a mesma empresa pode ser controladora de dados de clientes, <em>implantadora</em> do modelo de um terceiro e <em>provedora</em> de um sistema que revende a outro, tudo num produto só, com obrigações diferentes em cada papel. Segunda: o provedor pode, dependendo do contrato e do uso, deixar de ser mero operador, por exemplo quando treina o próprio modelo com seus dados para finalidade própria. É exatamente o que a regra AIG-007 sinaliza com <code>provider.trains_on_inputs</code>.</p>
+
+<h3>Exemplo trabalhado: classificar três sistemas</h3>
+<p>Aplique o método a três sistemas de uma mesma empresa fictícia de seguros. O objetivo não é acertar o enquadramento jurídico, e sim ver que a classificação produz uma lista de artefatos diferente em cada caso.</p>
+<table>
+<tr><th>Sistema</th><th>Uso</th><th>Dados</th><th>Artefatos que a classificação implica</th></tr>
+<tr><td>A. Assistente de dúvidas sobre apólices (RAG)</td><td>Responde cliente; não decide</td><td>Nome, CPF, e-mail em prompts</td><td>Registro; base legal (execução de contrato); retenção do log de prompts; aviso de que é IA; eval de fidelidade; plano de incidente.</td></tr>
+<tr><td>B. Triagem de sinistros que sugere recusa automática</td><td>Afeta direito do titular</td><td>Dado financeiro, possivelmente de saúde (sensível)</td><td>Tudo de A, mais RIPD, revisão humana efetiva (LGPD art. 20), avaliação de impacto, teste de viés, trilha de auditoria, possivelmente alto risco em jurisdições que o definem assim.</td></tr>
+<tr><td>C. Resumo interno de reuniões do time de engenharia</td><td>Produtividade</td><td>Nomes de colegas</td><td>Registro enxuto; retenção definida; verificar se fornecedor treina com os dados. Pouco mais.</td></tr>
+</table>
+<p>Se A, B e C seguissem o mesmo processo, ou C seria sufocado ou B seria negligenciado. Governança proporcional ao risco é o princípio que torna o sistema sustentável.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Granularidade do registro.</strong> Um registro por produto é fácil de manter e esconde mudanças; um por modelo/prompt/fluxo é preciso e impossível de manter à mão. Regra prática: um registro por <em>sistema com finalidade própria</em>, e mudança de finalidade, de provedor ou de categoria de dado reabre o registro.</li>
+<li><strong>Classificar para cima ou para baixo.</strong> Classificar alto demais gera trabalho; baixo demais gera exposição. Quando há dúvida, registre a classificação conservadora provisória e o motivo, e peça revisão jurídica. O custo de revisar uma classificação alta é pequeno comparado ao de explicar uma baixa a um regulador.</li>
+<li><strong>Centralizado versus federado.</strong> Um time central de governança escala mal; times de produto sem padrão comum divergem. O arranjo que costuma funcionar: padrão central (schema e regras), dono do registro no time do produto, revisão central só para o que o schema marca como alto risco.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Confundir <em>inventário</em> com <em>conformidade</em>: ter lista de sistemas não prova nada sobre eles.</li>
+<li>Registrar só o que o time considera "IA" e esquecer o recurso de LLM embutido em ferramenta SaaS que a empresa contratou. Uso informal (<em>shadow AI</em>) é onde costuma estar o maior vazamento.</li>
+<li>Deixar a classificação de risco com o time que quer lançar o produto, sem revisão independente.</li>
+<li>Registro que nasce correto e nunca é atualizado: a avaliação tem data e vence (regra AIG-014).</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Tratar o provedor de API como escudo.</strong> O instinto de arquiteto é delegar: "o dado vai para o provedor, ele é o especialista". Juridicamente, quem decidiu enviar dado pessoal e para quê é o controlador. O contrato do provedor (DPA, termos de retenção, treinamento sobre entradas, subprocessadores) é <em>insumo</em> do seu registro, não substituto dele. Leia o que o provedor retém por padrão e por quanto tempo antes de dizer, em reunião, que "não guardamos nada".</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Governança de IA é propriedade do sistema: classifique (risco de uso, risco de dados, risco técnico), derive os artefatos exigidos e verifique-os por máquina. Papéis (controlador, operador, provedor, implantador) definem quem deve o quê, e usar API de terceiro não transfere a responsabilidade. Proporcionalidade evita burocracia: o chatbot interno e a triagem de sinistros não podem seguir o mesmo processo. Humanos julgam a classificação; máquina confere os artefatos.</p>
+</div>
+
+<h2 id="b02">Bloco 2 · LGPD aplicada a LLM</h2>
+
+<h3>Por que isso importa</h3>
+<p>A Lei Geral de Proteção de Dados (Lei 13.709/2018) não menciona LLM, e não precisa. Ela se aplica a qualquer operação de tratamento de dado pessoal, e um sistema com LLM é, entre outras coisas, uma máquina de copiar texto para lugares inesperados. Para a engenharia, a pergunta útil não é "a LGPD permite IA?", e sim: <strong>em quais pontos do sistema um dado pessoal é coletado, copiado, transformado, enviado ou retido, e com que justificativa em cada ponto?</strong> Este bloco percorre esses pontos na ordem em que o dado viaja.</p>
+
+<h3>Mapa: onde o dado pessoal vive num sistema com LLM</h3>
+<table>
+<tr><th>Ponto</th><th>O que acontece</th><th>Risco típico</th><th>Controle de engenharia</th></tr>
+<tr><td>Entrada (prompt)</td><td>Usuário digita CPF, saúde, processo judicial; ou o sistema injeta dados do CRM</td><td>Coleta além do necessário; dado sensível sem base</td><td>Minimizar o contexto montado; redação antes do envio quando possível; separar campos estruturados</td></tr>
+<tr><td>Provedor do modelo</td><td>Dado cruza a rede e é processado fora</td><td>Transferência internacional; retenção; treino sobre entradas</td><td>Contrato, cláusulas-padrão, opção de zero-retention, região; campo <code>provider</code> no registro</td></tr>
+<tr><td>Logs e tracing</td><td>Prompt e resposta gravados para depuração (M06)</td><td>Cópia mais longeva e menos controlada do dado</td><td>Redação no ponto de log, retenção curta, acesso restrito</td></tr>
+<tr><td>Cache (inclusive semântico)</td><td>Resposta guardada por similaridade</td><td>Resposta de um titular servida a outro; retenção esquecida</td><td>Chave com escopo de tenant/usuário; TTL; não cachear conteúdo com PII</td></tr>
+<tr><td>RAG: chunks e embeddings</td><td>Documentos viram vetores no índice</td><td>Dado pessoal persistente e difícil de localizar; inversão de embedding</td><td>Metadado de titular em cada chunk; deleção por filtro; reindexação planejada</td></tr>
+<tr><td>Fine-tuning</td><td>Exemplos viram pesos</td><td>Memorização; apagamento praticamente inviável</td><td>Não treinar com dado identificável; anonimizar/sintetizar; guardar procedência do dataset</td></tr>
+<tr><td>Datasets de eval e de red team</td><td>Casos reais copiados para teste</td><td>Dado de produção vivendo em repositório de teste</td><td>Sintetizar ou anonimizar; mesmo regime de retenção</td></tr>
+<tr><td>Saída do modelo</td><td>Modelo pode revelar dado do contexto de outro titular ou "inventar" dado pessoal</td><td>Vazamento entre titulares; dado inexato (princípio da qualidade)</td><td>Isolamento por tenant (M12), filtros de saída, citação da fonte</td></tr>
+</table>
+<p>Observe que a maior parte do risco está em cópias <em>secundárias</em> (logs, cache, evals), não no tratamento principal. Quem só audita o fluxo "usuário pergunta, modelo responde" audita a parte menos perigosa.</p>
+
+<h3>Princípios que viram requisito (art. 6)</h3>
+<p>Os princípios do art. 6 da LGPD são o que um regulador usa para julgar um caso concreto. Três deles dominam o desenho de sistemas com LLM:</p>
+<ul>
+<li><strong>Finalidade e adequação.</strong> O dado foi coletado para um propósito informado ao titular; usá-lo para outro propósito incompatível exige nova justificativa. Reaproveitar o histórico de atendimento para treinar um modelo de marketing é o caso clássico. No registro: <code>purpose</code> com texto verificável, não "melhorar a experiência".</li>
+<li><strong>Necessidade (minimização).</strong> Tratar o mínimo para a finalidade. O contexto do prompt não deveria incluir o CPF se a resposta não depende dele. Isso é requisito de <em>montagem de contexto</em>, não só de política.</li>
+<li><strong>Segurança, prevenção e responsabilização.</strong> Medidas técnicas e administrativas, e capacidade de <em>demonstrar</em> que foram adotadas. Aqui o registro, os logs de auditoria e os relatórios são a demonstração.</li>
+</ul>
+<p>Os demais (livre acesso, qualidade, transparência, não discriminação) aparecem nos direitos do titular e na seção de decisões automatizadas mais abaixo.</p>
+
+<h3>Bases legais: o que cabe e o que não cabe</h3>
+<p>O art. 7 lista as bases para dado pessoal comum (consentimento, obrigação legal, políticas públicas, estudos por órgão de pesquisa, execução de contrato, exercício regular de direitos em processo, proteção da vida, tutela da saúde, legítimo interesse, proteção do crédito). O art. 11 trata do dado <strong>sensível</strong> (origem racial ou étnica, convicção religiosa, opinião política, filiação sindical, saúde, vida sexual, dado genético ou biométrico) com lista própria: consentimento específico e destacado, ou as hipóteses do inciso II. O ponto técnico que importa: <strong>legítimo interesse e execução de contrato não estão na lista do art. 11</strong>. Por isso o registro do laboratório mantém um conjunto <code>SENSITIVE_BASES</code> e a regra AIG-002 recusa, por exemplo, "legitimate_interest" quando <code>sensitive: true</code>.</p>
+<p>Duas bases merecem cuidado especial em IA:</p>
+<ul>
+<li><strong>Consentimento</strong> exige ser livre, informado e inequívoco, e pode ser revogado. Se a única base é consentimento, revogar significa parar de tratar e, em regra, eliminar: o desenho precisa suportar isso (de novo, apagar de logs, cache e vector store).</li>
+<li><strong>Legítimo interesse</strong> exige teste de balanceamento documentado (finalidade legítima, necessidade, expectativa razoável do titular, salvaguardas). Na consulta pública da ANPD sobre IA e decisões automatizadas (resultados em 2025), o legítimo interesse sob teste de balanceamento foi um dos pontos de convergência entre os participantes, mas a autoridade não fixou posição definitiva. Quem usa essa base para treinar ou refinar modelo precisa do teste por escrito.</li>
+</ul>
+<p>Quem escolhe a base é o controlador, com assessoria jurídica; a engenharia garante que a escolha esteja registrada (<code>legal_basis</code>), que seja compatível com a categoria do dado e que o sistema sustente as consequências dela (revogação, oposição).</p>
+
+<h3>Minimização e retenção como código</h3>
+<p>Retenção que não está no código é retenção que não existe. Duas decisões de projeto concretas:</p>
+<ul>
+<li><strong>Redigir antes de gravar.</strong> Aplique redação de PII no ponto em que o log é produzido, não em um job que roda depois. O laboratório oferece um <code>RedactingFilter</code> para o módulo <code>logging</code> do Python exatamente para isso. Ele tem um limite que o próprio código documenta: texto de exceção e <em>traceback</em> são formatados depois, pelo <em>handler</em>, e não passam pelo filtro. Em produção, adicione um <code>Formatter</code> que também redija.</li>
+<li><strong>Todo armazenamento tem prazo.</strong> No registro, cada <code>DataStore</code> que guarda dado pessoal precisa de <code>retention_days</code> (regra AIG-003) e de um mecanismo de eliminação por titular (<code>erasure_supported</code>, regra AIG-004). O art. 16 da LGPD manda eliminar o dado ao término do tratamento, com exceções legais; o prazo escolhido é uma decisão de negócio e jurídica, o cumprimento do prazo é uma tarefa agendada com teste.</li>
+</ul>
+<pre><code># Esboço: retenção como job idempotente (o nome da coleção e do campo são ilustrativos)
+def purge_expired(store, now, retention_days):
+    cutoff = now - timedelta(days=retention_days)
+    deleted = store.delete(where={"created_at": {"lt": cutoff}})
+    audit.log("purge", store=store.name, deleted=deleted, cutoff=cutoff.isoformat())
+    return deleted</code></pre>
+<p>O ponto não é a API, é o <code>audit.log</code>: a evidência de que a eliminação ocorreu também é um artefato, e ela própria não pode conter o dado apagado.</p>
+
+<h3>Pseudonimização não é anonimização</h3>
+<p>O laboratório redige com tags como <code>[CPF]</code> ou, com chave, <code>[CPF:beb2221b]</code> (HMAC-SHA256 truncado). O segundo formato é <strong>pseudonimização</strong>: o mesmo CPF gera sempre o mesmo token dentro da mesma chave, o que permite correlacionar linhas de log de uma mesma pessoa sem expor o número. A LGPD distingue: dado <em>anonimizado</em> (sem possibilidade razoável de reidentificação) deixa de ser dado pessoal (art. 12); dado <em>pseudonimizado</em> continua sendo dado pessoal, porque existe informação adicional, aqui a chave, que permite reidentificar. Consequências de engenharia: o token ainda está sujeito a retenção e a pedidos de eliminação; a chave deve ficar fora dos logs e ser rotacionada com plano; e hash sem chave de um identificador de espaço pequeno, como o CPF, é reversível por força bruta (são cerca de 10<sup>9</sup> combinações de nove dígitos), por isso o lab usa HMAC com chave e não um SHA-256 puro.</p>
+
+<h3>Direitos do titular, inclusive apagar de vector store</h3>
+<p>O art. 18 dá ao titular direitos de confirmação e acesso, correção, anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desconformidade, portabilidade, eliminação dos dados tratados com consentimento, informação sobre compartilhamento e revogação do consentimento. Cada um precisa de um caminho técnico, e o que falha em IA é quase sempre o mesmo: <strong>não saber onde está o dado do titular</strong>.</p>
+<p>Para o vector store, o projeto que torna a eliminação barata tem três decisões tomadas <em>antes</em> da ingestão:</p>
+<ol>
+<li>Todo chunk carrega, como metadado, o identificador do titular (ou da entidade) de origem e o identificador do documento. Sem isso, a única opção é reconstruir o índice.</li>
+<li>A fonte da verdade é o documento original em armazenamento com eliminação por titular; o índice é <em>derivado</em> e pode ser reconstruído. Apagar na fonte e reindexar é a rota de último recurso; apagar por filtro de metadado é a rota normal.</li>
+<li>A eliminação é um evento: gera registro auditável, atinge também réplicas, snapshots e caches derivados, e tem prazo máximo de propagação conhecido (backups podem esperar o ciclo de rotação, desde que documentado).</li>
+</ol>
+<pre><code># Esboço: eliminar um titular do índice vetorial e dos derivados
+def erase_subject(subject_id: str) -&gt; ErasureReport:
+    chunks = index.delete(filter={"subject_id": subject_id})      # embeddings + texto do chunk
+    cache.invalidate(tag=f"subject:{subject_id}")                  # cache semântico por tag
+    logs = log_store.delete(where={"subject_pseudonym": pseudo(subject_id)})
+    eval_hits = scan_eval_datasets(subject_id)                     # relatório, não remoção cega
+    return ErasureReport(chunks=chunks, cache=True, logs=logs, eval_hits=eval_hits)</code></pre>
+<p>Dois pontos finos. (1) <strong>Embedding não é anônimo por natureza</strong>: pesquisa mostra que é possível recuperar texto aproximado a partir de vetores, então trate-o como o dado que o originou. (2) <strong>Fine-tuning é o caso difícil</strong>: pesos não têm "linha por titular". Não existe hoje técnica madura que garanta remover o efeito de um exemplo sem re-treinar; a conclusão de engenharia é evitar treinar com dado pessoal identificável, preferir RAG (onde a eliminação é por filtro) para conhecimento que muda ou envolve titulares, e, quando for inevitável, documentar a procedência do dataset para poder re-treinar. A consulta da ANPD registrou justamente a divergência sobre a viabilidade técnica de excluir dados depois do treinamento; não presuma que o tema esteja resolvido.</p>
+
+<h3>Decisões automatizadas (art. 20)</h3>
+<p>O art. 20 garante ao titular o direito de solicitar a revisão de decisões tomadas unicamente com base em tratamento automatizado que afetem seus interesses (perfil pessoal, profissional, de consumo e de crédito, ou aspectos da personalidade), e de receber informações claras sobre os critérios e procedimentos usados, observado o segredo comercial e industrial; se o controlador negar a informação por segredo, a ANPD pode auditar aspectos discriminatórios. A redação atual não exige que a revisão seja feita por pessoa natural; a regulamentação e o debate sobre revisão humana seguem em aberto. A ANPD publicou em maio de 2025 a Nota Técnica nº 12/2025, consolidando as contribuições de uma tomada de subsídios sobre IA e revisão de decisões automatizadas, no âmbito da agenda regulatória; verifique se já existe regulamento posterior.</p>
+<p>Em engenharia: sistema que <em>decide</em> (recusa crédito, descarta candidato, bloqueia conta) precisa de (a) trilha explicável do que foi considerado, (b) canal de revisão com prazo, (c) pessoa com autoridade para reverter, não só para carimbar. A regra AIG-011 do laboratório reprova <code>automated_decision: true</code> com <code>human_review: false</code>.</p>
+
+<h3>Transferência internacional (arts. 33 a 36)</h3>
+<p>Mandar prompt com dado pessoal para API hospedada fora do Brasil é transferência internacional. A LGPD admite a transferência em hipóteses como país com grau de proteção adequado, cláusulas contratuais específicas ou padrão, normas corporativas globais, selos e certificados, consentimento específico, entre outras. A ANPD regulamentou o tema em 2024 (Resolução CD/ANPD nº 19/2024, que inclui as cláusulas-padrão contratuais); confira o texto vigente com o jurídico. No registro, <code>provider.country</code> diferente de <code>BR</code> com tratamento de dado pessoal exige <code>transfer_mechanism</code> preenchido (regra AIG-006). No <code>good.yaml</code> do laboratório o campo cita as cláusulas-padrão; no <code>bad.yaml</code> está vazio, e a regra reprova.</p>
+<p>Mitigações técnicas que reduzem, sem eliminar, a superfície: região de processamento no Brasil quando o provedor oferece, redação de identificadores antes do envio, opção contratual de não retenção e não treinamento, e preferência por modelo auto-hospedado (M11) quando o dado for sensível e o volume justificar.</p>
+
+<h3>ANPD, fiscalização e incidentes</h3>
+<p>A ANPD é a autoridade que fiscaliza e regulamenta a LGPD. Sinais verificados até 11/10/2026: tomada de subsídios sobre IA e decisões automatizadas (nov. a dez. de 2024, com 124 contribuições, conforme noticiado); Nota Técnica 12/2025 (maio de 2025); projeto-piloto de <em>sandbox</em> regulatório em IA e proteção de dados, com testes práticos previstos até dezembro de 2026; inclusão de "inteligência artificial e tecnologias emergentes" no mapa de temas prioritários 2026-2027; e medidas fiscalizatórias de repercussão, como a suspensão preventiva do uso de dados para treinar IA por uma grande plataforma e a suspensão da coleta de dados biométricos de íris por outra. Um projeto de lei complementar enviado pelo Executivo em dezembro de 2025 posicionaria a ANPD como coordenadora de um Sistema Nacional de IA, segundo fonte secundária; trate como informação a confirmar. Para o dia a dia: incidente de segurança com risco ou dano relevante exige comunicação à ANPD e aos titulares (art. 48), e a regulamentação específica (Resolução CD/ANPD nº 15/2024) fixa prazo curto, da ordem de três dias úteis; confirme o prazo no texto vigente.</p>
+
+<h3>O marco legal de IA brasileiro (PL 2338/2023): estágio em 11/10/2026</h3>
+<div class="box net">
+<span class="lbl">Verificado em 11/10/2026</span>
+<p>O PL 2338/2023 foi aprovado pelo Senado em 10/12/2024 e tramita na Câmara dos Deputados, em Comissão Especial instalada em maio de 2025, relatada pelo deputado Aguinaldo Ribeiro. Na consulta de 11/10/2026, a ficha apontava "Aguardando parecer do relator", sem votação em plenário; datas previstas para maio e junho de 2026 não se cumpriram, e o relator declarou em 24/08/2026 que o trabalho só volta com força total depois das eleições de outubro. <strong>Não é lei.</strong> Fontes: monitor legislativo de terceiros e reportagens, não a ficha oficial; confirme na página da proposição no site da Câmara.</p>
+</div>
+<p>O que o texto aprovado no Senado propõe, em linhas gerais e sujeito a mudança na Câmara: classificação por risco, com usos vedados e sistemas de alto risco sujeitos a avaliação de impacto algorítmico; direitos das pessoas afetadas (informação, explicação, contestação, revisão humana em certos casos); governança e sanções administrativas elevadas; e arranjo institucional com a ANPD na coordenação. Como a Câmara pode alterar o texto e o Senado precisa se pronunciar de novo sobre as mudanças, <strong>não projete datas de vigência</strong>. A postura de engenharia correta é esta: construir agora os artefatos que qualquer versão provável exigirá (inventário, classificação de risco, avaliação de impacto, explicabilidade, revisão humana), porque a LGPD já exige parte deles e o EU AI Act, o mais próximo modelo, já está em vigor. Isso evita retrabalho caso o texto final se aproxime desses modelos, sem apostar em detalhes que ainda não existem.</p>
+
+<h3>Exemplo trabalhado: o assistente de atendimento do laboratório</h3>
+<p>O arquivo <code>examples/good.yaml</code> descreve um assistente RAG de atendimento. Leia-o como um checklist LGPD já resolvido: trata CPF e e-mail (dado comum, base <code>contract</code>); o log de prompts guarda dado pessoal por 30 dias e suporta eliminação por titular; o vector store é declarado sem dado pessoal (os documentos são a base de ajuda aprovada) mas mantém retenção de 365 dias; o provedor está nos EUA com cláusulas-padrão registradas, sem treinar sobre entradas; há RIPD, relatório de eval, red team e model card datados; usuário é avisado de que fala com IA; há plano de incidente. O <code>bad.yaml</code> faz o oposto de propósito (triagem de currículos, dado sensível com legítimo interesse, três armazenamentos sem eliminação, provedor sem mecanismo de transferência) e dispara 10 erros e 3 avisos, mostrados no <a href="#lab-guiado">laboratório</a>.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Redação antes do envio ao modelo.</strong> Protege contra transferência e retenção, mas pode degradar a resposta se o modelo precisava do dado (por exemplo, para saudar pelo nome). Opção intermediária: substituir por token consistente no prompt e re-hidratar na saída, mantendo o mapa só em memória do seu serviço.</li>
+<li><strong>Log completo versus log redigido.</strong> O log completo facilita depuração e é a cópia mais perigosa. Padrão defensável: log redigido por padrão, acesso excepcional e auditado ao bruto, com retenção curta.</li>
+<li><strong>RAG versus fine-tuning para dado de titulares.</strong> RAG torna a eliminação operável; fine-tuning pode dar melhor estilo ou latência, ao custo de eliminação praticamente inviável.</li>
+<li><strong>Detector com viés para falso positivo.</strong> Mascarar um número de pedido que parece CPF custa pouco; deixar vazar um CPF custa muito. Por isso o lab prefere mascarar qualquer sequência de 11 dígitos que passe nos dígitos verificadores.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Achar que "dado público" dispensa base legal. Dado tornado manifestamente público pelo titular tem tratamento próprio (art. 7 §4), mas finalidade e boa-fé continuam exigidas. Raspar a web para treinar é uma das questões que a própria consulta da ANPD listou como divergente.</li>
+<li>Anonimizar com regex e declarar "anonimizado". Regex remove padrões conhecidos; nome, endereço e contexto reidentificam. O que a regex produz é redação, e a qualificação jurídica de anonimização é outra conversa.</li>
+<li>Esquecer o <em>backup</em> e o <em>tracing</em> de terceiros na lista de armazenamentos.</li>
+<li>Esquecer que dado do funcionário e do candidato também é dado pessoal.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>O detector de PII como prova de ausência.</strong> Regex mais dígito verificador acha CPF, e-mail e telefone formatados de modo convencional; não acha nome próprio, endereço, RG, número de processo, dado de saúde em texto livre, nem um CPF escrito por extenso ou com separadores incomuns. "O scanner passou" significa "não encontrei esses padrões", não "não há dado pessoal". Para classes sem formato fixo, use NER treinado, revisão amostral e, principalmente, <em>reduza o que entra</em> em vez de confiar em filtro de saída. O módulo <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a> trata a redação como defesa em camadas; este módulo adiciona que ela não é evidência de conformidade sozinha.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Mapeie cada cópia do dado pessoal (prompt, provedor, log, cache, chunk, dataset) e dê a cada uma base, retenção e caminho de eliminação. Legítimo interesse e contrato não valem para dado sensível. Pseudonimizar continua sendo tratar dado pessoal; embeddings e pesos de fine-tuning merecem o mesmo cuidado que a fonte. Para apagar do vector store, guarde o identificador do titular em cada chunk antes de ingerir. Enviar dado ao exterior exige mecanismo de transferência registrado. O PL 2338/2023 não é lei em 11/10/2026: construa os artefatos hoje, não aposte em datas.</p>
+</div>
+
+<h2 id="b03">Bloco 3 · EU AI Act</h2>
+
+<h3>Por que isso importa</h3>
+<p>O Regulamento (UE) 2024/1689 é a primeira lei horizontal abrangente de IA em vigor e serve de referência para o debate brasileiro e para contratos de clientes europeus. Para um engenheiro brasileiro, ele importa por dois motivos práticos: pode alcançar a sua empresa mesmo sem filial na Europa, e a sua taxonomia (proibido, alto risco, transparência, uso geral) é o vocabulário que auditores e clientes grandes já usam.</p>
+
+<h3>Estrutura por níveis de risco</h3>
+<table>
+<tr><th>Nível</th><th>O que é</th><th>Consequência</th></tr>
+<tr><td>Proibido (art. 5)</td><td>Práticas como manipulação subliminar prejudicial, exploração de vulnerabilidades, pontuação social, certos usos de identificação biométrica e de inferência de emoções no trabalho e na escola</td><td>Não pode ser colocado no mercado nem usado. Multas máximas da lei: até 35 milhões de euros ou 7% do faturamento mundial, o que for maior</td></tr>
+<tr><td>Alto risco (art. 6 e anexos I e III)</td><td>Componentes de segurança de produtos regulados (anexo I) e usos listados no anexo III: biometria, infraestrutura crítica, educação, <strong>emprego e gestão de trabalhadores</strong>, acesso a serviços essenciais (inclui <strong>avaliação de crédito</strong>), aplicação da lei, migração, justiça e processos democráticos</td><td>Sistema de gestão de risco, qualidade e governança de dados, documentação técnica, registro de eventos (logs), transparência ao implantador, supervisão humana, acurácia/robustez/cibersegurança, avaliação de conformidade</td></tr>
+<tr><td>Transparência (art. 50)</td><td>Sistemas que interagem com pessoas, geram conteúdo sintético (texto, áudio, imagem, vídeo) ou deepfakes, reconhecem emoções</td><td>Avisar que é IA; marcar conteúdo sintético em formato legível por máquina; rotular deepfakes</td></tr>
+<tr><td>Risco mínimo</td><td>O restante (filtro de spam, IA em jogos)</td><td>Sem obrigação específica; códigos de conduta voluntários</td></tr>
+</table>
+<p>Observe o que o lab modelou: <code>user_facing_generative</code> + <code>ai_disclosure</code> (regra AIG-015 sobre aviso de IA) e <code>risk_tier</code> com valor <code>high</code> exigindo avaliação de impacto (AIG-009) e registro de red team (AIG-013). A lista dos artefatos de alto risco do regulamento é maior; o laboratório implementa o subconjunto que um registro consegue conferir.</p>
+
+<h3>Modelos de uso geral (GPAI)</h3>
+<p>LLMs de fundação são tratados à parte (arts. 51 a 55). Todo provedor de modelo de uso geral deve manter documentação técnica, fornecer informações a quem integra o modelo, ter política de respeito a direitos autorais e publicar um resumo do conteúdo de treinamento. Modelos com <strong>risco sistêmico</strong> (presumidos acima de 10<sup>25</sup> FLOPs de computação de treinamento, entre outros critérios) têm deveres adicionais: avaliação de modelo, teste adversarial, relato de incidentes graves e cibersegurança reforçada. Um código de práticas voluntário para GPAI foi publicado em 2025. Para quem <em>consome</em> o modelo por API, a consequência é que a documentação do provedor passa a ser insumo obrigatório do seu dossiê; para quem faz fine-tuning substancial de um modelo alheio, pode haver mudança de papel para provedor. A fronteira exata é questão jurídica e das orientações da Comissão Europeia.</p>
+
+<h3>Cronograma verificado em 11/10/2026</h3>
+<p>O regulamento entrou em vigor em 1º de agosto de 2024 com aplicação escalonada. Em 2026 o cronograma foi alterado por um pacote de simplificação conhecido como <em>Digital Omnibus</em>. Segundo escritórios de advocacia consultados em 11/10/2026, o acordo político ocorreu em 6 de maio de 2026 e o ato de alteração foi adotado em 8 de julho e publicado no Jornal Oficial em 24 de julho de 2026, entrando em vigor três dias depois. Confira o número e o texto no EUR-Lex, porque os escritórios divergem em detalhes.</p>
+<table>
+<tr><th>Obrigação</th><th>Data de aplicação</th><th>Situação em 11/10/2026</th></tr>
+<tr><td>Proibições (art. 5)</td><td>2 de fevereiro de 2025</td><td>Em vigor. O omnibus acrescenta nova proibição (sistemas que geram imagens íntimas sintéticas sem consentimento e material de abuso sexual infantil), com transição relatada até 2 de dezembro de 2026</td></tr>
+<tr><td>Modelos de uso geral (arts. 51 a 55)</td><td>2 de agosto de 2025</td><td>Em vigor. Modelos já no mercado antes dessa data têm transição mais longa; o poder sancionatório da Comissão sobre GPAI está previsto para agosto de 2026 (confirme)</td></tr>
+<tr><td>Transparência (art. 50)</td><td>2 de agosto de 2026</td><td>Mantida; para a marcação de conteúdo sintético (art. 50(2)), sistemas já no mercado antes de 2/8/2026 têm até 2 de dezembro de 2026</td></tr>
+<tr><td>Alto risco do anexo III (autônomos)</td><td>2 de dezembro de 2027 (antes: 2/8/2026)</td><td>Adiado pelo omnibus</td></tr>
+<tr><td>Alto risco do anexo I (embutidos em produtos regulados)</td><td>2 de agosto de 2028 (antes: 2/8/2027)</td><td>Adiado pelo omnibus</td></tr>
+</table>
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Cronograma de regulação é dado de alto risco com meia-vida curta.</strong> Material de 2024 e início de 2025 (inclusive de bons escritórios) ainda diz "alto risco em agosto de 2026". Essa afirmação ficou desatualizada em julho de 2026. Registre a data de verificação ao lado de qualquer data que citar em documento interno, e releia a fonte primária antes de planejar roadmap em cima dela. Se você não conseguir confirmar uma data, escreva "a verificar" em vez de inventar.</p>
+</div>
+
+<h3>Alcance sobre empresas brasileiras</h3>
+<p>O art. 2 define o alcance. Em termos práticos, a empresa brasileira entra no escopo quando: (a) coloca no mercado da UE um sistema de IA ou modelo de uso geral, seja onde for estabelecida; (b) é <em>implantadora</em> com sede ou operação na UE; ou (c) é provedora ou implantadora num país terceiro e a <strong>saída</strong> do sistema é usada na União. Provedor de país terceiro de sistema de alto risco normalmente precisa nomear representante autorizado na UE. Casos típicos: SaaS de RH com clientes europeus (emprego é anexo III); fintech que pontua crédito de pessoas na UE; empresa que revende, sob marca própria, um chatbot a clientes europeus (aviso de IA e marcação de conteúdo). Um produto cujo único mercado é o Brasil, sem saída consumida na UE, em regra não entra. O campo <code>eu_exposure</code> do registro existe para forçar essa pergunta cedo: ele não decide, sinaliza que o jurídico precisa decidir.</p>
+
+<h3>Exemplo trabalhado: triagem de currículos do <code>bad.yaml</code></h3>
+<p>A "Triagem automática de currículos" ordena candidatos e descarta os de menor pontuação. Sob o EU AI Act, emprego e seleção de trabalhadores estão no anexo III, portanto alto risco; com <code>eu_exposure: true</code> e vagas com candidatos na UE, os deveres de alto risco, hoje com aplicação prevista para dezembro de 2027, serão exigidos. Sob a LGPD, o mesmo sistema já tem hoje deveres plenos: dado sensível, art. 20 de revisão, RIPD. A lição é que <strong>a data de um regime não adia o outro</strong>: o adiamento europeu não suspende a LGPD, e o cronograma de uma lei não dispensa os artefatos que a outra já exige.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Preparar-se cedo versus esperar a data.</strong> Com o adiamento, a tentação é congelar o trabalho. O custo de criar inventário, classificação e documentação é baixo agora e alto sob pressão; o mesmo trabalho serve à LGPD e a clientes que já pedem questionário de IA.</li>
+<li><strong>Classificar-se como provedor ou implantador.</strong> Ser implantador tem menos deveres, mas customizar demais o modelo ou colocar nome próprio no sistema pode torná-lo provedor.</li>
+<li><strong>Uma implementação "UE-first" versus específica por mercado.</strong> Aplicar o mesmo padrão em todos os mercados simplifica a operação; trata-se de decisão de produto e custo.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Concluir "não temos filial na UE, logo não se aplica", ignorando o critério da saída.</li>
+<li>Assumir que usar modelo de terceiro "herda" a conformidade do fabricante.</li>
+<li>Tratar o art. 50 como opcional por ser "só transparência": a obrigação de aviso e marcação vale já em agosto de 2026, com a transição relatada para a marcação de sistemas já existentes.</li>
+<li>Citar penalidade de memória. Os tetos variam por tipo de infração e há regras específicas para PMEs; leia o artigo.</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>O EU AI Act organiza obrigações por nível: proibido, alto risco, transparência, mínimo, mais um regime próprio para modelos de uso geral. Em 11/10/2026: proibições (fev/2025) e GPAI (ago/2025) em vigor; transparência do art. 50 a partir de 2/8/2026; alto risco adiado para 2/12/2027 (anexo III) e 2/8/2028 (anexo I) pelo omnibus. O alcance é extraterritorial por local de uso da saída. A LGPD segue plenamente exigível, independentemente do cronograma europeu.</p>
+</div>
+
+<h2 id="b04">Bloco 4 · Frameworks e artefatos</h2>
+
+<h3>Por que isso importa</h3>
+<p>Leis dizem <em>o que</em> deve ser alcançado; frameworks e normas dizem <em>como organizar o trabalho</em>. Eles interessam porque oferecem vocabulário comum com auditores, clientes e jurídico, e porque transformam "ter governança" em um conjunto enumerável de artefatos. A condição é saber o que cada um é, para não vender um framework voluntário como certificação.</p>
+
+<h3>NIST AI RMF 1.0 e o perfil de IA generativa</h3>
+<p>O <em>AI Risk Management Framework</em> do NIST (versão 1.0, 26 de janeiro de 2023) é voluntário, independente de setor e não certificável. Organiza-se em quatro funções: <strong>Govern</strong> (cultura, papéis, políticas, transversal), <strong>Map</strong> (contexto, finalidade, partes afetadas, riscos antecipados), <strong>Measure</strong> (testes, métricas, avaliação de confiabilidade) e <strong>Manage</strong> (priorizar, tratar e monitorar riscos, responder a incidentes). Um modo útil de lembrar: <em>Govern</em> cria as condições; <em>Map, Measure, Manage</em> são o ciclo operacional. O <strong>NIST AI 600-1, Generative AI Profile</strong> (26 de julho de 2024) é um perfil específico que lista riscos próprios ou agravados por IA generativa (por exemplo, confabulação, privacidade de dados, conteúdo nocivo, propriedade intelectual, segurança da informação, integração com cadeia de suprimentos) e ações sugeridas mapeadas às funções do framework. Em 11/10/2026 a página do NIST indicava que o AI RMF 1.0 está sendo revisado no contexto do Plano de Ação de IA da Casa Branca, sem data nem detalhe; a mesma página registra, em 7 de abril de 2026, uma nota conceitual de perfil para infraestrutura crítica. Verifique a página do NIST antes de citar a versão vigente.</p>
+<p>Mapeamento prático das funções para o que o curso já ensinou: <strong>Map</strong> é o registro de sistema e a classificação (este módulo), <strong>Measure</strong> é a suíte de evals e red team (<a href="../M06-evals-observabilidade/M06.html">M06</a>, <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>), <strong>Manage</strong> é monitoramento, plano de incidente e desativação, e <strong>Govern</strong> é quem é dono de quê, o que exige aprovação e o que acontece quando a regra é violada.</p>
+
+<h3>ISO/IEC 42001</h3>
+<p>A ISO/IEC 42001 (publicada em dezembro de 2023) é a norma de <strong>sistema de gestão de IA</strong> (AIMS), no mesmo estilo estrutural das normas de gestão como ISO 27001 e 9001: contexto da organização, liderança e política, planejamento (inclui avaliação de risco e de impacto), apoio, operação, avaliação de desempenho (auditoria interna, análise crítica) e melhoria contínua, com controles em anexo. Ela é <strong>certificável</strong>: um organismo de certificação audita a organização. Segundo fonte consultada, a ISO/IEC 42006, publicada em 7 de julho de 2025, define requisitos adicionais para os organismos que auditam e certificam sistemas de gestão de IA; confirme o estado atual com a ISO. O que a certificação atesta é que a organização tem um sistema de gestão operando para o escopo declarado; ela <em>não</em> atesta que um modelo específico é seguro, justo ou preciso. Ao ler o certificado de um fornecedor, verifique o escopo (quais produtos e processos) e a validade.</p>
+<table>
+<tr><th></th><th>NIST AI RMF / 600-1</th><th>ISO/IEC 42001</th></tr>
+<tr><td>Natureza</td><td>Framework e perfil voluntários</td><td>Norma de sistema de gestão</td></tr>
+<tr><td>Certificável</td><td>Não</td><td>Sim, por organismo acreditado</td></tr>
+<tr><td>Foco</td><td>Riscos e ações por função</td><td>Processos de gestão auditáveis</td></tr>
+<tr><td>Quando usar</td><td>Vocabulário e checklist de risco</td><td>Sinal de maturidade exigido por clientes; estrutura de auditoria</td></tr>
+<tr><td>Relação com leis</td><td>Não substitui nenhuma</td><td>Não substitui nenhuma; pode apoiar evidências de conformidade</td></tr>
+</table>
+
+<h3>Os artefatos: o mínimo que o auditor pede</h3>
+<table>
+<tr><th>Artefato</th><th>Responde a</th><th>Conteúdo essencial</th><th>Onde no lab</th></tr>
+<tr><td><strong>Inventário / registro de sistema</strong></td><td>O que existe e quem é dono?</td><td>Finalidade, dono, ciclo de vida, risco e justificativa, dados, armazenamentos, provedor, avaliações</td><td><code>AISystemRecord</code></td></tr>
+<tr><td><strong>Avaliação de impacto</strong> (algorítmico/direitos fundamentais)</td><td>Quem pode ser prejudicado e como?</td><td>Partes afetadas, danos plausíveis, mitigação, revisão humana, decisão de seguir ou não</td><td><code>AssessmentKind.IMPACT</code></td></tr>
+<tr><td><strong>RIPD</strong> (relatório de impacto à proteção de dados, art. 38 LGPD)</td><td>Que risco o tratamento causa ao titular?</td><td>Dados, finalidade, base, riscos, salvaguardas</td><td><code>AssessmentKind.DPIA</code></td></tr>
+<tr><td><strong>Model card</strong></td><td>O que é este modelo/sistema e onde falha?</td><td>Uso pretendido e não pretendido, versão, dados, métricas por subgrupo, limitações</td><td><code>AssessmentKind.MODEL_CARD</code></td></tr>
+<tr><td><strong>Datasheet do dataset</strong></td><td>De onde vêm os dados e o que contêm?</td><td>Origem, coleta, consentimento/base, composição, vieses conhecidos, usos recomendados</td><td>Procedência do dataset (campo de armazenamento)</td></tr>
+<tr><td><strong>Registro de riscos</strong></td><td>Quais riscos conhecemos, qual o estado?</td><td>Risco, probabilidade, impacto, dono, mitigação, status, data de revisão</td><td>Racional do risco e avaliações datadas</td></tr>
+<tr><td><strong>Relatório de eval e de red team</strong></td><td>Foi testado contra quê?</td><td>Conjuntos, métricas, resultados, versão avaliada</td><td><code>EVAL_REPORT</code>, <code>RED_TEAM</code></td></tr>
+</table>
+<p>Model card e datasheet vêm da literatura de pesquisa (Mitchell e coautores para <em>model cards</em>; Gebru e coautores para <em>datasheets for datasets</em>) e hoje são práticas difundidas. O ponto de engenharia: o artefato precisa estar <strong>vinculado a uma versão</strong>. Um model card sem a versão do modelo e do prompt avaliado vira documento histórico, e a regra AIG-014 do laboratório marca avaliação com mais de 365 dias.</p>
+
+<h3>Exemplo trabalhado: um registro mínimo em YAML</h3>
+<pre><code>id: assistente-atendimento
+name: Assistente de atendimento ao cliente
+owner: maria.souza@example.com
+purpose: Responder dúvidas de clientes sobre faturas e planos usando a base de ajuda aprovada.
+lifecycle: production
+risk_tier: limited
+risk_rationale: Chatbot que conversa com pessoas e não decide sobre direitos; exige aviso de IA.
+personal_data: {processes: true, categories: [nome, cpf, e-mail], sensitive: false}
+legal_basis: contract
+stores:
+  - {kind: prompt_log, holds_personal_data: true, retention_days: 30, erasure_supported: true}
+provider: {name: ProvedorExemplo, country: US, trains_on_inputs: false,
+           transfer_mechanism: clausulas-padrao-anpd-res-19-2024}
+assessments:
+  - {kind: dpia, done_on: 2026-06-20, reference: RIPD-2026-014}</code></pre>
+<p>O registro é <strong>fechado</strong>: o modelo Pydantic usa <code>extra="forbid"</code>, então um campo com erro de digitação (<code>retention_day</code>) é recusado, em vez de ser ignorado em silêncio e deixar o armazenamento "sem prazo". Em governança, ignorar um campo é pior do que falhar.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Certificar ou apenas alinhar.</strong> Certificação ISO 42001 custa tempo e auditoria, e vale quando o mercado ou o cliente exige. Alinhar-se sem certificar dá a maior parte do benefício de organização com custo menor.</li>
+<li><strong>Template pesado versus enxuto.</strong> Documentos longos que ninguém lê protegem mal. Prefira poucos campos obrigatórios, checáveis, com texto livre só onde há julgamento.</li>
+<li><strong>Documento versus dado.</strong> Um registro em YAML versionado e validado vale mais que uma planilha solta: tem histórico, revisão por PR e verificação automática.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Declarar "somos 42001" sem escopo, e tratar a norma como prova de modelo seguro.</li>
+<li>Preencher model card uma vez e nunca reabrir quando o modelo, o prompt ou o provedor mudam.</li>
+<li>Registro de riscos sem dono nem data de revisão: vira lista morta.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Framework como substituto de decisão.</strong> Mapear controles do NIST ou da ISO a planilhas dá sensação de progresso e pode esconder o essencial: ninguém decidiu o que o sistema <em>não</em> deve fazer, e ninguém tem autoridade para desligá-lo. Pergunta-teste: quem pode parar este sistema hoje, e com que critério? Se a resposta não está escrita e testada, o framework está decorando um vazio.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>NIST AI RMF (Govern, Map, Measure, Manage) e o perfil GenAI (AI 600-1) são vocabulário voluntário de risco; a ISO/IEC 42001 é norma de gestão certificável, que certifica processo, não produto. Os artefatos que sustentam ambos são poucos e checáveis: registro, avaliação de impacto, RIPD, model card, datasheet, registro de riscos e relatórios de eval e red team, sempre vinculados a versão e data. Frameworks organizam o trabalho; não decidem o risco.</p>
+</div>
+
+<h2 id="b05">Bloco 5 · Governança no dia a dia</h2>
+
+<h3>Por que isso importa</h3>
+<p>Governança que depende de reunião mensal morre no primeiro prazo apertado. Governança que roda no pipeline sobrevive porque custa segundos e falha no momento certo: antes do merge. O desafio sênior não é conhecer o framework, é <strong>desenhar o menor conjunto de controles que realmente muda comportamento</strong> e deixa evidência.</p>
+
+<h3>Governança mínima viável</h3>
+<ol>
+<li><strong>Inventário vivo.</strong> Um arquivo de registro por sistema, no repositório do sistema, com dono nomeado. Sem registro, sem deploy em produção.</li>
+<li><strong>Classificação com revisão.</strong> Quem constrói propõe o <code>risk_tier</code> e o racional; alguém independente confirma. Alto risco e dado sensível sobem para revisão jurídica.</li>
+<li><strong>Checagens automáticas.</strong> Schema fechado e regras de lacuna no CI (o que o lab faz).</li>
+<li><strong>Avaliação antes de produção e a cada mudança relevante</strong> (evals do M06), com data e versão.</li>
+<li><strong>Plano de incidente</strong> e caminho de desligamento (<em>kill switch</em>) para o que está em produção.</li>
+<li><strong>Revisão periódica</strong> com vencimento: o registro marca o que passou de 365 dias.</li>
+</ol>
+<p>Todo o resto (comitê, política de IA corporativa, treinamento) é útil, mas só depois destes seis.</p>
+
+<h3>Integrar ao CI/release sem burocracia</h3>
+<p>Princípios: (a) falhe pelo que é objetivo (erro) e avise pelo que é julgamento (<em>warning</em>); (b) mostre o problema no PR, na linha certa, com a regra e a correção; (c) permita exceção, mas como <strong>decisão registrada</strong> com dono e prazo, não como <code>--no-verify</code>. O lab emite anotações no formato do GitHub Actions com <code>--format github</code>.</p>
+<pre><code># .github/workflows/ia-governanca.yml (trecho)
+- name: Validar registros de sistemas de IA
+  run: |
+    uv run python -m aigov validate registry/*.yaml --format github
+- name: Varrer fixtures e logs de exemplo por PII
+  run: |
+    uv run python -m aigov scan tests/fixtures/chat.log</code></pre>
+<p>Dois cuidados. Primeiro, o <code>scan</code> imprime posição (linha e coluna) e nunca o valor encontrado, para que o resultado do CI não vire mais um lugar com PII. Segundo, o <code>--today</code> existe para tornar a saída reproduzível em teste: relógio injetado é o que permite testar a regra de validade de 365 dias sem esperar um ano.</p>
+
+<h3>Red teaming como prática de governança</h3>
+<p>Red team de IA é teste adversarial dirigido por hipóteses de dano: o que um usuário mal-intencionado, um usuário ingênuo e um dado envenenado conseguiriam provocar? O lado técnico (injeção de prompt, exfiltração, abuso de ferramentas) está no <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>; o lado de governança acrescenta três coisas: (1) escopo definido por riscos do registro, incluindo danos a terceiros e discriminação, não só vulnerabilidade técnica; (2) quem testa tem independência de quem construiu; (3) o resultado vira registro datado (<code>RED_TEAM</code>) com achados, severidade e decisão sobre cada um. A regra AIG-013 avisa quando um sistema de alto risco não tem esse registro.</p>
+
+<h3>Incidentes de IA</h3>
+<p>Incidente de IA inclui o que o seu runbook de SRE já cobre (indisponibilidade, custo) e o que ele costuma ignorar: saída danosa ou discriminatória, vazamento de dado pessoal pela saída ou pelo contexto, decisão automatizada errada em escala, uso fora da finalidade e falha de provedor que afeta direitos de alguém. O plano mínimo tem: classificação de severidade com critério de dano; contenção (desligar recurso, trocar para resposta de segurança, reverter versão de prompt/modelo); preservação de evidência <em>sem</em> multiplicar PII; critérios de notificação (ANPD e titulares quando houver risco ou dano relevante, conforme a LGPD; autoridade europeia e clientes quando o contrato ou o regime exigirem); análise sem culpados e, ao final, atualização de registro, evals e regra de CI para que o mesmo erro vire teste. O campo <code>incident_plan</code> obrigatório em produção (AIG-012, erro; em piloto, aviso) aponta para esse runbook.</p>
+
+<h3>Diálogo com o jurídico</h3>
+<p>O jurídico não quer ler código e você não quer ler a lei inteira; o registro é a interface. Combine: (1) a engenharia traz sempre <strong>fatos verificáveis</strong> (quais dados, onde ficam, quanto tempo, para onde vão), nunca opiniões; (2) o jurídico devolve <strong>decisões</strong> (base legal, risco, texto de aviso) que viram campos e regras; (3) divergência é registrada com data e responsável. Perguntas que valem ouro quando feitas cedo: Qual é a base legal desta finalidade? Esta classificação sobe para alto risco? O provedor é operador ou controlador conjunto? O que fazemos com o pedido de eliminação que atinge um modelo já treinado? Quem assina a exceção?</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Bloquear versus avisar.</strong> Bloqueio demais cria contorno; aviso demais é ignorado. O lab separa 10 regras de erro de 5 de aviso, pelo critério "é objetivamente inaceitável ou depende de contexto?".</li>
+<li><strong>Autonomia do time versus controle central.</strong> Padrão central de schema e regras, decisão local sobre as exceções dentro de limites.</li>
+<li><strong>Velocidade de lançamento versus profundidade de revisão.</strong> Proporcione ao risco: piloto com dados sintéticos passa rápido; produção com dado sensível, não.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Governança como etapa final, descoberta na véspera do lançamento. Registro nasce no design doc.</li>
+<li>Comitê que revisa o que um validador revisaria.</li>
+<li>Exceção sem dono e sem prazo, que vira regra.</li>
+<li>Pós-incidente que corrige o modelo e não cria o teste que o teria evitado.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p><strong>Regra que checa o que o time declarou, não o que o sistema faz.</strong> O validador do laboratório confia em <code>holds_personal_data: false</code>; se o time declarar errado, as regras passam. Por isso a regra AIG-005 cruza campos (armazenamento com dado pessoal e <code>processes: false</code> é inconsistente) e por isso existe o scanner de PII sobre logs e fixtures: verificação independente do que foi declarado. Em produção, some amostragem periódica e auditoria dos dados reais; declaração sem verificação é só confiança com formato de YAML.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Seis controles mínimos: inventário vivo, classificação revisada, checagem automática no CI, avaliação datada, plano de incidente com desligamento e revisão com vencimento. Erro objetivo bloqueia, julgamento avisa, exceção é decisão registrada. Red team de governança cobre danos a terceiros e é independente; incidente de IA termina em novo teste ou nova regra. Com o jurídico, engenharia entrega fatos e recebe decisões, ambos pelo registro.</p>
+</div>
+
+<h2 id="lab-guiado">Laboratório guiado E03</h2>
+<p>O laboratório <code>aigov</code> tem duas peças pequenas: o registro de sistema de IA (<code>models.py</code>, <code>loader.py</code>, <code>rules.py</code>) e o detector/redator de PII brasileira (<code>pii.py</code>), unidos por uma CLI. Python 3.14 com <code>uv</code>, sem rede nem credenciais. A referência é somente leitura: crie uma cópia de trabalho.</p>
+
+<div class="step"><span class="n">1</span><strong>Cópia de trabalho e gates (blocos 1 e 5).</strong>
+<pre><code>$ cd modulos/E03-governanca-regulacao/lab
+$ python3 create_working_copy.py
+/tmp/e03-xxxxxxxx
+$ cd /tmp/e03-xxxxxxxx
+$ uv sync &amp;&amp; uv run pytest -q &amp;&amp; uv run ruff check . &amp;&amp; uv run ruff format --check . &amp;&amp; uv run mypy --strict src tests
+.......................................................                  [100%]
+55 passed in 0.04s
+All checks passed!
+14 files already formatted
+Success: no issues found in 12 source files</code></pre>
+<p><strong>Resultado esperado:</strong> 55 testes verdes, <code>ruff</code> e <code>mypy --strict</code> limpos (o nome do diretório temporário varia). <strong>Se falhar:</strong> confirme Python 3.14 (<code>uv python list</code>); o <code>requires-python</code> é <code>&gt;=3.14</code>.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Bom e ruim (blocos 1, 2 e 3).</strong>
+<pre><code>$ uv run python -m aigov validate examples/good.yaml --today 2026-10-11; echo "exit=$?"
+good.yaml: 0 error(s), 0 warning(s)
+exit=0
+$ uv run python -m aigov validate examples/bad.yaml --today 2026-10-11; echo "exit=$?"
+bad.yaml: 10 error(s), 3 warning(s)
+  ERROR AIG-002 legal_basis: 'legitimate_interest' is not a valid basis for sensitive data (LGPD art. 11)
+  ERROR AIG-003 stores[0].retention_days: prompt_log holds personal data without a retention period
+  ERROR AIG-004 stores[0].erasure_supported: prompt_log holds personal data but cannot erase one data subject (LGPD art. 18)
+  ERROR AIG-004 stores[1].erasure_supported: vector_store holds personal data but cannot erase one data subject (LGPD art. 18)
+  ERROR AIG-004 stores[2].erasure_supported: finetune_dataset holds personal data but cannot erase one data subject (LGPD art. 18)
+  ERROR AIG-006 provider.transfer_mechanism: provider in US receives personal data without a documented transfer mechanism (LGPD arts. 33-36)
+  WARN  AIG-007 provider.trains_on_inputs: provider may train on inputs that contain personal data; confirm purpose compatibility or disable it by contract
+  ERROR AIG-009 assessments: high risk without an impact assessment
+  ERROR AIG-010 assessments: sensitive or children's data without a data protection impact report (RIPD)
+  ERROR AIG-011 human_review: automated decision affecting people without a review path (LGPD art. 20)
+  ERROR AIG-012 incident_plan: production system without an incident plan
+  WARN  AIG-013 assessments: high risk without a red team record
+  WARN  AIG-014 assessments[0]: eval_report is 589 days old (limit 365)
+exit=1</code></pre>
+<p><strong>Resultado esperado:</strong> exatamente essas linhas; exit 0 e 1. Associe cada regra a um bloco. <strong>Se falhar:</strong> sem <code>--today</code> o relógio é o da máquina e o AIG-014 muda.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Esquema fechado e falha injetada (bloco 4).</strong>
+<pre><code>$ sed 's/retention_days: 30/retention_day: 30/' examples/good.yaml &gt; /tmp/typo.yaml
+$ uv run python -m aigov validate /tmp/typo.yaml; echo "exit=$?"
+/tmp/typo.yaml: schema errors
+  stores.0.retention_day: Extra inputs are not permitted
+exit=2
+$ sed 's/ai_disclosure: true/ai_disclosure: false/' examples/good.yaml &gt; /tmp/semaviso.yaml
+$ uv run python -m aigov validate /tmp/semaviso.yaml --today 2026-10-11 --strict; echo "exit=$?"
+semaviso.yaml: 0 error(s), 1 warning(s)
+  WARN  AIG-015 ai_disclosure: users talk to a generative system without being told (EU AI Act art. 50)
+exit=1</code></pre>
+<p><strong>Resultado esperado:</strong> o erro de digitação é exit 2 (erro de uso/carga, distinto de achado); sem <code>--strict</code> o aviso sai com exit 0, com <code>--strict</code> com exit 1. É a política "erro bloqueia, aviso informa" do bloco 5.</p></div>
+
+<div class="step"><span class="n">4</span><strong>PII: varrer sem revelar e redigir (bloco 2).</strong>
+<pre><code>$ uv run python -m aigov scan examples/sample.log; echo "exit=$?"
+line 2: CPF (col 51)
+line 3: TELEFONE (col 55)
+line 3: TELEFONE (col 74)
+line 4: EMAIL (col 49)
+line 6: CPF (col 69)
+total: 5 CPF=2 EMAIL=1 TELEFONE=2
+exit=1
+$ AIGOV_PII_KEY=chave-do-lab uv run python -m aigov redact &lt; examples/sample.log | sed -n 2,6p
+2026-10-11T09:14:09Z INFO  chat.prompt "meu cpf e [CPF:beb2221b], preciso da segunda via"
+2026-10-11T09:14:11Z INFO  chat.prompt "pode ligar em [TELEFONE:1f94f6fd] ou [TELEFONE:f6a78f7b]?"
+2026-10-11T09:14:15Z WARN  crm.sync falhou para [EMAIL:18c5ed21] status=502
+2026-10-11T09:14:20Z INFO  order.created id=12345678901 total=R$ 1.234,56 ts=1760174060000
+2026-10-11T09:14:21Z INFO  chat.prompt "meu cpf de novo sem pontos: [CPF:beb2221b]"</code></pre>
+<p><strong>Resultado esperado:</strong> o CPF formatado (linha 2) e o sem pontuação (linha 6) geram o <em>mesmo</em> token com a mesma chave: pseudonimização que permite correlação. O <code>id=12345678901</code> e o timestamp não são mascarados porque o id não passa nos dígitos verificadores. <strong>Exercício:</strong> troque o id por <code>52998224725</code> e veja o falso positivo deliberado (<code>order=[CPF]</code>).</p></div>
+
+<div class="step"><span class="n">5</span><strong>Escreva a sua regra (bloco 5).</strong>
+<p>Acrescente em <code>rules.py</code> a regra AIG-016: <code>lifecycle: production</code> com <code>risk_tier: high</code> e <code>human_review: false</code> falha. Escreva antes o teste de caminho feliz, o de borda (<code>pilot</code> não falha) e o controle negativo (<code>minimal</code> não falha); registre a função em <code>RULES</code>. <strong>Resultado esperado:</strong> os gates do passo 1 continuam verdes, e o <code>bad.yaml</code> passa a ter um erro a mais.</p>
+</div>
+
+<h2 id="diagnostico">Tabela de Diagnóstico</h2>
+<table>
+<tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr>
+<tr><td><code>Extra inputs are not permitted</code> ao validar</td><td>Campo digitado errado ou fora do schema fechado</td><td>Corrija o nome; se o campo é legítimo, evolua o modelo Pydantic e os testes juntos</td></tr>
+<tr><td>AIG-014 aparece em registros antes limpos</td><td>Avaliação passou de 365 dias; relógio mudou</td><td>Refaça a avaliação e atualize <code>done_on</code> e <code>reference</code>; em teste, fixe <code>--today</code></td></tr>
+<tr><td>CPF sem pontuação não é detectado</td><td>Sequência de 11 dígitos que falha nos dígitos verificadores (ou colada a outros dígitos)</td><td>Se o número é válido e escapou, abra teste e ajuste o regex; se é inválido, o comportamento está correto</td></tr>
+<tr><td>Número de pedido virou <code>[CPF]</code></td><td>Passa nos dígitos verificadores: indistinguível de CPF</td><td>Aceite o falso positivo ou mude o formato do identificador; nunca afrouxe o detector</td></tr>
+<tr><td>PII no log mesmo com <code>RedactingFilter</code></td><td>Texto de exceção e traceback não passam pelo filtro</td><td>Redija também no <code>Formatter</code> do handler; não logue payload bruto</td></tr>
+<tr><td>CI verde e jurídico reclama</td><td>Declaração do registro não bate com a realidade</td><td>Amostragem de dados reais; scan em logs e fixtures; revisão da classificação</td></tr>
+<tr><td>Pedido de apagar titular exige reindexar tudo</td><td>Chunks sem identificador de titular nos metadados</td><td>Adicione <code>subject_id</code> na ingestão; reindexe uma vez; teste de eliminação ponta a ponta</td></tr>
+</table>
+
+<h2 id="checkpoint">Checkpoint E03</h2>
+<ol>
+<li><strong>Cenário 1.</strong> Seu time lança um assistente que resume prontuários para médicos, com um provedor de LLM nos EUA. Liste os campos do registro que você preenche e as regras que esperaria ver disparar se estiverem incompletos.
+<br><strong>Basta:</strong> dado sensível (saúde) exigindo base do art. 11 (não contrato nem legítimo interesse); RIPD; retenção e eliminação por titular em log, cache e vector store; mecanismo de transferência para o exterior; avaliação de impacto se houver decisão; eval e plano de incidente em produção.
+<br><strong>Reprova:</strong> "o provedor é responsável" ou "dado de saúde usa legítimo interesse".</li>
+<li><strong>Cenário 2.</strong> Chega um pedido de eliminação de um titular que conversou com o assistente por seis meses. Descreva o plano técnico e o que você não consegue prometer.
+<br><strong>Basta:</strong> localizar por identificador/pseudônimo em logs, histórico, cache, vector store (filtro de metadado) e datasets de eval; registrar o evento; explicar a janela de backup; dizer que não é viável garantir remoção de efeito em pesos já treinados e que por isso o treino com dado identificável foi evitado.
+<br><strong>Reprova:</strong> "apagamos a linha do banco" ou prometer apagar de um modelo fine-tunado.</li>
+<li><strong>Cenário 3.</strong> Um diretor diz "só temos usuários no Brasil, EU AI Act não é problema, e de toda forma só vale em agosto de 2026". Responda.
+<br><strong>Basta:</strong> o critério de alcance inclui o uso da saída na UE; confirmar com dados reais se há exposição; a data de alto risco foi adiada (dez/2027 anexo III, ago/2028 anexo I, conforme verificação de 11/10/2026) mas o art. 50 vale desde 2/8/2026 e a LGPD já vale; propõe verificar a fonte primária.
+<br><strong>Reprova:</strong> afirmar datas sem fonte ou ignorar a LGPD.</li>
+<li><strong>Cenário 4.</strong> Um colega propõe um comitê quinzenal que aprova todo uso de IA. Proponha o desenho alternativo.
+<br><strong>Basta:</strong> registro versionado, schema e regras no CI, exceção registrada com dono e prazo, comitê só para alto risco, dado sensível ou exceções, revisão periódica com vencimento.
+<br><strong>Reprova:</strong> eliminar a revisão humana de alto risco ou tornar tudo aviso.</li>
+<li><strong>Cenário 5.</strong> O scanner de PII passou em todos os logs. O gerente conclui "não há dado pessoal". Corrija.
+<br><strong>Basta:</strong> limite do detector (só CPF, e-mail e telefone convencionais; não nome, endereço, saúde em texto livre); pseudonimização ainda é dado pessoal; reduzir entrada e amostrar; scanner é controle, não prova.
+<br><strong>Reprova:</strong> tratar ausência de achados como ausência de dado.</li>
+</ol>
+
+<h2 id="fontes">Fontes e versões</h2>
+<p>Verificada em 11/10/2026. Itens marcados com (*) vêm de fonte secundária (escritório de advocacia, monitor legislativo ou imprensa) e devem ser conferidos na fonte oficial antes de uso formal.</p>
+<ul>
+<li><strong>LGPD</strong>: Lei 13.709/2018, texto no portal do Planalto (arts. 6, 7, 11, 12, 16, 18, 20, 33 a 36, 38, 42, 48). Resoluções CD/ANPD citadas (19/2024 sobre transferência internacional; 15/2024 sobre comunicação de incidente): conferir o texto vigente em gov.br/anpd.</li>
+<li><strong>ANPD</strong>: Nota Técnica nº 12/2025/CON1/CGN/ANPD (15/05/2025, tomada de subsídios sobre IA e decisões automatizadas); sandbox regulatório de IA e proteção de dados, mapa de temas 2026-2027 e projeto de lei complementar do SIA (*, resumos de imprensa e consultorias).</li>
+<li><strong>PL 2338/2023</strong>: aprovado no Senado em 10/12/2024; Comissão Especial da Câmara, relator Aguinaldo Ribeiro; em 11/10/2026 "aguardando parecer do relator" (*, monitor legislativo e imprensa; adiamento declarado em 24/08/2026). Fonte oficial: ficha de tramitação no site da Câmara dos Deputados.</li>
+<li><strong>EU AI Act</strong>: Regulamento (UE) 2024/1689 (EUR-Lex). Alteração do "Digital Omnibus on AI": acordo político em 6/5/2026, adoção em 8/7/2026, publicação em 24/7/2026, em vigor três dias depois, numerada pelos escritórios como Regulamento (UE) 2026/1744 (*); datas de alto risco 2/12/2027 e 2/8/2028 (*). Conferir no EUR-Lex.</li>
+<li><strong>NIST</strong>: AI RMF 1.0 (26/01/2023) e NIST AI 600-1, Generative AI Profile (26/07/2024), em nist.gov/itl/ai-risk-management-framework; nota de revisão do AI RMF sem data na mesma página.</li>
+<li><strong>ISO/IEC 42001:2023</strong> (dez/2023) e <strong>ISO/IEC 42006</strong> (7/7/2025 *): confirmar no catálogo da ISO.</li>
+<li><strong>Artefatos</strong>: Mitchell et al., "Model Cards for Model Reporting" (2019); Gebru et al., "Datasheets for Datasets" (2018/2021).</li>
+<li><strong>Lab</strong>: Python 3.14, Pydantic 2.12+, PyYAML 6, pytest, ruff, mypy 1.x; 55 testes, execução de 11/10/2026.</li>
+</ul>
+
+<div class="box ok">
+<span class="lbl">Conclusão</span>
+<p>Governança de IA é engenharia de evidência: classifique com responsabilidade, derive os artefatos, verifique o que é verificável, e deixe decisão para quem responde por ela. Os regimes mudam de data (o europeu mudou em julho de 2026, o brasileiro segue sem lei), mas os artefatos que eles pedem são os mesmos, e construí-los hoje é o que torna qualquer data futura administrável. Registro validado, PII sob controle, avaliação datada e plano de incidente: este é o piso.</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="E03"></script>
+</body>
+</html>

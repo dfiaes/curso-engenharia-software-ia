@@ -1,6 +1,6 @@
-**Status:** G0 approved; B01–B04 in didactic review with executable lab. G1–G6 pending orchestrator review.
-
 # M04 · Design Docs com IA
+
+**Fase 1** · Pré-requisito: M03. Estado: [STATUS](../../STATUS.md).
 
 ## Visão geral
 
@@ -9,8 +9,7 @@ Documentação tem agora um leitor que lê tudo, toda vez, e age com base no que
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M04.html`](M04.html) — abra no navegador
-- **Especificação:** [`docs/especificacoes/M04-ESPECIFICACAO.md`](../../docs/especificacoes/M04-ESPECIFICACAO.md) — G0 aprovado
-- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Especificação:** [`docs/especificacoes/M04-ESPECIFICACAO.md`](../../docs/especificacoes/M04-ESPECIFICACAO.md)
 - **Laboratório:** [`lab/`](lab/) — `design_guard` + demonstração local
 - **Carga:** 4 blocos de conteúdo (8h)
 - **Pré-requisito:** M03

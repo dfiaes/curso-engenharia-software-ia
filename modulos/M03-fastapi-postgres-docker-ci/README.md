@@ -1,8 +1,8 @@
 # M03 — fastapi-postgres-docker-ci
 
-**Status:** G0 approved; B01–B08 produced with guided lab and checkpoint. G1–G6 pending orchestrator review and PostgreSQL/Docker execution.
+**Phase 1** · prerequisites: M02A, F04 · status: [STATUS](../../STATUS.md).
 
-[Read the material](M03.html) · [Detailed specification](../../docs/especificacoes/M03-ESPECIFICACAO.md) · [Evidence and gates](RASTREABILIDADE.md)
+[Read the material](M03.html) · [Detailed specification](../../docs/especificacoes/M03-ESPECIFICACAO.md)
 
 HTTP contracts, sessions, transactions, migrations, PostgreSQL concurrency, containers, integration tests and CI.
 

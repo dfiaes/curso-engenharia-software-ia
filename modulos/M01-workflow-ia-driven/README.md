@@ -1,5 +1,7 @@
 # M01 · SDD, harness e execução paralela segura
 
+**Fase 2** · 5 blocos / 10h · Pré-requisito: M00. Estado: [STATUS](../../STATUS.md).
+
 ## Resultado do módulo
 
 O M01 ensina a transformar intenção em mudanças pequenas, rastreáveis e verificáveis. O agente executa sob contrato, capabilities e gates; não é tratado como autoridade do processo. Conceitos permanecem agnósticos, Python 3.14 é a linguagem canônica sem pressupor conhecimento de outra stack.
@@ -8,7 +10,6 @@ O M01 ensina a transformar intenção em mudanças pequenas, rastreáveis e veri
 
 - [`M01.html`](M01.html): material principal, cinco blocos/10h;
 - [`lab/README.md`](lab/README.md): referência executável; o roteiro de ambiente, código e diagnóstico fica no laboratório ao fim do HTML;
-- [`RASTREABILIDADE.md`](RASTREABILIDADE.md): 27 competências, 22 cenários e gates;
 - `lab/contracts/feature-contract.schema.json`: contrato estrutural Draft 2020-12;
 - `lab/src/sdd_lab/`: parser, drift, runner, workflow, policy, adapters, Git e Capstone;
 - `lab/skills/`: três Agent Skills portáteis;
@@ -55,6 +56,3 @@ HTML: 9.167 palavras visíveis por métrica editorial, 18 blocos de código,
 
 Os testes Git criam repositório e worktrees somente em `TemporaryDirectory`. Falta de Git bloqueia o gate; não há `skip`, `git add -A`, remoção forçada nem operação no repositório do curso.
 
-## Estado editorial
-
-O baseline de agosto teve G0–G6 aprovados; a revisão editorial de setembro aguarda revalidação G6. Em 15/08/2026, a apresentação foi alinhada ao contrato visual e didático do M00: header de saída, mapa navegável, contrato pedagógico, seções identificadas, numeração progressiva, callouts semânticos, diagnóstico e fontes como fechamento. A revisão visual em localhost confirmou tipografia equivalente, largura de 1100 px, seis âncoras válidas e ausência de overflow horizontal.

@@ -1,10 +1,8 @@
 # M02 · Python 3.14 para engenharia profissional
 
-## Estado do módulo
+**Fase 0** · 8 blocos / 16h · Pré-requisito: F02. Estado: [STATUS](../../STATUS.md).
 
-**VERIFICADO — G0–G6 aprovados.**
-
-O escopo foi ampliado de seis blocos/12h para **oito blocos/16h**. O HTML foi regenerado no padrão estrutural do M00/M01; o laboratório Python 3.14 está executável e os gates técnicos, de portabilidade e editoriais foram reproduzidos pelo orquestrador.
+O laboratório Python 3.14 é executável e foi verificado nos runtimes CPython 3.14 e 3.14t.
 
 ## Resultado do módulo
 
@@ -15,8 +13,7 @@ O aprofundamento cobre cinco níveis: fundamento conceitual, decisão e trade-of
 ## Materiais e estado
 
 - [`M02.html`](M02.html): oito blocos/16h, checkpoint com dez perguntas, diagnóstico e vinte fontes primárias;
-- [`RASTREABILIDADE.md`](RASTREABILIDADE.md): 43 competências, 38 cenários, fontes e estado conservador dos gates;
-- `docs/especificacoes/M02-ESPECIFICACAO.md`: escopo G0 aprovado, regras, arquitetura do lab e rubrica;
+- `docs/especificacoes/M02-ESPECIFICACAO.md`: regras, arquitetura do lab e rubrica;
 - [`lab/`](lab/): pacote instalável, 51 testes nos runtimes CPython 3.14/3.14t e Linux, build e prova limpa; evidências no README do laboratório.
 
 ## Estrutura aprovada — oito blocos/16h
@@ -43,7 +40,7 @@ Entregáveis existentes:
 - evidência estruturada com versões, duração, comandos e resultados reais;
 - catálogo de defeitos plausíveis gerados por IA para revisão orientada a contrato.
 
-## Gates executados em 15/08/2026
+## Baseline técnica (15/08/2026)
 
 ```text
 uv sync --python 3.14 --locked
@@ -55,7 +52,7 @@ uv build
 uv run python -m python_senior_lab.cli --help
 ```
 
-O orquestrador reproduziu lock/sync, Ruff format/lint, mypy strict, **51 testes** nos runtimes CPython 3.14 e 3.14t, build/inspeção de sdist/wheel e instalação do wheel em ambiente separado. A distribuição `csv-cleaner==0.1.0` importou `python_senior_lab` de `site-packages` e processou duas linhas em CPython 3.14.7/Windows. No 3.14t, a suíte passou com GIL desativado e `pydantic-core` não alterou esse modo. No WSL2/Ubuntu, os 51 testes e a CLI passaram em CPython 3.14.7, com saída UTF-8/LF. Loop/thread/process/interpreter produziram o mesmo hash, sem ranking fixo.
+Foram reproduzidos lock/sync, Ruff format/lint, mypy strict, **51 testes** nos runtimes CPython 3.14 e 3.14t, build/inspeção de sdist/wheel e instalação do wheel em ambiente separado. A distribuição `csv-cleaner==0.1.0` importou `python_senior_lab` de `site-packages` e processou duas linhas em CPython 3.14.7/Windows. No 3.14t, a suíte passou com GIL desativado e `pydantic-core` não alterou esse modo. No WSL2/Ubuntu, os 51 testes e a CLI passaram em CPython 3.14.7, com saída UTF-8/LF. Loop/thread/process/interpreter produziram o mesmo hash, sem ranking fixo.
 
 ## Critério de aprovação
 
@@ -67,12 +64,9 @@ O orquestrador reproduziu lock/sync, Ruff format/lint, mypy strict, **51 testes*
 
 Saída copiada, teste ignorado, benchmark sem contexto, número hardcoded, execução apenas no checkout ou resposta de IA sem reprodução não são evidência.
 
-## Fontes e política editorial
+## Fontes
 
 A especificação registra 20 fontes primárias/versionáveis: documentação Python 3.14, typing specification, PyPA e documentação oficial de uv, mypy, Pydantic, pytest e Hypothesis. Afirmações sobre implementação devem ser testadas na versão fixada pelo laboratório; fontes de ferramentas devem ser revalidadas em até 90 dias.
 
 Nenhuma tecnologia ou empresa define sozinha o conhecimento do módulo. O material distingue padrão, especificação, comportamento do runtime, implementação de ferramenta e decisão local de engenharia.
 
-## Próxima etapa
-
-Próxima manutenção: revalidar fontes e repetir os gates quando runtime, dependência, contrato ou material mudar. Os 38 cenários e G0–G6 estão aprovados.

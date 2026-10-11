@@ -17,7 +17,7 @@ uv run pytest
 Trilha Docker Compose: **BLOCKED** — `docker`/`docker compose` indisponíveis no ambiente de
 produção deste lote (verificado em 20/09/2026: `command not found: docker`). O arquivo
 `docker-compose.yml` documenta o alvo de integração (API + worker + Postgres/RLS) e fica
-registrado como BLOCKED na rastreabilidade, nunca simulado.
+registrado como BLOCKED, nunca simulado.
 
 ## Estrutura
 

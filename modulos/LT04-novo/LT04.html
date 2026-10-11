@@ -69,8 +69,8 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 
 <h1>LT04-T1 · Release: versão, gates, rollback, sinais, comunicação e pós-mortem</h1>
 <p class="meta">
-  <span class="badge">Trilha LT04 · Tier 1</span>
-  6 blocos / recorte release · <strong>Pré-requisitos:</strong> M03, LT01–LT03<br>
+  <span class="badge">Trilha LT04</span>
+  6 blocos / recorte release · <strong>Pré-requisitos:</strong> P01 (Fase 3); usa também M03 e LT01–LT03<br>
   <em>Do número solto à decisão reproduzível: versionar, barrar, reverter, medir, comunicar e aprender.</em>
 </p>
 
@@ -79,7 +79,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 </div>
 
 <div class="box warn">
-<p><strong>Divergência honesta contra a especificação.</strong> A especificação LT04 §4 define B01–B06 como estratégia de testes, performance/IA, SBOM/provenance, secure SDLC, governança e readiness — 34 cenários LT04-AT-001..061. Este recorte Tier 1 executa a fatia de engenharia de release (versionamento, gates, rollback, sinais, comunicação, pós-mortem), a mais próxima do Bloco 6 e dos gates Q1–Q7 da especificação. Os cenários de mutation, property, SBOM, provenance, SSDF, AI RMF e red team permanecem ESPECIFICADOS, não verificados. Nenhum gate é promovido por esta fatia além do declarado na rastreabilidade.</p>
+<p><strong>Divergência honesta contra a especificação.</strong> A especificação LT04 §4 define B01–B06 como estratégia de testes, performance/IA, SBOM/provenance, secure SDLC, governança e readiness — 34 cenários. Este recorte executa a fatia de engenharia de release (versionamento, gates, rollback, sinais, comunicação, pós-mortem), a mais próxima do Bloco 6 e dos gates Q1–Q7 da especificação. Os cenários de mutation, property, SBOM, provenance, SSDF, AI RMF e red team permanecem ESPECIFICADOS, não verificados.</p>
 </div>
 
 <div class="toc">
@@ -106,11 +106,11 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <h3>Orientação: o que este bloco entrega</h3>
 
 <div class="box">
-<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "subimos a latest" por identidade ordenada e história legível. Três resultados saem daqui (LT04-T1-AT-001..003; ponte com spec B06/Q4):</p>
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "subimos a latest" por identidade ordenada e história legível. Três resultados saem daqui:</p>
 <ul>
-<li>aplicar SemVer estrito como ordem total de release — número que decide precedência, não enfeite (AT-001);</li>
-<li>exigir changelog com versão, data e resumo em ordem decrescente — decisão legível por humano e máquina (AT-002);</li>
-<li>vincular versão a digest imutável — tag mutável nunca é identidade do artefato (AT-003, ponte LT04-AT-023);</li>
+<li>aplicar SemVer estrito como ordem total de release — número que decide precedência, não enfeite;</li>
+<li>exigir changelog com versão, data e resumo em ordem decrescente — decisão legível por humano e máquina;</li>
+<li>vincular versão a digest imutável — tag mutável nunca é identidade do artefato;</li>
 <li>ler a referência executável — <code>lab/versao_release.py</code> — sem exigir registry ou deploy. A execução pertence à folha B01-L, no <code>Laboratório guiado LT04-T1</code>.</li>
 </ul>
 <p><strong>Pré-requisitos.</strong> Leitura de dicionários e expressões regulares (M02). Cada termo novo — SemVer, changelog, digest — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
@@ -119,15 +119,15 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 
 <h3>N1 · SemVer: o número que decide precedência</h3>
 
-<p><strong>SemVer</strong> escreve a versão como <code>MAJOR.MINOR.PATCH</code>: MAJOR quebra compatibilidade, MINOR adiciona sem quebrar, PATCH corrige. A comparação é numérica por campo, não lexicográfica: <code>1.10.0</code> é posterior a <code>1.9.9</code>, e ordenação de strings diria o contrário. Zeros à esquerda são proibidos (<code>1.02.3</code> não é versão) e prefixo <code>v</code> não faz parte do número. O oráculo AT-001 exige ordem total: para qualquer par, menor, igual ou maior — sem empate ambíguo.</p>
+<p><strong>SemVer</strong> escreve a versão como <code>MAJOR.MINOR.PATCH</code>: MAJOR quebra compatibilidade, MINOR adiciona sem quebrar, PATCH corrige. A comparação é numérica por campo, não lexicográfica: <code>1.10.0</code> é posterior a <code>1.9.9</code>, e ordenação de strings diria o contrário. Zeros à esquerda são proibidos (<code>1.02.3</code> não é versão) e prefixo <code>v</code> não faz parte do número. O oráculo exige ordem total: para qualquer par, menor, igual ou maior — sem empate ambíguo.</p>
 
 <h3>N2 · Changelog: a história que humano e máquina leem</h3>
 
-<p><strong>Changelog</strong> é o registro intencional de mudança por versão: cada entrada carrega versão válida, data e resumo do que mudou para quem consome. Entradas em ordem decrescente — a mais nova primeiro — porque leitor de release lê de cima para baixo. Entrada sem data é história sem tempo; sem resumo é número sem decisão. O oráculo AT-002 lista cada problema com posição: campo ausente e quebra de ordem são acusados separadamente, sem máscara mútua.</p>
+<p><strong>Changelog</strong> é o registro intencional de mudança por versão: cada entrada carrega versão válida, data e resumo do que mudou para quem consome. Entradas em ordem decrescente — a mais nova primeiro — porque leitor de release lê de cima para baixo. Entrada sem data é história sem tempo; sem resumo é número sem decisão. O oráculo lista cada problema com posição: campo ausente e quebra de ordem são acusados separadamente, sem máscara mútua.</p>
 
 <h3>N3 · Digest: a identidade que a tag não é</h3>
 
-<p><strong>Digest</strong> (<code>sha256:…</code>) identifica o conteúdo do artefato; <strong>tag</strong> é apelido mutável que pode apontar para outro conteúdo amanhã. Promover por tag é promover por boato: o oráculo AT-003 só aceita o par versão válida mais digest bem formado, e recusa <code>latest</code> nos dois lados. Assinatura e registry reais pertencem à trilha externa — BLOCKED com registro onde ausentes; aqui o contrato prova o vínculo, não a criptografia.</p>
+<p><strong>Digest</strong> (<code>sha256:…</code>) identifica o conteúdo do artefato; <strong>tag</strong> é apelido mutável que pode apontar para outro conteúdo amanhã. Promover por tag é promover por boato: o oráculo só aceita o par versão válida mais digest bem formado, e recusa <code>latest</code> nos dois lados. Assinatura e registry reais pertencem à trilha externa — BLOCKED com registro onde ausentes; aqui o contrato prova o vínculo, não a criptografia.</p>
 
 <h3>N4 · Falha e diagnóstico: o catálogo da versão</h3>
 
@@ -136,7 +136,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <h3>Exemplos trabalhados</h3>
 <p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B01-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib (<code>re</code>). Leitura aqui; execução no <code>Laboratório guiado LT04-T1</code>. O deploy real pertence à trilha externa — BLOCKED com registro. Todo número de saída é exemplo variável até a medição da folha L.</p>
 
-<p><strong>Referência executável — <code>lab/versao_release.py</code>.</strong> SemVer estrito, ordem total, changelog acusado por posição e vínculo com digest (oráculos LT04-T1-AT-001..003). Só stdlib, determinístico:</p>
+<p><strong>Referência executável — <code>lab/versao_release.py</code>.</strong> SemVer estrito, ordem total, changelog acusado por posição e vínculo com digest. Só stdlib, determinístico:</p>
 <pre><code>"""Versao como contrato: SemVer, changelog ordenado e vinculo com digest.
 
 Referencia executavel do Bloco 1.
@@ -194,7 +194,7 @@ def vincular_digest(versao: str, digest: str) -&gt; dict[str, str]:
 <p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> <code>parse</code> aceita <code>1.2.3</code> e recusa <code>latest</code>, <code>1.02.3</code> e <code>1.2</code>; <code>comparar</code> põe <code>1.10.0</code> depois de <code>1.9.9</code>. <code>changelog_valido</code> devolve lista vazia no changelog são e acusa data ausente e inversão de ordem por posição. <code>vincular_digest</code> recusa tag e digest malformado. Formatos ilustrativos; a folha L executa os oráculos.</p>
 
 <div class="box">
-<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B01-L constrói em <code>lab/</code>.</strong> <code>lab/versao_release.py</code> com este contrato verbatim e os oráculos LT04-T1-AT-001..003 (1 arquivo de teste: SemVer, changelog, digest). O deploy e o registry reais pertencem à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B01-L constrói em <code>lab/</code>.</strong> <code>lab/versao_release.py</code> com este contrato verbatim e os oráculos (1 arquivo de teste: SemVer, changelog, digest). O deploy e o registry reais pertencem à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
 </div>
 
 <div class="box ok">
@@ -216,21 +216,21 @@ def vincular_digest(versao: str, digest: str) -&gt; dict[str, str]:
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
-<tr><td>Ordenação põe 1.9.9 depois de 1.10.0</td><td>Comparação lexicográfica de strings em vez de tupla numérica (LT04-T1-AT-001).</td><td>Comparar <code>parse</code> campo a campo; testar 1.10.0 contra 1.9.9.</td></tr>
-<tr><td>Release sem data nem resumo passa no parse</td><td>Changelog validado só pela versão: história sem tempo nem decisão (LT04-T1-AT-002).</td><td>Exigir versão, data e resumo por entrada; acusar por posição.</td></tr>
-<tr><td>Rollback aponta para conteúdo diferente do lançado</td><td>Identidade por tag mutável: o apelido mudou de dono (LT04-T1-AT-003).</td><td>Vincular versão a digest; promover e reverter por digest.</td></tr>
-<tr><td>Versão com zero à esquerda entra no release</td><td>Regex permissiva aceita <code>1.02.3</code>: número ambíguo (LT04-T1-AT-001).</td><td>SemVer estrito <code>(0|[1-9]\d*)</code>; recusar com <code>ValueError</code>.</td></tr>
+<tr><td>Ordenação põe 1.9.9 depois de 1.10.0</td><td>Comparação lexicográfica de strings em vez de tupla numérica.</td><td>Comparar <code>parse</code> campo a campo; testar 1.10.0 contra 1.9.9.</td></tr>
+<tr><td>Release sem data nem resumo passa no parse</td><td>Changelog validado só pela versão: história sem tempo nem decisão.</td><td>Exigir versão, data e resumo por entrada; acusar por posição.</td></tr>
+<tr><td>Rollback aponta para conteúdo diferente do lançado</td><td>Identidade por tag mutável: o apelido mudou de dono.</td><td>Vincular versão a digest; promover e reverter por digest.</td></tr>
+<tr><td>Versão com zero à esquerda entra no release</td><td>Regex permissiva aceita <code>1.02.3</code>: número ambíguo.</td><td>SemVer estrito <code>(0|[1-9]\d*)</code>; recusar com <code>ValueError</code>.</td></tr>
 </tbody>
 </table>
 
-<h3 id="checkpoint-b01">Checkpoint B01 — versão, changelog e digest (LT04-T1-AT-001..003)</h3>
+<h3 id="checkpoint-b01">Checkpoint B01 — versão, changelog e digest</h3>
 
 <div class="box ok">
 <p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
 <ol class="check">
-<li><strong>Explicação (LT04-T1-AT-001).</strong> Por que ordenar versões como strings quebra o release, e qual propriedade a ordem correta garante? <em>Rubrica (0–2): 2 = declara ordem lexicográfica invertendo 1.9.9/1.10.0 e exige ordem total numérica; 1 = declara sem o exemplo; 0 = aceita ordenação por string. Obrigatório para pontuar: declarar ordem total.</em></li>
-<li><strong>Decisão (LT04-T1-AT-002).</strong> Um changelog traz versões válidas mas sem datas e fora de ordem. O que acusar e em que granularidade? <em>Rubrica (0–2): 2 = acusa campo ausente e inversão por posição de entrada, sem máscara; 1 = acusa parcial; 0 = aprova pelo parse da versão. Obrigatório para pontuar: acusação por posição.</em></li>
-<li><strong>Transferência (LT04-T1-AT-003).</strong> Caso A: release promovido por <code>latest</code>. Caso B: digest malformado no vínculo. Diga o veredito de cada um e por quê. <em>Rubrica (0–2): 2 = recusa tag mutável como identidade e recusa digest malformado, com o motivo de cada um; 1 = acerta um caso; 0 = aceita tag como identidade. Obrigatório para pontuar: tag nunca é identidade.</em></li>
+<li><strong>Explicação.</strong> Por que ordenar versões como strings quebra o release, e qual propriedade a ordem correta garante? <em>Rubrica (0–2): 2 = declara ordem lexicográfica invertendo 1.9.9/1.10.0 e exige ordem total numérica; 1 = declara sem o exemplo; 0 = aceita ordenação por string. Obrigatório para pontuar: declarar ordem total.</em></li>
+<li><strong>Decisão.</strong> Um changelog traz versões válidas mas sem datas e fora de ordem. O que acusar e em que granularidade? <em>Rubrica (0–2): 2 = acusa campo ausente e inversão por posição de entrada, sem máscara; 1 = acusa parcial; 0 = aprova pelo parse da versão. Obrigatório para pontuar: acusação por posição.</em></li>
+<li><strong>Transferência.</strong> Caso A: release promovido por <code>latest</code>. Caso B: digest malformado no vínculo. Diga o veredito de cada um e por quê. <em>Rubrica (0–2): 2 = recusa tag mutável como identidade e recusa digest malformado, com o motivo de cada um; 1 = acerta um caso; 0 = aceita tag como identidade. Obrigatório para pontuar: tag nunca é identidade.</em></li>
 </ol>
 </div>
 
@@ -248,11 +248,11 @@ def vincular_digest(versao: str, digest: str) -&gt; dict[str, str]:
 <h3>Orientação: o que este bloco entrega</h3>
 
 <div class="box">
-<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "o gate passou" por barreira calculada com motivo nomeado. Três resultados saem daqui (LT04-T1-AT-010..012; ponte com spec Q7/P0-P1):</p>
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "o gate passou" por barreira calculada com motivo nomeado. Três resultados saem daqui:</p>
 <ul>
-<li>avaliar gate como conjunção de evidências: claim sem evidência reprova fechado, sem meio-termo (AT-010, ponte LT04-AT-050);</li>
-<li>forçar NO-GO com P0/P1 aberto ou gate reprovado — bloqueador não negocia com pressa (AT-011, ponte LT04-AT-051);</li>
-<li>admitir CONDITIONAL GO só com gate verde mais item com dono, condição e expiração (AT-012, ponte LT04-AT-052);</li>
+<li>avaliar gate como conjunção de evidências: claim sem evidência reprova fechado, sem meio-termo;</li>
+<li>forçar NO-GO com P0/P1 aberto ou gate reprovado — bloqueador não negocia com pressa;</li>
+<li>admitir CONDITIONAL GO só com gate verde mais item com dono, condição e expiração;</li>
 <li>ler a referência executável — <code>lab/gates_release.py</code> — sem exigir assinatura humana. A execução pertence à folha B02-L, no <code>Laboratório guiado LT04-T1</code>.</li>
 </ul>
 <p><strong>Pré-requisitos.</strong> Bloco 1 (identidade do que se promove) e leitura de dicionários (M02). Cada termo novo — claim, gate, CONDITIONAL GO — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
@@ -261,15 +261,15 @@ def vincular_digest(versao: str, digest: str) -&gt; dict[str, str]:
 
 <h3>N1 · Claim e gate: a conjunção que não negocia</h3>
 
-<p><strong>Claim</strong> é a alegação verificável ("contrato provado", "cauda medida"); <strong>gate</strong> é a conjunção: aprova somente se toda claim tem evidência presente. Evidência ausente não é "pendência leve": o gate reprova <strong>fechado</strong>, listando os bloqueadores pelo id. O oráculo AT-010 exige o veredito mais a lista — reprovação sem motivo nomeado é reprovação sem conserto.</p>
+<p><strong>Claim</strong> é a alegação verificável ("contrato provado", "cauda medida"); <strong>gate</strong> é a conjunção: aprova somente se toda claim tem evidência presente. Evidência ausente não é "pendência leve": o gate reprova <strong>fechado</strong>, listando os bloqueadores pelo id. O oráculo exige o veredito mais a lista — reprovação sem motivo nomeado é reprovação sem conserto.</p>
 
 <h3>N2 · P0/P1: o veto automático</h3>
 
-<p><strong>Severidade</strong> separa o intolerável do negociável: P0/P1 aberto força <strong>NO-GO</strong> independente de qualquer outro verde. Não existe "GO com P0 conhecido": conhecer e promover é aceitar o dano por escrito sem o papel. O oráculo AT-011 cobra o motivo com o id do crítico — a decisão carrega o nome do que a vetou. Gate reprovado por qualquer claim sem evidência também veta, mesmo em P2: falha fechada não vira GO por severidade baixa.</p>
+<p><strong>Severidade</strong> separa o intolerável do negociável: P0/P1 aberto força <strong>NO-GO</strong> independente de qualquer outro verde. Não existe "GO com P0 conhecido": conhecer e promover é aceitar o dano por escrito sem o papel. O oráculo cobra o motivo com o id do crítico — a decisão carrega o nome do que a vetou. Gate reprovado por qualquer claim sem evidência também veta, mesmo em P2: falha fechada não vira GO por severidade baixa.</p>
 
 <h3>N3 · CONDITIONAL GO: o talvez com dono e prazo</h3>
 
-<p><strong>CONDITIONAL GO</strong> só existe com gate verde mais item condicional completo: dono nomeado, condição verificável e expiração datada. Falta um dos três e o veredito volta a NO-GO — condicional sem dono é dívida com nome bonito, sem prazo é aceitação permanente disfarçada. O oráculo AT-012 testa cada ausência isoladamente: sem dono, sem condição e sem expiração vetam em três casos distintos. GO puro exige gate verde e lista vazia de pendências.</p>
+<p><strong>CONDITIONAL GO</strong> só existe com gate verde mais item condicional completo: dono nomeado, condição verificável e expiração datada. Falta um dos três e o veredito volta a NO-GO — condicional sem dono é dívida com nome bonito, sem prazo é aceitação permanente disfarçada. O oráculo testa cada ausência isoladamente: sem dono, sem condição e sem expiração vetam em três casos distintos. GO puro exige gate verde e lista vazia de pendências.</p>
 
 <h3>N4 · Falha e diagnóstico: o catálogo da barreira</h3>
 
@@ -278,7 +278,7 @@ def vincular_digest(versao: str, digest: str) -&gt; dict[str, str]:
 <h3>Exemplos trabalhados</h3>
 <p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B02-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib (sem imports). Leitura aqui; execução no <code>Laboratório guiado LT04-T1</code>. A assinatura humana responsável pertence à trilha externa — BLOCKED com registro. Todo número de saída é exemplo variável até a medição da folha L.</p>
 
-<p><strong>Referência executável — <code>lab/gates_release.py</code>.</strong> Gate por conjunção e decisão GO/CONDITIONAL/NO-GO com motivo (oráculos LT04-T1-AT-010..012). Só stdlib, determinístico:</p>
+<p><strong>Referência executável — <code>lab/gates_release.py</code>.</strong> Gate por conjunção e decisão GO/CONDITIONAL/NO-GO com motivo. Só stdlib, determinístico:</p>
 <pre><code>"""Decision engine: GO, CONDITIONAL GO ou NO-GO por calculo declarado.
 
 Referencia executavel do Bloco 2.
@@ -332,7 +332,7 @@ def decidir(
 <p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> <code>avaliar_gate</code> aprova com toda evidência e reprova listando <code>cauda</code> sem ela. <code>decidir</code> veta NO-GO com P0 aberto, com gate reprovado e com condicional sem dono, sem condição ou sem expiração; emite CONDITIONAL GO com item completo e GO puro sem pendências. Formatos ilustrativos; a folha L executa os oráculos.</p>
 
 <div class="box">
-<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B02-L constrói em <code>lab/</code>.</strong> <code>lab/gates_release.py</code> com este contrato verbatim e os oráculos LT04-T1-AT-010..012 (1 arquivo de teste: gate fechado, veto P0/P1, condicional). A assinatura responsável pertence à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B02-L constrói em <code>lab/</code>.</strong> <code>lab/gates_release.py</code> com este contrato verbatim e os oráculos (1 arquivo de teste: gate fechado, veto P0/P1, condicional). A assinatura responsável pertence à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
 </div>
 
 <div class="box ok">
@@ -354,21 +354,21 @@ def decidir(
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
-<tr><td>Gate aprova com claim sem evidência</td><td>Conjunção trocada por contagem ou quorum: ausência virou abstenção (LT04-T1-AT-010).</td><td>Reprovar fechado listando bloqueadores; testar o caso sem evidência.</td></tr>
-<tr><td>Release com P0 conhecido é promovido</td><td>Veto de severidade ausente ou negociável na pressa (LT04-T1-AT-011).</td><td>P0/P1 aberto força NO-GO com motivo nomeado, sem exceção.</td></tr>
-<tr><td>CONDITIONAL GO sem dono nem prazo passa</td><td>Condicional validada só pela presença do item (LT04-T1-AT-012).</td><td>Exigir dono, condição e expiração; cada ausência veta isoladamente.</td></tr>
+<tr><td>Gate aprova com claim sem evidência</td><td>Conjunção trocada por contagem ou quorum: ausência virou abstenção.</td><td>Reprovar fechado listando bloqueadores; testar o caso sem evidência.</td></tr>
+<tr><td>Release com P0 conhecido é promovido</td><td>Veto de severidade ausente ou negociável na pressa.</td><td>P0/P1 aberto força NO-GO com motivo nomeado, sem exceção.</td></tr>
+<tr><td>CONDITIONAL GO sem dono nem prazo passa</td><td>Condicional validada só pela presença do item.</td><td>Exigir dono, condição e expiração; cada ausência veta isoladamente.</td></tr>
 <tr><td>Decisão sem motivo chega à comunicação</td><td>Veredito emitido sem carregar bloqueadores ou pendências.</td><td>Decisão sempre com motivo: bloqueador, pendência ou lista vazia no GO.</td></tr>
 </tbody>
 </table>
 
-<h3 id="checkpoint-b02">Checkpoint B02 — gates e decisão (LT04-T1-AT-010..012)</h3>
+<h3 id="checkpoint-b02">Checkpoint B02 — gates e decisão</h3>
 
 <div class="box ok">
 <p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
 <ol class="check">
-<li><strong>Explicação (LT04-T1-AT-010).</strong> Por que claim sem evidência reprova o gate em vez de "ficar pendente", e o que a reprovação deve carregar? <em>Rubrica (0–2): 2 = declara falha fechada contra quorum e exige bloqueadores nomeados; 1 = declara sem o motivo; 0 = aceita pendência silenciosa. Obrigatório para pontuar: declarar falha fechada.</em></li>
-<li><strong>Decisão (LT04-T1-AT-011).</strong> Um release tem gate verde em Q1–Q6 mas P0 aberto em Q7. Qual o veredito e com que motivo? <em>Rubrica (0–2): 2 = veta NO-GO com o id do crítico, sem negociar com os verdes; 1 = veta sem motivo; 0 = aprova pelos verdes. Obrigatório para pontuar: NO-GO com motivo.</em></li>
-<li><strong>Transferência (LT04-T1-AT-012).</strong> Caso A: condicional com dono e condição, sem expiração. Caso B: gate verde, zero pendências. Diga o veredito de cada um. <em>Rubrica (0–2): 2 = NO-GO no caso A pela expiração ausente e GO puro no caso B; 1 = acerta um caso; 0 = aprova condicional incompleta. Obrigatório para pontuar: expiração como veto.</em></li>
+<li><strong>Explicação.</strong> Por que claim sem evidência reprova o gate em vez de "ficar pendente", e o que a reprovação deve carregar? <em>Rubrica (0–2): 2 = declara falha fechada contra quorum e exige bloqueadores nomeados; 1 = declara sem o motivo; 0 = aceita pendência silenciosa. Obrigatório para pontuar: declarar falha fechada.</em></li>
+<li><strong>Decisão.</strong> Um release tem gate verde em Q1–Q6 mas P0 aberto em Q7. Qual o veredito e com que motivo? <em>Rubrica (0–2): 2 = veta NO-GO com o id do crítico, sem negociar com os verdes; 1 = veta sem motivo; 0 = aprova pelos verdes. Obrigatório para pontuar: NO-GO com motivo.</em></li>
+<li><strong>Transferência.</strong> Caso A: condicional com dono e condição, sem expiração. Caso B: gate verde, zero pendências. Diga o veredito de cada um. <em>Rubrica (0–2): 2 = NO-GO no caso A pela expiração ausente e GO puro no caso B; 1 = acerta um caso; 0 = aprova condicional incompleta. Obrigatório para pontuar: expiração como veto.</em></li>
 </ol>
 </div>
 
@@ -385,11 +385,11 @@ def decidir(
 <h3>Orientação: o que este bloco entrega</h3>
 
 <div class="box">
-<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "voltamos e torcemos" por reversão decidida e restauração provada. Três resultados saem daqui (LT04-T1-AT-020..022; ponte com spec B06/Q6):</p>
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "voltamos e torcemos" por reversão decidida e restauração provada. Três resultados saem daqui:</p>
 <ul>
-<li>disparar stop condition por métrica contra limite — violação nomeada, não sensação (AT-020);</li>
-<li>reverter ao release anterior conhecido por digest — sem anterior, erro explícito, nunca improviso (AT-021, ponte LT04-AT-053);</li>
-<li>provar restauração por digest, dado compatível e saúde — restore sem prova é segunda queda adiada (AT-022, ponte LT04-AT-061);</li>
+<li>disparar stop condition por métrica contra limite — violação nomeada, não sensação;</li>
+<li>reverter ao release anterior conhecido por digest — sem anterior, erro explícito, nunca improviso;</li>
+<li>provar restauração por digest, dado compatível e saúde — restore sem prova é segunda queda adiada;</li>
 <li>ler a referência executável — <code>lab/rollback_release.py</code> — sem exigir tráfego real. A execução pertence à folha B03-L, no <code>Laboratório guiado LT04-T1</code>.</li>
 </ul>
 <p><strong>Pré-requisitos.</strong> Bloco 1 (digest como identidade) e Bloco 2 (quem veta). Cada termo novo — stop condition, rollback, restore — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
@@ -398,15 +398,15 @@ def decidir(
 
 <h3>N1 · Stop condition: o abort com nome e número</h3>
 
-<p><strong>Stop condition</strong> é o limite pré-declarado que aborta a promoção: erro acima de 5%, p99 acima de 800 ms — número, não pressentimento. Declarada antes do rollout, lida durante, obedecida sem reunião: stop que se negocia na hora é enfeite. O oráculo AT-020 devolve a lista de violações em ordem, e lista vazia significa seguir — silêncio calculado, não ausência de leitura.</p>
+<p><strong>Stop condition</strong> é o limite pré-declarado que aborta a promoção: erro acima de 5%, p99 acima de 800 ms — número, não pressentimento. Declarada antes do rollout, lida durante, obedecida sem reunião: stop que se negocia na hora é enfeite. O oráculo devolve a lista de violações em ordem, e lista vazia significa seguir — silêncio calculado, não ausência de leitura.</p>
 
 <h3>N2 · Rollback: a volta ao conhecido</h3>
 
-<p><strong>Rollback</strong> é a promoção reversa ao release anterior conhecido, identificado por digest — não "a versão que funcionava", mas o par versão mais digest registrado no histórico. Sem release anterior não há para onde voltar: o contrato levanta erro explícito em vez de inventar destino. O oráculo AT-021 cobra os dois casos: com stop, rollback ao anterior; sem stop, manter o atual; sem anterior, erro. Roll-forward (corrigir adiante) existe, mas é decisão nova com gate novo — não atalho para fugir do stop.</p>
+<p><strong>Rollback</strong> é a promoção reversa ao release anterior conhecido, identificado por digest — não "a versão que funcionava", mas o par versão mais digest registrado no histórico. Sem release anterior não há para onde voltar: o contrato levanta erro explícito em vez de inventar destino. O oráculo cobra os dois casos: com stop, rollback ao anterior; sem stop, manter o atual; sem anterior, erro. Roll-forward (corrigir adiante) existe, mas é decisão nova com gate novo — não atalho para fugir do stop.</p>
 
 <h3>N3 · Restore: a prova de que voltou</h3>
 
-<p><strong>Restauração</strong> só existe provada em três eixos: mesmo digest do alvo, dado compatível com o esquema do alvo e serviço saudável. Digest certo com dado incompatível é corrupção restaurada; tudo certo sem saúde é promessa. O oráculo AT-022 testa cada eixo isolado: digest trocado, dado de outro esquema e saúde falsa reprovam em três casos distintos. Evidência de restore entra no dossiê como as demais: digest, verificação e quem atestou.</p>
+<p><strong>Restauração</strong> só existe provada em três eixos: mesmo digest do alvo, dado compatível com o esquema do alvo e serviço saudável. Digest certo com dado incompatível é corrupção restaurada; tudo certo sem saúde é promessa. O oráculo testa cada eixo isolado: digest trocado, dado de outro esquema e saúde falsa reprovam em três casos distintos. Evidência de restore entra no dossiê como as demais: digest, verificação e quem atestou.</p>
 
 <h3>N4 · Falha e diagnóstico: o catálogo da reversão</h3>
 
@@ -415,7 +415,7 @@ def decidir(
 <h3>Exemplos trabalhados</h3>
 <p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B03-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib (sem imports). Leitura aqui; execução no <code>Laboratório guiado LT04-T1</code>. Tráfego e dado reais pertencem à trilha externa — BLOCKED com registro. Todo número de saída é exemplo variável até a medição da folha L.</p>
 
-<p><strong>Referência executável — <code>lab/rollback_release.py</code>.</strong> Stop por limite, reversão ao anterior e restore em três eixos (oráculos LT04-T1-AT-020..022). Só stdlib, determinístico:</p>
+<p><strong>Referência executável — <code>lab/rollback_release.py</code>.</strong> Stop por limite, reversão ao anterior e restore em três eixos. Só stdlib, determinístico:</p>
 <pre><code>"""Reversao verificada: stop dispara, rollback mira digest anterior, restore prova.
 
 Referencia executavel do Bloco 3.
@@ -459,7 +459,7 @@ def restauracao_ok(alvo: dict[str, str], estado: dict[str, object]) -&gt; bool:
 <p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> <code>stop_disparado</code> lista <code>erro</code> e <code>p99</code> violados e vazio quando dentro do limite. <code>reverter</code> mantém sem stop, reverte ao anterior com stop e levanta <code>ValueError</code> sem anterior. <code>restauracao_ok</code> exige digest, dado e saúde — cada eixo reprovado isoladamente. Formatos ilustrativos; a folha L executa os oráculos.</p>
 
 <div class="box">
-<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B03-L constrói em <code>lab/</code>.</strong> <code>lab/rollback_release.py</code> com este contrato verbatim e os oráculos LT04-T1-AT-020..022 (1 arquivo de teste: stop, reversão, restore). Tráfego e dado reais pertencem à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B03-L constrói em <code>lab/</code>.</strong> <code>lab/rollback_release.py</code> com este contrato verbatim e os oráculos (1 arquivo de teste: stop, reversão, restore). Tráfego e dado reais pertencem à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
 </div>
 
 <div class="box ok">
@@ -481,21 +481,21 @@ def restauracao_ok(alvo: dict[str, str], estado: dict[str, object]) -&gt; bool:
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
-<tr><td>Canary ruim segue promovendo</td><td>Stop sem limite pré-declarado: violação virou opinião na hora (LT04-T1-AT-020).</td><td>Limites escritos antes do rollout; violação aborta sem reunião.</td></tr>
-<tr><td>Rollback restaura conteúdo inesperado</td><td>Alvo por tag mutável: o apelido mudou de dono (LT04-T1-AT-021).</td><td>Mirar digest do release anterior registrado no histórico.</td></tr>
-<tr><td>Serviço "voltou" e quebrou de outro jeito</td><td>Restore sem prova de dado: esquema incompatível com o binário (LT04-T1-AT-022).</td><td>Provar digest, dado compatível e saúde antes de declarar volta.</td></tr>
-<tr><td>Reversão no primeiro release trava sem mensagem</td><td>Índice sem anterior tratado como caso normal (LT04-T1-AT-021).</td><td>Erro explícito sem anterior; decidir roll-forward com gate novo.</td></tr>
+<tr><td>Canary ruim segue promovendo</td><td>Stop sem limite pré-declarado: violação virou opinião na hora.</td><td>Limites escritos antes do rollout; violação aborta sem reunião.</td></tr>
+<tr><td>Rollback restaura conteúdo inesperado</td><td>Alvo por tag mutável: o apelido mudou de dono.</td><td>Mirar digest do release anterior registrado no histórico.</td></tr>
+<tr><td>Serviço "voltou" e quebrou de outro jeito</td><td>Restore sem prova de dado: esquema incompatível com o binário.</td><td>Provar digest, dado compatível e saúde antes de declarar volta.</td></tr>
+<tr><td>Reversão no primeiro release trava sem mensagem</td><td>Índice sem anterior tratado como caso normal.</td><td>Erro explícito sem anterior; decidir roll-forward com gate novo.</td></tr>
 </tbody>
 </table>
 
-<h3 id="checkpoint-b03">Checkpoint B03 — stop, rollback e restore (LT04-T1-AT-020..022)</h3>
+<h3 id="checkpoint-b03">Checkpoint B03 — stop, rollback e restore</h3>
 
 <div class="box ok">
 <p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
 <ol class="check">
-<li><strong>Explicação (LT04-T1-AT-020).</strong> Por que o limite do stop precisa ser declarado antes do rollout, e o que a lista vazia significa? <em>Rubrica (0–2): 2 = declara limite prévio contra negociação na crise e vazio como seguir calculado; 1 = declara parcial; 0 = aceita stop improvisado. Obrigatório para pontuar: limite prévio.</em></li>
-<li><strong>Decisão (LT04-T1-AT-021).</strong> Stop disparado no primeiro release do histórico, sem anterior. Qual a ação correta e por quê? <em>Rubrica (0–2): 2 = declara erro explícito e roll-forward como decisão nova com gate; 1 = declara sem o gate novo; 0 = inventa destino. Obrigatório para pontuar: erro explícito.</em></li>
-<li><strong>Transferência (LT04-T1-AT-022).</strong> Caso A: digest certo, dado de outro esquema. Caso B: tudo certo, serviço sem saúde. Diga o veredito de cada restore. <em>Rubrica (0–2): 2 = reprova ambos, nomeando dado incompatível e saúde ausente; 1 = acerta um caso; 0 = aprova pelo digest. Obrigatório para pontuar: três eixos.</em></li>
+<li><strong>Explicação.</strong> Por que o limite do stop precisa ser declarado antes do rollout, e o que a lista vazia significa? <em>Rubrica (0–2): 2 = declara limite prévio contra negociação na crise e vazio como seguir calculado; 1 = declara parcial; 0 = aceita stop improvisado. Obrigatório para pontuar: limite prévio.</em></li>
+<li><strong>Decisão.</strong> Stop disparado no primeiro release do histórico, sem anterior. Qual a ação correta e por quê? <em>Rubrica (0–2): 2 = declara erro explícito e roll-forward como decisão nova com gate; 1 = declara sem o gate novo; 0 = inventa destino. Obrigatório para pontuar: erro explícito.</em></li>
+<li><strong>Transferência.</strong> Caso A: digest certo, dado de outro esquema. Caso B: tudo certo, serviço sem saúde. Diga o veredito de cada restore. <em>Rubrica (0–2): 2 = reprova ambos, nomeando dado incompatível e saúde ausente; 1 = acerta um caso; 0 = aprova pelo digest. Obrigatório para pontuar: três eixos.</em></li>
 </ol>
 </div>
 
@@ -512,11 +512,11 @@ def restauracao_ok(alvo: dict[str, str], estado: dict[str, object]) -&gt; bool:
 <h3>Orientação: o que este bloco entrega</h3>
 
 <div class="box">
-<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "média verde" por sinal que não esconde a cauda nem o segmento. Três resultados saem daqui (LT04-T1-AT-030..032; ponte com spec B02/Q2):</p>
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "média verde" por sinal que não esconde a cauda nem o segmento. Três resultados saem daqui:</p>
 <ul>
-<li>medir p50/p95/p99 sobre amostras brutas — média sem cauda não é evidência (AT-030, ponte LT04-AT-010);</li>
-<li>acusar dado ausente em vez de inventar zero — percentil de vazio e taxa de total zero são erro explícito (AT-031, ponte LT04-AT-012);</li>
-<li>detectar regressão por slice — agregado verde não absolve segmento vermelho (AT-032, ponte LT04-AT-013);</li>
+<li>medir p50/p95/p99 sobre amostras brutas — média sem cauda não é evidência;</li>
+<li>acusar dado ausente em vez de inventar zero — percentil de vazio e taxa de total zero são erro explícito;</li>
+<li>detectar regressão por slice — agregado verde não absolve segmento vermelho;</li>
 <li>ler a referência executável — <code>lab/sinais_release.py</code> — sem exigir carga real. A execução pertence à folha B04-L, no <code>Laboratório guiado LT04-T1</code>.</li>
 </ul>
 <p><strong>Pré-requisitos.</strong> Bloco 3 (limites do stop) e estatística descritiva básica (M06). Cada termo novo — percentil, slice, agregado — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
@@ -525,15 +525,15 @@ def restauracao_ok(alvo: dict[str, str], estado: dict[str, object]) -&gt; bool:
 
 <h3>N1 · Percentis: a cauda tem número</h3>
 
-<p><strong>Percentil</strong> p é o valor abaixo do qual caem p% das amostras: p99 de 900 ms significa 1% das requisições acima disso — gente real esperando. <strong>Nearest-rank</strong> ordena as amostras e toma a posição teto(p% de n): cálculo auditável sobre o raw, sem modelo. Média de 54,5 ms com p99 de 900 ms não é "quase 50 ms": é 95% rápido e 5% quebrado. O oráculo AT-030 exige media mais p50/p95/p99 do mesmo raw, com n declarado — número sem amostra não é evidência.</p>
+<p><strong>Percentil</strong> p é o valor abaixo do qual caem p% das amostras: p99 de 900 ms significa 1% das requisições acima disso — gente real esperando. <strong>Nearest-rank</strong> ordena as amostras e toma a posição teto(p% de n): cálculo auditável sobre o raw, sem modelo. Média de 54,5 ms com p99 de 900 ms não é "quase 50 ms": é 95% rápido e 5% quebrado. O oráculo exige media mais p50/p95/p99 do mesmo raw, com n declarado — número sem amostra não é evidência.</p>
 
 <h3>N2 · Dado ausente: o zero que não se inventa</h3>
 
-<p>Sinal sem amostra não vale zero: <strong>percentil de lista vazia e taxa de erro com total zero levantam erro explícito</strong>, nunca retornam 0,0. Zero inventado desarma o stop do Bloco 3: o gate lê "tudo bem" onde deveria ler "sem leitura". O oráculo AT-031 cobra as duas recusas — e o p fora de (0, 100] também é recusado, porque percentil 0 ou 120 é pergunta mal feita. Dado ausente no dossiê aparece como lacuna nomeada, não como verde.</p>
+<p>Sinal sem amostra não vale zero: <strong>percentil de lista vazia e taxa de erro com total zero levantam erro explícito</strong>, nunca retornam 0,0. Zero inventado desarma o stop do Bloco 3: o gate lê "tudo bem" onde deveria ler "sem leitura". O oráculo cobra as duas recusas — e o p fora de (0, 100] também é recusado, porque percentil 0 ou 120 é pergunta mal feita. Dado ausente no dossiê aparece como lacuna nomeada, não como verde.</p>
 
 <h3>N3 · Slices: o agregado não absolve o segmento</h3>
 
-<p><strong>Slice</strong> é o recorte que importa para alguém: checkout, busca, login — ou plano, região, dispositivo. Regressão que só aparece num slice some na média global: o agregado verde absolve o segmento vermelho se ninguém olhar por recorte. O oráculo AT-032 lista os slices com p99 acima do teto, em ordem: vazio é saúde segmentada, não sorte. Slice sem amostras cai no AT-031 — ausente, nunca zero.</p>
+<p><strong>Slice</strong> é o recorte que importa para alguém: checkout, busca, login — ou plano, região, dispositivo. Regressão que só aparece num slice some na média global: o agregado verde absolve o segmento vermelho se ninguém olhar por recorte. O oráculo lista os slices com p99 acima do teto, em ordem: vazio é saúde segmentada, não sorte. Slice sem amostras cai — ausente, nunca zero.</p>
 
 <h3>N4 · Falha e diagnóstico: o catálogo do sinal</h3>
 
@@ -542,7 +542,7 @@ def restauracao_ok(alvo: dict[str, str], estado: dict[str, object]) -&gt; bool:
 <h3>Exemplos trabalhados</h3>
 <p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B04-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib (<code>math</code>). Leitura aqui; execução no <code>Laboratório guiado LT04-T1</code>. Carga e tráfego reais pertencem à trilha externa — BLOCKED com registro. Todo número de saída é exemplo variável até a medição da folha L.</p>
 
-<p><strong>Referência executável — <code>lab/sinais_release.py</code>.</strong> Nearest-rank, resumo com cauda, taxa de erro e piores slices (oráculos LT04-T1-AT-030..032). Só stdlib, determinístico:</p>
+<p><strong>Referência executável — <code>lab/sinais_release.py</code>.</strong> Nearest-rank, resumo com cauda, taxa de erro e piores slices. Só stdlib, determinístico:</p>
 <pre><code>"""Sinais que nao mentem: percentis de amostras brutas e regressao por slice.
 
 Referencia executavel do Bloco 4.
@@ -592,7 +592,7 @@ def slices_piores(p99_por_slice: dict[str, float], teto: float) -&gt; list[str]:
 <p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> <code>resumo</code> de 95×10 ms mais 5×900 ms dá média 54,5 ms com p99 de 900 ms e p50 de 10 ms. <code>percentil</code> de vazio e <code>taxa_erro</code> de total zero levantam <code>ValueError</code>. <code>slices_piores</code> acusa <code>busca</code> acima de 800 ms e vazio acima de 1000 ms. Formatos ilustrativos; a folha L executa os oráculos.</p>
 
 <div class="box">
-<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B04-L constrói em <code>lab/</code>.</strong> <code>lab/sinais_release.py</code> com este contrato verbatim e os oráculos LT04-T1-AT-030..032 (1 arquivo de teste: cauda, dado ausente, slices). Carga e tráfego reais pertencem à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B04-L constrói em <code>lab/</code>.</strong> <code>lab/sinais_release.py</code> com este contrato verbatim e os oráculos (1 arquivo de teste: cauda, dado ausente, slices). Carga e tráfego reais pertencem à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
 </div>
 
 <div class="box ok">
@@ -614,21 +614,21 @@ def slices_piores(p99_por_slice: dict[str, float], teto: float) -&gt; list[str]:
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
-<tr><td>Release "rápido na média" estoura stop no p99</td><td>Média como único sinal: 5% quebrado invisível no agregado (LT04-T1-AT-030).</td><td>Publicar media mais p50/p95/p99 do mesmo raw com n.</td></tr>
-<tr><td>Monitor marca 0% de erro sem tráfego</td><td>Total zero virou zero por cento: ausência lida como saúde (LT04-T1-AT-031).</td><td>Recusar total zero com erro; registrar lacuna nomeada.</td></tr>
-<tr><td>Checkout quebra e o painel global segue verde</td><td>Regressão por slice sem leitura segmentada (LT04-T1-AT-032).</td><td>Listar slices acima do teto; vazio é saúde, não sorte.</td></tr>
-<tr><td>Dois painéis divergem sobre o mesmo p99</td><td>Método de percentil diferente por painel: número sem método (ponte AT-030).</td><td>Fixar nearest-rank sobre raw; método junto do número.</td></tr>
+<tr><td>Release "rápido na média" estoura stop no p99</td><td>Média como único sinal: 5% quebrado invisível no agregado.</td><td>Publicar media mais p50/p95/p99 do mesmo raw com n.</td></tr>
+<tr><td>Monitor marca 0% de erro sem tráfego</td><td>Total zero virou zero por cento: ausência lida como saúde.</td><td>Recusar total zero com erro; registrar lacuna nomeada.</td></tr>
+<tr><td>Checkout quebra e o painel global segue verde</td><td>Regressão por slice sem leitura segmentada.</td><td>Listar slices acima do teto; vazio é saúde, não sorte.</td></tr>
+<tr><td>Dois painéis divergem sobre o mesmo p99</td><td>Método de percentil diferente por painel: número sem método.</td><td>Fixar nearest-rank sobre raw; método junto do número.</td></tr>
 </tbody>
 </table>
 
-<h3 id="checkpoint-b04">Checkpoint B04 — cauda, ausência e slices (LT04-T1-AT-030..032)</h3>
+<h3 id="checkpoint-b04">Checkpoint B04 — cauda, ausência e slices</h3>
 
 <div class="box ok">
 <p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
 <ol class="check">
-<li><strong>Explicação (LT04-T1-AT-030).</strong> Média 54,5 ms com p99 de 900 ms: o que cada número diz e o que falta para virar evidência? <em>Rubrica (0–2): 2 = declara média escondendo 5% quebrado e exige raw mais n e método; 1 = declara parcial; 0 = aprova pela média. Obrigatório para pontuar: cauda nomeada.</em></li>
-<li><strong>Decisão (LT04-T1-AT-031).</strong> O coletor não entregou amostras do intervalo. Publicar 0 ms, repetir o último valor ou recusar? <em>Rubrica (0–2): 2 = recusa com erro e registra lacuna, sem inventar nem repetir; 1 = recusa sem registrar; 0 = publica número. Obrigatório para pontuar: recusa explícita.</em></li>
-<li><strong>Transferência (LT04-T1-AT-032).</strong> Caso A: global verde, busca com p99 acima do teto. Caso B: todos os slices abaixo do teto. Diga a lista de cada caso. <em>Rubrica (0–2): 2 = acusa busca no caso A e vazio como saúde no caso B; 1 = acerta um caso; 0 = absolve pelo agregado. Obrigatório para pontuar: segmento não absolvido.</em></li>
+<li><strong>Explicação.</strong> Média 54,5 ms com p99 de 900 ms: o que cada número diz e o que falta para virar evidência? <em>Rubrica (0–2): 2 = declara média escondendo 5% quebrado e exige raw mais n e método; 1 = declara parcial; 0 = aprova pela média. Obrigatório para pontuar: cauda nomeada.</em></li>
+<li><strong>Decisão.</strong> O coletor não entregou amostras do intervalo. Publicar 0 ms, repetir o último valor ou recusar? <em>Rubrica (0–2): 2 = recusa com erro e registra lacuna, sem inventar nem repetir; 1 = recusa sem registrar; 0 = publica número. Obrigatório para pontuar: recusa explícita.</em></li>
+<li><strong>Transferência.</strong> Caso A: global verde, busca com p99 acima do teto. Caso B: todos os slices abaixo do teto. Diga a lista de cada caso. <em>Rubrica (0–2): 2 = acusa busca no caso A e vazio como saúde no caso B; 1 = acerta um caso; 0 = absolve pelo agregado. Obrigatório para pontuar: segmento não absolvido.</em></li>
 </ol>
 </div>
 
@@ -645,11 +645,11 @@ def slices_piores(p99_por_slice: dict[str, float], teto: float) -&gt; list[str]:
 <h3>Orientação: o que este bloco entrega</h3>
 
 <div class="box">
-<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "todo mundo foi avisado" por aprovação vinculada e decisão reproduzível. Três resultados saem daqui (LT04-T1-AT-040..042; ponte com spec B06/Q7):</p>
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "todo mundo foi avisado" por aprovação vinculada e decisão reproduzível. Três resultados saem daqui:</p>
 <ul>
-<li>exigir aprovadores por tier de risco — quem pode dizer não, antes do sim (AT-040);</li>
-<li>bloquear publicação sem os exigidos — risco sem dono não comunica, veta (AT-041, ponte LT04-AT-051);</li>
-<li>permitir reprodução independente do mesmo digest — revisor refaz claims e cálculos sem a sala original (AT-042, ponte LT04-AT-054);</li>
+<li>exigir aprovadores por tier de risco — quem pode dizer não, antes do sim;</li>
+<li>bloquear publicação sem os exigidos — risco sem dono não comunica, veta;</li>
+<li>permitir reprodução independente do mesmo digest — revisor refaz claims e cálculos sem a sala original;</li>
 <li>ler a referência executável — <code>lab/comunicar_release.py</code> — sem exigir reunião real. A execução pertence à folha B05-L, no <code>Laboratório guiado LT04-T1</code>.</li>
 </ul>
 <p><strong>Pré-requisitos.</strong> Bloco 2 (vereditos com motivo) e Bloco 4 (números com proveniência). Cada termo novo — tier, aprovador, reprodução — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
@@ -658,15 +658,15 @@ def slices_piores(p99_por_slice: dict[str, float], teto: float) -&gt; list[str]:
 
 <h3>N1 · Tiers: o risco diz quem precisa estar na sala</h3>
 
-<p><strong>Tier</strong> classifica o risco pelo impacto: médio exige engenharia, alto soma segurança, crítico soma negócio. A matriz é pré-declarada e curta — três tiers, sem "apocalíptico" inventado na hora: <strong>tier desconhecido levanta erro</strong>, porque aprovar risco sem categoria é aprovar sem critério. O oráculo AT-040 cobra a matriz exata e a recusa do desconhecido. Quem aprova qual risco está escrito antes da decisão, não negociado depois dela.</p>
+<p><strong>Tier</strong> classifica o risco pelo impacto: médio exige engenharia, alto soma segurança, crítico soma negócio. A matriz é pré-declarada e curta — três tiers, sem "apocalíptico" inventado na hora: <strong>tier desconhecido levanta erro</strong>, porque aprovar risco sem categoria é aprovar sem critério. O oráculo cobra a matriz exata e a recusa do desconhecido. Quem aprova qual risco está escrito antes da decisão, não negociado depois dela.</p>
 
 <h3>N2 · Aprovação: o sim que só vale completo</h3>
 
-<p><strong>Aprovação</strong> só publica com todos os exigidos presentes: crítico sem negócio na sala não comunica GO, comunica pendência. Ausente não é abstenção — é veto por falta, registrado com o nome de quem faltou. O oráculo AT-041 testa o bloqueio: matriz completa aprova, uma ausência veta, sala vazia veta. Comunicar decisão sem os donos é o defeito que o pós-mortem do Bloco 6 sempre encontra depois.</p>
+<p><strong>Aprovação</strong> só publica com todos os exigidos presentes: crítico sem negócio na sala não comunica GO, comunica pendência. Ausente não é abstenção — é veto por falta, registrado com o nome de quem faltou. O oráculo testa o bloqueio: matriz completa aprova, uma ausência veta, sala vazia veta. Comunicar decisão sem os donos é o defeito que o pós-mortem do Bloco 6 sempre encontra depois.</p>
 
 <h3>N3 · Reprodução: o revisor fora da sala</h3>
 
-<p><strong>Reprodução independente</strong> é o teste da comunicação: um revisor que não estava na sala refaz a decisão do mesmo digest, com cada claim ligada à evidência bruta. Digest trocado não reproduz — é outro release. Claim sem bruto não reproduz — é alegação sem lastro. Registro sem claims não reproduz — é veredito sem conta. O oráculo AT-042 cobra os quatro casos: igual reproduz, os três demais não. Dossiê que só a sala original entende é segredo, não comunicação.</p>
+<p><strong>Reprodução independente</strong> é o teste da comunicação: um revisor que não estava na sala refaz a decisão do mesmo digest, com cada claim ligada à evidência bruta. Digest trocado não reproduz — é outro release. Claim sem bruto não reproduz — é alegação sem lastro. Registro sem claims não reproduz — é veredito sem conta. O oráculo cobra os quatro casos: igual reproduz, os três demais não. Dossiê que só a sala original entende é segredo, não comunicação.</p>
 
 <h3>N4 · Falha e diagnóstico: o catálogo do comunicado</h3>
 
@@ -675,7 +675,7 @@ def slices_piores(p99_por_slice: dict[str, float], teto: float) -&gt; list[str]:
 <h3>Exemplos trabalhados</h3>
 <p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B05-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib (sem imports). Leitura aqui; execução no <code>Laboratório guiado LT04-T1</code>. Reunião e aprovação reais pertencem à trilha externa — BLOCKED com registro. Todo número de saída é exemplo variável até a medição da folha L.</p>
 
-<p><strong>Referência executável — <code>lab/comunicar_release.py</code>.</strong> Aprovadores por tier e reprodução do mesmo digest (oráculos LT04-T1-AT-040..042). Só stdlib, determinístico:</p>
+<p><strong>Referência executável — <code>lab/comunicar_release.py</code>.</strong> Aprovadores por tier e reprodução do mesmo digest. Só stdlib, determinístico:</p>
 <pre><code>"""Comunicacao que vincula: quem aprova qual risco e revisor que reproduz.
 
 Referencia executavel do Bloco 5.
@@ -718,7 +718,7 @@ def reproducao_ok(registro: dict[str, object], digest: str, brutos: dict[str, ob
 <p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> <code>exigidos</code> devolve a matriz por tier e recusa tier desconhecido. <code>aprovacao_ok</code> aprova sala completa e veta qualquer ausência. <code>reproducao_ok</code> confirma com mesmo digest e brutos completos, e nega com digest trocado, claim sem bruto ou registro sem claims. Formatos ilustrativos; a folha L executa os oráculos.</p>
 
 <div class="box">
-<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B05-L constrói em <code>lab/</code>.</strong> <code>lab/comunicar_release.py</code> com este contrato verbatim e os oráculos LT04-T1-AT-040..042 (1 arquivo de teste: tiers, bloqueio, reprodução). Reunião e aprovação reais pertencem à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B05-L constrói em <code>lab/</code>.</strong> <code>lab/comunicar_release.py</code> com este contrato verbatim e os oráculos (1 arquivo de teste: tiers, bloqueio, reprodução). Reunião e aprovação reais pertencem à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
 </div>
 
 <div class="box ok">
@@ -740,21 +740,21 @@ def reproducao_ok(registro: dict[str, object], digest: str, brutos: dict[str, ob
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
-<tr><td>Crítico aprovado só pela engenharia</td><td>Matriz de aprovadores ausente ou consultiva (LT04-T1-AT-040).</td><td>Exigir matriz por tier; publicar só com todos presentes.</td></tr>
-<tr><td>Risco "aceito" sem nome de quem aceitou</td><td>Aceite verbal sem dono vinculado ao tier (LT04-T1-AT-041).</td><td>Bloquear sem os exigidos; registrar presentes e faltas.</td></tr>
-<tr><td>Revisor não refaz a decisão do dossiê</td><td>Digest trocado ou claim sem bruto: conta sem lastro (LT04-T1-AT-042).</td><td>Vincular cada claim à evidência bruta sob o mesmo digest.</td></tr>
-<tr><td>Novo tier criado na véspera do release</td><td>Categoria improvisada para caber a pressa (LT04-T1-AT-040).</td><td>Recusar tier desconhecido; reclassificar com critério escrito.</td></tr>
+<tr><td>Crítico aprovado só pela engenharia</td><td>Matriz de aprovadores ausente ou consultiva.</td><td>Exigir matriz por tier; publicar só com todos presentes.</td></tr>
+<tr><td>Risco "aceito" sem nome de quem aceitou</td><td>Aceite verbal sem dono vinculado ao tier.</td><td>Bloquear sem os exigidos; registrar presentes e faltas.</td></tr>
+<tr><td>Revisor não refaz a decisão do dossiê</td><td>Digest trocado ou claim sem bruto: conta sem lastro.</td><td>Vincular cada claim à evidência bruta sob o mesmo digest.</td></tr>
+<tr><td>Novo tier criado na véspera do release</td><td>Categoria improvisada para caber a pressa.</td><td>Recusar tier desconhecido; reclassificar com critério escrito.</td></tr>
 </tbody>
 </table>
 
-<h3 id="checkpoint-b05">Checkpoint B05 — aprovação e reprodução (LT04-T1-AT-040..042)</h3>
+<h3 id="checkpoint-b05">Checkpoint B05 — aprovação e reprodução</h3>
 
 <div class="box ok">
 <p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
 <ol class="check">
-<li><strong>Explicação (LT04-T1-AT-040).</strong> Por que a matriz de aprovadores é pré-declarada e o que acontece com tier desconhecido? <em>Rubrica (0–2): 2 = declara matriz prévia contra negociação pós-decisão e erro no desconhecido; 1 = declara parcial; 0 = aceita tier improvisado. Obrigatório para pontuar: erro no desconhecido.</em></li>
-<li><strong>Decisão (LT04-T1-AT-041).</strong> Risco crítico com engenharia e segurança presentes, negócio ausente. Publica ou veta, e como registra? <em>Rubrica (0–2): 2 = veta por falta e registra a ausência nominal; 1 = veta sem registro; 0 = publica pelos presentes. Obrigatório para pontuar: veto por falta.</em></li>
-<li><strong>Transferência (LT04-T1-AT-042).</strong> Caso A: mesmo digest, uma claim sem bruto. Caso B: digest trocado, brutos completos. Diga se cada um reproduz. <em>Rubrica (0–2): 2 = nega ambos, nomeando lastro ausente e identidade trocada; 1 = acerta um caso; 0 = aprova um deles. Obrigatório para pontuar: as duas negações.</em></li>
+<li><strong>Explicação.</strong> Por que a matriz de aprovadores é pré-declarada e o que acontece com tier desconhecido? <em>Rubrica (0–2): 2 = declara matriz prévia contra negociação pós-decisão e erro no desconhecido; 1 = declara parcial; 0 = aceita tier improvisado. Obrigatório para pontuar: erro no desconhecido.</em></li>
+<li><strong>Decisão.</strong> Risco crítico com engenharia e segurança presentes, negócio ausente. Publica ou veta, e como registra? <em>Rubrica (0–2): 2 = veta por falta e registra a ausência nominal; 1 = veta sem registro; 0 = publica pelos presentes. Obrigatório para pontuar: veto por falta.</em></li>
+<li><strong>Transferência.</strong> Caso A: mesmo digest, uma claim sem bruto. Caso B: digest trocado, brutos completos. Diga se cada um reproduz. <em>Rubrica (0–2): 2 = nega ambos, nomeando lastro ausente e identidade trocada; 1 = acerta um caso; 0 = aprova um deles. Obrigatório para pontuar: as duas negações.</em></li>
 </ol>
 </div>
 
@@ -771,11 +771,11 @@ def reproducao_ok(registro: dict[str, object], digest: str, brutos: dict[str, ob
 <h3>Orientação: o que este bloco entrega</h3>
 
 <div class="box">
-<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "não se repete" por aprendizado com dono, prazo e expiração. Três resultados saem daqui (LT04-T1-AT-050..052; ponte com spec B04/Q5):</p>
+<p><span class="lbl">Orientação</span><strong>O que será aprendido.</strong> Este bloco troca "não se repete" por aprendizado com dono, prazo e expiração. Três resultados saem daqui:</p>
 <ul>
-<li>registrar incidente com título, timeline e causas — sem os três, não há o que aprender (AT-050);</li>
-<li>converter causa em ação com descrição, dono e prazo futuro — ação sem dono é intenção (AT-051);</li>
-<li>tratar waiver como exceção com expiração — vencida, bloqueia o release em vez de prorrogá-lo sozinha (AT-052, ponte LT04-AT-033);</li>
+<li>registrar incidente com título, timeline e causas — sem os três, não há o que aprender;</li>
+<li>converter causa em ação com descrição, dono e prazo futuro — ação sem dono é intenção;</li>
+<li>tratar waiver como exceção com expiração — vencida, bloqueia o release em vez de prorrogá-lo sozinha;</li>
 <li>ler a referência executável — <code>lab/posmortem_release.py</code> — sem exigir incidente real. A execução pertence à folha B06-L, no <code>Laboratório guiado LT04-T1</code>.</li>
 </ul>
 <p><strong>Pré-requisitos.</strong> Blocos 1–5 (o incidente sempre cita versão, gate, stop, sinal e dono). Cada termo novo — pós-mortem, ação, waiver — é definido no ponto de uso. Todo exemplo é Python 3.14 com só stdlib. Nenhuma outra stack é pressuposta.</p>
@@ -784,15 +784,15 @@ def reproducao_ok(registro: dict[str, object], digest: str, brutos: dict[str, ob
 
 <h3>N1 · Registro: o fato antes da culpa</h3>
 
-<p><strong>Pós-mortem</strong> é o registro escrito do incidente: título que nomeia o que doeu, <strong>timeline</strong> com fatos ordenados e <strong>causas</strong> que explicam sem apontar pessoa. Sem timeline, a discussão vira memória contra memória; sem causas, vira lista de sustos. O oráculo AT-050 acusa cada ausência pelo nome: título, timeline e causas ausentes aparecem separadas. Culpa individual não entra no registro — entra no máximo como falha de processo que permitiu o erro humano.</p>
+<p><strong>Pós-mortem</strong> é o registro escrito do incidente: título que nomeia o que doeu, <strong>timeline</strong> com fatos ordenados e <strong>causas</strong> que explicam sem apontar pessoa. Sem timeline, a discussão vira memória contra memória; sem causas, vira lista de sustos. O oráculo acusa cada ausência pelo nome: título, timeline e causas ausentes aparecem separadas. Culpa individual não entra no registro — entra no máximo como falha de processo que permitiu o erro humano.</p>
 
 <h3>N2 · Ação: a causa com dono e prazo</h3>
 
-<p><strong>Ação</strong> é a causa convertida em mudança: descrição do que muda, <strong>dono</strong> nomeado e <strong>prazo</strong> futuro em data ISO. Sem descrição, ninguém sabe o que fazer; sem dono, todos acham que é com outro; com prazo vencido ou ausente, a ação já nasceu morta. O oráculo AT-051 testa cada ausência isoladamente — quatro casos, quatro acusações. Ação aberta vira item condicional do Bloco 2: com dono, condição e expiração, ou não entra no release.</p>
+<p><strong>Ação</strong> é a causa convertida em mudança: descrição do que muda, <strong>dono</strong> nomeado e <strong>prazo</strong> futuro em data ISO. Sem descrição, ninguém sabe o que fazer; sem dono, todos acham que é com outro; com prazo vencido ou ausente, a ação já nasceu morta. O oráculo testa cada ausência isoladamente — quatro casos, quatro acusações. Ação aberta vira item condicional do Bloco 2: com dono, condição e expiração, ou não entra no release.</p>
 
 <h3>N3 · Waiver: a exceção que expira</h3>
 
-<p><strong>Waiver</strong> é a exceção assinada: motivo escrito, dono nomeado e <strong>expiração</strong> datada. Exceção sem expiração é regra nova sem gate; vencida, <strong>bloqueia o release automaticamente</strong> — não pede prorrogação sozinha, exige nova decisão. O oráculo AT-052 cobra os três casos: válida com os três campos, vencida que veta, sem dono que veta. Waiver no dossiê aparece com validade consultável, nunca como "exceção permanente".</p>
+<p><strong>Waiver</strong> é a exceção assinada: motivo escrito, dono nomeado e <strong>expiração</strong> datada. Exceção sem expiração é regra nova sem gate; vencida, <strong>bloqueia o release automaticamente</strong> — não pede prorrogação sozinha, exige nova decisão. O oráculo cobra os três casos: válida com os três campos, vencida que veta, sem dono que veta. Waiver no dossiê aparece com validade consultável, nunca como "exceção permanente".</p>
 
 <h3>N4 · Falha e diagnóstico: o catálogo do aprendizado</h3>
 
@@ -801,7 +801,7 @@ def reproducao_ok(registro: dict[str, object], digest: str, brutos: dict[str, ob
 <h3>Exemplos trabalhados</h3>
 <p><strong>Estatuto do código.</strong> O bloco abaixo é <strong>referência executável</strong>: o contrato que a folha B06-L implementa verbatim em <code>lab/</code>, com os nomes de módulo, funções e comportamento congelados — arquivo flat em <code>lab/</code>, só stdlib (sem imports). Leitura aqui; execução no <code>Laboratório guiado LT04-T1</code>. Incidente real pertence à trilha externa — BLOCKED com registro. Todo número de saída é exemplo variável até a medição da folha L.</p>
 
-<p><strong>Referência executável — <code>lab/posmortem_release.py</code>.</strong> Registro, ação e waiver com expiração (oráculos LT04-T1-AT-050..052). Só stdlib, determinístico:</p>
+<p><strong>Referência executável — <code>lab/posmortem_release.py</code>.</strong> Registro, ação e waiver com expiração. Só stdlib, determinístico:</p>
 <pre><code>"""Aprendizado com dono: registro, acao com prazo e waiver que expira de verdade.
 
 Referencia executavel do Bloco 6.
@@ -850,7 +850,7 @@ def waiver_valida(waiver: dict[str, object], hoje: str) -&gt; bool:
 <p><strong>Leitura do resultado (exemplo variável, não evidência).</strong> <code>validar_registro</code> aprova o incidente completo e acusa timeline e causas ausentes. <code>validar_acao</code> aprova com descrição, dono e prazo futuro, e acusa cada ausência — incluindo prazo vencido. <code>waiver_valida</code> confirma com os três campos futuros e nega vencida ou sem dono. Formatos ilustrativos; a folha L executa os oráculos.</p>
 
 <div class="box">
-<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B06-L constrói em <code>lab/</code>.</strong> <code>lab/posmortem_release.py</code> com este contrato verbatim e os oráculos LT04-T1-AT-050..052 (1 arquivo de teste: registro, ação, waiver). Incidente real pertence à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
+<p><span class="lbl">Ponte ao laboratório</span><strong>O que a folha B06-L constrói em <code>lab/</code>.</strong> <code>lab/posmortem_release.py</code> com este contrato verbatim e os oráculos (1 arquivo de teste: registro, ação, waiver). Incidente real pertence à trilha externa — BLOCKED com registro. Os roteiros moram no <code>Laboratório guiado LT04-T1</code>.</p>
 </div>
 
 <div class="box ok">
@@ -872,21 +872,21 @@ def waiver_valida(waiver: dict[str, object], hoje: str) -&gt; bool:
 <table>
 <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
-<tr><td>Discussão do incidente vira memória contra memória</td><td>Registro sem timeline: fatos sem ordem nem hora (LT04-T1-AT-050).</td><td>Exigir timeline com fatos; acusar ausência pelo nome.</td></tr>
-<tr><td>Ação "de todos" não sai do lugar</td><td>Causa sem dono convertido: intenção sem responsável (LT04-T1-AT-051).</td><td>Ação com descrição, dono e prazo futuro; cada ausência invalida.</td></tr>
-<tr><td>Exceção antiga segue valendo release após release</td><td>Waiver sem expiração: exceção virou regra sem gate (LT04-T1-AT-052).</td><td>Expiração datada; vencida bloqueia até nova decisão.</td></tr>
-<tr><td>Mesmo incidente se repete com outro título</td><td>Causas sem ação vinculada: documento sem mudança (ponte AT-050/051).</td><td>Ligar cada causa a ação com dono; pendência vira condicional do gate.</td></tr>
+<tr><td>Discussão do incidente vira memória contra memória</td><td>Registro sem timeline: fatos sem ordem nem hora.</td><td>Exigir timeline com fatos; acusar ausência pelo nome.</td></tr>
+<tr><td>Ação "de todos" não sai do lugar</td><td>Causa sem dono convertido: intenção sem responsável.</td><td>Ação com descrição, dono e prazo futuro; cada ausência invalida.</td></tr>
+<tr><td>Exceção antiga segue valendo release após release</td><td>Waiver sem expiração: exceção virou regra sem gate.</td><td>Expiração datada; vencida bloqueia até nova decisão.</td></tr>
+<tr><td>Mesmo incidente se repete com outro título</td><td>Causas sem ação vinculada: documento sem mudança.</td><td>Ligar cada causa a ação com dono; pendência vira condicional do gate.</td></tr>
 </tbody>
 </table>
 
-<h3 id="checkpoint-b06">Checkpoint B06 — registro, ação e waiver (LT04-T1-AT-050..052)</h3>
+<h3 id="checkpoint-b06">Checkpoint B06 — registro, ação e waiver</h3>
 
 <div class="box ok">
 <p><strong>Responda sem consultar o material.</strong> Cada pergunta cita o cenário que mede. Sem pista, sem esqueleto: este checkpoint avalia, não ensina. Números citados são exemplo variável, não evidência.</p>
 <ol class="check">
-<li><strong>Explicação (LT04-T1-AT-050).</strong> Por que timeline e causas são obrigatórias no registro, e o que a ausência de cada uma produz? <em>Rubrica (0–2): 2 = declara memória contra memória sem timeline e sustos sem causas, com acusação nominal; 1 = declara parcial; 0 = aceita registro só com título. Obrigatório para pontuar: as duas ausências.</em></li>
-<li><strong>Decisão (LT04-T1-AT-051).</strong> Uma ação traz descrição e dono, com prazo de ontem. Vale, vence ou invalida — e para onde vai a pendência? <em>Rubrica (0–2): 2 = invalida pelo prazo e converte em condicional com dono e expiração; 1 = invalida sem destino; 0 = aceita vencida. Obrigatório para pontuar: invalidação.</em></li>
-<li><strong>Transferência (LT04-T1-AT-052).</strong> Caso A: waiver completa, expiração amanhã. Caso B: mesma waiver, expiração ontem. Diga o efeito de cada uma no release. <em>Rubrica (0–2): 2 = libera o caso A e bloqueia o caso B até nova decisão; 1 = acerta um caso; 0 = prorroga sozinha. Obrigatório para pontuar: bloqueio da vencida.</em></li>
+<li><strong>Explicação.</strong> Por que timeline e causas são obrigatórias no registro, e o que a ausência de cada uma produz? <em>Rubrica (0–2): 2 = declara memória contra memória sem timeline e sustos sem causas, com acusação nominal; 1 = declara parcial; 0 = aceita registro só com título. Obrigatório para pontuar: as duas ausências.</em></li>
+<li><strong>Decisão.</strong> Uma ação traz descrição e dono, com prazo de ontem. Vale, vence ou invalida — e para onde vai a pendência? <em>Rubrica (0–2): 2 = invalida pelo prazo e converte em condicional com dono e expiração; 1 = invalida sem destino; 0 = aceita vencida. Obrigatório para pontuar: invalidação.</em></li>
+<li><strong>Transferência.</strong> Caso A: waiver completa, expiração amanhã. Caso B: mesma waiver, expiração ontem. Diga o efeito de cada uma no release. <em>Rubrica (0–2): 2 = libera o caso A e bloqueia o caso B até nova decisão; 1 = acerta um caso; 0 = prorroga sozinha. Obrigatório para pontuar: bloqueio da vencida.</em></li>
 </ol>
 </div>
 
@@ -900,14 +900,14 @@ def waiver_valida(waiver: dict[str, object], hoje: str) -&gt; bool:
 <hr>
 
 <h2 id="lab-guiado">Laboratório guiado LT04-T1</h2>
-<p><strong>Resultado observável.</strong> <code>uv run pytest -q</code> verde na cópia de trabalho (28 passed, AT-001–003, 010–012, 020–022, 030–032, 040–042, 050–052; release/deploy real, registry, carga, cloud e GPU = BLOCKED registrado). <strong>Limite.</strong> Só stdlib, sem rede/deploy; decisão sobre dados, nunca simulação de produção.</p>
+<p><strong>Resultado observável.</strong> <code>uv run pytest -q</code> verde na cópia de trabalho (28 passed; release/deploy real, registry, carga, cloud e GPU = BLOCKED registrado). <strong>Limite.</strong> Só stdlib, sem rede/deploy; decisão sobre dados, nunca simulação de produção.</p>
 <p><strong>Pré-requisitos.</strong> Blocos 1–6 lidos; <code>uv</code> com CPython 3.14.</p>
 <p><strong>Cópia de trabalho descartável</strong> (a referência não é tocada):</p>
 <pre><code>cd modulos/LT04-novo/lab
 cp -r . "$(python3 -c 'import tempfile; print(tempfile.mkdtemp(prefix="lt04-t1-"))')"
 cd &lt;diretorio-impresso&gt;
 uv sync</code></pre>
-<p><strong>Mapa:</strong> <code>versao_release.py</code> (AT-001..003), <code>gates_release.py</code> (AT-010..012), <code>rollback_release.py</code> (AT-020..022), <code>sinais_release.py</code> (AT-030..032), <code>comunicar_release.py</code> (AT-040..042), <code>posmortem_release.py</code> (AT-050..052); <code>tests/</code> com os oráculos; <code>evidence/</code> com saídas reais.</p>
+<p><strong>Mapa:</strong> <code>versao_release.py</code>, <code>gates_release.py</code>, <code>rollback_release.py</code>, <code>sinais_release.py</code>, <code>comunicar_release.py</code>, <code>posmortem_release.py</code>; <code>tests/</code> com os oráculos; <code>evidence/</code> com saídas reais.</p>
 <p><strong>Passos</strong> (observe → diagnostique):</p>
 <ol>
 <li><strong>Versão:</strong> <code>uv run pytest -q tests/test_at001_versao.py</code> — observe SemVer estrito, changelog acusado e digest vinculado.</li>

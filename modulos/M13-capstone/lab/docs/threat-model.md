@@ -25,6 +25,6 @@ webhook), PII em logs, índice de retrieval, ledger de uso.
 - Detector de injection (T6) é heurístico lexical: frases fora da lista passam.
   Mitigação: a camada primária é o filtro de pipeline, não o detector.
 - SQLite local não tem RLS; a defesa é o contrato de scoping + guard explícito.
-  RLS no Postgres permanece BLOCKED ambiental (ver RASTREABILIDADE R-03).
+  RLS no Postgres permanece BLOCKED ambiental.
 - Sem scanner externo (SAST/DAST) no ambiente: BLOCKED ambiental, cobertura via
   testes de isolamento e controles acima. Nenhum P0/P1 aberto ao final do B12.

@@ -1,6 +1,6 @@
-**Status:** G0 approved; B01–B06 in didactic review with offline executable lab. G1–G6 pending orchestrator review.
-
 # M06 · Evals e observabilidade
+
+**Fase 2** · Pré-requisito: M05. Estado: [STATUS](../../STATUS.md).
 
 ## Visão geral
 
@@ -11,8 +11,7 @@ O conceito que organiza tudo é **regressão comportamental**: em sistema com LL
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M06.html`](M06.html) — abra no navegador
-- **Especificação:** [`docs/especificacoes/M06-ESPECIFICACAO.md`](../../docs/especificacoes/M06-ESPECIFICACAO.md) — G0 aprovado
-- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Especificação:** [`docs/especificacoes/M06-ESPECIFICACAO.md`](../../docs/especificacoes/M06-ESPECIFICACAO.md)
 - **Laboratório:** [`lab/`](lab/) — runner offline com sistema e juiz falsos, sem rede/conta/crédito
 - **Carga:** 6 blocos de conteúdo (12h)
 - **Pré-requisito:** M05

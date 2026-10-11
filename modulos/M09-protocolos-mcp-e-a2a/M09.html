@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>M09 · Protocolos: MCP e A2A</title>
+<title>M09 · Protocolos: MCP na prática (e um panorama de A2A)</title>
 <style>
 :root{
   --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
@@ -72,8 +72,6 @@ svg{max-width:100%;height:auto}
 hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 .kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
   border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
-.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
-.course-notice p:last-child{margin-bottom:0}
 .step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
 .step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
   width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
@@ -87,13 +85,13 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <body>
 <div class="wrap">
 
-<h1>M09 · Protocolos: MCP e A2A</h1>
-<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Em produção: B01–B07 em revisão didática; laboratório local com três transportes e gates G1–G6 pendentes de revisão do orquestrador. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final. SDKs externos e hospedagem são trilha externa ao lab.</p></aside>
+<h1>M09 · Protocolos: MCP na prática (e um panorama de A2A)</h1>
+<p class="meta">Estado deste módulo: <a href="../../STATUS.md">STATUS.md</a>. SDKs externos e hospedagem são trilha externa ao laboratório.</p>
 <p class="meta"><span class="badge">MÓDULO 09</span> &nbsp; 7 blocos de 2h · pré-requisito: M08 · <strong>o item mais pedido em consultoria de IA hoje</strong></p>
 
 <div class="box">
 <span class="lbl">O que muda ao final deste módulo</span>
-<p>No M00 bloco 4 você construiu um servidor MCP de brinquedo e o plugou no seu agente. Este módulo transforma aquilo em competência vendável: você vai entender <strong>a especificação de verdade</strong> — inclusive as mudanças estruturais da revisão vigente, que quebram boa parte do material que circula por aí — e construir um servidor MCP de produção que expõe o índice e o grafo do sistema legado, consumível pelo Claude Code, pelo Copilot e pelo seu próprio agente. Depois, A2A: a camada de comunicação <em>entre agentes</em>, que chegou à versão 1.0 sob a Linux Foundation e ainda é cedo o suficiente para você sair na frente.</p>
+<p>No M00 bloco 4 você construiu um servidor MCP de brinquedo e o plugou no seu agente. Este módulo transforma aquilo em competência vendável: você vai entender <strong>a especificação de verdade</strong> — inclusive as mudanças estruturais da revisão vigente, que quebram boa parte do material que circula por aí — e construir um servidor MCP de produção que expõe o índice e o grafo do sistema legado, consumível pelo Claude Code, pelo Copilot e pelo seu próprio agente. No fim, um panorama curto de A2A, o protocolo de comunicação <em>entre agentes</em>, para você saber o que é e quando faria sentido.</p>
 <p><strong>Por que isso é vendável imediatamente:</strong> toda empresa que adotou assistentes de código quer expor os próprios sistemas a eles. Saber construir servidor MCP bom — com segurança, granularidade certa e economia de tokens — é serviço com demanda real e pouca oferta. O exercício deste módulo é literalmente o seu primeiro entregável monetizável.</p>
 </div>
 
@@ -110,7 +108,7 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <li><a href="#b03"><strong>Bloco 3</strong> — Transportes: stdio e Streamable HTTP, com MRTR</a></li>
 <li><a href="#b04"><strong>Bloco 4</strong> — Construindo o servidor: granularidade, escopo e erro</a></li>
 <li><a href="#b05"><strong>Bloco 5</strong> — Distribuição, consumo e extensões</a></li>
-<li><a href="#b06"><strong>Bloco 6</strong> — A2A: agentes conversando com agentes</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Panorama de A2A: agentes conversando com agentes</a></li>
 <li><a href="#b07"><strong>Bloco 7</strong> — Segurança de protocolo e entrega</a></li>
 <li><a href="#lab-guiado"><strong>Laboratório guiado M09</strong> — prática executável reunida, retomável por etapa</a></li>
 </ol>
@@ -386,7 +384,7 @@ Mcp-Name: repo_buscar_simbolo                   ← obrigatório em tools/call, 
                    "escolher_repo": { "method": "elicitation/create",
                                       "params": { "mode": "form", "message": "Qual repositório?",
                                                   "requestedSchema": { ... } } } },
-                "requestState": "<blob opaco, protegido por AEAD>" }
+                "requestState": "&lt;blob opaco, protegido por AEAD&gt;" }
    → a requisição 1 TERMINA aqui. Não há conexão pendurada.
 
 3. Cliente pergunta ao usuário, obtém a resposta
@@ -808,141 +806,34 @@ async def carregar_ferramentas_mcp(config: dict[str, object]) -> list[Ferramenta
 <p>Empacotar, servir por dois transportes, consumir pelo próprio agente e usar por uma semana é o exercício deste bloco — o roteiro executável (três transportes locais, sem Docker) fica no <code>Laboratório guiado M09</code>, depois do bloco 7. O percurso: mesmas ferramentas, transporte diferente, zero mudança no núcleo; latência medida da camada extra (para o agente próprio, importar direto costuma vencer; MCP brilha para outros clientes); e arquivo de atrito do uso diário virando melhoria de ferramenta ou caso de eval. Empacotamento Docker e uso em cliente externo são trilha externa.</p>
 
 <!-- ============================================ BLOCO 6 -->
-<h2 id="b06">Bloco 6 · A2A: agentes conversando com agentes</h2>
+<h2 id="b06">Bloco 6 · Panorama de A2A: agentes conversando com agentes</h2>
 <h3>Por que isso importa</h3>
-<p>MCP resolve <strong>agente ↔ ferramenta/dado</strong>. Sobra um problema que ele não endereça: <strong>agente ↔ agente</strong>. São coisas diferentes, e a diferença não é de escala — é de natureza:</p>
+<p>MCP resolve <strong>agente ↔ ferramenta/dado</strong>. O <strong>A2A</strong> (Agent2Agent) propõe resolver outro problema, <strong>agente ↔ agente</strong>: o outro lado deixa de ser uma função (entra argumento, sai resultado) e passa a ser um par com raciocínio próprio, que pode planejar, pedir mais informação e levar minutos ou dias. Este bloco é um panorama para reconhecer o protocolo; o módulo não exige que você o implemente.</p>
 
 <table>
 <thead><tr><th></th><th>MCP</th><th>A2A</th></tr></thead>
 <tbody>
 <tr><td>Conecta</td><td>um agente a ferramentas, dados e prompts</td><td>um agente a <strong>outro agente</strong></td></tr>
-<tr><td>O outro lado é</td><td>uma função: entra argumento, sai resultado</td><td>um <em>par</em> com raciocínio próprio, que pode planejar, perguntar e demorar</td></tr>
-<tr><td>Duração</td><td>chamada, tipicamente segundos</td><td><strong>tarefa</strong>, que pode levar minutos, horas ou dias</td></tr>
-<tr><td>Estado</td><td>sem estado (revisão atual)</td><td>a <strong>Task</strong> é a unidade com ciclo de vida e identidade</td></tr>
-<tr><td>Quem sabe o quê</td><td>o cliente vê o schema completo da ferramenta</td><td><strong>opacidade deliberada</strong>: cada agente esconde ferramentas, prompts e modelo do outro</td></tr>
-<tr><td>Analogia</td><td>chamar uma API</td><td>abrir um chamado com outro time</td></tr>
+<tr><td>Unidade</td><td>chamada de ferramenta, segundos, sem estado</td><td><strong>Task</strong> com identidade e ciclo de vida, possivelmente longa</td></tr>
+<tr><td>Visibilidade</td><td>o cliente vê o schema completo da ferramenta</td><td>opacidade deliberada: cada lado esconde ferramentas, prompt e modelo</td></tr>
 </tbody>
 </table>
 
-<p>A linha da <em>opacidade</em> é a mais importante e a mais fácil de perder de vista. A premissa do A2A é que agentes colaborem <strong>sem expor o interior</strong> — o agente que você chama não revela quais ferramentas usa, qual modelo roda, nem qual é o prompt dele. Isso não é limitação, é requisito: em cenário entre empresas (ou entre times com governança separada), expor o interior é vazamento de propriedade intelectual e superfície de ataque. Compare com MCP, onde o cliente <em>precisa</em> ver o schema de cada ferramenta para o modelo escolher.</p>
-
-<div class="box net">
-<span class="lbl">Chamada × solicitação</span>
-<p>MCP é <strong>chamada</strong>: contrato conhecido, resposta rápida, assinatura à vista. A2A é <strong>solicitação entre organizações</strong> — o padrão de fila, webhook e protocolo de mensagem: o outro lado é caixa preta com SLA, a operação é assíncrona, há identificador de correlação e consulta de estado. A2A padroniza isso para agentes, com o outro lado podendo <em>pedir informação adicional no meio do caminho</em>.</p>
-</div>
-
-<div class="box">
-<span class="lbl">Contexto · O que é o A2A e onde ele está</span>
-<p><strong>A2A (Agent2Agent)</strong> nasceu no Google em 2025 e foi doado à <strong>Linux Foundation</strong>, o que tirou o controle de um fornecedor único — detalhe que importa para adoção corporativa. A especificação chegou à <strong>versão 1.0</strong>, passou de 150 organizações participantes e já tem uso em produção e presença nas principais nuvens. Ainda assim, seja honesto na comparação: <strong>MCP tem adoção muito maior</strong> hoje, porque resolve o problema mais frequente (dar ferramentas a um assistente). A2A resolve um problema mais raro e mais avançado — e é justamente por chegar cedo nele que você sai na frente. Os dois são complementares e a comunidade os trata assim: <em>MCP para as ferramentas do seu agente; A2A para falar com o agente do outro</em>.</p>
-</div>
-
-<h3>Agent Card: o cartão de visitas</h3>
-<p>Antes de conversar, é preciso descobrir quem é o outro e o que ele faz. O <strong>Agent Card</strong> é um documento JSON publicado pelo agente, obtido por uma <strong>URI bem-conhecida</strong> (convenção <code>/.well-known/</code>, no espírito do <code>robots.txt</code> e do <code>openid-configuration</code> — confirme o caminho exato na revisão vigente, que mudou de nome entre versões).</p>
-
-<pre><code>// https://cartografo.dev/.well-known/agent-card.json  (formato ilustrativo)
-{
-  "protocolVersion": "1.0",
-  "name": "Cartógrafo",
-  "description": "Analisa repositórios legados e responde perguntas de arquitetura, dependências e risco de modernização.",
-  "url": "https://api.cartografo.dev/a2a",
-  "version": "1.2.0",
-  "provider": { "organization": "Cartógrafo", "url": "https://cartografo.dev" },
-
-  "capabilities": {
-    "streaming": true,              // suporta atualizações em tempo real
-    "pushNotifications": true,      // suporta webhook de conclusão
-    "stateTransitionHistory": true
-  },
-
-  "defaultInputModes":  ["text/plain", "application/json"],
-  "defaultOutputModes": ["text/plain", "application/json", "text/markdown"],
-
-  "skills": [                       // o que ele sabe fazer, em linguagem de negócio
-    {
-      "id": "analise-de-impacto",
-      "name": "Análise de impacto de mudança",
-      "description": "Dado um símbolo de um repositório indexado, identifica o que quebra ao alterá-lo.",
-      "tags": ["codigo", "legado", "risco"],
-      "examples": ["O que quebra se eu mudar a assinatura de CalcularJuros?"],
-      "inputModes": ["text/plain"],
-      "outputModes": ["application/json", "text/markdown"]
-    },
-    {
-      "id": "assessment-de-legado",
-      "name": "Assessment de sistema legado",
-      "description": "Gera relatório de arquitetura, grafo de dependências e top-10 riscos de modernização.",
-      "tags": ["assessment", "relatorio"]
-    }
-  ],
-
-  "securitySchemes": {              // como autenticar (no estilo OpenAPI)
-    "oauth2": { "type": "oauth2", "flows": { "clientCredentials": { "tokenUrl": "..." } } }
-  },
-  "security": [{ "oauth2": ["assessment:read"] }]
-}</code></pre>
-
-<p>Repare na diferença conceitual entre <strong>skill</strong> (A2A) e <strong>tool</strong> (MCP): a skill é descrita em <em>linguagem de negócio</em>, com exemplos, para que outro agente decida <em>se vale delegar</em>. Ela não expõe schema de argumentos, porque a conversa acontece por mensagens em linguagem natural (ou dados estruturados), não por chamada de função. É a diferença entre publicar "faço assessment de legado" e publicar "método <code>analisar(repo: str, profundidade: int)</code>".</p>
-
-<h3>Task, Message, Part, Artifact</h3>
-<p>Quatro tipos, e o modelo mental é o de um chamado:</p>
+<h3>O que é, em cinco linhas</h3>
 <ul>
-<li><strong>Task</strong> — a unidade de trabalho, com identidade e ciclo de vida. É o "protocolo" do chamado: você o cria, acompanha e recebe o resultado.</li>
-<li><strong>Message</strong> — uma troca dentro da tarefa (do cliente para o agente ou vice-versa).</li>
-<li><strong>Part</strong> — o conteúdo de uma mensagem: texto, arquivo ou <strong>dado estruturado</strong>. Uma mensagem tem uma ou mais parts, o que permite mandar "analise este repositório" + o JSON de configuração + um anexo.</li>
-<li><strong>Artifact</strong> — a <em>saída</em> produzida pelo agente, também composta de parts. É o entregável: o relatório, o grafo, o JSON de métricas.</li>
+<li>Cada agente publica um <strong>Agent Card</strong>, JSON em URI bem-conhecida, com o que faz e como autenticar.</li>
+<li>O cliente abre uma <strong>Task</strong> e troca <strong>Messages</strong> compostas de <strong>Parts</strong> (texto, arquivo, dado estruturado); a saída vem como <strong>Artifact</strong>.</li>
+<li>O ciclo de vida inclui <code>INPUT_REQUIRED</code> (o outro agente precisa de mais informação, em vez de adivinhar) e <code>REJECTED</code> (recusa explícita de escopo). É o mesmo princípio do MRTR do MCP (bloco 3) e da abstenção do RAG (M07 bloco 6).</li>
+<li>O acompanhamento é por polling, streaming ou push (webhook), conforme as capabilities do card.</li>
+<li>Foi criado no Google em 2025 e doado à Linux Foundation; existe em bindings JSON-RPC, gRPC e REST.</li>
 </ul>
 
-<p>Os estados da Task são o que torna o protocolo utilizável em processo real:</p>
-<table>
-<thead><tr><th>Estado</th><th>Significa</th><th>O que o cliente faz</th></tr></thead>
-<tbody>
-<tr><td><code>WORKING</code></td><td>em execução</td><td>aguarda: polling, stream ou webhook</td></tr>
-<tr><td><code>INPUT_REQUIRED</code></td><td>o agente precisa de mais informação para continuar</td><td>responde com nova mensagem na mesma task</td></tr>
-<tr><td><code>AUTH_REQUIRED</code></td><td>falta credencial/autorização para prosseguir</td><td>obtém a credencial e retoma</td></tr>
-<tr><td><code>COMPLETED</code></td><td>terminou com sucesso</td><td>coleta os artifacts</td></tr>
-<tr><td><code>FAILED</code></td><td>terminou com erro</td><td>lê o motivo; decide retry ou fallback</td></tr>
-<tr><td><code>CANCELED</code></td><td>cancelada (por cliente ou agente)</td><td>—</td></tr>
-<tr><td><code>REJECTED</code></td><td>o agente recusou a tarefa (fora de escopo, sem permissão)</td><td>não insista: reformule ou procure outro agente</td></tr>
-</tbody>
-</table>
-
-<div class="box warn">
-<span class="lbl">Os dois estados que quase ninguém implementa direito</span>
-<p><code>INPUT_REQUIRED</code> e <code>REJECTED</code> são o que separa integração madura de integração ingênua. <strong><code>INPUT_REQUIRED</code></strong> é o reconhecimento formal de que o outro agente pode não ter o suficiente para trabalhar — e a alternativa (adivinhar) é a fonte de resultado errado com aparência de pronto. Você já viu esse padrão duas vezes neste curso: é o MRTR do MCP (bloco 3) e é a abstenção do RAG (M07 bloco 6). <strong><code>REJECTED</code></strong> é a recusa explícita, que evita o pior comportamento possível: aceitar tudo e entregar lixo. Se o seu agente A2A nunca rejeita nada, ele está mentindo sobre o próprio escopo.</p>
-</div>
-
-<h3>Transportes e formas de acompanhar</h3>
-<p>A2A define <strong>três bindings</strong> — <code>JSON-RPC 2.0</code>, <code>gRPC</code> e <code>HTTP+JSON/REST</code> — com a mesma semântica. A escolha é operacional: JSON-RPC pela simetria com MCP e simplicidade; gRPC quando há exigência de performance e contrato forte (e o ecossistema já usa); REST quando o consumidor é um time que só quer chamar um endpoint.</p>
-<p>E <strong>três formas de acompanhar</strong> uma task, todas legítimas:</p>
-<ol>
-<li><strong>Polling</strong> (<code>GetTask</code>) — simples, funciona em qualquer infraestrutura, custa requisições. O default seguro.</li>
-<li><strong>Streaming</strong> — atualizações em tempo real enquanto a task roda. Exige a capability declarada no Agent Card; melhor UX, conexão aberta.</li>
-<li><strong>Push notification</strong> (webhook) — o agente avisa quando termina. Essencial para tarefas <em>longas</em> (horas), porque nenhuma conexão sobrevive a isso; exige endpoint público e autenticação do callback.</li>
-</ol>
-<p>Note que streaming e push são <strong>capabilities negociadas</strong>: se o Agent Card não declara, o cliente usa polling. É o mesmo princípio de degradação das extensões do MCP (bloco 5).</p>
-
-<div class="box fund">
-<span class="lbl">Fundamento de engenharia · Integração assíncrona entre organizações</span>
-<p>Nada aqui é novo — A2A é engenharia de integração corporativa com vocabulário de agentes. Recicle o que já sabe, porque é isso que você tem de vantagem:</p>
-<ul>
-<li><strong>Correlação e idempotência.</strong> Task tem id; retry de criação com o mesmo id não pode criar duas tarefas. Sem chave de idempotência, um timeout de rede vira trabalho duplicado — e agora o trabalho duplicado <em>custa tokens</em>.</li>
-<li><strong>Contrato × acoplamento.</strong> O Agent Card é o contrato público; o interior é livre. Isso é encapsulamento aplicado a organizações, e é o que permite ao outro lado trocar de modelo sem te avisar (o que é bom — e é por isso que você precisa de evals contra o parceiro, M06).</li>
-<li><strong>Webhook exige o mesmo rigor de sempre:</strong> autenticar o callback (senão qualquer um "conclui" sua task), verificar assinatura, tratar entrega duplicada e fora de ordem. Você vai fazer isso de novo no M12 com o webhook de pagamento — é literalmente o mesmo checklist.</li>
-<li><strong>Timeout e compensação.</strong> Tarefa que não termina precisa de política: cancelar, escalar para humano, ou compensar o que já foi feito. Saga, de novo (M10).</li>
-<li><strong>Confiança não é transitiva.</strong> Você confia no agente A; A delega a B; você não sabe que B existe. Isso é subcontratação — e exige as mesmas perguntas de sempre: onde o dado trafega, quem processa, sob qual base legal (M12).</li>
-</ul>
-</div>
-
-<h3>Quando usar A2A — e quando não usar</h3>
-<p>A resposta honesta para o seu caso, hoje: <strong>o Capstone não precisa de A2A</strong>. Ele é um produto que fala com o usuário e com assistentes de código — MCP cobre isso. Adotar A2A agora seria construir a ponte antes de existir o outro lado. Mas há dois cenários realistas em que ele entra, e vale desenhá-los:</p>
-<ul>
-<li><strong>O cliente tem um orquestrador.</strong> Empresa grande com plataforma de agentes própria quer que o Cartógrafo seja <em>mais um agente</em> no catálogo dela, chamado pelo orquestrador dela. Aí o Agent Card é o seu material de integração — e ter isso pronto encurta uma venda.</li>
-<li><strong>Composição com agentes que você não escreveu.</strong> Um agente de migração (de outro fornecedor) que consulta o seu para saber o risco antes de propor a mudança.</li>
-</ul>
-<p>E quando <strong>não</strong> usar: se os dois lados são seus, no mesmo sistema, use chamada de função ou fila — A2A adiciona protocolo, latência e superfície de ataque para resolver um problema de acoplamento organizacional que você não tem. A regra é a mesma do M08 sobre multi-agente: <em>se você não consegue nomear o problema que ele resolve, você não precisa dele</em>.</p>
+<h3>Quando faria sentido, e o estado de adoção</h3>
+<p>A2A faz sentido quando há <strong>fronteira organizacional</strong>: o orquestrador do cliente quer chamar o seu agente como mais um item do catálogo dele, ou um agente de outro fornecedor precisa consultar o seu. Se os dois lados são seus, no mesmo sistema, chamada de função ou fila resolvem com menos protocolo, latência e superfície de ataque.</p>
+<p>A adoção é incerta. MCP tem adoção muito maior porque resolve o problema mais frequente (dar ferramentas a um assistente); A2A atende um caso mais raro, e não está claro se vira padrão de fato, se converge com extensões do MCP ou se fica restrito a plataformas específicas. Verifique a versão e a adoção vigentes antes de decidir. As duas peças são complementares: MCP para as ferramentas do seu agente, A2A para falar com o agente do outro. O Capstone usa só MCP; adotar A2A agora seria construir a ponte antes de existir o outro lado, e o gatilho razoável para revisitar é o primeiro cliente pedir integração com o orquestrador dele.</p>
 
 <h3>Leitura aplicada · Delegar sem enxergar</h3>
-<p>Escrever o Agent Card, comparar skill com tool, desenhar o ciclo de vida e registrar o ADR de não implementar agora é o exercício deste bloco — o roteiro executável com agente local fica no <code>Laboratório guiado M09</code>, depois do bloco 7. O percurso: card que um humano de outra empresa entende sem explicação; tabela skill×tool (consumidor, exposição, ocultação); diagrama de estados com INPUT_REQUIRED e REJECTED; e ADR de não fazer com gatilho ("quando o primeiro cliente pedir integração com o orquestrador dele").</p>
+<p>Opcional: escreva um Agent Card que um humano de outra empresa entenda sem explicação e um ADR de não implementar agora, com o gatilho acima. O agente A2A local do <code>Laboratório guiado M09</code> mostra o ciclo até COMPLETED, REJECTED e cancelamento.</p>
 
 <!-- ============================================ BLOCO 7 -->
 <h2 id="b07">Bloco 7 · Segurança de protocolo, mini-projeto e entrega</h2>
@@ -1036,7 +927,7 @@ uv sync --frozen</code></pre>
 <p><strong>Resultado esperado:</strong> discovery, call estruturada, -32601/-32602, negação por escopo e capability, versão validada, prompt rendendo template.</p></div>
 <div class="step"><span class="n">2</span><strong>Transportes e cliente B (blocos 3/5).</strong> Rode <code>uv run pytest -q tests/test_transports.py</code>.
 <p><strong>Resultado esperado:</strong> mesmo núcleo nos três transportes; timeout observável; estado adulterado rejeitado; retomada MRTR; cliente independente no mesmo contrato.</p></div>
-<div class="step"><span class="n">3</span><strong>A2A (bloco 6).</strong> Rode <code>uv run pytest -q tests/test_a2a.py</code>.
+<div class="step"><span class="n">3</span><strong>A2A (bloco 6; opcional).</strong> Rode <code>uv run pytest -q tests/test_a2a.py</code>.
 <p><strong>Resultado esperado:</strong> card sem interior, ciclo até COMPLETED via INPUT_REQUIRED, REJECTED fora de escopo, cancelamento limpo.</p></div>
 <div class="step"><span class="n">4</span><strong>Validação técnica.</strong> <code>uv run ruff check .</code>, <code>uv run ruff format --check .</code>, <code>uv run mypy src tests</code>, suíte completa.
 <p><strong>Resultado esperado:</strong> tudo verde. Qualquer vermelho é defeito do programa.</p></div>
@@ -1078,15 +969,15 @@ uv sync --frozen</code></pre>
 <li><strong>P6.</strong> stdio × Streamable HTTP: dê o critério de escolha e explique por que o seu produto precisa dos dois. O que muda no núcleo ao trocar de transporte?</li>
 <li><strong>P7.</strong> Cite quatro dos seis ataques do bloco 7 e a mitigação de cada um. Qual deles o seu servidor barrou por design e por quê?</li>
 <li><strong>P8.</strong> "As annotations dizem que a ferramenta é read-only, então é seguro." Corrija a frase e explique de quem é a responsabilidade de cada princípio de segurança da spec.</li>
-<li><strong>P9.</strong> MCP × A2A: qual a diferença de natureza (não de escala)? O que significa a opacidade deliberada do A2A, e por que o Capstone não implementa A2A agora?</li>
+<li><strong>P9.</strong> MCP × A2A: qual a diferença de natureza entre os dois? Em que situação o A2A passaria a fazer sentido para o Capstone, e por que ele não o implementa agora?</li>
 </ul>
 <h4>Entregáveis verificados (mostrar rodando)</h4>
 <ol>
-<li>Gates verdes: <code>ruff</code>, <code>format</code>, <code>mypy --strict</code>, <code>pytest</code> do lab.</li>
+<li>Verificações verdes: <code>ruff</code>, <code>format</code>, <code>mypy --strict</code>, <code>pytest</code> do lab.</li>
 <li>Servidor com tools/resources/prompts, escopo do runtime e erros acionáveis; discovery pelos dois clientes.</li>
 <li>Mesmo núcleo nos três transportes; timeout, replay rejeitado e retomada MRTR demonstrados.</li>
 <li>Negações de segurança: escopo, capability, versão e Origin — cada uma com oráculo.</li>
-<li>Agente A2A: card sem interior, ciclo até COMPLETED, REJECTED e cancelamento.</li>
+<li>Opcional: agente A2A com card sem interior, ciclo até COMPLETED, REJECTED e cancelamento.</li>
 </ol>
 </div>
 
@@ -1096,7 +987,7 @@ uv sync --frozen</code></pre>
 <tbody>
 <tr><td><a href="https://modelcontextprotocol.io/specification/">MCP specification</a></td><td>primitivas e transportes (blocos 2–3)</td><td>padrão aberto</td><td>14/09/2026</td></tr>
 <tr><td><a href="https://www.jsonrpc.org/specification">JSON-RPC 2.0</a></td><td>formato de mensagem</td><td>padrão aberto</td><td>14/09/2026</td></tr>
-<tr><td><a href="https://a2a-protocol.org/">A2A specification</a></td><td>cards e tasks (bloco 6)</td><td>padrão aberto</td><td>14/09/2026</td></tr>
+<tr><td><a href="https://a2a-protocol.org/">A2A specification</a></td><td>panorama de A2A (bloco 6)</td><td>padrão aberto</td><td>14/09/2026</td></tr>
 <tr><td><a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/">OAuth 2.1 draft</a></td><td>auth do transporte HTTP (bloco 5)</td><td>normativa</td><td>14/09/2026</td></tr>
 </tbody>
 </table>

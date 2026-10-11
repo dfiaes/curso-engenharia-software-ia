@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>M12 · Produção segura, multi-tenant, billing e SRE para sistemas de IA</title>
+<title>M12 · Produção: segurança, multi-tenancy, controle de custo e SRE</title>
 <style>
 :root{--bg:#faf9f7;--fg:#1c1b19;--muted:#65615b;--line:#ddd8d0;--accent:#a94420;--soft:#fdf0e9;--code:#f2efe9;--blue:#425f9b;--blue-soft:#edf1f8;--warn:#806114;--warn-soft:#fff7df;--ok:#326443;--ok-soft:#eaf5ed;--mono:'SFMono-Regular',Consolas,'Liberation Mono',monospace}
 @media(prefers-color-scheme:dark){:root{--bg:#191816;--fg:#e9e5de;--muted:#aaa39a;--line:#38332d;--accent:#e47f54;--soft:#2b1c15;--code:#24211d;--blue:#9aafe3;--blue-soft:#1c2232;--warn:#dab85d;--warn-soft:#2b2515;--ok:#82b894;--ok-soft:#19271f}}
@@ -11,14 +11,14 @@
 </style>
 </head>
 <body><main class="wrap">
-<h1>M12 · Produção segura, multi-tenant, billing e SRE para sistemas de IA</h1>
+<h1>M12 · Produção: segurança, multi-tenancy, controle de custo e SRE</h1>
 <p class="meta"><span class="badge">FASE 4 · MÓDULO 12 · 18H</span> &nbsp; Python 3.14 · PostgreSQL 18 · arquitetura agnóstica de fornecedor</p>
 
-<div class="box warn"><span class="lbl">Estado editorial</span><p>Versão regenerada em revisão. O laboratório determinístico passa em Python 3.14; a suíte de RLS requer PostgreSQL real em container. Não declare o módulo concluído antes de produzir as evidências, executar os ataques e fechar G1–G6.</p></div>
+<p class="small">Estado deste módulo: <a href="../../STATUS.md">STATUS.md</a>. A suíte de RLS exige PostgreSQL real em container; sem Docker, rode os testes unitários e deixe a suíte <code>postgres</code> para depois.</p>
 
 <p>Um protótipo de IA demonstra capacidade. Um serviço de produção precisa demonstrar limites. O modelo pode sugerir uma ação, mas não concede autoridade; conteúdo recuperado pode informar uma decisão, mas continua não confiável; um retry pode recuperar uma leitura, mas pode duplicar um pagamento. Neste módulo você endurece o Capstone como um sistema sociotécnico: identidades, políticas, dados, efeitos externos, custos, pessoas e processos de incidente formam uma única superfície de risco.</p>
 
-<p>O foco é raciocínio transferível. Python é a linguagem do curso, PostgreSQL é o banco de referência e um provedor de billing pode aparecer como adapter, nunca como domínio. Os contratos centrais são <code>Protocol</code>s, modelos Pydantic e invariantes testáveis. Quando uma tecnologia mudar, você deve preservar as propriedades: menor privilégio, isolamento, uma intenção por efeito, ledger reconciliável e operação orientada por SLO.</p>
+<p>O foco é raciocínio transferível. Python é a linguagem do curso, PostgreSQL é o banco de referência e a cobrança do cliente (gateway de pagamento) é leitura opcional e, quando aparece, fica atrás de um adapter. Os contratos centrais são <code>Protocol</code>s, modelos Pydantic e invariantes testáveis. Quando uma tecnologia mudar, você deve preservar as propriedades: menor privilégio, isolamento, uma intenção por efeito, ledger reconciliável e operação orientada por SLO.</p>
 
 <div class="box net"><span class="lbl">Contrato de conclusão</span><p>Você deverá mostrar evidência, não apenas código: threat model ligado a testes; autorização com decisões explicáveis; isolamento cross-tenant em PostgreSQL real; idempotência sob concorrência e falha ambígua; custos derivados de ledger; e game day com alerta, mitigação e postmortem. Métrica hardcoded, screenshot sem comando reproduzível ou “o framework protege” não conta.</p></div>
 
@@ -29,7 +29,7 @@
 <li><a href="#b4">Multi-tenancy e RLS como propriedade</a></li>
 <li><a href="#b5">Idempotência durável e efeitos externos</a></li>
 <li><a href="#b6">Quotas, rate limits e orçamento</a></li>
-<li><a href="#b7">Metering, billing e unit economics</a></li>
+<li><a href="#b7">Metering e unit economics (cobrança: leitura opcional)</a></li>
 <li><a href="#b8">SRE para sistemas de IA</a></li>
 <li><a href="#b9">Hardening, red team e checkpoint</a></li>
 <li><a href="#playbook">Playbook aprofundado</a></li>
@@ -611,30 +611,23 @@ ledger.release("cancelled")  # cancelamento libera a reserva sem cobrança fanta
 <div class="evidence"><strong>Resultado esperado:</strong> M12-AT-041 interrompe ou degrada a operação sem exceder silenciosamente o orçamento.</div>
 <div class="evidence"><strong>Resultado esperado:</strong> cancelamento e timeout fecham a reserva com uso medido e reconciliado, sem cobrança fantasma.</div>
 
-<h2 id="b7">Bloco 7 · Metering, billing e unit economics sem lock-in</h2>
-<p class="trace">Competências M12-B07-C01..C06 · FIN-01, DIST-03 · Aceitação M12-AT-030, M12-AT-031, M12-AT-032</p>
+<h2 id="b7">Bloco 7 · Metering e unit economics (cobrança do cliente: leitura opcional)</h2>
+<p class="trace">Competências M12-B07-C01..C06 · FIN-01, DIST-03 · Aceitação M12-AT-031, M12-AT-032 (cobradas); M12-AT-030 (opcional)</p>
 
 <h3>Orientação do bloco</h3>
-<p>Neste bloco você aprende a separar cinco responsabilidades que costumam colapsar numa só: <em>metering</em> mede unidades consumidas por tenant, <em>pricing</em> transforma unidades em preço segundo uma tabela versionada, <em>invoicing</em> consolida a obrigação de um período, <em>payment</em> liquida o valor junto ao provedor e <em>entitlement</em> decide se o contrato habilita a capacidade, independentemente do consumo atual. Cada evento de uso carrega identidade estável, tenant, medidor, quantidade, unidade, origem, tempo do evento e tempo de recebimento, de modo que a mesma realidade medida duas vezes continua sendo uma só realidade. Pré-requisitos usados aqui: identidade e tenant do Bloco 3 e do Bloco 4, que dizem de quem é cada evento; idempotência do Bloco 5, que torna a repetição segura; quota e orçamento do Bloco 6, que limitam antes do efeito enquanto este bloco apura depois. Termos de cobrança recorrente, como assinatura, créditos e modelo híbrido, são explicados no ponto de uso, sem pressupor experiência prévia com faturamento.</p>
-<p>A saída observável deste bloco é um ledger de uso que funciona como fonte de auditoria: evento inválido ou com assinatura incorreta não produz mutação; evento duplicado ou fora de ordem converge para o mesmo total; divergência entre o ledger interno e o provedor vira registro aberto com responsável, nunca correção silenciosa; custo, receita e margem por tenant derivam de números medidos. As falhas de referência são webhook forjado ou repetido fora da janela, duplicata que dobra a cobrança, evento antigo que rebaixa o entitlement e adapter de billing que prende o domínio ao dialeto de um fornecedor. Este bloco é leitura com exemplos ilustrativos; a execução mora no laboratório final, descrita na ponte sem nenhum comando.</p>
+<p>Proteger o custo (bloco 6) limita o gasto antes do efeito; este bloco mede o gasto depois dele. <em>Metering</em> responde quantas unidades cada tenant consumiu (inferência, tokens, buscas vetoriais, armazenamento, ferramentas externas) e alimenta o custo por tenant e a margem. O que vem depois da medição, transformar uso em preço, fatura e pagamento junto a um gateway, é cobrança do cliente: está na caixa "Leitura opcional" e não entra no checkpoint. Pré-requisitos: identidade e tenant (blocos 3 e 4), idempotência (bloco 5) e quotas (bloco 6).</p>
 
-<h3>N1 · Conceito: medir, precificar, faturar, liquidar e habilitar</h3>
-<p><em>Metering</em> responde quantas unidades de cada medidor cada tenant consumiu — chamadas de inferência, tokens, buscas vetoriais, armazenamento, ferramentas externas. <em>Pricing</em> responde quanto vale cada unidade na tabela vigente; trocar a tabela não reescreve o passado medido. <em>Invoicing</em> responde qual obrigação consolidada o período gerou a partir do uso medido e do preço vigente. <em>Payment</em> responde se o valor foi liquidado no provedor, um estado externo que precisa ser verificado antes de alterar qualquer estado interno. <em>Entitlement</em> responde se a assinatura habilita a capacidade — ativa, em carência, suspensa ou cancelada — e evolui por versão de domínio, nunca pela ordem de chegada dos webhooks.</p>
-<p>O modelo mental é um livro-razão append-only com projeção convergente: cada <code>UsageEvent</code> entra uma vez, identificado por <code>event_id</code> estável, com <code>tenant_id</code>, <code>meter</code>, <code>quantity</code> positiva, <code>occurred_at</code> e <code>source_id</code>; o total por tenant e medidor é soma sobre o ledger, nunca um contador mutável; o estado de entitlement converge por <code>version</code>, de modo que duplicata repete sem efeito e evento antigo não rebaixa estado novo. Custos diretos — inferência, embeddings, busca, armazenamento, APIs atribuíveis — somam por medição; custos compartilhados — observabilidade, filas, suporte, plataforma — entram por critério de rateio explícito. Valores de quantidade, preço, receita e margem citados neste bloco são exemplo variável, nunca medição.</p>
-<div class="box"><span class="lbl">Conceito</span><p>O ledger interno é a fonte para auditoria e unit economics; o provedor é um sistema externo a reconciliar, nunca a fonte da verdade sobre o uso. O mecanismo da falha: aceitar estado externo sem verificação deixa um webhook forjado, duplicado ou atrasado reescrever entitlement e fatura; “corrigir” a divergência apagando-a destrói a trilha que explicaria a diferença. A consequência arquitetural: entrada externa passa por assinatura, janela de replay, deduplicação e processamento assíncrono, e toda divergência vira registro aberto com esperado, observado e responsável.</p></div>
+<h3>N1 · Conceito: ledger de uso append-only</h3>
+<p>O modelo mental é um livro-razão: cada <code>UsageEvent</code> entra uma vez, identificado por <code>event_id</code> estável, com <code>tenant_id</code>, <code>meter</code>, <code>quantity</code> positiva, <code>occurred_at</code> e <code>source_id</code>. O total por tenant e medidor é soma sobre o ledger, nunca um contador mutável, então a mesma realidade medida duas vezes continua sendo uma só. Custos diretos (inferência, embeddings, busca, armazenamento) somam por medição; custos compartilhados (observabilidade, filas, suporte) entram por critério de rateio declarado. Valores citados são exemplo variável, nunca medição.</p>
 
-<h3>N2 · Decisão: domínio no centro, provedor no adapter</h3>
-<p>A decisão central deste bloco: o domínio conhece <code>UsageEvent</code>, <code>UsageLedger</code>, <code>EntitlementProjection</code> e <code>ReconciliationIssue</code>; o provedor aparece somente atrás do protocolo <code>BillingProvider</code>, com um fake determinístico obrigatório e um adapter de referência em modo de teste. Trocar de provedor troca o adapter, nunca o domínio: a suíte de contrato é a mesma, e o ledger continua somando do mesmo jeito. Webhook é entrada não confiável — bytes crus primeiro, assinatura em tempo constante e tolerância temporal antes de qualquer parse ou mutação — e a resposta ao provedor é rápida porque o processamento pesado vai para fila.</p>
+<h3>N2 · Decisão: o que o ledger responde</h3>
 <table><thead><tr><th>Pergunta</th><th>Controle</th><th>Negação</th><th>O que não fazer</th></tr></thead><tbody>
-<tr><td>o webhook é autêntico e atual?</td><td>assinatura HMAC em tempo constante com janela de replay</td><td>assinatura inválida ou fora da janela nega sem mutação (<code>WEBHOOK_INVALID_SIGNATURE</code>, <code>WEBHOOK_OUTSIDE_REPLAY_WINDOW</code>)</td><td>parsear o corpo antes de verificar quem enviou</td></tr>
-<tr><td>o evento já entrou?</td><td>unicidade por <code>event_id</code> com <code>append</code> que devolve falso na duplicata</td><td>duplicata repetida sem somar de novo; versão antiga não rebaixa entitlement</td><td>somar cada entrega como se fosse consumo novo</td></tr>
-<tr><td>o provedor concorda com o ledger?</td><td>reconciliação periódica entre total interno e total do provedor</td><td>divergência abre <code>ReconciliationIssue</code> com esperado, observado e responsável</td><td>apagar a diferença ou ajustar o ledger ao provedor sem registro</td></tr>
-<tr><td>o preço mudou ou o provedor trocou?</td><td>tabela de preços versionada e adapter atrás do protocolo</td><td>reprecificar o passado ou acoplar o domínio ao dialeto do fornecedor</td><td>espalhar chamadas do SDK proprietário pela regra de negócio</td></tr>
+<tr><td>o evento já entrou?</td><td>unicidade por <code>event_id</code>; <code>append</code> devolve falso na duplicata</td><td>duplicata repetida sem somar de novo</td><td>somar cada entrega como se fosse consumo novo</td></tr>
+<tr><td>de onde vêm custo e margem?</td><td>soma derivada do ledger, com rateio declarado</td><td>número sem origem rastreável não entra no relatório</td><td>custo fixo arbitrário ou contador mutável</td></tr>
 </tbody></table>
-<p>Portabilidade se prova por exportação: todo o uso medido sai do sistema em formato aberto, com identificadores estáveis e carimbos de tempo, de modo que outro provedor ou uma apuração própria reconstrua os mesmos totais. Recursos exclusivos de um fornecedor ficam no adapter, documentados com o custo de saída — o que quebra, o que precisa ser reimplementado e quais dados precisam ser migrados. Preço, catálogo, quota de produto e comportamento de API de cobrança são informação de alto risco: valem na versão e na data consultadas, e a revalidação acompanha o adapter, nunca o domínio.</p>
 
-<h3>N3 · Exemplo trabalhado: do evento duplicado à margem defendida</h3>
-<p>Um tenant gera dois eventos de custo de inferência com valores ilustrativos. O segundo chega antes do primeiro por reordenação de fila: o ledger aceita ambos, cada um uma vez, e o total soma as duas quantidades. A redelivery do primeiro volta em seguida e o <code>append</code> devolve falso — o total não se move. Em paralelo, o provedor informa um entitlement de cancelamento em versão nova e depois reentrega a versão antiga de ativação: a projeção mantém o cancelamento, porque versão menor não rebaixa estado. A reconciliação compara o total interno com o total do provedor: iguais, nada a fazer; diferentes, um registro aberto guarda esperado, observado, tenant e medidor até a convergência. A margem do tenant sai de receita medida menos custo direto medido menos custo alocado declarado.</p>
+<h3>N3 · Exemplo trabalhado: do evento duplicado à margem</h3>
+<p>Um tenant gera dois eventos de custo de inferência. O segundo chega antes do primeiro por reordenação de fila: o ledger aceita ambos, cada um uma vez. A redelivery do primeiro volta em seguida e o <code>append</code> devolve falso; o total não se move. A margem do tenant sai de receita medida menos custo direto medido menos custo alocado declarado.</p>
 <pre><code># Exemplo ilustrativo — usa os nomes reais do ledger; valores variáveis
 ledger = UsageLedger()
 ledger.append(later)  # True: primeiro recebimento
@@ -643,70 +636,59 @@ ledger.append(earlier)  # False: duplicata não soma de novo
 ledger.total(tenant, "inference_cost_brl")  # soma medida dos dois eventos
 ledger.unit_margin(tenant, "inference_cost_brl",
                    revenue=..., allocated_cost=...)  # receita menos direto menos alocado</code></pre>
+
+<h3>N4 · Falha e diagnóstico: o que prova que a medição é confiável</h3>
+<p>O oráculo nunca é "o relatório fechou"; é "cada evento duplicado ou atrasado encontrou o controle correto e a margem deriva de números medidos". M12-AT-031 fecha quando duplicata e evento fora de ordem convergem para o mesmo total. M12-AT-032 fecha quando custo, receita e margem derivam do ledger medido.</p>
+<table><thead><tr><th>Sintoma</th><th>Hipótese</th><th>Evidência</th><th>Correção</th></tr></thead><tbody>
+<tr><td>custo dobra após redelivery</td><td>entrega tratada como consumo novo</td><td>total cresce na repetição do mesmo <code>event_id</code></td><td><code>append</code> idempotente por <code>event_id</code></td></tr>
+<tr><td>margem parece constante</td><td>custo fixo arbitrário</td><td>número sem origem no ledger</td><td>derivar de ledger medido e declarar o rateio</td></tr>
+</tbody></table>
+
+<div class="box"><span class="lbl">Leitura opcional · Cobrança do cliente e gateway de pagamento</span>
+<p><strong>Não cobrada no checkpoint.</strong> Leia se o seu produto vai cobrar por uso. Cinco responsabilidades que costumam colapsar numa só: <em>metering</em> (acima), <em>pricing</em> (tabela de preços versionada; trocar a tabela não reescreve o passado), <em>invoicing</em> (obrigação consolidada do período), <em>payment</em> (liquidação junto ao provedor, estado externo a verificar) e <em>entitlement</em> (se a assinatura habilita a capacidade: ativa, em carência, suspensa, cancelada; evolui por versão, nunca pela ordem de chegada).</p>
+<p>O domínio conhece <code>UsageLedger</code>, <code>EntitlementProjection</code> e <code>ReconciliationIssue</code>; o provedor fica atrás do protocolo <code>BillingProvider</code>, com um fake determinístico obrigatório. Webhook é entrada não confiável: verifique a assinatura HMAC em tempo constante, sobre os bytes crus e dentro de uma janela de replay (<code>WEBHOOK_INVALID_SIGNATURE</code>, <code>WEBHOOK_OUTSIDE_REPLAY_WINDOW</code>), antes de qualquer parse ou mutação, e responda rápido enviando o processamento para fila. A projeção de entitlement converge por <code>version</code>: duplicata repete sem efeito e evento antigo não rebaixa estado novo. A reconciliação periódica compara o total interno com o do provedor e, na divergência, abre uma <code>ReconciliationIssue</code> com esperado, observado e responsável, nunca um ajuste silencioso. Portabilidade se prova exportando o uso medido em formato aberto, com identificadores estáveis.</p>
 <pre><code># Exemplo ilustrativo — usa os nomes reais da projeção e da reconciliação
 projection = EntitlementProjection()
 projection.apply(cancelled_v3)  # True: versão nova assume o estado
 projection.apply(cancelled_v3)  # False: duplicata repete sem efeito
-projection.apply(active_v2)  # False: versão antiga não rebaixa (M12-AT-031)
+projection.apply(active_v2)  # False: versão antiga não rebaixa
 issue = await reconcile_usage(ledger, provider, tenant, meter)
-# iguais: None; diferentes: ReconciliationIssue aberta com
-# expected, observed e status "open" (M12-AT-032)</code></pre>
-
-<h3>N4 · Falha e diagnóstico: o que prova que a cobrança é confiável</h3>
-<p>O oráculo nunca é “a fatura fechou”; é “cada evento inválido, duplicado ou atrasado encontrou o controle correto, e cada divergência está registrada com esperado e observado”. M12-AT-030 fecha quando webhook com assinatura inválida ou fora da janela é rejeitado sem qualquer mutação. M12-AT-031 fecha quando duplicata e evento fora de ordem convergem — totais estáveis e entitlement na versão mais nova. M12-AT-032 fecha quando a divergência entre ledger e provedor abre registro com responsável, e custo, receita e margem derivam do ledger medido.</p>
-<table><thead><tr><th>Sintoma</th><th>Hipótese</th><th>Evidência</th><th>Correção</th></tr></thead><tbody>
-<tr><td>webhook forjado altera entitlement</td><td>mutação antes da verificação</td><td>estado interno muda com assinatura inválida</td><td>verificar assinatura em tempo constante e janela antes de parsear ou mutar</td></tr>
-<tr><td>cobrança dobra após redelivery</td><td>entrega tratada como consumo novo</td><td>total cresce na repetição do mesmo <code>event_id</code></td><td><code>append</code> idempotente por <code>event_id</code>; duplicata devolve falso</td></tr>
-<tr><td>cancelamento vira ativação</td><td>ordem de chegada como ordem de verdade</td><td>versão antiga sobrescreve versão nova</td><td>convergir por <code>version</code>; evento antigo nunca rebaixa estado</td></tr>
-<tr><td>divergência some sem explicação</td><td>reconciliação que ajusta em vez de registrar</td><td>totais convergem sem registro de esperado e observado</td><td>abrir <code>ReconciliationIssue</code> e fechar só com totais convergidos</td></tr>
-<tr><td>troca de provedor reescreve o domínio</td><td>SDK proprietário espalhado na regra de negócio</td><td>domínio importa tipos do fornecedor</td><td>protocolo <code>BillingProvider</code> com fake determinístico; fornecedor só no adapter</td></tr>
-</tbody></table>
-<div class="box warn"><span class="lbl">Perigo</span><p>Parse antes da assinatura, soma por entrega, versão ignorada e divergência apagada não fecham M12-AT-030–032: o primeiro aceita ordem de um falsário, o segundo cobra o mesmo consumo duas vezes, o terceiro ressuscita assinatura cancelada e o quarto destrói a prova da diferença. A fronteira é verificar antes de mutar, deduplicar por identificador estável, convergir por versão de domínio e reconciliar por registro aberto.</p></div>
-
-<h3>Contraste: ledger auditável contra contagem otimista</h3>
-<p>Uma contagem otimista incrementa um total mutável a cada entrega do provedor e confia na ordem de chegada: funciona enquanto a rede entrega uma vez e em ordem, e falha exatamente quando a rede faz o que redes fazem — duplicar, atrasar, reordenar. Um ledger auditável inverte o ônus: cada evento entra uma vez por identificador estável, o total é soma derivada que qualquer auditoria reconstrói, o entitlement converge por versão e a divergência com o provedor vira registro com responsável. Da mesma forma, um billing acoplado ao dialeto de um fornecedor contrasta com um domínio portátil: o primeiro fatura enquanto o contrato com o fornecedor dura; o segundo exporta o uso medido, troca o adapter e continua faturando com os mesmos totais.</p>
-
-<h3>Ponte para o laboratório — contratos congelados de B07-L (sem comandos)</h3>
-<p>O laboratório final executa esta teoria com arquivos planos junto ao laboratório, sem rede. Os contratos abaixo estão congelados para B07-L; nomes, assinaturas e comportamento que os testes exercem: <code>UsageEvent(event_id, tenant_id, meter, quantity, occurred_at, source_id)</code>, com quantidade positiva e <code>event_id</code> estável por evento; <code>BillingProvider</code> como protocolo com <code>report_usage(event)</code>, que devolve o recibo como texto do <code>event_id</code> e repete o mesmo recibo na redelivery, e <code>fetch_total(tenant_id, meter)</code>, que soma por tenant e medidor; <code>FakeBillingProvider</code> determinístico com a mesma semântica; <code>UsageLedger().append(event)</code>, que devolve verdadeiro no primeiro recebimento e falso na duplicata, <code>total(tenant_id, meter)</code>, que soma o medido, e <code>unit_margin(tenant_id, meter, revenue, allocated_cost)</code>, que devolve receita menos custo direto medido menos custo alocado; <code>EntitlementEvent(event_id, tenant_id, subscription_id, version, status)</code>, com estado entre ativa, em carência, suspensa e cancelada, e <code>EntitlementProjection().apply(event)</code>, que devolve falso para duplicata e para versão antiga, com <code>status(tenant_id, subscription_id)</code> refletindo a versão mais nova; <code>reconcile_usage(ledger, provider, tenant_id, meter)</code>, que devolve vazio com totais iguais e <code>ReconciliationIssue</code> aberta com esperado e observado na divergência; <code>verify_webhook(payload, timestamp, signature, secret, now)</code>, que nega com <code>WEBHOOK_INVALID_SIGNATURE</code> e <code>WEBHOOK_OUTSIDE_REPLAY_WINDOW</code> sem qualquer mutação. Limites declarados: a persistência do ledger e da projeção em banco real, a concorrência entre conexões e processos, o adapter de referência em modo de teste do provedor, o job periódico de reconciliação com responsável e prazo, além da integração ao Capstone e do relatório de margem do período, pertencem às evidências seguintes e não são alegados aqui.</p>
+# iguais: None; diferentes: ReconciliationIssue aberta com expected, observed e status "open"</code></pre>
+<p>Os contratos exercidos pelos testes do laboratório (<code>UsageEvent</code>, <code>BillingProvider</code>, <code>FakeBillingProvider</code>, <code>EntitlementEvent</code>, <code>reconcile_usage</code>, <code>verify_webhook</code>) estão em <code>lab/src</code>. Preço e comportamento de API de cobrança são informação de alto risco: valem na data consultada. Fontes: <a href="https://docs.stripe.com/webhooks">Stripe — Webhooks</a>, <a href="https://docs.stripe.com/api/idempotent_requests">Stripe — Idempotent requests</a>, <a href="https://docs.stripe.com/billing/subscriptions/usage-based">Stripe — Usage-based billing</a>, usadas só no adapter de referência.</p>
+</div>
 
 <h3>Síntese</h3>
 <ul>
-<li>Metering, pricing, invoicing, payment e entitlement respondem perguntas diferentes; webhook de pagamento nunca escreve direto no domínio de uso.</li>
-<li>O ledger é append-only e deduplicável por identificador estável; o total é soma derivada, e a divergência vira registro aberto, nunca ajuste silencioso.</li>
-<li>Entitlement converge por versão de domínio: duplicata repete sem efeito e evento antigo não rebaixa estado novo.</li>
-<li>Billing é adapter atrás de protocolo com fake determinístico; exportação em formato aberto prova a saída sem lock-in.</li>
-<li>M12-AT-030–032 fecham por rejeição sem mutação, convergência observável e divergência registrada, com margem derivada do ledger medido.</li>
+<li>O ledger é append-only e deduplicável por identificador estável; o total é soma derivada.</li>
+<li>Custo, receita e margem por tenant derivam do ledger medido, com rateio declarado.</li>
+<li>Cobrança do cliente (pricing, fatura, webhook de pagamento, entitlement) é opcional e fica atrás de um adapter com fake determinístico.</li>
+<li>M12-AT-031–032 fecham por convergência observável e margem derivada do ledger; M12-AT-030 é opcional.</li>
 </ul>
 
 <h3 id="diagnostico-b07">Diagnóstico B07</h3>
 <table><thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
 <tbody>
-<tr><td>webhook inválido muda estado</td><td>verificação após parse ou mutação</td><td>verificar assinatura e janela sobre bytes crus antes de qualquer mutação</td></tr>
 <tr><td>total cresce na redelivery</td><td>entrega confundida com consumo novo</td><td>deduplicar por <code>event_id</code>; <code>append</code> devolve falso na duplicata</td></tr>
-<tr><td>estado rebaixa após evento antigo</td><td>ordem de chegada como verdade</td><td>convergir por <code>version</code>; ignorar versão menor ou igual</td></tr>
-<tr><td>divergência sem responsável</td><td>reconciliação que ajusta sem registrar</td><td>abrir <code>ReconciliationIssue</code> com esperado, observado e dono</td></tr>
+<tr><td>margem sem origem rastreável</td><td>custo fixo ou contador mutável</td><td>derivar do ledger e declarar o rateio</td></tr>
+<tr><td>(opcional) webhook inválido muda estado</td><td>verificação após parse ou mutação</td><td>verificar assinatura e janela sobre bytes crus antes de qualquer mutação</td></tr>
+<tr><td>(opcional) estado rebaixa após evento antigo</td><td>ordem de chegada como verdade</td><td>convergir por <code>version</code>; ignorar versão menor ou igual</td></tr>
 </tbody></table>
-<h3 id="checkpoint-b07">Checkpoint B07 — metering, billing e margem (M12-AT-030–032)</h3>
+<h3 id="checkpoint-b07">Checkpoint B07 — metering e margem (M12-AT-031–032)</h3>
 <div class="box ok">
-<p><strong>Responda sem consultar o material.</strong> Sem pista, sem esqueleto; cada resposta vale 0–2.</p>
+<p><strong>Responda sem consultar o material.</strong> Sem pista, sem esqueleto; cada resposta vale 0–2. A cobrança do cliente não é cobrada.</p>
 <ol class="check">
-<li><strong>Decisão.</strong> Um webhook chega com assinatura incorreta e outro chega fora da janela de replay. O que acontece com o estado interno em cada caso e com que códigos? <em>Rubrica: 2 = ambos rejeitados sem mutação, com <code>WEBHOOK_INVALID_SIGNATURE</code> e <code>WEBHOOK_OUTSIDE_REPLAY_WINDOW</code>; 1 = parcial; 0 = "registra e confere depois". Obrigatório: verificação antes de parse ou mutação.</em></li>
-<li><strong>Diagnóstico.</strong> O mesmo evento de uso é entregue duas vezes e um evento de entitlement antigo chega depois do novo. O que o total mostra e qual estado a projeção mantém? <em>Rubrica: 2 = <code>append</code> devolve falso na duplicata com total estável + projeção ignora versão antiga e mantém a mais nova; 1 = parcial; 0 = "soma cada entrega". Obrigatório: citar identificador estável e versão.</em></li>
-<li><strong>Transferência.</strong> O ledger e o provedor divergem e o time quer trocar de provedor sem perder o histórico. O que registra a divergência e o que prova a saída? <em>Rubrica: 2 = <code>reconcile_usage</code> abre <code>ReconciliationIssue</code> com esperado e observado + margem deriva do ledger e exportação reconstrói os totais no novo adapter; 1 = parcial; 0 = "ajusta o ledger ao provedor". Obrigatório: divergência registrada, nunca apagada.</em></li>
+<li><strong>Diagnóstico.</strong> O mesmo evento de uso é entregue duas vezes e outro chega fora de ordem. O que o total mostra? <em>Rubrica: 2 = <code>append</code> devolve falso na duplicata e o total fica estável, com fora de ordem somando uma vez; 1 = parcial; 0 = "soma cada entrega". Obrigatório: citar identificador estável.</em></li>
+<li><strong>Transferência.</strong> O time quer a margem por tenant. De onde vêm receita, custo direto e custo alocado, e o que torna o número defensável? <em>Rubrica: 2 = tudo derivado do ledger medido, com rateio declarado e origem rastreável; 1 = parcial; 0 = "custo fixo por requisição". Obrigatório: ledger como fonte.</em></li>
 </ol>
 </div>
 
 <h3>Fontes do bloco</h3>
 <ul>
-<li><a href="https://docs.stripe.com/webhooks">Stripe — Webhooks</a> — assinatura, duplicidade, ordenação e processamento assíncrono usados somente no adapter de referência.</li>
-<li><a href="https://docs.stripe.com/api/idempotent_requests">Stripe — Idempotent requests</a> — semântica de chave e recibo estável citada sem prometer comportamento além do adapter.</li>
-<li><a href="https://docs.stripe.com/billing/subscriptions/usage-based">Stripe — Usage-based billing</a> — modelo de cobrança por uso como referência de adapter, nunca como domínio.</li>
 <li><a href="https://www.finops.org/framework/">FinOps Framework</a> — operação financeira que separa medição, alocação e decisão de redução de fatura.</li>
 <li><a href="https://www.finops.org/framework/capabilities/unit-economics/">FinOps — Unit Economics</a> — custo por unidade, margem de contribuição e relação entre custo e valor de negócio.</li>
 </ul>
-<div class="evidence"><strong>Resultado esperado:</strong> M12-AT-030 rejeita assinatura inválida e replay fora da janela sem qualquer mutação.</div>
-<div class="evidence"><strong>Resultado esperado:</strong> M12-AT-031 demonstra convergência para duplicidade e evento fora de ordem em ledger e entitlement.</div>
-<div class="evidence"><strong>Resultado esperado:</strong> M12-AT-032 abre divergência entre ledger e provedor; custo, receita e margem derivam do ledger medido.</div>
+<div class="evidence"><strong>Resultado esperado:</strong> M12-AT-031 demonstra convergência para duplicidade e evento fora de ordem no ledger.</div>
+<div class="evidence"><strong>Resultado esperado:</strong> M12-AT-032 mostra custo, receita e margem derivados do ledger medido.</div>
 
 <h2 id="b8">Bloco 8 · SRE para sistemas de IA e operação assistida</h2>
 <p class="trace">Competências M12-B08-C01..C06 · SRE-01, SRE-02, OBS-01, FIN-01 · Aceitação M12-AT-050, M12-AT-051, M12-AT-052</p>
@@ -882,7 +864,7 @@ report = planes.delete_tenant(context, now=t0, backup_retention=days(30))
 </tbody></table>
 
 <h3>Pacote de evidências</h3>
-<p>O pacote <code>capstone/evidence/m12/</code> guarda ambiente, resultados de testes, revisão do threat model, relatório red-team, relatório de isolamento por tenant, matriz de crashes de idempotência, reconciliação de billing, economia unitária, relatório de SLO, timeline do game day, postmortem e registro de riscos residuais — cada número rastreável ao ledger ou ao relatório que o produziu, sem resultado fixo arbitrário.</p>
+<p>O pacote <code>capstone/evidence/m12/</code> guarda ambiente, resultados de testes, revisão do threat model, relatório red-team, relatório de isolamento por tenant, matriz de crashes de idempotência, economia unitária (e, se você implementou cobrança, a reconciliação de billing), relatório de SLO, timeline do game day, postmortem e registro de riscos residuais — cada número rastreável ao ledger ou ao relatório que o produziu, sem resultado fixo arbitrário.</p>
 
 <p>Para M12-AT-060, execute exclusão de um tenant em banco, índice vetorial, cache, grafo, objetos, filas derivadas e telemetry store conforme contratos de retenção. Documente backups separadamente: exclusão imediata de backups imutáveis pode ser tecnicamente incompatível com recuperação; registre prazo de expiração, controles de restore e prevenção de reintrodução indevida.</p>
 
@@ -903,7 +885,7 @@ report = planes.delete_tenant(context, now=t0, backup_retention=days(30))
 <li>Como provar que a reutilização do pool não carrega o tenant anterior?</li>
 <li>O que fazer quando uma API externa conclui o efeito, mas a resposta se perde?</li>
 <li>Por que idempotency key sem hash do intent pode esconder um bug grave?</li>
-<li>Como webhook duplicado e fora de ordem afeta entitlement e faturamento?</li>
+<li>(Opcional) Como webhook duplicado e fora de ordem afeta entitlement e faturamento?</li>
 <li>Qual é a unidade econômica do Capstone e quais custos entram nela?</li>
 <li>Qual a diferença entre SLI, SLO, SLA e error budget?</li>
 <li>Quando um alerta deve paginar uma pessoa e quando deve abrir ticket?</li>
@@ -916,7 +898,7 @@ report = planes.delete_tenant(context, now=t0, backup_retention=days(30))
 <li>Executar cinco ataques agentic e mostrar controles em camadas.</li>
 <li>Executar a suíte cross-tenant em PostgreSQL real.</li>
 <li>Provocar concorrência e crash no efeito idempotente.</li>
-<li>Processar webhooks inválido, duplicado e fora de ordem.</li>
+<li>(Opcional) Processar webhooks inválido, duplicado e fora de ordem.</li>
 <li>Mostrar custo e margem derivados do ledger.</li>
 <li>Provocar burn rate e seguir o runbook.</li>
 <li>Apresentar um risco residual não corrigido e defender a decisão.</li>
@@ -1145,21 +1127,6 @@ report = planes.delete_tenant(context, now=t0, backup_retention=days(30))
 
 <p>Postmortem alimenta threat model, testes e backlog. Se o incidente revelou retry amplification, crie um cenário; se revelou instrução em log, preserve fixture sanitizado; se revelou custo errado, adicione reconciliação. A aprendizagem fecha quando ação é verificada, não quando documento é publicado.</p>
 
-<h3>Rubrica de revisão G1–G6</h3>
-<p><strong>G1, cobertura e profundidade:</strong> os nove blocos estão presentes; cada competência possui explicação, prática e evidência; conceitos próximos são diferenciados; o texto não depende de uma marca; ameaças têm risco residual. O reviewer seleciona amostras e segue links entre competência, aceitação e artefato.</p>
-
-<p><strong>G2, execução:</strong> Python 3.14, Ruff, mypy strict e testes determinísticos passam; PostgreSQL 18 real executa RLS e concorrência; skips obrigatórios falham o pipeline de release. Outputs registram versões. Resultado hardcoded, teste que não alcança boundary e exemplo que não compila são bloqueadores.</p>
-
-<p><strong>G3, segurança:</strong> ataques cobrem injection, tool misuse, SSRF, traversal, segredo/PII, approval, tenant, idempotência, webhook e ChatOps. Negações ocorrem antes do efeito. Logs/evidências não copiam payload sensível. Roles e policies são inspecionadas, não presumidas.</p>
-
-<p><strong>G4, neutralidade:</strong> domínio depende de portas e modelos próprios; fake é completo; adapter específico possui testes de contrato; ausência de feature é tratada. Documentação de fornecedor sustenta somente comportamento daquele adapter. Padrões abertos e fontes primárias sustentam conceitos transversais.</p>
-
-<p><strong>G5, operação e finanças:</strong> SLI vem de experiência, SLO tem janela, error budget tem policy, alerta tem ação e game day produz timeline/postmortem. Usage é medido, ledger deduplica, divergência abre issue e margem deriva de números rastreáveis. Custos compartilhados e unidade boa são declarados.</p>
-
-<p><strong>G6, editorial e evidência:</strong> links funcionam, versões e datas aparecem, termos são consistentes, HTML é legível/imprimível, checkpoint cobre raciocínio e demonstração. O pacote de evidência permite repetição. Todos os P0/P1 foram fechados; P2 aceitos têm responsável e prazo.</p>
-
-<p>A aprovação final é binária por gate e contextual por risco. Um módulo pode ter excelente texto e falhar G2 por ausência de PostgreSQL real; pode ter muitos testes e falhar G4 por domínio acoplado; pode ter SLO e falhar G5 porque a query não mede usuário. O status deve dizer exatamente o que falta. Essa transparência é parte da formação sênior.</p>
-
 <h3>Estudo de caso integrador · análise documental como SaaS</h3>
 <p>Considere um serviço que recebe documentos empresariais, recupera contexto e produz uma análise com fontes. Clientes pagam assinatura e uso; algumas análises acionam exportação ou envio externo. Dois tenants compartilham aplicação e PostgreSQL. O sistema usa um adapter de modelo, um vector store, object storage, fila e billing provider. A unidade econômica é “análise válida”, definida por schema correto, fontes presentes, policy aprovada e nota mínima na avaliação amostral.</p>
 
@@ -1210,7 +1177,7 @@ report = planes.delete_tenant(context, now=t0, backup_retention=days(30))
 
 <p>Critério de domínio: você consegue implementar a propriedade sem copiar o exemplo, adaptar para outro provider e explicar trade-off. Critério de operação: consegue diagnosticar por evidência e seguir runbook sob pressão. Critério de liderança: consegue dizer “não sabemos”, desenhar experimento e atribuir owner. O checkpoint mede memória apenas onde ela sustenta raciocínio; a demonstração mede capacidade real.</p>
 
-<p>Se o ambiente não possui Docker, continue com unitários, threat model, código e revisão, mas mantenha G2 pendente. Não substitua PostgreSQL real por confiança no SQL. Quando Docker estiver disponível, instale o grupo opcional, execute marker <code>postgres</code>, corrija o que surgir e anexe output. Um bloqueio ambiental honesto preserva a qualidade do curso; um check marcado sem execução destrói a rastreabilidade.</p>
+<p>Se o ambiente não possui Docker, continue com unitários, threat model, código e revisão, mas deixe a suíte <code>postgres</code> pendente. Não substitua PostgreSQL real por confiança no SQL. Quando Docker estiver disponível, instale o grupo opcional, execute marker <code>postgres</code>, corrija o que surgir e anexe output. Um bloqueio ambiental honesto preserva a qualidade do curso; um check marcado sem execução destrói a rastreabilidade.</p>
 
 <p>Ao encerrar, faça uma leitura transversal por propriedade, não por capítulo. Siga tenant desde token até banco, vetor, cache, fila, trace, billing e exclusão. Siga uma ação crítica desde proposta até policy, aprovação, idempotência, efeito, usage e audit. Siga um erro desde SLI até alerta, runbook, mitigação, reconciliação e postmortem. Essa leitura encontra lacunas entre equipes e componentes, onde incidentes reais costumam nascer. Se uma correlação se perde, um owner não existe ou uma boundary não tem teste negativo, registre trabalho pendente. A maturidade não vem da quantidade de controles, mas da continuidade verificável entre ameaça, decisão, implementação, evidência e recuperação.</p>
 <p>Registre também suposições, dependências externas e condições de invalidação; uma garantia sem essas fronteiras será interpretada como promessa maior do que a engenharia realmente demonstrou.</p>
@@ -1231,10 +1198,10 @@ report = planes.delete_tenant(context, now=t0, backup_retention=days(30))
 <tr><td><a href="https://www.finops.org/framework/">FinOps Framework</a></td><td>atualização 2026</td><td>unit economics</td><td>médio</td></tr>
 <tr><td><a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm">LGPD</a> e <a href="https://www.gov.br/anpd/pt-br/centrais-de-conteudo/materiais-educativos-e-publicacoes">ANPD</a></td><td>texto compilado vigente</td><td>privacidade no Brasil</td><td>médio</td></tr>
 <tr><td><a href="https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/">RateLimit fields draft-11</a></td><td>23/05/2026; Internet-Draft</td><td>panorama, não norma estável</td><td>crítico</td></tr>
-<tr><td><a href="https://docs.stripe.com/webhooks">Stripe docs</a></td><td>consultada 14/08/2026</td><td>somente adapter de referência</td><td>alto</td></tr>
+<tr><td><a href="https://docs.stripe.com/webhooks">Stripe docs</a></td><td>consultada 14/08/2026</td><td>somente adapter de referência (leitura opcional)</td><td>alto</td></tr>
 </tbody></table>
 
-<div class="box ok"><span class="lbl">Saída do módulo</span><p>Quando todos os gates fecharem, o Capstone terá controles determinísticos em torno da IA, isolamento verificável, efeitos reconciliáveis, medição financeira auditável e operação guiada por objetivos. A maturidade demonstrada não é “saber uma plataforma”; é conseguir explicar a propriedade, implementá-la em Python, testá-la na boundary real e trocá-la de adapter sem perder o contrato.</p></div>
+<div class="box ok"><span class="lbl">Saída do módulo</span><p>Ao concluir o módulo, o Capstone terá controles determinísticos em torno da IA, isolamento verificável, efeitos reconciliáveis, medição de custo auditável e operação guiada por objetivos. A maturidade demonstrada não é “saber uma plataforma”; é conseguir explicar a propriedade, implementá-la em Python, testá-la na boundary real e trocá-la de adapter sem perder o contrato.</p></div>
 
-<p class="small">Baseline técnica: Python 3.14, uv, Pydantic v2, mypy strict, Ruff, pytest e PostgreSQL 18. Material regenerado a partir da especificação M12; não reutiliza resultados do HTML bloqueado anterior.</p>
+<p class="small">Baseline técnica: Python 3.14, uv, Pydantic v2, mypy strict, Ruff, pytest e PostgreSQL 18.</p>
 </main><script src="../../portal/course-bridge.js" data-unit="M12"></script></body></html>

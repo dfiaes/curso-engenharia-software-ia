@@ -81,8 +81,6 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 }
 
 /* Navegação de leitura e retomada, revisão 2026-09-12. */
-.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
-.course-notice p:last-child{margin-bottom:0}
 .section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
 :focus-visible{outline:2px solid currentColor;outline-offset:3px}
 @media print{.section-link{display:none}}
@@ -92,8 +90,8 @@ hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 <div class="wrap">
 
 <h1>M03 · FastAPI, Postgres, Docker, CI</h1>
-<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Em produção: B01–B08 produzidos; laboratório guiado e checkpoint reconstruídos. Gates G1–G6 pendem de revisão do orquestrador e de execução PostgreSQL com Docker. Laboratório executável e gates G1–G6 ainda pendentes. <a href="../../docs/STATUS-IMPLEMENTACAO-CURSO.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário ou o link de uma seção para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa, aquecimento, diário ou commit. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
-<p class="meta"><span class="badge">MÓDULO 03</span> &nbsp; 8 blocos de conteúdo · pré-requisito: M02 · backend HTTP, dados, containers e CI com evidência local</p>
+<p class="meta">Estado e fase: <a href="../../STATUS.md">STATUS</a> · <a href="../../CURRICULO.md">Currículo</a></p>
+<p class="meta"><span class="badge">MÓDULO 03</span> &nbsp; Fase 1 · 8 blocos de conteúdo · pré-requisitos: M02A, F04 · backend HTTP, dados, containers e CI com evidência local</p>
 
 <div class="box">
 <span class="lbl">Saída concreta</span>
@@ -363,7 +361,7 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 <p>Repare em três decisões que valem discussão de code review:</p>
 <ul>
 <li><strong><code>expire_on_commit=False</code>:</strong> por padrão o SQLAlchemy "expira" os atributos dos objetos após <code>commit</code>, de modo que o próximo acesso recarrega do banco — mais um round-trip assíncrono escondido. Numa API, o comum é devolver o objeto que acabou de ser salvo sem nova consulta, por isso o laboratório desliga a expiração.</li>
-<li><strong>Pool no engine, sessão por request:</strong> o engine, com seu pool de conexões, é um singleton do processo, criado uma vez no startup. A <code>AsyncSession</code> é de escopo curto — uma por request, aberta na dependência e fechada no teardown. Compartilhar uma sessão entre tarefas concorrentes corrompe a unidade de trabalho; o laboratório prova isso com um oráculo negativo (AT-007).</li>
+<li><strong>Pool no engine, sessão por request:</strong> o engine, com seu pool de conexões, é um singleton do processo, criado uma vez no startup. A <code>AsyncSession</code> é de escopo curto — uma por request, aberta na dependência e fechada no teardown. Compartilhar uma sessão entre tarefas concorrentes corrompe a unidade de trabalho; o laboratório prova isso com um oráculo negativo.</li>
 <li><strong>Commit na dependência, não no endpoint:</strong> o endpoint declara a intenção (criar, buscar); a fronteira transaciona. É o padrão unidade-de-trabalho-por-request: a rota nunca chama <code>commit</code> diretamente, então nenhum caminho esquece de confirmar ou de reverter.</li>
 </ul>
 
@@ -388,15 +386,15 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 # REVISE o arquivo gerado em migrations/versions/ — autogenerate erra rename
 # (vê drop+add), não vê mudança de server_default, e não escreve backfill.
 uv run alembic upgrade head</code></pre>
-<p>Três regras separam migration revisada de incidente futuro. Primeira: <strong>migration é código revisado</strong> — o <code>--autogenerate</code> escreve um rascunho comparando modelos e banco, e rascunho se revisa. Segunda: <strong>todo <code>upgrade</code> tem <code>downgrade</code> testado</strong>, porque rollback de deploy depende dele (bloco 7). Terceira: <strong>migration destrutiva</strong> (remover coluna com dado) acontece em duas releases — primeiro o código para de usar a coluna, depois outra migration a remove. E a proibição que o laboratório verifica com oráculo (AT-008): nenhum startup de produção cria schema com <code>create_all</code>; o schema nasce de migration, sempre.</p>
+<p>Três regras separam migration revisada de incidente futuro. Primeira: <strong>migration é código revisado</strong> — o <code>--autogenerate</code> escreve um rascunho comparando modelos e banco, e rascunho se revisa. Segunda: <strong>todo <code>upgrade</code> tem <code>downgrade</code> testado</strong>, porque rollback de deploy depende dele (bloco 7). Terceira: <strong>migration destrutiva</strong> (remover coluna com dado) acontece em duas releases — primeiro o código para de usar a coluna, depois outra migration a remove. E a proibição que o laboratório verifica com oráculo: nenhum startup de produção cria schema com <code>create_all</code>; o schema nasce de migration, sempre.</p>
 
 <h3 id="sec-b02-leitura-aplicada">Leitura aplicada: acompanhe um request com banco <a class="section-link" href="#sec-b02-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
 <ol>
 <li><code>POST /links</code> chega validado pelo schema do bloco 1. A dependência <code>get_session</code> abre uma <code>AsyncSession</code> — uma unidade de trabalho vazia, presa a uma conexão do pool.</li>
 <li>A rota consulta <code>select(Link).where(Link.slug == slug)</code> e adiciona o novo objeto com <code>session.add</code>. Nada foi confirmado ainda; <code>flush</code> enviaria as escritas dentro da transação aberta, sem confirmar.</li>
 <li>Se um segundo request inseriu o mesmo slug entre a consulta e a escrita, a constraint <code>UNIQUE</code> rejeita a escrita com <code>IntegrityError</code>. A rota traduz para <code>409 Conflict</code>. Nenhum <code>if</code> prévio seria capaz disso — a janela entre checar e inserir pertence a quem escreve por último, e só o banco a fecha.</li>
-<li>Se o service levanta exceção no meio, a dependência executa <code>rollback</code> e a sessão fecha sem deixar resíduo (AT-003). Se tudo corre bem, <code>commit</code> confirma atomicamente.</li>
-<li>Semanas depois, o time precisa de uma coluna nova. Uma revision Alembic descreve <code>upgrade</code> e <code>downgrade</code>; <code>upgrade head</code> num banco vazio e <code>downgrade</code> de volta provam o caminho de ida e volta (AT-005).</li>
+<li>Se o service levanta exceção no meio, a dependência executa <code>rollback</code> e a sessão fecha sem deixar resíduo. Se tudo corre bem, <code>commit</code> confirma atomicamente.</li>
+<li>Semanas depois, o time precisa de uma coluna nova. Uma revision Alembic descreve <code>upgrade</code> e <code>downgrade</code>; <code>upgrade head</code> num banco vazio e <code>downgrade</code> de volta provam o caminho de ida e volta.</li>
 </ol>
 <p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — subir PostgreSQL, gerar e aplicar a migration, trocar o armazenamento em memória pela sessão real e provocar cada falha — fica no <code>Laboratório guiado M03</code>, depois do bloco 8, com resultado esperado e diagnóstico por passo.</p>
 
@@ -454,7 +452,7 @@ Execution Time: 0.071 ms</code></pre>
 <li><strong>Os quatro nós que resolvem a maioria das leituras:</strong> <code>Seq Scan</code> (leu a tabela inteira — aceitável em tabela pequena, alarme em tabela grande), <code>Index Scan</code> (percorreu a árvore), <code>Index Only Scan</code> (respondeu só com o índice, sem visitar a tabela) e <code>Nested Loop / Hash Join</code> (estratégia de junção; nested loop com milhares de iterações denuncia um N+1 no plano).</li>
 <li><strong><code>BUFFERS</code></strong> mostra páginas lidas de cache (<code>shared hit</code>) contra disco (<code>read</code>) — a diferença entre uma consulta de milissegundos e a mesma consulta em centenas de milissegundos.</li>
 </ul>
-<p>A decisão que o plano sustenta (AT-009): o predicado crítico — busca por slug, listagem recente por data — usa o índice escolhido, e isso se lê no nó do plano, não no cronômetro. Tempo absoluto varia por máquina; presença do nó <code>Index Scan</code> sobre o índice certo é o invariante.</p>
+<p>A decisão que o plano sustenta: o predicado crítico — busca por slug, listagem recente por data — usa o índice escolhido, e isso se lê no nó do plano, não no cronômetro. Tempo absoluto varia por máquina; presença do nó <code>Index Scan</code> sobre o índice certo é o invariante.</p>
 
 <h3 id="sec-jsonb-por-que-ele-salva-produto-de-ia">JSONB: coluna relacional para o estável, documento para o variável <a class="section-link" href="#sec-jsonb-por-que-ele-salva-produto-de-ia" aria-label="Link para esta seção">#</a></h3>
 <p>Sistemas que consomem modelos produzem dado semiestruturado com frequência: respostas com campos que variam por versão, metadados de execução (modelo, tokens, custo, latência), configurações por tenant. Modelar cada variação como coluna significa uma migration por semana; despejar tudo num armazenamento sem schema significa perder junções, transações e validação. <strong>JSONB é a terceira via do PostgreSQL:</strong> colunas relacionais para o que é estável e consultado sempre; uma coluna JSONB para a cauda variável — indexável com GIN e consultável com operadores:</p>
@@ -476,12 +474,12 @@ SELECT resultado->>'modelo' FROM analises;                     -- extrai como te
 SELECT * FROM analises WHERE resultado @> '{"modelo": "gpt"}'; -- contém (usa o GIN!)
 SELECT * FROM analises WHERE resultado ? 'warnings';           -- tem a chave?</code></pre>
 
-<div class="box"><span class="lbl">Referência do conceito</span><p>JSONB armazena documentos JSON em representação própria do PostgreSQL e oferece operadores de consulta. O formato não elimina a necessidade de schema, validação e índices: o que se consulta sempre vira coluna; o schema do documento mora no Pydantic; o acesso por chave usa índice GIN. Usar JSONB como substituto do schema relacional — sem validação e sem índice — troca uma migration por semana por consultas sem plano estável (AT-011).</p></div>
+<div class="box"><span class="lbl">Referência do conceito</span><p>JSONB armazena documentos JSON em representação própria do PostgreSQL e oferece operadores de consulta. O formato não elimina a necessidade de schema, validação e índices: o que se consulta sempre vira coluna; o schema do documento mora no Pydantic; o acesso por chave usa índice GIN. Usar JSONB como substituto do schema relacional — sem validação e sem índice — troca uma migration por semana por consultas sem plano estável.</p></div>
 
 <h3 id="sec-b03-leitura-aplicada">Leitura aplicada: do sintoma ao conserto <a class="section-link" href="#sec-b03-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
 <ol>
 <li>A listagem "links recentes" ordena por <code>created_at</code> sem índice. O plano mostra <code>Seq Scan + Sort</code>: a tabela inteira lida e ordenada para devolver 20 linhas. O conserto é um índice <code>(created_at DESC)</code>; o plano passa a <code>Index Scan</code>. O preço aparece do outro lado: cada índice novo torna cada escrita mensuravelmente mais lenta — a troca leitura×escrita, decidida por predicado, não por hábito.</li>
-<li>O contador <code>hits</code> é incrementado como "ler, somar 1, gravar" em Python. Sob concorrência em READ COMMITTED, duas transações leem o mesmo valor e uma sobrescreve a outra: updates perdidos sem nenhum erro. O conserto é somar no banco (<code>UPDATE links SET hits = hits + 1</code>), onde a operação é atômica. O laboratório prova os dois comportamentos com um teste concorrente (AT-010).</li>
+<li>O contador <code>hits</code> é incrementado como "ler, somar 1, gravar" em Python. Sob concorrência em READ COMMITTED, duas transações leem o mesmo valor e uma sobrescreve a outra: updates perdidos sem nenhum erro. O conserto é somar no banco (<code>UPDATE links SET hits = hits + 1</code>), onde a operação é atômica. O laboratório prova os dois comportamentos com um teste concorrente.</li>
 <li>Metadados de origem e campanha chegam por link e variam a cada trimestre. Viram coluna <code>meta</code> JSONB com índice GIN e consulta por contenção (<code>@&gt;</code>), adicionada via migration Alembic com downgrade — o ciclo do bloco 2 aplicado a um tipo novo.</li>
 </ol>
 <p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — popular massa de teste, comparar planos antes e depois do índice, provocar o lost update e consultar o JSONB com e sem GIN — fica no <code>Laboratório guiado M03</code>, depois do bloco 8, com resultado esperado e diagnóstico por passo.</p>
@@ -549,10 +547,10 @@ SELECT * FROM analises WHERE resultado ? 'warnings';           -- tem a chave?</
 </div>
 
 <h3 id="sec-b04-override">Override: trocar a infraestrutura sem tocar na regra <a class="section-link" href="#sec-b04-override" aria-label="Link para esta seção">#</a></h3>
-<p>O service recebe um repositório que atende ao protocolo — no laboratório, a implementação SQLAlchemy; no teste, um fake em memória com o mesmo comportamento. Nada na regra muda entre os dois: a construção escolhe o objeto, a lógica só usa o contrato. No nível HTTP, o mesmo princípio aparece como <code>dependency_overrides</code>: a aplicação real atende requests com a sessão de teste injetada, sem startup alternativo e sem condicional de ambiente. É assim que AT-015 se prova — mesma regra, duas infraestruturas, mesmos resultados.</p>
+<p>O service recebe um repositório que atende ao protocolo — no laboratório, a implementação SQLAlchemy; no teste, um fake em memória com o mesmo comportamento. Nada na regra muda entre os dois: a construção escolhe o objeto, a lógica só usa o contrato. No nível HTTP, o mesmo princípio aparece como <code>dependency_overrides</code>: a aplicação real atende requests com a sessão de teste injetada, sem startup alternativo e sem condicional de ambiente. É assim que isso se prova — mesma regra, duas infraestruturas, mesmos resultados.</p>
 
 <h3 id="sec-b04-guardrail">Guardrail: arquitetura com exit code <a class="section-link" href="#sec-b04-guardrail" aria-label="Link para esta seção">#</a></h3>
-<p>Convenção oral decai; verificação executável permanece. O laboratório varre a árvore sintática dos pacotes e rejeita imports proibidos: <code>api</code> não toca repositories nem models (a sessão atravessa como valor opaco da dependência); services não toca FastAPI, SQLAlchemy nem models; repositories não toca FastAPI; o núcleo não toca framework nenhum. Um import ilegal quebra a suíte com a violação apontada (AT-013/AT-014). O teste inclui seu próprio controle negativo — um trecho violador sintético que o verificador deve acusar — para que o oráculo não aprove tudo por acidente.</p>
+<p>Convenção oral decai; verificação executável permanece. O laboratório varre a árvore sintática dos pacotes e rejeita imports proibidos: <code>api</code> não toca repositories nem models (a sessão atravessa como valor opaco da dependência); services não toca FastAPI, SQLAlchemy nem models; repositories não toca FastAPI; o núcleo não toca framework nenhum. Um import ilegal quebra a suíte com a violação apontada. O teste inclui seu próprio controle negativo — um trecho violador sintético que o verificador deve acusar — para que o oráculo não aprove tudo por acidente.</p>
 
 <h3 id="sec-b04-leitura-aplicada">Leitura aplicada: seguir uma criação de ponta a ponta <a class="section-link" href="#sec-b04-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
 <ol>
@@ -561,7 +559,7 @@ SELECT * FROM analises WHERE resultado ? 'warnings';           -- tem a chave?</
 <li>O repositório executa <code>select</code>/<code>add</code> na sessão que a dependência abriu. Se a constraint rejeita a escrita, o erro sobe já traduzido pelo <code>errors</code>.</li>
 <li>A resposta volta como contrato de saída; a entidade do banco nunca cruza a fronteira. Trocar o repositório SQLAlchemy pelo fake não altera nenhuma dessas linhas — só a construção.</li>
 </ol>
-<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — service, repositório, app com override e guardrail verde — fica no <code>Laboratório guiado M03</code>, depois do bloco 8. A decisão de fronteiras, com custo e condição de revisão, está registrada no ADR do laboratório (AT-016).</p>
+<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — service, repositório, app com override e guardrail verde — fica no <code>Laboratório guiado M03</code>, depois do bloco 8. A decisão de fronteiras, com custo e condição de revisão, está registrada no ADR do laboratório.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 4</span>
@@ -638,8 +636,8 @@ CMD ["uvicorn", "link_shortener.serve:app", "--host", "0.0.0.0", "--port", "8000
 <li><strong><code>--frozen</code>:</strong> usa o uv.lock exato e falha se estiver desatualizado — determinismo do build.</li>
 <li><strong><code>USER app</code>:</strong> o processo não roda como root. Custa duas linhas e remove uma classe inteira de impacto em caso de invasão.</li>
 <li><strong><code>PYTHONUNBUFFERED=1</code>:</strong> logs saem sem buffer, porque em container o log é stdout — quem captura é a plataforma. Arquivo de log dentro do container morre com ele.</li>
-<li><strong><code>HEALTHCHECK</code>:</strong> o orquestrador precisa distinguir "processo vivo" de "app saudável" — o endpoint <code>/health</code> responde isso (AT-017/AT-020 o verificam).</li>
-<li><strong><code>.dockerignore</code></strong> (sempre, junto): <code>.git</code>, <code>.venv</code>, <code>.env</code>, <code>__pycache__</code>, <code>tests/</code>. Sem ele, um <code>.env</code> com segredos entra na imagem — e imagem é arquivável, inspecionável e frequentemente pública (AT-018).</li>
+<li><strong><code>HEALTHCHECK</code>:</strong> o orquestrador precisa distinguir "processo vivo" de "app saudável" — o endpoint <code>/health</code> responde isso (os testes do laboratório o verificam).</li>
+<li><strong><code>.dockerignore</code></strong> (sempre, junto): <code>.git</code>, <code>.venv</code>, <code>.env</code>, <code>__pycache__</code>, <code>tests/</code>. Sem ele, um <code>.env</code> com segredos entra na imagem — e imagem é arquivável, inspecionável e frequentemente pública.</li>
 </ul>
 
 <h3 id="sec-compose-o-ambiente-inteiro-declarado">Compose: o ambiente inteiro, declarado <a class="section-link" href="#sec-compose-o-ambiente-inteiro-declarado" aria-label="Link para esta seção">#</a></h3>
@@ -678,8 +676,8 @@ networks:
   shortnet:</code></pre>
 <p>Três mecânicas para entender de verdade:</p>
 <ul>
-<li><strong>Rede e DNS:</strong> o Compose cria uma rede onde cada serviço é hostname — repare na URL: <code>@db:5432</code>, não <code>@localhost</code>. Dentro da rede, o nome do serviço resolve; <code>localhost</code> dentro do container é o próprio container (AT-019).</li>
-<li><strong>Volume e rede nomeados:</strong> container é descartável; o volume <code>pgdata</code> é onde o dado persiste — sem ele, cada <code>down</code> apaga o banco. A rede <code>shortnet</code> declara o isolamento; a limpeza do laboratório só atinge esses recursos nomeados (AT-020).</li>
+<li><strong>Rede e DNS:</strong> o Compose cria uma rede onde cada serviço é hostname — repare na URL: <code>@db:5432</code>, não <code>@localhost</code>. Dentro da rede, o nome do serviço resolve; <code>localhost</code> dentro do container é o próprio container.</li>
+<li><strong>Volume e rede nomeados:</strong> container é descartável; o volume <code>pgdata</code> é onde o dado persiste — sem ele, cada <code>down</code> apaga o banco. A rede <code>shortnet</code> declara o isolamento; a limpeza do laboratório só atinge esses recursos nomeados.</li>
 <li><strong><code>depends_on</code> + <code>service_healthy</code>:</strong> "depois de" não é "pronto" — a API esperar o healthcheck do Postgres elimina o <code>ConnectionRefused</code> da corrida de inicialização.</li>
 </ul>
 
@@ -783,7 +781,7 @@ async def pg_client(pg_factory):
 <li>Lost update resolvido: N increments concorrentes com sessões próprias totalizam exatamente N no update atômico.</li>
 <li>Migration como setup: o schema do banco de teste nasce de <code>alembic upgrade head</code>, então a suíte quebra se uma revision estiver inconsistente.</li>
 </ol>
-<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável fica no <code>Laboratório guiado M03</code>, depois do bloco 8. Sem Docker Engine, a execução fica marcada como bloqueada; a indisponibilidade do banco (erro observável com cleanup, AT-024) tem oráculo parcial executável sem Docker no lab.</p>
+<p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável fica no <code>Laboratório guiado M03</code>, depois do bloco 8. Sem Docker Engine, a execução fica marcada como bloqueada; a indisponibilidade do banco (erro observável com cleanup) tem oráculo parcial executável sem Docker no lab.</p>
 
 <div class="box ok">
 <span class="lbl">Síntese do bloco 6</span>
@@ -800,7 +798,7 @@ async def pg_client(pg_factory):
 
 
 <h3 id="sec-por-que-isso-importa-6">Por que isso importa <a class="section-link" href="#sec-por-que-isso-importa-6" aria-label="Link para esta seção">#</a></h3>
-<p>Até aqui os gates (lint, tipos, testes) rodam na máquina de quem lembra de rodá-los. CI os promove a lei: <strong>todo push, todo pull request, sem exceção, numa máquina que não é a sua</strong>. E release fecha o ciclo: a mesma imagem verificada, endereçada por revisão imutável, com migrations aplicadas antes de promover e rollback ensaiado. Nada neste bloco exige conta externa: qualidade, imagem e contrato de release são locais e versionados; publicação externa é trilha opcional (AT-032).</p>
+<p>Até aqui os gates (lint, tipos, testes) rodam na máquina de quem lembra de rodá-los. CI os promove a lei: <strong>todo push, todo pull request, sem exceção, numa máquina que não é a sua</strong>. E release fecha o ciclo: a mesma imagem verificada, endereçada por revisão imutável, com migrations aplicadas antes de promover e rollback ensaiado. Nada neste bloco exige conta externa: qualidade, imagem e contrato de release são locais e versionados; publicação externa é trilha opcional.</p>
 
 <div class="box">
 <span class="lbl">Contexto · GitHub Actions em 90 segundos</span>
@@ -852,28 +850,28 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ github.sha }}</code></pre>
 <p>As decisões que importam:</p>
 <ul>
-<li><strong><code>needs:</code> encadeia gates:</strong> imagem só existe se qualidade passou. O <code>check.sh</code> local executa os mesmos comandos — paridade dev↔CI; divergência entre os dois é onde defeito se esconde (AT-025).</li>
-<li><strong>PR verifica, main endereça:</strong> o job de build só roda na main (<code>if: github.ref == ...</code>); nenhum caminho de deploy nem segredo de produção aparece no contexto de pull request (AT-026).</li>
-<li><strong>Tag pela SHA além de latest:</strong> cada commit tem imagem imutável endereçável — é isso que torna rollback uma operação (redeployar a SHA anterior), não uma esperança (AT-027).</li>
+<li><strong><code>needs:</code> encadeia gates:</strong> imagem só existe se qualidade passou. O <code>check.sh</code> local executa os mesmos comandos — paridade dev↔CI; divergência entre os dois é onde defeito se esconde.</li>
+<li><strong>PR verifica, main endereça:</strong> o job de build só roda na main (<code>if: github.ref == ...</code>); nenhum caminho de deploy nem segredo de produção aparece no contexto de pull request.</li>
+<li><strong>Tag pela SHA além de latest:</strong> cada commit tem imagem imutável endereçável — é isso que torna rollback uma operação (redeployar a SHA anterior), não uma esperança.</li>
 <li><strong>Lock preservado:</strong> <code>uv sync --frozen</code> falha se o lock divergir — a imagem sempre corresponde ao lock revisado.</li>
 </ul>
 
 <div class="box warn">
 <span class="lbl">Migrations no release — a decisão que separa deploy de incidente</span>
-<p>Nunca criar schema com <code>create_all</code> no startup em produção e nunca deixar a migration para "depois". O padrão é o <strong>comando de release</strong>: <code>alembic upgrade head</code> roda num passo efêmero ANTES de promover a versão nova. Se a migration falha, o release aborta e a versão anterior segue no ar. Combine com a regra do bloco 2 (migration compatível com a versão anterior — expandir/contrair em duas releases) e o banco deixa de ser o ponto sem volta (AT-028).</p>
+<p>Nunca criar schema com <code>create_all</code> no startup em produção e nunca deixar a migration para "depois". O padrão é o <strong>comando de release</strong>: <code>alembic upgrade head</code> roda num passo efêmero ANTES de promover a versão nova. Se a migration falha, o release aborta e a versão anterior segue no ar. Combine com a regra do bloco 2 (migration compatível com a versão anterior — expandir/contrair em duas releases) e o banco deixa de ser o ponto sem volta.</p>
 </div>
 
 <div class="box fund">
 <span class="lbl">Fundamento · Configuração, segredos e as três perguntas de release</span>
 <ul>
-<li><strong>Mesma imagem, configuração no ambiente:</strong> o que muda entre dev e produção é injetado, não rebuildado. Se trocar de ambiente exige rebuildar, o desenho está errado. Configuração obrigatória ausente deve falhar cedo e alto — e a mensagem de falha nunca revela o valor do segredo (AT-029).</li>
+<li><strong>Mesma imagem, configuração no ambiente:</strong> o que muda entre dev e produção é injetado, não rebuildado. Se trocar de ambiente exige rebuildar, o desenho está errado. Configuração obrigatória ausente deve falhar cedo e alto — e a mensagem de falha nunca revela o valor do segredo.</li>
 <li><strong>Segredo nunca em: código, imagem, log.</strong> Só no cofre da plataforma. O <code>.dockerignore</code> do bloco 5 e o mascaramento do CI são as redes; a disciplina é sua.</li>
 <li><strong>As três perguntas que todo release responde ANTES de existir:</strong> (1) como sei que quebrou? (health check + logs); (2) como volto? (redeploy da SHA anterior + downgrade compatível — ensaiado, não teórico); (3) o banco volta junto? (downgrade testado ou expandir/contrair). Sem as três respostas, não é release — é aposta.</li>
 </ul>
 </div>
 
 <h3 id="sec-b07-trilha-opcional">Trilha opcional · Publicação externa <a class="section-link" href="#sec-b07-trilha-opcional" aria-label="Link para esta seção">#</a></h3>
-<p>Publicar o encurtador numa plataforma (PaaS com suporte a container e Postgres, qualquer fornecedor) é trilha opcional e não condiciona a aprovação do módulo (AT-032). Quem a percorrer registra no contrato de release: ambiente, revisão publicada, método de rollback ensaiado e limite do ensaio. Conta, cartão e URL pública ficam fora do caminho obrigatório — por isso o laboratório nunca os exige.</p>
+<p>Publicar o encurtador numa plataforma (PaaS com suporte a container e Postgres, qualquer fornecedor) é trilha opcional e não condiciona a aprovação do módulo. Quem a percorrer registra no contrato de release: ambiente, revisão publicada, método de rollback ensaiado e limite do ensaio. Conta, cartão e URL pública ficam fora do caminho obrigatório — por isso o laboratório nunca os exige.</p>
 
 <h3 id="sec-b07-leitura-aplicada">Leitura aplicada: do push ao rollback <a class="section-link" href="#sec-b07-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
 <ol>
@@ -956,7 +954,7 @@ uv sync --frozen</code></pre>
 <div class="step"><span class="n">6</span><strong>Validação técnica.</strong> Rode <code>./scripts/check.sh</code> (equivale ao CI) e <code>uv build</code>.
 <p><strong>Resultado esperado:</strong> lint, formato, tipos e suíte verdes; wheel em <code>dist/</code>. <strong>Diagnóstico:</strong> qualquer vermelho aqui é defeito do programa, não seu — anote e corrija antes de prosseguir.</p></div>
 <div class="step"><span class="n">7</span><strong>PostgreSQL real.</strong> <span class="badge">DOCKER</span> Com Docker Engine: <code>docker compose up --build -d</code>, <code>uv run alembic upgrade head</code>, <code>uv run pytest -q -m postgres</code>, <code>docker compose stop db</code> com a API no ar (observe o 503), <code>docker compose down</code> (limpeza só dos recursos nomeados).
-<p><strong>Resultado esperado:</strong> Postgres saudável antes da API, migrations aplicadas, suíte PG verde, degradação observada, volume persistindo entre <code>down/up</code>. <strong>Sem Docker:</strong> esta etapa é leitura; os 6 testes pulam como BLOCKED e os gates G2/G5 seguem pendentes.</p></div>
+<p><strong>Resultado esperado:</strong> Postgres saudável antes da API, migrations aplicadas, suíte PG verde, degradação observada, volume persistindo entre <code>down/up</code>. <strong>Sem Docker:</strong> esta etapa é leitura; os 6 testes pulam como BLOCKED.</p></div>
 
 <h3 id="sec-lab-limpeza-retomada">Limpeza e retomada <a class="section-link" href="#sec-lab-limpeza-retomada" aria-label="Link para esta seção">#</a></h3>
 <p>Encerre com <code>docker compose down</code> (só com Docker) e apague a cópia de trabalho se quiser — ela é descartável. Para retomar, crie uma cópia nova e volte à etapa indicada: cada etapa só precisa da cópia sincronizada (<code>uv sync --frozen</code>), exceto a 7, que precisa dos containers no ar. Nenhum recurso fora da cópia e dos containers nomeados é criado ou removido.</p>
@@ -988,21 +986,21 @@ uv sync --frozen</code></pre>
 <span class="lbl">Avaliação sem consulta — diga "Checkpoint M03" no chat</span>
 <p>Cada pergunta cobre uma família de cenários; a rubrica diz o que basta e o que reprova. Demonstração com a referência do lab executa junto.</p>
 <ul class="check">
-<li><strong>P1 · Contrato HTTP (AT-001–004).</strong> Mostre criação, inválido, inexistente e correlation id pela API. <em>Basta:</em> status e corpo deliberados por situação, sem vazar entidade. <em>Reprova:</em> erro inconsistente ou header que altera semântica.</li>
-<li><strong>P2 · Sessão e migration (AT-003/005–008).</strong> Descreva o ciclo da sessão quando o service levanta exceção; mostre upgrade e downgrade da revision. <em>Basta:</em> rollback na borda, volta declarada, schema só de migration. <em>Reprova:</em> <code>create_all</code> em startup ou sessão compartilhada.</li>
-<li><strong>P3 · Plano e JSONB (AT-009/011).</strong> Dado um plano, identifique o nó problemático e diga se é índice ou estatística; justifique coluna vs. documento pelos dois custos de errar. <em>Basta:</em> invariante do nó certo + GIN/validação. <em>Reprova:</em> cronômetro como prova ou JSONB sem schema.</li>
-<li><strong>P4 · Concorrência (AT-006/010).</strong> Por que só a constraint fecha a corrida de slug; descreva o teste do lost update e as correções em ordem de custo. <em>Basta:</em> 409 vindo de <code>IntegrityError</code> e total exato no atômico. <em>Reprova:</em> <code>if exists</code> como proteção.</li>
-<li><strong>P5 · Fronteiras e override (AT-013–016).</strong> Enuncie o que cada camada pode importar; troque a infraestrutura sem tocar na regra; apresente o ADR com custo e condição de revisão. <em>Basta:</em> guardrail verde + override demonstrado + ADR. <em>Reprova:</em> rota importando persistência.</li>
-<li><strong>P6 · Embalagem (AT-017–020).</strong> Explique o Dockerfile linha a linha e o Compose (saúde, rede, volume, limpeza). <em>Basta:</em> não-root, contexto sem segredo, API após banco saudável. <em>Reprova:</em> segredo na imagem ou <code>localhost</code> interno.</li>
-<li><strong>P7 · Integração (AT-012/021–024).</strong> Prove isolamento (mesmo slug, qualquer ordem) e degradação com o banco parado. <em>Basta:</em> rollback do envelope + 503 estruturado com cleanup. <em>Reprova:</em> teste dependente de ordem ou travamento.</li>
-<li><strong>P8 · Release (AT-025–032).</strong> Responda as três perguntas (como sei que quebrou / como volto / e o banco?) com os mecanismos do pipeline, e diga o que é trilha opcional. <em>Basta:</em> gates paritários, SHA imutável, migration antes de promover. <em>Reprova:</em> segredo no PR ou publicação como requisito.</li>
+<li><strong>P1 · Contrato HTTP.</strong> Mostre criação, inválido, inexistente e correlation id pela API. <em>Basta:</em> status e corpo deliberados por situação, sem vazar entidade. <em>Reprova:</em> erro inconsistente ou header que altera semântica.</li>
+<li><strong>P2 · Sessão e migration.</strong> Descreva o ciclo da sessão quando o service levanta exceção; mostre upgrade e downgrade da revision. <em>Basta:</em> rollback na borda, volta declarada, schema só de migration. <em>Reprova:</em> <code>create_all</code> em startup ou sessão compartilhada.</li>
+<li><strong>P3 · Plano e JSONB.</strong> Dado um plano, identifique o nó problemático e diga se é índice ou estatística; justifique coluna vs. documento pelos dois custos de errar. <em>Basta:</em> invariante do nó certo + GIN/validação. <em>Reprova:</em> cronômetro como prova ou JSONB sem schema.</li>
+<li><strong>P4 · Concorrência.</strong> Por que só a constraint fecha a corrida de slug; descreva o teste do lost update e as correções em ordem de custo. <em>Basta:</em> 409 vindo de <code>IntegrityError</code> e total exato no atômico. <em>Reprova:</em> <code>if exists</code> como proteção.</li>
+<li><strong>P5 · Fronteiras e override.</strong> Enuncie o que cada camada pode importar; troque a infraestrutura sem tocar na regra; apresente o ADR com custo e condição de revisão. <em>Basta:</em> guardrail verde + override demonstrado + ADR. <em>Reprova:</em> rota importando persistência.</li>
+<li><strong>P6 · Embalagem.</strong> Explique o Dockerfile linha a linha e o Compose (saúde, rede, volume, limpeza). <em>Basta:</em> não-root, contexto sem segredo, API após banco saudável. <em>Reprova:</em> segredo na imagem ou <code>localhost</code> interno.</li>
+<li><strong>P7 · Integração.</strong> Prove isolamento (mesmo slug, qualquer ordem) e degradação com o banco parado. <em>Basta:</em> rollback do envelope + 503 estruturado com cleanup. <em>Reprova:</em> teste dependente de ordem ou travamento.</li>
+<li><strong>P8 · Release.</strong> Responda as três perguntas (como sei que quebrou / como volto / e o banco?) com os mecanismos do pipeline, e diga o que é trilha opcional. <em>Basta:</em> gates paritários, SHA imutável, migration antes de promover. <em>Reprova:</em> segredo no PR ou publicação como requisito.</li>
 </ul>
 <h4>Entregáveis verificados (mostrar rodando)</h4>
 <ol>
 <li>Gates locais verdes: <code>scripts/check.sh</code> (lint, formato, tipos, suíte) + wheel em <code>dist/</code>.</li>
 <li>Guardrail com mutante rejeitado e revertido; ADR 0001 apresentado.</li>
 <li>Fluxo final pela API: criação, consulta, 409, 404, 422, <code>/health</code> 200 e 503 degradado, correlation id.</li>
-<li>Suíte <code>postgres</code> como contrato: verde com Docker, BLOCKED sem ele (G2/G5 pendentes nesse caso).</li>
+<li>Suíte <code>postgres</code> como contrato: verde com Docker, BLOCKED sem ele.</li>
 <li>Contrato de release (<code>RELEASE.md</code>) com gates, SHA, migrations, segredos e trilha opcional registrada.</li>
 </ol>
 </div>

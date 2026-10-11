@@ -1,5 +1,7 @@
 # M11 · Fundamentos de ML/DL e modelos locais
 
+**Fase 4** · Pré-requisitos: F03, M05. Estado: [STATUS](../../STATUS.md).
+
 ## Visão geral
 
 Você não vai treinar um modelo de produção. Vai parar de tratar o modelo como caixa preta.
@@ -21,7 +23,7 @@ E abre uma porta comercial que a API não abre: **o cliente cujo código-fonte n
 - **Arquivo companheiro:** [`lab-transformer-do-zero.html`](lab-transformer-do-zero.html) — blocos 2 a 4, o laboratório de PyTorch (anexo de execução)
 - **Referência executável:** [`lab/`](lab/) — módulos, testes, fixtures e evidências (94 testes verdes; PG/servidor live como BLOCKED registrado)
 - **Carga:** 8 blocos de 2h (16h, estimativa editorial, sem sessão obrigatória)
-- **Pré-requisito:** M05 (gateway), M06 (evals) e M08 (orçamento de contexto)
+- **Pré-requisito:** F03 e M05 (gateway); usa também M06 (evals) e M08 (orçamento de contexto)
 
 > **Ordem de leitura.** Termine o bloco 1 no arquivo principal → abra o companheiro e faça os blocos 2 a 4 → volte para o bloco 5. O laboratório está separado pelo mesmo motivo que o M00 separou o bloco 4: é longo, autocontido, e **é a única parte do curso que não gera peça do Capstone** — existe para entendimento. Tudo roda em CPU; GPU só deixa mais rápido.
 

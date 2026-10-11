@@ -1,6 +1,6 @@
-**Status:** G0 approved; B01–B08 in didactic review with local executable lab (scripted policy). G1–G6 pending orchestrator review.
-
 # M08 · Agentes: padrões e context engineering
+
+**Fase 2** · Pré-requisito: M07. Estado: [STATUS](../../STATUS.md).
 
 ## Visão geral
 
@@ -11,8 +11,7 @@ Entrega o agente investigador do Capstone e — o mais valioso — o número que
 ## Conteúdo do módulo
 
 - **Material principal (HTML):** [`M08.html`](M08.html) — abra no navegador
-- **Especificação:** [`docs/especificacoes/M08-ESPECIFICACAO.md`](../../docs/especificacoes/M08-ESPECIFICACAO.md) — G0 aprovado
-- **Rastreabilidade:** [`RASTREABILIDADE.md`](RASTREABILIDADE.md)
+- **Especificação:** [`docs/especificacoes/M08-ESPECIFICACAO.md`](../../docs/especificacoes/M08-ESPECIFICACAO.md)
 - **Laboratório:** [`lab/`](lab/) — agente local com política roteirizada, sem rede/modelo real
 - **Carga:** 8 blocos de conteúdo (16h)
 - **Pré-requisito:** M07

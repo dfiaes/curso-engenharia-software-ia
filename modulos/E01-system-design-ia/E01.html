@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E01 · System Design de Sistemas com IA</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>E01 · System design de sistemas com IA</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas do laboratório e os gates vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14.7, uv 0.12.13). Os preços em dólar deste módulo são números redondos hipotéticos, não a tabela de nenhum fornecedor. <a href="../../STATUS.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Os blocos 4 a 6 são casos completos e podem ser lidos em qualquer ordem depois dos blocos 1 a 3. A prática fica reunida no final.</p></aside>
+<p class="meta"><span class="badge">FASE 4</span> &nbsp; 7 blocos · carga estimada ≈ 14 h · pré-requisitos: Fase 3 completa (<a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>, <a href="../LT02-novo/LT02.html">LT02</a>, <a href="../LT03-novo/LT03.html">LT03</a>, <a href="../P01-deploy-nuvem/P01.html">P01</a>, <a href="../LT04-novo/LT04.html">LT04</a>) · próximos: <a href="../E04-lideranca-tecnica/E04.html">E04</a> e <a href="../M13-capstone/M13.html">M13</a> · <strong>onde as peças do curso viram um desenho defensável</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Até aqui você construiu as peças: chamada de LLM com cache e gateway, RAG, agentes, avaliação, segurança, filas, nuvem. System design é a disciplina de escolher quais peças usar, em que quantidade, com que garantias e a que custo, antes de escrever o código, e de defender a escolha diante de quem vai pagar a conta e de quem vai ser acordado às três da manhã. Em sistemas com LLM duas coisas mudam o jogo: o custo passa a ser função de cada requisição, e a qualidade da resposta passa a ser um requisito que se degrada sem que nenhum alarme dispare.</p>
+<p>Ao terminar você consegue: (1) conduzir o método de requisitos, estimativa, API, dados, desenho e gargalos, e adaptá-lo a um design doc real e a uma conversa de 45 minutos; (2) dimensionar um sistema com QPS de pico, lei de Little, cota de tokens por minuto e custo mensal, em minutos e com aritmética que outro engenheiro consegue refazer; (3) reconhecer o que o LLM muda nos blocos de construção clássicos (latência em duas fases, cota em tokens, cache semântico, fallback entre modelos, batch, roteamento) e escrever SLOs que incluem custo e qualidade; (4) desenhar de ponta a ponta um assistente RAG, uma plataforma de agentes com ações em sistemas de terceiros e um pipeline de documentos em lote, cada um com números, falhas e plano de evolução; (5) escrever um design doc e sobreviver a uma revisão de staff engineer.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não repete os mecanismos que outros módulos ensinam: cache e gateway no <a href="../M05-llm-pratica-gateway-cache/M05.html">M05</a>, RAG no <a href="../M07-rag-de-verdade/M07.html">M07</a>, agentes no <a href="../M08-agentes-e-context-engineering/M08.html">M08</a>, segurança, quotas e multi-tenancy no <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>, filas e consistência no <a href="../LT02-novo/LT02.html">LT02</a>. Aqui esses mecanismos entram como componentes de um desenho, com um link para o detalhe. Entrevistas propriamente ditas ficam no <a href="../E05-carreira/E05.html">E05</a>.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça, com papel e caneta se precisar. Se acertar todas com segurança (conta e justificativa, não só o veredito), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint">Checkpoint E01</a> e siga. Qualquer resposta hesitante marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> Um produto tem "10 mil usuários ativos". Por que essa frase sozinha não permite calcular QPS, e qual é a diferença de ordem de grandeza entre as leituras possíveis?
+<details><summary>Resposta</summary><p>"Ativo" pode ser diário ou mensal, e o pico depende da janela de uso e do fator de pico. Com 5 requisições por usuário, janela de 10 horas e pico de 3 vezes, 10 mil ativos diários dão cerca de 4,2 QPS de pico; se só 30% dos "ativos" aparecem no dia, 1,25. A estimativa começa por perguntar a definição, e o resultado é um intervalo com premissas escritas, nunca um número solto.</p></details></li>
+<li><strong>(Bloco 2)</strong> Chegam 4 requisições por segundo e cada uma fica 7 segundos em voo. Quantas há em voo ao mesmo tempo, em média, e o que essa conta dimensiona?
+<details><summary>Resposta</summary><p>Lei de Little: L = λ·W = 4 × 7 = 28. Dimensiona conexões abertas, workers, threads, slots de streaming e o tamanho de pools. Vale para médias em regime estável, então se aplica à janela de pico, não ao dia inteiro.</p></details></li>
+<li><strong>(Bloco 3)</strong> O provedor limita 1,2 milhão de tokens por minuto (TPM) e 500 requisições por minuto (RPM). Seu tráfego de pico é 325 RPM com 3.850 tokens por requisição. Qual limite estoura primeiro?
+<details><summary>Resposta</summary><p>O TPM: 325 × 3.850 ≈ 1,25 milhão, acima de 1,2 milhão, enquanto o RPM tem folga. Sistemas com RAG e agentes são limitados por tokens, não por requisições; quem só monitora RPM descobre o limite em produção, com 429.</p></details></li>
+<li><strong>(Bloco 3)</strong> Por que reduzir a saída de 350 para 150 tokens muda mais a latência total que trocar o modelo de embedding?
+<details><summary>Resposta</summary><p>A geração é sequencial: cada token de saída custa um passo de decodificação. A 60 tokens/s, 200 tokens a menos economizam cerca de 3,3 s, contra dezenas de milissegundos de uma embedding mais rápida. A entrada pesa no TTFT (prefill, paralelo); a saída pesa no tempo total.</p></details></li>
+<li><strong>(Bloco 3)</strong> Qual é o risco específico do cache semântico que o cache exato não tem?
+<details><summary>Resposta</summary><p>Falso positivo: duas perguntas parecidas em embedding e diferentes em significado ("posso cancelar?" e "não posso cancelar?") devolvem a mesma resposta, e o erro é silencioso. Além disso a chave precisa incluir tenant, permissões e versão do corpus, ou o cache vaza dado entre usuários.</p></details></li>
+<li><strong>(Bloco 5)</strong> Um worker de agente cai depois de enviar o e-mail e antes de gravar o passo como concluído. O que impede o e-mail duplicado na reexecução?
+<details><summary>Resposta</summary><p>Chave de idempotência determinística por efeito (tarefa + passo + parâmetros), registrada antes da chamada e repassada ao sistema de terceiros, mais um log de efeitos consultado antes de reexecutar. A fila garante entrega pelo menos uma vez; a exatamente uma vez do efeito é construída pelo desenho.</p></details></li>
+<li><strong>(Bloco 6)</strong> Para extrair campos de 1,2 milhão de páginas, quando a API de batch é a escolha certa e qual é o custo dela?
+<details><summary>Resposta</summary><p>Quando ninguém espera a resposta de cada item e o prazo é de horas ou dias. Em troca de desconto (tipicamente 50% do preço síncrono) e cota separada, você aceita janela de conclusão de até 24 horas, resultados fora de ordem, erros por item e a necessidade de reconciliar tudo por <code>custom_id</code>.</p></details></li>
+<li><strong>(Bloco 7)</strong> Num design doc, qual é a diferença entre "alternativa considerada" e "lista de tecnologias"?
+<details><summary>Resposta</summary><p>A alternativa nomeia a opção rejeitada, o que ela daria e por que perdeu naquele contexto, com número ou restrição que o leitor possa contestar. Lista de tecnologias só descreve o que foi escolhido e transfere ao revisor o trabalho de adivinhar o porquê.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — O método: requisitos, estimativa, API, dados, desenho, gargalos e trade-offs</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Blocos de construção revisitados: balanceamento, cache, filas, partição, consistência, rate limit, backpressure e lei de Little</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — O que muda com LLM: latência, cotas, custo, não-determinismo, fallback, cache, batch, roteamento e SLOs</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Caso 1: assistente de suporte com RAG para 10 mil usuários</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Caso 2: plataforma de agentes que agem em sistemas de terceiros</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Caso 3: pipeline de documentos em lote</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — Escrever e defender o design: design doc, trade-offs, revisão e rubrica</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado E01</strong> — calculadora de capacidade e custo, os três casos e o template de design doc</a></li>
+</ol>
+</div>
+
+<!-- ============================================ BLOCO 1 -->
+<h2 id="b01">Bloco 1 · O método: requisitos, estimativa, API, dados, desenho, gargalos e trade-offs</h2>
+
+<h3>Por que isso importa</h3>
+<p>Um time recebe o pedido "coloque um assistente com IA no portal de suporte". Três semanas depois há um protótipo que impressiona na demonstração. No primeiro mês de produção aparecem três contas que ninguém fez: a cota do provedor estoura às 10h porque todos os usuários chegam juntos, a fatura mensal é dez vezes a prevista e as respostas erradas só são descobertas por reclamação de cliente. Nenhuma das três exigia talento raro para ser prevista. Exigia um método aplicado antes do código: perguntar o que o sistema precisa garantir, calcular a ordem de grandeza do que ele vai consumir, e só então desenhar.</p>
+<p><strong>System design</strong> é a disciplina de decompor um problema aberto em requisitos, estimativas, interfaces, dados e componentes, e de registrar por que cada escolha foi feita diante das alternativas. Não existe desenho correto fora de um conjunto de requisitos; existe desenho cujas escolhas se sustentam contra os números e as restrições declarados.</p>
+
+<h3>O método em sete passos</h3>
+<p>A ordem importa porque cada passo fornece o insumo do seguinte. Pular para o diagrama de caixas é o erro mais comum: as caixas parecem arquitetura, mas ainda não têm nada que as justifique.</p>
+<figure>
+<svg viewBox="0 0 760 150" role="img" aria-labelledby="t-metodo" width="760">
+<title id="t-metodo">Os sete passos do método de system design e o ciclo de volta aos requisitos</title>
+<g font-family="sans-serif" font-size="12" fill="currentColor" stroke="currentColor" stroke-width="1.2">
+<g fill="none">
+<rect x="6" y="30" width="96" height="50" rx="6"/><rect x="116" y="30" width="96" height="50" rx="6"/><rect x="226" y="30" width="96" height="50" rx="6"/><rect x="336" y="30" width="96" height="50" rx="6"/><rect x="446" y="30" width="96" height="50" rx="6"/><rect x="556" y="30" width="96" height="50" rx="6"/><rect x="666" y="30" width="88" height="50" rx="6"/>
+<path d="M102 55h14M212 55h14M322 55h14M432 55h14M542 55h14M652 55h14"/>
+<path d="M710 80v40H54V80" stroke-dasharray="4 3"/>
+</g>
+<g stroke="none" text-anchor="middle">
+<text x="54" y="52">1 Requisitos</text><text x="54" y="68" font-size="10">funcionais e NFR</text>
+<text x="164" y="52">2 Estimativa</text><text x="164" y="68" font-size="10">QPS, tokens, $</text>
+<text x="274" y="52">3 API</text><text x="274" y="68" font-size="10">contratos, erros</text>
+<text x="384" y="52">4 Dados</text><text x="384" y="68" font-size="10">entidades, chaves</text>
+<text x="494" y="52">5 Alto nível</text><text x="494" y="68" font-size="10">caixas e fluxo</text>
+<text x="604" y="52">6 Gargalos</text><text x="604" y="68" font-size="10">aprofundar 2 ou 3</text>
+<text x="710" y="52">7 Trade-offs</text><text x="710" y="68" font-size="10">registrar</text>
+<text x="380" y="138" font-size="11">cada gargalo ou número surpreendente reabre requisitos e estimativas</text>
+</g></g>
+</svg>
+<figcaption>O método é um ciclo: a estimativa que contradiz um requisito obriga a renegociar o requisito.</figcaption>
+</figure>
+
+<h4>1. Requisitos funcionais e não funcionais</h4>
+<p><strong>Requisitos funcionais</strong> dizem o que o sistema faz ("responde perguntas citando a fonte"). <strong>Requisitos não funcionais</strong> (NFR) dizem com que qualidade: latência, disponibilidade, durabilidade, segurança, custo, qualidade da resposta. São os NFR que determinam a arquitetura; dois sistemas com as mesmas funções e NFR diferentes têm desenhos diferentes. Um NFR só vale se tiver número e forma de medição: "rápido" não é requisito, "TTFT p95 abaixo de 1,5 s medido no gateway" é.</p>
+<p>Em sistemas com IA acrescente quatro perguntas que o desenho clássico não faz: qual o custo máximo por requisição e por mês; que taxa de resposta errada é tolerável e como será medida; que dados podem sair do perímetro para o provedor do modelo; e o que o sistema faz quando o modelo está lento, indisponível ou incerto. A última define o comportamento degradado, que é parte do produto.</p>
+
+<h4>2. Estimativas de ordem de grandeza</h4>
+<p>Estimar não é prever; é descobrir se o problema cabe em uma máquina ou em cem, em R$ 500 ou em R$ 50 mil por mês, antes de investir. A técnica é a de Fermi: decomponha em fatores que você consegue chutar com ±2x de erro e multiplique. Os fatores que sempre aparecem:</p>
+<ul>
+<li><strong>Volume:</strong> usuários ativos × ações por usuário por dia = requisições por dia.</li>
+<li><strong>Taxa média e de pico:</strong> requisições por dia ÷ segundos da janela de uso = <strong>QPS</strong> médio (queries per second); × fator de pico = QPS de pico. O dia tem 86.400 s, mas o uso se concentra: um produto B2B com janela de 10 h tem QPS médio 2,4 vezes o de uma divisão ingênua por 24 h.</li>
+<li><strong>Tamanho:</strong> tokens de entrada e de saída por requisição, bytes por registro, vetores por documento.</li>
+<li><strong>Tempo em voo:</strong> latência até o último token, que alimenta a lei de Little (bloco 2).</li>
+<li><strong>Cota:</strong> tokens por minuto (TPM) e requisições por minuto (RPM) que o provedor precisa liberar.</li>
+<li><strong>Armazenamento:</strong> bytes por item × itens × fator de réplica e de índice.</li>
+<li><strong>Custo por mês:</strong> requisições × custo por requisição, antes e depois das otimizações.</li>
+</ul>
+<p>Duas disciplinas evitam estimativas inúteis. Escreva cada premissa (a janela de 10 h, o fator de pico 3, os 3.500 tokens de entrada) para que o revisor ataque a premissa, não o resultado. E calcule intervalos quando a incerteza é grande: se o fator de pico pode ser 2 ou 5, o QPS de pico varia 2,5 vezes, e isso muda o plano de cota mais do que qualquer escolha de biblioteca.</p>
+
+<div class="box fund">
+<span class="lbl">Fundamento · números que valem decorar</span>
+<p>Um dia tem 86.400 s (≈ 10<sup>5</sup>); um mês de 30 dias tem 2,6 milhões de s; 1 milhão de requisições por dia dá 11,6 QPS médio em 24 h. Um float de 32 bits ocupa 4 bytes, então um vetor de 1.024 dimensões ocupa 4 KB. Um token em português equivale a algo como 3 a 4 caracteres, por volta de 0,75 palavra em inglês e menos em português; use 1 página de texto ≈ 600 a 900 tokens como ordem de grandeza e meça o seu tokenizador. Latências típicas: memória ≈ 100 ns, SSD ≈ 100 µs, rede no mesmo datacenter ≈ 0,5 ms, entre regiões ≈ 50 a 150 ms, primeira palavra de um LLM ≈ 0,3 a 2 s. Os valores exatos mudam com a geração do hardware; a hierarquia de ordens de grandeza, não.</p>
+</div>
+
+<h4>3. API</h4>
+<p>Defina os contratos antes dos componentes: recursos, operações, formato de entrada e saída, erros, paginação, idempotência, autenticação. Em sistemas com LLM, a API precisa decidir três coisas que a clássica ignora: se a resposta é <strong>síncrona, em streaming ou assíncrona com polling</strong> (o tempo de geração decide); como o cliente recebe <strong>erros parciais</strong> (o stream pode falhar na metade); e como expor <strong>custo e confiança</strong> (por exemplo, o número de tokens consumidos e as citações usadas). Operações que causam efeito externo exigem chave de idempotência desde o primeiro contrato; acrescentá-la depois quebra clientes.</p>
+
+<h4>4. Modelo de dados</h4>
+<p>Liste entidades, relações, chaves de partição e padrões de acesso. O que cresce sem limite (mensagens, traces, eventos de auditoria) pede retenção e particionamento desde o início. Em IA, dois itens ganham tabela própria: <strong>o que foi enviado ao modelo e o que voltou</strong> (para auditoria, reprodução e avaliação) e <strong>versões</strong> (de prompt, de modelo, de índice, de corpus), porque sem elas nenhuma regressão de qualidade é explicável.</p>
+
+<h4>5. Desenho de alto nível</h4>
+<p>Agora, sim, as caixas: clientes, borda, serviços, filas, armazenamento, provedores externos. Percorra uma requisição inteira, do clique à resposta, e depois o caminho de falha: o que acontece se cada caixa estiver lenta ou fora. Um desenho que só mostra o caminho feliz é um esboço.</p>
+
+<h4>6. Aprofundamento nos gargalos</h4>
+<p>Escolha dois ou três pontos que decidem o projeto e desça neles: onde a cota do provedor é o limite, onde o custo domina, onde a consistência importa, onde um componente é ponto único de falha. As estimativas do passo 2 indicam quais são. Aprofundar tudo por igual é sinal de que a estimativa não foi feita.</p>
+
+<h4>7. Trade-offs explícitos</h4>
+<p>Toda escolha cede algo. Registre o que foi cedido: "cache semântico reduz custo em 20% e introduz risco de resposta errada; mitigamos com limiar alto, escopo por tenant e amostragem de acertos para auditoria". O leitor deve conseguir discordar com precisão.</p>
+
+<h3>Exemplo trabalhado: resumidor de reuniões</h3>
+<p>Pedido: "resumir a transcrição de cada reunião e enviar ação por e-mail", para 2.000 usuários. Perguntas de esclarecimento: usuário ativo é diário? Quantas reuniões por dia? O resumo precisa estar pronto antes da reunião seguinte (minutos) ou até o fim do dia? Respostas assumidas: 2.000 usuários ativos por dia, 2 resumos por usuário, uso concentrado em 8 h, pico 4 vezes a média, transcrição de 12.000 tokens, resumo de 600 tokens, modelo grande ao preço hipotético de US$ 3 por milhão de tokens de entrada e US$ 15 por milhão de saída.</p>
+<pre><code>requisições/dia  = 2.000 × 2                    = 4.000
+QPS médio        = 4.000 / (8 × 3.600)          = 0,14
+QPS de pico      = 0,14 × 4                     = 0,56
+latência         = TTFT 2 s + 600 / 60 tok/s    = 12 s
+em voo (Little)  = 0,56 × 12                    = 6,7
+TPM de pico      = 0,56 × 60 × 12.600 × 1,3     ≈ 546 mil
+custo/requisição = (12.000 × 3 + 600 × 15) / 1e6 = US$ 0,045
+custo/mês        = 4.000 × 30 × 0,045           = US$ 5.400</code></pre>
+<p>Leitura: o volume é ridículo para a infraestrutura (menos de 1 QPS, 7 conexões simultâneas) e relevante para o orçamento (US$ 5.400 por mês, dominado pelos 12.000 tokens de entrada). Logo, o gargalo do projeto é custo, não escala. Como o prazo é "até o fim do dia", a API de batch (bloco 3) cortaria o gasto à metade sem tocar na arquitetura. Em três minutos de conta, o desenho deixou de ser "como escalar" e virou "como não gastar demais". Essa é a função da estimativa.</p>
+
+<h3>O mesmo método num design doc e numa entrevista</h3>
+<table>
+<thead><tr><th>Aspecto</th><th>Design doc real</th><th>Entrevista de system design</th></tr></thead>
+<tbody>
+<tr><td>Tempo</td><td>dias; revisão assíncrona e iterativa</td><td>35 a 45 minutos, síncrono</td></tr>
+<tr><td>Requisitos</td><td>vêm de usuários, dados e contratos; você investiga</td><td>vêm do entrevistador; você pergunta e fixa premissas em voz alta</td></tr>
+<tr><td>Estimativa</td><td>com dados reais de tráfego, medições e tabela de preços atual</td><td>com números redondos, 2 a 3 minutos, para escolher o que aprofundar</td></tr>
+<tr><td>Profundidade</td><td>cobre migração, operação, segurança, plano de rollback e prazos</td><td>cobre desenho e dois gargalos; operação em poucas frases</td></tr>
+<tr><td>Alternativas</td><td>documento escrito com critérios, custos e quem decide</td><td>menciona uma ou duas e explica a escolha</td></tr>
+<tr><td>Sucesso</td><td>decisão tomada, risco registrado, trabalho que cabe em semanas</td><td>raciocínio estruturado, trade-offs claros, reação boa a objeções</td></tr>
+</tbody>
+</table>
+<p>O método é o mesmo; muda a fonte dos números e o orçamento de tempo. Quem aprendeu só a versão de entrevista tende a desenhar sem dados; quem só escreve docs tende a perder o ritmo de pensar em voz alta. O bloco 7 trata da escrita e da defesa; o <a href="../E05-carreira/E05.html">E05</a> treina o formato oral.</p>
+
+<h3>Decisões e trade-offs do método</h3>
+<ul>
+<li><strong>Quanto esclarecer antes de desenhar:</strong> o suficiente para que a próxima decisão mude conforme a resposta. Pergunta cuja resposta não altera o desenho é adiável.</li>
+<li><strong>Precisão da estimativa:</strong> pare quando o resultado deixar de mudar a decisão. Entre US$ 5 mil e US$ 7 mil por mês a arquitetura é a mesma; entre US$ 5 mil e US$ 500 mil não é.</li>
+<li><strong>Largura contra profundidade:</strong> desenhe largo uma vez e desça só onde os números doem.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Começar pelo diagrama ou pela tecnologia ("vamos usar Kafka e Kubernetes") e só depois procurar o problema.</li>
+<li>NFR sem número, e número sem método de medição.</li>
+<li>Tratar o provedor de LLM como infinito: ele tem cota, latência e preço, e os três entram na conta.</li>
+<li>Esquecer o pico: a média esconde o instante em que o sistema falha.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Estimar com a experiência de sistemas clássicos e esquecer que a unidade de consumo mudou. Em um CRUD, a requisição custa microcentavos e o limite é CPU ou banco. Num sistema com LLM, uma requisição custa centavos, dura segundos, ocupa uma conexão aberta e consome uma cota medida em tokens. O sênior que dimensiona "pelo QPS" acerta a ordem de grandeza do tráfego e erra por duas ordens a conta e o limite.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Requisitos com número, estimativa com premissas escritas, API, dados, caixas, dois gargalos e trade-offs registrados: nessa ordem. A estimativa decide o que aprofundar; no exemplo ela mostrou que o problema era custo e não escala. Design doc e entrevista usam o mesmo método com fontes de número e orçamento de tempo diferentes.</p>
+</div>
+
+<!-- ============================================ BLOCO 2 -->
+<h2 id="b02">Bloco 2 · Blocos de construção revisitados</h2>
+
+<h3>Por que isso importa</h3>
+<p>Num design review, alguém pergunta "e se o tráfego dobrar?" e a resposta "colocamos mais pods atrás do load balancer" é verdadeira para um serviço CRUD e falsa para um serviço que mantém 30 streams de 7 segundos por pod, depende de uma cota externa que não escala com pods e gasta dinheiro a cada requisição. Os blocos de construção são os mesmos de sempre; o que muda é o que cada um precisa garantir quando a unidade de trabalho é lenta, cara e limitada por um terceiro. Este bloco revê cada peça com essa lente e termina na ferramenta que as une: a lei de Little.</p>
+
+<h3>Balanceamento de carga</h3>
+<p>Um <strong>load balancer</strong> distribui conexões ou requisições entre réplicas. Opera na camada 4 (conexões TCP, sem ler o conteúdo) ou na 7 (HTTP, com roteamento por caminho, cabeçalho ou tenant). O algoritmo importa mais com LLM do que em CRUD. Round-robin supõe que todas as requisições custam parecido; aqui uma requisição dura 800 ms e outra 40 s, e o round-robin empilha as longas numa réplica por acaso. Prefira <strong>least outstanding requests</strong> (a réplica com menos requisições em voo recebe a próxima) e ajuste os <em>timeouts</em> do balanceador para o tempo de um stream completo: o padrão de 60 s corta respostas longas no meio. Faça <strong>connection draining</strong> no deploy, esperando os streams terminarem em vez de derrubá-los, e use health checks que testem dependências leves (o pod está de pé e consegue falar com o gateway), nunca uma chamada de LLM real a cada 5 segundos.</p>
+
+<h3>Cache: onde colocar e como invalidar</h3>
+<p>Cache troca correção imediata por velocidade e custo. Cada camada serve a um fim: <strong>cliente</strong> (evita a requisição), <strong>CDN/borda</strong> (conteúdo público e estático), <strong>gateway</strong> (respostas de LLM repetidas, bloco 3 e <a href="../M05-llm-pratica-gateway-cache/M05.html#b05">M05</a>), <strong>aplicação</strong> (resultados de recuperação, permissões, configuração) e <strong>banco</strong> (páginas e planos). Quanto mais perto do cliente, maior o ganho e mais difícil invalidar.</p>
+<p>A invalidação é a parte difícil e tem quatro estratégias com custos diferentes. <strong>TTL</strong> (time to live) é simples e tolera dado velho por até o TTL. <strong>Invalidação por evento</strong> apaga a chave quando o dado muda, exige que toda escrita publique o evento, e falha quando alguém esquece um caminho de escrita. <strong>Chave versionada</strong> inclui na chave a versão do dado (hash do documento, versão do prompt, versão do índice), de modo que o dado novo é outra chave e o antigo expira sozinho; é a mais robusta e a que mais combina com LLM. <strong>Write-through</strong> atualiza cache e fonte juntos e paga o custo na escrita.</p>
+<p>Dois defeitos clássicos pegam sistemas com LLM com força especial. O <strong>cache stampede</strong>: a chave quente expira, cem requisições idênticas perdem o cache ao mesmo tempo e disparam cem chamadas caras ao modelo. A defesa é <em>single-flight</em> (a primeira requisição busca, as demais esperam o resultado dela) mais TTL com <em>jitter</em> (variação aleatória para as chaves não expirarem juntas). E o <strong>vazamento entre escopos</strong>: se a chave não inclui tenant e permissões, o usuário B recebe a resposta construída com os documentos do usuário A. A chave de qualquer cache que contenha conteúdo derivado de dados é <code>(tenant, política de acesso, versão do corpus, versão do prompt, modelo, parâmetros, pergunta normalizada)</code>.</p>
+
+<h3>Filas e processamento assíncrono</h3>
+<p>Uma <strong>fila</strong> desacopla quem produz trabalho de quem o executa, absorve picos e permite repetir o que falhou. Quando a resposta leva mais tempo que o usuário espera, ou quando o trabalho tem efeito externo, o desenho é: a API grava a tarefa e devolve um identificador; workers processam; o cliente consulta o estado ou recebe uma notificação. Os detalhes de entrega pelo menos uma vez, <em>visibility timeout</em>, ordenação, DLQ (dead-letter queue, fila de mensagens que falharam repetidamente), idempotência e outbox estão no <a href="../LT02-novo/LT02.html#b02">LT02</a>; o que este módulo exige é a decisão: <strong>qual trabalho vai para a fila e qual fica no caminho síncrono</strong>. Regra prática: síncrono (com stream) quando uma pessoa olha para a tela e a resposta cabe em poucos segundos; assíncrono quando dura mais que um minuto, causa efeito externo, ou pode esperar (batch, bloco 6).</p>
+
+<h3>Particionamento e replicação</h3>
+<p><strong>Particionamento</strong> (<em>sharding</em>) divide os dados entre nós por uma chave; <strong>replicação</strong> copia os dados para tolerar falha e escalar leitura. A chave de partição é a decisão de maior consequência. Em produtos multi-tenant a escolha natural é o tenant: isola vizinhos barulhentos, facilita residência de dados e exclusão, e simplifica a segurança por linha (<a href="../M12-producao-seguranca-sre-billing/M12.html#b4">M12, bloco 4</a>). O risco é a <strong>partição quente</strong>: um tenant grande concentra carga. Mitigações: sub-particionar tenants grandes, usar chave composta e limitar a concorrência por tenant.</p>
+<p>Na replicação com líder e seguidores há <em>replication lag</em> (atraso dos seguidores). Para o índice de um RAG, um atraso de minutos entre a edição de um documento e sua busca é aceitável; para permissões, não: um acesso revogado que continua valendo por 10 minutos é incidente de segurança. Por isso o desenho separa dados de relevância (consistência eventual, barata) de dados de autorização (consultados na fonte ou com TTL de segundos).</p>
+
+<h3>Consistência</h3>
+<p>Em vez de escolher "forte" ou "eventual" em abstrato, pergunte por dado: o que acontece se o leitor vir uma versão velha? Para um catálogo de FAQ, nada. Para o saldo de créditos do cliente, cobrança errada. Para o estado de uma tarefa de agente, uma ação repetida ou perdida. A tabela de decisão fica no <a href="../LT02-novo/LT02.html#b01">LT02, bloco 1</a>. Em sistemas com IA acrescente o dado mais perigoso: <strong>o que o modelo "sabe"</strong>. Um documento removido do índice por pedido de exclusão (LGPD) que continua em caches, em embeddings antigos e em respostas gravadas ainda é recuperável. Defina a cadeia de exclusão: fonte, chunks, vetores, cache, logs e conjuntos de avaliação.</p>
+
+<h3>Rate limiting</h3>
+<p>O <strong>rate limit</strong> protege o sistema e o orçamento contra excesso, e distribui a cota do provedor entre tenants. O algoritmo clássico é o <strong>token bucket</strong>: um balde com capacidade (a rajada tolerada) que enche a uma taxa constante (o ritmo sustentado); cada requisição retira do balde e é negada se faltar. A adaptação essencial para LLM é medir o balde em <strong>tokens de modelo</strong>, não em requisições, porque uma requisição de 200 tokens e outra de 30.000 pesam em ordens diferentes na cota e no custo. O exemplo abaixo (verificado) limita a 120.000 tokens por minuto com rajada de 10 segundos:</p>
+<pre><code>from dataclasses import dataclass
+
+
+@dataclass
+class TokenBucket:
+    capacity: float          # rajada: máximo de tokens gastos de uma vez
+    refill_per_s: float      # ritmo sustentado (tokens/s)
+    level: float = 0.0
+    last: float = 0.0
+
+    def try_spend(self, cost: float, now: float) -> float:
+        """0.0 se permitido; senão, segundos a esperar (vira Retry-After)."""
+        self.level = min(self.capacity, self.level + (now - self.last) * self.refill_per_s)
+        self.last = now
+        if cost &lt;= self.level:
+            self.level -= cost
+            return 0.0
+        return (cost - self.level) / self.refill_per_s
+
+
+tpm = 120_000
+b = TokenBucket(capacity=tpm / 6, refill_per_s=tpm / 60, level=tpm / 6)
+print([b.try_spend(3_850, t) for t in (0, 0, 0, 0, 0, 1)])
+# [0.0, 0.0, 0.0, 0.0, 0.0, 0.55]</code></pre>
+<p>Cinco requisições de 3.850 tokens passam na rajada (19.250 dos 20.000). Na sexta, um segundo depois, o balde tem 2.750 tokens e falta 1.100: o limitador responde "espere 0,55 s". Esse número vira o cabeçalho <code>Retry-After</code> de uma resposta <code>429 Too Many Requests</code> (RFC 6585), e o cliente bem-comportado espera em vez de martelar. Em produção o balde fica em Redis ou no gateway, com operação atômica, e existem baldes <strong>aninhados</strong>: por usuário, por tenant e global, este último refletindo a cota real do provedor. Detalhes de quotas e circuit breaker financeiro estão no <a href="../M12-producao-seguranca-sre-billing/M12.html#b6">M12, bloco 6</a>.</p>
+
+<h3>Backpressure e load shedding</h3>
+<p><strong>Backpressure</strong> é o mecanismo pelo qual um componente lento sinaliza aos produtores que devem desacelerar. Sem ele, a fila cresce sem limite, a latência explode (uma requisição aceita agora só termina depois de todas as anteriores) e o sistema morre de memória depois de ter atendido ninguém dentro do prazo. As ferramentas: filas <strong>limitadas</strong> (tamanho máximo, com rejeição explícita), concorrência máxima por componente (semáforo), <em>timeouts</em> em todas as chamadas e <strong>load shedding</strong>, que é recusar trabalho cedo e barato (HTTP 429 ou 503 com <code>Retry-After</code>) para proteger o que já foi aceito. Rejeitar 10% das requisições com rapidez é melhor que aceitar todas e responder todas depois do timeout do cliente, quando o trabalho já é inútil mas ainda foi pago.</p>
+<p>Com LLM há uma variante cara: a requisição abandonada pelo cliente continua gerando tokens no provedor, e você paga. Propague o cancelamento até o provedor (fechar o stream interrompe a geração em quem o suporta) e dê às tarefas assíncronas um <em>deadline</em> após o qual são descartadas.</p>
+
+<h3>Lei de Little: o dimensionador universal</h3>
+<p>A <strong>lei de Little</strong> (J. D. C. Little, 1961) afirma que, num sistema estável, o número médio de itens dentro dele é L = λ × W, com λ a taxa média de chegada e W o tempo médio que cada item passa no sistema. Não depende da distribuição das chegadas nem da ordem de atendimento. É a ferramenta mais útil para transformar QPS e latência em tamanhos concretos:</p>
+<ul>
+<li><strong>Streams abertos:</strong> 4,17 req/s × 7 s ≈ 29 conexões simultâneas. Se cada pod sustenta 50, um pod basta em teoria e três em prática.</li>
+<li><strong>Workers de uma fila:</strong> 1,39 tarefas/s × 110 s = 153 tarefas em execução; se cada worker faz uma por vez e queremos 70% de utilização, 153 ÷ 0,7 = 219 workers.</li>
+<li><strong>Pool de conexões ao banco, threads, slots no provedor:</strong> mesma conta, com W sendo o tempo de ocupação do recurso.</li>
+</ul>
+<p>Duas ressalvas técnicas. Primeiro, a lei dá o <em>valor médio</em>; a variação em torno dele (a cauda) exige folga, e por isso dimensionamos para 60 a 70% de utilização, não 100%. Segundo, o comportamento perto da saturação é não linear: numa fila simples (M/M/1), o tempo no sistema é W = S/(1 − ρ), com S o tempo de serviço e ρ a utilização. A 50% de utilização o tempo vale 2 S; a 70%, 3,3 S; a 90%, 10 S; a 95%, 20 S. Um sistema "com 90% de CPU" não está com 10% de folga; está a um pequeno aumento de carga de colapso. É a razão matemática do alvo de 70%, e da recomendação de <em>The Tail at Scale</em> (Dean e Barroso, 2013) de projetar para a cauda e não para a média.</p>
+
+<h3>Decisões e trade-offs</h3>
+<table>
+<thead><tr><th>Decisão</th><th>Opção A</th><th>Opção B</th><th>Critério</th></tr></thead>
+<tbody>
+<tr><td>Algoritmo de balanceamento</td><td>round-robin: simples</td><td>least outstanding: equilibra durações desiguais</td><td>variância da duração; com LLM, B</td></tr>
+<tr><td>Invalidação de cache</td><td>TTL: trivial, dado velho</td><td>chave versionada: sem invalidar, mais chaves</td><td>custo do dado velho; para corpus e prompt, B</td></tr>
+<tr><td>Trabalho síncrono ou assíncrono</td><td>síncrono com stream: UX direta</td><td>fila: absorve pico, permite retry</td><td>duração, efeito externo, prazo</td></tr>
+<tr><td>Chave de partição</td><td>tenant: isola e simplifica segurança</td><td>hash do item: distribui uniforme</td><td>tamanho relativo dos tenants</td></tr>
+<tr><td>Rate limit</td><td>em requisições: simples</td><td>em tokens: reflete custo e cota</td><td>variância do tamanho; com LLM, B</td></tr>
+</tbody>
+</table>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Fila sem limite e sem deadline, que transforma sobrecarga em latência infinita.</li>
+<li>Timeout do load balancer menor que a duração do stream.</li>
+<li>Rate limit global sem divisão por tenant: um cliente consome a cota de todos.</li>
+<li>Retry sem backoff e sem jitter: uma falha curta vira tempestade de requisições que a prolonga.</li>
+<li>Cache de resposta sem tenant na chave.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Escalar horizontalmente os workers quando o gargalo é a cota do provedor. Dobrar os pods dobra a taxa de tentativas e, com cota fixa, só aumenta o volume de 429, os retries e o custo de requisições que falham depois de gastar entrada. Antes de escalar, calcule o TPM necessário e compare com a cota concedida; o limite que importa é o que não escala com a sua infraestrutura.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Os blocos clássicos continuam valendo, com ajustes: balancear por requisições em voo, cachear com chave versionada e escopo, enfileirar o que dura ou age no mundo, particionar por tenant, separar consistência de relevância e de autorização, limitar em tokens e aplicar backpressure com rejeição cedo. Lei de Little converte QPS e latência em conexões e workers; planeje para 60 a 70% de utilização.</p>
+</div>
+
+<!-- ============================================ BLOCO 3 -->
+<h2 id="b03">Bloco 3 · O que muda com LLM</h2>
+
+<h3>Por que isso importa</h3>
+<p>Um serviço de resumo passou em todos os testes de carga com um servidor simulado que respondia em 50 ms. Em produção, com o modelo real, cada resposta durou entre 4 e 40 segundos, o pool de conexões esgotou, a cota de tokens por minuto zerou ao meio-dia e a fatura do mês foi calculada pelo comprimento das respostas, não pelo número delas. Nada disso era bug: eram propriedades do componente novo. Um LLM como serviço tem cinco características que invalidam hábitos de dimensionamento: latência em duas fases, vazão limitada por cota em tokens, custo variável por requisição, saída não determinística e qualidade que se degrada em silêncio.</p>
+
+<h3>Latência de geração: TTFT e tokens por segundo</h3>
+<p>Um modelo de linguagem gera a resposta um token por vez; cada token depende dos anteriores. O tempo total tem duas fases com naturezas diferentes:</p>
+<figure>
+<svg viewBox="0 0 760 170" role="img" aria-labelledby="t-lat" width="760">
+<title id="t-lat">Linha do tempo de uma requisição: fila, prefill até o primeiro token, decodificação token a token</title>
+<g font-family="sans-serif" font-size="12" fill="currentColor" stroke="currentColor" stroke-width="1.2">
+<line x1="20" y1="90" x2="740" y2="90"/>
+<rect x="20" y="62" width="70" height="28" fill="none"/><text x="26" y="80" stroke="none">fila / rede</text>
+<rect x="90" y="62" width="170" height="28" fill="none"/><text x="100" y="80" stroke="none">prefill (entrada inteira)</text>
+<rect x="260" y="62" width="480" height="28" fill="none"/><text x="270" y="80" stroke="none">decodificação: um token por passo, em sequência</text>
+<g stroke="none"><circle cx="260" cy="90" r="4"/><text x="200" y="118">primeiro token (TTFT)</text><text x="676" y="118">último token</text></g>
+<path d="M20 140H260" /><path d="M260 140H740" stroke-dasharray="5 3"/>
+<g stroke="none"><text x="90" y="158">TTFT: cresce com a entrada e com a fila</text><text x="420" y="158">cresce linearmente com tokens de saída ÷ tokens/s</text></g>
+</g>
+</svg>
+<figcaption>TTFT (time to first token) depende de fila e de prefill; o resto do tempo é saída ÷ taxa de decodificação.</figcaption>
+</figure>
+<p>O <strong>prefill</strong> processa todo o prompt de uma vez, em paralelo na GPU; seu tempo cresce com os tokens de entrada, mas de forma sublinear em relação a processá-los um a um. A <strong>decodificação</strong> é sequencial e, em geral, limitada pela leitura de memória, e não por cálculo; sua taxa (tokens por segundo) é uma propriedade do modelo e da carga do provedor. O resultado prático:</p>
+<pre><code>latência até o último token = fila + TTFT + (tokens de saída ÷ tokens por segundo)
+exemplo do Caso 1:  0,4 (recuperação) + 0,8 (TTFT) + 350 ÷ 60 = 7,03 s</code></pre>
+<p>Duas consequências guiam o desenho. A <strong>saída é a alavanca de latência e de custo</strong>: cortar a resposta de 350 para 150 tokens poupa 3,3 s e 20% do custo por requisição (os tokens de saída custam cinco vezes os de entrada no preço hipotético do módulo). Peça respostas curtas, formato estruturado enxuto e limite <code>max_tokens</code> com critério. E o <strong>streaming não reduz a latência total, mas reduz a percebida</strong>: o usuário começa a ler no TTFT. Por isso o SLO de uma interface de chat é sobre TTFT, e o de um job assíncrono é sobre o tempo total (<a href="../M05-llm-pratica-gateway-cache/M05.html#b04">M05, bloco 4</a>).</p>
+
+<h3>Vazão limitada por cota: RPM e TPM</h3>
+<p>O provedor limita o que sua conta pode consumir por minuto: <strong>RPM</strong> (requisições) e <strong>TPM</strong> (tokens), em geral por modelo e por nível de uso, às vezes com limites separados para entrada e saída e para requisições concorrentes. Excedê-los devolve <code>429</code>. Para dimensionar, calcule os dois e veja qual aperta:</p>
+<pre><code>RPM  = QPS de pico × 60 × (1 + folga)
+TPM  = QPS de pico × 60 × (tokens de entrada + saída) × (1 + folga)
+Caso 1: 4,17 × 60 × 1,3 = 325 RPM   ·   325 × 3.850 = 1.251.250 TPM</code></pre>
+<p>Em RAG, o TPM aperta primeiro porque cada requisição carrega milhares de tokens de contexto. Em agentes, a conta é pior: cada passo reenvia o histórico, e o consumo cresce de forma quadrática com o número de passos (bloco 5). Dois cuidados de leitura da documentação do provedor, porque variam: como a cota conta os tokens de entrada em cache e como conta a saída (alguns provedores reservam o <code>max_tokens</code> pedido no início da requisição, e um valor generoso demais consome cota que nunca será usada). As cotas crescem por pedido e por histórico de gasto, não instantaneamente: a solicitação de aumento entra no cronograma do projeto, com semanas de antecedência.</p>
+<p>O limite precisa ser distribuído internamente (balde por tenant, bloco 2), e o cliente do gateway deve tratar 429 e 5xx com <strong>backoff exponencial com jitter</strong>, respeitando <code>Retry-After</code>, dentro de um <em>deadline</em> total (<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">AWS Builders' Library</a>). Retry sem limite multiplica a carga justamente quando o provedor está mal.</p>
+
+<h3>Custo por requisição como requisito de primeira classe</h3>
+<p>Em um CRUD o custo marginal de uma requisição é desprezível, e o custo total é infraestrutura fixa. Aqui o custo marginal é real e variável: depende dos tokens de entrada, dos de saída e do modelo escolhido. Isso muda três práticas. O <strong>orçamento entra nos requisitos</strong> ("custo médio abaixo de US$ 0,02 por requisição, p99 abaixo de US$ 0,10"). O <strong>custo é medido por requisição</strong>, atribuído a tenant, funcionalidade e versão de prompt, e exposto nos traces (<a href="../M06-evals-observabilidade/M06.html#b05">M06, bloco 5</a> e <a href="../M12-producao-seguranca-sre-billing/M12.html#b7">M12, bloco 7</a>). E há <strong>tetos de segurança</strong>: por requisição (limite de tokens), por tarefa (bloco 5), por tenant e por mês, com corte automático, porque um loop ou um prompt malicioso gasta dinheiro à velocidade da API. A pergunta de revisão "quanto custa uma requisição ruim?" tem resposta calculável e deve estar no documento.</p>
+
+<h3>Não-determinismo e avaliação contínua</h3>
+<p>A mesma entrada pode produzir saídas diferentes: a amostragem é probabilística e, mesmo com temperatura zero, a ordem de operações em paralelo e as atualizações silenciosas do modelo alteram o resultado. Consequências de desenho: testes unitários exatos deixam de bastar; a qualidade vira uma <strong>distribuição</strong> medida em conjuntos de avaliação (<em>evals</em>), com gate na CI antes de cada mudança de prompt, modelo ou índice (<a href="../M06-evals-observabilidade/M06.html">M06</a>); e a produção precisa de <strong>avaliação contínua</strong>: amostrar uma fração do tráfego real, julgar (humano, regras ou LLM como juiz, com ressalvas conhecidas, ver Zheng et al., 2023) e acompanhar a taxa de aprovação como um SLI. Sem isso, a primeira detecção de queda de qualidade é a reclamação do cliente. O custo dessa avaliação entra na conta: julgar 5% das respostas do Caso 1 custa US$ 1.125 por mês.</p>
+
+<h3>Fallback entre modelos e provedores</h3>
+<p>Provedores têm incidentes, limites e depreciações. A resiliência exige uma cadeia de <strong>fallback</strong>: modelo principal, modelo alternativo (do mesmo provedor ou de outro), resposta degradada (cache, resposta pré-escrita, "não consegui agora, sua solicitação foi registrada"). Mecânica: <em>circuit breaker</em> que abre depois de N falhas e testa a recuperação aos poucos, <em>timeouts</em> por tentativa e um orçamento de tempo total. As armadilhas são específicas: prompts não são portáveis entre modelos (um prompt afinado para um modelo pode degradar noutro), formatos de saída estruturada e de tool calling diferem, e o fallback precisa passar pelo mesmo conjunto de avaliação, ou será um caminho de qualidade desconhecida ativado no pior momento. Fallback para provedor diferente também muda onde os dados trafegam, o que pode ferir requisitos de residência e contratos (<a href="../M05-llm-pratica-gateway-cache/M05.html#b06">M05, bloco 6</a>). Teste o fallback de verdade, com injeção de falha, em ambiente controlado.</p>
+
+<h3>Cache exato, semântico e de prefixo</h3>
+<table>
+<thead><tr><th>Tipo</th><th>Como funciona</th><th>Ganho</th><th>Risco</th></tr></thead>
+<tbody>
+<tr><td><strong>Exato</strong></td><td>chave = hash da entrada normalizada + modelo + parâmetros + versões</td><td>custo e latência da resposta repetida caem a ~zero</td><td>baixo; só repete o que é idêntico. Hit rate depende de repetição real, muitas vezes abaixo do esperado</td></tr>
+<tr><td><strong>Semântico</strong></td><td>embedding da pergunta; se houver vizinho acima de um limiar, devolve a resposta guardada</td><td>pega paraphrases; hit rate maior</td><td>falso positivo silencioso; exige limiar calibrado, escopo por tenant e permissão, e auditoria de amostra</td></tr>
+<tr><td><strong>De prefixo</strong> (do provedor)</td><td>parte inicial idêntica do prompt (instruções, ferramentas, documentos) é reaproveitada; entrada em cache custa uma fração e reduz a latência</td><td>grande em agentes e RAG com prompt de sistema longo</td><td>exige ordenar o prompt com o estável antes do variável; validade curta (minutos); regras de mínimo de tokens variam</td></tr>
+</tbody>
+</table>
+<p>Meça antes de prometer: o ganho do cache é <code>hit rate × custo evitado</code>, e o hit rate real vem de logs, não de intuição. No Caso 1 supomos 20% de acertos, o que corta US$ 23.625 para US$ 18.900 por mês; se o tráfego for 5% repetitivo, a economia some e a complexidade fica. Implementação e métricas estão no <a href="../M05-llm-pratica-gateway-cache/M05.html#b05">M05, bloco 5</a>.</p>
+
+<h3>Batch</h3>
+<p>APIs de <strong>batch</strong> aceitam um arquivo com milhares de requisições e as processam de forma assíncrona numa janela (tipicamente até 24 h), com desconto (em vários provedores na faixa de 50% do preço síncrono; confirme na tabela atual) e cota separada da síncrona. O trade-off é nítido: você troca latência por preço e vazão. Serve para classificação de backlog, extração em lote, avaliação offline, geração de embeddings em massa e relatórios noturnos; não serve para nada em que uma pessoa espera. Detalhes de desenho no bloco 6.</p>
+
+<h3>Roteamento por complexidade</h3>
+<p>A maior parte das requisições é simples, e o modelo grande é caro. O <strong>roteamento</strong> escolhe o modelo por requisição: uma regra (tipo de tarefa, tamanho), um classificador pequeno ou uma <strong>cascata</strong> (tenta o modelo barato, valida a saída e escala para o caro se falhar). Com 50% das requisições do Caso 1 num modelo pequeno, o custo médio por requisição cai de US$ 0,0158 para US$ 0,0085. O risco é a qualidade: o roteador erra, e o erro cai sempre na ponta barata. Por isso o roteamento só entra com avaliação por classe de requisição e com taxa de escalonamento medida; sem esses números, é um corte de custo disfarçado de otimização.</p>
+
+<h3>Guardrails</h3>
+<p><strong>Guardrails</strong> são verificações antes e depois do modelo: filtro de entrada (injeção de prompt, dado sensível, fora de escopo), validação de saída (esquema, citações presentes, política de conteúdo, ausência de dado de outro tenant). Cada guardrail acrescenta latência e, se for um LLM, custo e uma fonte de falso positivo. Aplique os determinísticos e baratos em todas as requisições (esquema, regex, lista de bloqueio, checagem de permissão) e os caros por amostragem ou por risco da ação. As ameaças e controles estão no <a href="../M12-producao-seguranca-sre-billing/M12.html#b1">M12</a>; no desenho, o guardrail aparece como etapa explícita, com orçamento de latência.</p>
+
+<h3>SLOs para sistemas com LLM</h3>
+<p>Um <strong>SLI</strong> (service level indicator) é uma medida; um <strong>SLO</strong> (service level objective) é a meta para ela num período; o <strong>orçamento de erro</strong> é a fração permitida de descumprimento (<a href="https://sre.google/sre-book/service-level-objectives/">Google SRE Book, cap. 4</a>). Para LLM acrescentam-se SLIs que o SRE clássico não tinha:</p>
+<table>
+<thead><tr><th>Dimensão</th><th>SLI</th><th>Exemplo de SLO</th></tr></thead>
+<tbody>
+<tr><td>Disponibilidade</td><td>fração de requisições com resposta útil (inclui degradada?)</td><td>99,5% em 30 dias; definir se a resposta de fallback conta</td></tr>
+<tr><td>Latência percebida</td><td>TTFT p95</td><td>≤ 1,5 s em 95% das requisições</td></tr>
+<tr><td>Latência total</td><td>tempo até o último token, p95 e p99</td><td>p95 ≤ 10 s</td></tr>
+<tr><td>Qualidade</td><td>taxa de aprovação em amostra julgada de tráfego real</td><td>≥ 90% de respostas fundamentadas, janela de 7 dias</td></tr>
+<tr><td>Segurança</td><td>incidentes de vazamento entre tenants</td><td>zero; qualquer ocorrência é incidente</td></tr>
+<tr><td>Custo</td><td>custo por requisição (média e p99) e gasto mensal contra orçamento</td><td>média ≤ US$ 0,011; alerta em 80% do orçamento</td></tr>
+</tbody>
+</table>
+<p>O SLO de qualidade só existe se houver amostragem e julgamento contínuos, e o de custo só existe se o custo for medido por requisição. O orçamento de erro serve para decisão: se a qualidade consome o orçamento, congela-se mudança de prompt e modelo; se o custo ultrapassa 80% do mês, ativam-se roteamento mais agressivo e limites mais apertados. Alertas ficam em consumo de orçamento (<em>burn rate</em>), não em um valor instantâneo ruidoso (<a href="https://sre.google/workbook/alerting-on-slos/">SRE Workbook, "Alerting on SLOs"</a>).</p>
+
+<h3>Decisões e trade-offs</h3>
+<table>
+<thead><tr><th>Alavanca</th><th>Ganha</th><th>Paga com</th></tr></thead>
+<tbody>
+<tr><td>Resposta mais curta</td><td>latência e custo</td><td>completude; revisar com avaliação</td></tr>
+<tr><td>Modelo menor / roteamento</td><td>custo e latência</td><td>qualidade em casos difíceis; complexidade do roteador</td></tr>
+<tr><td>Cache semântico</td><td>custo e latência</td><td>risco de resposta errada e de vazamento de escopo</td></tr>
+<tr><td>Batch</td><td>custo (~metade) e vazão</td><td>latência de horas; fluxo assíncrono</td></tr>
+<tr><td>Fallback multi-provedor</td><td>disponibilidade</td><td>manutenção de prompts, avaliação duplicada, dado em mais de um lugar</td></tr>
+<tr><td>Mais contexto recuperado</td><td>chance de conter a resposta</td><td>custo, TTFT e ruído que confunde o modelo</td></tr>
+</tbody>
+</table>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Testar carga com modelo simulado rápido e concluir que o serviço aguenta.</li>
+<li>Monitorar RPM e esquecer TPM, ou o contrário.</li>
+<li>Prometer "99,9%" de disponibilidade a partir de um provedor cujo SLA é menor, sem fallback.</li>
+<li>Tratar prompt, modelo e índice como configuração sem versão: a regressão fica inexplicável.</li>
+<li>Declarar sucesso com média de custo e ignorar a cauda: um 1% de requisições com contexto enorme pode ser 20% do gasto.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Escrever um SLO de disponibilidade e tratar uma resposta errada, porém com HTTP 200, como sucesso. O sistema fica "no ar" enquanto entrega respostas ruins por semanas, porque nenhum health check mede qualidade. O sênior que vem de sistemas determinísticos confia no status code; aqui o status code mede o transporte, e a qualidade precisa de um SLI próprio, com amostra julgada e alerta.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Latência é TTFT mais saída ÷ taxa; a saída domina. A vazão é limitada por RPM e TPM, e o TPM costuma apertar primeiro. Custo por requisição é requisito medido e com teto. A qualidade oscila e precisa de avaliação contínua. Fallback, cache (exato, semântico, de prefixo), batch e roteamento são alavancas com preço em qualidade ou complexidade. Os SLOs incluem TTFT, qualidade e custo, além da disponibilidade.</p>
+</div>
+
+<!-- ============================================ BLOCO 4 -->
+<h2 id="b04">Bloco 4 · Caso 1: assistente de suporte com RAG para 10 mil usuários</h2>
+
+<h3>Por que isso importa</h3>
+<p>É o sistema que a maioria das empresas constrói primeiro e o que mais tem aparência de pronto antes de estar. Um protótipo com LangChain e um índice vetorial responde bem às dez perguntas que o autor testou. Em produção surgem as perguntas do design: um cliente da empresa A pode receber trecho de um contrato da empresa B? O que acontece quando o índice está desatualizado há três dias? Quanto custa, por mês, e quem é avisado quando dobrar? Este bloco aplica o método do bloco 1 e as peças dos blocos 2 e 3 a um problema concreto, com os números que o script do laboratório reproduz (<code>python -m capacity 1</code>). Os mecanismos internos (embeddings, chunking, busca híbrida, ACL) ficam no <a href="../M07-rag-de-verdade/M07.html">M07</a>; aqui interessa a <em>composição</em> e o dimensionamento.</p>
+
+<h3>Passo 1 · Requisitos e premissas</h3>
+<p>Enunciado: uma empresa de software B2B quer um assistente que responda dúvidas de <strong>10 mil usuários ativos por dia</strong> (clientes finais de 200 organizações) sobre produto e contrato, com base em documentação, artigos de ajuda e histórico de tickets, e que passe o caso a um humano quando não souber. Antes de qualquer caixa, escreva o que você perguntaria e o que assumiu:</p>
+<table>
+<thead><tr><th>Item</th><th>Premissa (a confirmar com o dono do produto)</th></tr></thead>
+<tbody>
+<tr><td>Uso</td><td>5 perguntas por usuário ativo por dia, concentradas em 10 horas, pico de 3× a média</td></tr>
+<tr><td>Corpus</td><td>400 mil chunks (documentação pública + documentos privados por organização), atualização diária, correção urgente em até 1 hora</td></tr>
+<tr><td>Latência</td><td>TTFT p95 ≤ 1,5 s; resposta completa p95 ≤ 10 s (streaming)</td></tr>
+<tr><td>Qualidade</td><td>≥ 90% de respostas fundamentadas em fonte citada; abstenção quando a evidência é insuficiente</td></tr>
+<tr><td>Segurança</td><td>zero vazamento entre organizações; documento que o usuário não pode ler não pode influenciar a resposta</td></tr>
+<tr><td>Custo</td><td>teto de US$ 0,02 por pergunta (média) e orçamento mensal com alerta em 80%</td></tr>
+<tr><td>Disponibilidade</td><td>99,5% em 30 dias, contando como disponível a resposta degradada (busca de artigos sem geração)</td></tr>
+</tbody>
+</table>
+
+<h3>Passo 2 · Estimativa</h3>
+<pre><code>requisições/dia   = 10.000 × 5                       = 50.000
+QPS médio         = 50.000 ÷ (10 × 3.600)             ≈ 1,39
+QPS de pico       = 1,39 × 3                          ≈ 4,17
+latência total    = 0,4 (recuperação) + 0,8 (TTFT) + 350 ÷ 60 = 7,03 s
+em voo (Little)   = 4,17 × 7,03                       ≈ 29 requisições
+cota              = 325 RPM · 1.251.250 TPM (folga de 30%, 3.850 tokens por requisição)
+custo/requisição  = (3.500 × 3 + 350 × 15) ÷ 10⁶      ≈ US$ 0,0158
+custo mensal      = 50.000 × 30 × 0,01575             ≈ US$ 23.625
+índice vetorial   = 400.000 × 1.024 × 4 B × 1,5       ≈ 2,46 GB</code></pre>
+<p>Leia o resultado como um engenheiro leria: <strong>o tráfego é pequeno</strong> (4 QPS cabe em um processo), <strong>o dado é pequeno</strong> (2,5 GB cabe na memória de uma máquina modesta e em uma instância de Postgres com pgvector), e <strong>o custo é dominado pelo modelo</strong> (US$ 23,6 mil por mês, contra algumas centenas de dólares de infraestrutura). Isso decide o desenho: não há razão para sharding, para um cluster de busca dedicado nem para microsserviços; o esforço de engenharia vai para <em>qualidade, isolamento, custo e degradação</em>. Quem desenha 12 serviços para 4 QPS gasta a credibilidade que vai precisar na discussão de custo.</p>
+
+<h3>Passo 3 · Desenho</h3>
+<figure>
+<svg viewBox="0 0 780 330" role="img" width="780" aria-labelledby="t-c1">
+<title id="t-c1">Assistente RAG: gateway com autenticação e limite por tenant, cache, recuperação com filtro de ACL, geração por modelo roteado, validação de saída, e caminho separado de ingestão e avaliação</title>
+<defs><marker id="c1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g font-family="sans-serif" font-size="12" fill="none" stroke="currentColor" stroke-width="1.3">
+<rect x="10" y="20" width="110" height="46" rx="6"/><rect x="150" y="20" width="130" height="46" rx="6"/><rect x="310" y="20" width="120" height="46" rx="6"/><rect x="460" y="20" width="140" height="46" rx="6"/><rect x="630" y="20" width="130" height="46" rx="6"/>
+<rect x="310" y="110" width="120" height="46" rx="6"/><rect x="460" y="110" width="140" height="46" rx="6"/>
+<rect x="150" y="110" width="130" height="46" rx="6" stroke-dasharray="5 3"/>
+<rect x="10" y="230" width="130" height="46" rx="6"/><rect x="180" y="230" width="140" height="46" rx="6"/><rect x="360" y="230" width="140" height="46" rx="6"/><rect x="540" y="230" width="220" height="46" rx="6"/>
+<path d="M120 43H150" marker-end="url(#c1a)"/><path d="M280 43H310" marker-end="url(#c1a)"/><path d="M430 43H460" marker-end="url(#c1a)"/><path d="M600 43H630" marker-end="url(#c1a)"/>
+<path d="M370 66V110" marker-end="url(#c1a)"/><path d="M430 133H460" marker-end="url(#c1a)"/><path d="M530 110V66" marker-end="url(#c1a)"/>
+<path d="M310 133H280" marker-end="url(#c1a)"/>
+<path d="M140 253H180" marker-end="url(#c1a)"/><path d="M320 253H360" marker-end="url(#c1a)"/><path d="M500 253H540" marker-end="url(#c1a)"/>
+<path d="M430 230V156" stroke-dasharray="4 3" marker-end="url(#c1a)"/>
+</g>
+<g font-family="sans-serif" font-size="12" fill="currentColor">
+<text x="65" y="40" text-anchor="middle">cliente</text><text x="65" y="56" text-anchor="middle" font-size="10">SSE / streaming</text>
+<text x="215" y="40" text-anchor="middle">gateway</text><text x="215" y="56" text-anchor="middle" font-size="10">auth · limite por tenant</text>
+<text x="370" y="40" text-anchor="middle">cache</text><text x="370" y="56" text-anchor="middle" font-size="10">exato · escopo tenant</text>
+<text x="530" y="40" text-anchor="middle">orquestrador</text><text x="530" y="56" text-anchor="middle" font-size="10">monta prompt, orçamento</text>
+<text x="695" y="40" text-anchor="middle">LLM roteado</text><text x="695" y="56" text-anchor="middle" font-size="10">pequeno → grande</text>
+<text x="370" y="130" text-anchor="middle">recuperação</text><text x="370" y="146" text-anchor="middle" font-size="10">híbrida + ACL + rerank</text>
+<text x="530" y="130" text-anchor="middle">validação</text><text x="530" y="146" text-anchor="middle" font-size="10">citação · esquema · PII</text>
+<text x="215" y="130" text-anchor="middle">degradado</text><text x="215" y="146" text-anchor="middle" font-size="10">só busca de artigos</text>
+<text x="75" y="250" text-anchor="middle">fontes</text><text x="75" y="266" text-anchor="middle" font-size="10">docs · tickets</text>
+<text x="250" y="250" text-anchor="middle">ingestão</text><text x="250" y="266" text-anchor="middle" font-size="10">fila · chunk · embed</text>
+<text x="430" y="250" text-anchor="middle">índice</text><text x="430" y="266" text-anchor="middle" font-size="10">pgvector + texto, ACL</text>
+<text x="650" y="250" text-anchor="middle">avaliação contínua</text><text x="650" y="266" text-anchor="middle" font-size="10">5% de amostra julgada</text>
+<text x="10" y="310" font-size="11">Linha tracejada: a ingestão escreve no índice, fora do caminho da requisição.</text>
+</g>
+</svg>
+<figcaption>Caminho síncrono em cima (gateway, cache, orquestração, recuperação com ACL, geração, validação); caminho assíncrono embaixo (ingestão por fila e avaliação por amostragem). O ramo "degradado" recebe o tráfego quando o provedor falha.</figcaption>
+</figure>
+
+<h3>Passo 4 · Aprofundamento nos três gargalos</h3>
+<p><strong>1. Isolamento e permissão.</strong> O requisito de maior consequência. A permissão é aplicada <em>na consulta ao índice</em>, antes da relevância: o filtro por organização e por grupos de acesso entra na cláusula <code>WHERE</code> da busca (ou no filtro do índice), nunca depois, em código, sobre os melhores resultados, porque isso devolve menos resultados que o necessário e abre brecha por erro. Cada chunk guarda <code>tenant_id</code> e a lista de grupos permitidos na ingestão; a identidade vem do token validado no gateway e não do corpo da requisição. O cache usa o mesmo escopo: chave com tenant, grupo, versão do corpus, do prompt e do modelo, senão o primeiro usuário privilegiado "ensina" o cache a vazar. Políticas, RLS e teste de isolamento ficam no <a href="../M12-producao-seguranca-sre-billing/M12.html#b4">M12, bloco 4</a>; recuperação com ACL, no <a href="../M07-rag-de-verdade/M07.html#b06">M07, bloco 6</a>.</p>
+<p><strong>2. Custo.</strong> Os US$ 23.625 mensais têm três alavancas, cada uma com preço. Cache exato de 20% de acerto (suposição a medir) leva a US$ 18.900. Roteamento de 50% das perguntas ao modelo pequeno, por classificador de dificuldade ou por cascata com validação, leva a US$ 10.238. E o mais barato de todos: reduzir tokens de entrada. Os 3.500 tokens de entrada vêm de 5 a 8 chunks de ~400 tokens, mais instruções e histórico; cortar para 4 chunks após reranking reduz a entrada em ~30% e pode melhorar a qualidade, porque contexto irrelevante piora a resposta. A avaliação online também custa: julgar 5% das respostas com o modelo grande são US$ 1.125 por mês, ou 4,8% do gasto base. Esse custo entra no orçamento; esquecê-lo é o erro de quem "descobre" que a observabilidade custa.</p>
+<p><strong>3. Degradação e frescor.</strong> Se o provedor cair ou a cota esgotar (TPM de 1,25 milhão é folga de apenas 30%), o orquestrador devolve a busca dos artigos mais relevantes, sem geração, com a mensagem "não consegui compor a resposta agora; estes artigos podem ajudar". Isso conta como disponível no SLO, por decisão explícita. O frescor depende da ingestão: um documento alterado entra por evento (webhook ou captura de mudanças) em uma fila, é reprocessado e <em>substitui</em> os chunks antigos por versão; o campo <code>corpus_version</code> invalida o cache. Exclusões de documento precisam apagar chunks e entradas de cache, ou o assistente cita o que a empresa mandou retirar.</p>
+
+<h3>Passo 5 · Avaliação, observabilidade e SLOs</h3>
+<p>Sem avaliação, as três alavancas de custo viram jogo de roleta. O conjunto de ouro (100 a 300 perguntas reais anonimizadas, com fonte esperada e casos de abstenção) roda na CI a cada mudança de prompt, modelo, chunking ou índice (<a href="../M06-evals-observabilidade/M06.html">M06</a>). Em produção, 5% do tráfego é julgado por um modelo e 0,5% por humano para calibrar o juiz. Cada requisição registra: versões (prompt, modelo, corpus), IDs dos chunks recuperados, tokens, custo, TTFT, tempo total, decisão de cache, roteamento e veredito de validação; o texto da pergunta e da resposta fica sujeito a política de retenção e mascaramento. Os SLOs são os da tabela do bloco 3: disponibilidade 99,5%, TTFT p95 ≤ 1,5 s, fundamentação ≥ 90%, vazamento zero, custo médio ≤ US$ 0,011 após otimização (a meta usa o custo roteado: US$ 10.238 ÷ 1,5 milhão de requisições mensais ≈ US$ 0,0068, com folga para a cauda).</p>
+
+<h3>Falhas previstas</h3>
+<table>
+<thead><tr><th>Falha</th><th>Efeito</th><th>Detecção</th><th>Resposta automática</th></tr></thead>
+<tbody>
+<tr><td>429 do provedor</td><td>respostas lentas ou ausentes</td><td>taxa de 429, TPM usado ÷ cota</td><td>backoff com jitter dentro do deadline; depois fallback e degradação</td></tr>
+<tr><td>Índice desatualizado</td><td>resposta cita política antiga</td><td>idade do documento mais recente por fonte; fila de ingestão crescendo</td><td>alerta; resposta indica a data da fonte</td></tr>
+<tr><td>Regressão de qualidade após troca de modelo</td><td>fundamentação cai sem erro HTTP</td><td>amostra julgada, alerta em queda de 3 pontos</td><td>rollback da versão (modelo e prompt estão versionados)</td></tr>
+<tr><td>Pergunta com injeção de prompt em documento</td><td>instrução do atacante obedecida</td><td>guardrail de saída, teste adversarial na CI</td><td>resposta bloqueada, trecho em quarentena (<a href="../M12-producao-seguranca-sre-billing/M12.html#b2">M12, bloco 2</a>)</td></tr>
+<tr><td>Cauda de custo (contexto gigante)</td><td>1% das requisições vira 15% do gasto</td><td>p99 de custo por requisição</td><td>teto de tokens de entrada e de saída por requisição</td></tr>
+</tbody>
+</table>
+
+<h3>Decisões e trade-offs</h3>
+<table>
+<thead><tr><th>Decisão</th><th>Escolha</th><th>Alternativa</th><th>Por que aqui</th></tr></thead>
+<tbody>
+<tr><td>Armazenamento vetorial</td><td>pgvector no Postgres existente</td><td>serviço vetorial dedicado</td><td>2,5 GB e 4 QPS; um sistema a menos, mesma transação da ACL. Revisitar acima de ~50 milhões de vetores ou filtros que o índice não atende</td></tr>
+<tr><td>Cache</td><td>exato por tenant</td><td>semântico</td><td>falso positivo em contrato é incidente; semântico só após medir o falso positivo em amostra</td></tr>
+<tr><td>Streaming</td><td>sim, SSE</td><td>resposta completa</td><td>TTFT de 0,8 s contra 7 s de espera; custo: validação de saída precisa lidar com texto parcial</td></tr>
+<tr><td>Geração</td><td>cascata/roteamento por dificuldade</td><td>um modelo para tudo</td><td>corta ~46% do custo; custo: um classificador a manter e avaliar</td></tr>
+</tbody>
+</table>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Filtrar por permissão depois da busca (post-filter) e descobrir, no incidente, que o top-5 inteiro era de outro tenant.</li>
+<li>Escolher o banco vetorial antes de calcular que o índice cabe em 2,5 GB.</li>
+<li>Medir qualidade com as 10 perguntas do protótipo e declarar 100%.</li>
+<li>Esquecer a exclusão: o direito de remover um documento precisa chegar ao índice e ao cache.</li>
+<li>Não ter resposta para "o provedor caiu": o assistente vira página de erro justo quando o cliente mais precisa.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Dimensionar pelo QPS e esquecer que o recurso escasso é o <em>TPM</em> e a <em>concorrência de streaming</em>. Quatro QPS não assustam ninguém, mas são 29 conexões abertas por ~7 segundos cada, com 1,25 milhão de tokens por minuto contra uma cota que a conta pode não ter. O sênior de back-end calcula o pool de conexões e a CPU e entrega o desenho; a cota do provedor, que ele não controla, é o que derruba o sistema no primeiro dia de pico. Peça o aumento de cota semanas antes: o provedor aprova por processo, não por sprint.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>O Caso 1 é pequeno em tráfego (4 QPS, 29 requisições em voo) e em dados (2,5 GB), e grande em custo (US$ 23,6 mil por mês antes de otimizar). O desenho simples, em um monólito com Postgres, gasta o esforço em permissão aplicada na consulta, cache escopado, roteamento, degradação para busca sem geração, ingestão com versão e avaliação contínua em amostra. A cota de TPM, e não o QPS, é o limite que decide.</p>
+</div>
+
+<!-- ============================================ BLOCO 5 -->
+<h2 id="b05">Bloco 5 · Caso 2: plataforma de agentes que agem em sistemas de terceiros</h2>
+
+<h3>Por que isso importa</h3>
+<p>No Caso 1 o pior erro é uma resposta ruim. No Caso 2 o agente <em>faz coisas</em>: reembolsa, reagenda, cria ticket, altera cadastro em sistemas que a sua empresa não controla. O pior erro passa a ser um efeito colateral duplicado, não autorizado ou irreversível, e a fatura deixa de ser proporcional ao número de usuários, porque um agente em loop gasta sozinho. O desenho muda de "como respondo" para "como garanto que cada ação aconteça no máximo uma vez, com permissão, dentro de um orçamento e com rastro". O comportamento do agente em si (loop, ferramentas, contexto) está no <a href="../M08-agentes-e-context-engineering/M08.html">M08</a>; a teoria de segurança e identidade, no <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>; a garantia de entrega, no <a href="../LT02-novo/LT02.html">LT02</a>. Este bloco as <em>compõe e dimensiona</em> (<code>python -m capacity 2</code>).</p>
+
+<h3>Passo 1 · Requisitos e premissas</h3>
+<p>Enunciado: uma plataforma em que clientes (organizações) configuram agentes que executam tarefas como "conciliar este extrato", "responder este e-mail e abrir chamado no sistema X", chamando APIs de terceiros com credenciais do cliente. Premissas: <strong>2 mil usuários ativos</strong>, 10 tarefas por usuário por dia, em 12 horas, pico de 3×; cada tarefa tem em média <strong>10 passos</strong> (uma chamada ao modelo e uma ferramenta por passo), 8 s de modelo e 3 s de ferramenta por passo. Requisitos que o enunciado esconde e que você deve extrair: quais ações são <em>reversíveis</em>? quais exigem aprovação humana? qual o teto de gasto por tarefa e por tenant? quem responde por uma ação indevida (auditoria)? as tarefas de um cliente podem atrasar as de outro?</p>
+
+<h3>Passo 2 · Estimativa</h3>
+<pre><code>tarefas/dia        = 2.000 × 10                       = 20.000
+pico               = 20.000 ÷ (12 × 3.600) × 3         ≈ 1,39 tarefas/s
+duração da tarefa  = 10 passos × (8 s modelo + 3 s ferramenta) = 110 s
+em voo (Little)    = 1,39 × 110                        ≈ 153 tarefas simultâneas
+workers a 70%      = 153 ÷ 0,7                         = 219
+tokens por tarefa  = entrada 10 × 3.000 + 800 × (0+1+…+9) = 66.000 · saída 10 × 300 = 3.000
+RPM (chamadas)     = 1,39 × 10 chamadas × 60 × 1,3     = 1.084
+TPM                = 1,39 × 60 × 69.000 × 1,3          ≈ 7,5 milhões</code></pre>
+<p>Três números mudam a conversa. Primeiro, <strong>153 tarefas simultâneas</strong>: o 1,39 tarefa/s parecia pequeno, mas cada tarefa dura quase dois minutos, e a lei de Little cobra isso em workers, conexões e estado em memória. Segundo, <strong>RPM conta chamadas ao modelo, não tarefas</strong>: 1,39 tarefa/s são 14 chamadas/s, e quem pede cota por tarefa pede dez vezes menos que o necessário. Terceiro, <strong>66 mil tokens de entrada</strong> para uma tarefa cuja saída são 3 mil: o agente relê o histórico a cada passo, e o contexto cresce em cada iteração.</p>
+
+<div class="box fund">
+<span class="lbl">Fundamento · por que o custo de um agente é quadrático</span>
+<p>No passo <em>i</em> (começando em zero) o agente reenvia o contexto base mais tudo o que acumulou: <code>entrada_i = base + i × crescimento</code>. A soma em <em>n</em> passos é <code>n × base + crescimento × n(n−1)/2</code>. Com base 3.000 e crescimento 800: 10 passos dão 66.000; 20 passos dão 3.000×20 + 800×190 = 212.000, mais de três vezes, para o dobro de passos; 25 passos dão 315.000. O custo da tarefa longa (25 passos) é US$ 0,33 contra US$ 0,09 da média de 10, com cache de prefixo. Daí o teto de passos e de tokens por tarefa não ser capricho: é o que impede que uma tarefa patológica custe quanto cem normais.</p>
+</div>
+
+<h3>Passo 3 · Desenho</h3>
+<figure>
+<svg viewBox="0 0 780 300" role="img" width="780" aria-labelledby="t-c2">
+<title id="t-c2">Plataforma de agentes: API grava tarefa e devolve id, fila por tenant, workers executam o loop com orçamento, chamam o modelo e passam ações pelo executor com política, aprovação humana, idempotência e auditoria; sandbox isola ferramentas</title>
+<defs><marker id="c2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g font-family="sans-serif" font-size="12" fill="none" stroke="currentColor" stroke-width="1.3">
+<rect x="10" y="20" width="110" height="46" rx="6"/><rect x="150" y="20" width="130" height="46" rx="6"/><rect x="310" y="20" width="130" height="46" rx="6"/><rect x="470" y="20" width="140" height="46" rx="6"/><rect x="640" y="20" width="130" height="46" rx="6"/>
+<rect x="310" y="120" width="130" height="46" rx="6"/><rect x="470" y="120" width="140" height="46" rx="6"/><rect x="640" y="120" width="130" height="46" rx="6"/>
+<rect x="150" y="120" width="130" height="46" rx="6"/>
+<rect x="470" y="220" width="140" height="46" rx="6"/><rect x="640" y="220" width="130" height="46" rx="6"/><rect x="310" y="220" width="130" height="46" rx="6"/>
+<path d="M120 43H150" marker-end="url(#c2a)"/><path d="M280 43H310" marker-end="url(#c2a)"/><path d="M440 43H470" marker-end="url(#c2a)"/><path d="M610 43H640" marker-end="url(#c2a)"/>
+<path d="M540 66V120" marker-end="url(#c2a)"/><path d="M610 143H640" marker-end="url(#c2a)"/><path d="M540 166V220" marker-end="url(#c2a)"/><path d="M610 243H640" marker-end="url(#c2a)"/>
+<path d="M470 143H440" marker-end="url(#c2a)"/><path d="M310 243H280" stroke="none"/><path d="M470 243H440" marker-end="url(#c2a)"/><path d="M310 143H280" marker-end="url(#c2a)"/>
+</g>
+<g font-family="sans-serif" font-size="12" fill="currentColor">
+<text x="65" y="40" text-anchor="middle">cliente</text><text x="65" y="56" text-anchor="middle" font-size="10">POST /tarefas</text>
+<text x="215" y="40" text-anchor="middle">API</text><text x="215" y="56" text-anchor="middle" font-size="10">grava + devolve id</text>
+<text x="375" y="40" text-anchor="middle">fila por tenant</text><text x="375" y="56" text-anchor="middle" font-size="10">justiça, prioridade</text>
+<text x="540" y="40" text-anchor="middle">worker (loop)</text><text x="540" y="56" text-anchor="middle" font-size="10">orçamento de passos/US$</text>
+<text x="705" y="40" text-anchor="middle">modelo</text><text x="705" y="56" text-anchor="middle" font-size="10">cota por tenant</text>
+<text x="375" y="140" text-anchor="middle">estado da tarefa</text><text x="375" y="156" text-anchor="middle" font-size="10">checkpoint por passo</text>
+<text x="540" y="140" text-anchor="middle">executor de ações</text><text x="540" y="156" text-anchor="middle" font-size="10">política · idempotência</text>
+<text x="705" y="140" text-anchor="middle">aprovação humana</text><text x="705" y="156" text-anchor="middle" font-size="10">ações de risco</text>
+<text x="215" y="140" text-anchor="middle">cliente consulta</text><text x="215" y="156" text-anchor="middle" font-size="10">GET /tarefas/id</text>
+<text x="540" y="240" text-anchor="middle">sandbox de ferramentas</text><text x="540" y="256" text-anchor="middle" font-size="10">rede e credencial mínimas</text>
+<text x="705" y="240" text-anchor="middle">sistema de terceiros</text><text x="705" y="256" text-anchor="middle" font-size="10">recebe Idempotency-Key</text>
+<text x="375" y="240" text-anchor="middle">log de auditoria</text><text x="375" y="256" text-anchor="middle" font-size="10">append-only, por ação</text>
+</g>
+</svg>
+<figcaption>O worker executa o loop com orçamento; toda ação passa pelo executor, que aplica política, exige aprovação quando necessário, reserva a chave de idempotência, escreve na auditoria e só então chama o sistema externo dentro de um sandbox.</figcaption>
+</figure>
+
+<h3>Passo 4 · Aprofundamento</h3>
+<p><strong>Filas e justiça entre tenants.</strong> A API é assíncrona (o bloco 2 explicou por quê): grava a tarefa, devolve <code>202</code> com um identificador e o cliente consulta ou recebe um callback. A fila é <em>por tenant</em> (ou com chave de partição por tenant e escalonamento justo, round-robin ponderado), de modo que a organização que enviou 5 mil tarefas às 9h não atrase a que enviou duas. A cota de tokens do provedor é um recurso compartilhado: cada tenant tem seu balde de TPM, e a soma dos baldes não ultrapassa a cota contratada. Tarefas longas têm <em>deadline</em> e são retomáveis: o estado (histórico, passo atual, resultados das ferramentas) é persistido a cada passo, e um worker que morre deixa a tarefa visível de novo para outro assumir.</p>
+<p><strong>Idempotência de efeitos.</strong> A fila entrega <em>pelo menos uma vez</em>; um worker pode executar a ação e morrer antes de confirmar. Se a retentativa repete "reembolsar R$ 500", o cliente perde dinheiro. O padrão: antes de chamar o terceiro, o executor calcula uma chave determinística <code>hash(tenant, tarefa, passo, ação, parâmetros)</code>, grava-a no log de efeitos com estado <em>pendente</em> e a repassa no cabeçalho <code>Idempotency-Key</code> quando o terceiro a suporta (<a href="https://docs.stripe.com/api/idempotent_requests">convenção popularizada pela Stripe</a>). Na retentativa, o log diz se o efeito foi concluído, e o executor reutiliza o resultado em vez de repetir. Quando o terceiro não suporta chave, a ação precisa ser verificada por leitura antes de reexecutar ("o reembolso X já existe?"), e o que não pode ser verificado deve cair em aprovação humana. Teoria e testes de falha estão no <a href="../LT02-novo/LT02.html#b03">LT02, bloco 3</a> e no <a href="../M12-producao-seguranca-sre-billing/M12.html#b5">M12, bloco 5</a>.</p>
+<p><strong>Aprovação humana e política.</strong> Nem toda ação merece o mesmo controle. Classifique por reversibilidade e impacto: leitura (automática), escrita reversível de baixo valor (automática com auditoria), escrita irreversível ou acima de limite (aprovação humana), ação destrutiva ou de dinheiro novo (bloqueada ou dois aprovadores). A política é código versionado, avaliado no executor e não no prompt: pedir ao modelo que "tenha cuidado" não é controle. A aprovação é um estado da tarefa (<code>aguardando_aprovação</code>) com prazo, que libera o worker e retoma depois; a decisão do humano é registrada com identidade e hora. A fila de aprovação tem seu próprio SLO, porque um agente que espera dois dias não serve a ninguém.</p>
+<p><strong>Orçamento.</strong> Três tetos em camadas: por tarefa (máximo de passos, tokens e dólares), por tenant (cota mensal) e global (disjuntor financeiro). Estourar o teto da tarefa a encerra com resultado parcial e motivo explícito, e não a continua em silêncio. O orçamento é verificado <em>antes</em> de cada chamada ao modelo, com o custo estimado do próximo passo. Implementação do disjuntor financeiro no <a href="../M12-producao-seguranca-sre-billing/M12.html#b6">M12, bloco 6</a>.</p>
+<p><strong>Sandbox e credenciais.</strong> Ferramentas que executam código ou acessam rede rodam isoladas, com egresso restrito a destinos permitidos, credenciais de escopo mínimo emitidas por tarefa e com expiração curta, nunca o token de longa duração do cliente no contexto do modelo. Conteúdo vindo de terceiros (e-mails, páginas, respostas de API) é dado não confiável que pode conter instruções: a política decide o que o agente pode fazer, não o que o texto lido pede (<a href="../M12-producao-seguranca-sre-billing/M12.html#b1">M12, bloco 1</a>).</p>
+<p><strong>Auditoria.</strong> Um log <em>append-only</em> por ação com tenant, tarefa, passo, ação, parâmetros (mascarados quando sensíveis), decisão da política, aprovador, chave de idempotência, resposta do terceiro e versão de prompt, modelo e ferramentas. A pergunta que ele precisa responder em minutos: "por que o agente fez isso, com a autorização de quem, e o que mais ele fez nesta tarefa?".</p>
+
+<h3>Custo e alavancas</h3>
+<table>
+<thead><tr><th>Cenário</th><th>Por tarefa</th><th>Por mês (20 mil tarefas/dia)</th></tr></thead>
+<tbody>
+<tr><td>10 passos, sem cache de prefixo</td><td>US$ 0,243</td><td>US$ 145.800</td></tr>
+<tr><td>10 passos, 85% do prefixo em cache</td><td>US$ 0,0915</td><td>US$ 54.918</td></tr>
+<tr><td>10 passos, contexto compactado (crescimento 400) + cache</td><td>US$ 0,0788</td><td>≈ US$ 47.300</td></tr>
+<tr><td>25 passos (tarefa longa), com cache</td><td>US$ 0,3346</td><td>— (por tarefa)</td></tr>
+</tbody>
+</table>
+<p>O cache de prefixo do provedor reduz o custo em 62% e é <em>a</em> otimização desta plataforma, porque o histórico reenviado é quase todo prefixo idêntico: exige apenas disciplina de ordem no prompt (instruções e ferramentas primeiro, histórico em modo apenas de acréscimo, nada variável no começo). A compactação do contexto (resumir resultados antigos de ferramentas, descartar saídas já usadas) reduz o crescimento por passo e corta mais 14% sobre o já cacheado, ao risco de perder um detalhe de que o agente precisaria. Como o cache dura minutos, um agente que espera uma aprovação humana por horas perde o prefixo e paga a entrada cheia ao retomar: considere isso no orçamento das tarefas com aprovação.</p>
+
+<h3>Falhas previstas</h3>
+<table>
+<thead><tr><th>Falha</th><th>Efeito</th><th>Resposta</th></tr></thead>
+<tbody>
+<tr><td>Worker morre depois de executar a ação</td><td>retentativa repete o efeito</td><td>chave de idempotência + log de efeitos; verificação por leitura</td></tr>
+<tr><td>Terceiro devolve 5xx ou excede o tempo</td><td>estado do efeito desconhecido</td><td>marcar "incerto", verificar por leitura antes de repetir; se não der, aprovação humana</td></tr>
+<tr><td>Loop sem progresso</td><td>gasto e chamadas repetidas</td><td>teto de passos, detector de ação repetida, encerramento com parcial</td></tr>
+<tr><td>Tenant ruidoso</td><td>fila e cota consumidas</td><td>fila e balde por tenant; limite de tarefas simultâneas</td></tr>
+<tr><td>Injeção em conteúdo de terceiro</td><td>agente tenta ação não pedida</td><td>política no executor, escopo mínimo de credencial, aprovação para escrita irreversível</td></tr>
+<tr><td>Provedor de modelo indisponível</td><td>tarefas param</td><td>fallback de modelo; senão, pausa das tarefas com estado salvo e retomada, sem perder passos</td></tr>
+</tbody>
+</table>
+
+<h3>Decisões e trade-offs</h3>
+<table>
+<thead><tr><th>Decisão</th><th>Escolha</th><th>Alternativa</th><th>Por que aqui</th></tr></thead>
+<tbody>
+<tr><td>Execução</td><td>fila durável + workers com checkpoint</td><td>processo em memória por requisição</td><td>110 s por tarefa e efeitos externos exigem retomada; custo: persistência a cada passo</td></tr>
+<tr><td>Orquestração</td><td>máquina de estados explícita em código</td><td>deixar o modelo decidir todo o fluxo</td><td>passos de alto risco fixos e auditáveis; flexibilidade só onde o ganho justifica (<a href="../M08-agentes-e-context-engineering/M08.html#b01">M08, bloco 1</a>)</td></tr>
+<tr><td>Aprovação</td><td>por classe de ação</td><td>aprovar tudo / nada</td><td>tudo trava a vazão; nada transfere o risco para o cliente</td></tr>
+<tr><td>Multi-tenant</td><td>fila e cota por tenant, isolamento lógico no banco</td><td>infraestrutura dedicada por cliente</td><td>dedicado só para quem pagar e exigir; custo operacional alto</td></tr>
+</tbody>
+</table>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Dimensionar o RPM por tarefa (108 em vez de 1.084 chamadas) e o pool de workers pela taxa de chegada, sem a lei de Little.</li>
+<li>Confiar na entrega "exatamente uma vez" da fila em vez de construir a idempotência do efeito.</li>
+<li>Colocar a regra de aprovação no prompt do agente.</li>
+<li>Guardar a credencial de longa duração do cliente no contexto do modelo ou no log.</li>
+<li>Deixar o orçamento como alerta de fim de mês, sem corte por tarefa.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Tratar a falha do terceiro como "tente de novo". Um timeout depois de um POST não diz se o efeito aconteceu; repetir sem chave de idempotência cobra duas vezes, e não repetir perde a ação. O sênior de sistemas distribuídos sabe isso em teoria, mas num agente a tentação é maior: o modelo "resolve" a falha dizendo ao usuário que deu certo, ou reexecutando a ferramenta por conta própria, porque o erro apareceu no contexto e ele quer ser útil. A decisão de repetir é do executor determinístico, não do modelo.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Plataforma de agentes: 1,39 tarefa/s e 110 s por tarefa resultam em 153 tarefas simultâneas e 219 workers; RPM conta chamadas (1.084) e o TPM chega a 7,5 milhões. O custo é quadrático nos passos (66 mil tokens de entrada para 10 passos), então prefixo em cache (62% menos), compactação e tetos por tarefa governam o gasto. A segurança vem do executor: política em código, aprovação humana por classe de ação, idempotência com log de efeitos, sandbox com credencial mínima, auditoria append-only e filas e cotas por tenant.</p>
+</div>
+
+<!-- ============================================ BLOCO 6 -->
+<h2 id="b06">Bloco 6 · Caso 3: pipeline de documentos em lote</h2>
+
+<h3>Por que isso importa</h3>
+<p>É o caso que menos aparece em entrevistas e o que mais economiza dinheiro real. Quando ninguém espera a resposta de cada item, as regras mudam: a latência deixa de importar, a vazão e o custo por item passam a ser tudo, e o problema central vira <em>confiabilidade em escala</em>: o que fazer com 1,2 milhão de itens quando 3% falham de formas diferentes, o provedor muda o modelo no meio e a auditoria pergunta como você sabe que a extração está certa. Este bloco dimensiona o pipeline (<code>python -m capacity 3</code>) e mostra o desenho que torna o trabalho retomável, auditável e barato. Os fundamentos de entrega, DLQ e reprocessamento estão no <a href="../LT02-novo/LT02.html">LT02</a>, blocos 2 e 4; a avaliação, no <a href="../M06-evals-observabilidade/M06.html">M06</a>.</p>
+
+<h3>Passo 1 · Requisitos e premissas</h3>
+<p>Enunciado: uma seguradora tem um passivo de <strong>1,2 milhão de páginas</strong> (apólices, laudos, notas fiscais digitalizadas) e precisa extrair campos estruturados (partes, valores, datas, cláusulas) para um banco de dados, <strong>em até 7 dias</strong>, com taxa de erro de campo abaixo de 5% e rastro de qual modelo e prompt extraiu cada valor. Depois do passivo haverá fluxo contínuo de ~20 mil páginas por dia, com o mesmo desenho. Perguntas que valem ouro: o documento tem texto nativo ou é imagem (OCR ou modelo com visão)? qual o custo de um campo errado, e existe validação cruzada (soma de itens contra total, CPF com dígito verificador)? o dado é pessoal (retenção, localização do processamento)? a extração pode ser refeita quando o esquema mudar?</p>
+
+<h3>Passo 2 · Estimativa</h3>
+<pre><code>por página        = 2.200 tokens de entrada (imagem + instrução) · 600 de saída (JSON)
+modelo pequeno    = (2.200 × 0,25 + 600 × 1,25) ÷ 10⁶ = US$ 0,0013
+modelo grande     = (2.200 × 3,00 + 600 × 15,00) ÷ 10⁶ = US$ 0,0156
+cascata (12%)     = 0,0013 + 0,12 × 0,0156           ≈ US$ 0,0032 por página
+
+tudo no grande, síncrono   1,2 M × 0,0156 = US$ 18.720
+cascata, síncrono          1,2 M × 0,0032 = US$  3.806
+cascata em batch (−50%)                   = US$  1.903
+
+tokens totais     = 1,2 M × 2.800 × 1,12             ≈ 3,76 bilhões
+a 1 M TPM         = 3,76 bi ÷ 1 M ÷ 60               ≈ 62,7 h
+para 7 dias       = 3,76 bi ÷ 10.080 min             ≈ 373 mil TPM</code></pre>
+<p>Duas leituras. Primeiro, o pipeline <strong>cabe no prazo mesmo sem batch</strong>: 62,7 horas a 1 milhão de TPM, ou só 373 mil TPM sustentados para fechar em sete dias, e por isso o gargalo não é a cota, mas a robustez do processamento. Segundo, a ordem de grandeza do custo é <em>de milhares de dólares, não de dezenas de milhares</em>, e a decisão de arquitetura (cascata e batch) vale cerca de 90% da conta: de US$ 18.720 para US$ 1.903. A cascata paga US$ 0,0013 por página em todas e repete 12% com o modelo grande; o batch aproveita que ninguém espera.</p>
+
+<h3>Passo 3 · Desenho</h3>
+<figure>
+<svg viewBox="0 0 780 290" role="img" width="780" aria-labelledby="t-c3">
+<title id="t-c3">Pipeline em lote: armazenamento de documentos, particionador em lotes, pré-processamento, extração em lote com modelo pequeno, validadores, escalonamento para modelo grande, gravação idempotente, fila de revisão humana e amostra de QA</title>
+<defs><marker id="c3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g font-family="sans-serif" font-size="12" fill="none" stroke="currentColor" stroke-width="1.3">
+<rect x="10" y="20" width="110" height="46" rx="6"/><rect x="150" y="20" width="120" height="46" rx="6"/><rect x="300" y="20" width="130" height="46" rx="6"/><rect x="460" y="20" width="150" height="46" rx="6"/><rect x="640" y="20" width="130" height="46" rx="6"/>
+<rect x="640" y="120" width="130" height="46" rx="6"/><rect x="460" y="120" width="150" height="46" rx="6"/><rect x="300" y="120" width="130" height="46" rx="6"/><rect x="150" y="120" width="120" height="46" rx="6"/>
+<rect x="300" y="220" width="130" height="46" rx="6"/><rect x="460" y="220" width="150" height="46" rx="6"/><rect x="150" y="220" width="120" height="46" rx="6"/>
+<path d="M120 43H150" marker-end="url(#c3a)"/><path d="M270 43H300" marker-end="url(#c3a)"/><path d="M430 43H460" marker-end="url(#c3a)"/><path d="M610 43H640" marker-end="url(#c3a)"/>
+<path d="M705 66V120" marker-end="url(#c3a)"/><path d="M640 143H610" marker-end="url(#c3a)"/><path d="M460 143H430" marker-end="url(#c3a)"/><path d="M300 143H270" marker-end="url(#c3a)"/>
+<path d="M535 166V220" marker-end="url(#c3a)"/><path d="M460 243H430" marker-end="url(#c3a)"/><path d="M300 243H270" marker-end="url(#c3a)"/>
+</g>
+<g font-family="sans-serif" font-size="12" fill="currentColor">
+<text x="65" y="40" text-anchor="middle">documentos</text><text x="65" y="56" text-anchor="middle" font-size="10">objeto + hash</text>
+<text x="210" y="40" text-anchor="middle">manifesto</text><text x="210" y="56" text-anchor="middle" font-size="10">estado por página</text>
+<text x="365" y="40" text-anchor="middle">pré-processo</text><text x="365" y="56" text-anchor="middle" font-size="10">OCR / render / dedupe</text>
+<text x="535" y="40" text-anchor="middle">extração em lote</text><text x="535" y="56" text-anchor="middle" font-size="10">modelo pequeno, custom_id</text>
+<text x="705" y="40" text-anchor="middle">conciliação</text><text x="705" y="56" text-anchor="middle" font-size="10">resultado por custom_id</text>
+<text x="705" y="140" text-anchor="middle">validadores</text><text x="705" y="156" text-anchor="middle" font-size="10">esquema · regras · soma</text>
+<text x="535" y="140" text-anchor="middle">escalonamento</text><text x="535" y="156" text-anchor="middle" font-size="10">12% ao modelo grande</text>
+<text x="365" y="140" text-anchor="middle">gravação</text><text x="365" y="156" text-anchor="middle" font-size="10">upsert idempotente</text>
+<text x="210" y="140" text-anchor="middle">banco final</text><text x="210" y="156" text-anchor="middle" font-size="10">com versão da extração</text>
+<text x="365" y="240" text-anchor="middle">fila de revisão</text><text x="365" y="256" text-anchor="middle" font-size="10">falhas e baixa confiança</text>
+<text x="535" y="240" text-anchor="middle">QA amostral por lote</text><text x="535" y="256" text-anchor="middle" font-size="10">1.825 páginas / 100 mil</text>
+<text x="210" y="240" text-anchor="middle">DLQ + relatório</text><text x="210" y="256" text-anchor="middle" font-size="10">nada some em silêncio</text>
+</g>
+</svg>
+<figcaption>O manifesto é a fonte da verdade: cada página tem estado (pendente, enviada, extraída, validada, gravada, revisão, falha). A extração e a gravação são idempotentes, então qualquer etapa pode ser repetida sem duplicar nem perder.</figcaption>
+</figure>
+
+<h3>Passo 4 · Aprofundamento</h3>
+<p><strong>Extração com LLM ou visão.</strong> Documento com texto nativo vai por parser de texto (barato, determinístico); digitalizado vai por OCR clássico ou por modelo com visão, e a escolha é de custo e de qualidade medida, não de preferência: meça os dois numa amostra de 200 páginas rotuladas. Saída em esquema estruturado, com campos opcionais explícitos e <em>valor nulo permitido</em> (o modelo que é obrigado a preencher inventa). Peça, quando a precisão importa, a citação do trecho de origem do campo: um valor sem âncora no documento não passa na validação.</p>
+<p><strong>Batch API.</strong> A mecânica difere entre provedores, mas o desenho é estável: o pipeline monta arquivos de requisições, cada uma com um <code>custom_id</code> único (por exemplo <code>doc-84213-p07-v3</code>, incluindo a versão do prompt), envia, espera, e recebe resultados <em>fora de ordem</em>, parte com erro. Quem não reconcilia por <code>custom_id</code> e por manifesto perde páginas sem perceber. Respeite os limites de requisições e de tamanho por lote do provedor, divida o backlog em lotes de tamanho controlável (por exemplo 10 mil requisições) e acompanhe cada lote como unidade de retomada. A janela de conclusão é de até 24 horas por lote: com a conta de 62,7 horas de processamento total, mesmo um provedor lento fecha no prazo se houver lotes suficientes em paralelo.</p>
+<p><strong>Reprocessamento e idempotência.</strong> A chave de gravação é <code>(documento, página, versão_do_extrator)</code>. Repetir um lote reescreve os mesmos registros; trocar o prompt gera uma <em>nova versão</em>, sem apagar a anterior até a comparação. O manifesto permite perguntas operacionais: quantas páginas estão em cada estado? quais falharam mais de três vezes? quais usaram o prompt v2 e precisam refazer? Falhas se classificam: transitórias (429, 5xx, repetir com backoff), determinísticas (documento corrompido, saída que nunca valida: ir para a DLQ após N tentativas e para revisão) e sistemáticas (30% dos erros num mesmo tipo de documento: parar, corrigir o prompt, reprocessar só aquele tipo).</p>
+<p><strong>Validadores e cascata.</strong> A cascata só funciona com um critério automático de "esta saída é confiável?". Validação barata e determinística primeiro: esquema, tipos, formato (data real, CPF com dígito verificador, valor positivo), consistência cruzada (soma dos itens igual ao total, vigência com início antes do fim). Páginas que falham, ou cuja confiança declarada é baixa, escalam para o modelo grande; as que falham de novo vão à revisão humana. A taxa de 12% de escalonamento é uma premissa medida em amostra piloto: se for 30%, o custo médio por página sobe de US$ 0,0032 para US$ 0,0060, e a decisão ainda vale a pena; se o modelo pequeno acertar tanto quanto o grande, 0% e menos custo; se acertar menos do que parece, a validação não pega e o erro passa. O piloto mede exatamente isso.</p>
+<p><strong>QA amostral.</strong> Nenhuma validação cobre o erro plausível (nome trocado por outro nome válido). O controle é uma amostra aleatória estratificada por tipo de documento e revisada por humanos. O tamanho vem da estatística de uma proporção: <code>n = z² · p(1−p) ÷ margem²</code>. Para taxa esperada de 5% de erro e margem de ±1 ponto percentual a 95% de confiança: 1,96² × 0,05 × 0,95 ÷ 0,01² ≈ <strong>1.825 páginas por lote de 100 mil</strong>; em 12 lotes, 21.900 páginas, ou 365 horas de revisão a 60 páginas por hora, um custo humano maior que o de API. Relaxando a margem para ±2 pontos (n = 457 por lote), o total cai para 5.484 páginas e ~91 horas. É um exemplo clássico de trade-off: precisão da estimativa × custo de revisão, e a escolha depende de quanto custa um erro não detectado. O critério de aceite do lote é objetivo: limite superior do intervalo de confiança do erro abaixo de 5%; senão o lote é reprocessado ou revisado por inteiro.</p>
+
+<h3>Falhas previstas</h3>
+<table>
+<thead><tr><th>Falha</th><th>Efeito</th><th>Resposta</th></tr></thead>
+<tbody>
+<tr><td>Lote devolvido com 8% de erros por item</td><td>páginas ausentes</td><td>reconciliar por <code>custom_id</code>; reenviar só as faltantes em novo lote</td></tr>
+<tr><td>Provedor atualiza o modelo no meio do projeto</td><td>mudança de comportamento entre lotes</td><td>fixar versão do modelo; registrar no manifesto; comparar lotes na amostra</td></tr>
+<tr><td>Erro sistemático em um tipo de documento</td><td>milhares de páginas ruins, validação passa</td><td>QA estratificado por tipo; pausa do tipo; reprocessamento seletivo</td></tr>
+<tr><td>Orquestrador reinicia</td><td>trabalho em andamento perdido?</td><td>manifesto durável; retomada a partir do estado, lotes enviados são consultados, não reenviados</td></tr>
+<tr><td>Documento com dado pessoal sensível</td><td>retenção e vazamento</td><td>mascaramento nos logs, retenção mínima do arquivo no provedor, política de exclusão</td></tr>
+</tbody>
+</table>
+
+<h3>Decisões e trade-offs</h3>
+<table>
+<thead><tr><th>Decisão</th><th>Escolha</th><th>Alternativa</th><th>Por que aqui</th></tr></thead>
+<tbody>
+<tr><td>Modo de chamada</td><td>batch</td><td>síncrono com paralelismo</td><td>−50% e cota separada; custo: janela de até 24 h e reconciliação. Síncrono só para o fluxo urgente e para o piloto</td></tr>
+<tr><td>Modelo</td><td>cascata pequeno → grande</td><td>só o grande</td><td>US$ 1.903 contra US$ 18.720; custo: validadores e piloto para medir os 12%</td></tr>
+<tr><td>Orquestração</td><td>manifesto em banco + workers simples</td><td>engine de workflow completa</td><td>um estado por página basta; adote uma engine se aparecerem dependências entre etapas</td></tr>
+<tr><td>Revisão</td><td>amostra estratificada + fila de exceções</td><td>revisar tudo / nada</td><td>tudo não cabe no orçamento; nada não entrega garantia</td></tr>
+</tbody>
+</table>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Rodar os 1,2 milhão de uma vez, sem piloto de 200 páginas rotuladas; descobrir o problema do prompt depois de gastar o orçamento.</li>
+<li>Não ter manifesto: o orquestrador cai e ninguém sabe o que foi processado.</li>
+<li>Gravar sem chave de versão e perder a capacidade de comparar prompts.</li>
+<li>Amostrar sem estratificar e declarar 97% de acerto com um tipo de documento em 60%.</li>
+<li>Esquecer que a cota de batch e a síncrona são diferentes, e que limites de tamanho do arquivo valem por lote.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Otimizar o preço por token e ignorar o custo de <em>achar</em> o erro. A conta de API do Caso 3 é US$ 1.903; a revisão humana a ±1 ponto são 365 horas. Um sênior de plataforma celebra o desconto de 50% do batch e não recalcula o gargalo, que mudou de máquina para pessoa. A pergunta que recoloca o foco: "qual o custo de um campo errado que ninguém viu?". Se for baixo, relaxe a margem da amostra; se for alto (dado financeiro ou jurídico), invista em validação cruzada automática, que é mais barata que revisão e roda em 100% das páginas.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Para 1,2 milhão de páginas, a cascata em batch custa cerca de US$ 1,9 mil contra US$ 18,7 mil de tudo no modelo grande síncrono, e cabe em 7 dias (373 mil TPM). O desenho é um manifesto durável, extração com <code>custom_id</code>, validadores determinísticos, escalonamento, gravação idempotente por versão e DLQ. O gargalo real é a verificação: 1.825 páginas por lote de 100 mil para ±1 ponto, o que são 365 horas humanas, e por isso vale gastar com validação automática antes de gastar com revisão.</p>
+</div>
+
+<!-- ============================================ BLOCO 7 -->
+<h2 id="b07">Bloco 7 · Escrever e defender o design</h2>
+
+<h3>Por que isso importa</h3>
+<p>Um bom design que ninguém entende ou aprova não vira sistema. A diferença entre um engenheiro sênior e um staff aparece menos no desenho e mais no documento: o staff escreve de modo que o leitor decida em 15 minutos, sabendo o que foi descartado e quais riscos permanecem. E aparece na revisão: quem defende um design diante de perguntas hostis precisa saber distinguir "não pensei nisso" (a pergunta melhorou o design) de "pensei e descartei por este motivo" (a pergunta já tinha resposta no documento). Este bloco fecha o módulo com a estrutura do documento, as perguntas que um staff faz, os erros que reprovam e uma rubrica para você mesmo se avaliar. O formato de design doc e o processo de revisão com IA estão no <a href="../M04-design-docs-com-ia/M04.html">M04</a>; aqui interessa o conteúdo específico de sistemas com LLM e a defesa.</p>
+
+<h3>Estrutura de um design doc de sistema com IA</h3>
+<p>O template do laboratório (<code>template/DESIGN-DOC.md</code>) tem doze seções. A ordem tem lógica: contexto e objetivos antes de requisitos, estimativas antes de desenho, alternativas antes de riscos.</p>
+<table>
+<thead><tr><th>Seção</th><th>Pergunta que responde</th><th>Sinal de que está fraca</th></tr></thead>
+<tbody>
+<tr><td>1–2 Contexto, objetivos e não-objetivos</td><td>por que agora e o que ficará de fora?</td><td>objetivos que não dá para verificar ("melhorar o atendimento")</td></tr>
+<tr><td>3 Requisitos</td><td>que números definem "funcionou"?</td><td>"baixa latência", "alta qualidade", sem valor nem forma de medir</td></tr>
+<tr><td>4 Estimativas</td><td>qual a ordem de grandeza e quais premissas?</td><td>números soltos, sem premissa; custo ausente</td></tr>
+<tr><td>5–6 API, dados e desenho</td><td>que contratos e fluxos, incluindo o de falha?</td><td>só o caminho feliz; sem identificação de dono do dado</td></tr>
+<tr><td>7 Aprofundamento</td><td>quais 2 a 3 decisões determinam o projeto?</td><td>profundidade uniforme (o mesmo detalhe em tudo)</td></tr>
+<tr><td>8 Alternativas</td><td>o que foi considerado e rejeitado, e por quê?</td><td>alternativas de palha ou ausentes</td></tr>
+<tr><td>9 Avaliação e observabilidade</td><td>como saberemos se funciona e se piorou?</td><td>sem conjunto de avaliação, sem SLO de qualidade, sem política do que não registrar</td></tr>
+<tr><td>10 Falhas, segurança e custo máximo</td><td>o que quebra, quem percebe, quanto pode custar no pior caso?</td><td>sem teto de gasto; sem resposta a falha do provedor</td></tr>
+<tr><td>11–12 Entrega e riscos em aberto</td><td>o que é a V1, quando evoluir, o que não sabemos?</td><td>V1 igual ao sistema final; nenhum risco listado</td></tr>
+</tbody>
+</table>
+<p>Princípios de escrita: o resumo cabe em cinco linhas e contém a decisão pedida; cada número tem sua premissa; cada recomendação tem sua alternativa; a seção 12 admite o que se ignora. Um doc que não declara incerteza passa a impressão de que o autor não a enxergou.</p>
+
+<h3>Do doc à sala: o que fazer na primeira meia hora</h3>
+<p>Em entrevista ou revisão presencial, o tempo é escasso (cerca de 45 minutos) e o método do bloco 1 vira roteiro: 5 minutos de requisitos e premissas em voz alta (e peça a confirmação), 5 de estimativa em um canto do quadro, 10 de desenho e API, 15 de aprofundamento no ponto que o interlocutor escolher ou onde estiver o risco, 5 de falhas, custo e evolução. Anuncie o que você vai fazer e o que deixará de fora; comece simples e complique somente quando um número justificar. Quem começa por "vou usar Kafka, Redis e um banco vetorial" mostra repertório de componentes, não raciocínio. O <a href="../E05-carreira/E05.html">E05</a> trata a preparação e o formato oral.</p>
+
+<h3>Perguntas de staff (e o que elas procuram)</h3>
+<table>
+<thead><tr><th>Pergunta</th><th>O que o revisor procura</th><th>Resposta forte</th></tr></thead>
+<tbody>
+<tr><td>"Por que não fazer isto sem LLM?"</td><td>se o LLM é necessário ou moda</td><td>onde regras bastam, bastam; o LLM entra na parte em que a variabilidade da entrada inviabiliza regras, e há baseline sem LLM para comparar</td></tr>
+<tr><td>"Quanto custa por usuário, e o que o dobra?"</td><td>modelo de custo e alavancas</td><td>custo por requisição com premissas, sensibilidade a tamanho de contexto e passos, teto e alerta</td></tr>
+<tr><td>"O que acontece quando o provedor cai ou muda o modelo?"</td><td>dependência e regressão</td><td>fallback, degradação definida, versões fixas, avaliação na CI e canário</td></tr>
+<tr><td>"Como você sabe que a qualidade não caiu?"</td><td>avaliação contínua</td><td>conjunto de ouro, amostra julgada em produção, alerta em SLI de qualidade</td></tr>
+<tr><td>"Um tenant pode ver dado de outro?"</td><td>isolamento</td><td>filtro na consulta, cache escopado, teste de isolamento, auditoria</td></tr>
+<tr><td>"E se a mesma ação rodar duas vezes?"</td><td>idempotência de efeitos</td><td>chave determinística, log de efeitos, verificação por leitura, aprovação humana onde não há verificação</td></tr>
+<tr><td>"Onde isso quebra primeiro com 10× de carga?"</td><td>consciência de gargalo</td><td>cota de TPM e concorrência de streaming, depois custo; a infraestrutura clássica só depois</td></tr>
+<tr><td>"O que você não vai construir na V1?"</td><td>disciplina de escopo</td><td>lista explícita, com o gatilho para construir</td></tr>
+</tbody>
+</table>
+
+<h3>Erros comuns que reprovam um design</h3>
+<ul>
+<li><strong>Começar pela tecnologia</strong> em vez de pelo requisito e pelo número.</li>
+<li><strong>Complexidade sem números:</strong> filas, sharding e cache semântico em um sistema de 4 QPS.</li>
+<li><strong>Ausência de custo:</strong> o sistema funciona e é inviável financeiramente, e ninguém calculou.</li>
+<li><strong>Qualidade como esperança:</strong> sem conjunto de avaliação, sem SLO de qualidade, sem rollback de prompt.</li>
+<li><strong>Só caminho feliz:</strong> nenhuma resposta a 429, timeout, índice velho, loop de agente, saída inválida.</li>
+<li><strong>Segurança como anexo:</strong> permissão aplicada no fim da cadeia, credencial no prompt.</li>
+<li><strong>Alternativas de fachada:</strong> opções que ninguém escolheria, para parecer que houve análise.</li>
+<li><strong>Defender, em vez de decidir:</strong> tratar toda pergunta como ataque. A boa resposta reconhece o ponto, mede e muda o desenho se for o caso.</li>
+</ul>
+
+<h3>Rubrica de autoavaliação</h3>
+<p>Pontue cada critério de 0 a 3 (0 ausente, 1 mencionado, 2 correto, 3 com números e alternativa). Menos de 2 em requisitos, estimativa, falhas ou custo reprova, qualquer que seja o total.</p>
+<table>
+<thead><tr><th>Critério</th><th>3 pontos significam</th></tr></thead>
+<tbody>
+<tr><td>Requisitos e premissas</td><td>funcionais e não funcionais com valor e forma de medir; premissas escritas e questionadas</td></tr>
+<tr><td>Estimativa</td><td>QPS de pico, concorrência, cota RPM e TPM, custo mensal, armazenamento; refazível por outra pessoa</td></tr>
+<tr><td>Desenho e contratos</td><td>fluxo de ponta a ponta, API, modelo de dados, caminho de falha</td></tr>
+<tr><td>Aprofundamento</td><td>os 2–3 pontos decisivos tratados com mecanismo, não só nome</td></tr>
+<tr><td>Trade-offs e alternativas</td><td>cada decisão com a alternativa real, o custo da escolha e o gatilho para revisitar</td></tr>
+<tr><td>Qualidade e avaliação</td><td>conjunto de ouro, eval contínua, SLO de qualidade, rollback</td></tr>
+<tr><td>Falhas, segurança e custo máximo</td><td>tabela de falhas, isolamento, idempotência, teto de gasto, fallback</td></tr>
+<tr><td>Comunicação</td><td>resumo de cinco linhas, decisão pedida explícita, incertezas declaradas</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Escrever o design como defesa de uma tese em vez de pedir uma decisão. O sênior experiente tem opinião forte, e o doc sai com a conclusão no título e as alternativas rebaixadas a notas de rodapé. O revisor staff percebe, procura o ponto cego e, ao achar um, desconfia do resto. Um doc melhor expõe a decisão em aberto, apresenta a recomendação com a alternativa mais forte do lado e nomeia o que mudaria sua opinião ("se o hit rate de cache for menor que 5%, retiramos o cache; se a taxa de escalonamento passar de 40%, voltamos ao modelo único").</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Um design doc de sistema com IA tem requisitos com número, estimativa com premissa, desenho com caminho de falha, aprofundamento nos poucos pontos decisivos, alternativas reais, avaliação contínua e teto de custo. Na defesa, as perguntas de staff giram em torno de necessidade do LLM, custo, dependência do provedor, qualidade, isolamento, idempotência e gargalo. A rubrica avalia oito critérios, e a falta de números, de falhas ou de custo reprova mesmo com o resto bem feito.</p>
+</div>
+
+<!-- ============================================ LAB -->
+<h2 id="lab-guiado">Laboratório guiado E01</h2>
+<p>Uma calculadora de capacidade e custo em Python 3.14, sem rede, sem conta e sem dependências de execução, mais um script com os três casos e um template de design doc. Os preços são números redondos hipotéticos (US$ 3,00/15,00 por milhão de tokens para o modelo grande; 0,25/1,25 para o pequeno): troque pelos do seu provedor antes de usar um resultado para decidir algo. Todas as saídas abaixo vêm de execução real em 11/10/2026.</p>
+
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigidos: Python 3.14 e <code>uv</code>. Nunca edite a referência em <code>modulos/E01-system-design-ia/lab/</code>.</p>
+<pre><code>cd modulos/E01-system-design-ia/lab
+python3 create_working_copy.py
+cd /tmp/e01-xxxx          # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>PowerShell:</strong> <code>cd modulos\E01-system-design-ia\lab; python create_working_copy.py</code>, depois <code>cd</code> para o caminho impresso e <code>uv sync --frozen</code>; os comandos <code>uv run</code> são idênticos.</p>
+
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Caso 1: assistente RAG (bloco 4).</strong>
+<pre><code>$ uv run python -m capacity 1
+== Caso 1: assistente de suporte com RAG ==
+requisicoes por dia                             50_000
+QPS medio na janela                             1.39 req/s
+QPS de pico (3x)                                4.17 req/s
+latencia ate o ultimo token                     7.03 s
+requisicoes em voo no pico (Little)             29.31
+cota RPM com 30% de folga                       325 req/min
+cota TPM com 30% de folga                       1_251_250 tokens/min
+custo por requisicao, modelo grande             0.0158 USD
+custo mensal sem otimizacao                     23_625 USD
+custo mensal com 20% de acerto de cache         18_900 USD
+custo mensal com cache e 50% no modelo pequeno  10_238 USD
+avaliacao online: juiz em 5% das respostas      1_125 USD/mes
+indice vetorial (400 mil chunks, 1024 dim)      2.46 GB</code></pre>
+<p><strong>Resultado esperado:</strong> exatamente esses valores; são os números do bloco 4. <strong>Se falhar:</strong> <code>No module named capacity</code>: você não está na cópia ou esqueceu o <code>uv sync</code>. Valores diferentes: você editou um preço ou uma premissa em <code>src/capacity/cases.py</code>, o que é o uso previsto; confira o <code>git diff</code> ou refaça a cópia.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Caso 2: plataforma de agentes (bloco 5).</strong>
+<pre><code>$ uv run python -m capacity 2
+== Caso 2: plataforma de agentes ==
+tarefas por dia                                 20_000
+tarefas por segundo no pico (3x)                1.39 tarefas/s
+tokens de entrada por tarefa (10 passos)        66_000 tokens
+tokens de saida por tarefa                      3_000 tokens
+duracao de uma tarefa                           110 s
+tarefas simultaneas no pico (Little)            153
+workers a 70% de utilizacao                     219
+cota RPM (chamadas ao modelo) com 30% de folga  1_084 req/min
+cota TPM com 30% de folga                       7_475_000 tokens/min
+custo por tarefa, sem cache de prefixo          0.2430 USD
+custo por tarefa, 85% do prefixo em cache       0.0915 USD
+custo mensal sem cache                          145_800 USD
+custo mensal com cache de prefixo               54_918 USD
+custo por tarefa com contexto compactado        0.0788 USD
+custo de uma tarefa longa (25 passos)           0.3346 USD</code></pre>
+<p><strong>Resultado esperado:</strong> o RPM de 1.084 (chamadas, não tarefas) e as 153 tarefas simultâneas. <strong>Experimento:</strong> em <code>case2_agent_platform</code>, troque <code>steps=10</code> por <code>steps=20</code> nos dois lugares e preveja, antes de rodar, o total de tokens de entrada: 3.000 × 20 + 800 × 190 = 212.000, mais de 3× o valor de 66.000.</p></div>
+
+<div class="step"><span class="n">3</span><strong>Caso 3: pipeline em lote (bloco 6).</strong>
+<pre><code>$ uv run python -m capacity 3
+== Caso 3: pipeline de documentos em lote ==
+paginas no backlog                                        1_200_000
+custo por pagina, modelo pequeno                          0.0013 USD
+custo por pagina, modelo grande                           0.0156 USD
+custo medio por pagina, cascata com 12% de escalonamento  0.0032 USD
+total: tudo no modelo grande, sincrono                    18_720 USD
+total: cascata, sincrono                                  3_806 USD
+total: cascata, batch com 50% de desconto                 1_903 USD
+tokens totais (com reprocessamento)                       3_763_200_000 tokens
+tempo a 1M TPM (modo sincrono)                            62.72 h
+TPM minimo para terminar em 7 dias                        373_333 tokens/min
+amostra por lote de 100 mil paginas (5% +-1pp)            1_825 paginas
+paginas revisadas por humanos (12 lotes)                  21_900 paginas
+horas de revisao a 60 paginas/h                           365 h</code></pre>
+<p><strong>Resultado esperado:</strong> US$ 18.720 contra US$ 1.903, e as 365 horas de revisão que mudam o gargalo.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Sensibilidade: quando a premissa está errada.</strong> O valor de um modelo de custo é perguntar "e se". Na cópia de trabalho:
+<pre><code>$ uv run python - &lt;&lt;'EOF'
+from capacity import *
+print(sample_size(0.05, 0.02), sample_size(0.05, 0.02) * 12, round(sample_size(0.05, 0.02) * 12 / 60, 1))
+s = request_cost(Tokens(2200, 600), Price(0.25, 1.25)); l = request_cost(Tokens(2200, 600), Price(3, 15))
+print(round(cascade_cost(s, l, 0.30), 4))
+print(round(monthly_cost(50000, request_cost(Tokens(3500, 350), Price(3, 15)), cache_hit_rate=0.05)))
+EOF
+457 5484 91.4
+0.006
+22444</code></pre>
+<p><strong>Leitura:</strong> margem de ±2 pontos reduz a revisão a 5.484 páginas (91 horas); com 30% de escalonamento a cascata passa de US$ 0,0032 para US$ 0,0060 por página, ainda abaixo do modelo grande; com 5% de acerto de cache o Caso 1 cai só de US$ 23.625 para US$ 22.444, o que mal justifica a complexidade.</p></div>
+
+<div class="step"><span class="n">5</span><strong>Gates e mutação.</strong>
+<pre><code>$ uv run pytest -q &amp;&amp; uv run ruff check . &amp;&amp; uv run ruff format --check . &amp;&amp; uv run mypy --strict src tests
+....................................                                     [100%]
+36 passed in 0.02s
+All checks passed!
+10 files already formatted
+Success: no issues found in 7 source files</code></pre>
+<p>Agora uma mutação: em <code>core.py</code>, troque <code>math.ceil(concurrency / target_utilization)</code> por <code>int(concurrency / target_utilization)</code> (arredondar para baixo dimensiona workers a menos).</p>
+<pre><code>$ uv run pytest -q
+FAILED tests/test_cases.py::test_case2_golden_numbers
+FAILED tests/test_core.py::test_littles_law_and_workers - assert 42 == 43
+2 failed, 34 passed in 0.04s</code></pre>
+<p><strong>Resultado esperado:</strong> a suíte rejeita a mutação (42 workers em vez de 43). Reverta a mudança. Entrada inválida (utilização 150%, taxa de acerto de 140%, passos zero) levanta <code>CapacityError</code>: uma estimativa construída sobre um parâmetro absurdo é pior que nenhuma.</p></div>
+
+<div class="step"><span class="n">6</span><strong>Escreva o design doc de um quarto sistema.</strong> Copie <code>template/DESIGN-DOC.md</code> e preencha para este enunciado: <em>"classificação automática de e-mails de um SAC (20 mil por dia, resposta em até 1 hora, 40 categorias, ação de encaminhar a um humano ou responder com modelo pronto)"</em>. Use a calculadora para as seções 4 e 10 (acrescente um <code>case4</code> a <code>cases.py</code> com seu teste de números esperados). Autoavalie com a rubrica do bloco 7.
+<p><strong>Resultado esperado:</strong> as seções 3, 4, 8, 9 e 10 preenchidas com números; o teste <code>test_design_doc_template_has_the_required_sections</code> garante que o template manteve esses cabeçalhos. <strong>Se falhar:</strong> o teste acusa um cabeçalho renomeado; restaure-o.</p></div>
+
+<h2>Tabela de Diagnóstico</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>429 no meio do dia com RPM abaixo da cota</td><td>TPM esgotado (entrada grande ou agente reenviando histórico)</td><td>calcular TPM, não só RPM; reduzir contexto; balde por tenant; pedir aumento de cota</td></tr>
+<tr><td>Pool de conexões esgotado com poucos QPS</td><td>requisição longa (streaming de ~7 s): lei de Little</td><td>L = λ·W; dimensionar conexões ou workers por concorrência, não por taxa</td></tr>
+<tr><td>Conta de LLM 3× acima do previsto</td><td>média usada no lugar da cauda; agente com muitos passos; cache sem acerto</td><td>medir p99 de custo por requisição; teto de passos e tokens; medir hit rate real</td></tr>
+<tr><td>Ação externa executada duas vezes</td><td>retentativa sem chave de idempotência</td><td>chave determinística + log de efeitos; verificar por leitura antes de repetir</td></tr>
+<tr><td>Resposta de um tenant cita documento de outro</td><td>filtro de permissão depois da busca, ou cache sem tenant na chave</td><td>filtro na consulta; escopo completo na chave de cache; teste de isolamento na CI</td></tr>
+<tr><td>Disponibilidade 99,9% e usuários reclamam de respostas ruins</td><td>SLO só mede HTTP, não qualidade</td><td>SLI de qualidade por amostra julgada, com alerta e rollback de prompt</td></tr>
+<tr><td>Lote devolvido com menos itens que o enviado</td><td>erros por item e resultados fora de ordem sem reconciliação</td><td>manifesto + <code>custom_id</code>; reenviar só as faltantes</td></tr>
+<tr><td>Design aprovado e depois refeito</td><td>premissas não escritas; custo e falhas ausentes</td><td>seções 4, 8 e 10 do template; revisão com a rubrica antes de circular</td></tr>
+</tbody>
+</table>
+
+<h2 id="checkpoint">Checkpoint E01</h2>
+<div class="box ok">
+<span class="lbl">Avaliação sem consulta — diga "Checkpoint E01" no chat</span>
+<p>Uma pergunta por vez, sem consulta. Cada pergunta é um cenário; a rubrica diz o que basta e o que reprova.</p>
+<ul class="check">
+<li><strong>P1 · Estimativa em 10 minutos.</strong> "Um copiloto de código para 3 mil engenheiros, 40 interações por dia, 8 horas." Calcule QPS de pico, concorrência com resposta de 6 s, TPM com 6 mil tokens por interação e custo mensal com preço hipotético que você declare. <em>Basta:</em> definição de pico e premissas escritas, Little, TPM em vez de só RPM, custo com entrada e saída separadas, resultado como intervalo. <em>Reprova:</em> número sem premissa; só QPS.</li>
+<li><strong>P2 · Onde está o gargalo.</strong> O assistente RAG (4 QPS) responde bem no teste e cai no primeiro pico. Liste, em ordem de probabilidade, três causas específicas de LLM e como cada uma é detectada. <em>Basta:</em> TPM/429, concorrência de streaming/pool, fila no provedor ou TTFT alto por contexto grande; métricas correspondentes. <em>Reprova:</em> "escalar horizontalmente os servidores".</li>
+<li><strong>P3 · Custo de um agente.</strong> Um agente de 10 passos custa US$ 0,09; um cliente reclama que uma tarefa custou US$ 1,20. Explique como é possível e que controles evitam. <em>Basta:</em> custo quadrático no histórico, cauda de passos, loop sem progresso, perda do cache de prefixo; tetos por tarefa, detector de repetição, compactação. <em>Reprova:</em> "o modelo está caro".</li>
+<li><strong>P4 · Efeito duplicado.</strong> O worker chama a API de pagamento, o terceiro devolve timeout, a tarefa é repetida. Desenhe o protocolo que evita pagar duas vezes e diga o que fazer se o terceiro não suportar chave de idempotência. <em>Basta:</em> chave determinística gravada antes, log de efeitos, verificação por leitura, estado "incerto", aprovação humana como último recurso. <em>Reprova:</em> "a fila garante exatamente uma vez".</li>
+<li><strong>P5 · Batch ou síncrono.</strong> Para 1,2 milhão de páginas em 7 dias e para 20 mil por dia contínuas com resposta em 1 hora, escolha o modo de chamada e justifique com números. <em>Basta:</em> batch para o passivo (−50%, janela de 24 h, reconciliação), análise da janela de 1 hora do fluxo contínuo e alternativa híbrida; reconhece a mudança de gargalo para a revisão. <em>Reprova:</em> escolha sem custo ou sem tratar falha por item.</li>
+<li><strong>P6 · Qualidade silenciosa.</strong> Disponibilidade 99,95% e satisfação caindo há um mês. Explique por que nenhum alarme tocou e como projetar o monitoramento. <em>Basta:</em> HTTP 200 mede transporte; SLI de qualidade por amostra julgada; versões registradas; alerta e rollback. <em>Reprova:</em> "adicionar mais logs".</li>
+<li><strong>P7 · Defesa.</strong> Um staff pergunta: "por que não resolver isso com regras e um modelo pequeno?". Responda em 90 segundos. <em>Basta:</em> baseline sem LLM, medida em amostra, ponto em que as regras deixam de cobrir, custo e qualidade comparados, gatilho para reconsiderar. <em>Reprova:</em> defesa da escolha por preferência ou tom defensivo sem dado.</li>
+<li><strong>P8 · Design doc.</strong> Entregue o design doc do enunciado do passo 6 do laboratório e autoavalie com a rubrica. <em>Basta:</em> as 12 seções, estimativas reproduzíveis na calculadora, alternativas reais, tabela de falhas, teto de gasto, nota ≥ 2 em todos os critérios. <em>Reprova:</em> lista de tecnologias sem números.</li>
+</ul>
+<h4>Entregáveis verificados (mostrar rodando)</h4>
+<ol>
+<li>Gates do lab verdes: <code>pytest</code> (36 testes), <code>ruff check</code>, <code>ruff format --check</code>, <code>mypy --strict</code>.</li>
+<li>Mutação de <code>workers_needed</code> (<code>ceil</code> para <code>int</code>) rejeitada pela suíte e revertida.</li>
+<li>Os três casos reproduzindo os números dos blocos 4 a 6, mais a análise de sensibilidade do passo 4.</li>
+<li>Design doc do quarto sistema, preenchido com o template e autoavaliado.</li>
+</ol>
+</div>
+
+<h2>Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://sre.google/sre-book/service-level-objectives/">Google SRE Book, cap. 4 "Service Level Objectives"</a></td><td>SLI, SLO e orçamento de erro (bloco 3)</td><td>livro oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">AWS Builders' Library: timeouts, retries and backoff with jitter</a></td><td>retentativa e deadline (blocos 2, 3)</td><td>engenharia de fornecedor</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://www.rfc-editor.org/rfc/rfc6585">RFC 6585</a> (429 Too Many Requests)</td><td>rate limiting (bloco 2)</td><td>RFC</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.stripe.com/api/idempotent_requests">Stripe API: idempotent requests</a></td><td>convenção de <code>Idempotency-Key</code> (bloco 5)</td><td>documentação de fornecedor</td><td>11/10/2026</td></tr>
+<tr><td>J. D. C. Little, "A Proof for the Queuing Formula: L = λW", <em>Operations Research</em> 9(3), 1961</td><td>lei de Little (blocos 2, 4, 5)</td><td>fonte primária</td><td>—</td></tr>
+<tr><td>M. Kleppmann, <em>Designing Data-Intensive Applications</em>, 2ª ed., O'Reilly</td><td>consistência, replicação, partição, processamento em lote (bloco 2)</td><td>livro</td><td>—</td></tr>
+<tr><td>Documentação de preços, cotas, prompt caching e Batch API do seu provedor</td><td>desconto de batch, regras de cache de prefixo, RPM/TPM (blocos 3, 5, 6)</td><td>oficial; <strong>alto risco de mudança</strong></td><td>revalide a cada projeto</td></tr>
+<tr><td>Módulos vizinhos: <a href="../M05-llm-pratica-gateway-cache/M05.html">M05</a>, <a href="../M07-rag-de-verdade/M07.html">M07</a>, <a href="../M08-agentes-e-context-engineering/M08.html">M08</a>, <a href="../M12-producao-seguranca-sre-billing/M12.html">M12</a>, <a href="../LT02-novo/LT02.html">LT02</a>, <a href="../P01-deploy-nuvem/P01.html">P01</a></td><td>mecanismos aprofundados lá; composição e dimensionamento aqui</td><td>curso</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.astral.sh/uv/">uv</a> e <a href="https://docs.python.org/3/">documentação do Python</a></td><td>lab</td><td>oficial</td><td>11/10/2026</td></tr>
+</tbody>
+</table>
+<p>Os preços do módulo são hipotéticos e redondos; não representam nenhum fornecedor. As saídas do laboratório vêm de execução real em 11/10/2026 (Python 3.14, <code>uv</code>, <code>pytest</code>, <code>ruff</code>, <code>mypy</code> nas versões do <code>uv.lock</code>). Preço, cotas, desconto de batch e regras de cache de prefixo mudam com frequência e variam por provedor: revalide na documentação vigente antes de qualquer decisão.</p>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>System design é método: requisitos com número, estimativa com premissa, API e dados, desenho, gargalos e trade-offs.<br>
+A estimativa decide o desenho: 4 QPS e 2,5 GB pedem um monólito com Postgres; 153 tarefas simultâneas pedem fila, workers e estado.<br>
+Com LLM, a latência tem duas fases, a vazão é limitada por TPM, o custo é por requisição e a qualidade se degrada em silêncio.<br>
+Caso 1: o recurso escasso é a cota; as alavancas de custo são cache, roteamento e menos contexto.<br>
+Caso 2: efeitos externos exigem idempotência, política em código, aprovação por classe de ação, orçamento e auditoria.<br>
+Caso 3: cascata em batch corta 90% do custo; o gargalo passa a ser a verificação.<br>
+O documento é uma decisão pedida, com alternativas reais, falhas, custo máximo e incerteza declarada.<br>
+Próximo passo: liderança técnica (<a href="../E04-lideranca-tecnica/E04.html">E04</a>), capstone (<a href="../M13-capstone/M13.html">M13</a>) e entrevistas (<a href="../E05-carreira/E05.html">E05</a>).</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="E01"></script>
+</body>
+</html>

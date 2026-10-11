@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E04 · Liderança técnica na era da IA</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>E04 · Liderança técnica na era da IA</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas de terminal e os gates do laboratório vêm de execução real em 11/10/2026 (Linux aarch64, Python 3.14, uv). Números de pesquisa externa (DORA, METR) estão datados em "Fontes e versões" e devem ser revalidados em até 90 dias. Navegação: <a href="../E01-system-design-ia/E01.html">E01</a> (pré-requisito) · <a href="../M04-design-docs-com-ia/M04.html">M04</a> (ADR e postmortem como formato) · <a href="../LT04-novo/LT04.html">LT04</a> (release e postmortem como prática) · <a href="../E05-carreira/E05.html">E05</a> (próximo).</p></aside>
+<p class="meta"><span class="badge">FASE 4</span> &nbsp; 7 blocos · carga estimada ≈ 12 h · pré-requisito: <a href="../E01-system-design-ia/E01.html">E01</a> · <strong>de quem mais escreve código a quem faz o time inteiro entregar melhor</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Até aqui o curso mediu você pelo que você constrói. Um tech lead ou staff engineer é medido pelo que o time consegue construir, decidir e sustentar <em>sem você na sala</em>. Em 2026 isso inclui um fator novo: cada pessoa do time tem um agente capaz de produzir em minutos mais código do que o time consegue revisar em um dia. O gargalo saiu da digitação e foi para decisão, verificação e comunicação, que é exatamente o trabalho do líder técnico.</p>
+<p>Ao terminar você consegue: (1) escolher e defender o papel certo (tech lead, staff, principal, gerente) e exercer influência sem autoridade formal; (2) conduzir uma decisão em grupo com RFC, design review e ADR, classificando-a como reversível ou não e fechando desacordos com "discordo e apoio"; (3) fazer code review como alavanca de time, incluindo o de código gerado por IA, com ordem, tom e prazo; (4) decompor trabalho, estimar por faixa, rodar uma simulação de Monte Carlo e dizer "não" com alternativas; (5) dar feedback SBI com frases prontas, conduzir 1:1, delegar e montar rubrica de contratação, inclusive para o júnior na era da IA; (6) introduzir IA no time com política, harness compartilhado e experimento antes de mandato, medindo com DORA, SPACE e DevEx; (7) comandar um incidente, escrever postmortem blameless, desenhar on-call sustentável e falar com executivos.</p>
+<p>Produto concreto: o laboratório <code>leadkit</code> (previsão de prazo por Monte Carlo com semente fixa, métricas DORA a partir de CSV, linter de documentos e seis templates) executado e testado.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não é autoajuda nem catálogo de "soft skills". Cada prática vem com critério observável (como alguém de fora saberia que você a fez), roteiro de conversa ou template. Também não repete o que já existe: ADR e postmortem como <em>formato</em> estão no <a href="../M04-design-docs-com-ia/M04.html">M04</a>, o harness e os guardrails mecânicos do agente no <a href="../M01-workflow-ia-driven/M01.html">M01</a>, a prática de release e rollback no <a href="../LT04-novo/LT04.html">LT04</a>. Aqui entra o lado humano e organizacional desses artefatos: quem decide, quem discorda, quem responde às 3 da manhã.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça, sem consultar. Se acertar todas com segurança (mecanismo, não só o nome), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint">Checkpoint E04</a> e siga para o E05. Hesitação marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> Seu time tem um engenheiro brilhante que entrega o dobro de qualquer pessoa e uma equipe que não consegue decidir nada sem ele. Qual é o problema de liderança, e qual é a primeira mudança observável?
+<details><summary>Resposta</summary><p>O líder virou gargalo e ponto único de falha: o conhecimento e a decisão estão concentrados em uma pessoa. A primeira mudança observável é transferir uma decisão recorrente com critério escrito (quem decide, com que informação, até onde sem pedir permissão) e medir quantas passam a ocorrer sem você. Aumentar a própria produção piora o quadro.</p></details></li>
+<li><strong>(Bloco 2)</strong> Duas pessoas seniores discordam sobre usar fila durável ou chamada síncrona. Como decidir sem votar nem arrastar a discussão?
+<details><summary>Resposta</summary><p>Nomear um decisor antes, classificar a decisão (reversível com custo baixo decide-se rápido, irreversível ganha mais evidência) e, se o fato que falta é mensurável, definir o experimento que decide. Depois registrar a decisão e o desacordo no ADR e pedir "discordo e apoio" por escrito.</p></details></li>
+<li><strong>(Bloco 3)</strong> Um PR de 1.400 linhas gerado por agente chega com testes verdes e cobertura de 95%. Por onde você começa o review e o que recusa?
+<details><summary>Resposta</summary><p>Pela intenção e pelos testes, não pelo código: o PR resolve o problema do ticket? Os testes falham sem a mudança? Verificam mocks ou comportamento? Devolve-se para dividir: tamanho acima do que se revisa com atenção é motivo de recusa, venha de quem vier.</p></details></li>
+<li><strong>(Bloco 4)</strong> A soma dos "prováveis" de oito tarefas dá 41 dias-pessoa. Por que prometer 41 é quase certo de falhar, e o que prometer?
+<details><summary>Resposta</summary><p>Estimativas têm cauda longa para a direita (atrasar é ilimitado, adiantar é limitado), então a soma dos modos fica abaixo da mediana do total. Promete-se um percentil (por exemplo P85) com as hipóteses e os riscos explícitos. No lab, a soma 41 fica 13% abaixo do P50 simulado, e o P85 simulado é 29% maior que 41.</p></details></li>
+<li><strong>(Bloco 5)</strong> Reescreva "você é descuidado com testes" como feedback SBI.
+<details><summary>Resposta</summary><p>"No PR 482 de terça (Situação), o módulo de importação foi para review sem teste para arquivo vazio (Comportamento). Na quarta o suporte abriu o chamado CON-455 por esse caso e perdemos meio dia (Impacto). Na próxima entrega, rode a lista de bordas do time antes de pedir review; quer combinar de eu olhar o primeiro?" (Pedido).</p></details></li>
+<li><strong>(Bloco 6)</strong> O diretor manda "todo mundo usa o agente a partir de segunda". Qual a contraproposta de menor risco?
+<details><summary>Resposta</summary><p>Experimento delimitado: hipótese, duas a quatro semanas, grupo-piloto, métricas de fluxo (lead time, tamanho de PR, tempo de review, taxa de falha e retrabalho) mais percepção, critério de parada definido antes e política mínima de dados e revisão. Mandato só depois da evidência local.</p></details></li>
+<li><strong>(Bloco 7)</strong> Durante um incidente você é o comandante e sabe a causa provável. Deve corrigir pessoalmente?
+<details><summary>Resposta</summary><p>Não. O comandante coordena, decide e comunica; quem tem as mãos no teclado executa. Se o comandante mergulha na correção, ninguém mantém a visão do todo, atualiza stakeholders nem decide o rollback.</p></details></li>
+<li><strong>(Bloco 7)</strong> O postmortem diz "causa raiz: erro humano do desenvolvedor". O que está errado e como corrigir?
+<details><summary>Resposta</summary><p>Nomeia uma pessoa onde deveria nomear condições: por que o sistema permitiu que uma ação razoável produzisse a falha (sem validação, sem gate, runbook ambíguo, alerta ausente)? Reescreve-se como causas contribuintes em camadas, com ações verificáveis, dono e data.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — Papéis e escopo: tech lead, staff, principal e gerente; influência sem autoridade</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Decisão em grupo: RFC, design review, ADR, desacordo e reversibilidade</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Code review como líder, inclusive de código gerado por IA</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Planejamento e risco: estimativa por faixa, Monte Carlo, dívida técnica e "não" com alternativas</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Desenvolver pessoas: mentoria, delegação, SBI, 1:1, contratação e o júnior na era da IA</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Adoção de IA no time: política, harness, DORA, SPACE e DevEx</a></li>
+<li><a href="#b07"><strong>Bloco 7</strong> — Operação e cultura: incidente, postmortem blameless, on-call e executivos</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado E04</strong> — <code>leadkit</code>: Monte Carlo, DORA e templates</a></li>
+</ol>
+</div>
+
+<!-- ============================================ BLOCO 1 -->
+<h2 id="b01">Bloco 1 · Papéis e escopo: de quem mais codifica a quem multiplica</h2>
+
+<h3>Por que isso importa</h3>
+<p>A promoção a tech lead ou staff costuma acontecer porque você é o melhor executor da sala. O trabalho novo é outro: aumentar a capacidade de decisão e entrega de várias pessoas. Quem não faz essa troca consciente continua somando o próprio rendimento (uma pessoa, 40 horas) enquanto o ganho possível está na multiplicação (dez pessoas decidindo melhor). Com agentes de código, a troca ficou mais urgente: a produção individual de código barateou, o que torna a sua produção individual <em>ainda menos</em> diferencial e a qualidade das decisões do time ainda mais.</p>
+
+<h3>Os papéis, sem rótulo vago</h3>
+<p>Os nomes variam por empresa. O que importa é o que cada papel é responsável por entregar e como se verifica. Use esta tabela para negociar escopo, não para colar crachá.</p>
+<table>
+<thead><tr><th>Papel</th><th>Responde por</th><th>Autoridade típica</th><th>Sinal observável de que funciona</th></tr></thead>
+<tbody>
+<tr><td><strong>Tech lead</strong> (de um time)</td><td>Qualidade técnica e ritmo de entrega de um time; decomposição, design, review, onboarding técnico</td><td>Decide o "como" dentro do time; propõe o "o quê" com o gerente de produto</td><td>Time entrega com previsibilidade; decisões técnicas estão escritas; duas pessoas além de você conseguem liderar uma iniciativa</td></tr>
+<tr><td><strong>Engineering manager</strong></td><td>Pessoas: contratação, desempenho, carreira, saúde do time, prioridades e capacidade</td><td>Formal sobre pessoas, orçamento e escopo</td><td>Retenção, crescimento visível, conflitos tratados cedo, time com capacidade e foco</td></tr>
+<tr><td><strong>Staff engineer</strong></td><td>Problemas técnicos que atravessam times (arquitetura, migração, plataforma, confiabilidade), ou profundidade crítica</td><td>Quase nenhuma formal; opera por influência, documento e patrocínio</td><td>Uma decisão ou capacidade que persiste depois que você sai da iniciativa</td></tr>
+<tr><td><strong>Principal / distinguished</strong></td><td>Direção técnica da organização por anos; apostas de alto custo; reputação externa</td><td>Acesso a executivos; veto moral, não formal</td><td>A empresa evita um erro caro ou captura uma oportunidade que não veria sem você</td></tr>
+</tbody>
+</table>
+<p>Tech lead e gerente são papéis diferentes mesmo quando a mesma pessoa os acumula. O erro típico é o "tech lead que gerencia por osmose": cuida de pessoas só quando sobra tempo e, por isso, nunca. Se você acumula, escreva no calendário a parte de pessoas (1:1, feedback, carreira) com a mesma firmeza dos compromissos técnicos.</p>
+<p>Will Larson descreve quatro arquétipos de staff engineer: <em>tech lead</em> (guia um time), <em>architect</em> (dono de uma área técnica), <em>solver</em> (entra nos problemas difíceis e sai) e <em>right hand</em> (extensão de um executivo). A utilidade da lista é perguntar "qual deles esta empresa precisa de mim agora?" antes de aceitar o escopo, porque cada um tem rotina e métrica diferentes. Veja a fonte em "Fontes e versões".</p>
+
+<h3>Influência sem autoridade: o mecanismo</h3>
+<p>Sem poder de mando, você troca em quatro moedas: <strong>evidência</strong> (dados, protótipos, incidentes passados), <strong>clareza</strong> (o documento que organiza uma discussão confusa), <strong>reciprocidade</strong> (você já destravou os outros) e <strong>patrocínio</strong> (alguém com autoridade que apoia a direção). A ordem importa: começar pelo patrocínio sem evidência produz decreto fraco; evidência sem patrocínio produz análise ignorada.</p>
+<figure>
+<svg viewBox="0 0 640 190" role="img" aria-labelledby="t1" width="640" height="190">
+<title id="t1">Alavancagem: da produção individual à multiplicação do time</title>
+<g fill="none" stroke="currentColor" stroke-width="1.5">
+<rect x="20" y="60" width="130" height="70" rx="8"/><rect x="190" y="60" width="130" height="70" rx="8"/><rect x="360" y="60" width="130" height="70" rx="8"/>
+<path d="M150 95h40M320 95h40" marker-end="url(#a)"/><rect x="520" y="45" width="100" height="100" rx="8" stroke-dasharray="5 4"/>
+<path d="M490 95h30"/>
+</g>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+<g fill="currentColor" font-size="12" text-anchor="middle" font-family="sans-serif">
+<text x="85" y="90">Você</text><text x="85" y="108">escreve</text>
+<text x="255" y="90">Você decide</text><text x="255" y="108">e revisa</text>
+<text x="425" y="90">Você forma</text><text x="425" y="108">quem decide</text>
+<text x="570" y="90">Time decide</text><text x="570" y="108">sem você</text>
+<text x="85" y="160" fill="var(--muted)">1x</text><text x="255" y="160" fill="var(--muted)">2-3x (gargalo)</text><text x="425" y="160" fill="var(--muted)">5-10x</text>
+</g>
+</svg>
+<figcaption>O ganho de cada etapa só aparece se a etapa anterior for realmente entregue a alguém. Etapa 2 é onde mais líderes ficam presos.</figcaption>
+</figure>
+
+<h3>Exemplo trabalhado: o primeiro trimestre como tech lead</h3>
+<p>Contexto: você assume um time de sete pessoas que mantém o serviço de conciliação. Você é o autor de 40% dos commits. Plano de 90 dias com critério verificável:</p>
+<ol>
+<li><strong>Dias 1-15, escutar e mapear.</strong> 1:1 com todos (roteiro no bloco 5). Pergunta fixa: "o que atrasa você hoje e que eu poderia resolver?". Entregável: lista de dez atritos ordenada por frequência. Critério: três itens têm dono e data.</li>
+<li><strong>Dias 15-45, tirar-se do caminho crítico.</strong> Liste as decisões que passam por você (aprovação de PR, escolha de biblioteca, priorização de bug). Para cada uma, escreva a regra: "decide sozinho se reversível em um dia e abaixo de X; me avise depois". Critério: a fila de PRs que esperam você cai, medida por tempo até primeira revisão.</li>
+<li><strong>Dias 45-90, criar o segundo líder.</strong> Escolha uma iniciativa média e passe a liderança de ponta a ponta a uma pessoa, com você como patrocinador (o bloco 5 detalha a delegação). Critério: você não é o autor de nenhum commit do caminho crítico daquela iniciativa e ela entrega.</li>
+</ol>
+<p>Sua participação em commits deve cair de 40% para algo como 10 a 20%. Se caiu a zero e o time desacelerou, você delegou sem sustentar: é abdicação, não liderança.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Codar ou não codar.</strong> Manter uma parte do código mantém credibilidade e contexto. Mantenha trabalho <em>fora do caminho crítico</em> (ferramentas, spikes, correções pequenas), porque você será interrompido e não pode bloquear ninguém.</li>
+<li><strong>Staff por profundidade ou por abrangência.</strong> Profundidade (o especialista em banco de dados) é respeitável, mas só é staff se resolve o que ninguém mais resolve e se ensina o suficiente para não virar relíquia.</li>
+<li><strong>Gerente ou trilha técnica.</strong> A troca é reversível em muitas empresas. Faça um período de teste explícito (6 a 12 meses) com critério de saída conversado com sua chefia.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Responder todas as perguntas técnicas em vez de perguntar "o que você já tentou?". Cria dependência.</li>
+<li>Reescrever o PR do colega "porque é mais rápido". É, uma vez; a segunda vez custa o time.</li>
+<li>Confundir visibilidade com impacto: reunião de arquitetura de duas horas não é entrega.</li>
+<li>Aceitar escopo transversal sem patrocinador. Staff sem patrocínio vira consultor sem mandato.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>O herói silencioso. Você resolve as crises de madrugada, segura o legado, é indispensável, e a organização lê isso como competência. Na verdade, é risco: se você some, o sistema para. Pior, o time aprende a esperar o herói. Teste: se você tirar duas semanas de férias sem celular, o que quebra? Cada item da resposta é uma tarefa de transferência para o próximo trimestre.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Tech lead responde pelo time, gerente pelas pessoas, staff por problemas que atravessam times. Escolha o arquétipo antes do escopo. Influência sem autoridade = evidência + clareza + reciprocidade + patrocínio. Mede-se por decisões e iniciativas que funcionam sem você, não pelos seus commits. Com IA barateando código, o diferencial é a qualidade das decisões do time.</p>
+</div>
+
+<!-- ============================================ BLOCO 2 -->
+<h2 id="b02">Bloco 2 · Decisão em grupo: RFC, design review, ADR e desacordo</h2>
+
+<h3>Por que isso importa</h3>
+<p>Times seniores raramente falham por falta de ideias. Falham por decisões que ninguém sabe se foram tomadas, quem tomou, com que informação, e que reaparecem seis meses depois. O processo de decisão é um sistema: tem entrada (problema e evidência), processamento (crítica) e saída (decisão registrada). O formato dos documentos, em especial o <a href="../M04-design-docs-com-ia/M04.html">ADR</a>, está no M04; aqui está o <em>processo humano</em> em volta deles.</p>
+
+<h3>O fluxo: RFC, design review, ADR</h3>
+<table>
+<thead><tr><th>Artefato</th><th>Pergunta que responde</th><th>Quando usar</th><th>Prazo típico</th></tr></thead>
+<tbody>
+<tr><td><strong>RFC</strong> (pedido de comentários, assíncrono)</td><td>"Estamos de acordo com esta direção?"</td><td>Mudança que afeta mais de um time, interface pública, dependência nova relevante</td><td>5 a 10 dias úteis de comentários, data limite explícita</td></tr>
+<tr><td><strong>Design review</strong> (síncrona, 60 min)</td><td>"Quais riscos o grupo vê que o autor não viu?"</td><td>Depois que os comentários escritos foram lidos; para os temas que pedem conversa</td><td>Uma reunião; no máximo duas</td></tr>
+<tr><td><strong>ADR</strong></td><td>"O que foi decidido, por quê, e o que descartamos?"</td><td>Decisão difícil de reverter ou que alguém vai questionar depois</td><td>Até 24 h após a decisão</td></tr>
+</tbody>
+</table>
+<p>O template do laboratório (<code>templates/rfc.md</code>) impõe o que faz a diferença: revisores nomeados (não "o time"), data limite de comentários, tipo de decisão (reversível ou não), no mínimo duas alternativas incluindo "não fazer nada", riscos com sinal observável e uma seção "perguntas em aberto". A última é a mais valiosa e a mais ausente: um autor que declara o que não sabe mostra ao revisor onde ajudar.</p>
+
+<h3>Reversível ou irreversível: calibre o esforço</h3>
+<p>Jeff Bezos, na carta aos acionistas da Amazon de 2016, separou decisões em tipo 1 (de mão única, difíceis ou impossíveis de reverter) e tipo 2 (de mão dupla). A regra prática: decisões tipo 2 devem ser tomadas rápido, por indivíduos ou grupos pequenos; tipo 1 merecem processo pesado. O erro das organizações médias é aplicar processo tipo 1 a tudo. Pergunte sempre: <em>quanto custa voltar atrás e em quanto tempo?</em></p>
+<table>
+<thead><tr><th>Decisão</th><th>Custo de reverter</th><th>Tratamento</th></tr></thead>
+<tbody>
+<tr><td>Nome de função interna, biblioteca de teste</td><td>Horas</td><td>Quem implementa decide; sem RFC</td></tr>
+<tr><td>Adicionar fila durável ao fluxo de importação</td><td>Um sprint; mensagens publicadas permanecem</td><td>RFC curto + review; ADR</td></tr>
+<tr><td>Formato de ID público em API, esquema de particionamento de dados</td><td>Migração com clientes externos</td><td>RFC completo, protótipo, review ampliada, ADR</td></tr>
+<tr><td>Escolha de provedor de LLM com SDK no código inteiro</td><td>Depende do acoplamento; reduza com uma camada de abstração fina</td><td>Experimento e critério de saída antes; reduza o custo de reverter em vez de discutir mais</td></tr>
+</tbody>
+</table>
+<p>Há uma terceira via: <strong>diminuir o custo de reverter</strong>. Feature flag, dual write temporário, adaptador fino, migração em duas fases. Muitas decisões "de mão única" viram "de mão dupla" com um dia de engenharia, e isso é mais barato que um mês de debate.</p>
+
+<h3>Conduzindo uma design review (60 min)</h3>
+<p>O roteiro completo está em <code>templates/design-review.md</code>. A estrutura que sustenta:</p>
+<ol>
+<li><strong>Pergunta explícita.</strong> O convite começa com "o que preciso que o grupo decida ou critique é...". Sem isso, a reunião vira recital de slides.</li>
+<li><strong>Comentário escrito antes.</strong> Quem não leu pede adiamento. Resumir ao vivo para quem não leu pune quem leu.</li>
+<li><strong>Facilitador diferente do autor e decisor nomeado.</strong> O autor defende; o facilitador administra o tempo; o decisor decide.</li>
+<li><strong>Temas ordenados por risco</strong>, cada um terminando em: aceito, ajustar (com dono) ou desacordo registrado.</li>
+<li><strong>Leitura em voz alta</strong> das decisões e ações nos últimos cinco minutos.</li>
+</ol>
+
+<h3>Desacordo: do conflito à decisão</h3>
+<p>O desacordo técnico entre pessoas competentes costuma ter uma de três origens: <em>fato diferente</em> (um viu o incidente, outro não), <em>valor diferente</em> (velocidade versus robustez) ou <em>risco percebido diferente</em>. Cada uma tem tratamento próprio:</p>
+<ul>
+<li><strong>Fato diferente</strong> → traga o fato (log, medição, protótipo de dois dias). Encerre a opinião.</li>
+<li><strong>Valor diferente</strong> → explicite o trade-off e deixe o decisor escolher conscientemente. Registre qual valor foi priorizado.</li>
+<li><strong>Risco percebido diferente</strong> → peça o cenário concreto que falha ("em que condição isso quebra?") e o sinal que mostraria que o risco se concretizou. Transforme em monitoramento.</li>
+</ul>
+<p><strong>Discordo e apoio</strong> (<em>disagree and commit</em>, também da carta de 2016) funciona quando o decisor ouviu, decidiu e quem discordou assume a execução com lealdade. Duas condições o tornam legítimo e não coação: (1) cada lado teve voz antes; (2) existe um ponto de revisão baseado em dado ("reavaliamos se o p95 passar de 800 ms"). Sem o ponto de revisão, "discordo e apoio" vira derrota silenciosa.</p>
+<pre><code>Roteiro para o decisor, ao fechar um desacordo (2 minutos por lado, depois):
+
+"Ouvi duas posições. Rafael: manter chamada síncrona porque a latência
+fim a fim importa e a fila adiciona um componente a operar.
+Marina: fila durável porque 3 dos 5 timeouts de setembro vieram de extratos grandes.
+Decido por fila durável, tipo de decisão: reversível com custo (um sprint).
+Rafael, sua objeção fica registrada no ADR, com o sinal de revisão:
+se a latência p95 do fluxo normal passar de 800 ms, reabrimos.
+Preciso que cada um confirme por escrito até amanhã: 'discordo e apoio'
+ou 'concordo', ou traga um fato novo."</code></pre>
+
+<h3>Exemplo trabalhado: do RFC ao ADR</h3>
+<p>O repositório do lab traz <code>exemplos/rfc-bom.md</code>: um RFC sobre mover o processamento de extratos para fila durável, com contexto numérico (3 dos 5 timeouts, 1 a 2% de conciliações duplicadas), três revisores nomeados, data limite e tipo de decisão. O linter <code>leadkit check rfc</code> valida a estrutura (seções obrigatórias, no mínimo duas alternativas, nenhum TODO). Ele não valida julgamento: um RFC pode passar no linter e ser ruim. O linter existe para barrar o que é mecânico, de modo que o tempo humano vá para a crítica.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>RFC assíncrono é mais inclusivo, mais lento.</strong> Bom para times distribuídos e para quem pensa por escrito; ruim para decisões urgentes. Defina o prazo e respeite-o: comentário fora da data pede justificativa.</li>
+<li><strong>Consenso versus decisão.</strong> Consenso é custoso e dilui. Procure <em>consentimento</em>: "alguém tem uma objeção fundamentada?". Ausência de objeção sustentada basta.</li>
+<li><strong>Documento versus protótipo.</strong> Quando o risco está em desempenho ou integração, dois dias de protótipo valem mais que dez páginas.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>RFC escrito depois da decisão tomada: teatro. O revisor percebe e para de comentar.</li>
+<li>Design review sem decisor: termina em "vamos pensar mais".</li>
+<li>Registrar a decisão sem registrar o desacordo, para "não criar clima". Quando a objeção se confirmar, ninguém lembra que alguém avisou, e a confiança cai.</li>
+<li>Usar o ADR para tudo. Se ninguém questionaria depois, não precisa.</li>
+<li>Pedir opinião a quem não tem custo no resultado e ignorar quem vai operar o sistema às 3 da manhã.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Ganhar a discussão com autoridade técnica. Um sênior com 20 anos "vence" porque os demais cedem, não porque convenceu. O sintoma: decisões que ninguém contesta na reunião e todos contestam no corredor. Contramedida: fale por último, peça primeiro a objeção mais forte contra a sua posição e escreva-a no documento. Se você não consegue enunciar a melhor objeção contra sua proposta, você ainda não terminou de pensar.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>RFC assíncrono com prazo → design review com pergunta e decisor → ADR em 24 h. Classifique a decisão pelo custo de reverter e reduza esse custo quando puder. Desacordo vem de fato, valor ou risco, e cada um tem tratamento. "Discordo e apoio" exige voz prévia e ponto de revisão por dado. Registre a objeção, não só a decisão.</p>
+</div>
+
+<!-- ============================================ BLOCO 3 -->
+<h2 id="b03">Bloco 3 · Code review como líder, inclusive de código gerado por IA</h2>
+
+<h3>Por que isso importa</h3>
+<p>Code review é a maior alavanca de ensino e a maior fila oculta do time. Cada PR esperando revisão é trabalho parado; cada comentário mal escrito é uma pessoa que passa a evitar você. Com agentes, o volume de código por pessoa subiu, mas a capacidade de revisão humana não. O relatório DORA 2026 sobre retorno de IA, resumido em imprensa técnica, destaca justamente o review como ponto de alavanca: gerar código mais rápido perde valor se o review é lento ou raso (ver bloco 6 e "Fontes"). Revisar bem e rápido deixou de ser cortesia e virou política de capacidade.</p>
+
+<h3>A ordem do que revisar</h3>
+<p>Revisores novatos começam pelo estilo e param no estilo. Um líder inverte a pilha: gasta atenção onde o erro é caro e deixa o que máquina verifica para a máquina.</p>
+<ol>
+<li><strong>Intenção.</strong> O PR resolve o problema declarado? Existe um problema declarado? Se a descrição não explica o porquê, devolva antes de ler código.</li>
+<li><strong>Tamanho e escopo.</strong> Cabe em uma revisão com atenção (regra do lab: até 30 minutos)? Tem arquivos não relacionados? Devolver para dividir é um review legítimo.</li>
+<li><strong>Testes.</strong> Falham sem a mudança? Cobrem borda e falha, ou só o caminho feliz? Verificam comportamento ou verificam mocks?</li>
+<li><strong>Desenho e fronteiras.</strong> Responsabilidade no lugar certo, acoplamentos novos, contrato público, migração compatível.</li>
+<li><strong>Risco operacional.</strong> Observabilidade, comportamento sob falha, rollback, dado sensível, custo.</li>
+<li><strong>Legibilidade e nomes.</strong> Importa, mas é o último. Se formato e lint são automáticos (veja o harness no <a href="../M01-workflow-ia-driven/M01.html">M01</a>), nenhum humano comenta estilo.</li>
+</ol>
+<p>O guia público de code review do Google resume o critério central: aprovar quando a mudança melhora a saúde geral do código, mesmo que não seja como o revisor escreveria. Perfeição não é o padrão. Separar "bloqueante" de "sugestão" é o que mantém a velocidade.</p>
+
+<h3>Tom: escrever comentário que o outro consegue usar</h3>
+<p>O comentário que funciona descreve o efeito ou a pergunta, não a pessoa, e diz se bloqueia.</p>
+<table>
+<thead><tr><th>Em vez de</th><th>Escreva</th></tr></thead>
+<tbody>
+<tr><td>"Isso está errado."</td><td>"Se <code>extrato</code> vier vazio, a linha 48 lança <code>IndexError</code> e o worker reprocessa em loop. Bloqueante: precisa tratar o caso vazio."</td></tr>
+<tr><td>"Por que você fez assim?"</td><td>"Qual foi a razão de abrir uma conexão por linha? Estou vendo 12 mil conexões em um extrato grande. Não bloqueante, mas quero entender se há restrição que não vi."</td></tr>
+<tr><td>"Use um padrão melhor."</td><td>"Sugestão (não bloqueante): extrair a regra de conciliação para uma função pura facilita o teste. Posso fazer isso num PR separado se preferir."</td></tr>
+<tr><td>"Ótimo!" (sem mais nada)</td><td>"Gostei de ter isolado o relógio em um parâmetro: o teste de fuso horário ficou simples."</td></tr>
+</tbody>
+</table>
+<p>Prefixos curtos eliminam ambiguidade: <code>bloqueante:</code>, <code>sugestão:</code>, <code>pergunta:</code>, <code>nit:</code> (detalhe). Combine a convenção no time uma vez e ela economiza dezenas de ciclos de "isso é obrigatório?".</p>
+
+<h3>Tempo de resposta e PRs pequenos</h3>
+<p>O guia do Google estabelece que, fora emergência, o revisor responde no máximo em um dia útil; na prática, a primeira resposta em horas mantém o autor em contexto. Defina um acordo explícito do time (<em>SLA de review</em>): "primeira resposta em até 4 horas úteis; aprovação ou lista de bloqueantes em um dia". Meça o <em>tempo até a primeira revisão</em> e o <em>tamanho mediano do PR</em>: são indicadores de fluxo que você pode puxar do Git.</p>
+<p>PRs pequenos não são preferência estética: são a mesma ideia de lotes pequenos que o DORA associa a melhor desempenho de entrega. O custo de revisão cresce mais que linearmente com o tamanho, porque a atenção do revisor decai. A alavanca prática: stacked PRs ou cadeia de commits revisáveis um a um, <em>feature flags</em> para mesclar incompleto com segurança e um limite sugerido (por exemplo, 400 linhas de diff "úteis", excluindo gerado) que dispara conversa, não bloqueio automático.</p>
+
+<h3>Review de código gerado por IA</h3>
+<p>Código gerado tem um perfil de falha diferente do humano. Raramente tem erro de sintaxe e quase sempre parece correto. Os problemas típicos estão na distância entre plausível e correto:</p>
+<ul>
+<li><strong>API inventada ou de versão errada:</strong> função que não existe na versão fixada, flag de CLI que nunca existiu.</li>
+<li><strong>Teste tautológico:</strong> o teste verifica o mock que o próprio agente configurou; passa com qualquer implementação.</li>
+<li><strong>Tratamento de erro que engole:</strong> <code>except Exception: return []</code> devolve "plausível" no lugar de falhar.</li>
+<li><strong>Dependência nova</strong> com nome parecido com a certa (typosquatting) ou licença incompatível.</li>
+<li><strong>Escopo que cresce:</strong> o agente "melhora" arquivos que ninguém pediu, e o diff vira ilegível.</li>
+<li><strong>Teste enfraquecido para passar:</strong> asserção afrouxada, teste pulado, tolerância ampliada.</li>
+<li><strong>Duplicação:</strong> reimplementa um helper que já existe porque não o encontrou.</li>
+</ul>
+<p>O <code>templates/checklist-review-ia.md</code> do lab transforma isso em itens que exigem <em>evidência</em>, não "ok": link, trecho de teste, saída de comando. O item mais valioso e mais barato é <strong>rodar o teste novo contra o código antigo</strong>: se passa, o teste não prova nada.</p>
+<pre><code># Verificação rápida de que o teste novo realmente detecta a mudança
+git stash push -- src/                  # tira só o código de produção
+uv run pytest tests/test_importacao.py  # DEVE falhar
+git stash pop</code></pre>
+<p>Regra de responsabilidade para colocar no acordo do time: <strong>quem abre o PR é o autor, independentemente de quem digitou.</strong> "O agente fez" não é defesa nem justificativa. O autor deve conseguir explicar cada decisão não óbvia sem consultar o agente. Se não consegue, o PR não está pronto para revisão: está pronto para o autor estudar.</p>
+
+<h3>Exemplo trabalhado: PR de agente com 900 linhas</h3>
+<p>Cenário: um colega abre um PR de 900 linhas, gerado por agente, "implementa a tela de revisão de exceções". Testes verdes, cobertura 94%. Seu review, em ordem:</p>
+<ol>
+<li><strong>Intenção:</strong> a descrição repete o título. Comentário: "<em>bloqueante:</em> descreva o comportamento esperado em 3 linhas e o que ficou fora".</li>
+<li><strong>Tamanho:</strong> 900 linhas misturando tela, endpoint e mudança de esquema. Comentário: "<em>bloqueante:</em> divida em (a) migração + endpoint, (b) tela. Posso revisar (a) ainda hoje".</li>
+<li><strong>Testes (no pedaço (a)):</strong> rodou o teste novo no código antigo; passou. Comentário: "<em>bloqueante:</em> este teste passa sem a mudança; ele verifica o mock do repositório. Preciso de um teste contra o banco de teste".</li>
+<li><strong>Desenho:</strong> um novo helper de datas duplica <code>core/tempo.py</code>. "<em>sugestão:</em> reutilizar <code>core.tempo.para_utc</code>."</li>
+</ol>
+<p>Você revisou pouco código e já devolveu valor: rejeitou um PR grande de maneira respeitosa e deu um caminho. Isso é muito mais útil que 40 comentários de nome de variável.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Revisão por IA como primeira passada.</strong> Reduz erros mecânicos e acelera o ciclo; não substitui o humano para intenção, desenho e risco. Trate como lint inteligente, com falsos positivos, e nunca como aprovação.</li>
+<li><strong>Dois revisores</strong> aumentam a pegada de erros e o tempo. Reserve para mudanças de alto risco (segurança, dinheiro, migração).</li>
+<li><strong>Programar em par</strong> substitui parte do review assíncrono e é excelente para mudanças ambíguas; custa agenda.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Aprovar com "LGTM" um PR que você não leu porque confia no autor ou no agente. O custo aparece em produção.</li>
+<li>Reabrir decisão de desenho já tomada no RFC durante o review. O review valida a execução da decisão.</li>
+<li>Comentar o que o formatador resolveria.</li>
+<li>Deixar o PR sem resposta por dois dias e depois pedir uma refatoração grande.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Cobertura alta e testes verdes como prova de qualidade em código gerado. Um agente otimiza o sinal que lhe dão: se o gate é "cobertura &gt; 90%", ele escreve testes que cobrem sem verificar. O sênior experiente confia no gate porque o gate funcionou com humanos. Contra agentes, confie na <em>mutação</em> (o teste falha se eu quebrar o código?) e no teste contra o código antigo, não no número de cobertura.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Revise na ordem: intenção, tamanho, testes, desenho, risco, legibilidade. Prefixe comentários com bloqueante, sugestão, pergunta. Combine um SLA de primeira resposta e meça tempo de review e tamanho de PR. Em código de IA, exija evidência (teste que falha sem a mudança, API conferida, escopo contido) e deixe claro que o autor responde pelo PR.</p>
+</div>
+
+<!-- ============================================ BLOCO 4 -->
+<h2 id="b04">Bloco 4 · Planejamento e risco: estimativa por faixa, Monte Carlo, dívida e "não" com alternativas</h2>
+
+<h3>Por que isso importa</h3>
+<p>Um líder técnico é cobrado por previsibilidade mais do que por velocidade. Prazos curtos prometidos e quebrados custam mais confiança do que prazos honestos e longos. A estimativa de um número só é uma aposta mal formulada: esconde a incerteza e transfere o risco para quem a recebe. A alternativa é estimar por faixa, simular, prometer um percentil e tratar os riscos como itens de primeira classe.</p>
+
+<h3>Decomposição</h3>
+<p>Estimativa sem decomposição é palpite sobre algo que você ainda não entende. Decomponha até que cada parte seja (a) de um tamanho em que você já errou antes, e (b) entregável e verificável por si só. Regras práticas:</p>
+<ul>
+<li>Fatie por <strong>valor entregável verticalmente</strong> (uma importação ponta a ponta), não por camada (primeiro todo o banco).</li>
+<li>Itens de mais de 5 a 8 dias-pessoa ainda estão grandes demais; quebre ou marque a incerteza como alta.</li>
+<li>Inclua o que sempre é esquecido: migração de dados, observabilidade, runbook, rollout gradual, teste de carga, revisão de segurança, integração com o legado.</li>
+<li>Separe <strong>tarefas</strong> (trabalho que você sabe fazer) de <strong>riscos</strong> (eventos que podem ou não acontecer). Misturar os dois infla o plano e esconde o que importa.</li>
+</ul>
+
+<h3>Estimativa por faixa: três pontos</h3>
+<p>Para cada tarefa, pergunte três números: <strong>mínimo</strong> (quase tudo dá certo), <strong>provável</strong> (o que você espera) e <strong>máximo</strong> (um problema sério, mas não catástrofe). A distribuição que emerge é assimétrica: a cauda direita é mais longa porque atrasar é ilimitado e adiantar é limitado pelo zero. O arquivo <code>data/projeto-conciliacao.csv</code> do lab tem oito tarefas assim:</p>
+<pre><code>name,low,likely,high
+Modelar tabelas e migrações,2,3,6
+API de importação de extratos,3,5,10
+Regras de conciliação automática,5,8,20
+...
+Integração com o sistema legado de contas,4,8,25</code></pre>
+<p>Soma dos "prováveis": 41 dias-pessoa. Esse é o número que costuma ir ao slide. A seguir, por que é perigoso.</p>
+
+<h3>Monte Carlo: o mecanismo</h3>
+<p>A simulação sorteia, para cada tarefa, uma duração de uma distribuição definida pelos três pontos (triangular, ou PERT, que é uma Beta suavizada com média <code>(min + 4·provável + max)/6</code>), soma o sorteio de todas as tarefas, soma os riscos que "dispararam" naquela rodada (cada um com probabilidade e impacto) e repete 10.000 vezes. O resultado é a distribuição do total. Lê-se por <strong>percentis</strong>: P50 (metade das rodadas termina até ali), P85, P95. A <strong>semente fixa</strong> torna a execução reproduzível: duas pessoas rodando o mesmo CSV veem os mesmos números, o que viabiliza revisar a estimativa como código.</p>
+<pre><code>$ uv run leadkit estimate data/projeto-conciliacao.csv
+tarefas: 8  riscos: 0  execuções: 10000  semente: 42  distribuição: pert
+soma dos 'provável' (estimativa de ponto): 41.0 dias-pessoa
+esforço   média 47.4  mín 33.7  máx 67.3
+P50:   47.0 dias-pessoa  ->    47.0 dias corridos
+P85:   53.0 dias-pessoa  ->    53.0 dias corridos
+P95:   56.5 dias-pessoa  ->    56.5 dias corridos
+a soma dos 'provável' fica -13% em relação ao P50</code></pre>
+<p>Leitura: prometer 41 dias é prometer algo com probabilidade bem abaixo de 50% de se cumprir. O P85 (53) é a promessa que quebra em uma a cada sete execuções. Observe também que a <em>média</em> (47,4) supera a soma dos prováveis: a assimetria das caudas empurra a média para a direita.</p>
+
+<h3>Riscos discretos e capacidade</h3>
+<p>Riscos entram em <code>data/projeto-conciliacao-riscos.csv</code>: "time do legado atrasa o ambiente de homologação" (30%, +5 dias) e "requisito regulatório novo muda o formato do extrato" (15%, +10 dias). O parâmetro <code>--capacity</code> converte dias-pessoa em dias corridos: três pessoas com 60% de foco entregam 1,8 dia-pessoa por dia corrido.</p>
+<pre><code>$ uv run leadkit estimate data/projeto-conciliacao.csv \
+    --risks data/projeto-conciliacao-riscos.csv --capacity 1.8
+tarefas: 8  riscos: 2  execuções: 10000  semente: 42  distribuição: pert
+soma dos 'provável' (estimativa de ponto): 41.0 dias-pessoa
+esforço   média 50.3  mín 34.4  máx 77.1
+P50:   49.7 dias-pessoa  ->    27.6 dias corridos
+P85:   57.1 dias-pessoa  ->    31.7 dias corridos
+P95:   61.9 dias-pessoa  ->    34.4 dias corridos
+a soma dos 'provável' fica -17% em relação ao P50</code></pre>
+<p>Tradução para a conversa com o gerente de produto: "Com três pessoas e 60% de foco, 85% de confiança em 32 dias corridos; se precisar de 95%, 35. Os dois riscos de dependência explicam cerca de 3 dias-pessoa de P50 e a maior parte da cauda".</p>
+
+<h3>Limites do modelo (diga em voz alta)</h3>
+<ul>
+<li><strong>Independência.</strong> O simulador sorteia tarefas de forma independente. Na vida, elas se correlacionam (a mesma pessoa, o mesmo legado, o mesmo requisito vago). Correlação positiva <em>alarga</em> a distribuição: o P85 real é maior que o simulado. Trate o resultado como piso de honestidade, não como teto.</li>
+<li><strong>Escolha da distribuição.</strong> Com triangular, o mesmo CSV e os mesmos riscos dão P85 de 64,8 dias-pessoa contra 57,1 do PERT. A escolha é um julgamento: mostre as duas e justifique a usada. O comando aceita <code>--dist triangular</code>.</li>
+<li><strong>Entrada ruim, saída ruim.</strong> Se as faixas vêm de otimismo, o percentil é otimista. Calibre comparando estimado versus realizado de entregas passadas.</li>
+<li><strong>Sequencial.</strong> O modelo soma as tarefas (um fluxo de trabalho). Caminho crítico paralelo pede outra modelagem (máximo de ramos).</li>
+<li><strong>Alternativa baseada em fluxo.</strong> Se o time tem histórico estável, simule a partir do <em>throughput</em> real por semana (itens entregues) em vez de estimativas subjetivas; é mais difícil de enviesar.</li>
+</ul>
+<p>Falácia do planejamento (Kahneman e Tversky): mesmo sabendo da regra, tendemos a estimar pelo cenário ideal do projeto atual e ignorar a distribuição de projetos parecidos. A visão de fora ("projetos como este costumam estourar em X%") é o corretivo.</p>
+
+<h3>Roadmap e dívida técnica em termos de negócio</h3>
+<p>Um roadmap útil não lista funcionalidades com datas; expõe <strong>apostas</strong>, <strong>nível de confiança</strong> por horizonte (agora, próximo, depois) e <strong>o que depende de quê</strong>. Datas só nos horizontes onde há confiança. Para dívida técnica, abandone "o código está feio". Traduza em custo que o negócio entende:</p>
+<table>
+<thead><tr><th>Em vez de</th><th>Diga</th></tr></thead>
+<tbody>
+<tr><td>"Precisamos refatorar o módulo de conciliação."</td><td>"Cada regra nova de conciliação leva hoje 9 dias; nos módulos equivalentes bem estruturados, 3. Com 4 regras por trimestre, isso custa 24 dias-pessoa por trimestre. A refatoração custa 20 dias e se paga em um trimestre."</td></tr>
+<tr><td>"A cobertura de testes é baixa."</td><td>"30% dos incidentes dos últimos 6 meses vieram desse módulo; cada um consumiu em média 11 horas de 3 pessoas. Testes de caracterização custam 8 dias."</td></tr>
+<tr><td>"Estamos em uma versão antiga do framework."</td><td>"O suporte de segurança acaba em março. Depois dessa data, qualquer vulnerabilidade exige correção por nossa conta. A migração custa 15 dias agora ou 25 sob pressão."</td></tr>
+</tbody>
+</table>
+<p>Quatro perguntas organizam o argumento: <em>o que isso nos custa hoje</em> (tempo, incidentes, risco), <em>o que acontece se esperarmos</em> (custo cresce? prazo externo?), <em>quanto custa corrigir</em> e <em>como saberemos que funcionou</em> (a métrica que muda). A dívida que não tem custo mensurável e nenhum prazo é candidata honesta a ser aceita.</p>
+
+<h3>Dizer não com alternativas</h3>
+<p>Um "não" seco encerra a conversa e cria um adversário. Um "não" com alternativas abre uma negociação sobre escopo, prazo ou risco, que é o terreno certo. Estrutura em quatro movimentos:</p>
+<pre><code>1. Reconheça o objetivo:   "Entendo que o fechamento de novembro não pode passar
+                           sem a conciliação automática."
+2. Diga o fato:            "Com a capacidade atual, 85% de confiança é 32 dias corridos;
+                           o fechamento está a 24."
+3. Ofereça 2-3 opções:     "(A) Entregar a regra de conciliação exata e deixar a
+                           aproximada para dezembro, com revisão manual das exceções.
+                           (B) Adicionar duas pessoas, com 2 semanas de onboarding;
+                           isso não adianta, porque o gargalo é o legado.
+                           (C) Mover o fechamento para 15 de dezembro."
+4. Recomende e peça decisão: "Recomendo (A). Preciso da sua decisão até quinta
+                           para manter o plano."</code></pre>
+<p>Note o ponto 3: opção B mostra que você considerou e rejeitou, e por quê. A lei de Brooks (adicionar gente a projeto atrasado o atrasa mais) é um argumento antigo e útil, mas diga o gargalo concreto, não cite o livro.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Precisão aparente.</strong> Dois decimais num P85 passam confiança que o modelo não tem. Arredonde ao dia e diga as hipóteses.</li>
+<li><strong>Buffer escondido versus percentil declarado.</strong> Pessoas somam buffer em cada tarefa e a pressão o consome (Lei de Parkinson). Um percentil global, declarado, é mais honesto.</li>
+<li><strong>Estimar tudo versus fatiar e entregar.</strong> Quando a incerteza é alta, estime só o primeiro corte e replaneje com o que aprendeu.</li>
+<li><strong>Estimativas de IA.</strong> Assistentes ajudam a listar tarefas esquecidas e riscos; as faixas devem vir do histórico do time, não do modelo.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Entregar um número só ao gerente e uma faixa só ao time.</li>
+<li>Prometer o P50 como prazo. Metade das vezes você falha.</li>
+<li>Não revisitar a estimativa quando um risco dispara ou uma tarefa estoura.</li>
+<li>Ignorar o custo de coordenação ao somar pessoas: capacidade de 3 pessoas não é 3 × 1,0.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Cobrir o risco com sua autoridade em vez de com números. "Eu já fiz isso antes, 30 dias, pode confiar." Sua experiência é dado valioso, mas é um dado e não um argumento: se está certo, a simulação com suas faixas vai concordar, e agora o gerente pode ver o que acontece quando um risco dispara. Se a simulação discorda de você, ou você subestimou as caudas ou o modelo tem uma hipótese errada. As duas coisas são melhores descobertas antes do compromisso.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Decomponha em fatias verticais, estime por três pontos, separe tarefas de riscos e simule. Prometa um percentil (P85 ou P95 conforme o custo de falhar) com as hipóteses, e lembre que o modelo é piso, não teto (independência). No lab: soma 41, P50 47,0, P85 53,0, P95 56,5. Converta dívida em dias por trimestre e incidentes. Diga "não" com fato, opções e recomendação.</p>
+</div>
+
+<!-- ============================================ BLOCO 5 -->
+<h2 id="b05">Bloco 5 · Desenvolver pessoas: mentoria, delegação, feedback, 1:1, contratação e o júnior na era da IA</h2>
+
+<h3>Por que isso importa</h3>
+<p>Seu teto como líder é a capacidade das pessoas que você desenvolveu. Cada pessoa promovida, cada decisão delegada, cada contratação certa multiplica o que você consegue. E na era da IA há uma pergunta nova: se um agente faz o trabalho que antes treinava o júnior, como se forma o próximo sênior? Quem não responde isso conscientemente descobre em três anos que não tem pipeline de talento.</p>
+
+<h3>Mentoria, coaching e sponsorship: três coisas diferentes</h3>
+<table>
+<thead><tr><th>Prática</th><th>O que você faz</th><th>Frase típica</th><th>Quando</th></tr></thead>
+<tbody>
+<tr><td><strong>Mentoria</strong></td><td>Compartilha experiência e contexto</td><td>"Quando passei por isso, o que me ajudou foi..."</td><td>A pessoa quer atalhos de quem já viu o problema</td></tr>
+<tr><td><strong>Coaching</strong></td><td>Faz perguntas para a pessoa chegar à própria conclusão</td><td>"O que você já tentou? Se tivesse que escolher uma hipótese, qual seria?"</td><td>A pessoa sabe o suficiente e precisa estruturar o raciocínio</td></tr>
+<tr><td><strong>Sponsorship</strong></td><td>Usa seu capital para dar à pessoa visibilidade e oportunidade</td><td>"Indiquei você para liderar a migração; falei com a diretora sobre o seu trabalho."</td><td>A pessoa está pronta e falta acesso</td></tr>
+</tbody>
+</table>
+<p>A diferença é de custo para você. Mentoria custa tempo; sponsorship custa reputação, porque você arrisca seu nome. Por isso é o mais raro e o mais valioso. Um líder que só faz mentoria desenvolve pessoas que sabem, mas não chegam onde as decisões são tomadas.</p>
+
+<h3>Delegação: o que, para quem, com que contrato</h3>
+<p>Delegar não é descartar. É transferir <strong>responsabilidade pelo resultado</strong> com contexto, critério e acompanhamento proporcional ao risco. Um contrato de delegação cabe em seis linhas:</p>
+<pre><code>Resultado esperado:   Migrar o job de conciliação noturna para a fila nova.
+Por que importa:      Elimina os 3 timeouts/mês e libera o fechamento de novembro.
+Limites:              Decide sozinha desenho interno e biblioteca. Me consulta se
+                      mudar o contrato do evento publicado ou o custo mensal > R$ 500.
+Critério de pronto:   Duas semanas sem timeout, dashboard de fila, runbook revisado.
+Checkpoints:          Terça e sexta, 15 min. Primeiro: desenho em 1 página até quinta.
+Meu papel:            Revisor do desenho e patrocinador com o time de plataforma.</code></pre>
+<p>Ajuste a intensidade pelo par <em>competência × risco</em>: pessoa nova em área crítica ganha checkpoints curtos e frequentes; pessoa experiente em área de baixo risco ganha autonomia e um check de resultado. O erro oposto à micro-gestão é a abdicação, e ambos têm o mesmo sintoma: você é surpreendido.</p>
+<p>E delegue as tarefas <em>boas</em> também. Um líder que fica com o trabalho interessante e delega só o burocrático ensina ao time que crescimento não é para eles.</p>
+
+<h3>Feedback SBI</h3>
+<p>SBI (Situação, Comportamento, Impacto), do Center for Creative Leadership, funciona porque separa o <em>observável</em> do <em>interpretado</em>. Acrescentamos o <strong>Pedido</strong> porque feedback sem pedido é descrição sem direção. Regras:</p>
+<ul>
+<li><strong>Situação:</strong> quando e onde, específico. "Na review de quinta, com sete pessoas."</li>
+<li><strong>Comportamento:</strong> o que uma câmera registraria. Sem adjetivo, sem "sempre/nunca", sem diagnóstico de intenção.</li>
+<li><strong>Impacto:</strong> o efeito concreto em você, no time, no produto. Aqui cabe sentimento, se verdadeiro e sóbrio.</li>
+<li><strong>Pedido:</strong> o que você quer daqui para frente, verificável. Termine com uma pergunta aberta.</li>
+</ul>
+<table>
+<thead><tr><th>Ruim (julgamento)</th><th>Bom (SBI)</th></tr></thead>
+<tbody>
+<tr><td>"Você é agressivo nas reviews."</td><td>"Na design review de quinta (S), você interrompeu a Marina duas vezes antes de ela terminar o slide 3 e disse 'isso não vai funcionar' sem citar o cenário (B). Ela parou de apresentar e o grupo ficou 10 minutos sem discutir; eu saí sem saber que risco você via (I). Na próxima, deixe o apresentador terminar e escreva sua objeção no documento um dia antes, com o cenário que falha. Combinamos de rever isso no 1:1 de quinta? (P)"</td></tr>
+<tr><td>"Você é muito quieto."</td><td>"Nas últimas três dailies (S), você disse 'sem bloqueios' e na quarta descobri pelo Caio que a integração estava parada há dois dias (B). Perdemos o prazo de dependência e o Caio replanejou sem você (I). Quando algo estiver parado mais de um dia, escreva uma linha no canal do time. O que dificulta isso hoje? (P)"</td></tr>
+</tbody>
+</table>
+<p>O lab inclui <code>exemplos/sbi-ruim.md</code> e <code>sbi-bom.md</code> e um linter (<code>leadkit check sbi</code>) que detecta palavras de julgamento no Comportamento, seções vazias e TODO esquecido. É um exercício de calibragem, não um substituto de juízo: você ainda precisa ler o feedback com os olhos de quem recebe. Veja a saída real no laboratório.</p>
+<p>Feedback <strong>positivo</strong> usa a mesma estrutura e é subusado: "No incidente de terça (S), você pediu rollback antes de investigar a causa (B). Isso reduziu o impacto de 40 para 12 minutos (I). Continue priorizando mitigação (P)". É a forma mais barata de reforçar comportamento que você quer ver repetido.</p>
+
+<h3>1:1 que funciona</h3>
+<p>O 1:1 é da pessoa, não seu. O roteiro em <code>templates/one-on-one.md</code>: abertura aberta ("o que está na sua cabeça?", com silêncio de 10 segundos), pauta da pessoa, carreira em semanas alternadas, feedback nos dois sentidos e fecho com compromissos relidos. Mantenha um registro privado compartilhado só com a pessoa. Sinais de alerta: respostas que viram "tudo bem", cancelamento duas vezes seguidas, a pessoa para de trazer pauta. Qualquer um destes é informação sobre confiança, não sobre agenda.</p>
+<p>Perguntas de reserva que produzem sinal: "Qual tarefa dos últimos 15 dias você evitaria repetir?"; "Em que decisão você sentiu que não teve voz?"; "Se você fosse a tech lead, o que mudaria primeiro?". E para carreira: "Em seis meses, o que você gostaria de fazer que hoje não faz? O que falta e qual é o próximo passo concreto?".</p>
+
+<h3>Contratação e rubrica</h3>
+<p>Entrevista sem rubrica mede carisma e semelhança com o entrevistador. Uma rubrica tem: (1) competências relevantes ao papel (3 a 5), (2) evidência esperada para cada nível, (3) perguntas ou exercício que geram essa evidência, (4) escala com âncoras de comportamento e (5) regra de decisão (quem tem voto, o que é veto). Exemplo para engenheiro sênior de backend em sistema com IA:</p>
+<table>
+<thead><tr><th>Competência</th><th>Sinal forte</th><th>Sinal fraco</th><th>Como gerar o sinal</th></tr></thead>
+<tbody>
+<tr><td>Desenho sob incerteza</td><td>Pergunta requisitos, nomeia trade-offs, propõe o menor passo reversível</td><td>Vai direto à tecnologia; desenho único sem alternativa</td><td>Caso: "Importação de extratos falha 3% das vezes. Como investigar e desenhar?"</td></tr>
+<tr><td>Julgamento sobre código gerado</td><td>Verifica antes de confiar; sabe quando <em>não</em> usar o agente</td><td>Aceita saída plausível; ou rejeita IA por princípio</td><td>Mostrar PR gerado com 2 defeitos plantados; pedir review em voz alta</td></tr>
+<tr><td>Comunicação escrita</td><td>Texto estruturado, decisão clara, objeções reconhecidas</td><td>Texto longo sem recomendação</td><td>Exercício de 30 min: escrever um mini-RFC sobre o caso</td></tr>
+<tr><td>Colaboração e feedback</td><td>Dá e recebe correção sem defensividade</td><td>Culpa terceiros; evita falar de erros</td><td>Pedir um erro significativo e o que mudou depois</td></tr>
+</tbody>
+</table>
+<p>Boas práticas: cada entrevistador pontua <em>antes</em> de conversar com os outros (evita ancoragem); o mesmo exercício para todos os candidatos; pontuação por evidência observada, não por impressão ("senti que..."). Pergunte também sobre o que o candidato <em>não</em> sabe, e observe se a resposta é honesta.</p>
+
+<h3>O júnior na era da IA</h3>
+<p>O trabalho que formava juniores (tarefas pequenas, bem delimitadas, escrever muito código) é exatamente o que o agente faz bem. Risco: o júnior vira operador de agente sem construir o modelo mental que o tornaria sênior. A resposta não é proibir o agente, e sim reorganizar o aprendizado:</p>
+<ul>
+<li><strong>Entender antes de aceitar.</strong> Regra do PR: o autor explica, sem o agente, cada trecho não óbvio. Se não consegue, estuda antes de pedir review.</li>
+<li><strong>Ler muito código e depurar.</strong> A habilidade que o agente não substitui é diagnosticar. Dê ao júnior bugs reais para investigar com <code>git bisect</code>, logs e debugger, antes de qualquer sugestão do agente.</li>
+<li><strong>Escrever à mão o que é fundamental.</strong> Estruturas de dados, SQL, um cliente HTTP, um parser simples. O objetivo é o modelo mental, não o artefato.</li>
+<li><strong>Exposição a decisões.</strong> Inclua o júnior em design reviews como escriba e depois como autor de um RFC pequeno.</li>
+<li><strong>Revisões como ensino.</strong> Revise o PR do júnior explicando o porquê, não só o quê.</li>
+<li><strong>Progressão por evidência.</strong> Critérios por nível que incluem verificação, depuração e comunicação, não só volume entregue.</li>
+</ul>
+<p>E o ponto contraintuitivo: o júnior bom com agentes aprende <em>mais rápido</em> se for ensinado a interrogar o agente ("por que esta abordagem e não aquela?", "qual caso de borda você não cobriu?"). O agente é um tutor paciente que também mente com confiança; o júnior precisa aprender a desconfiar, e isso se ensina.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Feedback imediato versus no 1:1.</strong> Elogio imediato; correção em privado e logo. Segurar correção por semanas pioriza o impacto e vira ressentimento.</li>
+<li><strong>Delegar o que você faz melhor.</strong> Custa qualidade no curto prazo para ganhar capacidade. Calcule o ponto de equilíbrio e aceite o buraco.</li>
+<li><strong>Contratar para a cultura versus para a lacuna.</strong> "Adição" de cultura (o que falta) supera "encaixe" (quem é parecido).</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Guardar feedback para a avaliação semestral. Ninguém muda comportamento com seis meses de atraso.</li>
+<li>Misturar elogio e crítica no mesmo SBI ("sanduíche"): o elogio perde valor e a crítica se dilui.</li>
+<li>1:1 usado como status report.</li>
+<li>Rubrica criada depois da entrevista para justificar a decisão já tomada.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>"Estilo de gestão" como desculpa para não preparar. O sênior que sempre improvisou bem confia no improviso e entra no 1:1 sem ler as notas da semana anterior, sem lembrar o compromisso que assumiu. A pessoa percebe em dois minutos. Prepare-se 5 minutos antes: releia os compromissos, defina seus dois itens, escreva o SBI que você vai dar. A consistência pesa mais que a eloquência.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Mentoria passa experiência, coaching estrutura raciocínio, sponsorship arrisca capital. Delegue resultado com limites, critério de pronto e checkpoints. SBI + Pedido, sem adjetivos. 1:1 é da pessoa; atente aos sinais de silêncio. Rubrica com sinais fortes e fracos antes da entrevista. Júnior com IA: entender antes de aceitar, depurar, escrever à mão o fundamental e interrogar o agente.</p>
+</div>
+
+<!-- ============================================ BLOCO 6 -->
+<h2 id="b06">Bloco 6 · Adoção de IA no time: política, harness, onde acelera e atrapalha, e como medir</h2>
+
+<h3>Por que isso importa</h3>
+<p>O time vai usar IA com ou sem você. A decisão do líder é entre adoção sem regra (cada um com a sua ferramenta, dados sensíveis em serviços não aprovados, qualidade irregular) e adoção desenhada. Também é a decisão em que a evidência externa é mais contraditória, o que torna a medição local indispensável.</p>
+
+<h3>O que a evidência diz (com datas)</h3>
+<table>
+<thead><tr><th>Fonte</th><th>Achado</th><th>Cuidado de leitura</th></tr></thead>
+<tbody>
+<tr><td><strong>DORA, "State of AI-assisted Software Development" (set/2025)</strong>, ≈5.000 profissionais</td><td>90% usam IA (alta de 14% sobre o ano anterior); mais de 80% relatam ganho de produtividade; só 24% confiam muito. A adoção passou a se associar a maior <em>throughput</em> de entrega, mas continua ligada a maior instabilidade quando a base não é sólida. A IA atua como "espelho e multiplicador": amplifica o que a organização já é. Propõe sete arquétipos de time e um modelo de sete capacidades que potencializam a IA.</td><td>Autorrelato em grande parte; correlação, não experimento</td></tr>
+<tr><td><strong>DORA, "ROI of AI-assisted Software Development"</strong> (publicado no site dora.dev/ai como "último relatório"; confirme a data na página)</td><td>Propõe um quadro para decidir investimento, incluindo o dip inicial de produtividade na adoção. Um resumo secundário (Kodus, jul/2026) destaca a curva em J, o "imposto de verificação" e o review como alavanca. O resumo trata os números do cenário de 500 engenheiros como ilustração, não benchmark.</td><td>O resumo é de terceiros; leia o original antes de citar números</td></tr>
+<tr><td><strong>METR, ensaio randomizado (jul/2025)</strong>, 16 desenvolvedores experientes em repositórios próprios</td><td>Com ferramentas de IA da época, as tarefas levaram em média 19% mais tempo, embora os participantes esperassem e depois acreditassem ter sido mais rápidos (cerca de 20% a mais).</td><td>Amostra pequena, contexto específico (repositórios maduros que o desenvolvedor conhece bem), modelos de 2025. Não generalize para qualquer tarefa, mas leve a sério o descompasso entre percepção e medida</td></tr>
+</tbody>
+</table>
+<p>Leitura honesta: a IA acelera em alguns contextos, atrapalha em outros, e as pessoas julgam mal o próprio ganho. Isso é um argumento para medir <em>no seu time</em>, com métricas de fluxo, não para aceitar nem rejeitar a promessa.</p>
+
+<h3>Onde acelera e onde atrapalha</h3>
+<table>
+<thead><tr><th>Tende a acelerar</th><th>Tende a atrapalhar</th></tr></thead>
+<tbody>
+<tr><td>Código novo, padronizado, com especificação clara e testes</td><td>Código legado denso, com contexto implícito que o agente não vê</td></tr>
+<tr><td>Testes de caracterização, scaffolding, migração mecânica</td><td>Decisões de desenho com trade-offs sutis</td></tr>
+<tr><td>Exploração de API desconhecida, rascunho de documentação</td><td>Depuração de problemas de concorrência e de estado distribuído</td></tr>
+<tr><td>Primeira revisão automática de PR</td><td>Mudanças que exigem conhecimento de domínio não escrito</td></tr>
+<tr><td>Trabalhos paralelos com isolamento (worktrees, veja o <a href="../M01-workflow-ia-driven/M01.html">M01</a>)</td><td>Qualquer tarefa onde verificar custa mais que fazer</td></tr>
+</tbody>
+</table>
+<p>O critério decisivo é o <strong>custo de verificação</strong>. Se verificar o resultado é barato (teste existe, contrato claro), a IA acelera. Se verificar exige reconstruir o raciocínio, ela só desloca o trabalho de escrever para ler, e ler é mais difícil.</p>
+
+<h3>Política mínima do time</h3>
+<p>Uma página, versionada no repositório, com decisões e não aspirações:</p>
+<ol>
+<li><strong>Ferramentas aprovadas</strong> e o que cada uma pode ver (código, logs, dados). Tudo fora da lista exige exceção.</li>
+<li><strong>Dados proibidos</strong> em qualquer prompt: segredos, dados pessoais de clientes, código sob NDA de terceiros. Alinhe com a política de segurança e com <a href="../E03-governanca-regulacao/E03.html">E03</a> (LGPD).</li>
+<li><strong>Responsabilidade:</strong> o autor do PR responde por todo o código, gerado ou não.</li>
+<li><strong>Revisão:</strong> o checklist de review de IA vale para PRs gerados; PR gerado em área crítica exige segundo revisor.</li>
+<li><strong>Divulgação:</strong> o PR indica quando houve uso substancial de agente (não por punição: é contexto para o revisor).</li>
+<li><strong>Revisão da política:</strong> trimestral, com base nas métricas e incidentes.</li>
+</ol>
+<p>Sem direção explícita, as pessoas ocultam o uso por medo de julgamento e você perde o dado. A capacidade "postura clara e comunicada sobre IA" é uma das capacidades do modelo DORA justamente por isso.</p>
+
+<h3>Harness compartilhado</h3>
+<p>Em vez de cada pessoa treinar seu agente do zero, o time mantém um <em>harness</em> comum: arquivo de instruções do repositório (convenções, comandos de teste, o que nunca fazer), guardrails mecânicos (hooks, linters, gates de CI), prompts e <em>skills</em> reutilizáveis, e ambientes isolados para execução. O detalhe técnico está no <a href="../M01-workflow-ia-driven/M01.html">M01</a>; o papel do líder é três decisões: <strong>quem mantém</strong> (dono nomeado, revisão por PR), <strong>o que é obrigatório versus opcional</strong> (gates em CI: obrigatório; prompts: recomendado) e <strong>como se aprende com falhas</strong> (todo erro recorrente do agente vira regra no harness, no mesmo PR que corrige o código).</p>
+
+<h3>Medir: DORA, SPACE e DevEx</h3>
+<p>Três quadros complementares:</p>
+<ul>
+<li><strong>DORA (entrega):</strong> frequência de deploy, lead time de mudança, taxa de falha de mudança e tempo de recuperação; a pesquisa mais recente trata também retrabalho. Medem o <em>sistema de entrega</em>, não pessoas. Origem: Forsgren, Humble e Kim (<em>Accelerate</em>, 2018).</li>
+<li><strong>SPACE (Forsgren et al., ACM Queue, 2021):</strong> cinco dimensões: satisfação e bem-estar, desempenho, atividade, comunicação e colaboração, eficiência e fluxo. O recado central: nenhuma métrica sozinha; combine ao menos três dimensões, incluindo uma percepção.</li>
+<li><strong>DevEx (Noda, Storey, Forsgren e Greiler, ACM Queue, 2023):</strong> três dimensões da experiência: ciclos de feedback, carga cognitiva e estado de fluxo. Útil para achar o atrito que a IA remove ou cria.</li>
+</ul>
+<p>O lab calcula as quatro primeiras DORA a partir de dois CSV (deploys e incidentes). Um mês de dados fictícios:</p>
+<pre><code>$ uv run leadkit dora data/deploys.csv data/incidents.csv
+janela: 29.0 dias  deploys: 37
+frequência de deploy:        8.9 por semana
+lead time (commit->deploy):  mediana 14.6 h  P85 52.7 h
+taxa de falha de mudança:    13.5% (5/37 deploys)
+tempo de recuperação:        mediana 1.2 h
+atenção: 1 incidente(s) em aberto fora do tempo de recuperação</code></pre>
+<p>Três decisões do cálculo merecem discussão: (1) dois incidentes no mesmo deploy contam como <em>uma</em> mudança falha (a taxa é por mudança, não por incidente); (2) incidente em aberto não entra na mediana de recuperação (omitir seria otimista, por isso o aviso explícito); (3) lead time usa mediana e P85, porque a média é dominada por poucos deploys que ficaram parados num fim de semana.</p>
+<p><strong>Como usar com IA:</strong> compare antes e durante o experimento, no mesmo time. O padrão a procurar é o que a pesquisa DORA descreve: a frequência de deploy e o lead time melhoram, mas a taxa de falha de mudança e o retrabalho pioram. Isso significa que a velocidade de geração passou ao largo de verificação, e a ação é investir em testes, review e lotes pequenos, não em mais geração.</p>
+<div class="box warn">
+<span class="lbl">Lei de Goodhart</span>
+<p>Quando uma métrica vira meta, deixa de ser boa métrica. Métricas DORA são para o <em>time</em> enxergar o próprio sistema, nunca para ranking de pessoas ou de times, nem para bônus. Contagem de linhas ou de PRs por pessoa, com agentes, mede quanto o agente digitou.</p>
+</div>
+
+<h3>Experimento antes de mandato</h3>
+<p>Em vez de "todo mundo usa" ou "ninguém usa", conduza um experimento pequeno e honesto:</p>
+<pre><code>Hipótese:        Com o agente + harness do time, o lead time mediano cai 20%
+                 sem aumento da taxa de falha de mudança.
+Grupo:           3 de 7 pessoas (voluntárias), mesmos tipos de tarefa.
+Duração:         4 semanas, com 1 semana de aprendizado descartada da análise.
+Métricas:        lead time (mediana e P85), tamanho de PR, tempo até primeira
+                 revisão, taxa de falha, retrabalho (PRs de correção em 7 dias),
+                 + pesquisa de 5 perguntas (carga cognitiva, confiança, frustração).
+Critério de parada (definido ANTES):
+                 taxa de falha acima de 2x a linha de base por duas semanas, ou
+                 qualquer incidente com dado sensível em prompt.
+Decisão ao final: expandir, ajustar o harness, ou parar. Publicar os números.</code></pre>
+<p>Limitações a declarar: amostra pequena, voluntários são otimistas, efeito de novidade, tarefas diferentes. O experimento não prova; reduz a incerteza o bastante para decidir. E o resultado negativo é um resultado: "não ajudou neste tipo de tarefa" é informação valiosa.</p>
+<p>Quando o mandato vem de cima antes do experimento, responda com o desenho acima, não com resistência: "Concordo com o objetivo. Proponho um piloto de quatro semanas que nos dá números antes de escalar. Qual métrica o senhor quer ver melhor ao final?". Você troca oposição por patrocínio de um método.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Padronização versus liberdade.</strong> Uma ferramenta única facilita suporte e segurança; várias dão espaço para descoberta. Padronize o que toca dados e CI, deixe o editor livre.</li>
+<li><strong>Velocidade de adoção versus dívida de verificação.</strong> Acelerar a geração sem acelerar o review move o gargalo para a fila de PRs.</li>
+<li><strong>Medir percepção ou comportamento.</strong> Percepção erra (como no estudo METR), comportamento mede só o que registra. Use os dois.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Medir produtividade por linhas, commits ou PRs por pessoa.</li>
+<li>Concluir pelo piloto com os entusiastas e escalar para quem não escolheu usar.</li>
+<li>Política sem dono nem revisão: vira PDF esquecido.</li>
+<li>Culpar o agente por incidentes sem corrigir o gate que deixou passar.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Julgar a IA pela sua experiência individual. Você tem 20 anos de contexto, ótimos prompts e sabe verificar rápido: seu ganho (ou perda) não é o do time. O mesmo vale para o cético que testou um modelo antigo numa tarefa inadequada. Em ambos os casos, o líder está generalizando de n=1. Meça no time, nos tipos de tarefa do time, e atualize a conclusão a cada trimestre, porque as ferramentas mudam mais rápido que a sua opinião.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>A evidência é mista: ganhos reais de throughput, instabilidade se a base é fraca, percepção descalibrada. Política curta e versionada, harness com dono, review como alavanca. Meça com DORA + uma dimensão SPACE/DevEx, nunca por pessoa. Experimento com hipótese, grupo, prazo e critério de parada antes de qualquer mandato.</p>
+</div>
+
+<!-- ============================================ BLOCO 7 -->
+<h2 id="b07">Bloco 7 · Operação e cultura: incidente, postmortem blameless, on-call sustentável e executivos</h2>
+
+<h3>Por que isso importa</h3>
+<p>A cultura de um time aparece no pior dia. No incidente, as pessoas mostram se acreditam que podem falar o que sabem sem punição; no postmortem, se a organização aprende ou procura culpado. O líder técnico define esse padrão com seus gestos pequenos: quem ele pergunta primeiro, como reage à má notícia, o que cobra depois. O <em>formato</em> do postmortem e da prática de release está no <a href="../M04-design-docs-com-ia/M04.html">M04</a> e no <a href="../LT04-novo/LT04.html">LT04</a>; aqui entram os papéis humanos e o comportamento.</p>
+
+<h3>Incident commander: coordenar, não consertar</h3>
+<p>Em incidente sério, três papéis separados evitam o caos. O modelo vem de sistemas de comando de incidentes aplicados a operações de software (o capítulo de resposta a incidentes do livro SRE do Google o descreve):</p>
+<table>
+<thead><tr><th>Papel</th><th>Faz</th><th>Não faz</th></tr></thead>
+<tbody>
+<tr><td><strong>Comandante (IC)</strong></td><td>Mantém a visão do todo, atribui tarefas, decide mitigar versus investigar, decide rollback, delega comunicação</td><td>Mexer no sistema; investigar em profundidade</td></tr>
+<tr><td><strong>Operações / resolvedores</strong></td><td>Executam: investigam, aplicam mitigação, revertem</td><td>Decidir sozinhos algo arriscado sem avisar o IC</td></tr>
+<tr><td><strong>Comunicação</strong></td><td>Atualiza stakeholders em ritmo fixo, mantém a linha do tempo</td><td>Especular sobre causa</td></tr>
+</tbody>
+</table>
+<p>Princípios do comandante:</p>
+<ul>
+<li><strong>Mitigar antes de entender.</strong> Rollback, feature flag desligada, desvio de tráfego: restaure o serviço primeiro, investigue depois com calma.</li>
+<li><strong>Uma voz, um canal.</strong> Todas as decisões e hipóteses vão para o canal do incidente, com horário. É a base da linha do tempo.</li>
+<li><strong>Cadência.</strong> Atualização a cada 20 a 30 minutos, mesmo que seja "sem novidade, ainda investigando X". Silêncio gera ansiedade e interrupções.</li>
+<li><strong>Passagem de comando explícita.</strong> Em incidente longo, o IC cansa. "Passo o comando para a Beatriz. Beatriz, confirma?" "Assumo o comando."</li>
+<li><strong>Fale as hipóteses em voz alta e as descarte por evidência</strong>, uma por vez, com dono.</li>
+</ul>
+<pre><code>Mensagem de abertura (IC):
+"14:05 UTC. Sou o IC. Impacto: importação de extratos retorna 500 para ~30% dos
+clientes desde 13:52. Beatriz e Caio investigam, Marina é comunicação.
+Hipótese inicial: deploy d020 das 13:30. Primeira ação: avaliar rollback.
+Próxima atualização às 14:30, ou antes se mudar algo."
+
+Atualização (comunicação, a cada 30 min):
+"14:30 UTC. Rollback do d020 concluído às 14:18. Taxa de erro caiu de 30% para 1%.
+Monitorando por 30 min antes de encerrar. Causa ainda em investigação."</code></pre>
+
+<h3>Postmortem blameless</h3>
+<p>Blameless não significa sem responsabilidade; significa localizar a causa nas <em>condições do sistema</em> e nas <em>decisões razoáveis dadas as informações da hora</em>, não numa falha individual. O argumento é prático: se pessoas são punidas por erros, escondem erros, e uma organização que não vê erros não corrige seus sistemas. A tradição vem da segurança aeronáutica e foi popularizada em software por John Allspaw (Etsy) e pelo capítulo de cultura de postmortem do livro SRE do Google.</p>
+<p>O template do lab (<code>templates/postmortem.md</code>) tem: resumo em três frases, impacto numérico, linha do tempo em UTC (um fato por linha), <strong>causas contribuintes</strong> (no plural, em camadas), <strong>o que funcionou</strong> e ações com verbo, resultado verificável, <code>@dono</code> e data. O linter <code>leadkit check postmortem</code> barra o que é mecânico: seção vazia, "erro humano"/"culpa"/"negligência" e ação sem dono ou prazo.</p>
+<table>
+<thead><tr><th>Em vez de (culpa)</th><th>Escreva (sistema)</th></tr></thead>
+<tbody>
+<tr><td>"Causa raiz: erro humano. O Caio rodou a migração em produção."</td><td>"Contribuíram: (1) o runbook não distinguia o terminal de produção do de homologação; (2) a migração não tinha verificação de ambiente; (3) o alerta de latência não existe para esse endpoint, e a detecção veio de reclamação de cliente 38 minutos depois."</td></tr>
+<tr><td>"Ação: tomar mais cuidado ao fazer deploy."</td><td>"Ação: exigir confirmação do nome do ambiente em migrações destrutivas. @caio 2026-10-30."</td></tr>
+<tr><td>"Deveríamos ter testado mais."</td><td>"Ação: adicionar teste de contrato para o formato de extrato com campo opcional ausente. @marina 2026-10-23. Verificação: o teste falha no commit que causou o incidente."</td></tr>
+</tbody>
+</table>
+<p>As perguntas do facilitador para sair da culpa: <em>"O que tornou essa ação razoável naquele momento?"</em>, <em>"O que, no sistema, teria impedido ou detectado antes?"</em>, <em>"Como a próxima pessoa teria evitado isso sem ser mais cuidadosa?"</em>. A terceira é a mais forte: se a prevenção depende de atenção humana, ela vai falhar de novo.</p>
+<p>Duas práticas finais: (1) a reunião de postmortem acontece em até cinco dias úteis, com o documento já rascunhado e os envolvidos presentes; (2) as ações entram no mesmo backlog do trabalho de produto, com prioridade visível. Postmortem cujas ações apodrecem destrói a confiança no processo mais rápido do que nenhum postmortem.</p>
+<p>Os exemplos <code>postmortem-bom.md</code> e <code>postmortem-ruim.md</code> do lab ilustram o contraste, e o linter reproduz o diagnóstico (veja o laboratório).</p>
+
+<h3>On-call sustentável</h3>
+<p>On-call mal desenhado produz burnout e rotatividade, justamente das pessoas que conhecem o sistema. Parâmetros práticos que você pode defender:</p>
+<ul>
+<li><strong>Rotação grande o bastante.</strong> O livro SRE do Google calcula ao menos 8 pessoas para um plantão em um único fuso e 6 por site em dois fusos, para que cada pessoa fique de plantão uma fração pequena do tempo. Com menos que isso, reduza o escopo do que page ou divida a rotação com outro time.</li>
+<li><strong>Orçamento de alertas.</strong> O livro SRE usa como referência no máximo cerca de 2 incidentes por turno de 12 horas; se um plantão recebe mais que isso em média, o problema é o sistema, não o plantonista. Meça páginas por turno e proporção de alertas acionáveis.</li>
+<li><strong>Todo alerta que acorda alguém precisa ser acionável, urgente e ter runbook.</strong> Os demais viram ticket para o horário comercial.</li>
+<li><strong>Compensação e descanso.</strong> Folga após noite com incidente; pagamento ou compensação clara. Pessoas que se sentem exploradas saem.</li>
+<li><strong>Passagem de turno escrita</strong> (o que está aberto, o que está frágil, o que mudou).</li>
+<li><strong>Revisão trimestral</strong> do plantão: os 3 alertas mais frequentes viram trabalho de engenharia.</li>
+</ul>
+<p>Com IA, uma tentação é acrescentar alertas gerados sem critério ou usar o agente como primeira linha de triagem. Pode funcionar para classificação e coleta de contexto (logs, deploys recentes), mas ações em produção continuam com humano no circuito e política de permissão mínima. Detalhe no <a href="../LT04-novo/LT04.html">LT04</a>.</p>
+
+<h3>Comunicação com executivos</h3>
+<p>Um executivo tem 3 minutos, muitas prioridades e decide com o que você entrega. Estrutura que funciona (BLUF, <em>bottom line up front</em>):</p>
+<ol>
+<li><strong>Conclusão e pedido primeiro:</strong> "Precisamos de duas pessoas por seis semanas para a migração, ou aceitar risco de segurança a partir de março."</li>
+<li><strong>Por que agora:</strong> impacto em dinheiro, prazo, cliente ou risco regulatório.</li>
+<li><strong>Opções (duas ou três) e recomendação</strong>, com o custo de cada uma.</li>
+<li><strong>Riscos e como você saberá:</strong> sinal observável.</li>
+<li><strong>O que você precisa dele</strong> e para quando.</li>
+</ol>
+<table>
+<thead><tr><th>Evite</th><th>Prefira</th></tr></thead>
+<tbody>
+<tr><td>"Estamos com muita dívida técnica."</td><td>"Cada release custa hoje 6 dias a mais que há um ano; isso retira 15% da capacidade."</td></tr>
+<tr><td>"O sistema caiu por causa de uma race condition no pool de conexões."</td><td>"A importação ficou indisponível por 52 minutos para 30% dos clientes. A causa foi um limite de conexões que subimos no deploy anterior. Revertemos, e adicionamos um alerta e um teste de carga."</td></tr>
+<tr><td>"Temos 95% de confiança."</td><td>"Em 85 de cada 100 cenários simulados terminamos em 32 dias; em 95 de 100, em 35."</td></tr>
+</tbody>
+</table>
+<p>Em crise, o executivo precisa saber três coisas: <em>o que está acontecendo</em> (impacto), <em>o que estamos fazendo</em> (mitigação) e <em>quando saberemos mais</em>. Não adivinhe a causa; diga o que sabe, o que não sabe e quando atualizará. Má notícia tarde é pior que má notícia incompleta agora.</p>
+
+<h3>Cultura: o que você repete vira norma</h3>
+<p>Cultura é o conjunto das coisas que você recompensa e tolera. Gestos de baixo custo e alto efeito: agradecer publicamente quem trouxe uma má notícia cedo; admitir seu próprio erro no postmortem como primeiro exemplo; recusar o atalho que viola o acordo mesmo sob pressão (uma vez, em público); proteger o tempo de foco do time (reuniões concentradas, dias sem reunião); e não pedir ao time o que você mesmo evita.</p>
+
+<h3>Trade-offs</h3>
+<ul>
+<li><strong>Rapidez de resposta versus descanso.</strong> Recompensar heroísmo noturno ensina que o sistema precisa de heróis.</li>
+<li><strong>Transparência versus pânico.</strong> Comunicar cedo exige comunicar com calibragem: fato, impacto, próximo passo.</li>
+<li><strong>Postmortem para todos os incidentes versus só os graves.</strong> Defina limiar (severidade, impacto em cliente, quase-acidente instrutivo). Incidentes pequenos recebem versão curta.</li>
+</ul>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Comandante que vira o melhor resolvedor e deixa o canal sem coordenação.</li>
+<li>Postmortem que termina em "treinar a equipe" ou "tomar mais cuidado".</li>
+<li>Ações sem dono ou data, sem acompanhamento na semana seguinte.</li>
+<li>Plantão só dos seniores "porque eles sabem". Concentra risco e conhecimento.</li>
+<li>Reportar a executivos o jargão da causa em vez do impacto.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Postmortem blameless na teoria, culpado na prática. O documento diz "causas contribuintes", mas na reunião você pergunta "e quem aprovou isso?" ou o gerente da pessoa recebe um e-mail. Em um mês ninguém escreve mais com honestidade. Teste: depois do último incidente, alguém foi tratado diferente na avaliação, no escalonamento ou na conversa de corredor? Se sim, nenhum template conserta.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>O comandante coordena e comunica; quem tem as mãos no sistema executa. Mitigar antes de entender, atualizar em cadência fixa, passar o comando de forma explícita. Postmortem blameless localiza condições de sistema, tem ações com dono, data e verificação. On-call sustentável se mede em páginas por turno e alertas acionáveis. Com executivos, comece pela conclusão, pelo impacto e pelo pedido.</p>
+</div>
+
+<!-- ============================================ LAB -->
+<h2 id="lab-guiado">Laboratório guiado E04 · <code>leadkit</code>: Monte Carlo, DORA e templates</h2>
+<p>O laboratório de referência está em <code>modulos/E04-lideranca-tecnica/lab/</code> e é somente leitura. Python 3.14 com <code>uv</code>, sem dependência de execução, sem rede. As saídas abaixo vêm de execução real em 11/10/2026 (uv 0.12.13). Os dados são fictícios: um projeto de conciliação bancária, um mês de deploys e incidentes.</p>
+
+<div class="step"><span class="n">1</span><strong>Cópia de trabalho e gates.</strong> Objetivo: partir de um estado verde. Rode a partir da pasta do lab de referência:
+<pre><code>python3 create_working_copy.py          # imprime o diretório da cópia
+cd &lt;diretório impresso&gt;
+export UV_PROJECT_ENVIRONMENT=$HOME/.venvs/e04
+uv sync
+uv run pytest -q &amp;&amp; uv run ruff check . &amp;&amp; uv run ruff format --check . &amp;&amp; uv run mypy --strict src tests</code></pre>
+Resultado real:
+<pre><code>...................................................                      [100%]
+51 passed in 0.21s
+All checks passed!
+26 files already formatted
+Success: no issues found in 13 source files</code></pre>
+<em>Diagnóstico:</em> se <code>uv sync</code> pedir Python 3.14 e não achar, rode <code>uv python install 3.14</code>. Sem rede, use um interpretador 3.14 já instalado com <code>uv sync --python /caminho/python3.14</code>.</div>
+
+<div class="step"><span class="n">2</span><strong>Previsão sem e com riscos (bloco 4).</strong> Objetivo: ver a distância entre a soma dos prováveis e os percentis.
+<pre><code>uv run leadkit estimate data/projeto-conciliacao.csv
+uv run leadkit estimate data/projeto-conciliacao.csv --risks data/projeto-conciliacao-riscos.csv --capacity 1.8</code></pre>
+Resultado real (resumo; as saídas completas estão no bloco 4): soma dos prováveis 41,0; sem riscos, P50 47,0, P85 53,0, P95 56,5 dias-pessoa; com riscos e capacidade 1,8: P50 27,6, P85 31,7 e P95 34,4 dias corridos.
+<br><em>Verifique:</em> por que o P85 em dias corridos (31,7) não é simplesmente 57,1 / 1,8? Faça a conta: 57,1 / 1,8 = 31,72. É exatamente isso; a capacidade é uma divisão. A graça é que você pode rodar vários cenários de capacidade sem simular de novo.</div>
+
+<div class="step"><span class="n">3</span><strong>Semente e número de execuções.</strong> Objetivo: saber quanto confiar no número.
+<pre><code>uv run leadkit estimate data/projeto-conciliacao.csv --risks data/projeto-conciliacao-riscos.csv --capacity 1.8 --seed 7
+uv run leadkit estimate data/projeto-conciliacao.csv --risks data/projeto-conciliacao-riscos.csv --capacity 1.8 --runs 200 --seed 7</code></pre>
+Resultado real: com 10.000 execuções e semente 7, P85 = 57,4 dias-pessoa (semente 42: 57,1); com 200 execuções, P85 = 57,3 e P95 = 64,3 (contra 62,6 com 10.000). Trocar a semente mexe na primeira casa decimal; poucas execuções mexem sobretudo na cauda (P95). <em>Conclusão:</em> reporte dias inteiros e fixe a semente no repositório para que a revisão da estimativa seja reproduzível.</div>
+
+<div class="step"><span class="n">4</span><strong>Distribuição.</strong> Objetivo: ver o efeito de uma hipótese de modelagem.
+<pre><code>uv run leadkit estimate data/projeto-conciliacao.csv --risks data/projeto-conciliacao-riscos.csv --capacity 1.8 --dist triangular</code></pre>
+Resultado real: P50 56,2, P85 64,8, P95 70,2 dias-pessoa (31,2 / 36,0 / 39,0 dias corridos). A distribuição triangular dá mais peso às caudas que o PERT, e o P85 sobe de 57,1 para 64,8. <em>Tarefa:</em> escreva duas linhas justificando qual você reportaria ao gerente de produto e por quê.</div>
+
+<div class="step"><span class="n">5</span><strong>Métricas DORA (bloco 6).</strong> Objetivo: obter as quatro métricas e entender as escolhas de cálculo.
+<pre><code>uv run leadkit dora data/deploys.csv data/incidents.csv</code></pre>
+Resultado real: janela 29,0 dias; 37 deploys; 8,9 por semana; lead time mediana 14,6 h e P85 52,7 h; taxa de falha 13,5% (5/37); recuperação mediana 1,2 h; 1 incidente em aberto. Repare que <code>incidents.csv</code> tem 6 incidentes, dois deles (<code>i01</code> e <code>i06</code>) no deploy <code>d004</code>: 6 incidentes, 5 deploys falhos. Com <code>--days 30</code> a frequência vira 8,6 por semana e o resto não muda.
+<br><em>Tarefa:</em> edite uma cópia do CSV para que o incidente em aberto seja resolvido às 20:00 do mesmo dia e rode de novo. A mediana de recuperação muda? (Pista: 5 valores viram 6; a nova mediana é a média dos dois centrais, cerca de 3,1 h, e o aviso de incidente em aberto some.)</div>
+
+<div class="step"><span class="n">6</span><strong>Linter de documentos e controle negativo (blocos 2, 5 e 7).</strong> Objetivo: ver o que o verificador mecânico captura.
+<pre><code>uv run leadkit check postmortem exemplos/postmortem-ruim.md
+uv run leadkit check sbi exemplos/sbi-ruim.md
+uv run leadkit check rfc exemplos/rfc-bom.md
+uv run leadkit check rfc templates/rfc.md</code></pre>
+Resultado real:
+<pre><code>postmortem-ruim.md:5: [julgamento] causa atribuída a pessoa; descreva a condição do sistema que permitiu o erro
+postmortem-ruim.md:18: [julgamento] causa atribuída a pessoa; descreva a condição do sistema que permitiu o erro
+postmortem-ruim.md:22: [acao-sem-dono-ou-prazo] ação precisa de @dono e data AAAA-MM-DD
+postmortem-ruim.md:23: [acao-sem-dono-ou-prazo] ação precisa de @dono e data AAAA-MM-DD
+4 problema(s)                                               (exit 1)
+
+sbi-ruim.md:9: [julgamento] julgamento ou generalização no Comportamento; descreva o que foi visto/ouvido
+sbi-ruim.md:15: [secao-vazia] seção 'pedido' sem conteúdo
+sbi-ruim.md:17: [placeholder] TODO ainda no documento
+3 problema(s)                                               (exit 1)
+
+rfc-bom.md: ok (rfc)                                        (exit 0)
+
+rfc.md:28: [placeholder] TODO ainda no documento
+rfc.md:30: [secao-vazia] seção 'perguntas em aberto' sem conteúdo
+rfc.md:33: [placeholder] TODO ainda no documento
+rfc.md:35: [secao-vazia] seção 'decisao' sem conteúdo
+rfc.md:38: [placeholder] TODO ainda no documento
+18 problema(s)                                              (exit 1; trecho final da lista)</code></pre>
+O último é o <em>controle negativo</em>: um template não preenchido precisa falhar, senão o linter não prova nada. Um RFC que passa no linter ainda pode ser ruim; o linter só garante que o esqueleto está lá.</div>
+
+<div class="step"><span class="n">7</span><strong>Teste de mutação à mão.</strong> Objetivo: provar que os testes pegam um erro sutil no percentil. Na cópia de trabalho:
+<pre><code>sed -i 's/math.ceil(p \/ 100 \* len(sorted_values))/math.floor(p \/ 100 * len(sorted_values))/' src/leadkit/stats.py
+uv run pytest -q</code></pre>
+Resultado real:
+<pre><code>FAILED tests/test_dora.py::test_known_values - assert 6.0 == 12.0 ± 1.2e-05
+1 failed, 50 passed in 0.20s</code></pre>
+A mutação (percentil por piso em vez de posição ordinal) é morta por um teste de valores conhecidos. Reverta com <code>git checkout</code> ou recrie a cópia. Uma segunda mutação, trocar <code>&lt;</code> por <code>&lt;=</code> na checagem de probabilidade do risco, <em>sobrevive</em>: é equivalente na prática (só difere se o gerador devolver exatamente 0,0). Nem toda mutação sobrevivente é lacuna; saber distinguir é parte do ofício.</div>
+
+<div class="step"><span class="n">8</span><strong>Seu projeto.</strong> Objetivo: aplicar ao seu caso. Copie <code>data/projeto-conciliacao.csv</code>, troque as oito tarefas por um projeto real seu (mínimo 6), preencha mínimo, provável e máximo <em>antes</em> de olhar a soma e rode com e sem riscos. Preencha o <code>templates/rfc.md</code> para a decisão mais difícil do projeto e rode <code>leadkit check rfc</code> até passar. Guarde as duas saídas: são o entregável.</div>
+
+<h2>Tabela de Diagnóstico</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>Prazo prometido estourou, embora cada tarefa tenha sido estimada "com folga"</td><td>Soma dos prováveis tratada como prazo; cauda direita e riscos ignorados</td><td>Estimar por faixa, simular, prometer P85 com hipóteses e riscos explícitos</td></tr>
+<tr><td>O P85 do Monte Carlo ainda estoura sistematicamente</td><td>Faixas otimistas ou tarefas correlacionadas (modelo supõe independência)</td><td>Calibrar com estimado vs. realizado; alargar máximos; adicionar riscos comuns; usar throughput histórico</td></tr>
+<tr><td>Números mudam a cada execução e ninguém reproduz</td><td>Semente não fixada ou poucas execuções</td><td>Fixar <code>--seed</code> no repositório; 10.000 execuções; arredondar a dias</td></tr>
+<tr><td>Fila de PRs cresce depois de adotar o agente</td><td>Geração acelerou; revisão e tamanho de PR não</td><td>Limite de tamanho, SLA de primeira resposta, checklist de IA, revisão assistida como primeira passada</td></tr>
+<tr><td>Testes verdes, bug em produção em PR gerado</td><td>Teste verifica mock ou passa sem a mudança</td><td>Rodar o teste contra o código antigo; exigir teste contra componente real; mutação</td></tr>
+<tr><td>Decisões reaparecem a cada trimestre</td><td>Sem ADR, sem decisor, desacordo não registrado</td><td>RFC com decisor e prazo; ADR em 24 h; "discordo e apoio" com ponto de revisão</td></tr>
+<tr><td>Reuniões de design review longas e inconclusivas</td><td>Ninguém leu antes; sem pergunta explícita; sem decisor</td><td>Comentários escritos antes; facilitador; decisor nomeado; temas por risco</td></tr>
+<tr><td>Time esconde que usa IA</td><td>Medo de julgamento; política ausente ou punitiva</td><td>Política curta e aberta; divulgação como contexto de review, não punição</td></tr>
+<tr><td>Métricas DORA melhoram, instabilidade também</td><td>Volume de mudança sem verificação equivalente</td><td>Investir em testes, lotes pequenos, review; ver taxa de falha e retrabalho antes de ampliar</td></tr>
+<tr><td>Pós-incidente: "erro humano" na causa</td><td>Investigação parou na primeira pessoa</td><td>Perguntar "o que no sistema permitiu?"; causas em camadas; ação com dono e data</td></tr>
+<tr><td>Ações de postmortem nunca fecham</td><td>Fora do backlog; sem dono; sem verificação</td><td>Mesmo backlog do produto; <code>@dono</code> e data; revisão semanal até zerar</td></tr>
+<tr><td>Plantonistas esgotados</td><td>Rotação pequena; alertas não acionáveis</td><td>Orçamento de alertas; mover não urgentes para ticket; ampliar rotação; runbook</td></tr>
+</tbody>
+</table>
+
+<h2 id="checkpoint">Checkpoint E04</h2>
+<div class="box ok">
+<span class="lbl">Avaliação sem consulta — diga "Checkpoint E04" no chat</span>
+<p>Uma pergunta por vez, sem consulta. Cada pergunta é um cenário; a rubrica diz o que basta e o que reprova.</p>
+<ul class="check">
+<li><strong>P1 · O herói.</strong> Você é tech lead, autor de 45% dos commits, e o time não decide nada sem você. Descreva um plano de 60 dias. <em>Basta:</em> listar decisões que passam por você, regras de autonomia por escrito (reversibilidade e limite), um segundo líder numa iniciativa real, métrica observável (tempo até primeira revisão, decisões sem você). <em>Reprova:</em> "trabalhar mais" ou "treinar o time" sem mecanismo.</li>
+<li><strong>P2 · Desacordo.</strong> Duas pessoas seniores discordam sobre fila durável versus chamada síncrona, e a reunião não converge. <em>Basta:</em> classificar o desacordo (fato, valor, risco), nomear decisor, avaliar reversibilidade, definir experimento ou decidir, registrar a objeção e o sinal de revisão, pedir "discordo e apoio" por escrito. <em>Reprova:</em> votar, ou decidir sem registrar a objeção.</li>
+<li><strong>P3 · PR de agente.</strong> PR de 1.200 linhas, cobertura 96%, testes verdes, autor diz "o agente fez". Conduza o review. <em>Basta:</em> intenção primeiro, devolver para dividir, rodar o teste contra o código antigo, checar API e dependência, responsabilizar o autor, prefixos bloqueante/sugestão. <em>Reprova:</em> aprovar pela cobertura ou comentar só estilo.</li>
+<li><strong>P4 · Prazo.</strong> O gerente quer 41 dias, a soma dos prováveis. Responda com dados do lab. <em>Basta:</em> distribuição assimétrica, P50 47, P85 53, P95 56,5 (ou os números do seu projeto), riscos separados, limite de independência, opções de escopo e recomendação. <em>Reprova:</em> "não dá" sem alternativas, ou aceitar 41.</li>
+<li><strong>P5 · Feedback.</strong> Reescreva "o Rafael é arrogante nas reviews" como SBI com Pedido e diga como entregar. <em>Basta:</em> situação específica, comportamento observável sem adjetivo, impacto concreto, pedido verificável, pergunta aberta, conversa privada e logo. <em>Reprova:</em> manter adjetivo ou esperar a avaliação semestral.</li>
+<li><strong>P6 · Mandato de IA.</strong> A diretoria exige que todos usem agentes na segunda-feira. Proponha o caminho. <em>Basta:</em> piloto com hipótese, grupo, duração, métricas de fluxo (lead time, tamanho de PR, tempo de review, falha, retrabalho) mais percepção, critério de parada anterior, política mínima de dados e responsabilidade, nenhuma métrica por pessoa. <em>Reprova:</em> recusar sem alternativa ou aceitar medindo linhas de código.</li>
+<li><strong>P7 · Incidente e postmortem.</strong> Serviço fora por 52 minutos; o rascunho diz "erro humano". Descreva o papel do comandante e reescreva a causa. <em>Basta:</em> IC coordena e delega comunicação, mitigação antes de causa, cadência de atualização, causas contribuintes em camadas, ações com <code>@dono</code> e data, verificação. <em>Reprova:</em> IC que corrige pessoalmente, ou ação "tomar mais cuidado".</li>
+</ul>
+<h4>Entregáveis verificados (mostrar rodando)</h4>
+<ol>
+<li>Gates do lab verdes: <code>pytest</code> (51 testes), <code>ruff check</code>, <code>ruff format --check</code>, <code>mypy --strict</code>.</li>
+<li>Previsão do seu projeto com semente fixa: P50, P85, P95 e a soma dos prováveis, com e sem riscos.</li>
+<li>RFC seu passando em <code>leadkit check rfc</code>, com ao menos duas alternativas e tipo de decisão.</li>
+<li>Mutação do percentil rejeitada pela suíte, e o template intocado reprovado pelo linter (controle negativo).</li>
+</ol>
+</div>
+
+<h2>Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://dora.dev/ai/">DORA: página de IA (relatório "ROI of AI-assisted Software Development", listado como o mais recente)</a> e <a href="https://dora.dev/insights/dora-2025-year-in-review/">DORA 2025 year in review</a></td><td>Relatórios de IA do DORA (março/2025, setembro/2025, capacidades em dezembro/2025); throughput versus estabilidade (bloco 6)</td><td>pesquisa oficial</td><td>11/10/2026 (a página não informa a data do relatório de ROI)</td></tr>
+<tr><td><a href="https://blog.google/technology/developers/dora-report-2025/">Google: Inside our 2025 DORA report</a></td><td>≈5.000 respondentes, 90% de adoção, 24% de confiança alta, "espelho e multiplicador", sete arquétipos e sete capacidades (bloco 6)</td><td>divulgação do fornecedor da pesquisa</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://kodus.io/en/dora-accelerate-state-of-devops/">Kodus: resumo do relatório DORA de ROI de IA</a></td><td>Curva em J, review como alavanca (bloco 3 e 6). Resumo de terceiros: leia o original antes de citar números</td><td>texto de praticante</td><td>11/10/2026</td></tr>
+<tr><td>METR, "Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity" (jul/2025, arXiv 2507.09089)</td><td>Ensaio com 16 desenvolvedores; percepção versus medida (bloco 6)</td><td>pesquisa primária</td><td>valores de memória conferidos com a divulgação; releia o paper antes de citar</td></tr>
+<tr><td>N. Forsgren, J. Humble, G. Kim, <em>Accelerate</em> (2018); <a href="https://dora.dev/">dora.dev</a></td><td>As quatro métricas de entrega (bloco 6)</td><td>livro e pesquisa</td><td>—</td></tr>
+<tr><td>N. Forsgren et al., "The SPACE of Developer Productivity", ACM Queue, 2021; A. Noda, M.-A. Storey, N. Forsgren, M. Greiler, "DevEx: What Actually Drives Productivity", ACM Queue, 2023</td><td>Dimensões de produtividade e experiência (bloco 6)</td><td>artigos revisados</td><td>—</td></tr>
+<tr><td><a href="https://google.github.io/eng-practices/review/">Google Engineering Practices: code review</a></td><td>Padrão de aprovação, velocidade de resposta, CLs pequenos (bloco 3)</td><td>guia oficial público</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://sre.google/sre-book/table-of-contents/">Google, <em>Site Reliability Engineering</em>: capítulos sobre plantão, resposta a incidentes e cultura de postmortem</a></td><td>Comandante de incidente, blameless, carga de plantão (bloco 7)</td><td>livro oficial online</td><td>11/10/2026</td></tr>
+<tr><td>J. Allspaw, "Blameless PostMortems and a Just Culture", Etsy Code as Craft, 2012</td><td>Origem da prática blameless em software (bloco 7)</td><td>texto de praticante</td><td>—</td></tr>
+<tr><td>J. Bezos, cartas aos acionistas da Amazon (2015 e 2016)</td><td>Decisões tipo 1 e tipo 2; "disagree and commit" (bloco 2)</td><td>fonte primária</td><td>—</td></tr>
+<tr><td><a href="https://staffeng.com/">W. Larson, StaffEng, e <em>Staff Engineer</em> (2021)</a></td><td>Arquétipos de staff engineer (bloco 1)</td><td>texto de praticante</td><td>11/10/2026</td></tr>
+<tr><td>Center for Creative Leadership, modelo Situation-Behavior-Impact</td><td>Feedback SBI (bloco 5)</td><td>método publicado</td><td>—</td></tr>
+<tr><td>D. Kahneman, A. Tversky, "Intuitive Prediction: Biases and Corrective Procedures" (1977); F. Brooks, <em>The Mythical Man-Month</em> (1975)</td><td>Falácia do planejamento; lei de Brooks (bloco 4)</td><td>fontes primárias</td><td>—</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/random.html">Python: random (triangular, betavariate)</a> e <a href="https://docs.astral.sh/uv/">uv</a></td><td>Laboratório</td><td>oficial</td><td>11/10/2026</td></tr>
+</tbody>
+</table>
+<p>Números de pesquisa externa, relatórios DORA e achados sobre IA mudam em meses: revalide em até 90 dias. Os valores de P50/P85/P95 e as métricas DORA do módulo vêm de execução real do <code>leadkit</code> em 11/10/2026 com dados fictícios; os seus serão outros. Os papéis (tech lead, staff, principal) e as faixas de on-call são convenções do mercado, não padrão normativo.</p>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>O líder técnico é medido pelo que o time decide e entrega sem ele; com agentes, o gargalo é decisão e verificação.<br>
+Tech lead responde pelo time, gerente pelas pessoas, staff pelo que atravessa times; influência = evidência + clareza + patrocínio.<br>
+RFC com prazo, design review com decisor, ADR em 24 h; classifique por reversibilidade e registre a objeção.<br>
+Review na ordem intenção, tamanho, testes, desenho, risco; em código de IA, exija evidência e responsabilize o autor.<br>
+Estime por faixa e simule: soma 41, P50 47,0, P85 53,0, P95 56,5 no lab; prometa percentil e diga "não" com opções.<br>
+SBI com Pedido, 1:1 da pessoa, rubrica antes da entrevista; júnior com IA entende antes de aceitar.<br>
+IA no time: política curta, harness com dono, DORA + percepção, experimento com critério de parada antes de mandato.<br>
+Incidente: comandante coordena, mitiga primeiro; postmortem blameless com causas em camadas, ações com dono e data.</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="E04"></script>
+</body>
+</html>

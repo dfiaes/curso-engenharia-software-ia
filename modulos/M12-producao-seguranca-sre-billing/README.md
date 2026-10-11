@@ -9,7 +9,6 @@ Em nove blocos e aproximadamente 18 horas, o aluno transforma o Capstone em um s
 - [Material completo de estudo](M12.html)
 - [Especificação e critérios de aceitação](../../docs/especificacoes/M12-ESPECIFICACAO.md)
 - [Laboratório executável](lab/README.md)
-- [Matriz de rastreabilidade da implementação](RASTREABILIDADE.md)
 - [Registro de fontes primárias verificadas](FONTES.md)
 
 Python é a linguagem canônica. PostgreSQL 18 é a boundary real de referência para RLS. O domínio usa contratos próprios e fake determinístico; Stripe aparece somente como possível adapter test-mode, sem definir a arquitetura.

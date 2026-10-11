@@ -1,6 +1,6 @@
 # M00 · Harness engineering e trabalho seguro com IA
 
-**5 blocos / 10h** · Sem pré-requisito · **Estado:** regenerado; gates técnicos locais aprovados, revisão visual pendente.
+**Fase 2** · 5 blocos / 10h · Pré-requisito: Fase 1 (M04). Estado: [STATUS](../../STATUS.md).
 
 ## Ordem de estudo
 
@@ -8,7 +8,6 @@
 2. Ao chegar ao fim do HTML, execute o **Laboratório guiado M00**. Ele cria uma cópia temporária, reconstrói as partes centrais do código com blocos copiáveis e explica cada validação.
 3. Só depois faça o checkpoint no seu repositório de estudo.
 4. Consulte a [especificação](../../docs/especificacoes/M00-ESPECIFICACAO.md) para competências e cenários de aceitação.
-5. Consulte a [auditoria](../../docs/historico/2026-09-21/auditorias/M00-AUDITORIA.md) para entender o que foi corrigido no material anterior.
 
 O arquivo `bloco-4-mcp-e-hooks.html` e os PDFs associados são históricos. Não use seus imports, comandos ou descrição do ciclo de vida MCP como referência atual.
 
