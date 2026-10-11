@@ -1,5 +1,7 @@
 # Especificação do M01 — SDD, harness engineering e execução paralela segura
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.0 · **Data-base:** 14/08/2026 · **Estado:** G0 APROVADO · **Carga:** 5 blocos / 10h
 
 ## 1. Resultado do módulo

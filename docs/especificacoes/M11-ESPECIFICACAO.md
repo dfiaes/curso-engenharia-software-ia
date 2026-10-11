@@ -1,5 +1,7 @@
 # M11 — especificação de escopo e evidência
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.0 · **Data-base:** 14/09/2026 · **Estado:** G0 aprovado; G1 em produção
 
 ## 1. Decisão curricular
@@ -36,7 +38,7 @@ final em G1.
 | Não cobre | RAG vetorial (M07), protocolos MCP/A2A (M09), grafos de execução/conhecimento (M10), produção multi-tenant (M12) |
 | Evidência mínima | comandos, versões e saída executada; loss/latência/custo só com ambiente e amostras; perplexidade nunca como substituto de eval por tarefa; acordo de juiz só com conjunto humano |
 
-Referência interna de matemática e dependências do principal: [ponte do M11](../planejamento-v4/pontes-principal.md#vetores-e-gradientes-no-m11). Vetores, gradientes e a execução necessária são ensinados no percurso M11; ML01/ML05 são somente aprofundamentos opcionais.
+Referência interna de matemática e dependências do principal: ponte do M11. Vetores, gradientes e a execução necessária são ensinados no percurso M11; ML01/ML05 são somente aprofundamentos opcionais.
 ## 3. Arquitetura do laboratório
 
 ```text

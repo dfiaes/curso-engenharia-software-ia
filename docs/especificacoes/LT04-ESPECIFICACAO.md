@@ -1,5 +1,7 @@
 # Especificação do LT04 — Release engineering e aprendizado operacional
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.1 · **Data-base:** 26/09/2026 · **Estado:** PRÉVIA EDITORIAL TIER 1; extensão v4 com G0 aprovado · **Carga:** 6 blocos
 
 LT04 acontece depois do M12. Na Prévia Editorial v1, seu propósito é transformar “parece pronto” em uma decisão de release comunicável e reversível: versão, gates, rollback e restauração, sinais, comunicação e pós-mortem. Esse é o recorte Tier 1 já produzido no HTML e no laboratório local.

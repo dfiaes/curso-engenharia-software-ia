@@ -1,5 +1,7 @@
 # Especificação do LT02 — Sistemas distribuídos, dados e mensageria
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.0 · **Data-base:** 14/08/2026 · **Estado:** G0 APROVADO · **Carga:** 6 blocos / 12h
 
 LT02 acontece depois do M05. Seu propósito é tornar explícitas as garantias e os modos de falha que aparecem quando uma operação lenta, cara ou não determinística sai do processo HTTP e passa a ser executada por múltiplos workers.

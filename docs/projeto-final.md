@@ -4,23 +4,19 @@ Produto integrador pequeno para analisar um corpus autorizado de código: ingest
 
 A unidade de valor é uma jornada verificável: fornecer uma fixture → acompanhar um job → fazer uma pergunta → receber referências ou abstenção → diagnosticar uma falha. A superfície pode ser pequena; contratos, autorização, persistência, recuperação e limites precisam ser reais no escopo declarado.
 
-## Responsabilidades
+## Responsabilidades por fase
 
-| Peça | Origem curricular | Prova esperada |
-|---|---|---|
-| Contratos, estrutura, API e dados | M01–M04 | entrada validada, transação e migration verificadas |
-| Gateway e avaliação | M05/M06 | provider substituível e regressão detectada |
-| Recuperação e investigação | M07–M10 | consulta autorizada, proveniência e orçamento |
-| Fundamentos e modo local | M11 | decisão de modelo/serving com limites e medidas |
-| Segurança, custo e operação | M12/LTs | isolamento, idempotência, falha, telemetria e recuperação |
-| Integração e defesa | M13 | evidência de jornada completa e decisão go/no-go |
+| Fase | Peça | Módulos | Prova esperada |
+|---|---|---|---|
+| 0–1 | Contratos, dados e API | F04, F05, M02, M02A, M03, M04 | entrada validada, transação e migration verificadas, ADR das fronteiras |
+| 2 | Gateway, avaliação, recuperação e agentes | M05–M10 | provider substituível, regressão detectada, consulta autorizada com proveniência e orçamento |
+| 3 | Segurança, operação e deploy | M12, LT02–LT04, P01 | isolamento, idempotência, falha, telemetria, recuperação e deploy reproduzível |
+| 4 | System design, adaptação de modelo (opcional), governança e defesa | E01, M11, E02, E03, M13 | decisão de modelo/serving com limites e medidas, análise de risco, jornada completa e decisão go/no-go |
 
 As escolhas de framework são adapters, não currículo obrigatório. Não criar plataforma empresarial para demonstrar uma propriedade. Mecanismo em memória é evidência local; PostgreSQL, protocolo ou processo real são necessários quando a alegação depende deles. API paga e modelo grande não são requisitos do núcleo.
 
-## Autoridade e prontidão
+## Escopo e entrega
 
-A [especificação M13](especificacoes/M13-ESPECIFICACAO.md) detalha competências/CAP-*; a tarefa M13-S reconcilia o escopo herdado com o laboratório mínimo da [especificação transversal](especificacoes/FORMACAO-SOFTWARE-IA-ML-ESPECIFICACAO.md). Nenhum critério obrigatório é removido silenciosamente para obter aprovação.
+O [M13](../modulos/M13-capstone/M13.html) integra as peças e conduz a defesa; o escopo detalhado da versão anterior está em [M13-ESPECIFICACAO.md](especificacoes/M13-ESPECIFICACAO.md). O diretório [capstone](../capstone/README.md) contém o trabalho existente e não deve ser migrado ou reescrito durante a edição de um módulo.
 
-O [status](STATUS-IMPLEMENTACAO-CURSO.md) e a [rastreabilidade M13](../modulos/M13-capstone/RASTREABILIDADE.md) distinguem existente, parcial e comprovado. O diretório [capstone](../capstone/README.md) é trabalho existente; não migrar nem reescrever implicitamente durante uma tarefa de módulo.
-
-ML07 é um projeto tabular opcional e independente. Pode compartilhar contratos/telemetria ou uma porta com o Cartógrafo, mas sua execução não bloqueia este produto. Piloto com pessoas exige consentimento e dados reais coletados; exemplo sintético nunca comprova valor de mercado. Publicação e deploy não são automáticos.
+Piloto com pessoas exige consentimento e dados reais coletados; exemplo sintético nunca comprova valor de mercado. Publicação e deploy não são automáticos.

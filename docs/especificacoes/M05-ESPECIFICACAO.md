@@ -1,5 +1,7 @@
 # M05 — especificação de escopo e evidência
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.0 · **Data-base:** 14/09/2026 · **Estado:** G0 aprovado; G1 em produção
 
 ## 1. Decisão curricular
@@ -28,7 +30,7 @@ Preços e versões de produto citados no material são retrato datado
 | Não cobre | evals (M06), retrieval (M07), agentes (M08), produção multi-tenant (M12) |
 | Evidência mínima | comandos, versões e saída executada; latência/custo só com ambiente e amostras |
 
-Referência interna de matemática e dependências do principal: [ponte do M05](../planejamento-v4/pontes-principal.md#probabilidade-e-amostragem-no-m05). A distribuição e a amostragem são ensinadas no próprio B01; ML01 é somente aprofundamento opcional.
+Referência interna de matemática e dependências do principal: ponte do M05. A distribuição e a amostragem são ensinadas no próprio B01; ML01 é somente aprofundamento opcional.
 ## 3. Arquitetura do laboratório
 
 ```text
@@ -96,7 +98,7 @@ capacidades de produto devem ser revalidados em até 90 dias. Limite mínimo
 de prefixo cacheável não equivale a janela de contexto nem a teto de saída.
 O invariante ensinado (contrato, cache, retry, custo) não depende de
 nenhum fornecedor. O ledger focal de claims está em
-[`docs/planejamento-v4/fontes.json`](../planejamento-v4/fontes.json).
+`docs/planejamento-v4/fontes.json`.
 
 ## 7. Panorama de prática vigente
 

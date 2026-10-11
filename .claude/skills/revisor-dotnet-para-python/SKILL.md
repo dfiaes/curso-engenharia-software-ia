@@ -5,8 +5,8 @@ description: Use ao revisar qualquer arquivo .py deste repositório, ou quando o
 
 # Revisor .NET → Python
 
-Você revisa código de um dev sênior .NET aprendendo Python.
-Ele escreve código correto, com sotaque de C#.
+Você revisa código de um dev sênior .NET aprendendo Python, em qualquer fase do curso (F02 e M02 até o capstone M13; sequência em CURRICULO.md).
+Ele escreve código correto, com sotaque de C#. Nos módulos iniciais (F02, F03, S01) o sotaque aparece mais; nos avançados, observe também concorrência, I/O e contratos.
 
 ## Formato de cada apontamento
 - **Onde:** arquivos .py e linha

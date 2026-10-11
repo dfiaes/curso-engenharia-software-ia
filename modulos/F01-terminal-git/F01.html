@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F01 · Terminal, Sistema de Arquivos, Processos e Git</title>
+<style>
+:root{
+  --bg:#faf9f7; --fg:#1c1b19; --muted:#6b6862; --line:#e2ded7;
+  --accent:#b8532a; --accent-soft:#fdf2ed;
+  --code-bg:#f4f2ee; --net:#5b6ea8; --net-soft:#eef1f8;
+  --warn:#8a6d1f; --warn-soft:#fdf8e8; --ok:#3d6b4a; --ok-soft:#eef5f0;
+  --fund:#6b4a8a; --fund-soft:#f3eef8;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1917;--fg:#e8e4dd;--muted:#9a958c;--line:#332f2a;
+  --accent:#e08256;--accent-soft:#2a1d16;--code-bg:#232019;
+  --net:#8fa2d8;--net-soft:#1c2033;--warn:#d4ae55;--warn-soft:#2a2416;
+  --ok:#7fb08f;--ok-soft:#1a2620;--fund:#b08fd8;--fund-soft:#241c33;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16.5px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 120px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.45rem;margin:64px 0 16px;padding-top:24px;border-top:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:1.12rem;margin:36px 0 10px}
+h4{font-size:.98rem;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p,li{margin:0 0 14px}
+ul,ol{padding-left:22px}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.87em;background:var(--code-bg);
+  padding:2px 5px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--accent);color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;
+  font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;vertical-align:middle}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 8px 8px 0;padding:16px 20px;margin:22px 0}
+.box.net{border-left-color:var(--net);background:var(--net-soft)}
+.box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.box.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.box.fund{border-left-color:var(--fund);background:var(--fund-soft)}
+.box p:last-child,.box ul:last-child,.box li:last-child,.box table:last-child,.box pre:last-child{margin-bottom:0}
+.box .lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px}
+.box.net .lbl{color:var(--net)} .box.warn .lbl{color:var(--warn)} .box.ok .lbl{color:var(--ok)}
+.box.fund .lbl{color:var(--fund)}
+.bloco{border:1px solid var(--line);border-radius:10px;padding:4px 22px 18px;margin:32px 0;
+  background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
+.bloco>h3:first-child{margin-top:18px}
+.clock{font-family:var(--mono);font-size:.8rem;color:var(--muted);
+  background:var(--code-bg);padding:10px 14px;border-radius:6px;margin:14px 0}
+figure{margin:28px 0;text-align:center}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+svg{max-width:100%;height:auto}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:28px;position:relative}
+.check li::before{content:"☐";position:absolute;left:4px;font-size:1.1em;color:var(--muted)}
+.toc{background:var(--code-bg);border-radius:8px;padding:18px 22px;margin:28px 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:0 0 6px}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+.course-notice{border:1px solid currentColor;border-radius:8px;padding:1rem;margin:1rem 0;overflow-wrap:anywhere}
+.course-notice p:last-child{margin-bottom:0}
+.section-link{font-size:.75em;margin-left:.35em;text-decoration:none}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media print{.section-link{display:none}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:18px 0;background:var(--bg)}
+.step .n{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;
+  width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin-right:8px}
+@media print{
+  :root{--bg:#fff;--fg:#000;--code-bg:#f5f5f5}
+  .wrap{max-width:none;padding:0}
+  h2{page-break-after:avoid} .bloco,figure,pre,table{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>F01 · Terminal, sistema de arquivos, processos e Git a fundo</h1>
+<aside class="course-notice" aria-label="Estado e navegação"><p><strong>Estado do material.</strong> Rascunho completo para revisão humana. As saídas de terminal e os gates do laboratório vêm de execução real em 11/10/2026 (Linux aarch64, Git 2.34.1, Python 3.14.7, uv 0.12.13). <a href="../../STATUS.md">Consultar andamento</a>.</p><p><strong>No seu ritmo.</strong> Use o sumário para continuar de onde parou. Os blocos organizam assuntos; não exigem sessão completa. A prática fica reunida no final e pode atravessar várias sessões.</p></aside>
+<p class="meta"><span class="badge">FASE 0</span> &nbsp; 6 blocos · carga estimada ≈ 12 h · pré-requisitos: nenhum (primeiro módulo do curso) · próximo: F02 · <strong>a base que todo o resto assume</strong></p>
+
+<div class="box">
+<span class="lbl">O que muda ao final deste módulo</span>
+<p>Todo módulo seguinte roda comandos, lê logs, encadeia ferramentas e guarda trabalho em Git. Um agente de código faz o mesmo: só enxerga o mundo por <em>exit code</em>, <code>stdout</code>, <code>stderr</code> e histórico versionado. Quem trata isso como receita perde horas em falhas de causa mecânica simples.</p>
+<p>Ao terminar você consegue: (1) explicar o que acontece entre apertar Enter e o programa rodar, e prever o que um pipeline faz com exit codes e sinais; (2) compor ferramentas pequenas com pipes e redirecionamentos sem os acidentes clássicos (espaços em nomes, ordem de <code>2&gt;&amp;1</code>, variável vazia em <code>rm -rf</code>); (3) abrir a pasta <code>.git</code> e ler cada objeto à mão, entendendo por que commit é snapshot e por que histórico é imutável; (4) escolher entre merge, rebase e cherry-pick sabendo o que cada um grava; (5) colaborar via remotes sem reescrever o que os outros já têm; (6) investigar uma regressão com <code>log -S</code>, <code>blame</code> e <code>bisect run</code>, e recuperar trabalho "perdido" com <code>reflog</code>.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que este módulo NÃO é</span>
+<p>Não é lista de comandos para decorar. Cada comando entra como consequência de um modelo: processos e descritores no bloco 1, nomes e inodes no 2, objetos e ponteiros no 3. Redes, cgroups, containers e produção ficam no <a href="../LT01-novo/LT01.html">LT01</a>.</p>
+</div>
+
+<h2>Diagnóstico rápido</h2>
+<p>Responda de cabeça, sem testar. Se acertar todas com segurança (mecanismo, não só o nome do comando), leia apenas o "Em resumo" de cada bloco, faça o <a href="#checkpoint">Checkpoint F01</a> e siga para o F02. Qualquer resposta hesitante marca o bloco que vale ler inteiro.</p>
+<ol>
+<li><strong>(Bloco 1)</strong> <code>gerador | head -1</code> termina e o <code>gerador</code> acusa exit code 141. O programa tem bug?
+<details><summary>Resposta</summary><p>Não. <code>head</code> fechou o pipe; a próxima escrita do gerador gera <code>SIGPIPE</code> (13), e 128 + 13 = 141. É o fim normal de um produtor cujo consumidor desistiu.</p></details></li>
+<li><strong>(Bloco 1)</strong> Você define <code>X=1</code> no shell e roda <code>bash -c 'echo $X'</code>. O que imprime, e o que muda com <code>export X</code>?
+<details><summary>Resposta</summary><p>Vazio. O ambiente é uma cópia de pares <code>NOME=valor</code> entregue ao filho no <code>execve</code>; <code>export</code> marca a variável para entrar nela. Mudanças do filho nunca voltam ao pai.</p></details></li>
+<li><strong>(Bloco 1)</strong> <code>grep</code> devolve exit code 1. Isso é erro?
+<details><summary>Resposta</summary><p>Não: 0 = achou, 1 = não achou, 2 = erro de verdade (arquivo ilegível, regex inválida). O mesmo vale para <code>diff</code>.</p></details></li>
+<li><strong>(Bloco 2)</strong> Você cria um hard link e um symlink para <code>app.py</code> e apaga <code>app.py</code>. O que acontece com cada um?
+<details><summary>Resposta</summary><p>O hard link segue funcionando: é outro nome para o mesmo inode, e o dado só some quando a contagem de links chega a zero. O symlink guarda um caminho em texto e fica pendurado.</p></details></li>
+<li><strong>(Bloco 3)</strong> O que existe em <code>.git/objects</code> logo depois de <code>git add a.txt</code>, antes de qualquer commit?
+<details><summary>Resposta</summary><p>Um blob com o conteúdo do arquivo, endereçado pelo SHA-1 de <code>blob &lt;tamanho&gt;\0&lt;conteúdo&gt;</code>, e uma entrada em <code>.git/index</code>. Nenhuma tree, commit ou ref: o <code>commit</code> é que cria a tree a partir do índice, o objeto commit e move o branch.</p></details></li>
+<li><strong>(Bloco 3)</strong> Se commit guarda snapshot completo, por que o repositório não explode de tamanho?
+<details><summary>Resposta</summary><p>O snapshot é uma árvore de referências por hash: o que não mudou reaproveita o mesmo objeto. O <code>gc</code> ainda empacota objetos com compressão delta, uma otimização física invisível ao modelo lógico.</p></details></li>
+<li><strong>(Bloco 4)</strong> Por que um <code>git rebase</code> muda o hash dos commits reaplicados, e quando é seguro?
+<details><summary>Resposta</summary><p>O hash inclui o hash do pai; trocar a base muda o primeiro commit e a mudança propaga em cadeia. Os antigos continuam existindo. É seguro em histórico que só você tem.</p></details></li>
+<li><strong>(Bloco 6)</strong> Um <code>git reset --hard HEAD~2</code> descartou dois commits. Como recuperar, e até quando?
+<details><summary>Resposta</summary><p>Só a ref andou: <code>git reflog</code> lista onde o HEAD esteve e <code>git branch rescue &lt;hash&gt;</code> o ancora. O reflog é local e expira (90 dias alcançável, 30 inalcançável). Edição nunca adicionada ao índice não tem objeto e não volta.</p></details></li>
+</ol>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#b01"><strong>Bloco 1</strong> — O sistema operacional visto do terminal: processo, descritores, exit code, sinais, ambiente e PATH</a></li>
+<li><a href="#b02"><strong>Bloco 2</strong> — Sistema de arquivos e composição: caminhos, inodes, permissões, codificação, find/grep e pipes</a></li>
+<li><a href="#b03"><strong>Bloco 3</strong> — Git por dentro: objetos, hash de conteúdo, refs, HEAD e índice</a></li>
+<li><a href="#b04"><strong>Bloco 4</strong> — Fluxo do dia a dia: branches, merge, rebase, conflitos, cherry-pick e stash</a></li>
+<li><a href="#b05"><strong>Bloco 5</strong> — Colaboração: remotes, fetch/pull/push, pull requests, convenções, hooks e assinatura</a></li>
+<li><a href="#b06"><strong>Bloco 6</strong> — Investigação e recuperação: log -S, blame, bisect, reset, revert, reflog e worktree</a></li>
+<li><a href="#lab-guiado"><strong>Laboratório guiado F01</strong> — CLI com exit codes, leitor de objetos Git e cenários de recuperação</a></li>
+</ol>
+</div>
+<!-- ============================================ BLOCO 1 -->
+<h2 id="b01">Bloco 1 · O sistema operacional visto do terminal</h2>
+
+<h3>Por que isso importa</h3>
+<p>Um pipeline de CI mostra verde, mas o deploy não aconteceu: <code>build.sh | tee build.log</code> devolve o exit code do <code>tee</code>, não o do build. Um script funciona no terminal e falha no cron porque o <code>PATH</code> é outro. O agente de código roda o seu teste, lê "0" e declara sucesso, sem olhar o <code>stderr</code>. Nos três, o defeito está no modelo mental, não no comando.</p>
+<p>O modelo cabe em cinco peças: <strong>processo</strong>, <strong>descritores de arquivo</strong>, <strong>exit code</strong>, <strong>sinais</strong> e <strong>ambiente</strong>. Tudo que o terminal faz é combinação delas.</p>
+
+<h3>Terminal, shell e processo são três coisas</h3>
+<p>O <strong>terminal</strong> (emulador) é a janela: recebe teclas e desenha caracteres; por baixo, o kernel expõe um <em>tty</em> (na prática, um pseudo-terminal) que a liga aos programas. O <strong>shell</strong> (bash, zsh, sh, PowerShell) é um programa comum que roda nesse tty, lê linhas e as interpreta: expande variáveis, aplica redirecionamentos, procura executáveis e dispara processos. Fechar o terminal envia <code>SIGHUP</code> ao shell.</p>
+<p>Um <strong>processo</strong> é um programa em execução com identidade própria: um <strong>PID</strong> (número único), um <strong>PPID</strong> (o pai), um espaço de memória, um diretório corrente (<em>cwd</em>), um ambiente, uma tabela de descritores abertos e um estado de saída. Todo processo, exceto o primeiro, nasce de outro: o resultado é uma <strong>árvore de processos</strong>.</p>
+<pre><code>$ echo "este shell: $$   pai: $PPID"
+este shell: 14   pai: 13</code></pre>
+<pre><code>$ sleep 30 &amp; echo "filho em background: $!"; ps -o pid,ppid,stat,comm -p $$,$!; kill $!
+filho em background: 17
+    PID    PPID STAT COMMAND
+     16      15 S    bash
+     17      16 S    sleep</code></pre>
+<p>O PPID do <code>sleep</code> é o PID do <code>bash</code>: a relação pai-filho é o que importa; os números mudam a cada execução.</p>
+
+<div class="box fund">
+<span class="lbl">Fundamento · fork e exec</span>
+<p>Unix cria processos em dois passos. <code>fork()</code> duplica o processo atual (o filho começa como cópia do pai, com a mesma tabela de descritores). Depois o filho chama <code>execve()</code>, que <em>substitui a imagem do programa</em> pelo executável pedido, mantendo o PID, os descritores abertos e o ambiente que o pai montou. A separação é o que torna o redirecionamento barato: entre o <code>fork</code> e o <code>exec</code> o shell reorganiza os descritores do filho, e o programa executado nem sabe que sua saída vai para um arquivo.</p>
+</div>
+<p>Daí um fato que confunde veteranos: <code>cd</code> é <em>builtin</em> (executado dentro do próprio shell). O diretório corrente é atributo do processo, e um filho não altera o do pai. Se <code>cd</code> fosse um programa externo, mudaria o diretório de um processo que morre em seguida.</p>
+<pre><code>$ cd /tmp; (cd /; pwd); pwd
+/
+/tmp</code></pre>
+
+<h3>Três descritores e a filosofia do fluxo</h3>
+<p>Para um processo, um arquivo aberto é um inteiro pequeno, o <strong>descritor de arquivo</strong> (fd), índice numa tabela mantida pelo kernel. Por convenção todo processo nasce com três: <strong><code>stdin</code> (0)</strong>, de onde lê a entrada; <strong><code>stdout</code> (1)</strong>, para onde escreve o resultado; <strong><code>stderr</code> (2)</strong>, para onde escreve diagnósticos. Os três apontam, por padrão, para o terminal. O ponto de separar 1 de 2 é que o <em>resultado</em> pode ser canalizado para o próximo programa enquanto os <em>avisos</em> continuam visíveis para a pessoa.</p>
+<pre><code>$ ls -l /proc/self/fd &gt; saida.txt 2&gt; erro.txt &lt; /dev/null; awk "NR&gt;1{print \$9, \$10, \$11}" saida.txt
+0 -&gt; /dev/null
+1 -&gt; /tmp/demo-b1/saida.txt
+2 -&gt; /tmp/demo-b1/erro.txt
+3 -&gt; /proc/21/fd</code></pre>
+<p>Com <code>&lt; /dev/null</code>, <code>&gt; saida.txt</code> e <code>2&gt; erro.txt</code> o shell religou os fds 0, 1 e 2 antes do <code>exec</code>. O fd 3 é o diretório que o próprio <code>ls</code> abriu para listar.</p>
+
+<figure>
+<svg viewBox="0 0 760 250" role="img" width="760" height="250" font-family="inherit" font-size="13">
+<title>Pipeline cat | grep com redirecionamento: processos, descritores e destinos</title>
+<defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<rect x="10" y="20" width="150" height="56" rx="8"/><rect x="250" y="20" width="150" height="56" rx="8"/><rect x="500" y="20" width="150" height="56" rx="8"/>
+<rect x="500" y="150" width="150" height="40" rx="6" stroke-dasharray="5 4"/><rect x="250" y="190" width="150" height="40" rx="6" stroke-dasharray="5 4"/>
+<path d="M160,48 H250" marker-end="url(#a1)"/><path d="M400,48 H500" marker-end="url(#a1)"/>
+<path d="M575,76 V150" marker-end="url(#a1)"/><path d="M500,64 C430,150 430,200 400,210" marker-end="url(#a1)"/>
+</g>
+<g fill="currentColor">
+<text x="85" y="44" text-anchor="middle" font-weight="700">cat dados.txt</text><text x="85" y="62" text-anchor="middle" font-size="11">PID 101</text>
+<text x="325" y="44" text-anchor="middle" font-weight="700">grep alvo</text><text x="325" y="62" text-anchor="middle" font-size="11">PID 102</text>
+<text x="575" y="44" text-anchor="middle" font-weight="700">tr a-z A-Z</text><text x="575" y="62" text-anchor="middle" font-size="11">PID 103</text>
+<text x="205" y="40" text-anchor="middle" font-size="11">pipe</text><text x="450" y="40" text-anchor="middle" font-size="11">pipe</text>
+<text x="585" y="118" font-size="11">fd 1 → arquivo</text><text x="575" y="175" text-anchor="middle">saida.txt</text>
+<text x="325" y="215" text-anchor="middle">terminal (tty)</text><text x="440" y="150" font-size="11">fd 2 → terminal</text>
+</g>
+</svg>
+<figcaption>Comando <code>cat dados.txt | grep alvo | tr a-z A-Z &gt; saida.txt</code>. Três processos filhos do shell, ligados por dois pipes (stdout de um é o stdin do seguinte). Só o último tem o fd 1 redirecionado para arquivo; o stderr de cada um segue para o terminal.</figcaption>
+</figure>
+
+<h3>Exit code: a resposta de um processo</h3>
+<p>Quando um processo termina, deixa um inteiro de 0 a 255, o <strong>exit code</strong> (ou <em>status</em>). O pai o recolhe (<code>wait</code>) e o shell o expõe em <code>$?</code>. A convenção é universal: <strong>0 significa sucesso; qualquer outro valor, falha ou resultado especial</strong>. Além disso, o shell reserva alguns:</p>
+<table>
+<thead><tr><th>Código</th><th>Significado</th><th>Origem</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>sucesso</td><td>convenção</td></tr>
+<tr><td>1</td><td>falha genérica (ou "não achei", em grep/diff)</td><td>cada programa decide</td></tr>
+<tr><td>2</td><td>uso incorreto / erro de verdade (grep, ls, argparse)</td><td>convenção forte</td></tr>
+<tr><td>126</td><td>achou o arquivo, mas não é executável</td><td>shell</td></tr>
+<tr><td>127</td><td>comando não encontrado</td><td>shell</td></tr>
+<tr><td>128 + n</td><td>morto pelo sinal <em>n</em> (130 = SIGINT, 141 = SIGPIPE, 143 = SIGTERM, 137 = SIGKILL)</td><td>shell</td></tr>
+</tbody>
+</table>
+<pre><code>$ true; echo "true=$?"; false; echo "false=$?"
+true=0
+false=1
+$ ls /nao/existe; echo "ls=$?"
+ls: cannot access '/nao/existe': No such file or directory
+ls=2
+$ comando-que-nao-existe; echo "inexistente=$?"
+bash: line 1: comando-que-nao-existe: command not found
+inexistente=127
+$ echo "echo hi" &gt; naoexec.sh; ./naoexec.sh; echo "sem-x=$?"
+bash: line 1: ./naoexec.sh: Permission denied
+sem-x=126
+$ sh -c "kill -INT \$\$"; echo "SIGINT=$?"
+SIGINT=130
+$ sh -c "kill -TERM \$\$"; echo "SIGTERM=$?"
+Terminated
+SIGTERM=143</code></pre>
+<p>Há duas camadas aqui. O exit code <em>do programa</em> é escolha de quem o escreveu (<code>exit 7</code>). O código 128+n é <em>do shell</em>: o processo nem chegou a escolher, o kernel o encerrou por sinal. A distinção importa ao ler logs: "exit 137" quase sempre é SIGKILL, e em container isso costuma significar que o kernel matou o processo por falta de memória.</p>
+
+<h3>Stdout, stderr e quem enxerga o quê</h3>
+<pre><code>$ ls /nao/existe 2&gt;/dev/null; echo "exit=$?"
+exit=2
+$ ls /nao/existe &gt;/dev/null; echo "(a mensagem acima veio do stderr)"
+ls: cannot access '/nao/existe': No such file or directory
+(a mensagem acima veio do stderr)</code></pre>
+<p>Na primeira execução a mensagem sumiu (foi para <code>/dev/null</code>) e o exit code 2 permaneceu. Na segunda, o stdout foi descartado e a mensagem de erro continuou visível, porque ela nunca esteve no stdout. A regra de projeto para qualquer ferramenta que você escreva: <strong>dados no stdout, diagnóstico no stderr, resultado no exit code</strong>. É o contrato que permite compor programas, e é a interface pela qual um agente de código decide se o comando funcionou.</p>
+
+<h3>Sinais</h3>
+<p>Um <strong>sinal</strong> é uma notificação assíncrona que o kernel entrega a um processo. Ele interrompe o fluxo normal e dispara um <em>handler</em>; se o processo não instalou um, vale a ação padrão (quase sempre terminar). Os que importam no dia a dia:</p>
+<ul>
+<li><strong>SIGINT (2)</strong>: Ctrl-C. O driver do tty, ao receber o byte 0x03, envia o sinal ao <em>grupo de processos em primeiro plano</em>, não só ao programa à frente; por isso Ctrl-C interrompe um pipeline inteiro.</li>
+<li><strong>SIGTERM (15)</strong>: pedido educado de encerramento (<code>kill PID</code>). O processo pode capturá-lo e fazer limpeza.</li>
+<li><strong>SIGKILL (9)</strong>: encerramento imposto pelo kernel. Não pode ser capturado nem ignorado; nenhuma limpeza roda.</li>
+<li><strong>SIGPIPE (13)</strong>: escrita em pipe cujo leitor já fechou. A ação padrão mata o escritor; é o que encerra <code>yes | head -1</code>.</li>
+</ul>
+<p>Shutdown gracioso, grace period e o papel do PID 1 em container estão no <a href="../LT01-novo/LT01.html#b01">LT01, bloco 1</a>. Aqui basta fixar que um programa bem-comportado trata SIGINT e SIGPIPE de propósito, e é isso que o laboratório faz. O trecho central do <code>pgrep.py</code> (um grep mínimo em Python):</p>
+<pre><code>def main(argv: list[str] | None = None) -&gt; int:
+    args = _build_parser().parse_args(argv)
+    try:
+        return _run(args)
+    except KeyboardInterrupt:          # Python traduz SIGINT em exceção
+        return EXIT_SIGINT             # 130 = 128 + 2
+    except BrokenPipeError:            # leitor do pipe fechou (SIGPIPE ignorado pelo Python)
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        return EXIT_SIGPIPE            # 141 = 128 + 13</code></pre>
+<p>O Python ignora SIGPIPE por padrão e levanta <code>BrokenPipeError</code> na escrita. O <code>dup2</code> para <code>/dev/null</code> evita um segundo erro quando o interpretador tenta descarregar o stdout ao sair. O teste do laboratório prova o contrato: fecha o lado de leitura do pipe e exige 141.</p>
+
+<h3>Ambiente: o que o filho herda</h3>
+<p>O <strong>ambiente</strong> é uma lista de pares <code>NOME=valor</code> que o processo recebe no <code>execve</code>. Ele é <em>copiado</em> para o filho; depois disso pai e filho divergem sem se afetar. O shell mantém dois conjuntos: variáveis de shell (internas) e variáveis <em>exportadas</em> (as que entram na cópia).</p>
+<pre><code>$ export SEGREDO=abc; bash -c "echo filho vê: \$SEGREDO"; unset SEGREDO; bash -c "echo filho vê: [\$SEGREDO]"
+filho vê: abc
+filho vê: []
+$ X=1; bash -c "echo sem export: [\$X]"; export X; bash -c "echo com export: [\$X]"
+sem export: []
+com export: [1]</code></pre>
+<p>Duas consequências. Nenhum programa altera o ambiente de quem o chamou, e por isso <code>source venv/bin/activate</code> precisa ser <em>sourced</em> (executado no shell atual). E o ambiente não é cofre: todo filho herda tudo que foi exportado.</p>
+
+<h3>PATH: como um comando é encontrado</h3>
+<p>Quando você digita <code>python3</code>, o shell segue uma ordem: (1) apelido (<em>alias</em>); (2) função do shell; (3) builtin; (4) se o nome <strong>contém barra</strong> (<code>./run.sh</code>, <code>/usr/bin/ls</code>), usa o caminho direto sem procurar; (5) senão, percorre os diretórios de <code>PATH</code>, da esquerda para a direita, e executa o primeiro arquivo executável com esse nome. O resultado fica em cache (<code>hash</code>).</p>
+<pre><code>$ type -a python3 | head -3; command -v ls; type cd
+python3 is /usr/bin/python3
+python3 is /bin/python3
+/usr/bin/ls
+cd is a shell builtin</code></pre>
+<pre><code>$ mkdir bin; printf "#!/bin/sh\necho meu ls\n" &gt; bin/ls; chmod +x bin/ls; PATH="$PWD/bin:$PATH" ls; PATH="$PWD/bin:$PATH" command -v ls; ls | head -2
+meu ls
+/tmp/demo-b1/bin/ls
+bin
+erro.txt</code></pre>
+<p>O primeiro <code>PATH</code> que contém um <code>ls</code> vence. É assim que um ambiente virtual Python funciona: ativar apenas põe <code>.venv/bin</code> na frente do <code>PATH</code>, e <code>python</code> passa a resolver para o interpretador do projeto. O diretório corrente <strong>não</strong> está no <code>PATH</code> de propósito: se estivesse, entrar numa pasta com um <code>ls</code> malicioso o executaria. Para diagnosticar "qual binário é esse?", use <code>type -a nome</code> (todos os candidatos, em ordem) e <code>command -v nome</code> (o escolhido). Evite <code>which</code> em scripts: não é padronizado e não enxerga builtins nem aliases.</p>
+
+<div class="box net">
+<span class="lbl">Se você usa Windows (PowerShell)</span>
+<p>O modelo é o mesmo. Exit code do último programa externo: <code>$LASTEXITCODE</code>. Ambiente: <code>$env:PATH</code> (separador <code>;</code>). Resolução de comando: <code>Get-Command python</code>. O pipe passa <em>objetos</em>, não bytes. Os comandos canônicos do módulo são de macOS/Linux; no Windows, o caminho mais simples é o WSL2.</p>
+</div>
+
+<h3>Exemplo trabalhado: "qual Python é esse?"</h3>
+<p>Sintoma clássico: <code>pip install</code> funciona e o <code>import</code> falha. Quatro comandos, aplicação direta do bloco:</p>
+<pre><code>command -v python python3 pip      # quem o PATH escolheu para cada nome
+python -c "import sys; print(sys.executable)"
+echo "$PATH" | tr ':' '\n' | head      # a ordem de busca
+echo "$VIRTUAL_ENV"                  # vazio = nenhum venv ativo neste shell</code></pre>
+<p>Se <code>pip</code> vem de <code>/usr/bin</code> e <code>python</code> de <code>.venv/bin</code>, são dois ambientes; a correção é chamar o par certo (<code>python -m pip</code>). Com <code>uv run</code>, adotado no curso, o ambiente do projeto é resolvido sem ativação.</p>
+
+<h3>Decisões e erros comuns</h3>
+<ul>
+<li><strong>Exit codes de ferramentas suas:</strong> 0 (ok), 1 (condição negativa esperada, como "não achei"), 2 (uso ou erro real). Evite 126, 127 e valores acima de 128, que o shell já usa.</li>
+<li><strong><code>sh</code> ou <code>bash</code>?</strong> <code>#!/bin/sh</code> promete só POSIX; <code>#!/usr/bin/env bash</code> libera arrays e <code>pipefail</code>. Passou de umas 30 linhas ou ganhou estruturas de dados: reescreva em Python.</li>
+<li><code>$?</code> guarda só o status do <em>último</em> comando; salve com <code>rc=$?</code> se precisar dele duas vezes. E <code>command not found</code> (127) quase nunca é "não instalado": é "não está no PATH <em>deste</em> shell" (cron, systemd, IDE e container têm PATH próprio).</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · o status do pipeline é o do último comando</span>
+<p>Em <code>cmd_que_falha | tee log</code>, o shell devolve o exit code do <code>tee</code> (0). O build falhou, o pipeline "passou". O mesmo ocorre em <code>false | true</code>:</p>
+<pre><code>$ false | true; echo "sem pipefail=$?"; set -o pipefail; false | true; echo "com pipefail=$?"
+sem pipefail=0
+com pipefail=1</code></pre>
+<p>Com <code>set -o pipefail</code> (bash, zsh, e POSIX desde a edição de 2024), o status do pipeline é o do último comando que falhou. Mas pipefail tem custo: o 141 de um produtor encerrado por <code>head</code> agora conta como falha. E há um segundo buraco no mesmo terreno: <code>local x=$(cmd)</code> devolve o status do <code>local</code> (0), mascarando a falha do <code>cmd</code>; declare e atribua em linhas separadas. Em script de CI, a combinação segura é <code>set -euo pipefail</code> mais teste explícito do que você espera que falhe.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · variável de ambiente não é segredo</span>
+<p>Exportar <code>API_KEY</code> a entrega a <em>todo</em> filho e a qualquer processo do mesmo usuário via <code>/proc/&lt;pid&gt;/environ</code>. Passe o valor só ao comando que precisa (<code>API_KEY=... comando</code>) ou leia de arquivo com permissão restrita. Mais no <a href="../LT01-novo/LT01.html#b02">LT01, bloco 2</a>.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Terminal exibe, shell interpreta, processo executa; todo processo tem PID, pai, ambiente e três descritores. Redirecionar é religar descritores antes do <code>exec</code>. O exit code é a resposta (0 = ok; 128+n = sinal) e o status de um pipeline é o do último comando, salvo <code>pipefail</code>. O ambiente é cópia entregue ao filho, nunca de volta. Comandos são achados pelo <code>PATH</code>, da esquerda para a direita; <code>type -a</code> mostra a verdade.</p>
+</div>
+<!-- ============================================ BLOCO 2 -->
+<h2 id="b02">Bloco 2 · Sistema de arquivos e composição de ferramentas</h2>
+
+<h3>Por que isso importa</h3>
+<p>Três acidentes reais, todos evitáveis. Um script de limpeza roda <code>rm -rf "$BUILD_DIR/"</code> com a variável vazia e apaga a raiz do que o usuário alcança. Um <code>.sh</code> editado no Windows falha no Linux com <code>bad interpreter</code>. Um <code>find | xargs</code> funciona por meses e quebra no dia em que alguém cria um arquivo com espaço no nome. Em todos, o erro é tratar nome de arquivo como texto simples e ignorar o que o sistema de arquivos e o shell realmente fazem.</p>
+
+<h3>Caminhos: absoluto, relativo e o diretório corrente</h3>
+<p>Um caminho <strong>absoluto</strong> começa em <code>/</code> (raiz) e aponta para um lugar inequívoco. Um caminho <strong>relativo</strong> é resolvido a partir do <em>cwd</em> do processo. <code>.</code> é o diretório corrente, <code>..</code> o pai. Dois pontos importam na prática. Primeiro: o cwd pertence ao processo, então o mesmo script com o mesmo argumento relativo faz coisas diferentes conforme quem o chamou (cron, CI e IDE têm cwd diferentes). Segundo: <code>a/../b</code> não equivale a <code>b</code> quando <code>a</code> é symlink; o kernel resolve <code>..</code> depois de seguir o link. <code>realpath</code> devolve o caminho canônico, com links resolvidos.</p>
+<pre><code>$ mkdir -p proj/src proj/docs; cd proj; echo "print(1)" &gt; src/app.py; pwd; cd src; pwd; cd ..; ls ./src/../docs; realpath src/../src/app.py
+/tmp/demo-b2/proj
+/tmp/demo-b2/proj/src
+/tmp/demo-b2/proj/src/app.py</code></pre>
+<p>Em scripts, ancore em algo estável (<code>cd "$(dirname "$0")"</code>; em Python, <code>Path(__file__).resolve().parent</code>) em vez de confiar no cwd herdado.</p>
+
+<h3>Nome, inode e link</h3>
+<p>No Unix, o nome de um arquivo <em>não</em> é o arquivo. Um <strong>diretório</strong> é uma tabela que mapeia nomes para <strong>inodes</strong>; o inode guarda o dono, as permissões, os tempos, o tamanho e a localização dos blocos de dados. Um <strong>hard link</strong> é outra entrada de diretório apontando para o mesmo inode; o inode mantém uma <em>contagem de links</em>. Remover um nome (<code>rm</code> é <code>unlink</code>) decrementa a contagem, e o dado só é liberado quando chega a zero e nenhum processo mantém o arquivo aberto. Um <strong>symlink</strong> é um arquivo à parte, cujo conteúdo é um caminho em texto, resolvido a cada acesso.</p>
+<figure>
+<svg viewBox="0 0 760 230" role="img" width="760" height="230" font-family="inherit" font-size="13">
+<title>Nomes apontando para inodes: hard link compartilha o inode, symlink guarda um caminho</title>
+<defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<rect x="10" y="20" width="170" height="44" rx="6"/><rect x="10" y="90" width="170" height="44" rx="6"/><rect x="10" y="165" width="170" height="44" rx="6"/>
+<rect x="330" y="50" width="180" height="84" rx="8"/><rect x="330" y="165" width="180" height="44" rx="8" stroke-dasharray="5 4"/>
+<path d="M180,42 H330" marker-end="url(#a2)"/><path d="M180,112 H330" marker-end="url(#a2)"/><path d="M180,187 H330" marker-end="url(#a2)" stroke-dasharray="5 4"/>
+<rect x="590" y="40" width="150" height="84" rx="8"/><path d="M510,92 H590" marker-end="url(#a2)"/>
+</g>
+<g fill="currentColor">
+<text x="95" y="46" text-anchor="middle">src/app.py</text><text x="95" y="116" text-anchor="middle">src/hard.py</text><text x="95" y="191" text-anchor="middle">src/soft.py (symlink)</text>
+<text x="420" y="76" text-anchor="middle" font-weight="700">inode 1655</text><text x="420" y="96" text-anchor="middle" font-size="11">modo, dono, tempos</text><text x="420" y="114" text-anchor="middle" font-size="11">links = 2</text>
+<text x="420" y="185" text-anchor="middle" font-weight="700">inode 1676</text><text x="420" y="201" text-anchor="middle" font-size="11">conteúdo: "app.py"</text>
+<text x="665" y="76" text-anchor="middle" font-weight="700">blocos</text><text x="665" y="96" text-anchor="middle" font-size="11">dados do arquivo</text>
+<text x="255" y="178" text-anchor="middle" font-size="11">nome → inode</text>
+</g>
+</svg>
+<figcaption>Dois nomes, um inode (hard link); o symlink é outro inode cujo conteúdo é um caminho. Apagar <code>app.py</code> baixa <code>links</code> para 1: <code>hard.py</code> segue lendo os blocos; <code>soft.py</code> aponta para um nome que não existe mais.</figcaption>
+</figure>
+<pre><code>$ ln src/app.py src/hard.py; ln -s app.py src/soft.py; ls -li src; echo trocado &gt; src/app.py; cat src/hard.py src/soft.py
+total 8
+1655 -rwxr--r-- 2 ada ada 9 Oct 11 17:16 app.py
+1655 -rwxr--r-- 2 ada ada 9 Oct 11 17:16 hard.py
+1676 lrwxrwxrwx 1 ada ada 6 Oct 11 17:16 soft.py -&gt; app.py
+trocado
+trocado
+$ rm src/app.py; cat src/hard.py; cat src/soft.py; echo "soft=$?"; ls -l src/soft.py
+trocado
+cat: src/soft.py: No such file or directory
+soft=1
+lrwxrwxrwx 1 ada ada 6 Oct 11 17:16 src/soft.py -&gt; app.py</code></pre>
+<p>Observe as duas escritas. O <code>echo trocado &gt; src/app.py</code> <em>truncou e reescreveu o mesmo inode</em>, por isso o hard link viu a mudança. Já muitos editores gravam salvando num arquivo novo e renomeando por cima (a técnica de <em>escrita atômica</em>): o nome passa a apontar para outro inode, e hard links antigos continuam com o conteúdo velho. O mecanismo de rename atômico e o que o <code>fsync</code> garante estão no <a href="../LT01-novo/LT01.html#b02">LT01, bloco 2</a>.</p>
+
+<h3>Permissões e dono</h3>
+<p>Cada inode tem um dono (usuário), um grupo e nove bits: <code>r</code>, <code>w</code>, <code>x</code> para dono, grupo e outros. Em octal, <code>r=4 w=2 x=1</code>, então <code>644</code> é <code>rw-r--r--</code> e <code>755</code> é <code>rwxr-xr-x</code>. Em <strong>arquivo</strong>, <code>x</code> permite executar. Em <strong>diretório</strong>, <code>r</code> permite listar os nomes e <code>x</code> permite atravessar (acessar entradas dentro dele); sem <code>x</code> você nem abre um arquivo cujo nome conhece.</p>
+<pre><code>$ ls -l src/app.py; stat -c "%n modo=%a (%A) dono=%U inode=%i links=%h tamanho=%s" src/app.py
+-rw-r--r-- 1 ada ada 9 Oct 11 17:16 src/app.py
+src/app.py modo=644 (-rw-r--r--) dono=ada inode=1655 links=1 tamanho=9
+$ chmod 000 src; ls src; echo "ls=$?"; chmod 755 src
+ls: cannot open directory 'src': Permission denied
+ls=2</code></pre>
+<p>A <strong>umask</strong> é uma máscara subtraída das permissões de criação: com <code>0022</code>, arquivos novos nascem <code>644</code>; com <code>077</code>, <code>600</code>.</p>
+<p>Duas ressalvas sobre o Git: ele registra só <em>um</em> bit de permissão (modos <code>100644</code> e <code>100755</code>) e nenhum dono. E <code>chmod 777</code> como "conserto" esconde que o dono ou o grupo estava errado.</p>
+
+<h3>Codificação e fim de linha</h3>
+<p>Um arquivo é uma sequência de bytes. Texto é uma <em>interpretação</em> desses bytes por uma codificação. A palavra <code>café</code> ocupa 5 bytes em UTF-8 (o <code>é</code> vale 2) e 4 em Latin-1. Abrir um com a codificação do outro gera <em>mojibake</em> (<code>cafÃ©</code>) ou erro de decodificação.</p>
+<pre><code>$ printf "caf\xc3\xa9\n" &gt; utf8.txt; printf "caf\xe9\n" &gt; latin1.txt; file utf8.txt latin1.txt; wc -c utf8.txt latin1.txt; iconv -f latin1 -t utf-8 latin1.txt | cmp - utf8.txt &amp;&amp; echo iguais
+utf8.txt:   Unicode text, UTF-8 text
+latin1.txt: ISO-8859 text
+ 6 utf8.txt
+ 5 latin1.txt
+11 total
+iguais</code></pre>
+<p>Padrão do curso: <strong>UTF-8, sem BOM, sempre explícito</strong> (em Python, <code>open(..., encoding="utf-8")</code>; o padrão do Windows historicamente não era UTF-8). O segundo vilão é o <strong>fim de linha</strong>: Unix usa <code>LF</code> (<code>\n</code>), Windows clássico usa <code>CRLF</code> (<code>\r\n</code>).</p>
+<pre><code>$ printf "linha1\r\nlinha2\r\n" &gt; win.txt; printf "linha1\nlinha2\n" &gt; unix.txt; file win.txt unix.txt; od -c win.txt | head -2
+win.txt:  ASCII text, with CRLF line terminators
+unix.txt: ASCII text
+0000000   l   i   n   h   a   1  \r  \n   l   i   n   h   a   2  \r  \n
+0000020</code></pre>
+<pre><code>$ printf "#!/bin/sh\r\necho oi\r\n" &gt; crlf.sh; chmod +x crlf.sh; ./crlf.sh; echo "exit=$?"
+bash: ./crlf.sh: /bin/sh^M: bad interpreter: No such file or directory
+exit=126
+$ sed -i "s/\r$//" crlf.sh; ./crlf.sh; echo "exit=$?"
+oi
+exit=0</code></pre>
+<p>O kernel leu a linha <code>#!/bin/sh\r</code> e procurou um interpretador chamado literalmente <code>/bin/sh^M</code>. O exit code 126 vem daí. A defesa é de repositório, não de memória: um <code>.gitattributes</code> com <code>* text=auto eol=lf</code> (ou regras por extensão, como <code>*.sh text eol=lf</code>) normaliza a escolha, independentemente do <code>core.autocrlf</code> de cada máquina. No lab, o <code>pgrep</code> preserva o <code>\r</code> de propósito: um padrão <code>fim$</code> não casa com <code>fim\r\n</code>, o que faz o mesmo grep "falhar" em arquivos do Windows.</p>
+
+<h3>Achar e filtrar: find e grep</h3>
+<p><code>find</code> percorre uma árvore e avalia uma expressão por entrada: <code>-type f</code>, <code>-name '*.md'</code> (glob entre aspas, para o shell não expandir antes), <code>-mtime -7</code>, <code>-size +1M</code>, e ações como <code>-exec cmd {} +</code> e <code>-delete</code>. <code>grep</code> filtra <em>linhas</em> por regex: <code>-r</code> recursivo, <code>-n</code> número da linha, <code>-i</code> sem distinção de caixa, <code>-l</code> só nomes, <code>-c</code> contagem, <code>-E</code> regex estendida, <code>-F</code> literal, <code>-v</code> inverte.</p>
+<pre><code>$ grep -rn "TODO" --include="*.md" . | sort
+./docs/com espaco.md:1:TODO c
+./docs/notas.md:1:TODO: a
+./docs/notas.md:3:TODO: b</code></pre>
+<p>Ferramentas modernas (<code>ripgrep</code>, <code>fd</code>) são mais rápidas e respeitam <code>.gitignore</code>, mas não são padrão em todo lugar: scripts com <code>find</code>/<code>grep</code>, dia a dia com as modernas.</p>
+
+<h3>Redirecionamento, pipes e a filosofia Unix</h3>
+<p>Redirecionar religa um descritor (bloco 1): <code>&gt; arq</code> (fd 1 para o arquivo, truncando), <code>&gt;&gt; arq</code> (anexa), <code>&lt; arq</code> (fd 0 vem do arquivo), <code>2&gt; arq</code> (fd 2), <code>2&gt;&amp;1</code> ("fd 2 passa a apontar para onde o fd 1 aponta <em>agora</em>"). Um <strong>pipe</strong> <code>a | b</code> cria um canal em memória com buffer limitado (64 KiB por padrão no Linux): se o leitor é lento, o escritor <em>bloqueia</em>, o que dá contrapressão de graça. Os processos de um pipeline rodam <em>ao mesmo tempo</em>, não um após o outro.</p>
+<p>A ordem dos redirecionamentos é lida da esquerda para a direita, e é aí que veteranos tropeçam:</p>
+<pre><code>$ ls /nao/existe &gt; log.txt 2&gt;&amp;1; echo "--- log.txt:"; cat log.txt
+--- log.txt:
+ls: cannot access '/nao/existe': No such file or directory
+$ ls /nao/existe 2&gt;&amp;1 &gt; log2.txt; echo "--- log2.txt:"; cat log2.txt
+ls: cannot access '/nao/existe': No such file or directory
+--- log2.txt:</code></pre>
+<p>Em <code>&gt; log.txt 2&gt;&amp;1</code>, o fd 1 vai para o arquivo e <em>depois</em> o fd 2 copia o fd 1 (também o arquivo). Em <code>2&gt;&amp;1 &gt; log2.txt</code>, o fd 2 copia o fd 1 <em>ainda apontando para o terminal</em>, e só então o fd 1 vai para o arquivo: a mensagem de erro aparece na tela e o arquivo fica vazio.</p>
+<p>A <strong>filosofia Unix</strong> (Doug McIlroy, <em>Bell System Technical Journal</em>, 1978): programas que fazem uma coisa bem, que trabalham juntos, com texto como interface universal. Daí <code>sort | uniq -c | sort -rn | head</code>: quatro ferramentas triviais, um ranking de frequência.</p>
+<div class="box">
+<span class="lbl">Trade-off · quando sair do shell</span>
+<p>O texto é interface universal, mas perde estrutura: tudo vira "linhas separadas por espaço" e cada ferramenta reinterpreta. Regra prática: o shell é ótimo para <em>compor</em> programas existentes e ruim para <em>modelar</em> dados. Quando precisar de estrutura aninhada, tratamento de erro por caso ou testes, passe para Python (F02), e mantenha o contrato de exit code e stdout/stderr, que é o que torna seu programa composível de volta.</p>
+</div>
+
+<h3>Exemplo trabalhado: espaços em nomes e o xargs</h3>
+<p>O <code>xargs</code> lê itens da entrada e monta a linha de comando de outro programa. Por padrão separa por <em>qualquer espaço em branco</em>, e é aí que quebra:</p>
+<pre><code>$ find . -name "*.md" | xargs wc -l 2&gt;&amp;1 | tail -3
+wc: ./docs/com: No such file or directory
+wc: espaco.md: No such file or directory
+ 3 total
+$ find . -name "*.md" -print0 | xargs -0 wc -l
+ 3 ./docs/notas.md
+ 1 ./docs/com espaco.md
+ 4 total
+$ find . -name "*.md" -exec grep -c TODO {} +
+./docs/notas.md:2
+./docs/com espaco.md:1</code></pre>
+<p>O primeiro caso viu <code>./docs/com</code> e <code>espaco.md</code> como dois arquivos. As saídas corretas: separar por byte nulo (<code>find -print0 | xargs -0</code>) ou dispensar o <code>xargs</code> com <code>find -exec ... {} +</code>. O mesmo erro aparece em <code>for f in $(ls)</code>; itere sobre globs (<code>for f in *.md</code>) ou use <code>while IFS= read -r f</code>, e aspas duplas em toda expansão: <code>"$f"</code>.</p>
+
+<h3>Erros comuns</h3>
+<ul>
+<li>Variável vazia em caminho destrutivo. O shell expande <code>"$D/"</code> para <code>/</code>:
+<pre><code>$ D=; echo rm -rf "$D/"
+rm -rf /
+$ D=; echo rm -rf "${D:?D vazio}/"; echo "exit=$?"
+bash: line 1: D: D vazio</code></pre>
+<p>A defesa é <code>${D:?mensagem}</code> (aborta se vazia ou não definida) e <code>set -u</code> (aborta em variável não definida). Ambos custam uma linha.</p></li>
+<li>Esquecer que <code>&gt;</code> trunca <em>antes</em> do comando rodar: <code>sort arq &gt; arq</code> deixa o arquivo vazio. Use arquivo temporário e <code>mv</code>, ou <code>sort -o arq arq</code>.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · o glob é expandido pelo shell, não pelo comando</span>
+<p><code>find . -name *.md</code> sem aspas funciona até o dia em que existe um <code>.md</code> no diretório corrente: o shell expande o glob antes do <code>find</code> rodar, que recebe <code>-name README.md</code> e silenciosamente procura só esse nome. O erro não aparece como erro; aparece como "faltou resultado". Em contrapartida, <code>grep "TODO" *.py</code> <em>precisa</em> da expansão do shell. A pergunta que resolve qualquer caso: "quem deve interpretar este padrão, o shell ou o programa?". Se for o programa, use aspas simples.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Nome é entrada de diretório que aponta para um inode; hard link compartilha inode, symlink guarda caminho. Permissão tem nove bits mais a umask; em diretório, <code>x</code> é atravessar. Texto é bytes mais codificação: UTF-8 e LF por convenção explícita. Redirecionamentos são lidos da esquerda para a direita; pipes rodam em paralelo com contrapressão. Aspas em tudo; <code>-print0</code> ou <code>-exec {} +</code> em vez de <code>xargs</code> cego; <code>${VAR:?}</code> antes de <code>rm</code>.</p>
+</div>
+<!-- ============================================ BLOCO 3 -->
+<h2 id="b03">Bloco 3 · Git por dentro: objetos, hash de conteúdo, refs e índice</h2>
+
+<h3>Por que isso importa</h3>
+<p>Quem aprende Git por receitas acumula crenças erradas: que commit é uma diferença, que branch é uma pasta, que apagar um arquivo o remove do histórico. Cada uma gera um incidente típico: segredo "removido" que continua baixável, commit "perdido" dado como morto, rebase que parece magia. O Git é, por baixo, uma pequena base de objetos imutáveis endereçados por conteúdo, mais alguns arquivos de texto com ponteiros. Lendo esses arquivos à mão, o resto do módulo deixa de ser receita.</p>
+
+<h3>Um armazém endereçado por conteúdo</h3>
+<p>O núcleo é um mapa chave-valor em <code>.git/objects</code>. A chave de cada objeto é o <strong>hash do conteúdo</strong>: SHA-1 da sequência <code>&lt;tipo&gt; &lt;tamanho&gt;\0&lt;conteúdo&gt;</code>. O valor é essa mesma sequência comprimida com zlib. Duas consequências estruturais: o mesmo conteúdo sempre gera a mesma chave (deduplicação automática), e um objeto nunca muda (mudar o conteúdo muda a chave, ou seja, cria outro objeto).</p>
+<pre><code>$ printf "olá, git\n" | git hash-object --stdin
+9c07bea4318031a0450fd0e7eb55acde9f12fede
+$ printf "blob 10\0olá, git\n" | sha1sum
+9c07bea4318031a0450fd0e7eb55acde9f12fede  -</code></pre>
+<p>O <code>sha1sum</code> sobre <code>blob 10\0olá, git\n</code> (10 bytes de conteúdo) reproduz exatamente o hash do <code>git hash-object</code>. Não há mágica no cabeçalho, nem nome de arquivo no hash. O Git moderno usa uma variante de SHA-1 que detecta ataques de colisão conhecidos e tem suporte experimental a SHA-256 (<code>hash-function-transition</code>, nas fontes); neste módulo e no leitor do laboratório, SHA-1.</p>
+
+<h3>Os quatro tipos de objeto</h3>
+<table>
+<thead><tr><th>Tipo</th><th>Guarda</th><th>Não guarda</th></tr></thead>
+<tbody>
+<tr><td><strong>blob</strong></td><td>os bytes de um arquivo</td><td>nome, permissão, data</td></tr>
+<tr><td><strong>tree</strong></td><td>lista de entradas <code>modo nome → hash</code> (de blobs e de outras trees)</td><td>conteúdo dos arquivos</td></tr>
+<tr><td><strong>commit</strong></td><td>hash da tree raiz, hash(es) do(s) pai(s), autor, committer, mensagem</td><td>diferença alguma</td></tr>
+<tr><td><strong>tag</strong> (anotada)</td><td>hash do objeto marcado, tipo, nome, tagger, mensagem (opcionalmente assinatura)</td><td>—</td></tr>
+</tbody>
+</table>
+<p>Veja a sequência real. Primeiro, <code>git add</code> sozinho (nenhum commit ainda):</p>
+<pre><code>$ find .git/objects -type f; xxd .git/index | head -1
+.git/objects/9c/07bea4318031a0450fd0e7eb55acde9f12fede
+00000000: 4449 5243 0000 0002 0000 0001 6acb c16d  DIRC........j..m
+$ git cat-file -t 9c07bea4318031a0450fd0e7eb55acde9f12fede; git cat-file -s 9c07bea4318031a0450fd0e7eb55acde9f12fede; git cat-file -p 9c07bea4318031a0450fd0e7eb55acde9f12fede
+blob
+10
+olá, git
+$ python3 -c "import zlib,sys; print(zlib.decompress(open('.git/objects/9c/07bea4318031a0450fd0e7eb55acde9f12fede','rb').read()))"
+b'blob 10\x00ol\xc3\xa1, git\n'
+$ git ls-files -s; git log 2&gt;&amp;1 | head -1
+100644 9c07bea4318031a0450fd0e7eb55acde9f12fede 0	a.txt
+fatal: your current branch 'main' does not have any commits yet</code></pre>
+<p>O <code>add</code> gravou o <strong>blob</strong> (arquivo solto em <code>objects/9c/07bea...</code>, os dois primeiros hex viram diretório) e uma entrada no <strong>índice</strong>, o arquivo binário <code>.git/index</code> (assinatura <code>DIRC</code>, de <em>dircache</em>). Nenhuma tree e nenhum commit existem ainda. Agora o commit:</p>
+<pre><code>$ git cat-file -p HEAD
+tree c113a9c706cf719ef32284642e0b6231ff5f0fab
+author Ada Lovelace &lt;ada@example.com&gt; 1767268920 +0000
+committer Ada Lovelace &lt;ada@example.com&gt; 1767268920 +0000
+
+primeiro
+$ git cat-file -p HEAD^{tree}
+100644 blob 9c07bea4318031a0450fd0e7eb55acde9f12fede	a.txt
+100644 blob 9c07bea4318031a0450fd0e7eb55acde9f12fede	b.txt
+040000 tree 50e024742aaa4cdeb6f960c9be8586abe92aee3c	lib
+$ git cat-file -p HEAD:lib
+100644 blob 7d4290a117a4ddcc11daae7ea675841033830c8f	m.py</code></pre>
+<p>Note três fatos. <code>a.txt</code> e <code>b.txt</code> têm o mesmo conteúdo e portanto <strong>o mesmo blob</strong> (<code>9c07bea...</code>): o nome vive na tree, não no blob. O diretório <code>lib</code> é uma tree própria. E o commit não menciona arquivo nenhum: aponta para <em>uma</em> tree raiz.</p>
+
+<figure>
+<svg viewBox="0 0 760 330" role="img" width="760" height="330" font-family="inherit" font-size="12.5">
+<title>Dois commits: cada um aponta para uma tree; objetos não alterados são compartilhados</title>
+<defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<rect x="10" y="130" width="90" height="34" rx="17"/><rect x="10" y="20" width="90" height="34" rx="17"/>
+<rect x="150" y="130" width="130" height="40" rx="6"/><rect x="150" y="20" width="130" height="40" rx="6"/>
+<rect x="350" y="130" width="130" height="40" rx="6"/><rect x="350" y="20" width="130" height="40" rx="6"/>
+<rect x="560" y="20" width="140" height="34" rx="6"/><rect x="560" y="85" width="140" height="34" rx="6"/><rect x="560" y="150" width="140" height="34" rx="6"/><rect x="560" y="215" width="140" height="34" rx="6"/><rect x="560" y="280" width="140" height="34" rx="6"/>
+<path d="M100,37 H150" marker-end="url(#a3)"/><path d="M100,147 H150" marker-end="url(#a3)"/>
+<path d="M280,40 H350" marker-end="url(#a3)"/><path d="M280,150 H350" marker-end="url(#a3)"/>
+<path d="M215,130 V60" marker-end="url(#a3)" stroke-dasharray="5 4"/>
+<path d="M480,35 L560,37" marker-end="url(#a3)"/><path d="M480,45 L560,102" marker-end="url(#a3)"/><path d="M480,52 L560,232" marker-end="url(#a3)"/>
+<path d="M480,140 L560,37" marker-end="url(#a3)"/><path d="M480,150 L560,102" marker-end="url(#a3)"/><path d="M480,160 L560,298" marker-end="url(#a3)"/>
+</g>
+<g fill="currentColor">
+<text x="55" y="42" text-anchor="middle">main</text><text x="55" y="152" text-anchor="middle">HEAD</text>
+<text x="215" y="45" text-anchor="middle" font-weight="700">commit 66a25a9</text><text x="215" y="58" text-anchor="middle" font-size="10.5">"muda m"</text>
+<text x="215" y="150" text-anchor="middle" font-weight="700">commit 98f71d4</text><text x="215" y="163" text-anchor="middle" font-size="10.5">"primeiro"</text>
+<text x="415" y="45" text-anchor="middle" font-weight="700">tree b627547</text><text x="415" y="155" text-anchor="middle" font-weight="700">tree c113a9c</text>
+<text x="630" y="42" text-anchor="middle">blob 9c07bea (a.txt, b.txt)</text><text x="630" y="107" text-anchor="middle">tree lib/ …</text>
+<text x="630" y="172" text-anchor="middle">…</text><text x="630" y="237" text-anchor="middle">blob 407de30 (m.py, x = 2)</text><text x="630" y="302" text-anchor="middle">blob 7d4290a (m.py, x = 1)</text>
+<text x="233" y="100" font-size="10.5">parent</text>
+</g>
+</svg>
+<figcaption>Cada commit aponta para <em>uma</em> tree; a tree aponta para blobs e sub-trees. O blob <code>9c07bea</code> é compartilhado pelos dois commits e por dois nomes. Só <code>lib/m.py</code> mudou, então só o blob e as trees do caminho até a raiz são novos.</figcaption>
+</figure>
+
+<h3>Commit é snapshot, não diff</h3>
+<p>Cada commit referencia a árvore <em>completa</em> do projeto naquele instante. O que parece diff é calculado sob demanda, comparando duas trees. Compare as duas árvores do exemplo:</p>
+<pre><code>$ git cat-file -p HEAD
+tree b6275471ffb654fa570a25849e89c9198e6e5911
+parent 98f71d41e43747948aca0a778f587314fb8be8e0
+author Ada Lovelace &lt;ada@example.com&gt; 1767268980 +0000
+committer Ada Lovelace &lt;ada@example.com&gt; 1767268980 +0000
+
+muda m
+$ git ls-tree -r HEAD; echo; git ls-tree -r HEAD~1
+100644 blob 9c07bea4318031a0450fd0e7eb55acde9f12fede	a.txt
+100644 blob 9c07bea4318031a0450fd0e7eb55acde9f12fede	b.txt
+100644 blob 407de3068e7b5950585d5abed9776d104235a85d	lib/m.py
+
+100644 blob 9c07bea4318031a0450fd0e7eb55acde9f12fede	a.txt
+100644 blob 9c07bea4318031a0450fd0e7eb55acde9f12fede	b.txt
+100644 blob 7d4290a117a4ddcc11daae7ea675841033830c8f	lib/m.py</code></pre>
+<p>No segundo commit, <code>a.txt</code> e <code>b.txt</code> apontam para o mesmo blob de antes; só <code>lib/m.py</code> ganhou um blob novo (<code>407de30</code>), e por consequência a tree <code>lib</code> e a tree raiz também são novas. Custo de um commit = objetos dos arquivos alterados + trees ao longo dos caminhos + o commit. O modelo "commit = diff" explicaria mal por que <code>git checkout</code> de qualquer commit é rápido (basta ler uma tree) e por que o hash do commit depende de <em>tudo</em> abaixo dele: mudar um byte em um blob muda a tree, o commit e, em cadeia, todos os descendentes.</p>
+<p>Armazenamento é outra camada. Objetos novos ficam <em>soltos</em> (um arquivo por objeto); o <code>git gc</code> (ou o envio/recebimento via rede) os agrupa em <strong>packfiles</strong>, guardando objetos parecidos como delta. É otimização física: o modelo lógico segue sendo "snapshot por commit". O leitor do laboratório lê só objetos soltos e, depois de um <code>git gc</code>, acusa o que não encontra, de propósito.</p>
+
+<h3>Refs e HEAD: os únicos arquivos mutáveis</h3>
+<p>Objetos são imutáveis; o que muda é o ponteiro. Uma <strong>ref</strong> é um arquivo de texto com um hash. Um branch é <code>refs/heads/&lt;nome&gt;</code>; tag leve é <code>refs/tags/&lt;nome&gt;</code>; branch remoto rastreado é <code>refs/remotes/origin/&lt;nome&gt;</code>. O <strong>HEAD</strong> é uma ref especial: normalmente <em>simbólica</em> (<code>ref: refs/heads/main</code>, "estou no main"); se contém um hash cru, estamos em <strong>detached HEAD</strong>. Fazer um commit = criar o objeto commit e reescrever a ref à qual HEAD aponta.</p>
+<pre><code>$ cat .git/HEAD; cat .git/refs/heads/main; git rev-parse HEAD
+ref: refs/heads/main
+66a25a9bf0f2c7aab8e0f1c11d722790d8472cd0
+66a25a9bf0f2c7aab8e0f1c11d722790d8472cd0
+$ git tag leve; git tag -a v1 -m "versão 1"; ls .git/refs/tags; cat .git/refs/tags/leve; git cat-file -t v1; git cat-file -p v1
+leve
+v1
+66a25a9bf0f2c7aab8e0f1c11d722790d8472cd0
+tag
+object 66a25a9bf0f2c7aab8e0f1c11d722790d8472cd0
+type commit
+tag v1
+tagger Ada Lovelace &lt;ada@example.com&gt; 1767268980 +0000
+
+versão 1</code></pre>
+<p>Um branch tem 41 bytes (40 hex mais <code>\n</code>). Criar, mover e apagar branches é barato por isso. Tag leve é só uma ref; <strong>tag anotada</strong> é um objeto próprio (com tagger, mensagem e opcionalmente assinatura), e a ref aponta para ele. Com muitas refs, o Git as agrupa no arquivo <code>packed-refs</code>; o leitor do laboratório resolve ambos.</p>
+
+<h3>O índice e as três árvores</h3>
+<p>Entre o diretório de trabalho e o histórico existe o <strong>índice</strong> (staging area): a tree que <em>será</em> o próximo commit, já materializada como lista de <code>modo, hash, estágio, caminho</code>. Isso dá três "versões" de cada arquivo ao mesmo tempo: a do <strong>HEAD</strong> (último commit), a do <strong>índice</strong> e a do <strong>diretório de trabalho</strong>.</p>
+<table>
+<thead><tr><th>Comando</th><th>O que faz nos arquivos de <code>.git</code></th></tr></thead>
+<tbody>
+<tr><td><code>git add f</code></td><td>grava o blob com o conteúdo <em>atual</em> de <code>f</code> e atualiza a entrada em <code>.git/index</code></td></tr>
+<tr><td><code>git commit</code></td><td><code>write-tree</code> (cria trees a partir do índice) → cria o objeto commit (pai = HEAD atual) → reescreve a ref do branch</td></tr>
+<tr><td><code>git status</code></td><td>compara HEAD×índice ("staged") e índice×trabalho ("unstaged")</td></tr>
+<tr><td><code>git diff</code> / <code>--cached</code></td><td>trabalho×índice / índice×HEAD</td></tr>
+</tbody>
+</table>
+<pre><code>$ git status -sb; git diff --cached | tail -2; git diff | tail -2
+## main
+MM f
+-v1
++v2
+-v2
++v3</code></pre>
+<p>Esse <code>MM</code> é o efeito prático: o <code>add</code> tirou uma "foto" do arquivo naquele instante (<code>v2</code>); a edição posterior (<code>v3</code>) ficou só no trabalho; o commit seguinte levou <code>v2</code> e deixou <code>v3</code> de fora.</p>
+<pre><code>$ git show HEAD:f; cat f; git status -sb
+v2
+v3
+## main
+ M f</code></pre>
+
+<h3>Exemplo trabalhado: ler um repositório sem o Git</h3>
+<p>O leitor do laboratório (<code>gitobjects.py</code>, pouco mais de 200 linhas, só biblioteca padrão) faz o caminho inverso do <code>git cat-file</code>: descomprime com <code>zlib</code>, separa cabeçalho e corpo no primeiro <code>\0</code>, confere que o SHA-1 do conteúdo bate com o nome e interpreta tree e commit. Resolve HEAD, branches e tags soltos ou em <code>packed-refs</code>. Os testes comparam cada leitura com a saída do próprio <code>git</code>.</p>
+
+<h3>Decisões, limites e consequências</h3>
+<ul>
+<li><strong>Imutabilidade é a regra do jogo.</strong> "Reescrever histórico" (rebase, amend) nunca altera objetos: cria objetos novos e move a ref. Os antigos continuam no armazém até o <code>gc</code> descartá-los por inalcançáveis. É isso que torna a recuperação do bloco 6 possível.</li>
+<li><strong>Segredo commitado é segredo vazado.</strong> Remover o arquivo no commit seguinte cria uma tree sem ele, mas o blob segue acessível por qualquer commit anterior. A resposta é revogar a credencial; reescrever histórico (<code>git filter-repo</code>) é limpeza complementar, não remédio.</li>
+</ul>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · o hash do commit inclui data e autor</span>
+<p>Dois commits com árvore idêntica e mensagem idêntica têm hashes diferentes se o autor, o committer ou o horário diferirem. Por isso <code>cherry-pick</code> e <code>rebase</code> geram novos hashes mesmo quando o conteúdo é igual, e por isso comparar "este commit já entrou?" pelo hash falha. O laboratório fixa autor e relógio justamente para tornar os hashes reproduzíveis. Para saber se um patch equivalente já foi aplicado, use <code>git cherry</code> ou <code>git log --cherry-pick</code>, que comparam o patch.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>O Git é um armazém imutável de objetos (blob, tree, commit, tag) endereçados pelo SHA-1 do conteúdo, mais refs mutáveis. Commit aponta para uma tree completa; o que não mudou é reaproveitado por hash. Branch é um arquivo de 41 bytes; HEAD aponta para um branch ou, destacado, para um hash. <code>add</code> grava blob e entra no índice; <code>commit</code> transforma o índice em trees e commit e move o ponteiro.</p>
+</div>
+<!-- ============================================ BLOCO 4 -->
+<h2 id="b04">Bloco 4 · Fluxo do dia a dia: branches, merge, rebase e conflitos</h2>
+
+<h3>Por que isso importa</h3>
+<p>Sexta, 18h: dois branches tocaram o mesmo arquivo e o merge acusa conflito. Quem vê branch como "pasta de código" entra em pânico; quem sabe que branch é um ponteiro e que merge é uma operação sobre três árvores resolve em minutos e, mais importante, sabe quando <em>não</em> reescrever o que os colegas já têm.</p>
+
+<h3>Branch é ponteiro; trocar de branch é mover HEAD</h3>
+<p>No bloco 3, um branch era um arquivo com um hash. Criar um branch escreve esse arquivo; <code>git switch</code> aponta o HEAD para outro branch e reescreve o diretório de trabalho e o índice para casar com a tree do commit de destino. Nada é copiado.</p>
+<pre><code>$ git switch -q -c feature; echo F1 &gt; f.txt; git add f.txt; git commit -qm "F1"; git log --oneline --graph --all
+* f386880 F1
+* f337fba C1 base</code></pre>
+
+<h3>Merge: fast-forward e three-way</h3>
+<p><strong>Fast-forward</strong>: se o branch que recebe é ancestral direto do que chega, não há nada a combinar. O Git só avança o ponteiro e não cria commit.</p>
+<pre><code>$ git switch -q main; cat .git/refs/heads/main | cut -c1-7; git merge feature; cat .git/refs/heads/main | cut -c1-7; git log --oneline --graph
+f337fba
+Updating f337fba..f386880
+Fast-forward
+ f.txt | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 f.txt
+f386880
+* f386880 F1
+* f337fba C1 base</code></pre>
+<p>O <code>f337fba</code> virou <code>f386880</code> no arquivo da ref, e só isso. <strong>Three-way merge</strong>: se os dois lados andaram, o Git acha o <strong>ancestral comum</strong> (<em>merge base</em>) e compara três trees: a base, a sua ponta e a do outro lado. Em cada caminho: só um lado mudou, vale o que mudou; nenhum mudou, fica; os dois mudaram a mesma região de forma diferente, <strong>conflito</strong>. O resultado é um <strong>commit de merge com dois pais</strong>.</p>
+<pre><code>$ git merge-base main feature | cut -c1-7
+0d89db3
+$ git merge feature
+Merge made by the 'ort' strategy.
+ f.txt | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 f.txt
+$ git log --oneline --graph; git cat-file -p HEAD | sed -n 1,4p
+*   0e7a565 Merge branch 'feature'
+|\
+| * 9f68d5a F1
+* | d295e97 M1
+|/
+* 0d89db3 C1 base
+tree e9af6182b8bcce4f4f77f62181367f9f00c0be32
+parent d295e977edff419ce93d6d3133475a454773ab71
+parent 9f68d5a7e7364b4fdf0e2f37abdcd0da63bd9caa
+author Ada Lovelace &lt;ada@example.com&gt; 1767269100 +0000</code></pre>
+<p>O merge usa a estratégia <code>ort</code> (padrão desde o Git 2.34, mais rápida e mais correta com renomeações que a antiga <code>recursive</code>). Duas opções definem a política: <code>--ff-only</code> (recusa se precisar de commit de merge) e <code>--no-ff</code> (força o commit de merge, preservando no grafo o fato de que existiu um branch).</p>
+
+<figure>
+<svg viewBox="0 0 760 230" role="img" width="760" height="230" font-family="inherit" font-size="12.5">
+<title>Merge preserva os dois caminhos com um commit de dois pais; rebase copia os commits para a ponta nova</title>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<circle cx="40" cy="70" r="11"/><circle cx="110" cy="70" r="11"/><circle cx="180" cy="70" r="11"/><circle cx="250" cy="70" r="11"/><circle cx="180" cy="20" r="11"/><circle cx="250" cy="20" r="11"/>
+<path d="M51,70 H99 M121,70 H169 M191,70 H239 M114,60 L174,24 M191,20 H239"/>
+<path d="M261,66 L310,70 M261,24 L310,64" /><circle cx="322" cy="67" r="11" stroke-width="2.4"/>
+<circle cx="440" cy="150" r="11"/><circle cx="510" cy="150" r="11"/><circle cx="580" cy="150" r="11"/><circle cx="650" cy="150" r="11"/><circle cx="580" cy="200" r="11" stroke-dasharray="4 3"/><circle cx="650" cy="200" r="11" stroke-dasharray="4 3"/>
+<path d="M451,150 H499 M521,150 H569 M591,150 H639 M514,160 L574,196 M591,200 H639"/>
+<circle cx="720" cy="150" r="11"/><circle cx="720" cy="200" r="11" stroke-width="2.4"/><path d="M661,150 H709 M720,161 V189"/>
+</g>
+<g fill="currentColor">
+<text x="10" y="116">merge: 1 commit novo, 2 pais, histórico preservado</text>
+<text x="400" y="118">rebase: F1′ e F2′ são cópias (novos hashes)</text>
+<text x="400" y="232" font-size="11">tracejado = originais, ainda no armazém até o gc</text>
+<text x="180" y="12" text-anchor="middle" font-size="11">F1</text><text x="250" y="12" text-anchor="middle" font-size="11">F2</text><text x="250" y="96" text-anchor="middle" font-size="11">M1</text>
+<text x="322" y="92" text-anchor="middle" font-size="11">merge</text><text x="720" y="226" text-anchor="middle" font-size="11">F2′</text><text x="720" y="132" text-anchor="middle" font-size="11">F1′ (sobre M1)</text>
+</g>
+</svg>
+<figcaption>Esquerda: <code>git merge feature</code> mantém F1 e F2 e adiciona um commit de merge. Direita: <code>git rebase main</code> recria F1 e F2 sobre a ponta nova de <code>main</code>; os originais ficam órfãos.</figcaption>
+</figure>
+
+<h3>Conflitos: o que o Git entrega e como resolver</h3>
+<p>Num conflito o Git para no meio da operação e deixa três coisas: o diretório de trabalho com <strong>marcadores</strong> no arquivo, o índice com <strong>três versões</strong> (estágios 1 = base, 2 = "nossa", 3 = "deles") e o estado "merge em andamento".</p>
+<pre><code>$ git merge ana
+Auto-merging greet.txt
+CONFLICT (content): Merge conflict in greet.txt
+Automatic merge failed; fix conflicts and then commit the result.
+$ cat greet.txt
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+olá, Brasil
+=======
+olá, mundo
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; ana
+$ git ls-files -u
+100644 b30aa6deda68a4ddeadc2449be9025cbe409881c 1	greet.txt
+100644 5b8c6ac58a85074a3cc99b74501e05fd46acf4b4 2	greet.txt
+100644 2b3f4de1a27c4e2c35faf1c35187c82504d115d4 3	greet.txt
+$ git show :1:greet.txt; git show :2:greet.txt; git show :3:greet.txt
+olá
+olá, Brasil
+olá, mundo</code></pre>
+<p>Resolver é decidir o conteúdo final (aqui, <code>olá, mundo e Brasil</code>), remover os marcadores, dar <code>git add</code> no arquivo (isso limpa os estágios) e <code>git commit</code>:</p>
+<pre><code>$ git add greet.txt &amp;&amp; git commit -m "merge ana" &amp;&amp; git log --oneline --graph
+[main 112dc97] merge ana
+*   112dc97 merge ana
+|\
+| * 1f34502 ana: mundo
+* | b7e4fec main: Brasil
+|/
+* a0b88cd base</code></pre>
+<p>Se a situação fugir do controle, <code>git merge --abort</code> devolve tudo ao estado anterior ao merge (aqui, num segundo conflito idêntico):</p>
+<pre><code>$ git merge --abort; git status -sb; cat greet.txt
+## main
+olá, Brasil</code></pre>
+<p>Duas configurações ajudam: <code>merge.conflictStyle=zdiff3</code> (Git 2.35+) mostra também o texto da base entre os marcadores, e <code>rerere</code> memoriza como você resolveu um conflito para reaplicar em rebases repetidos.</p>
+
+<h3>Rebase: reescrever sobre uma base nova</h3>
+<p><strong>Rebase</strong> pega os commits do seu branch que não estão na base nova, guarda o patch de cada um e o reaplica, em ordem, sobre a nova ponta. Como o pai do primeiro commit muda, seu hash muda, e em cadeia o de todos os seguintes.</p>
+<pre><code>$ git log --format="%h %s" --graph --all
+* 60e9b43 M1
+| * 2695a97 F2
+| * e7505f4 F1
+|/
+* 2ab0acc C1 base
+$ git rebase main
+Rebasing (1/2)
+Rebasing (2/2)
+Successfully rebased and updated refs/heads/feature.
+$ git log --format="%h %s" --graph --all
+* 1069229 F2
+* 914dd78 F1
+* 60e9b43 M1
+* 2ab0acc C1 base</code></pre>
+<p>Os commits <code>e7505f4</code> e <code>2695a97</code> (F1, F2 originais) viraram <code>914dd78</code> e <code>1069229</code>. Os antigos seguem no armazém, alcançáveis pelo reflog e por <code>ORIG_HEAD</code>:</p>
+<pre><code>$ git reflog -6 --format="%h %gd %gs"
+1069229 HEAD@{0} rebase (finish): returning to refs/heads/feature
+1069229 HEAD@{1} rebase (pick): F2
+914dd78 HEAD@{2} rebase (pick): F1
+60e9b43 HEAD@{3} rebase (start): checkout main
+2695a97 HEAD@{4} checkout: moving from main to feature
+60e9b43 HEAD@{5} commit: M1</code></pre>
+<p>O <code>rebase -i</code> permite <code>reword</code>, <code>squash</code>, <code>fixup</code>, <code>drop</code> e reordenar antes de compartilhar; com <code>git commit --fixup=&lt;hash&gt;</code> e <code>--autosquash</code>, correções pequenas se encaixam nos commits certos. Depois, o branch entra na principal por fast-forward (<code>merge --ff-only</code>), em história linear.</p>
+
+<table>
+<thead><tr><th></th><th>Merge</th><th>Rebase</th></tr></thead>
+<tbody>
+<tr><td>Histórico</td><td>fiel: mostra quando os branches divergiram e se juntaram</td><td>linear: parece que o trabalho foi feito em sequência</td></tr>
+<tr><td>Hashes</td><td>preserva os existentes</td><td>cria novos (os antigos ficam órfãos)</td></tr>
+<tr><td>Conflitos</td><td>resolvidos uma vez, no commit de merge</td><td>potencialmente a cada commit reaplicado</td></tr>
+<tr><td>Segurança</td><td>seguro em branch compartilhado</td><td>só em commits que ninguém mais tem</td></tr>
+</tbody>
+</table>
+<p>Regra operacional: <strong>rebase para limpar o seu trabalho local antes de publicar; merge (ou squash) para integrar trabalho compartilhado.</strong> Reescrever commits que já estão em <code>origin</code> obriga cada colega a reconciliar versões duplicadas.</p>
+
+<h3>Cherry-pick e stash</h3>
+<p><code>git cherry-pick &lt;commit&gt;</code> recalcula o patch daquele commit e o aplica sobre o HEAD atual, criando um commit <em>novo</em> com a mesma mensagem e autor. É a ferramenta de backport (levar um hotfix para um branch de release). Duplica a mudança no histórico, então prefira merge quando for integrar um branch inteiro; use <code>-x</code> para anotar a origem na mensagem.</p>
+<pre><code>$ git cherry-pick hotfix~1; git log --format="%h %s" --all --graph
+[main 81c5fb3] hotfix: corrige X
+ Date: Thu Jan 1 12:17:00 2026 +0000
+ 1 file changed, 1 insertion(+)
+ create mode 100644 fix.txt
+* b52ad54 extra: não quero
+* 5927758 hotfix: corrige X
+| * 81c5fb3 hotfix: corrige X
+|/
+* 7f735b1 C1 base</code></pre>
+<p><code>git stash</code> guarda o trabalho em andamento para trocar de contexto. Por baixo, é um commit (ou melhor, dois: um para o índice, outro para o diretório de trabalho), apontado por <code>refs/stash</code>:</p>
+<pre><code>$ git stash push -m "wip de a e b"; git status -sb; git stash list
+Saved working directory and index state On main: wip de a e b
+## main
+stash@{0}: On main: wip de a e b
+$ git cat-file -p stash@{0} | sed -E "s/ [0-9]+ \+0000//" | head -6
+tree 1c132632379e4b22220018f3ae023c6de4a5be9c
+parent 88b99acf7fa93976f9cb7334c27d05e662baeba0
+parent 084a987c9f5d615fed0eec463f7e3dca44f344b9
+author Ada Lovelace &lt;ada@example.com&gt;
+committer Ada Lovelace &lt;ada@example.com&gt;</code></pre>
+<p>Os dois pais são o HEAD e o commit do índice. Por padrão o stash <em>não</em> leva arquivos não rastreados (<code>-u</code> inclui-os). <code>stash pop</code> pode conflitar como um merge. Para mais que um dia de trabalho, prefira um branch, que tem nome e não some em <code>stash clear</code>.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · merge limpo não é merge correto</span>
+<p>O Git detecta conflito <em>textual</em>. Se um lado renomeia uma função e o outro adiciona uma chamada ao nome antigo em outro arquivo, o merge passa sem aviso e o build quebra. Por isso o fluxo saudável tem teste e CI depois do merge (ou, melhor, antes: "merge queue" e CI sobre o resultado da integração, não só sobre o branch). A mesma lógica vale para rebase: reaplicar com sucesso não garante que o código compile.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · <code>git pull</code> faz merge sem perguntar</span>
+<p>Por padrão, <code>pull</code> é <code>fetch</code> seguido de <code>merge</code>. Quem puxa com commits locais ainda não publicados ganha um commit de merge "Merge branch 'main' of origin/main" que ninguém quis. Defina a política explicitamente: <code>git config pull.rebase true</code> (ou <code>pull.ff only</code>) e o comportamento deixa de depender de humor.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Branch é ponteiro. Merge compara três trees (base, minha, deles): fast-forward só move a ref; three-way cria commit com dois pais; conflito deixa marcadores e estágios 1/2/3 no índice, e <code>--abort</code> desfaz. Rebase copia commits para uma base nova, com hashes novos; use no que é só seu. Cherry-pick copia um patch; stash é um par de commits em <code>refs/stash</code>. Merge limpo ainda precisa de teste.</p>
+</div>
+<!-- ============================================ BLOCO 5 -->
+<h2 id="b05">Bloco 5 · Colaboração: remotes, pull requests, convenções, hooks e assinatura</h2>
+
+<h3>Por que isso importa</h3>
+<p>Git é distribuído: cada clone tem o histórico inteiro e é, tecnicamente, um repositório igual ao original. "Servidor central" é convenção humana. Quase todo incidente de colaboração (push rejeitado, histórico duplicado, trabalho do colega sobrescrito) vem de não saber o que fetch, pull e push realmente movem.</p>
+
+<h3>Remotes, branches de rastreamento e os três verbos</h3>
+<p>Um <strong>remote</strong> é um nome (<code>origin</code>) para uma URL mais um <em>refspec</em>, a regra que mapeia branches remotos para refs locais. O refspec padrão <code>+refs/heads/*:refs/remotes/origin/*</code> diz: "copie cada branch de lá para <code>origin/&lt;nome&gt;</code> aqui". Essas refs <code>origin/main</code> são um <strong>cache local</strong> do que o servidor tinha na última conversa. Você não commita nelas.</p>
+<pre><code>$ git remote -v; git branch -vv
+origin	/tmp/demo-b5/origin.git (fetch)
+origin	/tmp/demo-b5/origin.git (push)
+* main 63444ae [origin/main] C1
+$ cat .git/config | sed -n "/remote/,\$p"
+[remote "origin"]
+	url = /tmp/demo-b5/origin.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main</code></pre>
+<ul>
+<li><strong><code>fetch</code></strong>: baixa objetos novos e atualiza as refs <code>origin/*</code>. Não toca em seus branches nem no diretório de trabalho. É seguro sempre.</li>
+<li><strong><code>pull</code></strong>: <code>fetch</code> mais integração (merge ou rebase) do branch rastreado no branch atual.</li>
+<li><strong><code>push</code></strong>: envia seus objetos e pede ao servidor que mova a ref remota. O servidor só aceita se for fast-forward (a nova ponta contém a antiga).</li>
+</ul>
+<p>Uma colisão típica: Beto já empurrou o commit B1 para o servidor; Ana, sem saber, fez o A1 localmente.</p>
+<pre><code>$ git status -sb
+## main...origin/main [ahead 1]
+$ git fetch origin; git status -sb; git log --oneline --graph --all
+From /tmp/demo-b5/origin
+   63444ae..0c9a943  main       -&gt; origin/main
+## main...origin/main [ahead 1, behind 1]
+* b33d6e0 A1 da ana
+| * 0c9a943 B1 do beto
+|/
+* 63444ae C1
+$ git push origin main 2&gt;&amp;1 | head -3
+To /tmp/demo-b5/origin.git
+ ! [rejected]        main -&gt; main (non-fast-forward)
+error: failed to push some refs to '/tmp/demo-b5/origin.git'</code></pre>
+<p>O <code>status</code> usa o cache: depois do <code>fetch</code>, mostra <code>ahead 1, behind 1</code>. O push foi rejeitado porque a ponta do servidor (<code>0c9a943</code>) não está no histórico da Ana. Integrar, depois enviar:</p>
+<pre><code>$ git pull --rebase origin main 2&gt;&amp;1 | tr "\r" "\n" | tail -2; git log --oneline --graph
+
+Successfully rebased and updated refs/heads/main.
+* 61c1f14 A1 da ana
+* 0c9a943 B1 do beto
+* 63444ae C1
+$ git push origin main 2&gt;&amp;1 | head -3
+To /tmp/demo-b5/origin.git
+   0c9a943..61c1f14  main -&gt; main</code></pre>
+<h3>Reescrever o que já foi publicado</h3>
+<p>Quando é <em>necessário</em> reescrever um branch publicado (por exemplo, o seu branch de PR), o push precisa ser forçado. <code>--force</code> sobrescreve a ref remota sem olhar; <code>--force-with-lease</code> só sobrescreve se a ref remota ainda for a que <em>você viu</em> no último fetch:</p>
+<pre><code>$ git commit -q --amend -m "A1 reescrito"; git push --force-with-lease origin main
+To /tmp/demo-b5/origin.git
+ ! [rejected]        main -&gt; main (stale info)
+error: failed to push some refs to '/tmp/demo-b5/origin.git'</code></pre>
+<p>Depois do último fetch da Ana, o Beto empurrou outro commit; o lease dela estava velho (<code>stale info</code>) e o servidor recusou, poupando o trabalho dele. Um <code>--force</code> puro teria apagado o commit do Beto. Observe a ressalva: se você rodar <code>git fetch</code> automaticamente (IDE, hook) antes do push, o lease passa a ser "o que acabou de baixar" e perde a proteção; prefira a forma explícita <code>--force-with-lease=main:&lt;hash esperado&gt;</code>.</p>
+
+<h3>Pull requests e convenções</h3>
+<p><strong>Pull request</strong> (GitHub, Bitbucket) ou <strong>merge request</strong> (GitLab) não é recurso do Git: é da plataforma, que junta um branch, a revisão, o CI e uma ação de integração. Há três integrações, com efeitos distintos no histórico: <em>merge commit</em> (preserva o branch), <em>squash</em> (um commit na principal) e <em>rebase and merge</em> (linear). Escolha uma por repositório. PRs pequenos são revisados; PRs enormes recebem "LGTM".</p>
+<p><strong>Mensagem de commit.</strong> Resumo no imperativo com até ~50 caracteres ("Add retry to payment client"), linha em branco, corpo com o <em>porquê</em> (o diff já mostra o <em>o quê</em>). O <strong>Conventional Commits 1.0.0</strong> estrutura o resumo como <code>tipo(escopo): descrição</code> (<code>feat</code>, <code>fix</code>, ...), com <code>!</code> ou <code>BREAKING CHANGE:</code> para quebras; mapeia para versionamento semântico (<code>feat</code> → minor, <code>fix</code> → patch). Só rende se alguma ferramenta consome o formato.</p>
+<table>
+<thead><tr><th>Fluxo</th><th>Como funciona</th><th>Quando serve</th></tr></thead>
+<tbody>
+<tr><td><strong>Trunk-based</strong></td><td>todos integram em <code>main</code> várias vezes por dia; branches vivem horas; recursos incompletos ficam atrás de feature flags</td><td>entrega contínua, equipes com CI confiável. É a prática associada a melhor desempenho de entrega nas pesquisas DORA</td></tr>
+<tr><td><strong>GitHub flow</strong></td><td>branch curto por mudança, PR, merge em <code>main</code>, deploy</td><td>a maioria dos serviços web</td></tr>
+<tr><td><strong>GitFlow</strong></td><td><code>develop</code>, <code>feature/*</code>, <code>release/*</code>, <code>hotfix/*</code>, <code>main</code></td><td>software com versões instaladas e várias releases mantidas em paralelo. O próprio autor (2020) recomenda algo mais simples para entrega contínua</td></tr>
+</tbody>
+</table>
+<p>O que decide é o <em>tempo de vida do branch</em>: quanto mais ele vive, mais dor de integração. Escolha o fluxo mais simples que cabe no modelo de release.</p>
+
+<h3>.gitignore, hooks e commits assinados</h3>
+<p><code>.gitignore</code> lista padrões de arquivos <em>não rastreados</em> que o Git deve ignorar (<code>*.log</code>, <code>.env</code>, <code>__pycache__/</code>). A última regra que casa vence; <code>!padrão</code> reverte. Há três níveis: o <code>.gitignore</code> do repositório (versionado), <code>.git/info/exclude</code> (só seu) e <code>core.excludesFile</code> (global da máquina, bom para arquivos de editor). Não afeta o que já está rastreado:</p>
+<pre><code>$ git check-ignore -v a.log .env keep.log
+.gitignore:2:*.log	a.log
+.gitignore:1:.env	.env
+.gitignore:4:!keep.log	keep.log
+$ git status -sb | head -3; git check-ignore -v tracked.log; echo "check-ignore exit=$?"
+## main...origin/main [ahead 1]
+ M tracked.log
+?? .gitignore
+check-ignore exit=1</code></pre>
+<p>O <code>tracked.log</code> casa com <code>*.log</code> mas segue aparecendo como modificado, porque já estava no índice; <code>check-ignore</code> não o reporta como ignorado (exit 1). Para parar de rastrear: <code>git rm --cached tracked.log</code>.</p>
+<p><strong>Hooks</strong> são programas em <code>.git/hooks/</code> executados em eventos (<code>pre-commit</code>, <code>commit-msg</code>, <code>pre-push</code>); se um <code>pre-*</code> sai com código diferente de zero, a operação aborta. Como <code>.git/</code> não é versionado, hooks não viajam com o clone: use <code>git config core.hooksPath .githooks</code> com a pasta no repositório, ou o projeto <em>pre-commit</em>.</p>
+<pre><code>$ git commit -m "adiciona env"; echo "exit=$?"; git log --oneline -1
+pre-commit: .env nunca entra no repositório
+exit=1
+47d9988 A1 reescrito
+$ git commit --no-verify -q -m "pulando o hook"; git log --oneline -1; git rm -q --cached .env; git commit -q -m "remove env (o segredo continua no histórico)"; git log --oneline -3
+37045c6 pulando o hook
+26f1916 remove env (o segredo continua no histórico)
+37045c6 pulando o hook
+47d9988 A1 reescrito</code></pre>
+<p>O hook bloqueou o commit (exit 1). <code>--no-verify</code> o contorna, e é por isso que hook local é <em>conveniência</em>; o controle que vale é o mesmo teste no CI e a proteção de branch no servidor. Detalhe do hook acima: ele filtra com <code>--diff-filter=AM</code> (adicionado ou modificado). Sem o filtro, o commit que <em>remove</em> o <code>.env</code> também listaria o arquivo e seria bloqueado, impedindo o conserto.</p>
+<p><strong>Commits assinados.</strong> Assinar um commit adiciona um cabeçalho <code>gpgsig</code> ao objeto, com assinatura criptográfica sobre o conteúdo do commit. Desde o Git 2.34 a assinatura pode usar chave SSH (além de GPG), o que simplifica a vida de quem já tem uma:</p>
+<pre><code>$ git commit -q -m "commit assinado"; git cat-file -p HEAD | sed -n 1,4p
+tree 4d593e935186bcc35450336864a1aad148210a14
+author Ada Lovelace &lt;ada@example.com&gt; 1767268920 +0000
+committer Ada Lovelace &lt;ada@example.com&gt; 1767268920 +0000
+gpgsig -----BEGIN SSH SIGNATURE-----
+$ git verify-commit HEAD; echo "exit=$?"
+Good "git" signature for ada@example.com with ED25519 key SHA256:74gPR+zfaoP6WrXarrNH+5b5rgHt0dvlMskYrNTimDw
+exit=0</code></pre>
+<p>A verificação exige um arquivo de <em>allowed signers</em> (e-mail e chave pública autorizados) e prova que <em>o detentor da chave</em> criou o commit com aquele conteúdo, não que a pessoa é quem diz ser. Plataformas exibem "Verified" quando você cadastra a chave pública na conta.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · segredo que foi para o remoto já vazou</span>
+<p>Após o push, o segredo está no servidor, nos clones dos colegas, em caches de CI e, em repositório público, em coletores automáticos que varrem commits em segundos. Remover o arquivo em outro commit (bloco 3) não remove o blob; reescrever histórico (<code>git filter-repo</code>) não alcança clones nem forks. A ordem correta é: <strong>revogar e trocar a credencial primeiro</strong>; só depois, limpar o histórico por higiene. Hook de <code>pre-commit</code> com detector de segredos reduz a chance; o scanner no CI e o push protection da plataforma fecham a porta.</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Remote = nome + URL + refspec; <code>origin/*</code> é cache do último fetch. <code>fetch</code> é seguro; <code>pull</code> = fetch + integrar; <code>push</code> só avança por fast-forward. Para reescrever o publicado: <code>--force-with-lease</code>, nunca <code>--force</code>. PR é recurso da plataforma; escolha a estratégia de integração por repositório. Prefira fluxo com branches curtos. <code>.gitignore</code> não afeta rastreados; hooks locais são conveniência; assinatura prova a chave, não a pessoa; segredo publicado se revoga.</p>
+</div>
+<!-- ============================================ BLOCO 6 -->
+<h2 id="b06">Bloco 6 · Investigação e recuperação</h2>
+
+<h3>Por que isso importa</h3>
+<p>Produção quebrou e o último deploy juntou 40 commits. Ou alguém rodou o comando errado e o trabalho de dois dias "sumiu". Nos dois casos o histórico é a ferramenta: investigar é fazer perguntas ao grafo de commits; recuperar é lembrar que objetos são imutáveis e que só os ponteiros andaram.</p>
+
+<h3>Perguntar ao histórico: log, blame, bisect</h3>
+<p><code>git log -S&lt;texto&gt;</code> (o <em>pickaxe</em>) lista os commits em que o <strong>número de ocorrências</strong> de um texto mudou: ou seja, quando ele foi introduzido ou removido. <code>-G&lt;regex&gt;</code> lista os commits cujo diff tem uma <strong>linha adicionada ou removida</strong> casando a regex, o que também pega alterações de valor. A diferença aparece num caso simples (a constante <code>TAXA</code> nasce com 0.10 e depois muda para 0.15):</p>
+<pre><code>$ git log --oneline -S"TAXA" -- pricing.py
+499c9b9 pricing: aplica taxa
+$ git log --oneline -G"TAXA = 0\.[0-9]+" -- pricing.py
+541c8e5 pricing: taxa sobe para 15%
+499c9b9 pricing: aplica taxa
+$ git log --format="%h %s" -S"0.10"
+541c8e5 pricing: taxa sobe para 15%
+499c9b9 pricing: aplica taxa</code></pre>
+<p>O <code>-S"TAXA"</code> só vê a criação (a contagem de ocorrências não mudou no commit do 15%). O <code>-G</code> vê as duas alterações. E <code>-S"0.10"</code> acusa quem a introduziu e quem a retirou. Para uma função específica há <code>git log -L :nome:arquivo</code>, e <code>--follow</code> acompanha renomeações de um arquivo.</p>
+<p><code>git blame</code> mostra, para cada linha, o último commit que a alterou:</p>
+<pre><code>$ git blame -L1,4 pricing.py | sed -E "s/ [0-9]{4}-[0-9-]+ [0-9:]+ [+-][0-9]{4}//"
+541c8e5e (Ada Lovelace 1) TAXA = 0.15
+499c9b98 (Ada Lovelace 2)
+^aded484 (Ada Lovelace 3) def total(items):
+499c9b98 (Ada Lovelace 4)     return sum(i["price"] for i in items) * (1 + TAXA)</code></pre>
+<p>O prefixo <code>^aded484</code> marca o commit raiz. <em>Blame</em> aponta a última mudança, não a causa: para reformatações use <code>-w</code>, <code>-M</code>/<code>-C</code> (linhas movidas) e <code>--ignore-revs-file</code>.</p>
+<p><code>git bisect</code> é busca binária no histórico: você diz um commit <em>bom</em> e um <em>ruim</em>, o Git faz checkout do meio, você declara bom ou ruim, e a cada passo o intervalo cai pela metade. Com N commits, são ~log₂ N testes (40 commits: 6). Com <code>git bisect run</code>, um script faz o julgamento; o <strong>exit code</strong> do script é a resposta:</p>
+<table>
+<thead><tr><th>Exit code do script</th><th>Significado para o bisect</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>commit bom</td></tr>
+<tr><td>1 a 127, exceto 125</td><td>commit ruim</td></tr>
+<tr><td>125</td><td>não dá para testar este commit (não compila): pular</td></tr>
+<tr><td>128 ou mais</td><td>erro: aborta a busca</td></tr>
+</tbody>
+</table>
+<p>É a tabela de exit codes do bloco 1, agora usada por uma ferramenta. Na prática, o script de teste é qualquer comando que falha na presença do bug:</p>
+<pre><code>$ git bisect start; git bisect bad HEAD; git bisect good HEAD~7
+Bisecting: 3 revisions left to test after this (roughly 2 steps)
+[ecb51edd2c47cd8d3933faef5eca1a777c08661d] mudança 3
+$ git bisect run python3 check.py | head -10
+running  'python3' 'check.py'
+Bisecting: 1 revision left to test after this (roughly 1 step)
+[5f1a749791fa0dcb2af2ea6ca019347a0ce00dc6] mudança 5
+running  'python3' 'check.py'
+Bisecting: 0 revisions left to test after this (roughly 0 steps)
+[6a6a49bda158d9e9cb26433b228652b91833db0b] mudança 4
+running  'python3' 'check.py'
+6a6a49bda158d9e9cb26433b228652b91833db0b is the first bad commit
+commit 6a6a49bda158d9e9cb26433b228652b91833db0b
+Author: Ada Lovelace &lt;ada@example.com&gt;</code></pre>
+<p>De 8 commits, 3 testes. O mesmo cenário está no laboratório, com o commit culpado conhecido, para você comparar com o que o <code>bisect</code> encontra.</p>
+
+<h3>Desfazer: reset, revert, restore</h3>
+<p>O <code>reset</code> opera sobre as três árvores do bloco 3 (HEAD, índice, diretório de trabalho). A diferença entre os modos é até onde ele desce:</p>
+<table>
+<thead><tr><th>Modo</th><th>Move a ref do branch</th><th>Reescreve o índice</th><th>Reescreve o trabalho</th></tr></thead>
+<tbody>
+<tr><td><code>--soft</code></td><td>sim</td><td>não</td><td>não</td></tr>
+<tr><td><code>--mixed</code> (padrão)</td><td>sim</td><td>sim</td><td>não</td></tr>
+<tr><td><code>--hard</code></td><td>sim</td><td>sim</td><td><strong>sim (destrói edições não commitadas)</strong></td></tr>
+</tbody>
+</table>
+<pre><code>$ git reset --soft HEAD~1; git status -sb; git log --oneline -1; cat f
+## main
+MM f
+A  g.txt
+3158ca7 c2
+a
+b
+c
+extra
+$ git reset --mixed HEAD~1; git status -sb; git log --oneline -1; cat f
+## main
+ M f
+?? g.txt
+3158ca7 c2
+a
+b
+c
+extra
+$ git reset --hard HEAD~1; git status -sb; git log --oneline -1; cat f
+## main
+3158ca7 c2
+a
+b</code></pre>
+<p>Em todos o HEAD voltou para <code>c2</code>. No <code>--soft</code>, a mudança do <code>c3</code> segue <em>staged</em> (refazer o commit); no <code>--mixed</code>, vira edição não staged; no <code>--hard</code>, some do disco, junto com a edição extra que só existia no trabalho.</p>
+<p><code>git revert &lt;commit&gt;</code> não reescreve nada: cria um <strong>commit novo que desfaz</strong> o patch do alvo. É o desfazer para o histórico já publicado:</p>
+<pre><code>$ git revert --no-edit HEAD~1; git log --oneline; ls; cat f
+[main f6e60a5] Revert "c2 introduz g"
+ Date: Thu Jan 1 12:11:00 2026 +0000
+ 1 file changed, 1 deletion(-)
+ delete mode 100644 g
+f6e60a5 Revert "c2 introduz g"
+ee94771 c3 muda f
+e45860d c2 introduz g
+aac8a0e c1
+f
+a
+b</code></pre>
+<p>Reverter um commit de merge exige dizer qual pai é a linha principal (<code>git revert -m 1 &lt;merge&gt;</code>); para reintroduzir o trabalho depois, reverta o revert. Para arquivos, o par moderno (Git 2.23+) é <code>git restore &lt;arq&gt;</code> (descarta a edição) e <code>git restore --staged &lt;arq&gt;</code> (tira do índice). <code>git clean -n</code> lista o que removeria dos não rastreados; <code>-f</code> remove sem volta.</p>
+
+<h3>Reflog: o diário dos ponteiros</h3>
+<p>Cada vez que HEAD ou um branch se move, o Git anota no <strong>reflog</strong> (<code>.git/logs/</code>) de onde e para onde. O <code>reset --hard</code> que "perdeu" dois commits apenas moveu o branch; os objetos continuam lá, alcançáveis pelo reflog:</p>
+<pre><code>$ git reset --hard HEAD~2; git reflog --format="%h %gd %gs"
+HEAD is now at d15a064 c1
+d15a064 HEAD@{0} reset: moving to HEAD~2
+ea3a018 HEAD@{1} commit: c3 precioso
+e02ea3e HEAD@{2} commit: c2
+d15a064 HEAD@{3} commit (initial): c1
+$ git fsck --lost-found 2&gt;&amp;1 | head -3
+dangling commit ea3a018c686d5014eb9710c15c739fecf5e668f3</code></pre>
+<p>O <code>git fsck --lost-found</code> acha objetos que nenhuma ref alcança ("dangling"), inclusive blobs que foram para o índice via <code>git add</code> e nunca viraram commit. É a rede de segurança para o <code>stash drop</code> acidental também.</p>
+<div class="box">
+<span class="lbl">Limites da recuperação</span>
+<p>(1) O reflog é <strong>local</strong>: não vem com o clone nem vai com o push. (2) Expira: padrão de 90 dias para entradas ainda alcançáveis e 30 dias para as inalcançáveis (<code>gc.reflogExpire</code>, <code>gc.reflogExpireUnreachable</code>); depois o <code>git gc</code> pode apagar os objetos. (3) O que nunca passou por <code>git add</code> ou <code>commit</code> não tem objeto: um <code>reset --hard</code> ou <code>git checkout -- .</code> em arquivo só editado é irrecuperável pelo Git (o editor pode ter histórico local). A suíte do laboratório prova o item 2: após <code>reflog expire</code> e <code>gc --prune=now</code> o commit desaparece de fato.</p>
+</div>
+
+<h3>Worktree: vários diretórios, um repositório</h3>
+<p><code>git worktree add</code> cria outro diretório de trabalho ligado ao mesmo banco de objetos, com HEAD e índice próprios. Serve para atender um hotfix sem stash nem clone, ou para rodar duas tarefas em paralelo (o bloco 4 do <a href="../M01-workflow-ia-driven/M01.html#b4">M01</a> usa isso para agentes concorrentes).</p>
+<pre><code>$ git worktree add -q -b hotfix ../W-hotfix; git worktree list | sed -E "s/ +[0-9a-f]{7} / &lt;hash&gt; /"; cat ../W-hotfix/.git; ls .git/worktrees
+/tmp/demo-b6/W &lt;hash&gt; [main]
+/tmp/demo-b6/W-hotfix &lt;hash&gt; [hotfix]
+gitdir: /tmp/demo-b6/W/.git/worktrees/W-hotfix
+W-hotfix
+$ git worktree add ../W-outra main 2&gt;&amp;1 | grep fatal
+fatal: 'main' is already checked out at '/tmp/demo-b6/W'</code></pre>
+<p>Num worktree ligado, <code>.git</code> é um <em>arquivo</em> com o texto <code>gitdir: ...</code>, apontando para <code>.git/worktrees/&lt;nome&gt;</code> no repositório principal. Por isso o leitor do laboratório precisa seguir <code>gitdir</code> e <code>commondir</code>. A recusa do segundo comando é regra: o mesmo branch não pode estar em dois worktrees, porque cada um mexeria na mesma ref por baixo do outro.</p>
+
+<h3>Qual comando para qual situação</h3>
+<table>
+<thead><tr><th>Situação</th><th>Comando</th></tr></thead>
+<tbody>
+<tr><td>Editei e quero descartar (não commitado)</td><td><code>git restore &lt;arq&gt;</code> (sem volta)</td></tr>
+<tr><td>Commitei errado, ainda não publiquei</td><td><code>git reset --soft HEAD~1</code> (refazer) ou <code>git commit --amend</code></td></tr>
+<tr><td>Commit ruim já em <code>main</code> compartilhada</td><td><code>git revert &lt;hash&gt;</code></td></tr>
+<tr><td>Perdi commits após reset/rebase</td><td><code>git reflog</code>, depois <code>git branch rescue &lt;hash&gt;</code></td></tr>
+<tr><td>Quebrou, não sei onde</td><td><code>git bisect run &lt;teste&gt;</code></td></tr>
+<tr><td>Quando esta linha entrou?</td><td><code>git log -S</code> / <code>-G</code>, <code>git blame</code></td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior · o script do bisect precisa viver fora da árvore que muda</span>
+<p>O <code>bisect</code> faz checkout de commits antigos. Se o script de teste é um arquivo rastreado criado depois do bug, ele <em>não existe</em> nos commits mais antigos; se existe mas mudou, cada commit testa uma coisa diferente. No laboratório, <code>check.py</code> é commitado desde o primeiro commit para evitar isso; em casos reais, copie o script para fora do repositório (<code>/tmp/teste.sh</code>) e chame-o por caminho absoluto. E o ambiente: dependência instalada hoje pode não existir para o código de seis meses atrás; use 125 para "este commit não é testável".</p>
+</div>
+
+<div class="box ok">
+<span class="lbl">Em resumo</span>
+<p>Use <code>log -S/-G</code> para saber quando um texto entrou, <code>blame</code> para a última mudança por linha e <code>bisect run</code> (exit 0 bom, 1–127 ruim, 125 pular) para achar o commit que quebrou. <code>reset</code> desce por três árvores: soft move a ref, mixed também o índice, hard também o trabalho. <code>revert</code> desfaz sem reescrever. O reflog é o diário local dos ponteiros (90/30 dias); objetos só somem depois do <code>gc</code>. Worktrees compartilham objetos e não repetem branch.</p>
+</div>
+<!-- ============================================ LABORATÓRIO GUIADO -->
+<h2 id="lab-guiado">Laboratório guiado F01</h2>
+<p>Três peças em Python 3.14, sem rede e sem conta: <code>pgrep</code> (grep mínimo com stdin/stdout/stderr e exit codes), um leitor de objetos soltos do Git e dois cenários reproduzíveis (reflog e <code>git bisect run</code>). Autores e relógio dos commits são fixos: os hashes abaixo devem ser <strong>idênticos</strong> aos seus. Os testes que usam Git são ignorados, com mensagem clara, se o <code>git</code> não estiver no <code>PATH</code>.</p>
+
+<h3>Pré-requisitos e cópia de trabalho</h3>
+<p>Exigidos: Python 3.14, <code>uv</code>, Git 2.28 ou mais novo (para <code>git init -b</code>), shell bash ou zsh. Nunca edite a referência em <code>modulos/F01-terminal-git/lab/</code>.</p>
+<pre><code>cd modulos/F01-terminal-git/lab
+python3 create_working_copy.py
+cd /tmp/f01-xxxx          # o caminho impresso
+uv sync --frozen</code></pre>
+<p><strong>PowerShell:</strong> <code>cd modulos\F01-terminal-git\lab; python create_working_copy.py</code>, depois <code>cd</code> para o caminho impresso e <code>uv sync --frozen</code>. Pipes com <code>PIPESTATUS</code> (passo 2) não existem no PowerShell; use WSL2 para esse passo. <strong>Resultado esperado:</strong> ambiente sincronizado; a cópia pode ser descartada e refeita.</p>
+
+<h3>Etapas</h3>
+<div class="step"><span class="n">1</span><strong>Exit codes e streams (bloco 1).</strong> Rode o <code>pgrep</code> em quatro situações: achou, não achou, arquivo inexistente e arquivo inexistente com <code>stderr</code> descartado.
+<pre><code>$ printf 'alfa\nbeta\ngama\n' | uv run python -m shell_git_lab.pgrep -n a; echo "exit=$?"
+1:alfa
+2:beta
+3:gama
+exit=0
+$ printf 'alfa\nbeta\n' | uv run python -m shell_git_lab.pgrep zeta; echo "exit=$?"
+exit=1
+$ uv run python -m shell_git_lab.pgrep alfa nao-existe.txt; echo "exit=$?"
+pgrep: nao-existe.txt: No such file or directory
+exit=2
+$ uv run python -m shell_git_lab.pgrep alfa nao-existe.txt 2&gt;/dev/null; echo "exit=$?"
+exit=2</code></pre>
+<p><strong>Resultado esperado:</strong> exatamente a saída acima: 0, 1, 2, e o 2 persiste quando a mensagem é descartada. <strong>Se falhar:</strong> <code>No module named shell_git_lab</code>: você não está na cópia ou esqueceu o <code>uv sync</code>.</p></div>
+
+<div class="step"><span class="n">2</span><strong>Pipe fechado e SIGPIPE (bloco 1).</strong>
+<pre><code>$ seq 1 300000 | uv run python -m shell_git_lab.pgrep 7 | head -2; echo "status=${PIPESTATUS[*]}"
+7
+17
+status=141 141 0</code></pre>
+<p><strong>Resultado esperado:</strong> duas linhas e <code>status=141 141 0</code>: o <code>seq</code> morreu por SIGPIPE e o <code>pgrep</code> tratou o <code>BrokenPipeError</code> e saiu com 141 (128 + 13); o <code>head</code> terminou bem. Sem o <code>head</code> (por exemplo, com <code>&gt; /dev/null</code>), todos terminam com 0. <strong>Se falhar:</strong> em zsh a variável é <code>$pipestatus</code> (minúscula, índice a partir de 1).</p></div>
+
+<div class="step"><span class="n">3</span><strong>CRLF (bloco 2).</strong>
+<pre><code>$ printf 'fim\r\n' &gt; win.txt; uv run python -m shell_git_lab.pgrep 'fim$' win.txt; echo "exit=$?"; uv run python -m shell_git_lab.pgrep -c 'fim\r$' win.txt
+exit=1
+1</code></pre>
+<p><strong>Resultado esperado:</strong> <code>fim$</code> não casa (exit 1); <code>fim\r$</code> casa.</p></div>
+
+<div class="step"><span class="n">4</span><strong>Reflog e leitor de objetos (blocos 3 e 6).</strong> Crie o cenário (três commits e um <code>reset --hard</code>), veja o reflog e leia o commit recuperado com o leitor Python, sem o Git:
+<pre><code>$ uv run python -m shell_git_lab.cli scenario reflog --dir ../f01-cenarios/reflog
+repositório: ../f01-cenarios/reflog
+HEAD após reset --hard: 3b22521d9d
+commit 'perdido':       cef501eadf
+recuperado pelo reflog: cef501eadf (branch rescue)
+recuperação confere
+$ git -C ../f01-cenarios/reflog reflog
+3b22521 HEAD@{0}: reset: moving to 3b22521d9db581a375459fe11fac02d5bf3aac15
+cef501e HEAD@{1}: commit: terceira versão com trabalho importante
+86ab18e HEAD@{2}: commit: segunda versão
+3b22521 HEAD@{3}: commit (initial): primeira versão
+$ uv run python -m shell_git_lab.cli cat-object ../f01-cenarios/reflog rescue
+commit 249 cef501eadf5f117dfca06c2971923d5b9842eaad
+tree eb393600ffd9acf75c7306787e9133e67619dd01
+parent 86ab18ea28d651974cec3ca0bc175914ce845ab7
+author Ada Lovelace &lt;ada@example.com&gt; 1767268980 +0000
+committer Ada Lovelace &lt;ada@example.com&gt; 1767268980 +0000
+
+terceira versão com trabalho importante</code></pre>
+<p>Confira que o leitor concorda com o Git, e navegue pela árvore:</p>
+<pre><code>$ uv run python -m shell_git_lab.cli cat-object ../f01-cenarios/reflog rescue | tail -n +2 | diff - &lt;(git -C ../f01-cenarios/reflog cat-file -p rescue) &amp;&amp; echo identico
+identico
+$ uv run python -m shell_git_lab.cli cat-object ../f01-cenarios/reflog $(git -C ../f01-cenarios/reflog rev-parse 'rescue^{tree}')
+tree 37 eb393600ffd9acf75c7306787e9133e67619dd01
+100644 blob f20902fe9e3c294f6cfe6ca3ec12921b83679bbb	notes.txt
+$ uv run python -m shell_git_lab.cli log ../f01-cenarios/reflog rescue
+cef501eadf terceira versão com trabalho importante
+86ab18ea28 segunda versão
+3b22521d9d primeira versão</code></pre>
+<p><strong>Resultado esperado:</strong> hashes iguais aos mostrados e <code>identico</code>. <strong>Se falhar:</strong> <code>objeto ... não existe como arquivo solto (há packfiles ...)</code> significa que o <code>git gc</code> empacotou o repositório, e o leitor só lê objetos soltos de propósito. <code>fatal: not a git repository</code>: o <code>--dir</code> do passo anterior não foi o mesmo.</p></div>
+
+<div class="step"><span class="n">5</span><strong>Bisect (bloco 6).</strong> Oito commits; <code>add</code> passa a subtrair no quinto.
+<pre><code>$ uv run python -m shell_git_lab.cli scenario bisect --dir ../f01-cenarios/bisect
+repositório: ../f01-cenarios/bisect
+commits: 8  culpado esperado: 88e56ba659
+bisect apontou:         88e56ba659
+bisect confere
+$ git -C ../f01-cenarios/bisect log --oneline
+e0b3056 mudança 7
+d7d4060 mudança 6
+fe4b4ac mudança 5
+88e56ba mudança 4
+6c84721 mudança 3
+b2c3d44 mudança 2
+3e7c399 mudança 1
+3f15bb2 mudança 0</code></pre>
+<p><strong>Resultado esperado:</strong> o culpado esperado e o encontrado coincidem em <code>88e56ba</code> ("mudança 4"). O código usa o mesmo <code>git bisect run</code> do bloco 6 e recusa o cenário se o commit "bom" falhar ou o "ruim" passar, para nunca inventar um culpado.</p></div>
+
+<div class="step"><span class="n">6</span><strong>O teste morde (mutação).</strong> Em <code>src/shell_git_lab/pgrep.py</code> troque <code>EXIT_NO_MATCH = 1</code> por <code>EXIT_NO_MATCH = 0</code> e rode só os testes do <code>pgrep</code>:
+<pre><code>$ uv run pytest -q --tb=no tests/test_pgrep.py
+.F....FF...                                                              [100%]
+=========================== short test summary info ============================
+FAILED tests/test_pgrep.py::test_no_match_is_exit_1_not_an_error - AssertionE...
+FAILED tests/test_pgrep.py::test_binary_file_is_skipped_with_notice - Asserti...
+FAILED tests/test_pgrep.py::test_crlf_keeps_carriage_return_so_dollar_anchor_misses
+3 failed, 8 passed in 0.31s</code></pre>
+<p><strong>Resultado esperado:</strong> três testes vermelhos. Desfaça a troca. O controle negativo prova que a suíte detecta a violação do contrato (0 = achou, 1 = não achou).</p></div>
+
+<div class="step"><span class="n">7</span><strong>Gates de qualidade.</strong>
+<pre><code>$ uv run pytest -q
+.....................................                                    [100%]
+37 passed in 1.11s
+$ uv run ruff check .
+All checks passed!
+$ uv run ruff format --check .
+13 files already formatted
+$ uv run mypy --strict src tests
+Success: no issues found in 11 source files</code></pre>
+<p><strong>Resultado esperado:</strong> tudo verde (37 testes). Qualquer vermelho é defeito do programa. Se o <code>ruff</code> acusar arquivos de <code>../f01-cenarios</code>, os cenários foram criados dentro do projeto: use um <code>--dir</code> fora dele.</p></div>
+
+<h3>Limpeza e retomada</h3>
+<p>Apague a cópia de trabalho e <code>../f01-cenarios</code> quando quiser; cada etapa só depende da cópia sincronizada.</p>
+
+<!-- ============================================ DIAGNÓSTICO -->
+<h2>Tabela de Diagnóstico</h2>
+<table>
+<thead><tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr></thead>
+<tbody>
+<tr><td>CI verde, mas o passo falhou (log mostra erro).</td><td>Pipeline com <code>| tee</code> devolve o status do último comando.</td><td><code>set -o pipefail</code>; confira com <code>${PIPESTATUS[@]}</code>.</td></tr>
+<tr><td><code>command not found</code> (127) só no cron/IDE/container.</td><td><code>PATH</code> diferente do seu terminal.</td><td><code>command -v</code> no contexto real; caminho absoluto ou <code>PATH</code> explícito no script.</td></tr>
+<tr><td><code>bad interpreter: /bin/sh^M</code> (126).</td><td>Script com fim de linha CRLF.</td><td><code>.gitattributes</code> com <code>eol=lf</code>; converta com <code>sed -i 's/\r$//'</code>.</td></tr>
+<tr><td><code>xargs</code>/<code>for</code> quebra com nome com espaço.</td><td>Separação por espaço em branco.</td><td><code>find -print0 | xargs -0</code>, <code>-exec {} +</code> ou <code>while read -r</code>.</td></tr>
+<tr><td><code>git push</code> rejeitado (non-fast-forward).</td><td>O remoto tem commits que você não tem.</td><td><code>git fetch</code> e <code>pull --rebase</code> (ou merge); força só com <code>--force-with-lease</code>.</td></tr>
+<tr><td>"Perdi" commits depois de reset/rebase.</td><td>Só a ref andou; objetos seguem no armazém.</td><td><code>git reflog</code>; <code>git branch rescue &lt;hash&gt;</code>.</td></tr>
+<tr><td>Leitor do lab: "não existe como arquivo solto".</td><td>Objeto foi para um packfile (<code>git gc</code>).</td><td>Esperado (limite do leitor); use <code>git cat-file</code> para repositórios empacotados.</td></tr>
+</tbody>
+</table>
+
+<!-- ============================================ CHECKPOINT -->
+<h2 id="checkpoint">Checkpoint F01</h2>
+<div class="box ok">
+<span class="lbl">Avaliação sem consulta — diga "Checkpoint F01" no chat</span>
+<p>Uma pergunta por vez, sem consulta. Cada pergunta é um cenário; a rubrica diz o que basta e o que reprova.</p>
+<ul class="check">
+<li><strong>P1 · Pipeline que mente.</strong> <code>./build.sh | tee build.log</code> reporta sucesso com o build quebrado. Explique o mecanismo e dê duas correções, com o efeito colateral de cada. <em>Basta:</em> status do último comando; <code>pipefail</code> ou <code>PIPESTATUS</code>; menciona o 141. <em>Reprova:</em> "o tee tem bug".</li>
+<li><strong>P2 · Quem é esse comando?</strong> <code>pip</code> instala e o <code>import</code> falha. Diagnostique só com shell. <em>Basta:</em> <code>type -a</code>/<code>command -v</code>, dois ambientes, <code>python -m pip</code>. <em>Reprova:</em> "reinstale tudo".</li>
+<li><strong>P3 · Redirecionamento.</strong> Prediga o conteúdo de <code>log</code> e da tela para <code>cmd &gt; log 2&gt;&amp;1</code> e <code>cmd 2&gt;&amp;1 &gt; log</code>. <em>Basta:</em> cópia do fd no momento em que é lido, da esquerda para a direita. <em>Reprova:</em> "são equivalentes".</li>
+<li><strong>P4 · Do add ao commit.</strong> Liste, em ordem, quais arquivos de <code>.git</code> mudam em <code>git add</code>, <code>git commit</code> e <code>git switch</code>. Prove por que dois arquivos iguais ocupam um objeto. <em>Basta:</em> blob e índice; trees, commit e ref; HEAD e índice/trabalho. <em>Reprova:</em> "o commit guarda o diff".</li>
+<li><strong>P5 · Escolha de integração.</strong> Cenário: branch de feature de 5 commits, <code>main</code> andou, o branch já foi empurrado e um colega o baixou. Escolha e justifique merge, rebase ou squash, e o que acontece com os hashes. <em>Basta:</em> não reescrever o compartilhado, ou combinar e usar <code>--force-with-lease</code>. <em>Reprova:</em> rebase + <code>--force</code> sem aviso.</li>
+<li><strong>P6 · Regressão.</strong> A suíte passou há 60 commits e falha hoje. Descreva a investigação com <code>bisect run</code>: escrita do script, significado de 0/1/125/&gt;127, onde o script vive. <em>Basta:</em> busca binária, script fora da árvore, determinismo. <em>Reprova:</em> testar commit a commit.</li>
+<li><strong>P7 · Recuperação.</strong> Após <code>reset --hard HEAD~3</code> e depois de um <code>stash drop</code>, o que ainda pode ser recuperado, como e até quando? Quais edições nunca voltam? <em>Basta:</em> reflog (90/30 dias), <code>fsck --lost-found</code>, branch de resgate; edição nunca adicionada é irrecuperável. <em>Reprova:</em> "o Git apaga na hora".</li>
+</ul>
+<h4>Entregáveis verificados (mostrar rodando)</h4>
+<ol>
+<li>Gates do lab verdes: <code>pytest</code> (37 testes), <code>ruff check</code>, <code>ruff format --check</code>, <code>mypy --strict</code>.</li>
+<li>Mutação de <code>EXIT_NO_MATCH</code> rejeitada pela suíte e revertida.</li>
+<li>Cenário de reflog recuperando o commit e leitor Python idêntico ao <code>git cat-file</code>.</li>
+<li>Cenário de bisect apontando o commit esperado, e recusando quando não há regressão.</li>
+</ol>
+</div>
+
+<h2>Fontes e versões</h2>
+<table>
+<thead><tr><th>Fonte</th><th>Uso</th><th>Tipo</th><th>Verificada em</th></tr></thead>
+<tbody>
+<tr><td><a href="https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html">POSIX.1-2024, Shell Command Language</a></td><td>exit status, redirecionamento, expansões, pipefail (bloco 1–2)</td><td>padrão</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://www.gnu.org/software/bash/manual/bash.html">GNU Bash Reference Manual</a></td><td>PATH, hash, PIPESTATUS, <code>${var:?}</code> (blocos 1–2)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://man7.org/linux/man-pages/">Linux man-pages: signal(7), pipe(7), execve(2), proc(5)</a></td><td>sinais, capacidade do pipe, ambiente (bloco 1)</td><td>oficial</td><td>11/10/2026 (índice)</td></tr>
+<tr><td>M. D. McIlroy, prefácio de <em>The Bell System Technical Journal</em> 57(6), 1978</td><td>filosofia Unix (bloco 2)</td><td>fonte primária</td><td>—</td></tr>
+<tr><td><a href="https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain">Pro Git, cap. 10 "Git Internals"</a></td><td>blob, tree, commit, refs (bloco 3)</td><td>livro oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://git-scm.com/docs/gitrepository-layout">gitrepository-layout</a> e <a href="https://git-scm.com/docs/hash-function-transition">hash-function-transition</a></td><td>estrutura de <code>.git</code>; SHA-1 e SHA-256 (bloco 3)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://www.rfc-editor.org/rfc/rfc1950">RFC 1950 (zlib)</a></td><td>formato dos objetos soltos (bloco 3, lab)</td><td>RFC</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://git-scm.com/docs/git-rebase">git-rebase</a>, <a href="https://git-scm.com/docs/git-log">git-log</a>, <a href="https://git-scm.com/docs/git-bisect">git-bisect</a>, <a href="https://git-scm.com/docs/git-reflog">git-reflog</a>, <a href="https://git-scm.com/docs/git-gc">git-gc</a>, <a href="https://git-scm.com/docs/git-worktree">git-worktree</a></td><td>blocos 4 e 6 (exit codes do bisect, expiração do reflog)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://git-scm.com/docs/githooks">githooks</a>, <a href="https://git-scm.com/docs/gitignore">gitignore</a>, <a href="https://git-scm.com/docs/gitattributes">gitattributes</a></td><td>bloco 5 (e CRLF no bloco 2)</td><td>oficial</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://www.conventionalcommits.org/en/v1.0.0/">Conventional Commits 1.0.0</a></td><td>convenção de mensagens (bloco 5)</td><td>especificação</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://trunkbaseddevelopment.com/">trunkbaseddevelopment.com</a>, <a href="https://dora.dev/capabilities/trunk-based-development/">DORA</a>, <a href="https://nvie.com/posts/a-successful-git-branching-model/">GitFlow (Driessen)</a></td><td>fluxos de branch (bloco 5)</td><td>prática / pesquisa</td><td>11/10/2026</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/subprocess.html">Python: subprocess</a> e <a href="https://docs.astral.sh/uv/">uv</a></td><td>lab</td><td>oficial</td><td>11/10/2026</td></tr>
+</tbody>
+</table>
+<p>As saídas vêm de execução real em 11/10/2026 com Git 2.34.1; versões mais novas mudam mensagens e padrões (<code>zdiff3</code> exige Git 2.35+). Comportamento de Git, <code>uv</code> e plataformas (PR, "Verified") é de alto risco: revalidar em até 90 dias.</p>
+
+<div class="box">
+<span class="lbl">Conclusão — o essencial em 8 linhas</span>
+<p>Terminal exibe, shell interpreta, processo executa; resultado vai no stdout, diagnóstico no stderr, veredicto no exit code.<br>
+O status de um pipeline é o do último comando; 128 + n é morte por sinal; 141 é um pipe que fechou.<br>
+Nome aponta para inode; aspas em tudo; redirecionamentos são lidos da esquerda para a direita.<br>
+Git é um armazém imutável de blobs, trees e commits endereçados por conteúdo, mais refs mutáveis.<br>
+Commit é snapshot; branch são 41 bytes; o índice é o próximo commit já montado.<br>
+Merge junta; rebase copia (hashes novos) e só vale no que é seu; conflito é decisão sobre três versões.<br>
+Remoto é cache no <code>origin/*</code>; force só com lease; hook local é conveniência; segredo publicado se revoga.<br>
+Investigue com <code>log -S</code>, <code>blame</code> e <code>bisect run</code>; recupere com <code>reflog</code>: só a ref andou.</p>
+</div>
+
+</div>
+<script src="../../portal/course-bridge.js" data-unit="F01"></script>
+</body>
+</html>

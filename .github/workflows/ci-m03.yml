@@ -6,14 +6,10 @@ on:
   push:
     paths:
       - ".github/workflows/ci-m03.yml"
-      - "tools/run_course_lab.py"
-      - "docs/planejamento-v4/ambientes.json"
       - "modulos/M03-fastapi-postgres-docker-ci/**"
   pull_request:
     paths:
       - ".github/workflows/ci-m03.yml"
-      - "tools/run_course_lab.py"
-      - "docs/planejamento-v4/ambientes.json"
       - "modulos/M03-fastapi-postgres-docker-ci/**"
 
 permissions:
@@ -69,7 +65,10 @@ jobs:
       - name: Require reachable Docker Engine
         run: docker info --format '{{.ServerVersion}}'
       - name: Run real PostgreSQL integration tests
-        run: python tools/run_course_lab.py --unit M03-fastapi-postgres-docker-ci --mode integration
+        working-directory: modulos/M03-fastapi-postgres-docker-ci/lab
+        run: |
+          uv sync --frozen
+          uv run pytest -q -m postgres
 
   build-image:
     name: Build local image on main (no publish)

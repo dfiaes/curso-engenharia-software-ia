@@ -1,10 +1,10 @@
 # Mapa conceitual — software e sistemas de IA
 
-Referência curta de vocabulário, não hierarquia obrigatória nem pré-requisito de leitura. O módulo indicado desenvolve mecanismo, exemplo, decisão e falha. O [currículo](../CURRICULO.md) e o [status](STATUS-IMPLEMENTACAO-CURSO.md) definem escopo e prontidão.
+Referência curta de vocabulário, não hierarquia obrigatória nem pré-requisito de leitura. O módulo indicado desenvolve mecanismo, exemplo, decisão e falha. O [currículo](../CURRICULO.md) define o escopo e o [status](../STATUS.md) a prontidão.
 
 | Conceito | Distinção necessária | Onde estudar |
 |---|---|---|
-| Modelo | transforma entradas segundo parâmetros aprendidos; capacidade depende de dados, objetivo e interface | M05/M11; ML opcional |
+| Modelo | transforma entradas segundo parâmetros aprendidos; capacidade depende de dados, objetivo e interface | M05/M11 |
 | Harness/runtime | software que monta contexto, controla execução, ferramentas, estado e limites | M00/M01/M08 |
 | Prompt | entrada/instrução comportamental; não é mecanismo de autorização | M05/M08/M12 |
 | Contexto | informação disponível em uma chamada, incluindo instruções, dados e resultados | M00/M05/M08 |
@@ -19,6 +19,6 @@ Referência curta de vocabulário, não hierarquia obrigatória nem pré-requisi
 | MCP/A2A | contratos de comunicação versionados; adoção de protocolo não concede confiança | M09 |
 | Eval | medição do comportamento num conjunto declarado; complementa testes do software | M06 |
 | Observabilidade | sinais para investigar estado e comportamento; telemetria precisa respeitar privacidade | M06/M12/LT01 |
-| ML/MLOps | aprendizado por dados e seu ciclo de operação; não se resume a LLMs | apêndice ML01–ML07, opcional |
+| ML/MLOps | aprendizado por dados e seu ciclo de operação; não se resume a LLMs | M11 |
 
-Uma aplicação pode usar modelo sem agente, busca sem geração, workflow sem LLM ou ferramentas sem MCP. Escolher a composição pelo problema e pela evidência. O principal explica toda matemática indispensável no ponto de uso; o apêndice oferece aprofundamento.
+Uma aplicação pode usar modelo sem agente, busca sem geração, workflow sem LLM ou ferramentas sem MCP. Escolher a composição pelo problema e pela evidência. Cada módulo explica a matemática indispensável no ponto de uso.

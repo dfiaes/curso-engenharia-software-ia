@@ -1,5 +1,7 @@
 # Especificação do M02 — Python 3.14 para engenharia profissional
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.1 · **Data-base:** 15/08/2026 · **Estado:** G0 APROVADO · **Carga:** 8 blocos / 16h
 
 **Baseline de execução de 15/08/2026:** o orquestrador aprovou G0–G6 e os 38 cenários daquela edição; os comandos e saídas são evidência histórica em `modulos/M02-python-profissional/RASTREABILIDADE.md`. A edição editorial de setembro requer revalidação, especialmente G6; consulte `docs/STATUS-IMPLEMENTACAO-CURSO.md` para o estado operacional atual. Esta especificação preserva o registro de agosto e não promove gate.

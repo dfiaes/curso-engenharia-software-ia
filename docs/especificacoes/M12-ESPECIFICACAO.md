@@ -1,5 +1,7 @@
 # Especificação do M12 — Produção, segurança, multi-tenancy, billing e SRE
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.0 · **Data-base:** 14/08/2026 · **Estado:** G0 APROVADO · **Carga:** 9 blocos / 18h
 
 Esta especificação é o contrato de regeneração do M12. O HTML existente está bloqueado para estudo e não deve ser usado como base técnica. Seu roteiro nominal pode ser aproveitado, mas exemplos, afirmações e soluções precisam ser reconstruídos a partir deste documento.

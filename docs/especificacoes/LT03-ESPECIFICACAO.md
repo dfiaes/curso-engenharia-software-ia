@@ -1,5 +1,7 @@
 # Especificação do LT03 — Cloud-native, IaC, GitOps e plataforma
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.0 · **Data-base:** 14/08/2026 · **Estado:** G0 APROVADO · **Carga:** 6 blocos / 12h
 
 LT03 acontece depois do M10. Seu propósito é levar o serviço Python do artefato OCI a um ambiente declarativo, reconciliado e operável, sem transformar o aluno em operador de um único provedor de nuvem.

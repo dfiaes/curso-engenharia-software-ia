@@ -1,5 +1,7 @@
 # Especificação do LT01 — Runtime, Linux e redes
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.0 · **Data-base:** 14/08/2026 · **Estado:** G0 APROVADO · **Carga:** 6 blocos / 12h
 
 LT01 acontece depois do M03. Seu propósito não é formar administrador Linux ou engenheiro de redes: é tornar o engenheiro Python capaz de explicar, medir e diagnosticar o caminho entre uma requisição e o processo que a atende.

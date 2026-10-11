@@ -1,195 +1,84 @@
-# Padrão composto de qualidade técnica e didática
+# Padrão de qualidade técnica e didática
 
-**Versão:** 1.1 · **Atualizado em:** 12/09/2026 · **Aplicação:** todos os módulos e laboratórios
+Guia para quem escreve ou revisa módulos e laboratórios. As regras permanentes estão em [`CLAUDE.md`](../CLAUDE.md); a sequência em [`CURRICULO.md`](../CURRICULO.md); a política de fontes em [`POLITICA-FONTES-E-AGNOSTICISMO.md`](POLITICA-FONTES-E-AGNOSTICISMO.md).
 
-## 1. Autoridade
+## 1. Régua técnica
 
-Nenhum módulo isolado é o padrão completo. O M00 oferece a baseline visual; M01 e M02 já elevaram a densidade, a rastreabilidade, a execução e a validação cross-platform. A qualidade exigida é o conjunto mais forte e coerente de:
+Cada tópico relevante responde, proporcionalmente ao escopo:
 
-1. `CLAUDE.md` e `AGENTS.md`;
-2. política de fontes e agnosticismo;
-3. currículo e fronteiras entre módulos;
-4. especificação e rastreabilidade locais;
-5. profundidade N1–N5 e gates G0–G6;
-6. evidência executável e revisão do orquestrador;
-7. critérios técnicos e didáticos deste documento.
-
-Uma prática nova só eleva a baseline se for verificável, transferível e não criar regressão de acessibilidade, manutenção ou aprendizagem.
-
-## 2. Régua técnica
-
-Cada tópico relevante precisa responder, proporcionalmente ao escopo:
-
-| Camada | Pergunta obrigatória | Evidência |
+| Camada | Pergunta | Evidência |
 |---|---|---|
-| fundamento | qual problema existe e qual modelo mental explica o mecanismo? | explicação, vocabulário e limites |
-| decisão | quando usar, quando evitar e quais trade-offs importam? | matriz, hipótese ou ADR |
-| implementação | como construir em Python sem esconder a primitiva? | código completo e ambiente reproduzível |
-| falha | como quebra, como detectar e como recuperar? | falha semeada, oráculo e diagnóstico |
-| operação/transferência | como medir, proteger, manter e transferir? | telemetria/evidência e defesa técnica |
+| Fundamento | Que problema existe e qual modelo mental explica o mecanismo? | explicação, vocabulário, limites |
+| Decisão | Quando usar, quando evitar, que trade-offs importam? | matriz, hipótese ou ADR |
+| Implementação | Como construir em Python sem esconder a primitiva? | código completo, ambiente reproduzível |
+| Falha | Como quebra, como detectar, como recuperar? | falha semeada, oráculo, diagnóstico |
+| Operação | Como medir, proteger e manter? | telemetria, evidência, defesa técnica |
 
-Requisitos adicionais:
+- Separar invariante, padrão aberto e adapter de produto.
+- Cobrir caminho feliz, borda, falha injetada e controle negativo.
+- Não publicar benchmark, versão ou saída sem data e método.
+- Revisar código gerado por IA pelos mesmos contratos do código humano.
 
-- separar invariante, padrão aberto e adapter de produto;
-- tornar explícita a diferença entre conceito, convenção, sintaxe de interface e mecanismo de segurança;
-- cobrir caminho feliz, bordas, falha, controle negativo e limitação não provada;
-- não publicar claim temporal, benchmark ou saída sem versão/data/método;
-- ensinar estrutura de dados, complexidade, runtime, I/O, concorrência, dados, segurança e operação onde forem pré-requisitos reais — sem transformar cada módulo numa enciclopédia repetitiva;
-- revisar código gerado por IA pelos mesmos contratos aplicados ao código humano.
+## 2. Estrutura de um bloco
 
-## 3. Arquitetura didática
+1. **Situação:** a tarefa, falha ou custo que torna o conceito necessário.
+2. **Definição e modelo mental:** o que é, em linguagem direta, antes da API ou do comando.
+3. **Mecanismo:** o que acontece entre entrada, estado, processamento e efeito.
+4. **Exemplo trabalhado:** solução completa com raciocínio e resultado real.
+5. **Contraste:** alternativa, anti-padrão ou caso quase correto.
+6. **Decisão e limite:** quando ajuda, quando não ajuda, qual alternativa importa.
 
-Cada bloco deve permitir estudo independente e retomada após pausa. A sequência recomendada é:
+Cada bloco deve permitir pausa e retomada: abre com o problema e termina num ponto reconhecível. Sigla, ferramenta e sintaxe são introduzidas no ponto de uso. Pré-requisitos ficam explícitos e apontam para o módulo que os ensina.
 
-1. **orientação:** o que será aprendido, pré-requisitos e saída observável;
-2. **contexto disponível:** explicar ou vincular os conhecimentos anteriores necessários, sem questionário de entrada;
-3. **modelo mental:** explicar o porquê antes da API ou comando;
-4. **exemplo trabalhado:** solução completa, raciocínio e resultado real;
-5. **contraste:** alternativa, anti-padrão ou caso quase correto;
-6. **laboratório guiado no final:** montar um experimento coeso em cópia descartável, com procedimento completo, checkpoints de observação e diagnóstico;
-7. **checkpoint separado:** depois do laboratório, avaliar recuperação, decisão, diagnóstico e transferência sem consulta;
-8. **fechamento:** síntese, evidência produzida e próxima retomada.
+## 3. Voz
 
-### 3.5 Contrato de laboratório guiado
+Autor experiente, para leitura autônoma por quem pode ter menos experiência, sem perder precisão. O termo técnico permanece e é definido no primeiro uso. A prosa alterna decisão curta e explicação desenvolvida quando uma relação causal precisa ser construída. Sem conectivos de enchimento, adjetivos grandiosos, aberturas protocolares ou fechamentos de efeito. Cada parágrafo acrescenta contexto, decisão, consequência ou evidência. Ressalvas só para limites técnicos reais.
 
-O laboratório é a continuação da explicação, não uma prova interrompendo cada bloco. Os exemplos no corpo do HTML podem mostrar mecanismo, contraste ou rastreamento de execução. O roteiro manual fica reunido na seção final `Laboratório guiado MXX`, acessível diretamente; essa posição não impõe a ordem ou duração de cada sessão.
+## 4. Laboratório
 
-O roteiro obrigatório contém, em ordem: resultado observável e limite; pré-requisitos; criação de cópia de trabalho descartável; mapa dos arquivos; passos cumulativos com **por que → copie → execute → observe → diagnostique**; validação técnica; limpeza segura; referência dos arquivos finais. A cópia nasce em diretório temporário pertencente ao laboratório e não pode limpar paths fornecidos pelo usuário.
+O laboratório é a continuação da explicação e fica reunido no fim do módulo (`Laboratório guiado <CÓDIGO>`). Referência versionada em `lab/`; o aluno trabalha numa cópia descartável criada por `create_working_copy.py`, que nunca limpa caminhos fornecidos pelo usuário.
 
-Não há exercício avaliativo dentro da prática. Um caso negativo é executado para tornar uma fronteira visível e já traz o resultado esperado. Lint, tipagem e testes funcionam como oráculos do software; o checkpoint posterior, não o laboratório, mede a competência do aluno. O código de referência permanece versionado em `lab/`, e cada bloco copiável do guia precisa corresponder a ele ou ser identificado como pseudocódigo.
+- Passos cumulativos: por que → copie → execute → observe → diagnostique.
+- Resultado esperado em cada passo; caso negativo já traz a saída esperada.
+- Código copiável corresponde ao `lab/` ou é rotulado como pseudocódigo.
+- Saída publicada vem de execução real ou é rotulada como variável.
+- Validação técnica com `pytest`, `ruff` e `mypy --strict`; limpeza segura no fim.
+- Exemplos no corpo do HTML podem ser lidos sem executar; a prática manual fica no lab.
 
-### 3.1 Carga cognitiva e expertise
+## 5. Checkpoint
 
-- Não assumir conhecimento ainda não ensinado; introduzir sigla, ferramenta e sintaxe no ponto de uso.
-- Declarar pré-requisitos e oferecer links para sua explicação. Não presumir conhecimentos pelo cargo ou pela stack de origem.
-- Integrar explicação e código próximos para evitar atenção dividida.
-- Começar com exemplo trabalhado e retirar suporte progressivamente.
-- Quebrar complexidade por dependências conceituais, não por quantidade arbitrária de texto.
-- Ensinar em Python, sem tabelas de tradução ou analogias recorrentes com outra stack. Interoperabilidade, quando for o assunto, exige contratos ensinados antes da comparação.
+Separado do lab, sem consulta, por cenário, com rubrica "Basta / Reprova". Mede explicação, decisão, diagnóstico e transferência, não repetição do exemplo. Critérios são conhecidos de antemão; a solução de uma tarefa independente não é entregue. Reprovar é permitido e não bloqueia a navegação.
 
-### 3.2 Fixação e avaliação
+## 6. Evidência e fontes
 
-- Recuperação ativa e revisão espaçada são recursos disponíveis, sem duração, frequência ou execução obrigatórias durante o estudo.
-- Exercícios devem variar contexto e intercalar competências já estudadas.
-- Cada erro relevante entra em revisão espaçada quando houver estudo real; produção editorial não altera `PROGRESSO.md`.
-- Checkpoint mede explicação, decisão, execução, diagnóstico e transferência; múltipla escolha isolada não aprova competência prática.
-- A avaliação informa critérios e oráculos antecipadamente, mas não entrega a solução da tarefa independente.
-- O checkpoint mantém rigor para registrar domínio; não bloqueia navegação nem exige que toda pessoa estude do mesmo modo. Se solicitado, a ajuda pode entregar solução diretamente sem exigir tentativas ou uma escada de pistas.
+Afirmações de alto risco (versões, preços, recursos de produto, dados de adoção) levam fonte junto ao texto e data de verificação; revalidar em até 90 dias. Panorama de mercado, quando útil, é seção curta e datada: sinal e fonte, prática que ele torna relevante, ferramentas separadas em núcleo, padrão aberto e adapter, limites do dado. Popularidade não escolhe a arquitetura do aluno.
 
-### 3.6 Ritmo livre e retomada
+## 7. Acessibilidade e apresentação
 
-- Bloco é unidade editorial, não sessão. Carga horária é estimativa de escopo; não usar relógios de estudo, contagem regressiva, quotas ou prazo de conclusão.
-- Cada seção começa com o problema e termina num ponto reconhecível. Links estáveis permitem continuar dali, mesmo após uma sessão curta.
-- O percurso principal contém mecanismo, decisão, exemplo e limite. Detalhes extensos de consulta ficam identificados como referência, sem esconder conceitos necessários à compreensão.
-- Cada etapa prática declara estado inicial, arquivo, resultado, diagnóstico e estado para retomar. Recursos em execução precisam de encerramento seguro e reinício documentados.
-- Diário, commit, autoavaliação, leitura em voz alta e registro de tempo são opcionais. Nenhum deles condiciona o acesso ao conteúdo.
-- Quando houver feedback espontâneo ou solicitado sobre o material, usar dúvidas, dificuldade de retomada e desempenho observado para melhorar a explicação. Não inventar ganho de aprendizagem nem instalar coleta silenciosa.
+- HTML semântico, hierarquia de headings, idioma e landmarks corretos.
+- Teclado, foco visível, contraste e texto redimensionável; nada depende só de cor.
+- Tabelas e código com estratégia móvel; sem overflow horizontal da página a 390 px.
+- SVG e diagramas com nome e alternativa textual.
+- Impressão sem corte ou sobreposição.
+- Termos ingleses profissionais preservados e definidos no primeiro uso.
 
-### 3.3 Contrato de voz editorial e contexto técnico
+## 8. Autoavaliação N1–N5
 
-O material é escrito para leitura autônoma por uma pessoa que pode ter menos experiência, sem reduzir a precisão necessária para a formação sênior. Simplificar a linguagem não autoriza apagar nomenclatura, trade-off, falha ou limite. O termo técnico permanece; sua função é explicada no ponto em que passa a ser necessário.
+Ferramenta do autor para medir a profundidade de um tópico, não etapa de aprovação:
 
-Para toda tecnologia, sigla, API, ferramenta ou construção de linguagem introduzida no bloco, a revisão procura esta cadeia:
+- **N1** reconhece o termo e sabe para que serve.
+- **N2** explica o mecanismo com as próprias palavras.
+- **N3** implementa e testa o caso comum.
+- **N4** diagnostica falhas e escolhe entre alternativas com trade-offs.
+- **N5** projeta, opera e defende a decisão num sistema real.
 
-1. **situação:** qual tarefa, falha ou custo torna o conceito necessário;
-2. **definição:** o que ele é, em linguagem direta;
-3. **mecanismo:** o que acontece entre entrada, estado, processamento e efeito;
-4. **decisão:** quando ele ajuda, quando não ajuda e qual alternativa importa;
-5. **observação:** exemplo trabalhado, contraste ou diagnóstico que torne a explicação verificável.
+## 9. Lista antes de marcar um módulo como pronto
 
-A prosa alterna frases curtas de fixação e períodos desenvolvidos quando uma relação causal precisa ser construída. Não usar conectivos vazios, adjetivação grandiosa, metáforas corporativas, abertura protocolar ou encerramento clichê. Cada parágrafo deve acrescentar contexto, decisão, consequência ou evidência. Tamanho de texto não é critério de corte: o material pode crescer o necessário para respeitar as dependências conceituais, desde que não repita conteúdo ou esconda ausência de prática.
-
-### 3.4 Panorama de prática vigente no mercado
-
-O curso mostra como os fundamentos aparecem em ferramentas e fluxos que têm adoção observável. Esse panorama orienta estudo e transferência; não escolhe a arquitetura do aluno por popularidade, nem transforma uma pesquisa de mercado em autoridade técnica.
-
-Quando o tema tiver impacto no trabalho atual, o módulo inclui uma seção curta e datada com:
-
-1. o sinal de mercado e sua fonte, método, população e data;
-2. a prática profissional que o sinal torna relevante;
-3. duas ou mais ferramentas, frameworks ou padrões que materializam a prática, separados entre núcleo, padrão aberto e adapter;
-4. limites do dado — por exemplo, repositórios públicos não representam vagas, empresas brasileiras, custo ou adequação ao domínio;
-5. uma decisão didática: o que o aluno precisa dominar primeiro e o que ficará apenas como exemplo de ecossistema.
-
-Relatórios de comunidades, pesquisas com desenvolvedores, dados públicos de ecossistemas e estudos com método publicado podem sustentar a seção como fonte industrial. A documentação oficial continua a fonte do comportamento de cada produto; especificações e papers continuam a fonte do fundamento. Dados de adoção, versões, preços, APIs e catálogos de produto são de alto risco e exigem revalidação em até 90 dias.
-
-## 4. Material como referência
-
-O HTML precisa funcionar simultaneamente como aula e consulta:
-
-- sumário com links profundos estáveis para bloco e subseção;
-- prontidão visível: distinguir conteúdo verificado, lote parcial e legado em revisão, com link para a evidência;
-- títulos pesquisáveis, glossário local e referências cruzadas;
-- exemplos completos ligados ao repositório/lab e ao commit/evidência aplicável;
-- tabelas de referência somente quando ajudarem decisão ou consulta;
-- diagnóstico sintoma → hipótese → evidência → correção;
-- fonte colocada junto ao claim de alto risco e registro completo ao final;
-- nenhuma navegação essencial pode depender apenas de abrir arquivos `file://` manualmente.
-
-Até existir a plataforma integrada, links entre documentos devem usar caminhos relativos funcionais no repositório e âncoras HTML estáveis.
-
-## 5. Apresentação, inclusão e acessibilidade
-
-- HTML semântico, hierarquia de headings, idioma e landmarks corretos;
-- teclado, foco visível, contraste, texto redimensionável e conteúdo compreensível sem cor;
-- tabelas e código com estratégia móvel; zero overflow da página a 390 px;
-- SVG/diagramas com nome e alternativa textual equivalente;
-- impressão integral revisada, sem corte ou sobreposição;
-- densidade visual compatível com leitura longa, com largura de linha e espaçamento controlados;
-- linguagem portuguesa precisa; termos ingleses preservados quando forem o vocabulário profissional, sempre definidos no primeiro uso.
-
-## 6. Fontes pedagógicas de base
-
-| Fonte | Aplicação | Tipo |
-|---|---|---|
-| [Roediger & Karpicke — testing effect](https://doi.org/10.1111/j.1745-6916.2006.00012.x) | recuperação ativa e retenção | revisão de pesquisa primária |
-| [Sweller et al. — Cognitive Architecture and Instructional Design](https://doi.org/10.1007/s10648-019-09465-5) | carga cognitiva, exemplos trabalhados e expertise reversal | revisão científica |
-| [Tamang et al. — self-explanation de código](https://doi.org/10.1145/3408877.3432423) | explicação de código e compreensão | experimento em educação de computação |
-| [Sandoval-Medina et al. 2024](https://doi.org/10.62273/GMIV1698) | worked examples e self-explanation em programação | estudo aplicado |
-
-Essas fontes orientam decisões didáticas; não justificam percentuais universais nem garantem o mesmo efeito para todo aluno. O curso registra desempenho próprio e ajusta suporte sem confundir percepção de fluência com aprendizagem.
-
-## 7. Gate de autoria por bloco
-
-Antes de marcar um bloco como produzido:
-
-- [ ] pré-requisitos, objetivos e saída observável estão explícitos;
-- [ ] a explicação independe de .NET ou outra stack e o material permite pausa sem ritual obrigatório;
-- [ ] conceitos e termos novos são ensinados antes do uso;
-- [ ] cada conceito novo apresenta situação, definição, mecanismo, decisão/limite e observação proporcional ao escopo;
-- [ ] a voz alterna ritmo sem virar texto telegráfico, e não usa conectivos vazios ou clichês de fechamento;
-- [ ] quando relevante, há panorama de prática vigente datado, com sinal de mercado, limite metodológico e separação entre fundamento e produto;
-- [ ] existe exemplo completo executável ou justificativa de não aplicabilidade;
-- [ ] o resultado publicado veio de execução ou está rotulado como variável;
-- [ ] há contraste/anti-padrão e diagnóstico de falha relevante;
-- [ ] exemplos conceituais não exigem execução durante a leitura; a prática manual aparece somente no laboratório final;
-- [ ] laboratório usa cópia de trabalho descartável, passos cumulativos, resultado esperado e diagnóstico sem avaliação do aluno;
-- [ ] código copiável corresponde ao artefato executável ou está rotulado como pseudocódigo;
-- [ ] checkpoint posterior avalia recuperação/transferência além de repetição do exemplo;
-- [ ] claims possuem fonte proporcional e adapters não viram fundamentos;
-- [ ] links profundos, mobile, teclado, acessibilidade e impressão foram verificados;
-- [ ] rastreabilidade e status foram atualizados sem tocar o diário do aluno.
-
-## 8. Regra de evolução
-
-Ao encontrar uma abordagem melhor:
-
-1. registrar qual problema ela resolve;
-2. provar o ganho com revisão ou evidência;
-3. atualizar este padrão se for geral;
-4. aplicar ao módulo em produção;
-5. abrir backlog explícito para módulos anteriores afetados.
-
-“Ficar parecido com o M00” nunca é critério suficiente de aceite.
-
-## 9. Fluxo de implementação e manutenção documental
-
-1. Ler os documentos indicados em `AGENTS.md`, a especificação e a rastreabilidade em escopo; consultar o status para escolher a unidade ativa.
-2. Construir o exemplo/laboratório junto com a explicação. Executar os oráculos antes de publicar saídas; um texto completo com prática ainda inexistente permanece parcial.
-3. Revisar dependências conceituais, repetição, exemplos trabalhados, diagnóstico e transferência. Não usar contagem de palavras ou quantidade de caixas como critério de aprovação.
-4. Verificar links/estrutura com `tools/check_course.py`, correspondência do código copiável com a referência e cobertura do checkpoint. Executar gates técnicos do módulo e revisar visualmente desktop, 390 px e impressão quando houver mudança de apresentação.
-5. Atualizar rastreabilidade, matriz e status na mesma mudança. Se uma alteração invalidar a revisão anterior, registrar revalidação pendente sem apagar a evidência histórica.
-
-`CLAUDE.md` contém regras permanentes; este padrão contém a régua e o fluxo; `CURRICULO.md` contém escopo; `STATUS-IMPLEMENTACAO-CURSO.md` contém a única fila operacional; especificações e rastreabilidade contêm os detalhes locais. Auditorias guardam achados/evidências datados, não prioridades concorrentes. Uma fonte descoberta durante a produção entra na especificação do módulo correspondente.
-
-Remover documento redundante ou fora do escopo somente após identificar seus consumidores, consolidar decisões ainda válidas e corrigir links. Não apagar evidência, fixtures, ADRs ou trabalho do aluno para reduzir a contagem de arquivos. O histórico de estudo não é migrado por uma limpeza editorial.
+- [ ] Pré-requisitos, objetivo e saída observável explícitos; diagnóstico rápido presente.
+- [ ] Conceitos novos seguem situação → definição → mecanismo → decisão → observação.
+- [ ] Exemplo completo executável, contraste e diagnóstico de falha.
+- [ ] Lab em cópia descartável, executado de ponta a ponta.
+- [ ] Checkpoint por cenário com rubrica.
+- [ ] Fontes com data; `python3 tools/check_course.py` sem erro.
+- [ ] Desktop, 390 px, teclado e impressão verificados.
+- [ ] Estado atualizado em [`STATUS.md`](../STATUS.md); `PROGRESSO.md` intocado.

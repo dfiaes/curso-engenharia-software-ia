@@ -1,5 +1,7 @@
 # M06 — especificação de escopo e evidência
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.0 · **Data-base:** 14/09/2026 · **Estado:** G0 aprovado; G1 em produção
 
 ## 1. Decisão curricular
@@ -32,7 +34,7 @@ documentado.
 | Não cobre | RAG (M07), agentes (M08), produção multi-tenant (M12) |
 | Evidência mínima | comandos, versões e saída executada; acordo de juiz só com conjunto humano |
 
-Referência interna de matemática e dependências do principal: [ponte do M06](../planejamento-v4/pontes-principal.md#proporções-e-incerteza-no-m06). A interpretação de proporções e incerteza deve permanecer autossuficiente em B01; ML01 é somente aprofundamento opcional.
+Referência interna de matemática e dependências do principal: ponte do M06. A interpretação de proporções e incerteza deve permanecer autossuficiente em B01; ML01 é somente aprofundamento opcional.
 ## 3. Arquitetura do laboratório
 
 ```text
@@ -117,7 +119,7 @@ precisa registrar anotadores, rubrica e resolução de desacordos; o helper não
 certifica isso.
 `LLM-as-judge` nunca substitui calibração humana; concordância não é a
 margem de erro da acurácia do produto. O ledger focal e as correções
-pendentes estão em [`docs/planejamento-v4/fontes.json`](../planejamento-v4/fontes.json).
+pendentes estão em `docs/planejamento-v4/fontes.json`.
 
 O exemplo de planejamento do B01 usa a aproximação de uma proporção do
 NIST com `p₀=0,90`, `p₁=0,95`, `α=0,05` bilateral e poder `0,80`. A

@@ -1,5 +1,7 @@
 # M02A — Engenharia de Software Sênior em 2026
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 > Especificação normativa de produção · versão 1.2 · 12/09/2026
 > Estado: **G0 aprovado; G1 em produção**
 

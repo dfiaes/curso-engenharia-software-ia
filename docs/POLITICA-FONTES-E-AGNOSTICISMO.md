@@ -1,12 +1,10 @@
 # Política de fontes e agnosticismo tecnológico
 
-**Versão:** 1.0 · **Data-base:** 14/08/2026
-
 ## 1. Princípio
 
 O curso ensina conhecimento transferível. Nenhuma API proprietária, framework ou modelo é tratado como fundamento universal. Python é a linguagem canônica; tecnologias específicas são implementações intercambiáveis de contratos explícitos.
 
-**Decisão didática de 12/09/2026:** neutralidade também se aplica à origem do aluno. Nenhum conceito, exercício ou checkpoint pressupõe .NET ou outra stack. Ensinar problema, definição, mecanismo e limite antes de qualquer comparação. Corpus de outra linguagem, quando necessário ao produto, é dado de teste com contexto próprio, não pré-requisito do leitor.
+**Neutralidade de origem:** a neutralidade também se aplica à origem do aluno. Nenhum conceito, exercício ou checkpoint pressupõe .NET ou outra stack. Ensinar problema, definição, mecanismo e limite antes de qualquer comparação. Corpus de outra linguagem, quando necessário ao produto, é dado de teste com contexto próprio, não pré-requisito do leitor.
 
 ## 2. Hierarquia de fontes
 
@@ -43,7 +41,7 @@ Cada módulo deve manter uma seção `Fontes e versões` contendo:
 - data de última verificação;
 - risco de obsolescência: baixo, médio ou alto.
 
-Não basta listar uma bibliografia ao final. A matriz precisa permitir descobrir qual fonte sustenta cada competência versionável.
+Não basta listar uma bibliografia ao final: cada afirmação importante deve apontar para a fonte que a sustenta.
 
 ## 5. Contrato de neutralidade
 

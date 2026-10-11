@@ -1,5 +1,7 @@
 # Especificação do M13 — Capstone Cartógrafo
 
+> Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em [CURRICULO.md](../../CURRICULO.md) e [STATUS.md](../../STATUS.md).
+
 **Versão:** 1.0 · **Data-base:** 14/08/2026 · **Estado:** G0 APROVADO · **Carga:** 20 blocos / 40h
 
 Esta especificação converte o M13 em roteiro de integração, validação e lançamento. O módulo não introduz uma nova pilha: ele obriga as peças construídas em M01–M12 e LT01–LT04 a funcionar como um produto único, mensurável e operável.
