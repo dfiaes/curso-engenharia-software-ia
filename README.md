@@ -8,11 +8,13 @@ Curso em português que leva do nível júnior ao nível de especialista e líde
 2. Faça o [nivelamento](docs/nivelamento.md) para saber onde entrar. Quem já trabalha na área pode passar rápido pela Fase 0 usando o diagnóstico de cada módulo.
 3. Siga o [currículo](CURRICULO.md) em ordem.
 
+Precisa trabalhar com agentes de código já? Faça a [Trilha rápida](trilha-rapida/TR.html) e use o [kit de arranque](kit/README.md) no seu projeto.
+
 | Fase | Foco | Módulos |
 |---|---|---|
 | 0 · Fundamentos | Terminal e Git, Python, algoritmos, web e HTTP, SQL | F01–F05, M02 |
 | 1 · Engenharia de software | Design de código, engenharia sênior, serviço real, docs e decisões, runtime e redes | S01, M02A, M03, M04, LT01 |
-| 2 · AI Engineering | Agentes de programação, LLM na prática, evals, RAG, agentes, MCP, grafos | M00, M01, M05–M10 |
+| 2 · AI Engineering | Agentes de programação, LLM na prática, evals, RAG, agentes, MCP, grafos | M00, M01, A01, M05–M10 |
 | 3 · Produção | Segurança e SRE, sistemas distribuídos, plataforma, deploy em nuvem, release | M12, LT02, LT03, P01, LT04 |
 | 4 · Especialista e líder | System design de IA, ML/DL, adaptação de modelos, governança, liderança, capstone, carreira | E01, M11, E02, E03, E04, M13, E05 |
 

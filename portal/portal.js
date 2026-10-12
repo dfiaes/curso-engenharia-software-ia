@@ -31,7 +31,7 @@
     $("featured").innerHTML = cont
       + card("trilha-rapida/TR.html", "Trilha rápida", "Trilha rápida: desenvolvimento com agentes", "Caminho curto para trabalhar com agentes de código antes de percorrer o currículo completo.")
       + card("docs/nivelamento.md", "Nivelamento", "Nivelamento", "Descubra por onde começar de acordo com a sua experiência.")
-      + card("kit/README.md", "Kit", "Kit de arranque", "Ambiente, modelos e arquivos iniciais para acompanhar os laboratórios.");
+      + card("kit/README.md", "Kit", "Kit de arranque", "Modelos agnósticos para copiar no seu projeto: AGENTS.md, intent/spec/plan, hooks e esteira dev → cert → prod.");
   }
 
   function unitCard(u) {

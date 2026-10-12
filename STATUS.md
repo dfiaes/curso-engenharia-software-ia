@@ -1,6 +1,6 @@
 # Status dos módulos
 
-Atualizado em 11/10/2026. Estados: **pronto** (revisado por uma pessoa, lab executado), **revisar** (conteúdo completo, falta revisão humana ou execução do lab), **rascunho** (em escrita).
+Atualizado em 12/10/2026. Estados: **pronto** (revisado por uma pessoa, lab executado), **revisar** (conteúdo completo, falta revisão humana ou execução do lab), **rascunho** (em escrita).
 
 | Fase | Módulo | Estado | Observação |
 |---|---|---|---|
@@ -17,6 +17,8 @@ Atualizado em 11/10/2026. Estados: **pronto** (revisado por uma pessoa, lab exec
 | 1 | LT01 Runtime, Linux e redes | revisar | |
 | 2 | M00 Agentes de programação | revisar | |
 | 2 | M01 SDD e execução paralela | revisar | |
+| 2 | A01 SDLC nativo de IA | revisar | novo; baseado no AI-native SDLC playbook, agnóstico de ferramenta |
+| — | Trilha rápida + kit | revisar | novo; kit com bootstrap e testes |
 | 2 | M05 LLM na prática | revisar | |
 | 2 | M06 Evals e observabilidade | revisar | |
 | 2 | M07 RAG | revisar | |
@@ -47,3 +49,4 @@ Atualizado em 11/10/2026. Estados: **pronto** (revisado por uma pessoa, lab exec
 - P01: build Docker, `what-if` e deploy real não foram executados (sem Docker/conta Azure no ambiente de autoria).
 - Módulos novos ficaram entre 9 e 18 mil palavras; F02, F05 e E01 são candidatos a enxugar após a primeira leitura.
 - M02A, LT01, LT03, LT04 e M11: IDs de critério de aceite foram tirados da prosa; reler frases onde o ID era o sujeito.
+- Layout compartilhado (`assets/course.css`/`course.js`): tema claro/escuro e responsividade; todos os módulos têm quizzes, diagramas passo a passo, simuladores e flashcards — conferir no navegador, sobretudo no celular.

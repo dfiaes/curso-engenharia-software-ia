@@ -4,6 +4,8 @@ Uma trilha única, em cinco fases, do nível júnior ao nível de especialista e
 
 **Como usar.** Siga as fases em ordem. Cada módulo abre com um **diagnóstico rápido**: se você acerta tudo, leia só a conclusão, faça o checkpoint e siga em frente. Quem já atua na área costuma passar rápido pela Fase 0 e parar exatamente nos pontos que a rotina deixou enferrujados. Comece pelo [nivelamento](docs/nivelamento.md) para decidir onde entrar.
 
+**Trilha rápida.** Se o objetivo imediato é trabalhar bem com agentes de código (Cursor, Codex, OpenCode, Claude Code ou um agente próprio) num projeto real, faça antes a [Trilha rápida](trilha-rapida/TR.html): o ciclo intenção → spec → plano → implementação → verificação → PR → esteira dev/cert/prod → operação, para projeto novo ou existente, com GitHub, Jira e Azure ou on-premise. Os modelos prontos estão no [kit de arranque](kit/README.md).
+
 As cargas são estimativas para quem estuda o módulo inteiro e faz o lab. Estado de cada módulo: [`STATUS.md`](STATUS.md).
 
 ## Fase 0 · Fundamentos (≈ 90 h)
@@ -31,7 +33,7 @@ Da escrita de código à engenharia: design, decisões, contratos, dados, concor
 | [M04](modulos/M04-design-docs-com-ia/M04.html) | Design docs, ADR, C4 e documentação como contexto de agente | 8 h | M03 |
 | [LT01](modulos/LT01-novo/LT01.html) | Runtime, Linux e redes em profundidade | 12 h | F04, M03 |
 
-## Fase 2 · AI Engineering (≈ 120 h)
+## Fase 2 · AI Engineering (≈ 134 h)
 
 Construir com modelos de linguagem: trabalhar com agentes de programação, chamar modelos, avaliar, recuperar, orquestrar e integrar.
 
@@ -39,6 +41,7 @@ Construir com modelos de linguagem: trabalhar com agentes de programação, cham
 |---|---|---:|---|
 | [M00](modulos/M00-ferramental/M00.html) | Trabalhar com agentes de programação: harness, contexto, permissões e evidência | 10 h | Fase 1 |
 | [M01](modulos/M01-workflow-ia-driven/M01.html) | Desenvolvimento orientado a especificação e execução paralela com IA | 10 h | M00 |
+| [A01](modulos/A01-sdlc-nativo-ia/A01.html) | SDLC nativo de IA, agnóstico de ferramenta: intent, spec, plan, hooks, revisão por IA, gates por ambiente, manutenção em loop | 14 h | M01 |
 | [M05](modulos/M05-llm-pratica-gateway-cache/M05.html) | LLM na prática: tokens, structured output, tool calling, streaming, cache, gateway e custo | 14 h | M03 |
 | [M06](modulos/M06-evals-observabilidade/M06.html) | Evals e observabilidade de sistemas com LLM | 12 h | M05 |
 | [M07](modulos/M07-rag-de-verdade/M07.html) | RAG de verdade: embeddings, chunking, pgvector, busca híbrida, reranking, ACL | 16 h | M06 |
