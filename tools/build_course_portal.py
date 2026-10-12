@@ -16,6 +16,7 @@ SOURCE = ROOT / "portal" / "course-source.json"
 MANIFEST = ROOT / "portal" / "course-manifest.json"
 TEMPLATE = ROOT / "portal" / "index.template.html"
 OUTPUT = ROOT / "index.html"
+MANIFEST_JS = ROOT / "assets" / "course-manifest.js"
 WRITING = "em escrita"
 AVAILABLE = "disponível"
 
@@ -179,11 +180,14 @@ def main() -> int:
     manifest = build_manifest(allow_missing=args.allow_missing)
     manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
     output_text = render(manifest)
+    manifest_js = "window.COURSE_MANIFEST = " + json.dumps(manifest, ensure_ascii=False, separators=(",", ":")) + ";\n"
 
     if args.check:
         errors: list[str] = []
         if not MANIFEST.is_file() or MANIFEST.read_text(encoding="utf-8") != manifest_text:
             errors.append("portal/course-manifest.json is stale; run tools/build_course_portal.py")
+        if not MANIFEST_JS.is_file() or MANIFEST_JS.read_text(encoding="utf-8") != manifest_js:
+            errors.append("assets/course-manifest.js is stale; run tools/build_course_portal.py")
         if not OUTPUT.is_file() or OUTPUT.read_text(encoding="utf-8") != output_text:
             errors.append("index.html is stale; run tools/build_course_portal.py")
         if errors:
@@ -192,6 +196,7 @@ def main() -> int:
     else:
         MANIFEST.write_text(manifest_text, encoding="utf-8")
         OUTPUT.write_text(output_text, encoding="utf-8")
+        MANIFEST_JS.write_text(manifest_js, encoding="utf-8")
 
     writing = [unit["code"] for unit in manifest["units"] if unit["status"] == WRITING]
     print(
