@@ -419,7 +419,14 @@
 
   function start() {
     if (document.body.dataset.layout !== "none") { buildLayout(); trackProgress(); }
-    else { applyTheme(currentTheme()); }
+    else {
+      /* Páginas sem o layout dos módulos (portal): ligar o botão de tema da própria página. */
+      var pb = document.querySelector(".c-theme");
+      if (pb) {
+        applyTheme(currentTheme());
+        pb.addEventListener("click", function () { applyTheme(currentTheme() === "dark" ? "light" : "dark"); });
+      }
+    }
     rewriteDocLinks(document);
     enhanceReading();
     initAll(document);
