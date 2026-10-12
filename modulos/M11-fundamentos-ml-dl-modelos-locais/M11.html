@@ -133,6 +133,48 @@
 </tbody>
 </table>
 
+<div class="ix"><span class="ix-title">Simulador: descida de gradiente e taxa de aprendizado</span>
+<p>Treinar é repetir <code>peso −= lr · gradiente</code>. Aqui a perda é <code>(w − 3)²</code> (o ótimo é <code>w = 3</code>) e o peso começa em −3. Mude a taxa de aprendizado e veja o passo grande oscilar ou divergir, e o pequeno demorar.</p>
+<div class="ix-row"><label>Taxa de aprendizado (lr): <strong id="f11-gd-lr-v">0.10</strong></label><input type="range" id="f11-gd-lr" min="0.02" max="1.2" step="0.01" value="0.1" style="max-width:260px" aria-label="Taxa de aprendizado">
+<label>Passos: <strong id="f11-gd-n-v">12</strong></label><input type="range" id="f11-gd-n" min="1" max="30" step="1" value="12" style="max-width:200px" aria-label="Número de passos"></div>
+<div id="f11-gd-svg"></div>
+<div class="ix-out" id="f11-gd-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+var $ = function (id) { return document.getElementById(id); };
+var lr = $("f11-gd-lr"), nn = $("f11-gd-n");
+var X0 = 30, X1 = 610, WMIN = -4, WMAX = 10, Y0 = 190, Y1 = 22, LMAX = 50;
+function px(w) { return X0 + (Math.max(WMIN, Math.min(WMAX, w)) - WMIN) / (WMAX - WMIN) * (X1 - X0); }
+function py(l) { return Y0 - Math.min(l, LMAX) / LMAX * (Y0 - Y1); }
+function run() {
+  var a = Math.max(0.02, parseFloat(lr.value) || 0.1), n = Math.max(1, parseInt(nn.value, 10) || 12);
+  $("f11-gd-lr-v").textContent = a.toFixed(2); $("f11-gd-n-v").textContent = n;
+  var w = -3, ws = [w], i;
+  for (i = 0; i < n; i++) { w = w - a * 2 * (w - 3); ws.push(w); }
+  var curve = "";
+  for (i = 0; i <= 120; i++) { var ww = WMIN + (WMAX - WMIN) * i / 120; curve += (i ? "L" : "M") + px(ww).toFixed(1) + " " + py((ww - 3) * (ww - 3)).toFixed(1); }
+  var s = '<svg viewBox="0 0 640 215" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Parábola da perda com a trajetória dos pesos</title>';
+  s += '<line x1="30" y1="190" x2="610" y2="190" class="s-line" stroke-width="1" opacity=".5"/>';
+  s += '<path d="' + curve + '" fill="none" class="s-line" stroke-width="1.6" opacity=".7"/>';
+  s += '<line x1="' + px(3).toFixed(1) + '" y1="22" x2="' + px(3).toFixed(1) + '" y2="190" class="s-muted" stroke-width="1" stroke-dasharray="4 4"/><text x="' + px(3).toFixed(1) + '" y="206" font-size="11" text-anchor="middle" fill="currentColor">ótimo w = 3</text>';
+  var pts = ws.map(function (x) { return px(x).toFixed(1) + "," + py((x - 3) * (x - 3)).toFixed(1); }).join(" ");
+  s += '<polyline points="' + pts + '" fill="none" class="s-accent" stroke-width="1.3" opacity=".8"/>';
+  ws.forEach(function (x, k) { s += '<circle cx="' + px(x).toFixed(1) + '" cy="' + py((x - 3) * (x - 3)).toFixed(1) + '" r="' + (k === ws.length - 1 ? 6 : 3.2) + '" class="s-accent"/>'; });
+  s += '</svg>';
+  $("f11-gd-svg").innerHTML = s;
+  var f = 1 - 2 * a, regime;
+  if (a < 0.5) regime = "converge suavemente (fator por passo = " + f.toFixed(2) + ").";
+  else if (Math.abs(a - 0.5) < 1e-9) regime = "converge em um passo (caso especial).";
+  else if (a < 1) regime = "oscila em torno do ótimo, mas converge (fator " + f.toFixed(2) + ", negativo).";
+  else if (Math.abs(a - 1) < 1e-9) regime = "oscila para sempre entre dois pontos (fator −1).";
+  else regime = "DIVERGE: cada passo erra mais que o anterior (|fator| = " + Math.abs(f).toFixed(2) + " > 1).";
+  var loss = (w - 3) * (w - 3);
+  $("f11-gd-out").textContent = "Após " + n + " passos: w = " + (Math.abs(w) > 1e6 ? w.toExponential(2) : w.toFixed(3)) + ", perda = " + (loss > 1e6 ? loss.toExponential(2) : loss.toFixed(4)) + ".\nCom lr = " + a.toFixed(2) + ", " + regime + "\nPasso grande oscila e diverge; passo pequeno demora: lr é decisão de engenharia, não propriedade do algoritmo.";
+}
+lr.addEventListener("input", run); nn.addEventListener("input", run);
+run();
+});</script>
+
 <h3>O instrumento: logprobs</h3>
 
 <p>O gateway do M05 registra tokens e latência por chamada. Falta a probabilidade que o modelo atribuiu a cada token emitido. Esse número é o instrumento de confiança mais barato disponível.</p>
@@ -236,6 +278,16 @@ confianca = resumir(lps)</code></pre>
 </ul>
 </div>
 
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um token emitido tem logprob −2,3. O que isso significa e como o módulo trata?</p>
+<ol><li data-opt="a">O token é 2,3 vezes mais provável que o segundo colocado</li><li data-opt="b">A resposta tem 2,3% de chance de estar correta</li><li data-opt="c">O modelo atribuiu cerca de 10% de probabilidade àquele token; abaixo de −1,0 (~37%) o módulo o conta como incerto (convenção operacional, não constante universal)</li><li data-opt="d">O token foi emitido com 90% de confiança</li></ol>
+<div class="explain">Logprob é ln(p): −2,3 ≈ ln(0,10). Mede a probabilidade do <em>token emitido</em> segundo o modelo, não a correção da resposta. O limiar −1,0 separa "hesitou aqui" de ruído e vale como convenção do módulo.</div></div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Um colega aprova respostas automaticamente quando os logprobs são altos. Qual é o erro?</p>
+<ol><li data-opt="a">Nenhum: logprob alto equivale a resposta correta</li><li data-opt="b">Confiança mede coerência com o aprendido, não correspondência com a realidade: existe modelo confiante e errado. Logprob prioriza a fila de revisão humana, não assina veredito</li><li data-opt="c">Logprobs só existem em modelos locais, então o gateway nunca os recebe</li><li data-opt="d">O erro é usar a média; a perplexidade deveria ser a soma dos logprobs</li></ol>
+<div class="explain">Modelo fluente, com logprobs limpos, pode descrever com segurança um fato inexistente. Uso legítimo: relativo e agregado (comparar a mesma tarefa, acompanhar deriva, ordenar revisão). O grader de correção continua sendo o do M06.</div></div>
+
 <h3>Fontes do Bloco 1</h3>
 
 <ul>
@@ -288,6 +340,13 @@ confianca = resumir(lps)</code></pre>
 <p><span class="lbl">Contraste</span><strong>Sycophancy é incentivo, não personalidade.</strong> <em>Sycophancy</em> é ceder quando o usuário insiste, mesmo com a resposta correta já emitida. Se o avaliador médio prefere concordância, o gradiente aponta para concordância. Pedir firmeza no prompt não remove o incentivo: a pressão do usuário continua na entrada e a recompensa aprendida continua nos pesos. A defesa é arquitetural: o número sai de código determinístico e o LLM redige o texto em volta. Resposta que precisa resistir a pressão nunca nasce de geração livre.</p>
 </div>
 
+<div class="stepper"><span class="ix-title">Passo a passo: do continuador ao assistente</span>
+<div class="frame" data-caption="1. Pré-treino: prever o próximo token sobre corpus amplo produz um continuador"><svg viewBox="0 0 640 225" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Etapas de pós-treino</title><defs><marker id="ixs1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="15" y="20" width="170" height="78" rx="8" class="s-box" stroke-width="1.3" /><text x="100" y="38" font-size="11" text-anchor="middle" fill="currentColor" opacity=".8">entrada</text><text x="100" y="58" font-size="12" text-anchor="middle" fill="currentColor" >"Qual a capital</text><text x="100" y="74" font-size="12" text-anchor="middle" fill="currentColor" >da França?"</text><line x1="188" y1="59" x2="222" y2="59" class="s-line" stroke-width="1.5" marker-end="url(#ixs1)" /><rect x="225.0" y="30" width="150" height="58" rx="8" class="s-soft" stroke-width="3" /><text x="300" y="55.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >pré-treino</text><text x="300" y="71.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >(próximo token)</text><line x1="378" y1="59" x2="412" y2="59" class="s-line" stroke-width="1.5" marker-end="url(#ixs1)" /><rect x="415" y="20" width="215" height="78" rx="8" class="s-soft" stroke-width="1.6" /><text x="522" y="38" font-size="11" text-anchor="middle" fill="currentColor" opacity=".8">saída típica</text><text x="522" y="58" font-size="12" text-anchor="middle" fill="currentColor" >"Qual a capital da Espanha?</text><text x="522" y="74" font-size="12" text-anchor="middle" fill="currentColor" >Qual a capital da Itália?..."</text><rect x="15" y="125" width="615" height="85" rx="8" class="s-box" stroke-width="1.2" /><text x="322" y="148" font-size="12" text-anchor="middle" fill="currentColor" >Aprendeu linguagem, sintaxe, estilo e fatos frequentes.</text><text x="322" y="166" font-size="12" text-anchor="middle" fill="currentColor" >Completa texto: não responde, não segue instrução, não recusa.</text></svg></div>
+<div class="frame" data-caption="2. SFT: pares instrução → resposta ensinam o formato de diálogo"><svg viewBox="0 0 640 225" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Etapas de pós-treino</title><defs><marker id="ixs2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="15" y="20" width="170" height="78" rx="8" class="s-box" stroke-width="1.3" /><text x="100" y="38" font-size="11" text-anchor="middle" fill="currentColor" opacity=".8">entrada</text><text x="100" y="58" font-size="12" text-anchor="middle" fill="currentColor" >Mesmo prompt, agora</text><text x="100" y="74" font-size="12" text-anchor="middle" fill="currentColor" >em formato de chat</text><line x1="188" y1="59" x2="222" y2="59" class="s-line" stroke-width="1.5" marker-end="url(#ixs2)" /><rect x="225.0" y="30" width="150" height="58" rx="8" class="s-soft" stroke-width="3" /><text x="300" y="55.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >SFT</text><text x="300" y="71.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >(diálogos)</text><line x1="378" y1="59" x2="412" y2="59" class="s-line" stroke-width="1.5" marker-end="url(#ixs2)" /><rect x="415" y="20" width="215" height="78" rx="8" class="s-soft" stroke-width="1.6" /><text x="522" y="38" font-size="11" text-anchor="middle" fill="currentColor" opacity=".8">saída típica</text><text x="522" y="58" font-size="12" text-anchor="middle" fill="currentColor" >"A capital da França é Paris."</text><rect x="15" y="125" width="615" height="85" rx="8" class="s-box" stroke-width="1.2" /><text x="322" y="148" font-size="12" text-anchor="middle" fill="currentColor" >Ainda prevê o próximo token, mas sobre diálogos exemplares.</text><text x="322" y="166" font-size="12" text-anchor="middle" fill="currentColor" >Ensina formato: responder em vez de continuar.</text></svg></div>
+<div class="frame" data-caption="3. RLHF / DPO: preferência humana refina tom, utilidade e recusa"><svg viewBox="0 0 640 225" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Etapas de pós-treino</title><defs><marker id="ixs3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="15" y="20" width="170" height="78" rx="8" class="s-box" stroke-width="1.3" /><text x="100" y="38" font-size="11" text-anchor="middle" fill="currentColor" opacity=".8">entrada</text><text x="100" y="58" font-size="12" text-anchor="middle" fill="currentColor" >Duas respostas possíveis,</text><text x="100" y="74" font-size="12" text-anchor="middle" fill="currentColor" >um humano escolhe a melhor</text><line x1="188" y1="59" x2="222" y2="59" class="s-line" stroke-width="1.5" marker-end="url(#ixs3)" /><rect x="225.0" y="30" width="150" height="58" rx="8" class="s-soft" stroke-width="3" /><text x="300" y="55.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >RLHF / DPO</text><text x="300" y="71.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >(preferências)</text><line x1="378" y1="59" x2="412" y2="59" class="s-line" stroke-width="1.5" marker-end="url(#ixs3)" /><rect x="415" y="20" width="215" height="78" rx="8" class="s-soft" stroke-width="1.6" /><text x="522" y="38" font-size="11" text-anchor="middle" fill="currentColor" opacity=".8">saída típica</text><text x="522" y="58" font-size="12" text-anchor="middle" fill="currentColor" >Resposta útil, no tom certo;</text><text x="522" y="74" font-size="12" text-anchor="middle" fill="currentColor" >recusa o que não deve</text><rect x="15" y="125" width="615" height="85" rx="8" class="s-box" stroke-width="1.2" /><text x="322" y="148" font-size="12" text-anchor="middle" fill="currentColor" >RLHF usa um modelo de recompensa; DPO otimiza a preferência direta.</text><text x="322" y="166" font-size="12" text-anchor="middle" fill="currentColor" >Muda o comportamento, mas não cria conhecimento que faltava.</text></svg></div>
+<div class="frame" data-caption="4. Chat template: papéis viram tokens de marcação — e o formato não é intercambiável"><svg viewBox="0 0 640 225" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Etapas de pós-treino</title><defs><marker id="ixs4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="15" y="20" width="170" height="78" rx="8" class="s-box" stroke-width="1.3" /><text x="100" y="38" font-size="11" text-anchor="middle" fill="currentColor" opacity=".8">entrada</text><text x="100" y="58" font-size="12" text-anchor="middle" fill="currentColor" >papéis: system, user,</text><text x="100" y="74" font-size="12" text-anchor="middle" fill="currentColor" >assistant (API do M05)</text><line x1="188" y1="59" x2="222" y2="59" class="s-line" stroke-width="1.5" marker-end="url(#ixs4)" /><rect x="225.0" y="30" width="150" height="58" rx="8" class="s-soft" stroke-width="3" /><text x="300" y="55.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >chat template</text><text x="300" y="71.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >(papéis → tokens)</text><line x1="378" y1="59" x2="412" y2="59" class="s-line" stroke-width="1.5" marker-end="url(#ixs4)" /><rect x="415" y="20" width="215" height="78" rx="8" class="s-soft" stroke-width="1.6" /><text x="522" y="38" font-size="11" text-anchor="middle" fill="currentColor" opacity=".8">saída típica</text><text x="522" y="58" font-size="12" text-anchor="middle" fill="currentColor" >&lt;marcador de papel&gt; texto</text><text x="522" y="74" font-size="12" text-anchor="middle" fill="currentColor" >&lt;marcador de fim&gt;</text><rect x="15" y="125" width="615" height="85" rx="8" class="s-box" stroke-width="1.2" /><text x="322" y="148" font-size="12" text-anchor="middle" fill="currentColor" >O comportamento de assistente foi aprendido condicionado a estes tokens.</text><text x="322" y="166" font-size="12" text-anchor="middle" fill="currentColor" >Template errado ou ausente é o degrau 1 da escada de diagnóstico do bloco 8.</text></svg></div>
+</div>
+
 <h3>Chat template como formato de fio</h3>
 <p>Durante o SFT cada diálogo é formatado com marcadores que delimitam papéis. Esses marcadores são tokens: o modelo aprendeu o comportamento de assistente condicionado à sequência exata deles. Cada família tem o seu; o formato não é intercambiável. A API de chat do M05 entrega papéis; o template serializa papéis em tokens; o modelo lê tokens.</p>
 <p><strong>Trecho conceitual — o que o modelo recebe.</strong> Ilustra a serialização; o renderizador executável com oráculos pertence à referência <code>lab/template_chat.py</code>:</p>
@@ -338,6 +397,56 @@ O que faz PedidoService?&lt;|im_end|&gt;
 <div class="box warn">
 <p><span class="lbl">Contraste</span><strong>"T=0 elimina alucinação" e "abstenção é preguiça" — não.</strong> A primeira frase confunde remover sorteio com adicionar conhecimento. A segunda confunde reconhecer limite com recusar trabalho: sem incentivo à abstenção, o pipeline sempre devolve um valor em vez de sinalizar a falha; o chamador nunca sabe quando a resposta é chute. A rubrica assimétrica transforma o pipeline em sinalização honesta.</p>
 </div>
+
+<div class="ix"><span class="ix-title">Simulador: temperatura, top-k e top-p sobre uma distribuição</span>
+<p>Contexto: <code>"A capital da França é"</code>. Os logits abaixo são fictícios. A ordem do pipeline é fixa: <strong>temperatura → top-k → top-p</strong> (sempre renormalizando).</p>
+<div class="ix-row"><label>Temperatura T: <strong id="f11-sm-t-v">1.00</strong></label><input type="range" id="f11-sm-t" min="0.1" max="2" step="0.05" value="1" style="max-width:200px" aria-label="Temperatura">
+<label>top-k: <strong id="f11-sm-k-v">7</strong></label><input type="range" id="f11-sm-k" min="1" max="7" step="1" value="7" style="max-width:140px" aria-label="top-k">
+<label>top-p: <strong id="f11-sm-p-v">1.00</strong></label><input type="range" id="f11-sm-p" min="0.1" max="1" step="0.05" value="1" style="max-width:160px" aria-label="top-p"></div>
+<div id="f11-sm-bars"></div>
+<div class="ix-row"><button type="button" class="ix-btn primary" id="f11-sm-go">Sortear 20 tokens</button><span id="f11-sm-draw"></span></div>
+<div class="ix-out" id="f11-sm-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+var $ = function (id) { return document.getElementById(id); };
+var toks = ["Paris","Lyon","Marselha","Nice","Berlim","gato","42"], logits = [6.0, 3.6, 3.2, 2.4, 1.5, 0.2, -1.0];
+var tt = $("f11-sm-t"), kk = $("f11-sm-k"), pp = $("f11-sm-p"), last = null;
+function softmax(z) { var m = Math.max.apply(null, z), e = z.map(function (x) { return Math.exp(x - m); }), s = e.reduce(function (a, b) { return a + b; }, 0); return e.map(function (x) { return x / s; }); }
+function pipeline() {
+  var T = Math.max(0.05, parseFloat(tt.value) || 1), K = parseInt(kk.value, 10) || 7, P = parseFloat(pp.value) || 1;
+  var p1 = softmax(logits.map(function (x) { return x / T; }));
+  var order = p1.map(function (v, i) { return i; }).sort(function (a, b) { return p1[b] - p1[a]; });
+  var keep = {}, i;
+  for (i = 0; i < Math.min(K, order.length); i++) keep[order[i]] = true;
+  var tot = 0; order.forEach(function (ix) { if (keep[ix]) tot += p1[ix]; });
+  var cum = 0, keep2 = {};
+  for (i = 0; i < order.length; i++) { var ix = order[i]; if (!keep[ix]) continue; keep2[ix] = true; cum += p1[ix] / tot; if (cum >= P - 1e-9) break; }
+  var tot2 = 0; Object.keys(keep2).forEach(function (k) { tot2 += p1[k]; });
+  var fin = p1.map(function (v, j) { return keep2[j] ? v / tot2 : 0; });
+  return { T: T, K: K, P: P, p1: p1, fin: fin };
+}
+function render() {
+  var r = pipeline(); last = r;
+  $("f11-sm-t-v").textContent = r.T.toFixed(2); $("f11-sm-k-v").textContent = r.K; $("f11-sm-p-v").textContent = r.P.toFixed(2);
+  var h = "";
+  toks.forEach(function (t, i) {
+    var w = r.fin[i] * 100, cut = r.fin[i] === 0;
+    h += '<div style="display:flex;align-items:center;gap:8px;margin:3px 0' + (cut ? ';opacity:.55' : '') + '"><code style="width:84px">' + t + '</code><span style="flex:1;background:var(--surface-2);border-radius:4px;height:16px;position:relative"><span style="position:absolute;left:0;top:0;height:16px;border-radius:4px;width:' + (r.p1[i] * 100) + '%;border:1px dashed var(--muted);box-sizing:border-box"></span><span style="display:block;height:16px;border-radius:4px;min-width:' + (cut ? 0 : 2) + 'px;width:' + w + '%;background:var(--accent)"></span></span><strong style="width:88px;text-align:right">' + (cut ? "cortado" : w.toFixed(1) + "%") + '</strong></div>';
+  });
+  $("f11-sm-bars").innerHTML = h;
+  var H = 0, n = 0; r.fin.forEach(function (p) { if (p > 0) { H -= p * Math.log(p) / Math.LN2; n++; } });
+  var top = r.fin.indexOf(Math.max.apply(null, r.fin));
+  $("f11-sm-out").textContent = "Entropia da distribuição final: " + H.toFixed(2) + " bits (" + n + " candidato(s) vivos).\n\"" + toks[top] + "\" lidera com " + (r.fin[top] * 100).toFixed(1) + "%. Tracejado = distribuição após a temperatura, antes dos cortes.\nT baixo afia, T alto achata; top-k e top-p só removem cauda — ninguém improvável vira provável, e o fato errado mais provável continua o mais provável (T=0 não cura alucinação).";
+}
+$("f11-sm-go").addEventListener("click", function () {
+  if (!last) render();
+  var counts = toks.map(function () { return 0; }), i, j;
+  for (i = 0; i < 20; i++) { var u = Math.random(), c = 0; for (j = 0; j < toks.length; j++) { c += last.fin[j]; if (u <= c || j === toks.length - 1) { counts[j]++; break; } } }
+  $("f11-sm-draw").textContent = toks.map(function (t, k) { return counts[k] ? t + " ×" + counts[k] : ""; }).filter(Boolean).join(" · ");
+});
+[tt, kk, pp].forEach(function (e) { e.addEventListener("input", render); });
+render();
+});</script>
 
 <h3>Exemplo trabalhado: referências executáveis</h3>
 <p><strong>Estatuto do código.</strong> Os quatro blocos abaixo são referência executável: o contrato que a folha B05-L implementa verbatim em <code>lab/</code>, layout flat, só stdlib, sem modelo e sem rede. Leitura aqui; execução no <code>Laboratório guiado M11</code>. Nomes de módulo, funções, classes e comportamento estão congelados. Trechos anteriores rotulados como conceituais ilustram mecanismo; só estes quatro são programa completo.</p>
@@ -496,6 +605,16 @@ def graduar(esperado: str, obtido: str) -&gt; tuple[Desfecho, float]:
 <li>Rubrica +1/+0,5/−1 compra honestidade: grader que zera abstenção compra chute.</li>
 </ul>
 </div>
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual afirmação sobre temperatura 0 é correta?</p>
+<ol><li data-opt="a">Elimina a alucinação, porque o modelo passa a dizer só o que sabe</li><li data-opt="b">Garante determinismo bit a bit em qualquer API</li><li data-opt="c">É o mesmo que top-p = 1</li><li data-opt="d">Remove o sorteio e fixa o token mais provável: troca alucinação variável por reprodutível, mas não cura, e nem garante saída idêntica bit a bit em API</li></ol>
+<div class="explain">Se o token mais provável está errado (fato arbitrário ausente), o erro passa a se repetir com constância. Batching muda a ordem de redução em ponto flutuante e a versão do modelo muda sem aviso; por isso o M06 usa grader semântico em vez de exigir saída idêntica.</div></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que um grader de acurácia pura, que dá zero para "não encontrei no contexto", incentiva alucinação?</p>
+<ol><li data-opt="a">Chutar às vezes acerta e abster-se garante zero, então o chute é premiado; a rubrica assimétrica (+1 certo, +0,5 abstenção, −1 erro confiante) inverte o incentivo</li><li data-opt="b">Porque o grader aumenta a temperatura do modelo durante a avaliação</li><li data-opt="c">Porque abstenção consome mais tokens que um chute</li><li data-opt="d">Não incentiva: alucinação vem só da falta de dados de treino</li></ol>
+<div class="explain">São dois mecanismos somados: o estatístico (fato arbitrário sem padrão para generalizar) e o de incentivo (avaliação que premia chute). É a lei de Goodhart: otimizar acurácia produz chute. Antes de otimizar um número, escreva qual comportamento degenerado o maximiza.</div></div>
+
 <h3>Fontes do Bloco 5</h3>
 <ul>
 <li>SRC-M11-04 — InstructGPT — científica — SFT e RLHF por preferência. URLs na spec §6. Consulta: 14/09/2026. Risco: baixo.</li>
@@ -548,6 +667,45 @@ kv_bytes   = 2 * n_camadas * n_kv * dim_cabeca * ctx * batch * bytes_por_valor
 <p><span class="lbl">Diagnóstico</span><strong>KV estoura com contexto × concorrência.</strong> Modelo que serve bem um usuário em 8k pode não caber com quatro simultâneos em 128k: o servidor descarrega camadas para CPU e a vazão cai uma ordem de grandeza sem mensagem de erro. Dimensionar com o contexto máximo real e a concorrência real, nunca com o caso de demonstração. No B07 essa conta vira parâmetro de servidor.</p>
 </div>
 <p><strong>Exemplo variável, calculado pela fórmula — não evidência.</strong> Arquitetura ilustrativa com 32 camadas, 8 cabeças KV, dimensão 128, KV a 2 bytes: cada token de cada sequência ocupa 128 KiB de KV. Modelo ilustrativo de 8B em Q4 (≈0,58 byte/parâmetro): pesos ≈ 4,32 GB. Com ctx 8192 e batch 1, KV ≈ 1,00 GB; com overhead 1,5 GB, total ≈ 6,8 GB. Com ctx 131072 e batch 4, KV ≈ 64 GB e total ≈ 70 GB. O mesmo peso, dois hardwares distintos. A folha L recalcula com a arquitetura declarada do modelo escolhido; nenhum número aqui é medida.</p>
+
+<div class="ix"><span class="ix-title">Calculadora: cabe na minha máquina? (pesos + overhead + KV)</span>
+<p>Fórmula do bloco: <code>memória = pesos + overhead + KV</code>, com <code>KV = 2 · camadas · n_kv · dim_cabeça · ctx · batch · bytes</code>. Bytes por parâmetro são aproximados (incluem as escalas por bloco). Valores iniciais: o exemplo ilustrativo de 8B do texto (não é medida).</p>
+<div class="ix-row"><label>Parâmetros (B): <input type="number" id="f11-vr-b" value="8" min="0.1" max="1000" step="0.1" style="width:80px"></label>
+<label>Quantização: <select id="f11-vr-q"><option value="2">FP16 (2,00 B/param)</option><option value="1.06">Q8_0 (~1,06)</option><option value="0.69">Q5_K_M (~0,69)</option><option value="0.58" selected>Q4_K_M (~0,58)</option><option value="0.44">Q3_K_S (~0,44)</option></select></label>
+<label>VRAM disponível: <select id="f11-vr-g"><option value="8">8 GB</option><option value="12">12 GB</option><option value="16">16 GB</option><option value="24" selected>24 GB</option><option value="48">48 GB</option><option value="80">80 GB</option></select></label></div>
+<div class="ix-row"><label>Camadas: <input type="number" id="f11-vr-l" value="32" min="1" max="200" style="width:64px"></label>
+<label>Cabeças KV: <input type="number" id="f11-vr-h" value="8" min="1" max="128" style="width:64px"></label>
+<label>Dim. cabeça: <input type="number" id="f11-vr-d" value="128" min="16" max="512" style="width:70px"></label>
+<label>Contexto: <input type="number" id="f11-vr-c" value="8192" min="256" max="2000000" step="256" style="width:100px"></label>
+<label>Concorrência: <input type="number" id="f11-vr-n" value="1" min="1" max="256" style="width:64px"></label>
+<label>Overhead (GB): <input type="number" id="f11-vr-o" value="1.5" min="0" max="20" step="0.1" style="width:64px"></label></div>
+<div class="ix-row"><button type="button" class="ix-btn" id="f11-vr-p1">Demo: 8k × 1 usuário</button><button type="button" class="ix-btn" id="f11-vr-p2">Produção: 128k × 4 usuários</button></div>
+<div id="f11-vr-bar"></div>
+<div class="ix-out" id="f11-vr-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+var $ = function (id) { return document.getElementById(id); };
+var ids = ["b","q","g","l","h","d","c","n","o"].map(function (s) { return $("f11-vr-" + s); });
+var GB = 1024 * 1024 * 1024;
+function num(e, d) { var x = parseFloat(e.value); return isFinite(x) && x >= 0 ? x : d; }
+function run() {
+  var B = num(ids[0], 8), bpp = num(ids[1], 0.58), G = num(ids[2], 24), L = num(ids[3], 32), H = num(ids[4], 8), D = num(ids[5], 128), X = num(ids[6], 8192), N = num(ids[7], 1), O = num(ids[8], 1.5);
+  var w = B * 1e9 * bpp / GB, kv = 2 * L * H * D * X * N * 2 / GB, tot = w + O + kv, pctMax = Math.max(tot, G);
+  function seg(v, c, l) { return '<span title="' + l + '" style="display:inline-block;height:22px;width:' + (v / pctMax * 100) + '%;background:' + c + '"></span>'; }
+  var fits = tot <= G;
+  $("f11-vr-bar").innerHTML = '<div style="position:relative;background:var(--surface-2);border-radius:5px;height:22px;overflow:hidden;white-space:nowrap">' + seg(w, "var(--info)", "pesos") + seg(O, "var(--muted)", "overhead") + seg(kv, "var(--warn)", "KV") + '</div>' +
+    '<div style="position:relative;height:10px"><span style="position:absolute;left:' + (G / pctMax * 100) + '%;top:0;height:10px;border-left:2px solid var(--fg)"></span></div>' +
+    '<div style="font-size:.82rem;color:var(--muted)">azul = pesos · cinza = overhead · amarelo = KV · traço = VRAM disponível (' + G + ' GB)</div>';
+  var kvTok = 2 * L * H * D * 2 / 1024;
+  $("f11-vr-out").textContent = "Pesos: " + w.toFixed(2) + " GB   Overhead: " + O.toFixed(2) + " GB   KV: " + kv.toFixed(2) + " GB\nTotal estimado: " + tot.toFixed(1) + " GB de " + G + " GB — " + (fits ? "CABE (folga de " + (G - tot).toFixed(1) + " GB)." : "NÃO CABE (faltam " + (tot - G).toFixed(1) + " GB).") +
+    "\nCada token de cada sequência ocupa " + kvTok.toFixed(0) + " KiB de KV; dobrar contexto ou concorrência dobra o KV, os pesos não se movem." +
+    (fits ? "" : "\nSem aviso, o servidor descarrega camadas para a CPU e a vazão cai uma ordem de grandeza. Reduza ctx/concorrência ou suba o quant (e meça o eval).");
+}
+ids.forEach(function (e) { e.addEventListener("input", run); e.addEventListener("change", run); });
+$("f11-vr-p1").addEventListener("click", function () { ids[6].value = 8192; ids[7].value = 1; run(); });
+$("f11-vr-p2").addEventListener("click", function () { ids[6].value = 131072; ids[7].value = 4; run(); });
+run();
+});</script>
 
 <h3>Quantização e GGUF: o que cada letra declara</h3>
 <p>Quantizar é guardar cada peso com menos bits e recuperar a faixa com um fator de escala por bloco. Compressão com perda aplicada aos parâmetros: menos memória e mais velocidade de carga, fidelidade menor por arredondamento.</p>
@@ -697,6 +855,16 @@ def veredito_comercial(faixa: Faixa) -&gt; str:
 <li>Orçamento e licença rodam offline nos dois scripts; pesos e medida no servidor pertencem à trilha externa com BLOCKED honesto.</li>
 </ul>
 </div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Um modelo serve bem 1 usuário em contexto de 8k. O time passa para 4 simultâneos em 128k (131072). O que explode, e quanto?</p>
+<ol><li data-opt="a">Os pesos, que são recarregados para cada requisição</li><li data-opt="b">O cache de KV: cresce linearmente com o contexto e com a concorrência (16 × 4 = 64 vezes aqui); os pesos não mudam</li><li data-opt="c">O overhead, que dobra a cada usuário novo</li><li data-opt="d">Nada: contexto maior só afeta a latência, não a memória</li></ol>
+<div class="explain">memória = pesos + overhead + KV, e só o KV multiplica com ctx e batch. Estourar a VRAM costuma ser silencioso: o servidor descarrega camadas para CPU e a vazão cai uma ordem de grandeza sem mensagem de erro. Use a calculadora acima com o contexto máximo real e a concorrência real.</div></div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">O que o nome <code>Q4_K_M</code> declara, e o que <em>não</em> declara?</p>
+<ol><li data-opt="a">Declara 4 bits e qualidade equivalente ao FP16 em qualquer tarefa</li><li data-opt="b">Declara quatro modelos num só arquivo, com mix médio</li><li data-opt="c">Declara 4 bits, esquema K (escalas em dois níveis por bloco) e mix médio; não declara qualidade por tarefa, que se mede (raciocínio encadeado quebra primeiro)</li><li data-opt="d">Declara o contexto (Q) e o número de cabeças de atenção (4)</li></ol>
+<div class="explain">O nome é um contrato de tamanho e esquema. Perplexidade estável não prova que a cadeia de raciocínio sobreviveu: cada passo desvia um pouco e o desvio se propaga. Meça com os evals próprios, por categoria, no quant específico.</div></div>
+
 <h3>Fontes do Bloco 6</h3>
 <ul>
 <li>SRC-M11-06 — Llama 2 — científica — referência de arquitetura aberta para a conta de parâmetros. URLs na spec §6. Consulta: 14/09/2026. Risco: médio.</li>
@@ -951,6 +1119,16 @@ if __name__ == "__main__":
 <li>Local por etapa vai ao ADR-0005 com gatilho; sem VRAM folgada a resposta é API ou configuração reduzida.</li>
 </ul>
 </div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Você envia a um Ollama com configuração padrão um prompt maior que o contexto de 4096. O que acontece, e qual é a defesa?</p>
+<ol><li data-opt="a">O contexto é truncado em silêncio e o começo (onde mora o system) é descartado; defesa: forçar <code>num_ctx</code> por requisição e validar <code>n_ctx ≥ prompt estimado</code></li><li data-opt="b">Erro explícito "context length exceeded", fácil de tratar</li><li data-opt="c">O servidor amplia o contexto sozinho, ao custo de VRAM</li><li data-opt="d">O modelo resume o prompt automaticamente antes de responder</li></ol>
+<div class="explain">Nenhum erro: só resposta pior. E elevar <code>num_ctx</code> eleva o KV (bloco 6), então a mudança passa pela conta de VRAM. É uma das três armadilhas do Ollama, junto com paralelismo 1 e unload em 5 minutos.</div></div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Quando faz sentido escolher vLLM em vez de Ollama?</p>
+<ol><li data-opt="a">Sempre, porque é o servidor de produção</li><li data-opt="b">Na máquina de desenvolvimento sem GPU</li><li data-opt="c">Quando se quer gerenciar modelos manualmente, com controle fino de flags</li><li data-opt="d">Em GPU com concorrência real de usuários (continuous batching + PagedAttention); com um usuário só a diferença não aparece, e começar pelo Ollama mantém a troca em configuração</li></ol>
+<div class="explain">Sem concorrência medida, o custo operacional do vLLM chega antes do ganho. Com a mesma porta do M05 (endpoint compatível com OpenAI), a troca é de configuração, não de código de chamada.</div></div>
+
 <h3>Fontes do Bloco 7</h3>
 <ul>
 <li>SRC-M11-15 — llama.cpp — projeto aberto — GGUF, motor e servidor local. URLs na spec §6. Consulta: 14/09/2026. Risco: alto; revalidar em até 90 dias.</li>
@@ -1044,6 +1222,18 @@ obtida = {"nome": "ler_arquivo", "args": {"caminho": "a.py"}}
 <tr><td>8</td><td>O modelo é ruim nisto mesmo</td><td>Só depois de 1–7, com número</td><td>Trocar de modelo — ou manter esta etapa em API</td></tr>
 </tbody>
 </table>
+
+<div class="ix"><span class="ix-title">Ordene os passos</span><p>Monte a <strong>escada de diagnóstico</strong> do modelo local que "quase funciona" em modo agente, do degrau mais barato e provável ao mais caro e improvável.</p>
+<ol class="order" data-solution="a,b,c,d,e,f,g,h">
+<li data-id="a">Chat template errado ou ausente: comparar com o cartão do modelo</li>
+<li data-id="b">Contexto truncado em silêncio: contar tokens do prompt contra o <code>num_ctx</code></li>
+<li data-id="c">Modelo sem suporte nativo a tools: testar uma chamada trivial</li>
+<li data-id="d">Formato da documentação das tools: trocar Python/XML por JSON Schema e rerrodar o eval</li>
+<li data-id="e">Stop tokens errados: olhar a saída crua e ver se ele simula o turno do usuário</li>
+<li data-id="f">Quantização agressiva demais: rodar o mesmo eval em Q8_0</li>
+<li data-id="g">Prompt e schemas grandes demais para um modelo pequeno: reduzir de 12 para 4 tools</li>
+<li data-id="h">Só então, com número: o modelo é ruim nisto — trocar de modelo ou manter a etapa em API</li>
+</ol></div>
 
 <h3>Os evals do M06 contra o local: matriz, formato e custo</h3>
 
@@ -1255,6 +1445,16 @@ def break_even(
 <li>LoRA/QLoRA ajusta formato e comportamento com menos de 1% treinável, e ainda assim é o degrau 6 de 6: fato novo entra por RAG ou ferramenta.</li>
 </ul>
 </div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">O modelo local "quase funciona" em modo agente. Qual é a primeira ação segundo o bloco?</p>
+<ol><li data-opt="a">Fazer fine-tuning LoRA com exemplos de tool calling</li><li data-opt="b">Descer a escada de diagnóstico: chat template e contexto truncado antes de culpar o modelo ou pensar em fine-tuning</li><li data-opt="c">Trocar imediatamente por um modelo maior</li><li data-opt="d">Aumentar a temperatura para variar as chamadas</li></ol>
+<div class="explain">A escada vai do mais barato e provável para o mais caro e improvável, o inverso da intuição. "O modelo é ruim nisto mesmo" é o degrau 8 e só vale depois de 1 a 7, com número.</div></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">"O modelo não conhece a nossa API interna." Fine-tuning com LoRA é a resposta certa?</p>
+<ol><li data-opt="a">Não: fine-tuning ajusta distribuição e comportamento, não insere fatos de forma confiável; conhecimento novo entra por RAG (degrau 3 da escada)</li><li data-opt="b">Sim: LoRA é a forma mais barata de inserir conhecimento</li><li data-opt="c">Sim, desde que o posto r seja 64 ou mais</li><li data-opt="d">Sim, porque RAG não funciona com modelos locais</li></ol>
+<div class="explain">Fine-tuning é o degrau 6 de 6: semanas, dados e manutenção perpétua, e não é reversível de graça. Serve para comportamento e formato muito específicos em altíssimo volume.</div></div>
+
 <h3>Fontes do Bloco 8</h3>
 <ul>
 <li>SRC-M11-18 — BFCL/gorilla — industrial — tool-calling e sensibilidade a formato; detalhes de versão e contagens a confirmar contra o repositório na folha L; nenhum número do legado herdado como evidência. URLs na spec §6. Consulta: 14/09/2026. Risco: alto; revalidar em até 90 dias.</li>
@@ -1466,6 +1666,23 @@ uv sync</code></pre>
 <li><strong>Decisão.</strong> Formato rígido em alto volume com RAG pronto: LoRA r=16 em D=4096 (0.78% treinável) ou full fine-tuning para "ensinar os fatos"? <em>Rubrica (0–2): 2 = escolhe LoRA para comportamento/formato com fatos no RAG, mostrando 2r/D &lt; 1% e recusando fato-novo-via-pesos; 1 = escolhe certo sem a conta; 0 = full-FT para fatos. Obrigatório para pontuar: 0.78% e "fato no RAG, formato no LoRA".</em></li>
 <li><strong>Transferência.</strong> Caso A: agente que trava em tool-call. Caso B: relatório rígido em dezenas de milhares/mês. Aplique a escada de 8 num e a de 6 no outro, dizendo onde cada um para. <em>Rubrica (0–2): 2 = caso A desce a escada de diagnóstico e para no degrau que resolve; caso B desce prompt→formato→RAG→tool→modelo→fine-tuning e para no primeiro que resolve; 1 = troca as escadas ou omite a parada; 0 = fine-tuning direto nos dois. Obrigatório para pontuar: "parar no primeiro degrau que resolve" nas duas.</em></li>
 </ol>
+</div>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique no cartão (ou use Enter) para virar. Tente responder em voz alta antes de ver o verso.</p>
+<div class="flashcards">
+<div class="fc"><div class="front">Logprob e perplexidade</div><div class="back">Logprob = ln(p) do token emitido (0 = certeza; −1,0 ≈ 37%). Perplexidade = exp(−média dos logprobs). Priorizam revisão humana; não assinam veredito.</div></div>
+<div class="fc"><div class="front">Treinar × inferir</div><div class="back">Inferência usa pesos fixos. Treino repete forward → loss → backward → step → zero_grad. Passo (lr) grande diverge; pequeno demora.</div></div>
+<div class="fc"><div class="front">Logit, softmax, temperatura</div><div class="back">Logit é escore bruto; softmax o converte em probabilidades (ordem preservada, diferença ampliada); T divide os logits antes: T&lt;1 afia, T&gt;1 achata.</div></div>
+<div class="fc"><div class="front">Pré-treino → SFT → RLHF/DPO</div><div class="back">Pré-treino: continuador (próximo token). SFT: formato de diálogo. RLHF/DPO: preferência (tom, utilidade, recusa). Nenhum cria conhecimento que faltava.</div></div>
+<div class="fc"><div class="front">Chat template</div><div class="back">Serializa papéis em tokens de marcação; o comportamento de assistente foi aprendido condicionado a eles. Template errado é o degrau 1 do diagnóstico.</div></div>
+<div class="fc"><div class="front">Duas causas da alucinação</div><div class="back">Estatística: fato arbitrário sem padrão a generalizar. Incentivo: avaliação que premia chute. Contramedida: rubrica assimétrica (+1 / +0,5 abstenção / −1 erro confiante).</div></div>
+<div class="fc"><div class="front">Ordem do pipeline de amostragem</div><div class="back">Temperatura repondera; top-k e top-p cortam a cauda; penalidade de repetição ajusta o já emitido. T=0 fixa o mais provável: reprodutível, não correto.</div></div>
+<div class="fc"><div class="front">Memória de serving</div><div class="back">pesos + overhead (1–2 GB) + KV. KV = 2·camadas·n_kv·dim_cabeça·ctx·batch·bytes: cresce com contexto e concorrência; pesos não.</div></div>
+<div class="fc"><div class="front">Anatomia de Q4_K_M</div><div class="back">Q = quantização; 4 = bits por peso; K = escalas em dois níveis por bloco; M = mix médio (tensores sensíveis ganham bits). Nome declara tamanho, não qualidade por tarefa.</div></div>
+<div class="fc"><div class="front">Pesos abertos ≠ código aberto</div><div class="back">Acesso aos números não dá direito comercial. Leia a licença (4 faixas) e o cartão do modelo antes de prometer ao cliente.</div></div>
+<div class="fc"><div class="front">As três armadilhas do Ollama</div><div class="back">Contexto padrão de 4096 trunca em silêncio e descarta o system; paralelismo 1 enfileira (p95 explode); unload em 5 min cobra a carga de volta. Nunca 0.0.0.0 sem auth.</div></div>
+<div class="fc"><div class="front">Modelo ≠ agente ≠ harness</div><div class="back">Antes de trocar de modelo, desça a escada de 8 degraus (template, contexto, tools, formato, stop tokens, quant, tamanho do prompt). Fine-tuning é o degrau 6 de 6 e não insere fatos: use RAG.</div></div>
 </div>
 
 <h2>Checkpoint M11</h2>

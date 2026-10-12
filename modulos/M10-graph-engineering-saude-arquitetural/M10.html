@@ -118,6 +118,16 @@
 <p>Reescrever as três perguntas como travessias, provar o custo da alternativa em SQL e classificar perguntas reais é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, depois do bloco 9. O percurso: nó de partida, tipos de aresta, direção, profundidade e forma da resposta por pergunta (80% da modelagem); CTE recursiva de 20+ linhas como argumento documentado; e a distribuição busca/grafo/SQL/híbrido que especifica o roteador.</p>
 
 <!-- ============================================ BLOCO 2 -->
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual destas perguntas <strong>exige</strong> grafo, e não busca vetorial ou SQL?</p>
+<ol><li data-opt="a">Onde está a regra de cálculo de juros?</li><li data-opt="b">Quais telas dependem, direta ou indiretamente, desta tabela?</li><li data-opt="c">Como funciona a autenticação?</li><li data-opt="d">Quantos arquivos existem por linguagem?</li></ol>
+<div class="explain">A resposta é o conjunto de nós alcançáveis por travessia: está na <em>relação</em> entre documentos, a vários saltos, e nenhum chunk a contém. As outras são, nessa ordem, busca (vetorial/léxica), busca + síntese e agregação (SQL). Aumentar o k ou fazer rerank não cria relações; o problema é de representação, não de recuperação.</div></div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um colega afirma: "Já usamos LangGraph, então temos grafo de conhecimento". O que está errado?</p>
+<ol><li data-opt="a">Nada: LangGraph persiste o estado e isso já constitui um grafo de conhecimento</li><li data-opt="b">LangGraph só funciona se houver um Neo4j por baixo</li><li data-opt="c">LangGraph é grafo de <em>execução</em> (nós = passos, arestas = transições de controle); grafo de conhecimento tem entidades do domínio e é extraído dos dados. São ortogonais</li><li data-opt="d">O grafo de conhecimento é só outro nome para o grafo de execução, mas com mais nós</li></ol>
+<div class="explain">Os dois compartilham o vocabulário (nós e arestas), mas respondem perguntas diferentes: um dá durabilidade e ponto de intervenção, o outro dá resposta que exige relação. Você pode ter um sem o outro, e o Capstone precisa dos dois por razões diferentes.</div></div>
+
 <h2 id="b02">Bloco 2 · Execução: estado, reducers e roteamento</h2>
 <h3>Por que isso importa</h3>
 <p>No M08 você escreveu o loop do agente à mão — e foi a coisa certa a fazer, porque agora você sabe exatamente o que um framework faria por você. O ADR-0003 registrou o gatilho de revisão: <em>execução que precisa sobreviver a restart</em>. O pipeline de ingestão do Capstone (clonar → parsear → indexar → construir grafo → analisar → revisar → relatar) roda por horas sobre milhares de arquivos e <strong>falha no meio, sempre</strong> — rede, rate limit, OOM, deploy. Reprocessar do zero custa dinheiro real em chamadas já pagas. É exatamente o problema que o LangGraph resolve bem.</p>
@@ -291,6 +301,62 @@ def construir() -> StateGraph:
 <p>Desenhar o pipeline, implementar estado e nós com reducers, ligar os reais e provocar falha parcial é o exercício deste bloco — o roteiro executável com motor local fica no <code>Laboratório guiado M10</code>, depois do bloco 9 (LangGraph real é trilha externa). O percurso: diagrama comparado com o construído; topologia validada com nós "burros" antes de lógica; custo acumulado correto no fan-out com teste do reducer; e erro virando campo do estado, nunca exceção que mata o grafo.</p>
 
 <!-- ============================================ BLOCO 3 -->
+<div class="ix"><span class="ix-title">Simulador: reducer em execução paralela</span>
+<p>Cada nó paralelo (<code>Send</code>) analisa um lote e devolve <code>{"analisados": [...]}</code>. Escolha o reducer do campo e veja o que sobra no estado.</p>
+<div class="ix-row"><label>Nós paralelos: <strong id="f10-red-n-v">3</strong></label><input type="range" id="f10-red-n" min="1" max="6" value="3" style="max-width:200px" aria-label="Número de nós paralelos">
+<label>Arquivos por nó: <strong id="f10-red-k-v">4</strong></label><input type="range" id="f10-red-k" min="1" max="8" value="4" style="max-width:200px" aria-label="Arquivos por nó"></div>
+<div class="ix-row"><label for="f10-red-r">Reducer do campo:</label><select id="f10-red-r"><option value="over">padrão (sobrescreve)</option><option value="add">operator.add (concatena)</option><option value="uni">união sem duplicata</option></select>
+<label><input type="checkbox" id="f10-red-dup"> todos os nós também devolvem <code>comum.cs</code></label></div>
+<div id="f10-red-viz"></div>
+<div class="ix-out" id="f10-red-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+var $ = function (id) { return document.getElementById(id); };
+var n = $("f10-red-n"), k = $("f10-red-k"), r = $("f10-red-r"), dup = $("f10-red-dup"), viz = $("f10-red-viz"), out = $("f10-red-out");
+function chips(list, cls) {
+  return list.map(function (f) { return '<span style="display:inline-block;margin:2px 4px 2px 0;padding:1px 8px;border-radius:10px;border:1px solid var(--line);background:var(' + cls + ');font-family:var(--mono);font-size:.8rem">' + f + '</span>'; }).join("");
+}
+function run() {
+  var N = +n.value, K = +k.value, mode = r.value, withDup = dup.checked;
+  $("f10-red-n-v").textContent = N; $("f10-red-k-v").textContent = K;
+  var nodes = [], i, j, all = [];
+  for (i = 0; i < N; i++) {
+    var l = [];
+    for (j = 0; j < K; j++) l.push("a" + (i + 1) + "_" + (j + 1) + ".cs");
+    if (withDup) l.push("comum.cs");
+    nodes.push(l); all = all.concat(l);
+  }
+  var state, seen = {};
+  if (mode === "over") state = nodes[N - 1].slice();
+  else if (mode === "add") state = all.slice();
+  else { state = []; all.forEach(function (f) { if (!seen[f]) { seen[f] = 1; state.push(f); } }); }
+  var uniq = {}; all.forEach(function (f) { uniq[f] = 1; });
+  var nUniq = Object.keys(uniq).length, stUniq = {}; state.forEach(function (f) { stUniq[f] = 1; });
+  var lost = nUniq - Object.keys(stUniq).length, repeated = state.length - Object.keys(stUniq).length;
+  var h = "";
+  nodes.forEach(function (l, idx) { h += '<div style="margin:4px 0"><strong>nó ' + (idx + 1) + '</strong> devolve: ' + chips(l, "--surface-2") + '</div>'; });
+  h += '<div style="margin:10px 0 4px"><strong>Estado final de <code>analisados</code></strong> (' + state.length + ' itens): ' + chips(state, lost > 0 ? "--bad-soft" : "--ok-soft") + '</div>';
+  viz.innerHTML = h;
+  var msg = "Produzido: " + nUniq + " arquivos distintos. No estado: " + Object.keys(stUniq).length + " distintos.\n";
+  if (lost > 0) msg += "PERDA SILENCIOSA: " + lost + " arquivo(s) sumiram do estado, sem erro. Reducer padrão = último que escreve vence.";
+  else if (repeated > 0) msg += "Nada se perdeu, mas " + repeated + " item(ns) ficaram repetidos: contagem e custo seriam inflados. Considere união/dedupe.";
+  else msg += "Estado completo e sem duplicatas.";
+  out.textContent = msg;
+}
+[n, k, r, dup].forEach(function (e) { e.addEventListener("input", run); e.addEventListener("change", run); });
+run();
+});</script>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Dois nós paralelos devolvem <code>{"analisados": [...]}</code> para o mesmo campo, com o reducer padrão. Qual é o risco descrito no bloco?</p>
+<ol><li data-opt="a">Um valor sobrescreve o outro e parte do trabalho se perde, sem erro nem log; o conserto é reducer explícito, como <code>operator.add</code></li><li data-opt="b">Os dois são concatenados automaticamente, então não há risco</li><li data-opt="c">O grafo trava com deadlock e precisa de um semáforo</li><li data-opt="d">O problema só existe quando se usa <code>Command</code>, nunca com <code>Send</code></li></ol>
+<div class="explain">O default sobrescreve. Regra prática: todo campo que mais de um nó escreve precisa de reducer explícito. É o mesmo raciocínio de ler-somar-gravar sem atomicidade: perde atualização de forma não determinística. (Algumas versões do framework acusam erro em atualização concorrente sem reducer; em código próprio de merge o dano continua silencioso. Confira a doc da sua versão.)</div></div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Você dispara 400 análises com <code>Send</code> e 3 arquivos têm encoding estranho. Qual é o desenho padrão do curso?</p>
+<ol><li data-opt="a">Deixar a exceção subir: o grafo para, e a retomada refaz só esses 3</li><li data-opt="b">Remover o limite de concorrência para que as 400 terminem antes das falhas aparecerem</li><li data-opt="c">Cada nó captura a exceção e devolve o erro no campo <code>erros</code> (com reducer de acúmulo); o consolidador decide se o volume de falhas invalida o resultado</li><li data-opt="d">Ignorar os erros sem registrá-los, para não poluir o estado</li></ol>
+<div class="explain">Exceção que sobe mata o grafo inteiro por causa de um arquivo. Erro como <em>dado</em> do estado mantém a execução viva e deixa a decisão (tolerar 3 em 400? 40 em 400?) para quem consolida. Sem limite de concorrência, o resultado seria 429 em cascata.</div></div>
+
 <h2 id="b03">Bloco 3 · Persistência: checkpoint, threads, retomada e time travel</h2>
 <h3>Por que isso importa</h3>
 <p>Este é o bloco que justifica o framework. Tudo o que você viu no bloco 2 dava para escrever à mão em algumas centenas de linhas; <strong>persistência correta, não</strong>. E o checkpoint do módulo é literalmente o que o currículo cobra: <em>matar o processo no meio de uma execução e mostrar que ela retoma do último ponto sem repetir chamadas pagas</em>.</p>
@@ -400,6 +466,16 @@ await app.ainvoke(None, config=config)</code></pre>
 <p>Ligar o checkpointer, instrumentar custo, matar no meio e fazer time travel é o exercício deste bloco — o roteiro executável com kill simulado fica no <code>Laboratório guiado M10</code>, depois do bloco 9 (PostgresSaver real é trilha externa com Docker). O percurso: tabelas de checkpoint inspecionadas; contagem de referência; segunda parte com menos chamadas que execução completa (soma ≈ única, nunca 2x); e A/B de modelo sem repetir preparação. A prova do módulo em forma local: efeito uma vez, retomada do ponto.</p>
 
 <!-- ============================================ BLOCO 4 -->
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual <code>thread_id</code> permite retomar a ingestão do repositório R do tenant T depois que o processo que a iniciou foi perdido?</p>
+<ol><li data-opt="a"><code>uuid4()</code> gerado a cada execução</li><li data-opt="b">Apenas o <code>tenant_id</code></li><li data-opt="c">O PID do processo que iniciou a execução</li><li data-opt="d">Uma chave estável e derivável dos parâmetros de entrada: tenant + repositório (e commit, se você reindexa a mesma coisa várias vezes)</li></ol>
+<div class="explain">Aleatório por execução nunca retoma (cada tentativa vira thread nova). Fixo demais (só o tenant) faz duas ingestões colidirem e uma sobrescrever o estado da outra. O PID some junto com o processo. Regra: o thread_id sai dos parâmetros de entrada, sem consultar nada.</div></div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Na ingestão do Capstone, cada nó de análise é uma chamada paga. Qual modo de durabilidade o bloco recomenda?</p>
+<ol><li data-opt="a"><code>"exit"</code>: persiste só no fim, que é o mais barato</li><li data-opt="b"><code>"sync"</code>: persiste a cada passo e bloqueia até gravar, porque repetir um passo custa dinheiro</li><li data-opt="c"><code>"async"</code>: nunca perde nada porque não bloqueia a execução</li><li data-opt="d">Qualquer um, desde que o nó seja idempotente; durabilidade é irrelevante com idempotência</li></ol>
+<div class="explain">"exit" perde tudo se o processo morrer; "async" pode perder o último passo (aceitável para trabalho longo e tolerante, não aqui). Idempotência evita <em>efeito</em> duplicado, mas não devolve o dinheiro da chamada já paga. É o mesmo trade-off de <code>synchronous_commit</code>: durabilidade contra latência, escolhida por caso de uso.</div></div>
+
 <h2 id="b04">Bloco 4 · Human-in-the-loop: <code>interrupt()</code> e a armadilha da reexecução</h2>
 <h3>Por que isso importa</h3>
 <p>Você já tem o gancho de HITL desde o M08 bloco 5 (a allowlist que pausa o loop) e a promessa do M12 de transformá-lo em camada de política. Este bloco entrega o mecanismo <em>durável</em>: pausar a execução, devolver o controle, e retomar <strong>horas ou dias depois, possivelmente em outro processo</strong> — porque o humano não responde em 30 segundos e nenhuma conexão HTTP espera por ele.</p>
@@ -490,6 +566,25 @@ await app.ainvoke(
 <p>Implementar o nó de revisão, expor por HTTP com auditoria, provar a durabilidade reiniciando o processo e provocar a reexecução é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, depois do bloco 9. O percurso: ramificação que evita pausar sempre; ciclo por HTTP com estado de espera; retomada em processo que nunca viu o início; e efeito antes da pausa acontecendo duas vezes — movido para depois, uma vez.</p>
 
 <!-- ============================================ BLOCO 5 -->
+<div class="stepper"><span class="ix-title">Passo a passo: checkpoint, interrupt() e retomada em outro processo</span>
+<div class="frame" data-caption="1. O grafo roda <code>parse</code> e o runtime grava o checkpoint #1 na thread"><svg viewBox="0 0 640 250" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Grafo com checkpoint e interrupt()</title><defs><marker id="ixs1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="3" /><text x="80" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >parse</text><text x="80" y="94" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".85">executando</text><line x1="140" y1="53" x2="175" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs1)" /><rect x="175.0" y="28" width="120" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >analisar</text><line x1="295" y1="53" x2="340" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs1)" /><rect x="340.0" y="28" width="120" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="400" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >revisar</text><text x="400" y="65.5" font-size="13" text-anchor="middle" fill="currentColor" >(interrupt)</text><line x1="460" y1="53" x2="500" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs1)" /><rect x="500.0" y="28" width="110" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="555" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >relatar</text><rect x="60" y="140" width="520" height="90" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="160" font-size="12" text-anchor="middle" fill="currentColor" font-weight="600" >Postgres (checkpointer) · thread_id = tenant:repo</text><text x="320" y="182" font-size="12" text-anchor="middle" fill="currentColor" >cp#1: {fase: "parse", arquivos: 400}</text><text x="320" y="199" font-size="12" text-anchor="middle" fill="currentColor" >next = analisar</text></svg></div>
+<div class="frame" data-caption="2. <code>analisar</code> termina: checkpoint #2 (cada passo é um save point)"><svg viewBox="0 0 640 250" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Grafo com checkpoint e interrupt()</title><defs><marker id="ixs2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="80" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >parse</text><text x="80" y="94" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".85">cp#1 gravado</text><line x1="140" y1="53" x2="175" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs2)" /><rect x="175.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="3" /><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >analisar</text><text x="235" y="94" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".85">executando</text><line x1="295" y1="53" x2="340" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs2)" /><rect x="340.0" y="28" width="120" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="400" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >revisar</text><text x="400" y="65.5" font-size="13" text-anchor="middle" fill="currentColor" >(interrupt)</text><line x1="460" y1="53" x2="500" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs2)" /><rect x="500.0" y="28" width="110" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="555" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >relatar</text><rect x="60" y="140" width="520" height="90" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="160" font-size="12" text-anchor="middle" fill="currentColor" font-weight="600" >Postgres (checkpointer) · thread_id = tenant:repo</text><text x="320" y="182" font-size="12" text-anchor="middle" fill="currentColor" >cp#1 parse ✓ · cp#2 analisar ✓</text><text x="320" y="199" font-size="12" text-anchor="middle" fill="currentColor" >12 riscos altos no estado</text></svg></div>
+<div class="frame" data-caption="3. <code>revisar</code> chama <code>interrupt(payload)</code>: o grafo pausa e devolve o controle"><svg viewBox="0 0 640 250" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Grafo com checkpoint e interrupt()</title><defs><marker id="ixs3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="80" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >parse</text><line x1="140" y1="53" x2="175" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs3)" /><rect x="175.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >analisar</text><text x="235" y="94" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".85">cp#2 gravado</text><line x1="295" y1="53" x2="340" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs3)" /><rect x="340.0" y="28" width="120" height="50" rx="8" class="s-box" stroke-width="3" style="stroke:var(--warn)"/><text x="400" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >revisar</text><text x="400" y="65.5" font-size="13" text-anchor="middle" fill="currentColor" >(interrupt)</text><text x="400" y="94" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".85">PAUSADO</text><line x1="460" y1="53" x2="500" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs3)" /><rect x="500.0" y="28" width="110" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="555" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >relatar</text><rect x="60" y="140" width="520" height="90" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="160" font-size="12" text-anchor="middle" fill="currentColor" font-weight="600" >Postgres (checkpointer) · thread_id = tenant:repo</text><text x="320" y="182" font-size="12" text-anchor="middle" fill="currentColor" >cp#3 pausado em revisar</text><text x="320" y="199" font-size="12" text-anchor="middle" fill="currentColor" >payload mostrado ao humano guardado no estado</text></svg></div>
+<div class="frame" data-caption="4. O processo morre, o pod é reciclado, houve deploy: nada em memória, tudo no banco"><svg viewBox="0 0 640 250" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Grafo com checkpoint e interrupt()</title><defs><marker id="ixs4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="80" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >parse</text><line x1="140" y1="53" x2="175" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs4)" /><rect x="175.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >analisar</text><line x1="295" y1="53" x2="340" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs4)" /><rect x="340.0" y="28" width="120" height="50" rx="8" class="s-box" stroke-width="3" style="stroke:var(--warn)"/><text x="400" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >revisar</text><text x="400" y="65.5" font-size="13" text-anchor="middle" fill="currentColor" >(interrupt)</text><text x="400" y="94" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".85">sem processo</text><line x1="460" y1="53" x2="500" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs4)" /><rect x="500.0" y="28" width="110" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="555" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >relatar</text><rect x="60" y="140" width="520" height="90" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="160" font-size="12" text-anchor="middle" fill="currentColor" font-weight="600" >Postgres (checkpointer) · thread_id = tenant:repo</text><text x="320" y="182" font-size="12" text-anchor="middle" fill="currentColor" >(processo anterior não existe mais)</text><text x="320" y="199" font-size="12" text-anchor="middle" fill="currentColor" >o estado dorme, indexado por thread_id</text></svg></div>
+<div class="frame" data-caption="5. Outro processo chama <code>Command(resume=...)</code> com o MESMO thread_id; o nó revisar reexecuta desde a primeira linha"><svg viewBox="0 0 640 250" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Grafo com checkpoint e interrupt()</title><defs><marker id="ixs5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="80" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >parse</text><line x1="140" y1="53" x2="175" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs5)" /><rect x="175.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >analisar</text><line x1="295" y1="53" x2="340" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs5)" /><rect x="340.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="3" /><text x="400" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >revisar</text><text x="400" y="65.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >(interrupt)</text><text x="400" y="94" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".85">reexecuta do início</text><line x1="460" y1="53" x2="500" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs5)" /><rect x="500.0" y="28" width="110" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="555" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >relatar</text><rect x="60" y="140" width="520" height="90" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="160" font-size="12" text-anchor="middle" fill="currentColor" font-weight="600" >Postgres (checkpointer) · thread_id = tenant:repo</text><text x="320" y="182" font-size="12" text-anchor="middle" fill="currentColor" >efeito antes do interrupt() acontece DE NOVO</text><text x="320" y="199" font-size="12" text-anchor="middle" fill="currentColor" >(por isso: idempotente ou depois da pausa)</text></svg></div>
+<div class="frame" data-caption="6. <code>revisar</code> conclui, <code>relatar</code> roda: a execução termina sem refazer parse nem analisar"><svg viewBox="0 0 640 250" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Grafo com checkpoint e interrupt()</title><defs><marker id="ixs6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="80" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >parse</text><line x1="140" y1="53" x2="175" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs6)" /><rect x="175.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >analisar</text><line x1="295" y1="53" x2="340" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs6)" /><rect x="340.0" y="28" width="120" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="400" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >revisar</text><text x="400" y="65.5" font-size="13" text-anchor="middle" fill="currentColor" >(interrupt)</text><text x="400" y="94" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".85">aprovação auditada</text><line x1="460" y1="53" x2="500" y2="53" class="s-line" stroke-width="1.5" marker-end="url(#ixs6)" /><rect x="500.0" y="28" width="110" height="50" rx="8" class="s-soft" stroke-width="3" /><text x="555" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >relatar</text><text x="555" y="94" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".85">executando</text><rect x="60" y="140" width="520" height="90" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="160" font-size="12" text-anchor="middle" fill="currentColor" font-weight="600" >Postgres (checkpointer) · thread_id = tenant:repo</text><text x="320" y="182" font-size="12" text-anchor="middle" fill="currentColor" >cp#4 revisar ✓ · cp#5 relatar ✓</text><text x="320" y="199" font-size="12" text-anchor="middle" fill="currentColor" >trilha de auditoria: payload exato aprovado</text></svg></div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um nó faz <code>await notificar_cliente(...)</code> e só depois chama <code>interrupt()</code>. O humano responde horas depois. O que acontece?</p>
+<ol><li data-opt="a">O nó continua exatamente na linha seguinte ao <code>interrupt()</code>; a notificação sai uma só vez</li><li data-opt="b">O checkpoint desfaz automaticamente o efeito da primeira execução</li><li data-opt="c">O nó reexecuta desde o começo; sem idempotência, o cliente recebe duas notificações. O efeito deve ir para depois da pausa ou ser idempotente</li><li data-opt="d">O <code>interrupt()</code> é ignorado e o nó segue sem pausar, se não houver checkpointer</li></ol>
+<div class="explain">Na retomada o runtime roda o nó inteiro de novo, e dessa vez o <code>interrupt()</code> devolve o valor do resume em vez de pausar. Tudo o que vinha antes acontece duas vezes. E sem checkpointer o <code>interrupt()</code> simplesmente não funciona: é pré-requisito, não opção.</div></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual destes usos de <code>interrupt()</code> é um bug segundo as cinco regras do bloco?</p>
+<ol><li data-opt="a">Dentro de um <code>while True</code> que repete a validação até o revisor aprovar</li><li data-opt="b">Num nó de aprovação cuja pausa tem TTL e um job que varre pendências antigas</li><li data-opt="c">Num nó que captura apenas uma exceção específica, fora da linha do <code>interrupt()</code></li><li data-opt="d">Em um grafo compilado com checkpointer em Postgres</li></ol>
+<div class="explain">Como o nó reexecuta desde o início, cada retomada replica as iterações anteriores e o custo cresce. Para "rejeitou, peça de novo", use aresta condicional voltando ao nó: cada volta é um passo do grafo, com checkpoint próprio. As outras três opções seguem as regras (TTL, exceção específica, checkpointer durável).</div></div>
+
 <h2 id="b05">Bloco 5 · Modelagem do grafo de conhecimento e extração determinística</h2>
 <h3>Por que isso importa</h3>
 <p>Aqui começa o grafo de conhecimento, e a primeira decisão é a que mais determina o resultado: <strong>o que vira nó, o que vira aresta e o que vira propriedade</strong>. Modelagem excessiva produz um grafo bonito que ninguém consulta; modelagem escassa produz um grafo que não responde as perguntas. E há uma segunda decisão, de custo: <strong>quem extrai o grafo — código ou LLM?</strong> A resposta certa para o seu domínio economiza milhares de dólares e elimina uma classe inteira de alucinação.</p>
@@ -659,6 +754,16 @@ def instabilidade(g: nx.DiGraph, componente_de: dict[str, str]) -> dict[str, flo
 <p>Validar o parser em arquivo conhecido, extrair o corpus com censo, comparar com extração por LLM e usar LLM só onde ganha é o exercício deste bloco — o roteiro executável com AST da stdlib fica no <code>Laboratório guiado M10</code>, depois do bloco 9 (tree-sitter é trilha externa). O percurso: teste verde em milissegundos sem API; taxa de não resolução anotada como teto de cobertura; tabela parser × LLM em custo e acertos sustentando a regra de ouro; e não-resolvidos desambiguados com confiança menor que 1.</p>
 
 <!-- ============================================ BLOCO 6 -->
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Para responder "que código está morto?", por que o esquema do Cartógrafo precisa do tipo de nó <code>EntryPoint</code>?</p>
+<ol><li data-opt="a">Porque o networkx exige um nó de entrada para qualquer grafo</li><li data-opt="b">Código morto é o conjunto de métodos não alcançáveis a partir de algum entry point; sem esse nó não existe ponto de partida para a alcançabilidade</li><li data-opt="c">Para que o LLM saiba qual arquivo ler primeiro</li><li data-opt="d">Para indexar os vetores dos métodos</li></ol>
+<div class="explain">É o exemplo do "modele a partir da pergunta": remova o tipo de nó e a pergunta deixa de ser respondível. Lembre que o resultado é <em>candidato</em> a código morto, nunca veredito (reflexão e DI por convenção geram falso positivo).</div></div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Quem deve extrair as chamadas entre métodos do corpus de código do cliente?</p>
+<ol><li data-opt="a">Um LLM por arquivo, porque é mais preciso que gramática em código</li><li data-opt="b">Um LLM com temperatura 0, que o torna determinístico</li><li data-opt="c">Embeddings dos métodos, que dispensam a extração</li><li data-opt="d">O parser (AST/tree-sitter): custo ~zero e reprodutível. O LLM entra só para desambiguar o que o parser não resolve, rotular módulos e resumir comunidades</li></ol>
+<div class="explain">Em código, o parser é gramática: alta precisão, custo de CPU, resultado idêntico a cada execução. LLM por arquivo é o item mais caro do pipeline, inventa relação e varia entre execuções (temperatura 0 não garante determinismo). A regra de ouro: o que é determinístico fica determinístico.</div></div>
+
 <h2 id="b06">Bloco 6 · Onde guardar o grafo: AGE, Neo4j ou SQL</h2>
 <h3>Por que isso importa</h3>
 <p>O grafo em memória do bloco 5 morre com o processo. Persistir permite consultar de outro serviço, isolar por tenant e responder em milissegundos sem reprocessar o repositório. A decisão de <em>onde</em> persistir já está no ADR-0001 (M04 bloco 3): Postgres único, com pgvector e, se preciso, Apache AGE, extensão que adiciona grafo e Cypher dentro do Postgres e devolve linhas SQL que dão <code>JOIN</code> com suas tabelas.</p>
@@ -711,6 +816,88 @@ $$) AS (afetado agtype, distancia agtype);</code></pre>
 <p>Persistir o grafo em lotes (~500 por vez, não um <code>CREATE</code> por nó) e conferir a travessia à mão contra uma referência conhecida é o exercício deste bloco. A execução real contra PostgreSQL/AGE exige Docker e é trilha externa; a versão em memória está no <code>Laboratório guiado M10</code>.</p>
 
 <!-- ============================================ BLOCO 7 -->
+<div class="ix"><span class="ix-title">Simulador: travessia no grafo de chamadas</span>
+<p>Grafo de exemplo com <code>CHAMA</code> (quem chama quem). Escolha o método e a profundidade para ver <strong>o que quebra se eu mudar este método</strong>, ou troque o modo para achar <strong>candidatos a código morto</strong> a partir dos entry points.</p>
+<div class="ix-row"><label for="f10-bfs-m">Modo:</label><select id="f10-bfs-m"><option value="imp">Impacto: chamadores (transitivos) do método</option><option value="dead">Código morto: o que nenhum entry point alcança</option></select>
+<label for="f10-bfs-t">Método:</label><select id="f10-bfs-t"></select>
+<label>Profundidade: <strong id="f10-bfs-d-v">2</strong></label><input type="range" id="f10-bfs-d" min="1" max="6" value="2" style="max-width:180px" aria-label="Profundidade máxima da travessia (6 = sem limite)"></div>
+<div id="f10-bfs-svg"></div>
+<div class="ix-out" id="f10-bfs-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+var $ = function (id) { return document.getElementById(id); };
+var names = ["Tela.Pagar","Api.Fatura","Pagamento.Processar","Fatura.Gerar","Juros.Calcular","Desconto.Aplicar","Imposto.Somar","Arredonda.Moeda","Legado.Relatorio","Util.Log"];
+var pos = [[110,28],[400,28],[110,100],[400,100],[260,180],[70,180],[470,180],[260,258],[572,100],[572,180]];
+var edges = [[0,2],[1,3],[2,4],[2,5],[3,4],[3,6],[4,7],[5,7],[6,7],[2,9],[3,9],[8,4],[8,9]];
+var entries = [0,1];
+var sel = $("f10-bfs-t"), mode = $("f10-bfs-m"), dep = $("f10-bfs-d"), box = $("f10-bfs-svg"), out = $("f10-bfs-out");
+names.forEach(function (nm, i) { var o = document.createElement("option"); o.value = i; o.textContent = nm; sel.appendChild(o); });
+sel.value = 4;
+function bfs(start, rev, maxd) {
+  var dist = {}, q = [], i;
+  start.forEach(function (s) { dist[s] = 0; q.push(s); });
+  while (q.length) {
+    var u = q.shift();
+    if (dist[u] >= maxd) continue;
+    edges.forEach(function (e) {
+      var a = rev ? e[1] : e[0], b = rev ? e[0] : e[1];
+      if (a === u && dist[b] === undefined) { dist[b] = dist[u] + 1; q.push(b); }
+    });
+  }
+  return dist;
+}
+function draw(dist, target, isDead) {
+  var s = '<svg viewBox="0 0 640 296" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Grafo de chamadas de exemplo</title><defs><marker id="f10bfsm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>';
+  edges.forEach(function (e) {
+    var a = pos[e[0]], b = pos[e[1]], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.sqrt(dx * dx + dy * dy) || 1;
+    var x1 = a[0] + dx / L * 14, y1 = a[1] + 15 + (dy > 0 ? 0 : -30), x2 = b[0] - dx / L * 4, y2 = b[1] - 17;
+    if (dy === 0) { y1 = a[1]; y2 = b[1]; x1 = a[0] + (dx > 0 ? 62 : -62); x2 = b[0] + (dx > 0 ? -64 : 64); }
+    s += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" class="s-line" stroke-width="1.2" opacity=".55" marker-end="url(#f10bfsm)"/>';
+  });
+  names.forEach(function (nm, i) {
+    var p = pos[i], d = dist[i], cls = "s-box", extra = 'stroke-width="1.2" stroke-dasharray="4 4" opacity=".8"', tag = "";
+    if (isDead) {
+      if (d !== undefined) { cls = "s-soft"; extra = 'stroke-width="1.5"'; }
+      else { extra = 'stroke-width="2.4" stroke-dasharray="5 4" style="stroke:var(--bad)"'; tag = " ?"; }
+    } else if (i === target) { cls = "s-soft"; extra = 'stroke-width="3.2"'; tag = " (alvo)"; }
+    else if (d !== undefined) { cls = "s-soft"; extra = 'stroke-width="1.5"'; tag = " · " + d; }
+    s += '<rect x="' + (p[0] - 62) + '" y="' + (p[1] - 15) + '" width="124" height="30" rx="8" class="' + cls + '" ' + extra + '/>';
+    s += '<text x="' + p[0] + '" y="' + (p[1] + 4.5) + '" font-size="11.5" text-anchor="middle" fill="currentColor">' + nm + tag + '</text>';
+    if (entries.indexOf(i) >= 0) s += '<text x="' + p[0] + '" y="' + (p[1] - 20) + '" font-size="10" text-anchor="middle" fill="currentColor" opacity=".7">entry point</text>';
+  });
+  return s + '</svg>';
+}
+function run() {
+  var isDead = mode.value === "dead", d = +dep.value, md = d >= 6 ? 99 : d, t = +sel.value;
+  $("f10-bfs-d-v").textContent = d >= 6 ? "sem limite" : d;
+  sel.disabled = isDead; dep.disabled = isDead;
+  var dist, lines = [];
+  if (isDead) {
+    dist = bfs(entries, false, 99);
+    names.forEach(function (nm, i) { if (dist[i] === undefined) lines.push(nm); });
+    box.innerHTML = draw(dist, -1, true);
+    out.textContent = "Alcançáveis a partir dos entry points: " + Object.keys(dist).length + " de " + names.length + ".\nCandidato(s) a código morto: " + (lines.join(", ") || "nenhum") + "\nAtenção: é CANDIDATO, não veredito. Reflexão e injeção de dependência por convenção geram falso positivo.";
+  } else {
+    dist = bfs([t], true, md);
+    var by = {};
+    Object.keys(dist).forEach(function (k) { if (+k !== t) { (by[dist[k]] = by[dist[k]] || []).push(names[k]); } });
+    box.innerHTML = draw(dist, t, false);
+    var txt = "Mudar " + names[t] + " pode afetar " + (Object.keys(dist).length - 1) + " método(s) a até " + (d >= 6 ? "qualquer número de" : d) + " salto(s) de distância:\n";
+    Object.keys(by).sort().forEach(function (k) { txt += "  " + k + " salto(s): " + by[k].join(", ") + "\n"; });
+    if (Object.keys(dist).length === 1) txt += "  (nenhum chamador nesse alcance)\n";
+    txt += "BFS custa O(V+E): percorrer tudo é barato. O perigo é o hub muito chamado: sem limite de profundidade a vizinhança vira o repositório inteiro.";
+    out.textContent = txt;
+  }
+}
+[sel, mode, dep].forEach(function (e) { e.addEventListener("input", run); e.addEventListener("change", run); });
+run();
+});</script>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Você quer travessias de profundidade variável, sem operar mais um banco e na mesma transação do pgvector. Qual é a escolha do curso e qual cuidado é obrigatório?</p>
+<ol><li data-opt="a">Apache AGE no Postgres, com profundidade sempre limitada (<code>*1..4</code>), um grafo por tenant derivado do escopo autenticado e valores validados antes de entrar no <code>$$ ... $$</code></li><li data-opt="b">Neo4j, porque o RLS do Postgres cobre as tabelas internas do grafo</li><li data-opt="c">Só CTE recursiva, porque o AGE não suporta Cypher</li><li data-opt="d">AGE com travessia ilimitada (<code>*</code>), já que o Postgres trata ciclos sozinho</li></ol>
+<div class="explain">AGE mantém uma só infraestrutura e uma só transação. O RLS não cobre as tabelas internas de vértices (daí um grafo por tenant), a interpolação em <code>$$</code> é superfície de injeção, e travessia sem limite em grafo com ciclo explode.</div></div>
+
 <h2 id="b07">Bloco 7 · GraphRAG: busca local, global e o custo real</h2>
 <h3>Por que isso importa</h3>
 <p>Você já tem os dois lados: busca híbrida (M07) e grafo (blocos 5–6). <strong>GraphRAG</strong> é o nome que o campo deu para usá-los juntos — e há mais de uma forma de fazer isso, com custos que diferem em ordens de grandeza. Este bloco te dá o mapa para escolher, e a honestidade sobre a conta que quase nenhum material apresenta.</p>
@@ -798,6 +985,55 @@ async def recuperar(pergunta: str, escopo: Escopo, saltos: int = 2) -> ContextoG
 <p>Ligar a rota estrutura, detectar comunidades, fazer a conta dos resumos e implementar a pergunta global preguiçosa é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, depois do bloco 9. O percurso: âncora semântica com expansão orçada contra RAG puro; comunidades divergindo das pastas como achado gratuito; conta de resumos contra receita decidindo ingestão vs. consulta em ADR; e síntese com custo controlado citando módulos.</p>
 
 <!-- ============================================ BLOCO 8 -->
+<div class="stepper"><span class="ix-title">Passo a passo: recuperação híbrida vetor → grafo</span>
+<div class="frame" data-caption="1. A pergunta não nomeia o símbolo: "o que depende do cálculo de juros?""><svg viewBox="0 0 640 230" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>GraphRAG híbrido: vetor para achar o ponto de entrada, grafo para expandir</title><defs><marker id="ixs7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="15.0" y="20" width="110" height="50" rx="8" class="s-soft" stroke-width="3" /><text x="70" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >pergunta</text><line x1="125" y1="45" x2="160" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs7)" /><rect x="160.0" y="20" width="150" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="235" y="41.5" font-size="13" text-anchor="middle" fill="currentColor" >busca vetorial</text><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >(top-3 âncoras)</text><line x1="310" y1="45" x2="345" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs7)" /><rect x="355.0" y="20" width="150" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="430" y="41.5" font-size="13" text-anchor="middle" fill="currentColor" >travessia</text><text x="430" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >(3 × 2 saltos)</text><line x1="505" y1="45" x2="538" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs7)" /><rect x="540.0" y="20" width="90" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="585" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >contexto</text><rect x="30" y="125" width="580" height="85" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="148" font-size="12" text-anchor="middle" fill="currentColor" >O usuário não sabe que a classe se chama FinanceiroLegadoHelper.</text><text x="320" y="166" font-size="12" text-anchor="middle" fill="currentColor" >Grafo puro precisa de um nó de partida; vetor puro não enxerga relações.</text></svg></div>
+<div class="frame" data-caption="2. A busca vetorial acha os pontos de entrada (semântica)"><svg viewBox="0 0 640 230" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>GraphRAG híbrido: vetor para achar o ponto de entrada, grafo para expandir</title><defs><marker id="ixs8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="15.0" y="20" width="110" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="70" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >pergunta</text><line x1="125" y1="45" x2="160" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs8)" /><rect x="160.0" y="20" width="150" height="50" rx="8" class="s-soft" stroke-width="3" /><text x="235" y="41.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >busca vetorial</text><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >(top-3 âncoras)</text><line x1="310" y1="45" x2="345" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs8)" /><rect x="355.0" y="20" width="150" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="430" y="41.5" font-size="13" text-anchor="middle" fill="currentColor" >travessia</text><text x="430" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >(3 × 2 saltos)</text><line x1="505" y1="45" x2="538" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs8)" /><rect x="540.0" y="20" width="90" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="585" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >contexto</text><rect x="30" y="125" width="580" height="85" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="148" font-size="12" text-anchor="middle" fill="currentColor" >Top-3 âncoras: FinanceiroLegadoHelper.CalcJuros, Juros.Calcular, doc de juros.</text><text x="320" y="166" font-size="12" text-anchor="middle" fill="currentColor" >O vetor faz o que o grafo não faz: casa significado, não estrutura.</text></svg></div>
+<div class="frame" data-caption="3. O grafo expande a vizinhança com orçamento (3 âncoras × 2 saltos)"><svg viewBox="0 0 640 230" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>GraphRAG híbrido: vetor para achar o ponto de entrada, grafo para expandir</title><defs><marker id="ixs9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="15.0" y="20" width="110" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="70" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >pergunta</text><line x1="125" y1="45" x2="160" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs9)" /><rect x="160.0" y="20" width="150" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="235" y="41.5" font-size="13" text-anchor="middle" fill="currentColor" >busca vetorial</text><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >(top-3 âncoras)</text><line x1="310" y1="45" x2="345" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs9)" /><rect x="355.0" y="20" width="150" height="50" rx="8" class="s-soft" stroke-width="3" /><text x="430" y="41.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >travessia</text><text x="430" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >(3 × 2 saltos)</text><line x1="505" y1="45" x2="538" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs9)" /><rect x="540.0" y="20" width="90" height="50" rx="8" class="s-box" stroke-width="1.2" stroke-dasharray="4 4" opacity=".75"/><text x="585" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >contexto</text><rect x="30" y="125" width="580" height="85" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="148" font-size="12" text-anchor="middle" fill="currentColor" >Percorre CHAMA/ACESSA a partir das âncoras, no máximo 2 saltos.</text><text x="320" y="166" font-size="12" text-anchor="middle" fill="currentColor" >Sem orçamento, a vizinhança de um método muito chamado é o repositório inteiro.</text></svg></div>
+<div class="frame" data-caption="4. O contexto final leva os dois: trechos e caminhos como evidência"><svg viewBox="0 0 640 230" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>GraphRAG híbrido: vetor para achar o ponto de entrada, grafo para expandir</title><defs><marker id="ixs10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="15.0" y="20" width="110" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="70" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" >pergunta</text><line x1="125" y1="45" x2="160" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs10)" /><rect x="160.0" y="20" width="150" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="235" y="41.5" font-size="13" text-anchor="middle" fill="currentColor" >busca vetorial</text><text x="235" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >(top-3 âncoras)</text><line x1="310" y1="45" x2="345" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs10)" /><rect x="355.0" y="20" width="150" height="50" rx="8" class="s-soft" stroke-width="1.2" /><text x="430" y="41.5" font-size="13" text-anchor="middle" fill="currentColor" >travessia</text><text x="430" y="57.5" font-size="13" text-anchor="middle" fill="currentColor" >(3 × 2 saltos)</text><line x1="505" y1="45" x2="538" y2="45" class="s-line" stroke-width="1.5" marker-end="url(#ixs10)" /><rect x="540.0" y="20" width="90" height="50" rx="8" class="s-soft" stroke-width="3" /><text x="585" y="49.5" font-size="13" text-anchor="middle" fill="currentColor" font-weight="600" >contexto</text><rect x="30" y="125" width="580" height="85" rx="8" class="s-box" stroke-width="1.3" /><text x="320" y="148" font-size="12" text-anchor="middle" fill="currentColor" >Caminhos A → B → C vão para a resposta (citação estrutural, verificável).</text><text x="320" y="166" font-size="12" text-anchor="middle" fill="currentColor" >Cada lado cobre a fraqueza do outro; o LLM só explica e prioriza.</text></svg></div>
+</div>
+
+<div class="ix"><span class="ix-title">Simulador: pré-computar resumos × resumir sob demanda</span>
+<p>Números de exemplo, para você trocar pelos seus (não são medidas). Pré-computado paga <em>toda</em> comunidade a cada reindexação; preguiçoso paga só as consultadas.</p>
+<div class="ix-row"><label>Comunidades: <input type="number" id="f10-gc-c" value="400" min="1" max="100000" style="width:90px"></label>
+<label>Tokens por resumo: <input type="number" id="f10-gc-t" value="6000" min="100" max="200000" style="width:90px"></label>
+<label>US$ por 1M tokens: <input type="number" id="f10-gc-p" value="1" min="0.01" step="0.01" style="width:80px"></label></div>
+<div class="ix-row"><label>Reindexações por mês: <input type="number" id="f10-gc-r" value="4" min="1" max="1000" style="width:80px"></label>
+<label>Perguntas globais por mês: <input type="number" id="f10-gc-q" value="30" min="0" max="100000" style="width:90px"></label>
+<label>Comunidades lidas por pergunta: <input type="number" id="f10-gc-m" value="12" min="1" max="1000" style="width:80px"></label></div>
+<div id="f10-gc-bars"></div>
+<div class="ix-out" id="f10-gc-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+var $ = function (id) { return document.getElementById(id); };
+var ids = ["c","t","p","r","q","m"].map(function (s) { return $("f10-gc-" + s); });
+function usd(v) { return "US$ " + v.toLocaleString("pt-BR", { maximumFractionDigits: 2, minimumFractionDigits: 2 }); }
+function run() {
+  var v = ids.map(function (e) { var x = parseFloat(e.value); return isFinite(x) && x >= 0 ? x : 0; });
+  var Cn = v[0], T = v[1], P = v[2], R = v[3], Q = v[4], M = Math.min(v[5], Cn);
+  var pre = R * Cn * T / 1e6 * P, lazy = Q * M * T / 1e6 * P, mx = Math.max(pre, lazy, 0.01);
+  function bar(l, val, c) { return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="width:190px">' + l + '</span><span style="flex:1;background:var(--surface-2);border-radius:4px;height:18px"><span style="display:block;height:18px;border-radius:4px;min-width:3px;width:' + (val / mx * 100) + '%;background:' + c + '"></span></span><strong style="width:110px;text-align:right">' + usd(val) + '</strong></div>'; }
+  $("f10-gc-bars").innerHTML = bar("Pré-computado (ingestão)", pre, "var(--bad)") + bar("Preguiçoso (na consulta)", lazy, "var(--ok)");
+  var be = M > 0 ? R * Cn / M : Infinity;
+  var msg = "Pré-computado: " + R + " reindexações × " + Cn + " comunidades × " + T + " tokens.\nPreguiçoso: " + Q + " perguntas × " + M + " comunidades × " + T + " tokens.\n";
+  if (pre > lazy) msg += "Hoje o preguiçoso é " + (lazy > 0 ? (pre / lazy).toFixed(1) + "x" : "muito") + " mais barato.\n";
+  else msg += "Neste cenário o pré-computado já não perde (consultas muito frequentes).\n";
+  msg += "Ponto de equilíbrio: acima de " + Math.ceil(be) + " perguntas globais por mês o pré-cálculo passa a compensar (Q* = R·C / m).\nSe a ingestão é fixa por repositório e você cobra por análise, o custo de ingestão come a margem de todo cliente.";
+  $("f10-gc-out").textContent = msg;
+}
+ids.forEach(function (e) { e.addEventListener("input", run); });
+run();
+});</script>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">"Quais são os principais temas de risco deste sistema?" Por que o top-k vetorial falha, e o que resolve?</p>
+<ol><li data-opt="a">Falta aumentar o k e acrescentar um reranker</li><li data-opt="b">É uma pergunta relacional de um salto: basta uma travessia a partir de um nó</li><li data-opt="c">Não existe um trecho que contenha a resposta: é uma visão agregada sobre o corpus todo e o top-k vê só uma amostra. Resolvem comunidades + resumos (GraphRAG global)</li><li data-opt="d">É uma contagem: basta um <code>GROUP BY</code> em SQL</li></ol>
+<div class="explain">É a diferença entre buscar um registro e produzir uma visão que não existe em nenhuma linha. GraphRAG global é pré-agregação. Mais k traz mais amostra, não o todo.</div></div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual é a lição de custo transferível do GraphRAG segundo o bloco?</p>
+<ol><li data-opt="a">Resumir todas as comunidades na ingestão, porque o custo é diluído entre os clientes</li><li data-opt="b">Ingestão determinística e barata; LLM na consulta, com orçamento por pergunta (a abordagem preguiçosa adia o resumo até alguém perguntar)</li><li data-opt="c">Custo de consulta é fixo por repositório e custo de ingestão é variável</li><li data-opt="d">Usar o padrão global (4) para qualquer pergunta, por segurança</li></ol>
+<div class="explain">Custo de ingestão é fixo por repositório e come a margem de todo cliente; custo de consulta é variável e pode ser precificado. Como a maioria das comunidades nunca será perguntada, pré-computar todas desperdiça. Use o simulador acima para achar o ponto de equilíbrio.</div></div>
+
 <h2 id="b08">Bloco 8 · Grafo como memória e fatos com validade</h2>
 <h3>Por que isso importa</h3>
 <p>No M08 bloco 6 você construiu a tabela <code>fatos_agente</code> e estabeleceu a regra: <strong>fato durável precisa de evidência e de gatilho de invalidação</strong>. Aquilo foi a versão relacional, deliberadamente simples. Agora que existe grafo, vale a pergunta: a memória do agente ganha alguma coisa sendo grafo? A resposta é sim, por dois motivos concretos — e um deles resolve um problema que a versão relacional não resolve bem.</p>
@@ -932,6 +1168,51 @@ notas_registrar()           →  grava fatos novos com evidência e valido_de</c
 <p>Migrar para o esquema temporal, provocar a invalidação, testar a honestidade e consultar o passado é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, depois do bloco 9. O percurso: segunda pergunta igual mais barata pela memória; intervalo fechado com o fato sumindo dos vigentes sem sair da tabela; resposta carregando commit e idade com aviso em desatualização; e consulta histórica correta como recurso de produto.</p>
 
 <!-- ============================================ BLOCO 9 -->
+<div class="ix"><span class="ix-title">Simulador: fatos com validade (consulta "como era no commit N?")</span>
+<p>Mova o commit consultado. Um fato vale em <code>c</code> se <code>valido_de ≤ c &lt; valido_ate</code> (<code>valido_ate</code> vazio = ainda vigente). Invalidar é fechar o intervalo; a linha nunca sai da tabela.</p>
+<div class="ix-row"><label>Commit consultado: <strong id="f10-tm-c-v">c6</strong></label><input type="range" id="f10-tm-c" min="1" max="8" value="6" style="max-width:260px" aria-label="Commit consultado">
+<label><input type="checkbox" id="f10-tm-all" checked> mostrar fatos que não valem neste commit</label></div>
+<div id="f10-tm-tab"></div>
+<div class="ix-out" id="f10-tm-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+var $ = function (id) { return document.getElementById(id); };
+var facts = [
+  ["Tela.Pagar CHAMA Pagamento.Processar", 1, null],
+  ["Pagamento.Processar CHAMA Juros.Calcular", 1, 5],
+  ["Pagamento.Processar CHAMA Juros.CalcularV2", 5, null],
+  ["Legado.Relatorio CHAMA Juros.Calcular", 1, 4],
+  ["Fatura.Gerar CHAMA Imposto.Somar", 2, null],
+  ["Fatura.Gerar CHAMA Desconto.Aplicar", 3, 7]
+];
+var sl = $("f10-tm-c"), all = $("f10-tm-all");
+function run() {
+  var c = +sl.value; $("f10-tm-c-v").textContent = "c" + c;
+  var rows = "", ok = 0, closed = 0;
+  facts.forEach(function (f) {
+    var vig = f[1] <= c && (f[2] === null || c < f[2]);
+    if (vig) ok++;
+    if (f[2] !== null && f[2] <= c) closed++;
+    if (!vig && !all.checked) return;
+    rows += '<tr' + (vig ? '' : ' style="opacity:.55"') + '><td><code>' + f[0] + '</code></td><td>c' + f[1] + '</td><td>' + (f[2] === null ? '—' : 'c' + f[2]) + '</td><td>' + (vig ? '<strong style="color:var(--ok)">vale</strong>' : (f[1] > c ? 'ainda não existia' : 'encerrado')) + '</td></tr>';
+  });
+  $("f10-tm-tab").innerHTML = '<table><thead><tr><th>Fato</th><th>valido_de</th><th>valido_ate</th><th>Em c' + c + '</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  $("f10-tm-out").textContent = "Em c" + c + ": " + ok + " fato(s) vigente(s); " + closed + " já encerrado(s) continuam na tabela (histórico é o produto).\nResposta honesta: \"isso era verdade no commit c" + c + ", pode ter mudado depois\". Nunca DELETE: feche o intervalo.";
+}
+sl.addEventListener("input", run); all.addEventListener("change", run);
+run();
+});</script>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">O arquivo <code>PagamentoService.cs</code> mudou no commit abc. O que fazer com os fatos de memória derivados dele?</p>
+<ol><li data-opt="a"><code>DELETE</code> dos fatos, para o grafo não mentir</li><li data-opt="b">Nada: o fato continua verdadeiro até alguém reclamar</li><li data-opt="c">Recriar toda a memória do zero a cada commit</li><li data-opt="d">Fechar o intervalo (<code>UPDATE ... SET valido_ate = :commit</code>, idempotente com <code>WHERE valido_ate IS NULL</code>) e nunca apagar</li></ol>
+<div class="explain">Apagar destrói auditoria ("por que o relatório de maio dizia outra coisa?"), depuração e consulta ao passado. Recriar tudo joga fora trabalho caro: a granularidade certa é a do símbolo, não a do arquivo.</div></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual é a diferença entre tempo do fato e tempo do registro?</p>
+<ol><li data-opt="a">Fato: quando aquilo foi verdade no sistema (intervalo de commits). Registro: quando o sistema descobriu. Guardar os dois permite responder sobre o passado e auditar</li><li data-opt="b">São o mesmo dado em duas colunas, só por conveniência</li><li data-opt="c">O tempo do registro é quando o fato deixou de valer</li><li data-opt="d">O tempo do fato é a data em que o relatório foi gerado</li></ol>
+<div class="explain">Confundir os eixos é o erro comum. "Isso era verdade no commit abc, pode ter mudado" só é possível porque o intervalo de validade é separado da data da execução que o estabeleceu. Veja no simulador: o histórico continua na tabela mesmo depois do fechamento.</div></div>
+
 <h2 id="b09">Bloco 9 · Mini-projeto: as três perguntas respondidas</h2>
 <h3>O que você vai entregar</h3>
 <p>Três peças do Capstone de uma vez — <code>orchestration/</code>, <code>graph/</code> e <code>metrics/</code> — que correspondem às versões <strong>v4, v5 e v6</strong> da tabela de evolução do produto (<code>projeto-final.md</code>): grafo de conhecimento com métricas, workflow durável com checkpoint e HITL, e memória com fatos duráveis. E a prova de que funcionou não é "está bonito": é <strong>um eval que estava vermelho ficando verde</strong>.</p>
@@ -940,6 +1221,11 @@ notas_registrar()           →  grava fatos novos com evidência e valido_de</c
 <p>Ligar o pipeline, ligar a rota do grafo, virar os casos, adicionar graders e gerar o relatório é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M10</code>, abaixo. O percurso: execução completa com thread estável e contagem de efeitos; distribuição de rotas com as estruturais na rota nova; casos "impossíveis" passando com taxa documentada (reflexão vira confiança baixa declarada, não fingimento); graders de caminho e reprodutibilidade no CI; e relatório reconciliado com o gabarito — atualizando um dos dois quando divergem. A aplicação ao Capstone é trilha opcional com especificação própria.</p>
 
 <!-- ============================================ LABORATÓRIO GUIADO -->
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual é a prova de que o mini-projeto funcionou, segundo o bloco?</p>
+<ol><li data-opt="a">Uma demo visual do grafo no navegador, com bom aspecto</li><li data-opt="b">Um eval que estava vermelho (as perguntas estruturais) ficando verde, com graders de caminho e reprodutibilidade rodando no CI</li><li data-opt="c">O número de nós e arestas extraídos do repositório</li><li data-opt="d">Ausência de erros no log da última execução</li></ol>
+<div class="explain">A prova não é "está bonito": é mudança mensurável num eval que falhava. Casos impossíveis passam com taxa documentada, e reflexão vira confiança baixa declarada em vez de cobertura fingida.</div></div>
+
 <h2 id="lab-guiado">Laboratório guiado M10</h2>
 <p>A prática do módulo, reunida e executável sem dependências externas — workflow com checkpoint em arquivo, grafo extraído por AST, memória temporal e métricas. Pode atravessar várias sessões: cada etapa termina retomável. Lint, tipos e testes são oráculos do programa; o checkpoint vem depois, separado. LangGraph, AGE e modelos reais são trilha externa.</p>
 
@@ -987,6 +1273,25 @@ uv sync --frozen</code></pre>
 </table>
 
 <!-- ============================================ CHECKPOINT -->
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique no cartão (ou use Enter) para virar. Tente responder em voz alta antes de ver o verso.</p>
+<div class="flashcards">
+<div class="fc"><div class="front">Grafo de execução × grafo de conhecimento</div><div class="back">Execução: nós = passos, arestas = transições; escrito por você; dá retomada e HITL. Conhecimento: nós = entidades do domínio; extraído dos dados; dá resposta com relação. Ortogonais.</div></div>
+<div class="fc"><div class="front">Por que RAG não responde "o que quebra se eu mudar X?"</div><div class="back">A resposta é a relação entre documentos, a vários saltos; nenhum chunk a contém. Problema de representação, não de recuperação: k e rerank não ajudam.</div></div>
+<div class="fc"><div class="front">Reducer de estado</div><div class="back">Define como o pedaço devolvido por um nó é fundido no estado. Default sobrescreve; campo escrito por mais de um nó precisa de reducer explícito (ex.: operator.add).</div></div>
+<div class="fc"><div class="front">Send, Command, aresta condicional</div><div class="back">Send: N cópias de um nó com estado próprio (map-reduce). Command: atualiza o estado e escolhe o destino num retorno só. Condicional: função decide o próximo nó pelo estado.</div></div>
+<div class="fc"><div class="front">thread_id correto</div><div class="back">Chave estável derivável dos parâmetros de entrada (tenant + repo [+ commit]). Aleatório nunca retoma; fixo demais colide entre execuções.</div></div>
+<div class="fc"><div class="front">exit, async, sync</div><div class="back">Durabilidade: exit persiste só no fim; async a cada passo sem bloquear (pode perder o último); sync a cada passo bloqueando. Passo caro de repetir pede sync.</div></div>
+<div class="fc"><div class="front">Contrato da retomada por replay</div><div class="back">O nó reexecuta: precisa ser idempotente, determinístico, pequeno o bastante e com estado serializável. Sem relógio ou aleatoriedade dentro do nó.</div></div>
+<div class="fc"><div class="front">A armadilha do interrupt()</div><div class="back">O nó reexecuta desde o início na retomada. Nada de efeito não idempotente antes da pausa; sem try/except genérico, sem while True, sem reordenar interrupts; toda pausa com TTL.</div></div>
+<div class="fc"><div class="front">Modele a partir da pergunta</div><div class="back">Nó = o que se conta ou serve de partida; aresta = o que se percorre; propriedade = o resto. Pergunta de corte: que pergunta deixa de ser respondível sem este tipo?</div></div>
+<div class="fc"><div class="front">Parser × LLM na extração</div><div class="back">Parser: ~zero custo, preciso em código, reprodutível. LLM: desambiguar não resolvidos, rotular, resumir comunidades. 95% do grafo sai do parser.</div></div>
+<div class="fc"><div class="front">Instabilidade I = Ce / (Ca + Ce)</div><div class="back">Mede facilidade de mudança de um componente, não defeito. Denuncia seta na direção errada e ciclos; use tendência, declare a fronteira.</div></div>
+<div class="fc"><div class="front">Tabelas × AGE × Neo4j</div><div class="back">CTE recursiva: nada a mais, poucos saltos. AGE: Cypher no seu Postgres, mesma transação (grafo por tenant, profundidade limitada). Neo4j: quando o grafo é o produto.</div></div>
+<div class="fc"><div class="front">GraphRAG local × global</div><div class="back">Local/híbrido: vetor acha a âncora, grafo expande (barato). Global: comunidades + resumos para perguntas de síntese (caro; versão preguiçosa adia o LLM para a consulta).</div></div>
+<div class="fc"><div class="front">Fato temporal</div><div class="back">Tem intervalo de validade (valido_de, valido_ate) e proveniência. Invalidar = fechar o intervalo, nunca DELETE. Tempo do fato ≠ tempo do registro.</div></div>
+</div>
+
 <h2 id="checkpoint-m10">Checkpoint M10</h2>
 <div class="box ok">
 <span class="lbl">Avaliação sem consulta — diga "Checkpoint M10" no chat</span>
