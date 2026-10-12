@@ -118,3 +118,23 @@ def test_tools_desconhecida_falha(tmp_path: Path) -> None:
 
     with pytest.raises(SystemExit):
         bootstrap.main([str(tmp_path), "--tools", "vim"])
+
+
+def test_copia_evals_sem_resultados(tmp_path: Path) -> None:
+    src = tmp_path / "tpl"
+    (src / "evals/resultados/x").mkdir(parents=True)
+    (src / "evals/resultados/x/relatorio.md").write_text("x", encoding="utf-8")
+    (src / "evals/run_evals.py").write_text("print(1)", encoding="utf-8")
+    dest = tmp_path / "d"
+    dest.mkdir()
+    bootstrap.apply_kit(dest, template=src)
+    assert (dest / "evals/run_evals.py").is_file()
+    assert not (dest / "evals/resultados").exists()
+
+
+def test_gitignore_existente_recebe_linha_dos_evals(tmp_path: Path) -> None:
+    (tmp_path / ".gitignore").write_text("bin/", encoding="utf-8")
+    bootstrap.apply_kit(tmp_path)
+    assert (tmp_path / ".gitignore").read_text(encoding="utf-8").splitlines() == ["bin/", "evals/resultados/"]
+    bootstrap.apply_kit(tmp_path)
+    assert (tmp_path / ".gitignore").read_text(encoding="utf-8").count("evals/resultados/") == 1

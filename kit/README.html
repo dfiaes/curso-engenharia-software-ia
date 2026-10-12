@@ -75,6 +75,10 @@
 <td>Teste Playwright mínimo, modelo para os testes gerados pela skill.</td>
 </tr>
 <tr>
+<td><code>evals/</code></td>
+<td>Evals agnósticos de agente e modelo (só Python 3.11+): casos TOML com verificação objetiva, variantes (Claude Code, Codex, OpenCode, Cursor, API própria), pass^k, custo por sucesso, McNemar e modo <code>--skill-ab</code>. Exemplo executável sem custo. Veja <code>evals/README.md</code>.</td>
+</tr>
+<tr>
 <td><code>prompts/</code></td>
 <td>Prompts agnósticos: onboarding de repo existente, nova feature, corrigir bug, módulo grande, atualizar docs, revisar PR.</td>
 </tr>
@@ -137,6 +141,14 @@ python3 /caminho/do/curso/kit/bootstrap.py . --existing
 <li>Peça testes de caracterização das áreas de maior risco <strong>antes</strong> de qualquer mudança funcional.</li>
 <li>Só então adote as regras do dia a dia (branch protection, hooks, template de PR).</li>
 </ol>
+<h2 id="avaliar-skills-e-modelos">Avaliar skills e modelos</h2>
+<p>Antes de trocar de modelo ou de manter uma skill, meça. <code>evals/</code> roda os mesmos casos (com verificação por teste) em cada variante, repete N vezes e reporta pass^k, custo por tarefa bem-sucedida e uma comparação pareada com McNemar exato.</p>
+<pre><code class="language-bash">python3 evals/run_evals.py --config evals/exemplos/variantes.toml --casos-dir evals/exemplos/casos \
+    --variantes modelo-grande,modelo-pequeno --repeticoes 3 --paralelo 4      # exemplo com agente fake, sem custo
+python3 evals/run_evals.py --variantes sonnet,haiku --repeticoes 3            # os seus casos e variantes
+python3 evals/run_evals.py --variantes sonnet --skill-ab minha-skill          # a skill ainda vale a pena?
+</code></pre>
+<p>Resultado em <code>evals/resultados/&lt;data&gt;/</code> (já no <code>.gitignore</code>). Saída de exemplo: <code>evals/exemplos/relatorio-exemplo.md</code>. Rode de novo ao mudar modelo, skill, <code>AGENTS.md</code> ou quando o fornecedor atualizar o modelo.</p>
 <h2 id="testes-do-kit">Testes do kit</h2>
 <pre><code class="language-bash">cd kit &amp;&amp; uv run -q --with pytest python -m pytest -q tests
 </code></pre>

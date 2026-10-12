@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de kit/template/evals/README.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evals: meça, não opine</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="evals-meça-não-opine">Evals: meça, não opine</h1>
+<p>Duas perguntas, uma ferramenta (só Python 3.11+ padrão, sem dependências, qualquer agente ou modelo):</p>
+<ul>
+<li><strong>A minha skill continua útil?</strong> Compare o mesmo agente com e sem a skill (<code>--skill-ab</code>).</li>
+<li><strong>Um modelo mais barato entrega o mesmo?</strong> Compare variantes (<code>--variantes grande,barato</code>) pelo custo por tarefa bem-sucedida.</li>
+</ul>
+<h2 id="teste-agora-sem-custo">Teste agora, sem custo</h2>
+<pre><code class="language-bash">python3 evals/run_evals.py --config evals/exemplos/variantes.toml --casos-dir evals/exemplos/casos \
+    --variantes modelo-grande,modelo-pequeno --repeticoes 3 --paralelo 4
+python3 evals/run_evals.py --config evals/exemplos/variantes.toml --casos-dir evals/exemplos/casos \
+    --variantes modelo-grande --skill-ab corrigir-bug --repeticoes 3
+</code></pre>
+<p>O agente é um fake determinístico (<code>exemplos/agente_fake.py</code>). Veja a saída pronta em <code>exemplos/relatorio-exemplo.md</code>. Resultados ficam em <code>evals/resultados/&lt;data&gt;/</code> (<code>resultados.jsonl</code> + <code>relatorio.md</code>; fora do git).</p>
+<h2 id="seus-casos-e-suas-variantes">Seus casos e suas variantes</h2>
+<ol>
+<li><code>casos/*.toml</code>: copie <code>casos/_modelo.toml</code>. Campos: <code>id</code>, <code>descricao</code>, <code>tags</code>, <code>dificuldade</code>, <code>prompt</code>, <code>fixture</code> (pasta copiada para um diretório temporário a cada execução), <code>deve_acionar_skill</code> e <code>[verificar]</code> com <code>comando</code> (exit 0 = ok, roda no workdir), <code>regex_saida</code> e/ou <code>arquivos_esperados</code>.</li>
+<li><code>variantes.toml</code>: uma por agente/modelo, com <code>comando</code> (<code>{prompt_file}</code> e <code>{workdir}</code>), <code>modelo</code>, <code>env</code>, preços por milhão de tokens e <code>regex_tokens</code> para medir custo. Há exemplos comentados de Claude Code, Codex, OpenCode, Cursor CLI e script próprio; <strong>as flags mudam, confira na doc da sua versão</strong>. Segredos só por variável de ambiente (<code>"$MINHA_CHAVE"</code>); chave literal é recusada.</li>
+<li>Para <code>--skill-ab</code>, a variante declara <code>[variante.com_skill]</code> e <code>[variante.sem_skill]</code> (env, ou <code>comando</code> alternativo): por exemplo, um diretório de skills diferente ou uma flag.</li>
+</ol>
+<p>Opções: <code>--variantes a,b</code> (a primeira é a linha de base), <code>--casos all|tag|id</code>, <code>--repeticoes N</code>, <code>--timeout S</code>, <code>--paralelo P</code>, <code>--saida DIR</code>, <code>--tolerancia 0.05</code>.</p>
+<h2 id="como-montar-um-bom-conjunto-de-casos">Como montar um bom conjunto de casos</h2>
+<ul>
+<li><strong>20 a 50 casos reais</strong>, tirados do seu histórico (bugs que você corrigiu, features que entregou, PRs revisados). Menos de 20 casos: o relatório avisa que a decisão é frágil.</li>
+<li><strong>Critério verificável por máquina</strong>: teste que passa, arquivo que existe, saída que casa. Se você precisa "ler e achar bom", ainda não é um caso.</li>
+<li><strong>Misture dificuldades</strong> e inclua <strong>casos de borda</strong> (entrada vazia, limites, entradas inválidas). Só casos fáceis fazem todo modelo parecer igual.</li>
+<li><strong>Casos negativos para skill</strong>: tarefas em que a skill NÃO deve ser acionada (<code>deve_acionar_skill = false</code>). Sem eles você não vê falso positivo.</li>
+<li>Fixtures pequenas e herméticas (sem rede, sem relógio, sem estado compartilhado). Não deixe a solução ao alcance do agente.</li>
+<li>Repita (k = 3 a 5): agentes variam entre execuções.</li>
+</ul>
+<h2 id="como-ler-o-relatório">Como ler o relatório</h2>
+<ul>
+<li><strong>pass@1 médio</strong>: acerto médio por tentativa. <strong>pass^k</strong>: casos em que <em>todas</em> as k tentativas acertaram: é a confiabilidade que você sente no dia a dia. <strong>pass@k</strong>: casos em que <em>alguma</em> acertou: o que o modelo consegue com tentativas extras. Grande distância entre pass@k e pass^k = instável.</li>
+<li><strong>Custo por sucesso</strong> (custo total / sucessos) é o número que importa: um modelo barato que erra muito pode sair mais caro. <code>n/d</code> = faltou <code>regex_tokens</code> ou preço.</li>
+<li><strong>Falhas por motivo</strong>: <code>timeout</code>, <code>agente_erro</code>, <code>verificar.*</code>. Muito <code>timeout</code> é problema de instrução ou de limite, não de capacidade.</li>
+<li><strong>Comparação pareada</strong>: lista os casos que mudaram. O <strong>McNemar exato</strong> diz se o número de mudanças para cada lado passa do acaso. Com poucos casos o normal é "diferença não distinguível de ruído": isso <strong>não</strong> prova que são iguais, só que você ainda não sabe; aumente casos e repetições.</li>
+<li><strong>Recomendação</strong>: regras fixas e escritas no próprio relatório (trocar só se a perda de pass^k couber na tolerância e o custo por sucesso cair).</li>
+<li><strong>Modo skill</strong>: ganho de pass^k com vs sem; acionamento correto, falso positivo (disparou à toa) e falso negativo (não disparou quando devia); veredito <em>útil</em>, <em>neutra</em> (enxugue ou aposente: skill que não ajuda só consome contexto) ou <em>prejudicial</em>.</li>
+</ul>
+<h2 id="quando-llm-as-judge-é-aceitável">Quando LLM-as-judge é aceitável</h2>
+<p>Só quando o critério é irredutivelmente subjetivo (clareza de um texto, tom). Aí: rubrica escrita com notas discretas, juiz de modelo diferente do avaliado, e <strong>calibre contra notas humanas</strong> (rotule 30+ casos à mão e meça a concordância antes de confiar). Se for possível escrever um teste, escreva o teste. Para usar um juiz neste kit, faça o <code>verificar.comando</code> chamar seu script de julgamento e devolver exit 0/1.</p>
+<h2 id="quando-rodar-de-novo">Quando rodar de novo</h2>
+<p>Ao trocar de modelo, ao criar ou editar uma skill, ao mudar o <code>AGENTS.md</code> e quando o fornecedor atualizar o modelo (o mesmo nome pode mudar de comportamento). Guarde o <code>relatorio.md</code> aprovado como referência e compare.</p>
+</div>
+<script src="../../../assets/course-manifest.js"></script>
+<script src="../../../assets/docs-manifest.js"></script>
+<script src="../../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

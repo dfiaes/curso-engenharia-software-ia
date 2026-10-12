@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de kit/template/evals/exemplos/relatorio-exemplo.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório de evals</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<!-- Saída REAL do exemplo com o agente fake (sem custo). Gerada com:
+  python3 evals/run_evals.py --config evals/exemplos/variantes.toml --casos-dir evals/exemplos/casos \
+      --variantes modelo-grande,modelo-pequeno --repeticoes 3 --paralelo 4
+  python3 evals/run_evals.py --config evals/exemplos/variantes.toml --casos-dir evals/exemplos/casos \
+      --variantes modelo-grande --skill-ab corrigir-bug --repeticoes 3 --paralelo 4
+Os preços e os modelos são fictícios. O relatório do 1º comando vem primeiro; do 2º, só o resumo e o "Modo skill". -->
+
+<h1 id="relatório-de-evals">Relatório de evals</h1>
+<ul>
+<li>Data: 2026-10-12 17:11:42</li>
+<li>Casos: 8 | repetições (k): 3 | tentativas: 48</li>
+<li>Tolerância de pass^k: 5.0%</li>
+</ul>
+<h2 id="resumo-por-variante">Resumo por variante</h2>
+<table>
+<thead>
+<tr>
+<th>Variante</th>
+<th>Modelo</th>
+<th>pass@1 médio</th>
+<th>pass^k</th>
+<th>pass@k</th>
+<th>Custo total</th>
+<th>Custo/sucesso</th>
+<th>Latência p50</th>
+<th>p95</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>modelo-grande</td>
+<td>modelo-grande (fake)</td>
+<td>83%</td>
+<td>75%</td>
+<td>100%</td>
+<td>US$ 0.3359</td>
+<td>US$ 0.0168</td>
+<td>0.06s</td>
+<td>0.07s</td>
+</tr>
+<tr>
+<td>modelo-pequeno</td>
+<td>modelo-pequeno (fake)</td>
+<td>62%</td>
+<td>38%</td>
+<td>75%</td>
+<td>US$ 0.0356</td>
+<td>US$ 0.0024</td>
+<td>0.05s</td>
+<td>0.08s</td>
+</tr>
+</tbody>
+</table>
+<p>Legenda: <strong>pass@1 médio</strong> = taxa média de acerto por tentativa; <strong>pass^k</strong> = fração de casos em que TODAS as k tentativas acertaram (confiabilidade); <strong>pass@k</strong> = fração de casos em que ALGUMA tentativa acertou (capacidade); custo/sucesso = custo total / tentativas bem-sucedidas (n/d se faltar uso de tokens ou preço).</p>
+<h2 id="falhas-por-motivo">Falhas por motivo</h2>
+<table>
+<thead>
+<tr>
+<th>Variante</th>
+<th>Motivo</th>
+<th>Ocorrências</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>modelo-grande</td>
+<td>verificar.comando</td>
+<td>4</td>
+</tr>
+<tr>
+<td>modelo-pequeno</td>
+<td>verificar.comando</td>
+<td>9</td>
+</tr>
+</tbody>
+</table>
+<h2 id="detalhe-por-caso-passk-tentativas-oktotal">Detalhe por caso (pass^k: tentativas ok/total)</h2>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>modelo-grande</th>
+<th>modelo-pequeno</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ano-bissexto</td>
+<td>3/3</td>
+<td>3/3</td>
+</tr>
+<tr>
+<td>dedup-ordem</td>
+<td>3/3</td>
+<td>3/3</td>
+</tr>
+<tr>
+<td>media-vazia</td>
+<td>3/3</td>
+<td>2/3</td>
+</tr>
+<tr>
+<td>mesclar-intervalos</td>
+<td>1/3</td>
+<td>0/3</td>
+</tr>
+<tr>
+<td>ola-mundo</td>
+<td>3/3</td>
+<td>3/3</td>
+</tr>
+<tr>
+<td>paginar</td>
+<td>3/3</td>
+<td>2/3</td>
+</tr>
+<tr>
+<td>parse-duracao</td>
+<td>3/3</td>
+<td>2/3</td>
+</tr>
+<tr>
+<td>slugify</td>
+<td>1/3</td>
+<td>0/3</td>
+</tr>
+</tbody>
+</table>
+<h2 id="comparação-pareada">Comparação pareada</h2>
+<p>Regras (fixas, para a decisão ser reprodutível): (1) perda = pass^k(A) - pass^k(B); (2) só se recomenda trocar A por B se a perda for &lt;= tolerância (5.0%) <strong>e</strong> o custo por sucesso de B for menor que o de A; (3) sem custo medido, mantém-se A; (4) o McNemar exato avalia se os casos que mudaram de resultado excedem o acaso (p &lt; 0.05); (5) menos de 20 casos = decisão frágil.</p>
+<h3 id="a--modelo-grande-vs-b--modelo-pequeno">A = modelo-grande  vs  B = modelo-pequeno</h3>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>A (modelo-grande)</th>
+<th>B (modelo-pequeno)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>media-vazia</td>
+<td>ok</td>
+<td>falha</td>
+</tr>
+<tr>
+<td>paginar</td>
+<td>ok</td>
+<td>falha</td>
+</tr>
+<tr>
+<td>parse-duracao</td>
+<td>ok</td>
+<td>falha</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>A ok / B falha: 3 | A falha / B ok: 0</li>
+<li>McNemar exato (pass^k por caso): p = 0.2500: diferença não distinguível de ruído com 8 casos.</li>
+<li><strong>Recomendação:</strong> MANTER modelo-grande: modelo-pequeno perde 37.5% de pass^k, acima da tolerância de 5.0%. Atenção: só 8 casos; com menos de 20 a decisão é frágil.</li>
+</ul>
+<hr />
+<h1 id="execução-2-modo-skill---skill-ab-corrigir-bug">Execução 2: modo skill (--skill-ab corrigir-bug)</h1>
+<h3 id="resumo-por-variante_1">Resumo por variante</h3>
+<table>
+<thead>
+<tr>
+<th>Variante</th>
+<th>Modelo</th>
+<th>pass@1 médio</th>
+<th>pass^k</th>
+<th>pass@k</th>
+<th>Custo total</th>
+<th>Custo/sucesso</th>
+<th>Latência p50</th>
+<th>p95</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>modelo-grande+com-skill</td>
+<td>modelo-grande (fake)</td>
+<td>79%</td>
+<td>75%</td>
+<td>88%</td>
+<td>US$ 0.3359</td>
+<td>US$ 0.0177</td>
+<td>0.07s</td>
+<td>0.07s</td>
+</tr>
+<tr>
+<td>modelo-grande+sem-skill</td>
+<td>modelo-grande (fake)</td>
+<td>83%</td>
+<td>75%</td>
+<td>100%</td>
+<td>US$ 0.3359</td>
+<td>US$ 0.0168</td>
+<td>0.06s</td>
+<td>0.08s</td>
+</tr>
+</tbody>
+</table>
+<h2 id="modo-skill">Modo skill</h2>
+<h3 id="skill-corrigir-bug-modelo-grandecom-skill-vs-modelo-grandesem-skill">Skill <code>corrigir-bug</code> (modelo-grande+com-skill vs modelo-grande+sem-skill)</h3>
+<ul>
+<li>Ganho de pass^k (com - sem): +0 pontos percentuais</li>
+<li>Acionamento nos casos com <code>deve_acionar_skill</code> (24 tentativas): corretos 14, falsos positivos 10, falsos negativos 0</li>
+<li><strong>Veredito: neutra</strong>: sem ganho além da tolerância: candidata a enxugar (menos texto, menos contexto) ou a aposentar.</li>
+</ul>
+</div>
+<script src="../../../../assets/course-manifest.js"></script>
+<script src="../../../../assets/docs-manifest.js"></script>
+<script src="../../../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

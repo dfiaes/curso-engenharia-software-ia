@@ -12,7 +12,7 @@
 <div class="wrap">
 <h1>Trilha rápida · Desenvolvimento com agentes, do zero ao ciclo contínuo</h1>
 <p class="meta"><a href="../STATUS.md">STATUS</a> · <a href="../CURRICULO.md">Currículo</a> · <a href="../kit/README.md">Kit de arranque</a></p>
-<p class="meta"><span class="badge">TRILHA RÁPIDA</span> &nbsp; 12 passos · carga estimada ≈ 6 h de leitura + prática no seu repositório · pré-requisito: saber usar Git e um terminal · <strong>agnóstico de ferramenta</strong></p>
+<p class="meta"><span class="badge">TRILHA RÁPIDA</span> &nbsp; 13 passos · carga estimada ≈ 7 h de leitura + prática no seu repositório · pré-requisito: saber usar Git e um terminal · <strong>agnóstico de ferramenta</strong></p>
 
 <div class="box">
 <span class="lbl">Para quem é e o que muda ao final</span>
@@ -77,8 +77,9 @@ Course.ready(function (C) {
 <li><a href="#passo-7"><strong>Passo 7</strong> · MCP na prática</a></li>
 <li><a href="#passo-8"><strong>Passo 8</strong> · Comandos reutilizáveis</a></li>
 <li><a href="#passo-9"><strong>Passo 9</strong> · Skills na prática</a></li>
-<li><a href="#passo-10"><strong>Passo 10</strong> · Onde fica cada coisa em cada ferramenta</a></li>
-<li><a href="#passo-11"><strong>Passo 11</strong> · Cartão de bolso</a></li>
+<li><a href="#passo-10"><strong>Passo 10</strong> · Avaliar skills e escolher modelo</a></li>
+<li><a href="#passo-11"><strong>Passo 11</strong> · Onde fica cada coisa em cada ferramenta</a></li>
+<li><a href="#passo-12"><strong>Passo 12</strong> · Cartão de bolso</a></li>
 </ol>
 </div>
 
@@ -374,7 +375,7 @@ PROJ-123: valida CNPJ no cadastro de investidor</code></pre>
 <h3>O agente lendo e escrevendo no ticket</h3>
 <ol>
 <li><strong>Manual (zero configuração):</strong> você cola o texto do ticket no prompt e, ao final, cola o resumo gerado no Jira. Funciona em qualquer ferramenta e é o ponto de partida seguro.</li>
-<li><strong>Via MCP (Model Context Protocol):</strong> um servidor MCP de Jira expõe operações como buscar issue, comentar e transicionar. Todas as ferramentas do Passo 10 falam MCP; a configuração e os riscos estão no Passo 7. Configure com credencial de <em>menor privilégio</em> (uma conta de serviço do agente que só lê e comenta, sem permissão de transicionar para "Done" nem de editar campos de prioridade). Veja <a href="../modulos/M00-ferramental/M00.html">M00</a> (ferramental e MCP) e o módulo sobre protocolos para o conceito.</li>
+<li><strong>Via MCP (Model Context Protocol):</strong> um servidor MCP de Jira expõe operações como buscar issue, comentar e transicionar. Todas as ferramentas do Passo 11 falam MCP; a configuração e os riscos estão no Passo 7. Configure com credencial de <em>menor privilégio</em> (uma conta de serviço do agente que só lê e comenta, sem permissão de transicionar para "Done" nem de editar campos de prioridade). Veja <a href="../modulos/M00-ferramental/M00.html">M00</a> (ferramental e MCP) e o módulo sobre protocolos para o conceito.</li>
 <li><strong>Via CLI/API na esteira:</strong> a pipeline (não o agente) transiciona o ticket quando o deploy em cert/prod termina. O agente nunca fecha o próprio trabalho.</li>
 </ol>
 <div class="box warn">
@@ -760,7 +761,7 @@ async def main() -&gt; None:
             print(resultado.content)
 
 asyncio.run(main())</code></pre>
-<p class="small">A API do SDK evoluiu com as versões do protocolo; confira as assinaturas na documentação do SDK instalado †. No seu loop, a camada de política do Passo 10 decide <em>antes</em> de cada <code>call_tool</code> (allowlist de nomes, aprovação humana nas escritas) e a saída da tool entra no contexto como dado.</p>
+<p class="small">A API do SDK evoluiu com as versões do protocolo; confira as assinaturas na documentação do SDK instalado †. No seu loop, a camada de política do Passo 11 decide <em>antes</em> de cada <code>call_tool</code> (allowlist de nomes, aprovação humana nas escritas) e a saída da tool entra no contexto como dado.</p>
 </section>
 </div>
 <div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
@@ -938,7 +939,185 @@ test('a página inicial carrega e mostra o título principal', async ({ page }) 
 </div>
 <p><strong>Em resumo.</strong> Skill = pasta com <code>SKILL.md</code> carregada sob demanda pela descrição. Regra orienta sempre, comando você inicia, skill especializa, hook garante. Fonte única em <code>.agents/skills/</code>; Claude Code ganha a cópia em <code>.claude/skills/</code>.</p>
 
-<h2 id="passo-10">Passo 10 · Onde fica cada coisa em cada ferramenta</h2>
+<h2 id="passo-10">Passo 10 · Avaliar skills e escolher modelo</h2>
+<p><strong>Por que isso importa.</strong> Duas decisões caras costumam ser tomadas por impressão. A primeira: "essa skill ainda ajuda?". Uma skill escrita para um modelo fraco pode ter ficado velha quando o modelo melhorou, pode acionar fora de hora e gastar contexto à toa, ou até atrapalhar. A segunda: "o modelo barato dá conta?". Às vezes dá, para o trabalho mecânico; às vezes erra tanto que o custo por entrega sai maior. As duas se respondem do mesmo jeito: <strong>rodar as mesmas tarefas reais, mais de uma vez, e comparar números</strong>. O kit traz a ferramenta pronta (<a href="../kit/template/evals/README.md"><code>kit/template/evals</code></a>): só Python 3.11+, sem dependências, qualquer agente de linha de comando. O fundamento estatístico e a avaliação de agentes em profundidade estão no <a href="../modulos/M06-evals-observabilidade/M06.html#b07">M06, Bloco 7</a>.</p>
+
+<h3>1. Monte o conjunto de casos</h3>
+<ul>
+<li><strong>20 a 50 tarefas reais</strong>, tiradas do seu histórico: bugs que você corrigiu, features pequenas que entregou, PRs que revisou. Com menos de 20 o relatório avisa que a decisão é frágil.</li>
+<li><strong>Critério verificável por máquina</strong>: teste que passa, arquivo que existe, saída que casa. Se para julgar você precisa "ler e achar bom", ainda não é um caso.</li>
+<li><strong>Dificuldades misturadas e casos de borda</strong> (entrada vazia, limites, entrada inválida). Só casos fáceis fazem qualquer modelo parecer igual.</li>
+<li><strong>Casos negativos para a skill</strong>: tarefas em que ela <em>não</em> deve ser acionada (<code>deve_acionar_skill = false</code>). Sem eles você nunca enxerga o falso positivo.</li>
+<li>Fixture pequena e hermética (sem rede, sem relógio), e a solução fora do alcance do agente.</li>
+</ul>
+<p>Um caso é um arquivo <code>.toml</code>. Este é real, do próprio kit (<code>exemplos/casos/slugify.toml</code>; o teste que decide está na fixture):</p>
+<pre><code>id = "slugify"
+descricao = "Implementar slugify com acentos e pontuação"
+tags = ["python", "feature"]
+dificuldade = "media"
+prompt = "Implemente slugify em texto.py conforme a docstring e faça os testes passarem. Não altere os testes."
+fixture = "../fixtures/slugify"      # copiada para uma pasta temporária a cada execução
+deve_acionar_skill = false           # caso negativo: a skill de bugfix não deveria disparar
+
+[verificar]
+comando = "\"$PYTHON\" -m unittest discover -q"   # exit 0 = passou</code></pre>
+
+<h3>2. Rode o kit</h3>
+<p>Experimente agora, sem custo (o agente do exemplo é um programa fake e determinístico):</p>
+<pre><code># comparar modelos: a primeira variante é a linha de base; 3 repetições por caso
+python3 evals/run_evals.py --config evals/exemplos/variantes.toml --casos-dir evals/exemplos/casos \
+    --variantes modelo-grande,modelo-pequeno --repeticoes 3 --paralelo 4
+
+# modo skill: o mesmo agente com e sem a skill "corrigir-bug"
+python3 evals/run_evals.py --config evals/exemplos/variantes.toml --casos-dir evals/exemplos/casos \
+    --variantes modelo-grande --skill-ab corrigir-bug --repeticoes 3</code></pre>
+<p>Para o seu agente real, descreva cada <strong>variante</strong> em <code>variantes.toml</code>: o comando que executa a tarefa a partir de <code>{prompt_file}</code> e <code>{workdir}</code>, o modelo, os preços por milhão de tokens e uma <code>regex_tokens</code> para medir o custo. Segredos só por variável de ambiente. Os exemplos abaixo vêm do arquivo do kit; <strong>as flags mudam entre versões, confira na ajuda da sua ferramenta</strong>.</p>
+<div class="tabs">
+<section data-tab="Claude Code"><pre><code>[[variante]]
+nome = "claude-sonnet"
+modelo = "claude-sonnet"
+comando = 'claude -p --model sonnet --permission-mode acceptEdits "$(cat {prompt_file})"'
+preco_entrada_mtok = 3.00      # confira a tabela de preços vigente
+preco_saida_mtok = 15.00
+regex_acionamento_skill = '\[skill:minha-skill\]'
+[variante.com_skill]
+env = { CLAUDE_CONFIG_DIR = "$HOME/.claude-com-skill" }
+[variante.sem_skill]
+env = { CLAUDE_CONFIG_DIR = "$HOME/.claude-sem-skill" }</code></pre></section>
+<section data-tab="Codex"><pre><code>[[variante]]
+nome = "codex"
+modelo = "gpt-xx"
+comando = 'codex exec --full-auto "$(cat {prompt_file})"'</code></pre></section>
+<section data-tab="OpenCode"><pre><code>[[variante]]
+nome = "opencode-modelo-barato"
+modelo = "provedor/modelo-barato"
+comando = 'opencode run --model provedor/modelo-barato "$(cat {prompt_file})"'</code></pre></section>
+<section data-tab="Cursor CLI"><pre><code>[[variante]]
+nome = "cursor"
+modelo = "auto"
+comando = 'cursor-agent -p --force "$(cat {prompt_file})"'</code></pre></section>
+<section data-tab="Script próprio"><pre><code>[[variante]]
+nome = "api-propria"
+modelo = "meu-modelo"
+comando = 'python3 "$EVALS_DIR/meu_agente.py" --prompt-file {prompt_file} --workdir {workdir}'
+env = { MEU_PROVEDOR_API_KEY = "$MEU_PROVEDOR_API_KEY", MEU_MODELO = "nome-do-modelo" }
+regex_tokens = 'usage: in=(?P&lt;entrada&gt;\d+) out=(?P&lt;saida&gt;\d+)'</code></pre></section>
+</div>
+<p>Para a Cursor CLI e as demais, sem uma saída de uso de tokens o custo aparece como <code>n/d</code>: procure o modo JSON/verbose da ferramenta e capture os tokens com <code>regex_tokens</code>. No modo skill, cada variante declara <code>[variante.com_skill]</code> e <code>[variante.sem_skill]</code> (uma pasta de skills diferente, uma variável ou um comando alternativo).</p>
+
+<div class="stepper"><span class="ix-title">Passo a passo: do conjunto de casos à decisão</span>
+<div class="frame" data-caption="1. Casos: 20 a 50 tarefas reais, com critério verificável, casos de borda e casos negativos para a skill."><svg viewBox="0 0 640 96" role="img" aria-label="Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão" style="width:100%;height:auto;max-width:640px"><title>Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão</title><rect x="4" y="20" width="96" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="52" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Casos</text><text x="52" y="62" font-size="10" text-anchor="middle" fill="currentColor">20–50 reais</text><line x1="100" y1="48" x2="110" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="110" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="158" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Variantes</text><text x="158" y="62" font-size="10" text-anchor="middle" fill="currentColor">modelo / skill</text><line x1="206" y1="48" x2="216" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="216" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="264" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">k repetições</text><text x="264" y="62" font-size="10" text-anchor="middle" fill="currentColor">k = 3 a 5</text><line x1="312" y1="48" x2="322" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="322" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="370" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Verificação</text><text x="370" y="62" font-size="10" text-anchor="middle" fill="currentColor">teste, exit 0</text><line x1="418" y1="48" x2="428" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="428" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="476" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Relatório</text><text x="476" y="62" font-size="10" text-anchor="middle" fill="currentColor">pass^k, custo</text><line x1="524" y1="48" x2="534" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="534" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="582" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Decisão</text><text x="582" y="62" font-size="10" text-anchor="middle" fill="currentColor">regra escrita</text></svg></div>
+<div class="frame" data-caption="2. Variantes: cada modelo, ferramenta ou configuração (com e sem a skill) descrita em variantes.toml, com preços e regex de tokens."><svg viewBox="0 0 640 96" role="img" aria-label="Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão" style="width:100%;height:auto;max-width:640px"><title>Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão</title><rect x="4" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="52" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Casos</text><text x="52" y="62" font-size="10" text-anchor="middle" fill="currentColor">20–50 reais</text><line x1="100" y1="48" x2="110" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="110" y="20" width="96" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="158" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Variantes</text><text x="158" y="62" font-size="10" text-anchor="middle" fill="currentColor">modelo / skill</text><line x1="206" y1="48" x2="216" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="216" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="264" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">k repetições</text><text x="264" y="62" font-size="10" text-anchor="middle" fill="currentColor">k = 3 a 5</text><line x1="312" y1="48" x2="322" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="322" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="370" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Verificação</text><text x="370" y="62" font-size="10" text-anchor="middle" fill="currentColor">teste, exit 0</text><line x1="418" y1="48" x2="428" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="428" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="476" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Relatório</text><text x="476" y="62" font-size="10" text-anchor="middle" fill="currentColor">pass^k, custo</text><line x1="524" y1="48" x2="534" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="534" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="582" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Decisão</text><text x="582" y="62" font-size="10" text-anchor="middle" fill="currentColor">regra escrita</text></svg></div>
+<div class="frame" data-caption="3. Repetições: cada caso roda k vezes por variante, porque o agente varia entre execuções."><svg viewBox="0 0 640 96" role="img" aria-label="Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão" style="width:100%;height:auto;max-width:640px"><title>Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão</title><rect x="4" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="52" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Casos</text><text x="52" y="62" font-size="10" text-anchor="middle" fill="currentColor">20–50 reais</text><line x1="100" y1="48" x2="110" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="110" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="158" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Variantes</text><text x="158" y="62" font-size="10" text-anchor="middle" fill="currentColor">modelo / skill</text><line x1="206" y1="48" x2="216" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="216" y="20" width="96" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="264" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">k repetições</text><text x="264" y="62" font-size="10" text-anchor="middle" fill="currentColor">k = 3 a 5</text><line x1="312" y1="48" x2="322" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="322" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="370" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Verificação</text><text x="370" y="62" font-size="10" text-anchor="middle" fill="currentColor">teste, exit 0</text><line x1="418" y1="48" x2="428" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="428" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="476" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Relatório</text><text x="476" y="62" font-size="10" text-anchor="middle" fill="currentColor">pass^k, custo</text><line x1="524" y1="48" x2="534" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="534" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="582" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Decisão</text><text x="582" y="62" font-size="10" text-anchor="middle" fill="currentColor">regra escrita</text></svg></div>
+<div class="frame" data-caption="4. Verificação: o comando do caso decide (exit 0 = passou). Sem opinião, sem juiz quando dá para escrever teste."><svg viewBox="0 0 640 96" role="img" aria-label="Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão" style="width:100%;height:auto;max-width:640px"><title>Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão</title><rect x="4" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="52" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Casos</text><text x="52" y="62" font-size="10" text-anchor="middle" fill="currentColor">20–50 reais</text><line x1="100" y1="48" x2="110" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="110" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="158" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Variantes</text><text x="158" y="62" font-size="10" text-anchor="middle" fill="currentColor">modelo / skill</text><line x1="206" y1="48" x2="216" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="216" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="264" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">k repetições</text><text x="264" y="62" font-size="10" text-anchor="middle" fill="currentColor">k = 3 a 5</text><line x1="312" y1="48" x2="322" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="322" y="20" width="96" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="370" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Verificação</text><text x="370" y="62" font-size="10" text-anchor="middle" fill="currentColor">teste, exit 0</text><line x1="418" y1="48" x2="428" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="428" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="476" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Relatório</text><text x="476" y="62" font-size="10" text-anchor="middle" fill="currentColor">pass^k, custo</text><line x1="524" y1="48" x2="534" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="534" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="582" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Decisão</text><text x="582" y="62" font-size="10" text-anchor="middle" fill="currentColor">regra escrita</text></svg></div>
+<div class="frame" data-caption="5. Relatório: pass@1, pass^k, pass@k, custo por sucesso, comparação pareada, McNemar e acionamento da skill."><svg viewBox="0 0 640 96" role="img" aria-label="Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão" style="width:100%;height:auto;max-width:640px"><title>Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão</title><rect x="4" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="52" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Casos</text><text x="52" y="62" font-size="10" text-anchor="middle" fill="currentColor">20–50 reais</text><line x1="100" y1="48" x2="110" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="110" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="158" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Variantes</text><text x="158" y="62" font-size="10" text-anchor="middle" fill="currentColor">modelo / skill</text><line x1="206" y1="48" x2="216" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="216" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="264" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">k repetições</text><text x="264" y="62" font-size="10" text-anchor="middle" fill="currentColor">k = 3 a 5</text><line x1="312" y1="48" x2="322" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="322" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="370" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Verificação</text><text x="370" y="62" font-size="10" text-anchor="middle" fill="currentColor">teste, exit 0</text><line x1="418" y1="48" x2="428" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="428" y="20" width="96" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="476" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Relatório</text><text x="476" y="62" font-size="10" text-anchor="middle" fill="currentColor">pass^k, custo</text><line x1="524" y1="48" x2="534" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="534" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="582" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Decisão</text><text x="582" y="62" font-size="10" text-anchor="middle" fill="currentColor">regra escrita</text></svg></div>
+<div class="frame" data-caption="6. Decisão: aplicar a regra escrita antes (tolerância de pass^k e custo menor); guardar o relatório como referência."><svg viewBox="0 0 640 96" role="img" aria-label="Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão" style="width:100%;height:auto;max-width:640px"><title>Fluxo de avaliação: casos, variantes, repetições, verificação, relatório e decisão</title><rect x="4" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="52" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Casos</text><text x="52" y="62" font-size="10" text-anchor="middle" fill="currentColor">20–50 reais</text><line x1="100" y1="48" x2="110" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="110" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="158" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Variantes</text><text x="158" y="62" font-size="10" text-anchor="middle" fill="currentColor">modelo / skill</text><line x1="206" y1="48" x2="216" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="216" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="264" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">k repetições</text><text x="264" y="62" font-size="10" text-anchor="middle" fill="currentColor">k = 3 a 5</text><line x1="312" y1="48" x2="322" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="322" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="370" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Verificação</text><text x="370" y="62" font-size="10" text-anchor="middle" fill="currentColor">teste, exit 0</text><line x1="418" y1="48" x2="428" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="428" y="20" width="96" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="476" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Relatório</text><text x="476" y="62" font-size="10" text-anchor="middle" fill="currentColor">pass^k, custo</text><line x1="524" y1="48" x2="534" y2="48" class="s-line" stroke="currentColor" stroke-width="1.5"/><rect x="534" y="20" width="96" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="582" y="45" font-size="12" text-anchor="middle" font-weight="600" fill="currentColor">Decisão</text><text x="582" y="62" font-size="10" text-anchor="middle" fill="currentColor">regra escrita</text></svg></div>
+</div>
+
+<h3>3. Leia o relatório</h3>
+<p>Os números abaixo são <strong>saída do agente fake do kit</strong> (8 casos, k = 3; modelos e preços fictícios), copiados de <code>exemplos/relatorio-exemplo.md</code>. Servem para ler o formato, não para escolher modelo.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Variante</th><th>pass@1 médio</th><th>pass^k</th><th>pass@k</th><th>Custo/sucesso</th></tr></thead>
+<tbody>
+<tr><td>modelo-grande</td><td>83%</td><td>75%</td><td>100%</td><td>US$ 0.0168</td></tr>
+<tr><td>modelo-pequeno</td><td>62%</td><td>38%</td><td>75%</td><td>US$ 0.0024</td></tr>
+</tbody></table></div>
+<ul>
+<li><strong>pass@1</strong> é o acerto médio por tentativa. <strong>pass@k</strong> é "alguma das k tentativas acertou": o que o modelo consegue com tentativas extras. <strong>pass^k</strong> é "todas as k acertaram": a confiabilidade que um agente precisa ter para rodar sem você olhando. O modelo-pequeno tem pass@k de 75% e pass^k de 38%: sabe fazer, mas não de modo confiável.</li>
+<li><strong>Custo por tarefa bem-sucedida</strong> = custo total / sucessos. O modelo-pequeno é 7 vezes mais barato por sucesso (0.0024 contra 0.0168) <em>porque</em> o preço cai mais do que o acerto. Se acertasse pouco, o barato sairia caro. Esse é o número que decide, não o preço por token.</li>
+<li><strong>Comparação pareada</strong>: lista os casos que mudaram de resultado. Aqui, três casos (<code>media-vazia</code>, <code>paginar</code>, <code>parse-duracao</code>) o grande acertou sempre e o pequeno falhou; nenhum no sentido contrário.</li>
+<li><strong>McNemar exato</strong>: pergunta se 3 contra 0 mudanças passa do acaso. Resposta do relatório: p = 0,25, "diferença não distinguível de ruído com 8 casos". Isso <em>não</em> prova que são iguais; prova que 8 casos são poucos. Aumente casos e repetições.</li>
+<li><strong>Recomendação</strong> (regra fixa, escrita no relatório): "MANTER modelo-grande: modelo-pequeno perde 37,5% de pass^k, acima da tolerância de 5%. Atenção: só 8 casos".</li>
+</ul>
+<p><strong>No modo skill</strong> (mesma saída fake, skill <code>corrigir-bug</code>): ganho de pass^k de +0 ponto percentual; acionamento nos casos com <code>deve_acionar_skill</code>: 14 corretos, <strong>10 falsos positivos</strong>, 0 falsos negativos; veredito <strong>neutra</strong>. Leitura: falso positivo é a skill disparando quando não devia (gasta contexto e pode desviar o agente); falso negativo é não disparar quando devia (a skill vira letra morta). O veredito é <em>útil</em> (ganho acima da tolerância), <em>neutra</em> (sem ganho: enxugue ou aposente) ou <em>prejudicial</em> (piora).</p>
+
+<div class="ix"><span class="ix-title">Simulador: trocar de modelo ou manter?</span>
+<p>Informe o resultado de cada variante (o relatório mostra esses campos) e a tolerância. A regra é a mesma do <code>run_evals.py</code>: só troca A por B se a perda de pass^k couber na tolerância <strong>e</strong> o custo por sucesso de B for menor. Custo por sucesso = custo por tentativa / pass@1. Valores iniciais: o exemplo do agente fake.</p>
+<div class="ix-row"><strong>A (linha de base)</strong></div>
+<div class="ix-row"><label for="tr-sim-a1">pass@1 de A (%):</label><input type="number" id="tr-sim-a1" min="0" max="100" step="1" value="83">
+<label for="tr-sim-ak">pass^k de A (%):</label><input type="number" id="tr-sim-ak" min="0" max="100" step="1" value="75">
+<label for="tr-sim-ac">custo por tentativa de A (US$):</label><input type="number" id="tr-sim-ac" min="0" step="0.0001" value="0.014"></div>
+<div class="ix-row"><strong>B (candidata a substituir)</strong></div>
+<div class="ix-row"><label for="tr-sim-b1">pass@1 de B (%):</label><input type="number" id="tr-sim-b1" min="0" max="100" step="1" value="62">
+<label for="tr-sim-bk">pass^k de B (%):</label><input type="number" id="tr-sim-bk" min="0" max="100" step="1" value="38">
+<label for="tr-sim-bc">custo por tentativa de B (US$):</label><input type="number" id="tr-sim-bc" min="0" step="0.0001" value="0.0015"></div>
+<div class="ix-row"><label for="tr-sim-tol">Tolerância de pass^k (pontos %):</label><input type="number" id="tr-sim-tol" min="0" max="100" step="0.5" value="5">
+<label for="tr-sim-n">Casos no conjunto:</label><input type="number" id="tr-sim-n" min="1" max="500" step="1" value="8"></div>
+<div class="ix-row"><label for="tr-sim-x">Casos em que só A acertou (pareado):</label><input type="number" id="tr-sim-x" min="0" max="500" step="1" value="3">
+<label for="tr-sim-y">só B acertou:</label><input type="number" id="tr-sim-y" min="0" max="500" step="1" value="0"></div>
+<div class="ix-out" id="tr-sim-out" aria-live="polite"></div>
+</div>
+<script>
+Course.ready(function (C) {
+  var g = function (i) { return document.getElementById(i); };
+  var ids = ["a1", "ak", "ac", "b1", "bk", "bc", "tol", "n", "x", "y"];
+  function num(id) { var v = parseFloat(g("tr-sim-" + id).value); return isFinite(v) ? v : 0; }
+  function mcnemar(b, c) {
+    var n = b + c; if (n === 0) return 1;
+    var k = Math.min(b, c), soma = 0, comb = 1;
+    for (var i = 0; i <= k; i++) { if (i > 0) comb = comb * (n - i + 1) / i; soma += comb; }
+    return Math.min(1, 2 * soma / Math.pow(2, n));
+  }
+  function usd(v) { return v === null ? "n/d" : "US$ " + v.toFixed(4); }
+  function upd() {
+    var a1 = num("a1") / 100, b1 = num("b1") / 100, ak = num("ak") / 100, bk = num("bk") / 100;
+    var tol = num("tol") / 100, n = num("n"), x = Math.round(num("x")), y = Math.round(num("y"));
+    var ca = a1 > 0 ? num("ac") / a1 : null, cb = b1 > 0 ? num("bc") / b1 : null;
+    var perda = ak - bk, rec;
+    if (perda > tol) rec = "MANTER A: B perde " + (perda * 100).toFixed(1) + " pontos de pass^k, acima da tolerância de " + (tol * 100).toFixed(1) + ".";
+    else if (ca === null || cb === null) rec = "MANTER A por ora: falta custo medido (pass@1 zero).";
+    else if (cb < ca) rec = "TROCAR A por B: perda de pass^k (" + (perda * 100).toFixed(1) + " pontos) dentro da tolerância e o custo por sucesso cai de " + usd(ca) + " para " + usd(cb) + ".";
+    else rec = "MANTER A: perda dentro da tolerância, mas o custo por sucesso não cai (" + usd(ca) + " para " + usd(cb) + ").";
+    if (n < 20) rec += " Atenção: só " + n + " casos; com menos de 20 a decisão é frágil.";
+    var p = mcnemar(x, y);
+    var ruido = p >= 0.05 ? "diferença não distinguível de ruído" : "diferença detectável (p < 0,05)";
+    var h = "<p>Custo por sucesso: A = <strong>" + usd(ca) + "</strong> · B = <strong>" + usd(cb) + "</strong>" +
+      (ca && cb ? " (B custa " + (cb / ca * 100).toFixed(0) + "% do custo de A por sucesso)" : "") + "</p>" +
+      "<p>Perda de pass^k (A − B): <strong>" + (perda * 100).toFixed(1) + " pontos</strong></p>" +
+      "<p>McNemar exato (" + x + " contra " + y + "): p = " + p.toFixed(4).replace(".", ",") + ", " + ruido + ".</p>" +
+      "<p><strong>Recomendação:</strong> " + rec + "</p>";
+    g("tr-sim-out").innerHTML = h;
+  }
+  ids.forEach(function (i) { g("tr-sim-" + i).addEventListener("input", upd); });
+  upd();
+});
+</script>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">O modelo barato tem pass@1 de 90% e o caro, 95%. O barato custa um décimo por tentativa. Qual número você ainda precisa ver antes de trocar?</p>
+<ol><li data-opt="a">Nenhum: 90% é quase 95% e é dez vezes mais barato.</li><li data-opt="b">O pass^k nas k repetições do seu conjunto de casos e o tipo de falha: se o agente roda sem supervisão, 90% por tentativa pode virar pouco mais de 70% de confiabilidade em k = 3.</li><li data-opt="c">A velocidade de resposta, só.</li></ol>
+<div class="explain">B. Confiabilidade acumula: com tentativas independentes, 0,9³ ≈ 73%. E 5 pontos de diferença em pass@1 podem ser a diferença entre falha detectável (o teste reprova e você repete) e silenciosa. O custo por sucesso também precisa ser medido, não deduzido do preço.</div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">O relatório de uma skill mostra 0 falsos negativos e 10 falsos positivos, e ganho de pass^k de +0. O que fazer?</p>
+<ol><li data-opt="a">Manter: nunca deixa de acionar quando deve.</li><li data-opt="b">Aumentar o texto da skill para que ela "pareça mais útil".</li><li data-opt="c">Refinar a <code>description</code> para parar de disparar em tarefas fora do escopo (e adicionar esses casos negativos ao conjunto); se mesmo assim o ganho continuar nulo, aposentar a skill.</li></ol>
+<div class="explain">C. Falso positivo é a descrição ampla demais; ela gasta contexto sem retorno. Corrija o gatilho, reavalie e, se a skill continuar neutra, remova: skill é dependência, e dependência sem benefício é custo.</div>
+</div>
+
+<h3>4. Decisões típicas</h3>
+<ul>
+<li><strong>Dividir o trabalho.</strong> Se o barato perde confiabilidade só nos casos difíceis, use-o no mecânico (renomear, gerar teste de caso simples, formatar) e o caro no plano e na revisão. Isso é decisão por <em>tipo de caso</em>; as tags do conjunto permitem medir (<code>--casos tag</code>).</li>
+<li><strong>Refinar a descrição da skill</strong> quando há falso positivo; enriquecer o gatilho quando há falso negativo.</li>
+<li><strong>Aposentar a skill neutra.</strong> O modelo melhorou e já faz sem ela? Menos texto, menos contexto, menos manutenção.</li>
+<li><strong>Quando rodar de novo:</strong> ao trocar de modelo, ao criar ou editar uma skill, ao mudar o <code>AGENTS.md</code> e quando o fornecedor atualizar o modelo (o mesmo nome pode mudar de comportamento). Guarde o <code>relatorio.md</code> aprovado como referência.</li>
+<li><strong>Colocar no CI como gate.</strong> Uma suíte rápida agendada (por exemplo semanal ou ao tocar em <code>.agents/skills/</code> e <code>AGENTS.md</code>) que falha se o pass^k cair mais que a tolerância. O raciocínio do gate está no <a href="../modulos/M06-evals-observabilidade/M06.html#b06">M06, Bloco 6</a>.</li>
+</ul>
+<p><strong>LLM-as-judge.</strong> Só quando o critério é irredutivelmente subjetivo (clareza, tom). Rubrica escrita, juiz de modelo diferente do avaliado e calibração contra notas humanas (30+ casos rotulados à mão). Se dá para escrever um teste, escreva o teste.</p>
+
+<h3>Antes de trocar de modelo</h3>
+<ul class="checklist" data-key="TR-antes-trocar-modelo">
+<li>Tenho 20 a 50 casos reais, com critério verificável e casos de borda?</li>
+<li>Há casos negativos para cada skill que quero avaliar?</li>
+<li>Rodei com k ≥ 3 repetições e olhei pass^k, não só pass@1?</li>
+<li>Comparei o custo por sucesso, medido com tokens reais, e não o preço por token?</li>
+<li>Defini a tolerância de perda de pass^k antes de ver o resultado?</li>
+<li>Se a diferença é "não distinguível de ruído", aumentei casos ou repetições em vez de concluir?</li>
+<li>Guardei o relatório aprovado e marquei no calendário/CI a próxima rodada?</li>
+</ul>
+<p><strong>Em resumo.</strong> Meça em vez de opinar: casos reais verificáveis, k repetições, pass^k para confiabilidade, custo por sucesso para dinheiro, McNemar para saber se a diferença é real, e uma regra de decisão escrita antes. Skill que não ajuda se aposenta; modelo barato entra onde o relatório mostra que dá conta.</p>
+
+<h2 id="passo-11">Passo 11 · Onde fica cada coisa em cada ferramenta</h2>
 <p><strong>Por que isso importa.</strong> Os conceitos são os mesmos em todas as ferramentas; só o endereço muda. Com a tabela abaixo você traduz o método para a ferramenta que o seu time usa hoje (e para a de amanhã). Versão do quadro: <strong>verificado em 12/10/2026</strong> contra a documentação oficial. Produtos mudam rápido: itens marcados com † não foram lidos em página oficial nesta verificação, confirme antes de depender deles.</p>
 
 <div class="table-wrap"><table>
@@ -974,7 +1153,7 @@ test('a página inicial carrega e mostra o título principal', async ({ page }) 
 </div>
 <p><strong>Em resumo.</strong> Conteúdo no repositório, ponteiros por ferramenta, garantias na esteira. A tabela muda com as versões; o método não.</p>
 
-<h2 id="passo-11">Passo 11 · Cartão de bolso</h2>
+<h2 id="passo-12">Passo 12 · Cartão de bolso</h2>
 <p>Resumo para colar ao lado do monitor. O estado dos itens fica salvo neste navegador.</p>
 
 <h3>Antes de começar o trabalho</h3>
@@ -1006,6 +1185,14 @@ test('a página inicial carrega e mostra o título principal', async ({ page }) 
 <li>Rollback conhecido (SHA anterior) e ensaiado</li>
 <li>Ticket transicionado pela esteira, com versão e link</li>
 <li>O agente errou duas vezes? Corrigi o <code>AGENTS.md</code> ou criei um hook</li>
+</ul>
+
+<h3>Ao trocar de modelo ou de skill</h3>
+<ul class="checklist" data-key="TR-bolso-avaliar">
+<li>Rodei o kit de evals (k ≥ 3) e li pass^k e custo por sucesso, não só o preço do token</li>
+<li>A diferença passou do ruído (McNemar) ou aumentei casos e repetições?</li>
+<li>Skill neutra ou com falso positivo: refinei a descrição ou aposentei</li>
+<li>Guardei o relatório aprovado como referência para a próxima mudança</li>
 </ul>
 
 <h3>Exercício final: ordene o ciclo completo</h3>
@@ -1050,6 +1237,12 @@ test('a página inicial carrega e mostra o título principal', async ({ page }) 
 <div class="fc"><div class="front">Comando reutilizável</div><div class="back">Prompt versionado no repositório, acionado por nome com argumentos (<code>/corrigir-bug PROJ-456</code>). Fonte única em <code>.agents/commands/</code>.</div></div>
 <div class="fc"><div class="front">Estrutura de uma skill</div><div class="back">Pasta com <code>SKILL.md</code> (frontmatter <code>name</code> + <code>description</code>, instruções) e arquivos auxiliares opcionais. Carregada sob demanda pela descrição.</div></div>
 <div class="fc"><div class="front">Regra × comando × skill × hook</div><div class="back">Regra (AGENTS.md): sempre. Comando: você chama. Skill: sob demanda por descrição. Hook/CI: controle duro que bloqueia, independente do modelo.</div></div>
+<div class="fc"><div class="front">pass@k × pass^k</div><div class="back">pass@k: alguma das k tentativas acertou (capacidade). pass^k: todas acertaram (confiabilidade). Agente sem supervisão precisa de pass^k alto.</div></div>
+<div class="fc"><div class="front">Custo por tarefa bem-sucedida</div><div class="back">Custo total / sucessos. Modelo barato que erra muito pode sair mais caro; o preço por token sozinho engana.</div></div>
+<div class="fc"><div class="front">McNemar e "não distinguível de ruído"</div><div class="back">Testa, nos casos pareados que mudaram, se os ganhos de um lado passam do acaso. Com poucos casos o normal é ruído: não prova igualdade, pede mais casos e repetições.</div></div>
+<div class="fc"><div class="front">Falso positivo × falso negativo de skill</div><div class="back">Falso positivo: acionou quando não devia (gasta contexto). Falso negativo: não acionou quando devia. Precisa de casos negativos para enxergar o primeiro.</div></div>
+<div class="fc"><div class="front">Veredito de uma skill</div><div class="back">Útil (ganho de pass^k acima da tolerância), neutra (enxugue ou aposente) ou prejudicial (piora).</div></div>
+<div class="fc"><div class="front">Quando rodar os evals de novo</div><div class="back">Ao trocar de modelo, criar ou editar skill, mudar o AGENTS.md e quando o fornecedor atualizar o modelo. Pode virar gate de CI.</div></div>
 </div>
 
 <h2>Fontes e versões</h2>

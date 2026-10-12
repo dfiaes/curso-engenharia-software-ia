@@ -1,0 +1,53 @@
+# Variantes REAIS do seu projeto. Descomente/adapte uma por modelo/agente que quer comparar.
+# Vale para todas: segredos NUNCA aqui, só referência a variável de ambiente (ex.: "$ANTHROPIC_API_KEY").
+# Placeholders do `comando`: {prompt_file} (arquivo com o prompt do caso) e {workdir} (cópia temporária da fixture,
+# que também é o diretório de execução). Variáveis exportadas: $PYTHON, $EVALS_DIR, $EVAL_CASO_ID,
+# $EVAL_DIFICULDADE, $EVAL_TENTATIVA, $EVAL_VARIANTE, $EVAL_MODELO, $EVAL_SKILL_MODO (só no --skill-ab).
+#
+# ATENÇÃO: as flags abaixo são exemplos; CONFIRA NA DOC DA SUA VERSÃO (mudam entre releases).
+# Para extrair uso de tokens, use `regex_tokens` com grupos (?P<entrada>..) e (?P<saida>..) sobre a saída do agente
+# (muitas CLIs têm um modo JSON/verbose com o uso). Sem isso o custo aparece como "n/d".
+# `regex_acionamento_skill`: padrão que prova que a skill foi usada (ex.: a skill manda imprimir "[skill:minha-skill]").
+# Para --skill-ab, declare [variante.com_skill] e [variante.sem_skill] (env, ou comando alternativo).
+
+[config]
+tolerancia_pass_k = 0.05
+
+# --- Claude Code (confira: claude -p --help) ---
+# [[variante]]
+# nome = "claude-sonnet"
+# modelo = "claude-sonnet"
+# comando = 'claude -p --model sonnet --permission-mode acceptEdits "$(cat {prompt_file})"'
+# preco_entrada_mtok = 3.00      # confira a tabela de preços vigente
+# preco_saida_mtok = 15.00
+# regex_acionamento_skill = '\[skill:minha-skill\]'
+# [variante.com_skill]
+# env = { CLAUDE_CONFIG_DIR = "$HOME/.claude-com-skill" }   # exemplo: diretório de config com a skill instalada
+# [variante.sem_skill]
+# env = { CLAUDE_CONFIG_DIR = "$HOME/.claude-sem-skill" }
+
+# --- Codex CLI (confira: codex exec --help) ---
+# [[variante]]
+# nome = "codex"
+# modelo = "gpt-xx"
+# comando = 'codex exec --full-auto "$(cat {prompt_file})"'
+
+# --- OpenCode (confira: opencode run --help) ---
+# [[variante]]
+# nome = "opencode-modelo-barato"
+# modelo = "provedor/modelo-barato"
+# comando = 'opencode run --model provedor/modelo-barato "$(cat {prompt_file})"'
+
+# --- Cursor CLI (confira: cursor-agent --help) ---
+# [[variante]]
+# nome = "cursor"
+# modelo = "auto"
+# comando = 'cursor-agent -p --force "$(cat {prompt_file})"'
+
+# --- Script próprio chamando uma API (modelo e chave por variável de ambiente) ---
+# [[variante]]
+# nome = "api-propria"
+# modelo = "meu-modelo"
+# comando = 'python3 "$EVALS_DIR/meu_agente.py" --prompt-file {prompt_file} --workdir {workdir}'
+# env = { MEU_PROVEDOR_API_KEY = "$MEU_PROVEDOR_API_KEY", MEU_MODELO = "nome-do-modelo" }
+# regex_tokens = 'usage: in=(?P<entrada>\d+) out=(?P<saida>\d+)'

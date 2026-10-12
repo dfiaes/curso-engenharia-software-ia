@@ -19,6 +19,7 @@ Conjunto de arquivos para copiar para qualquer projeto e conduzir o ciclo **inte
 | `.agents/commands/`, `.agents/skills/` | Fonte única de comandos (`/nova-feature`, `/corrigir-bug`, `/atualizar-docs`) e de skills (`gerar-teste-playwright`). `--tools` copia para o formato de cada ferramenta. |
 | `.cursor/mcp.json`, `.mcp.json`, `opencode.json`, `docs/agentes/codex-config.toml` | Configs de exemplo de MCP (Playwright e Atlassian/Jira) para Cursor, Claude Code, OpenCode e Codex. Sem segredos: OAuth ou variável de ambiente. |
 | `tests/e2e/exemplo.spec.ts` | Teste Playwright mínimo, modelo para os testes gerados pela skill. |
+| `evals/` | Evals agnósticos de agente e modelo (só Python 3.11+): casos TOML com verificação objetiva, variantes (Claude Code, Codex, OpenCode, Cursor, API própria), pass^k, custo por sucesso, McNemar e modo `--skill-ab`. Exemplo executável sem custo. Veja `evals/README.md`. |
 | `prompts/` | Prompts agnósticos: onboarding de repo existente, nova feature, corrigir bug, módulo grande, atualizar docs, revisar PR. |
 
 ## Projeto novo
@@ -63,6 +64,19 @@ python3 /caminho/do/curso/kit/bootstrap.py . --existing
 1. Rode `prompts/onboarding-repo-existente.md` numa sessão **só-leitura**; aprove e grave `docs/architecture.md` e o `AGENTS.md`.
 2. Peça testes de caracterização das áreas de maior risco **antes** de qualquer mudança funcional.
 3. Só então adote as regras do dia a dia (branch protection, hooks, template de PR).
+
+## Avaliar skills e modelos
+
+Antes de trocar de modelo ou de manter uma skill, meça. `evals/` roda os mesmos casos (com verificação por teste) em cada variante, repete N vezes e reporta pass^k, custo por tarefa bem-sucedida e uma comparação pareada com McNemar exato.
+
+```bash
+python3 evals/run_evals.py --config evals/exemplos/variantes.toml --casos-dir evals/exemplos/casos \
+    --variantes modelo-grande,modelo-pequeno --repeticoes 3 --paralelo 4      # exemplo com agente fake, sem custo
+python3 evals/run_evals.py --variantes sonnet,haiku --repeticoes 3            # os seus casos e variantes
+python3 evals/run_evals.py --variantes sonnet --skill-ab minha-skill          # a skill ainda vale a pena?
+```
+
+Resultado em `evals/resultados/<data>/` (já no `.gitignore`). Saída de exemplo: `evals/exemplos/relatorio-exemplo.md`. Rode de novo ao mudar modelo, skill, `AGENTS.md` ou quando o fornecedor atualizar o modelo.
 
 ## Testes do kit
 

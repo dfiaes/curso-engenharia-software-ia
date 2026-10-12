@@ -1,0 +1,34 @@
+# Variantes de EXEMPLO: apontam para o agente fake (sem custo, sem rede).
+# Uso, a partir da raiz do projeto:
+#   python3 evals/run_evals.py --config evals/exemplos/variantes.toml --casos-dir evals/exemplos/casos \
+#       --variantes modelo-grande,modelo-pequeno --repeticoes 2 --paralelo 4
+# O runner exporta $PYTHON (interpretador atual) e $EVALS_DIR (pasta evals/).
+
+[config]
+tolerancia_pass_k = 0.05      # perda máxima aceitável de pass^k para trocar de modelo
+
+[[variante]]
+nome = "modelo-grande"
+modelo = "modelo-grande (fake)"
+comando = '"$PYTHON" "$EVALS_DIR/exemplos/agente_fake.py" --modelo modelo-grande --prompt-file {prompt_file} --workdir {workdir}'
+preco_entrada_mtok = 3.00     # US$ por milhão de tokens (valores ilustrativos)
+preco_saida_mtok = 15.00
+regex_tokens = 'entrada=(?P<entrada>\d+) saida=(?P<saida>\d+)'
+regex_acionamento_skill = '\[skill:corrigir-bug\]'
+
+# Modo skill (vale para a variante acima): --variantes modelo-grande --skill-ab corrigir-bug
+# O fake lê EVAL_SKILL_MODO ("com"/"sem") que o runner exporta; num agente real você declara
+# como ligar/desligar a skill (env, flag ou diretório de skills alternativo).
+[variante.com_skill]
+env = { SKILL_DIR = "$EVALS_DIR/../.agents/skills" }
+[variante.sem_skill]
+env = { SKILL_DIR = "/nonexistent" }
+
+[[variante]]
+nome = "modelo-pequeno"
+modelo = "modelo-pequeno (fake)"
+comando = '"$PYTHON" "$EVALS_DIR/exemplos/agente_fake.py" --modelo modelo-pequeno --prompt-file {prompt_file} --workdir {workdir}'
+preco_entrada_mtok = 0.25
+preco_saida_mtok = 1.25
+regex_tokens = 'entrada=(?P<entrada>\d+) saida=(?P<saida>\d+)'
+regex_acionamento_skill = '\[skill:corrigir-bug\]'

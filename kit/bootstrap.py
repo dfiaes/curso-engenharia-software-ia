@@ -22,6 +22,8 @@ from typing import Sequence
 TEMPLATE = Path(__file__).resolve().parent / "template"
 EXISTING_SKIP = {".github/workflows/deploy.yml", "azure-pipelines.yml"}
 IGNORED_PARTS = {"__pycache__", ".pytest_cache"}
+EXCLUDED_PREFIXES = ("evals/resultados/",)  # saídas geradas dos evals nunca são copiadas
+GITIGNORE_LINE = "evals/resultados/"
 TOOLS = ("cursor", "claude", "codex", "opencode")
 COMMANDS_DIR = ".agents/commands"
 SKILLS_DIR = ".agents/skills"
@@ -37,10 +39,15 @@ class Report:
     skipped_existing: list[str] = field(default_factory=list)
     skipped_mode: list[str] = field(default_factory=list)
     tools_created: list[str] = field(default_factory=list)
+    gitignore_updated: bool = False
 
 
 def iter_template(template: Path) -> list[Path]:
-    files = [p for p in template.rglob("*") if p.is_file() and not (IGNORED_PARTS & set(p.parts))]
+    files = [
+        p for p in template.rglob("*")
+        if p.is_file() and not (IGNORED_PARTS & set(p.parts))
+        and not p.relative_to(template).as_posix().startswith(EXCLUDED_PREFIXES)
+    ]
     return sorted(files)
 
 
@@ -59,6 +66,14 @@ def apply_kit(dest: Path, existing: bool = False, dry_run: bool = False, templat
         if not dry_run:
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, target)
+    # .gitignore já existente: acrescenta só a linha dos resultados de evals (nunca reescreve o resto).
+    gi = dest / ".gitignore"
+    if gi.is_file() and GITIGNORE_LINE not in gi.read_text(encoding="utf-8").splitlines():
+        report.gitignore_updated = True
+        if not dry_run:
+            texto = gi.read_text(encoding="utf-8")
+            sep = "" if texto.endswith("\n") or not texto else "\n"
+            gi.write_text(f"{texto}{sep}{GITIGNORE_LINE}\n", encoding="utf-8")
     return report
 
 
@@ -130,6 +145,8 @@ def format_report(report: Report, dry_run: bool) -> str:
     lines += [f"já existe (mantido): {p}" for p in report.skipped_existing]
     lines += [f"ignorado (--existing): {p}" for p in report.skipped_mode]
     lines += [f"{verb} (--tools): {p}" for p in report.tools_created]
+    if report.gitignore_updated:
+        lines.append(f"{'acrescentaria' if dry_run else 'acrescentado'} ao .gitignore: {GITIGNORE_LINE}")
     lines.append(f"resumo: {len(report.created)} {verb}(s), {len(report.skipped_existing)} mantido(s), {len(report.skipped_mode)} ignorado(s), {len(report.tools_created)} por ferramenta")
     return "\n".join(lines)
 
