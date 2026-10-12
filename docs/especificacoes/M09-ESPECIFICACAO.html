@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M09-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M09 — especificação de escopo e evidência</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="m09--especificação-de-escopo-e-evidência">M09 — especificação de escopo e evidência</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/09/2026 · <strong>Estado:</strong> G0 aprovado; G1 em produção</p>
+<h2 id="1-decisão-curricular">1. Decisão curricular</h2>
+<p>O M09 ensina protocolos como contratos entre processos: MCP
+(agente↔ferramenta/dado, com descoberta) e A2A (agente↔agente, com
+opacidade e ciclo de vida). Protocolo transforma N×M em N+M. O núcleo —
+registros, despacho, escopo do runtime, negação por capability, timeout,
+cancelamento e ciclo de vida de task — é implementado no laboratório
+sobre três transportes locais (memória, stdio com subprocesso real e
+HTTP em localhost via stdlib), sem dependência externa, conta ou rede
+pública. SDKs de fornecedor e hospedagem são trilha externa.</p>
+<p>A integração no Capstone (<code>mcp/</code>, <code>a2a/</code>) só ocorre após spec própria.
+Versão de protocolo é dependência de produção: o material retrata a
+revisão vigente na data-base e manda confirmar antes de implementar.</p>
+<h2 id="2-resultado-limites-e-integração">2. Resultado, limites e integração</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Definição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carga</td>
+<td>sete blocos de duas horas, total de 14 h</td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>M05 (contrato), M08 (tools), M04 (ADR)</td>
+</tr>
+<tr>
+<td>Saída</td>
+<td>servidor com tools/resources/prompts, cliente independente e agente A2A</td>
+</tr>
+<tr>
+<td>Peça do capstone</td>
+<td><code>mcp/</code> + <code>agent-card.json</code>; integração só após spec própria</td>
+</tr>
+<tr>
+<td>Não cobre</td>
+<td>grafos (M10), produção multi-tenant (M12)</td>
+</tr>
+<tr>
+<td>Evidência mínima</td>
+<td>comandos, versões e saída executada; conformidade total com spec externa, só na trilha externa</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-arquitetura-do-laboratório">3. Arquitetura do laboratório</h2>
+<pre><code class="language-text">núcleo (registros+despacho+escopo) ◄── transports ──► cliente A / cliente B
+   │        memory (filas)                (implementações independentes)
+   │        stdio (subprocesso real)
+   │        http (localhost, stdlib)
+   ▼
+a2a (cards, tasks, polling) com opacidade entre pares
+</code></pre>
+<p>A referência fica em <code>modulos/M09-protocolos-mcp-e-a2a/lab/</code>. O roteiro
+<code>Laboratório guiado M09</code>, no final do HTML, cria cópia de trabalho em
+diretório temporário possuído pelo laboratório.</p>
+<h2 id="4-blocos-competências-e-evidência">4. Blocos, competências e evidência</h2>
+<table>
+<thead>
+<tr>
+<th>Bloco</th>
+<th>Competências observáveis</th>
+<th>Evidência planejada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B01 · por que protocolo</td>
+<td>N×M, arquitetura, JSON-RPC</td>
+<td>conta + diagrama</td>
+</tr>
+<tr>
+<td>B02 · primitivas</td>
+<td>tools/resources/prompts, capabilities</td>
+<td>discovery + negação</td>
+</tr>
+<tr>
+<td>B03 · transportes</td>
+<td>stdio/HTTP, MRTR, headers</td>
+<td>paridade + replay</td>
+</tr>
+<tr>
+<td>B04 · servidor</td>
+<td>granularidade, escopo, erro</td>
+<td>servidor com 3 tools</td>
+</tr>
+<tr>
+<td>B05 · distribuição</td>
+<td>empacotar, consumir, auth</td>
+<td>cliente independente</td>
+</tr>
+<tr>
+<td>B06 · A2A</td>
+<td>card, task, estados</td>
+<td>ciclo até COMPLETED</td>
+</tr>
+<tr>
+<td>B07 · segurança</td>
+<td>6 ataques, checklist</td>
+<td>negações demonstradas</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-cenários-de-aceitação">5. Cenários de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Oráculo e caso relevante</th>
+<th>Bloco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M09-AT-001</td>
+<td><code>tools/list</code> descobre as tools registradas</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M09-AT-002</td>
+<td><code>tools/call</code> executa e devolve resultado estruturado</td>
+<td>B02/B04</td>
+</tr>
+<tr>
+<td>M09-AT-003</td>
+<td>tool inexistente devolve <code>-32601</code>, não exceção crua</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M09-AT-004</td>
+<td>argumento fora do schema é rejeitado antes de executar</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M09-AT-005</td>
+<td>resource leitura + erro em URI desconhecida</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M09-AT-006</td>
+<td>prompt rende template com argumento</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M09-AT-007</td>
+<td>escopo insuficiente nega (confused deputy barrado)</td>
+<td>B04/B07</td>
+</tr>
+<tr>
+<td>M09-AT-008</td>
+<td>capability não declarada nunca é acionada</td>
+<td>B02/B03</td>
+</tr>
+<tr>
+<td>M09-AT-009</td>
+<td>timeout e cancelamento observáveis, sem órfão</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M09-AT-010</td>
+<td>versão de protocolo viaja por requisição e é validada</td>
+<td>B02/B03</td>
+</tr>
+<tr>
+<td>M09-AT-011</td>
+<td>estado retomado adulterado é rejeitado (MAC/TTL)</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M09-AT-012</td>
+<td>mesmo núcleo nos 3 transportes (memória/stdio/HTTP)</td>
+<td>B03/B05</td>
+</tr>
+<tr>
+<td>M09-AT-013</td>
+<td>A2A: card descoberto + task até COMPLETED com artifact</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M09-AT-014</td>
+<td>A2A: REJECTED fora de escopo + INPUT_REQUIRED retomado</td>
+<td>B06</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-fontes-e-versões">6. Fontes e versões</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte e uso</th>
+<th>Tipo</th>
+<th>Risco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M09-01</td>
+<td><a href="https://modelcontextprotocol.io/specification/">MCP specification</a> — primitivas e transportes</td>
+<td>padrão aberto</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M09-02</td>
+<td><a href="https://www.jsonrpc.org/specification">JSON-RPC 2.0</a> — formato de mensagem</td>
+<td>padrão aberto</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M09-03</td>
+<td><a href="https://a2a-protocol.org/">A2A specification (Linux Foundation)</a> — cards e tasks</td>
+<td>padrão aberto</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M09-04</td>
+<td><a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/">OAuth 2.1 draft</a> — auth do transporte HTTP</td>
+<td>normativa</td>
+<td>médio</td>
+</tr>
+</tbody>
+</table>
+<p>Consultadas em 14/09/2026. Revisão de protocolo, capacidades e
+comportamento de produto: revalidar em até 90 dias. O lab implementa um
+subconjunto documentado (sem sampling/elicitation reais); conformidade
+total pertence à trilha externa com SDK.</p>
+<h2 id="7-panorama-de-prática-vigente">7. Panorama de prática vigente</h2>
+<p>MCP em editores/IDEs e A2A sob fundação neutra são prática observável —
+sustentam decisões didáticas sem definir fundamentos.</p>
+<h2 id="8-gates-e-decisão-g0">8. Gates e decisão G0</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Estado</th>
+<th>Critério</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G0 · escopo</td>
+<td><strong>APROVADO</strong></td>
+<td>sete blocos, 14 cenários, fontes classificadas, lab local e limites definidos</td>
+</tr>
+<tr>
+<td>G1–G6</td>
+<td>EM PRODUÇÃO/PENDENTE</td>
+<td>HTML legado em revisão; lab e avaliação em construção neste ciclo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisão de G0:</strong> aprovada em 14/09/2026 pelo orquestrador. Define o
+trabalho; não certifica HTML legado ou lab inexistente.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

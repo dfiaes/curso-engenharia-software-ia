@@ -61,4 +61,38 @@ assert.throws(() => Progress.sanitize({ ...current, optional: { F01: "sim" } }, 
 assert.throws(() => Progress.sanitize({ schemaVersion: 9 }, manifest), /não é compatível/);
 assert.throws(() => Progress.sanitize([], manifest), /objeto de progresso/);
 
+// ---- Reset ----
+function fakeStorage(initial) {
+  const m = new Map(Object.entries(initial));
+  return {
+    get length() { return m.size; },
+    key: (i) => Array.from(m.keys())[i] ?? null,
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => { m.set(k, String(v)); },
+    removeItem: (k) => { m.delete(k); },
+    keys: () => Array.from(m.keys()).sort(),
+  };
+}
+const seed = () => fakeStorage({
+  [Progress.STORAGE_KEY]: JSON.stringify({ schemaVersion: 2, courseVersion: "fases-v2", lastVisited: { unit: "F01", block: "F01:b02" },
+    blocks: { "F01:b01": "completed", "F01:b02": "in_progress", "M00:b01": "completed" }, optional: { F01: { lab: true }, M00: { lab: true } } }),
+  "curso.check.F01-passo": "{}", "curso.check.M00-passo": "{}", "curso.quiz.F01-q1": "1",
+  "curso.theme": "dark", "outra.app": "x",
+});
+const all = seed();
+Progress.resetAll(all);
+assert.deepEqual(all.keys(), ["curso.theme", "outra.app"]);
+assert.equal(all.getItem("curso.theme"), "dark");
+
+const one = seed();
+Progress.resetUnit(one, "F01");
+const left = JSON.parse(one.getItem(Progress.STORAGE_KEY));
+assert.deepEqual(left.blocks, { "M00:b01": "completed" });
+assert.deepEqual(Object.keys(left.optional), ["M00"]);
+assert.equal(left.lastVisited, null);
+assert.deepEqual(one.keys(), ["curso.check.M00-passo", "curso.theme", "outra.app", Progress.STORAGE_KEY].sort());
+
+const broken = { get length() { throw new Error("x"); }, key() { throw new Error("x"); }, getItem() { throw new Error("x"); }, setItem() { throw new Error("x"); }, removeItem() { throw new Error("x"); } };
+assert.doesNotThrow(() => { Progress.resetAll(broken); Progress.resetUnit(broken, "F01"); });
+
 console.log("Portal progress: assertions passed.");

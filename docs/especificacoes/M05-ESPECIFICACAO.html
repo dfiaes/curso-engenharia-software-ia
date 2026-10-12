@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M05-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M05 — especificação de escopo e evidência</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="m05--especificação-de-escopo-e-evidência">M05 — especificação de escopo e evidência</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/09/2026 · <strong>Estado:</strong> G0 aprovado; G1 em produção</p>
+<h2 id="1-decisão-curricular">1. Decisão curricular</h2>
+<p>O M05 ensina a engenharia em volta do modelo: contrato de mensagem,
+saída estruturada, tool calling, streaming, cache, gateway com fallback
+e custo como requisito. O núcleo é invariante e agnóstico — mensagens,
+uso, erros, finish reasons e tool calls normalizados em portas Python.
+Provedores concretos (Anthropic, OpenAI ou outros) são adapters
+intercambiáveis atrás da mesma suíte de contrato.</p>
+<p>O laboratório obrigatório usa fakes determinísticos locais e nunca exige
+rede, conta ou crédito. Testes live contra provedores são trilha opcional,
+marcados, datados e comparando implementações — nunca a única evidência.
+Preços e versões de produto citados no material são retrato datado
+(agosto–setembro/2026), não promessa; revalidar em até 90 dias.</p>
+<h2 id="2-resultado-limites-e-integração">2. Resultado, limites e integração</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Definição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carga</td>
+<td>sete blocos de duas horas, total de 14 h</td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>M02 (Pydantic, asyncio), M03 (HTTP, CI), M04 (docs como contexto)</td>
+</tr>
+<tr>
+<td>Saída</td>
+<td>gateway com dois adapters, cache, retry/timeout, contabilidade de custo e relatório</td>
+</tr>
+<tr>
+<td>Peça do capstone</td>
+<td>camada <code>services/llm/</code>; a integração no Capstone só ocorre após spec própria</td>
+</tr>
+<tr>
+<td>Não cobre</td>
+<td>evals (M06), retrieval (M07), agentes (M08), produção multi-tenant (M12)</td>
+</tr>
+<tr>
+<td>Evidência mínima</td>
+<td>comandos, versões e saída executada; latência/custo só com ambiente e amostras</td>
+</tr>
+</tbody>
+</table>
+<p>Referência interna de matemática e dependências do principal: ponte do M05. A distribuição e a amostragem são ensinadas no próprio B01; ML01 é somente aprofundamento opcional.</p>
+<h2 id="3-arquitetura-do-laboratório">3. Arquitetura do laboratório</h2>
+<pre><code class="language-text">aplicação ──► Gateway ──► adapter primário (fake A) ──► resposta normalizada
+                  │            │ falha/timeout
+                  │            ▼
+                  │       adapter fallback (fake B)
+                  ├──► cache exato (prefixo estável, TTL, stats)
+                  ├──► retry com orçamento + timeout por chamada
+                  └──► ledger de custo (tokens, modelo, R$) + relatório
+</code></pre>
+<p>A referência fica em <code>modulos/M05-llm-pratica-gateway-cache/lab/</code>. O roteiro
+<code>Laboratório guiado M05</code>, no final do HTML, cria cópia de trabalho em
+diretório temporário possuído pelo laboratório.</p>
+<h2 id="4-blocos-competências-e-evidência">4. Blocos, competências e evidência</h2>
+<table>
+<thead>
+<tr>
+<th>Bloco</th>
+<th>Competências observáveis</th>
+<th>Evidência planejada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B01 · contrato</td>
+<td>tokens, janela, amostragem, finish reason</td>
+<td>estimativa + fake com usage</td>
+</tr>
+<tr>
+<td>B02 · structured</td>
+<td>schema como contrato, validação, abstenção</td>
+<td>Pydantic parse + JSON inválido</td>
+</tr>
+<tr>
+<td>B03 · tools</td>
+<td>loop com orçamento, erro acionável, parada</td>
+<td>tool loop com fake + budget</td>
+</tr>
+<tr>
+<td>B04 · streaming</td>
+<td>SSE, parcial, backpressure, 202+job</td>
+<td>assembler com stream cortado</td>
+</tr>
+<tr>
+<td>B05 · cache</td>
+<td>camadas, invalidação, prefixo estável, stats</td>
+<td>hit/miss + TTL + relatório</td>
+</tr>
+<tr>
+<td>B06 · gateway</td>
+<td>fallback, timeout, retry com teto, telemetria</td>
+<td>primário derrubado, cliente não percebe</td>
+</tr>
+<tr>
+<td>B07 · custo</td>
+<td>contabilidade por request, alavancas, relatório</td>
+<td>ledger + relatório com R$</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-cenários-de-aceitação">5. Cenários de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Oráculo e caso relevante</th>
+<th>Bloco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M05-AT-001</td>
+<td>dois adapters passam na mesma suíte de contrato (fake A e B)</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M05-AT-002</td>
+<td>usage (in/out) contabilizado por chamada, sem rede</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M05-AT-003</td>
+<td>finish reason truncado vira erro explícito, não JSON quebrado silencioso</td>
+<td>B01/B02</td>
+</tr>
+<tr>
+<td>M05-AT-004</td>
+<td>JSON válido vira objeto Pydantic; JSON inválido vira erro tipado</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M05-AT-005</td>
+<td>saída fora do schema (campo ausente/tipo errado) é rejeitada</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M05-AT-006</td>
+<td>abstenção ("não encontrei") é saída válida, não falha</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M05-AT-007</td>
+<td>tool loop executa pede→executa→devolve até resposta ou teto de passos</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M05-AT-008</td>
+<td>ferramenta desconhecida/argumento inválido vira erro acionável</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M05-AT-009</td>
+<td>stream parcial (corte no meio do JSON) é detectado, não parseado</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M05-AT-010</td>
+<td>backpressure: produtor rápido não estoura memória do consumidor</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M05-AT-011</td>
+<td>segunda chamada idêntica é hit (sem nova chamada ao adapter)</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M05-AT-012</td>
+<td>TTL expirado volta a chamar; invalidação explícita limpa</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M05-AT-013</td>
+<td>primário derrubado: fallback responde sem o cliente perceber</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M05-AT-014</td>
+<td>timeout por chamada + retry com teto; retry storm é impossível por construção</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M05-AT-015</td>
+<td>telemetria registra modelo usado, latência e tokens por chamada</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M05-AT-016</td>
+<td>ledger soma custo por request/modelo com preços datados</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M05-AT-017</td>
+<td>relatório lista top requests e economia do cache em R$</td>
+<td>B07</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-fontes-e-versões">6. Fontes e versões</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte e uso</th>
+<th>Tipo</th>
+<th>Risco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M05-01</td>
+<td><a href="https://docs.anthropic.com/en/api/messages">Anthropic API — messages</a> — contrato de chamada/usage</td>
+<td>fornecedor</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M05-02</td>
+<td><a href="https://platform.openai.com/docs/api-reference/chat">OpenAI API — chat</a> — segundo adapter</td>
+<td>fornecedor</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M05-03</td>
+<td><a href="https://platform.claude.com/docs/en/build-with-claude/prompt-caching">Anthropic — prompt caching</a> — prefixo/TTL/preços/limites mínimos por modelo</td>
+<td>fornecedor / adapter</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M05-04</td>
+<td><a href="https://html.spec.whatwg.org/multipage/server-sent-events.html">SSE spec (HTML standard)</a> — formato do stream</td>
+<td>normativa</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M05-05</td>
+<td><a href="https://json-schema.org/specification">JSON Schema 2020-12</a> — validação de saída</td>
+<td>padrão aberto</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M05-06</td>
+<td>Preços de provedores (retrato ago–set/2026 no HTML) — conta de custo</td>
+<td>fornecedor</td>
+<td>alto</td>
+</tr>
+</tbody>
+</table>
+<p>Fontes da tabela consultadas em 14/09/2026; SRC-M05-03 revalidada em
+25/09/2026. Preços, versões de modelo, quotas, limites mínimos de cache e
+capacidades de produto devem ser revalidados em até 90 dias. Limite mínimo
+de prefixo cacheável não equivale a janela de contexto nem a teto de saída.
+O invariante ensinado (contrato, cache, retry, custo) não depende de
+nenhum fornecedor. O ledger focal de claims está em
+<code>docs/planejamento-v4/fontes.json</code>.</p>
+<h2 id="7-panorama-de-prática-vigente">7. Panorama de prática vigente</h2>
+<p>Gateways (LiteLLM e similares) e prompt caching são prática observável em
+times que operam LLM em volume — sustentam a decisão didática. Não definem
+fundamento nem autorizam recomendação universal de produto.</p>
+<h2 id="8-gates-e-decisão-g0">8. Gates e decisão G0</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Estado</th>
+<th>Critério</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G0 · escopo</td>
+<td><strong>APROVADO</strong></td>
+<td>sete blocos, 17 cenários, fontes classificadas, lab local sem rede e limites definidos</td>
+</tr>
+<tr>
+<td>G1–G6</td>
+<td>EM PRODUÇÃO/PENDENTE</td>
+<td>HTML legado em revisão; lab e avaliação em construção neste ciclo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisão de G0:</strong> aprovada em 14/09/2026 pelo orquestrador. Define o
+trabalho; não certifica HTML legado ou lab inexistente.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

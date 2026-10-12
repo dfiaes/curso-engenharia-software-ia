@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M03-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M03 — especificação de escopo e evidência</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="m03--especificação-de-escopo-e-evidência">M03 — especificação de escopo e evidência</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 21/08/2026 · <strong>Estado:</strong> G0 aprovado; G1 em produção</p>
+<h2 id="1-decisão-curricular">1. Decisão curricular</h2>
+<p>O M03 transforma os contratos e o runtime local do M02 em uma aplicação HTTP operável. O produto didático é um encurtador de links, <code>link-shortener</code>. Ele possui uma fronteira HTTP, dados persistentes em PostgreSQL, migrações, testes de integração, imagem de container e pipeline de qualidade. A escolha do produto é deliberadamente pequena: a infraestrutura fica visível sem esconder a decisão de engenharia atrás de regras de negócio extensas.</p>
+<p>Python 3.14 é a linguagem canônica. FastAPI, SQLAlchemy, Alembic, Docker Compose, Testcontainers e GitHub Actions são adapters do laboratório. HTTP, OpenAPI, transação, constraint, plano de consulta, imagem imutável, health check e gate de qualidade são os conhecimentos transferíveis.</p>
+<p>O laboratório obrigatório roda de forma local. Exige Docker Engine/Compose para a parte PostgreSQL real; a ausência desse ambiente é bloqueio explícito, não é substituída por SQLite, mock ou teste marcado como <code>skip</code>. Conta externa, domínio, credencial de cloud e deploy público são uma trilha opcional após o laboratório. Eles não condicionam a aprovação do módulo.</p>
+<h2 id="2-resultado-limites-e-integração">2. Resultado, limites e integração</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Definição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carga</td>
+<td>oito blocos de duas horas, total de 16 h</td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>M02: projeto Python, Pydantic, typing, <code>asyncio</code>, teste, casos negativos e gates locais</td>
+</tr>
+<tr>
+<td>Saída</td>
+<td>serviço HTTP local com banco real, migrações, container, suíte de integração e pipeline versionado</td>
+</tr>
+<tr>
+<td>Peça do capstone</td>
+<td>convenções para backend <code>cartografo</code>; a integração no repositório do capstone só ocorre depois de uma spec própria</td>
+</tr>
+<tr>
+<td>Não cobre</td>
+<td>autenticação/tenant/billing (M12), IA/provider (M05–M09), durabilidade distribuída (M10/LT02), SRE integral (M06/M12), benchmark de inferência (M11)</td>
+</tr>
+<tr>
+<td>Evidência mínima</td>
+<td>comandos, versões e saída executada; nenhum tempo, p95 ou tamanho de imagem é publicado como número universal</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-arquitetura-do-laboratório">3. Arquitetura do laboratório</h2>
+<pre><code class="language-text">cliente ASGI/local HTTP
+          │
+          ▼
+ FastAPI adapter ──► aplicação ──► repositório SQLAlchemy ──► PostgreSQL
+          │                    │
+          │                    └── contratos Pydantic/OpenAPI
+          ▼
+ health / Problem Details / correlation id
+
+Compose: api + db                  Testcontainers: PostgreSQL descartável
+CI: formatação → lint → tipos → testes → build de imagem
+</code></pre>
+<p>O repositório de referência ficará em <code>modulos/M03-fastapi-postgres-docker-ci/lab/</code>. O roteiro <code>Laboratório guiado M03</code>, no final do HTML, criará uma cópia marcada em diretório temporário pertencente ao laboratório. A cópia não modifica <code>capstone/</code>, o checkout do curso ou arquivos pessoais.</p>
+<h2 id="4-blocos-competências-e-evidência">4. Blocos, competências e evidência</h2>
+<table>
+<thead>
+<tr>
+<th>Bloco</th>
+<th>Competências observáveis</th>
+<th>Evidência planejada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B01 · fronteira HTTP</td>
+<td>distinguir transporte, contrato e regra; usar rota, schema, dependência com <code>yield</code>, lifecycle e middleware; escolher status e erro</td>
+<td>API ASGI com <code>POST /links</code>, <code>GET /links/{slug}</code>, correlation id e erro estruturado</td>
+</tr>
+<tr>
+<td>B02 · sessão e migração</td>
+<td>delimitar unidade de trabalho; configurar <code>AsyncSession</code>; revisar migration e rollback</td>
+<td>migration versionada, <code>upgrade</code>/<code>downgrade</code> em PostgreSQL limpo</td>
+</tr>
+<tr>
+<td>B03 · dados e concorrência</td>
+<td>escolher índice pelo predicado; ler plano; separar JSONB de coluna estável; provar e corrigir lost update</td>
+<td><code>EXPLAIN</code> armazenado como evidência variável; teste concorrente e update atômico</td>
+</tr>
+<tr>
+<td>B04 · fronteiras internas</td>
+<td>separar HTTP, aplicação, domínio e persistência; transformar arquitetura em regra executável</td>
+<td>import contract e mutante que é rejeitado</td>
+</tr>
+<tr>
+<td>B05 · imagem e composição</td>
+<td>explicar camada, build multi-stage, usuário não-root, segredo, volume, DNS interno e health check</td>
+<td>Dockerfile/Compose inspecionados; serviço <code>db</code> saudável antes de <code>api</code></td>
+</tr>
+<tr>
+<td>B06 · integração honesta</td>
+<td>escolher unitário versus integração; isolar estado; usar client ASGI e PostgreSQL descartável</td>
+<td>Testcontainers, casos de constraint, migration e concorrência reais</td>
+</tr>
+<tr>
+<td>B07 · CI e release</td>
+<td>converter gates locais em workflow; separar qualidade, imagem e release; manter config e segredo fora da imagem</td>
+<td>workflow testado estaticamente e script local equivalente; contrato de release sem credencial real</td>
+</tr>
+<tr>
+<td>B08 · operação local</td>
+<td>correlacionar request, health, timeout, falha do banco e rollback; defender limites</td>
+<td>execução final local, diagnóstico e checkpoint; deploy público apenas opcional</td>
+</tr>
+</tbody>
+</table>
+<p>Cada competência deve atravessar N1–N4. B03, B05, B06 e B08 também exigem evidência operacional proporcional ao escopo. O módulo não promete N5 de produção apenas porque uma imagem foi publicada.</p>
+<h2 id="5-cenários-de-aceitação">5. Cenários de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Oráculo e caso relevante</th>
+<th>Bloco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M03-AT-001</td>
+<td>OpenAPI expõe contrato de criação e resposta sem vazar entidade de persistência</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M03-AT-002</td>
+<td>payload inválido devolve erro HTTP com tipo, status e detalhe deliberados</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M03-AT-003</td>
+<td>dependência de sessão faz rollback quando a aplicação levanta exceção</td>
+<td>B01/B02</td>
+</tr>
+<tr>
+<td>M03-AT-004</td>
+<td>middleware preserva ou cria correlation id e não altera a semântica da resposta</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M03-AT-005</td>
+<td>migration sobe em banco vazio e <code>downgrade</code> retorna ao estado anterior declarado</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M03-AT-006</td>
+<td>constraint única vence uma corrida de inserção e a aplicação traduz o conflito</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M03-AT-007</td>
+<td>uma <code>AsyncSession</code> não é compartilhada por tarefas concorrentes</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M03-AT-008</td>
+<td>nenhum startup de produção usa <code>create_all</code>; o schema nasce de migration</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M03-AT-009</td>
+<td>predicado crítico usa o índice escolhido segundo <code>EXPLAIN</code>; o plano é interpretado, não cronometrado como promessa</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M03-AT-010</td>
+<td>incremento ler-somar-gravar perde atualização sob concorrência; update atômico preserva o total</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M03-AT-011</td>
+<td>atributo variável é persistido em JSONB com consulta e índice adequados, sem chamar JSONB de substituto para schema relacional</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M03-AT-012</td>
+<td>teste inicia com estado de banco isolado e não depende da ordem da suíte</td>
+<td>B03/B06</td>
+</tr>
+<tr>
+<td>M03-AT-013</td>
+<td>import ilegal de framework na aplicação é recusado pelo guardrail</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M03-AT-014</td>
+<td>router não importa repositório nem entidade SQLAlchemy diretamente</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M03-AT-015</td>
+<td>override de dependência troca a infraestrutura em teste sem alterar a regra de aplicação</td>
+<td>B04/B06</td>
+</tr>
+<tr>
+<td>M03-AT-016</td>
+<td>ADR registra o custo e a condição de revisão da fronteira escolhida</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M03-AT-017</td>
+<td>imagem final executa como usuário não-root e não inclui ferramenta de build desnecessária</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M03-AT-018</td>
+<td>contexto de build exclui <code>.env</code>, checkout e ambiente virtual conforme <code>.dockerignore</code></td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M03-AT-019</td>
+<td>Compose só admite <code>api</code> depois do health check do banco; <code>localhost</code> não é usado como host interno</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M03-AT-020</td>
+<td>volume e rede possuem função declarada; a limpeza só atinge recursos nomeados do laboratório</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M03-AT-021</td>
+<td>Testcontainers sobe PostgreSQL descartável e executa migrations reais</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M03-AT-022</td>
+<td>client ASGI cobre criação, consulta, inválido, inexistente e conflito contra o banco real</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M03-AT-023</td>
+<td>relógio e gerador de slug são determinísticos no teste, não em produção</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M03-AT-024</td>
+<td>indisponibilidade do banco produz timeout/erro observável e cleanup, sem tarefa ou sessão órfã</td>
+<td>B06/B08</td>
+</tr>
+<tr>
+<td>M03-AT-025</td>
+<td>workflow reproduz formatação, lint, tipagem, testes e build com lock preservado</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M03-AT-026</td>
+<td>pull request não recebe caminho de deploy nem segredo de produção</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M03-AT-027</td>
+<td>imagem é endereçada por identificador imutável de revisão, separado de tag conveniente</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M03-AT-028</td>
+<td>migration de release tem compatibilidade e rollback descritos; não roda em startup do servidor</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M03-AT-029</td>
+<td>settings falham cedo quando configuração necessária não existe e não revelam segredo no diagnóstico</td>
+<td>B07/B08</td>
+</tr>
+<tr>
+<td>M03-AT-030</td>
+<td>execução final local mostra health, criação, redirect e conflito com cabeçalho de correlação</td>
+<td>B08</td>
+</tr>
+<tr>
+<td>M03-AT-031</td>
+<td>diagnóstico liga sintoma de conexão, plano, migration, imagem ou CI à hipótese e à correção verificável</td>
+<td>B08</td>
+</tr>
+<tr>
+<td>M03-AT-032</td>
+<td>publicação externa opcional registra ambiente, revisão, método de rollback e limite do ensaio; sua ausência não reprova o laboratório</td>
+<td>B08</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-fontes-e-versões">6. Fontes e versões</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte e uso</th>
+<th>Tipo</th>
+<th>Risco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M03-01</td>
+<td><a href="https://fastapi.tiangolo.com/tutorial/dependencies/">FastAPI dependencies</a> — grafo de dependências e <code>Annotated</code></td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M03-02</td>
+<td><a href="https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/">FastAPI dependencies with yield</a> e <a href="https://fastapi.tiangolo.com/advanced/events/">lifespan</a> — lifecycle e cleanup</td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M03-03</td>
+<td><a href="https://fastapi.tiangolo.com/async/">FastAPI async</a> — limites de <code>def</code>/<code>async def</code></td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M03-04</td>
+<td><a href="https://spec.openapis.org/oas/latest.html">OpenAPI Specification</a> — contrato HTTP documentável</td>
+<td>padrão aberto</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M03-05</td>
+<td><a href="https://www.rfc-editor.org/rfc/rfc9110">RFC 9110</a> e <a href="https://www.rfc-editor.org/rfc/rfc9457">RFC 9457</a> — semântica HTTP e Problem Details</td>
+<td>normativa</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M03-06</td>
+<td><a href="https://docs.sqlalchemy.org/en/21/orm/extensions/asyncio.html">SQLAlchemy asyncio</a> e <a href="https://docs.sqlalchemy.org/en/20/orm/session_basics.html">Session basics</a> — sessão e concorrência</td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M03-07</td>
+<td><a href="https://alembic.sqlalchemy.org/en/latest/cookbook.html">Alembic cookbook</a> — operação de migrations</td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M03-08</td>
+<td><a href="https://www.postgresql.org/docs/current/mvcc.html">PostgreSQL MVCC</a> e <a href="https://www.postgresql.org/docs/current/tutorial-transactions.html">transactions</a> — isolamento e transação</td>
+<td>documentação oficial</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M03-09</td>
+<td><a href="https://www.postgresql.org/docs/current/using-explain.html">PostgreSQL EXPLAIN</a> e <a href="https://www.postgresql.org/docs/current/sql-analyze.html">ANALYZE</a> — plano e estatística</td>
+<td>documentação oficial</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M03-10</td>
+<td><a href="https://www.postgresql.org/docs/current/datatype-json.html">PostgreSQL JSON types</a> — JSONB e índices</td>
+<td>documentação oficial</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M03-11</td>
+<td><a href="https://docs.docker.com/build/building/multi-stage/">Docker multi-stage builds</a> e <a href="https://docs.docker.com/build/building/context/">build context</a></td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M03-12</td>
+<td><a href="https://docs.docker.com/compose/how-tos/startup-order/">Docker Compose startup order</a> — health/dependência</td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M03-13</td>
+<td><a href="https://testcontainers.com/guides/getting-started-with-testcontainers-for-python/">Testcontainers for Python</a> — adapter de teste real</td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M03-14</td>
+<td><a href="https://docs.github.com/actions/writing-workflows/workflow-syntax-for-github-actions">GitHub Actions workflow syntax</a> e <a href="https://docs.github.com/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions">security hardening</a></td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M03-15</td>
+<td><a href="https://survey.stackoverflow.co/2025/technology">Stack Overflow Developer Survey 2025</a> — sinal industrial datado</td>
+<td>industrial</td>
+<td>alto</td>
+</tr>
+</tbody>
+</table>
+<p>As fontes foram consultadas em 21/08/2026. Toda documentação de framework, imagem, action, versão de banco e sinal de mercado deve ser revalidada em até 90 dias. O sinal industrial mostra respostas de uma amostra voluntária; não mede vagas, custo, segurança ou adequação ao domínio.</p>
+<h2 id="7-panorama-de-prática-vigente">7. Panorama de prática vigente</h2>
+<p>A pesquisa Stack Overflow 2025 reporta crescimento de FastAPI, PostgreSQL entre os bancos mais usados pelos respondentes e salto de uso de Docker. Isso sustenta a decisão didática de expor a combinação API, banco relacional, container e CI em um mesmo produto. Não prova que essa combinação é correta para qualquer empresa ou projeto.</p>
+<p>O núcleo estudado é HTTP/OpenAPI, transação, schema versionado, imagem reproduzível e gate de qualidade. FastAPI e SQLAlchemy materializam o adapter Python; Django, Flask, Litestar, asyncpg puro ou outro ORM são alternativas com custos diferentes. PostgreSQL é o banco canônico deste módulo; SQLite não substitui sua evidência de concorrência. Docker Compose ensina composição local, não é uma tese sobre orquestração de produção. GitHub Actions exemplifica CI versionado; a regra transferível é que o pipeline execute os mesmos oráculos em ambiente neutro.</p>
+<h2 id="8-gates-e-decisão-g0">8. Gates e decisão G0</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Estado</th>
+<th>Critério</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G0 · escopo</td>
+<td><strong>APROVADO</strong></td>
+<td>oito blocos, 32 cenários, fontes classificadas, laboratório local e fronteiras curriculares definidos</td>
+</tr>
+<tr>
+<td>G1 · conteúdo</td>
+<td>EM PRODUÇÃO</td>
+<td>HTML legado requer reconstrução didática e fontes por bloco</td>
+</tr>
+<tr>
+<td>G2 · execução</td>
+<td>PENDENTE</td>
+<td><code>lab/</code>, cópia temporária, gates, PostgreSQL real e evidência ainda não existem</td>
+</tr>
+<tr>
+<td>G3 · avaliação</td>
+<td>PENDENTE</td>
+<td>checkpoint será convertido para cenários, demonstração e rubrica</td>
+</tr>
+<tr>
+<td>G4 · portabilidade</td>
+<td>PENDENTE</td>
+<td>invariantes/adapters e Windows/Linux/Docker exigem verificação</td>
+</tr>
+<tr>
+<td>G5 · produção</td>
+<td>PENDENTE</td>
+<td>timeout, cleanup, segredo, health, concorrência e release precisam de oráculos</td>
+</tr>
+<tr>
+<td>G6 · editorial</td>
+<td>PENDENTE</td>
+<td>HTML, fontes, links, 390 px, impressão e revisão visual aguardam reconstrução</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisão de G0:</strong> aprovada em 21/08/2026 pelo orquestrador. A aprovação define o trabalho; ela não certifica o HTML legado, código inexistente ou deploy externo.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

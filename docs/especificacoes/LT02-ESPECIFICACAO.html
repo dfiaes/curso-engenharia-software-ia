@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/LT02-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Especificação do LT02 — Sistemas distribuídos, dados e mensageria</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="especificação-do-lt02--sistemas-distribuídos-dados-e-mensageria">Especificação do LT02 — Sistemas distribuídos, dados e mensageria</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/08/2026 · <strong>Estado:</strong> G0 APROVADO · <strong>Carga:</strong> 6 blocos / 12h</p>
+<p>LT02 acontece depois do M05. Seu propósito é tornar explícitas as garantias e os modos de falha que aparecem quando uma operação lenta, cara ou não determinística sai do processo HTTP e passa a ser executada por múltiplos workers.</p>
+<h2 id="1-resultado-do-laboratório">1. Resultado do laboratório</h2>
+<p>Ao concluir LT02, o aluno consegue:</p>
+<ul>
+<li>raciocinar sobre falha parcial, tempo, ordem, consistência, CAP e PACELC sem slogans incorretos;</li>
+<li>escolher fila, log/stream ou chamada síncrona por requisito, não por moda;</li>
+<li>definir acknowledgement, redelivery, ordenação, concorrência e backpressure;</li>
+<li>implementar idempotência durável, deduplicação e transactional outbox/inbox;</li>
+<li>limitar retries por deadline, orçamento e jitter, tratando poison messages;</li>
+<li>coordenar sagas e compensações sem fingir transação distribuída;</li>
+<li>explicar isolamento, WAL, replicação, backup, PITR, retenção e restauração;</li>
+<li>provar o comportamento de jobs multiworker durante crashes e duplicatas.</li>
+</ul>
+<h2 id="2-pré-requisitos-e-limites">2. Pré-requisitos e limites</h2>
+<p><strong>Pré-requisitos:</strong> M03 e M05. LT01 fornece processos, rede, deadline e saturação. M12 reutilizará ledger, multi-tenancy e operação; M13 integrará as garantias no produto.</p>
+<p><strong>Fora de escopo:</strong> implementar consenso, broker ou banco distribuído; memorizar produtos; administrar clusters em produção; prometer exatamente-uma-vez global; tratar alta disponibilidade como substituta de backup.</p>
+<h3 id="regras-conceituais-inegociáveis">Regras conceituais inegociáveis</h3>
+<ol>
+<li>CAP descreve o que ocorre <strong>durante uma partição</strong>; não é “escolha dois” em operação normal.</li>
+<li>PACELC acrescenta o trade-off entre latência e consistência quando não há partição.</li>
+<li><code>at-least-once</code> admite duplicatas; <code>at-most-once</code> admite perda. “Exactly once” só pode ser afirmado com fronteira, estado e falhas explicitamente delimitados.</li>
+<li>Idempotência não é apenas guardar uma chave em memória: exige identidade da intenção, estado durável, concorrência e política de expiração.</li>
+<li>Retry sem deadline, limite, backoff e jitter é amplificação de falha.</li>
+<li>Compensação é uma nova ação de negócio; não desfaz o tempo nem garante rollback perfeito.</li>
+<li>Replicação/HA reduzem indisponibilidade; backup e restore protegem contra exclusão, corrupção e erro humano.</li>
+</ol>
+<h2 id="3-ambiente-e-arquitetura-do-laboratório">3. Ambiente e arquitetura do laboratório</h2>
+<pre><code class="language-text">client
+  │ POST /jobs + Idempotency-Key
+  ▼
+FastAPI producer ── transação ──► PostgreSQL
+                                  jobs + outbox
+                                          │ relay
+                                          ▼
+                                  MessageBus port
+                                  ├─ fake determinístico
+                                  └─ RabbitMQ adapter didático
+                                          │ ack/redelivery
+                                  ┌───────┴────────┐
+                                  ▼                ▼
+                              worker A          worker B
+                                  └───────┬────────┘
+                                          ▼
+                                  fake external effect
+                                  inbox + effect ledger
+
+OTel Collector ◄── trace context, messaging spans, métricas e logs
+fault controller ─► crash, duplicate, delay, reorder, 429, timeout, broker/db outage
+</code></pre>
+<p>Estrutura prevista:</p>
+<pre><code class="language-text">labs/LT02-distribuidos-dados-mensageria/
+  compose.yaml
+  producer/
+  relay/
+  worker/
+  contracts/
+    asyncapi.yaml
+    events/
+  adapters/
+    fake_bus.py
+    rabbitmq_bus.py
+  migrations/
+  faults/
+  backup/
+  observability/
+  tests/
+  runbooks/
+  evidence/
+</code></pre>
+<p>O domínio depende de <code>MessageBus</code>, <code>JobRepository</code>, <code>IdempotencyStore</code>, <code>EffectLedger</code> e <code>Clock</code> definidos com <code>typing.Protocol</code>. CloudEvents fornece o envelope interoperável; AsyncAPI documenta canais, mensagens e operações. RabbitMQ demonstra acknowledgements, confirms, prefetch, redelivery e DLQ, mas a suíte de contrato também roda com fake determinístico e impede acoplamento do domínio.</p>
+<p>Toda execução persiste <code>message_id</code>, <code>correlation_id</code>, <code>causation_id</code>, <code>tenant_id</code>, <code>intent_hash</code>, <code>attempt</code>, <code>occurred_at</code>, <code>deadline_at</code> e versão do schema. Payload sensível não entra em logs ou atributos de alta cardinalidade.</p>
+<h2 id="4-blocos">4. Blocos</h2>
+<h2 id="bloco-1--falha-parcial-tempo-ordem-e-consistência">Bloco 1 · Falha parcial, tempo, ordem e consistência</h2>
+<p><strong>IDs:</strong> LT02-B01-C01..06 · <strong>Matriz:</strong> DIST-01.</p>
+<p><strong>Conteúdo:</strong> sistema distribuído e ausência de relógio/estado global instantâneo; timeout como observação ambígua; duplicação, atraso, perda e reordenação; consistência forte e eventual; read-your-writes e monotonic reads; linearizability versus serializability; CAP sob partição e PACELC fora dela.</p>
+<p><strong>Prática:</strong> executar um serviço de escrita e duas leituras sob latência/partição controlada; registrar o que cada participante sabe; comparar política que recusa escrita, política que aceita e reconcilia e impacto de latência.</p>
+<p><strong>Evidência:</strong> tabela requisito → falha → decisão → garantia → custo, timeline com eventos e ADR sem o slogan “escolha dois”.</p>
+<p><strong>Aceitação:</strong> o aluno identifica a fronteira de consistência, distingue timeout de falha confirmada e defende uma escolha com experimento reproduzível.</p>
+<h2 id="bloco-2--filas-streams-entrega-ordenação-e-backpressure">Bloco 2 · Filas, streams, entrega, ordenação e backpressure</h2>
+<p><strong>IDs:</strong> LT02-B02-C01..07 · <strong>Matriz:</strong> DIST-02.</p>
+<p><strong>Conteúdo:</strong> chamada síncrona, work queue e append-only stream; producer/consumer; channel, partition e consumer group; acknowledgement e publisher confirm; redelivery; at-most/at-least-once; ordenação global versus por chave; prefetch; bounded queue; demand e backpressure; schema evolution; CloudEvents e AsyncAPI.</p>
+<p><strong>Prática:</strong> publicar jobs acima da capacidade de dois workers, limitar in-flight, medir profundidade/idade da fila e observar redelivery após crash antes do ack. Particionar por <code>tenant_id</code> ou <code>job_id</code> quando a ordem for requisito.</p>
+<p><strong>Falhas:</strong> broker indisponível, confirmação perdida, consumer lento, ack prematuro, mensagem atrasada/duplicada/fora de ordem e poison message.</p>
+<p><strong>Evidência:</strong> contrato AsyncAPI, schemas versionados, gráfico input rate → queue age → throughput/erro/memória e matriz de semântica de entrega.</p>
+<p><strong>Aceitação:</strong> memória permanece limitada, produtor recebe pressão explícita, duplicata é esperada no desenho e mensagem venenosa termina em quarentena após tentativas finitas.</p>
+<h2 id="bloco-3--idempotência-durável-e-transactional-outboxinbox">Bloco 3 · Idempotência durável e transactional outbox/inbox</h2>
+<p><strong>IDs:</strong> LT02-B03-C01..07 · <strong>Matriz:</strong> DIST-03.</p>
+<p><strong>Conteúdo:</strong> identidade da requisição versus identidade do efeito; chave de idempotência e hash canônico da intenção; estados <code>started/completed/failed/unknown</code>; unique constraint; resposta persistida; lock/lease e fencing; outbox na mesma transação do estado de negócio; relay reexecutável; inbox/dedup do consumidor; tombstone, TTL e reconciliação.</p>
+<p><strong>Prática:</strong> gravar <code>job + outbox</code> atomicamente; matar producer após commit; publicar novamente quando confirm se perde; executar dois workers concorrentes; matar worker antes e depois do efeito externo; reconciliar estado <code>unknown</code> consultando o provedor fake por operation ID.</p>
+<p><strong>Falhas:</strong> mesma chave com payload diferente, relay duplicado, processo morto após efeito/antes de persistir, lease expirada e concorrência entre instâncias.</p>
+<p><strong>Evidência:</strong> migrations, diagrama de estados, histórico transacional e testes que contam efeitos reais no ledger externo.</p>
+<p><strong>Aceitação:</strong> qualquer número de redeliveries produz no máximo um efeito lógico dentro da fronteira declarada; intenção conflitante é rejeitada; recovery não depende de memória do processo.</p>
+<h2 id="bloco-4--deadlines-retries-dlq-sagas-e-compensação">Bloco 4 · Deadlines, retries, DLQ, sagas e compensação</h2>
+<p><strong>IDs:</strong> LT02-B04-C01..07 · <strong>Matriz:</strong> DIST-02, DIST-03, LLM-03.</p>
+<p><strong>Conteúdo:</strong> falha transitória/permanente/ambígua; timeout por tentativa versus deadline do job; exponential backoff com jitter; retry budget, max attempts e concurrency budget; Retry-After; circuit breaker e load shedding; DLQ como quarentena observável, não cemitério; saga orquestrada versus coreografada; passos compensáveis, pivot e retryáveis.</p>
+<p><strong>Prática:</strong> orquestrar <code>reservar orçamento → executar operação externa → confirmar uso</code>; injetar 429, timeout e erro permanente; impedir tentativa que já não cabe no deadline; compensar reserva quando permitido e abrir caso humano quando resultado é ambíguo.</p>
+<p><strong>Evidência:</strong> policy executável, timeline de saga, contagem de retries por causa, runbook de DLQ/replay e teste de não amplificação.</p>
+<p><strong>Aceitação:</strong> retry total é finito e distribuído com jitter; replay preserva identidade; compensação é idempotente; erro ambíguo não é tratado como falha definitiva sem reconciliação.</p>
+<h2 id="bloco-5--transações-wal-replicação-backup-pitr-e-retenção">Bloco 5 · Transações, WAL, replicação, backup, PITR e retenção</h2>
+<p><strong>IDs:</strong> LT02-B05-C01..07 · <strong>Matriz:</strong> DATA-02, DIST-01.</p>
+<p><strong>Conteúdo:</strong> ACID e limites da transação; isolation levels e anomalias; optimistic/pessimistic concurrency; WAL e durability; replicação síncrona/assíncrona e lag; RPO/RTO; base backup + WAL archive/PITR; checksum/verificação; retenção, deleção e legal hold; restore drill; HA versus DR.</p>
+<p><strong>Prática:</strong> reproduzir lost update/write skew quando aplicável e corrigir; gerar base backup; excluir um job; restaurar em instância isolada até imediatamente antes da exclusão; validar integridade e registrar tempos medidos.</p>
+<p><strong>Falhas:</strong> commit reconhecido antes da durabilidade esperada, réplica atrasada, backup incompleto, credencial de restore ausente, retenção incompatível e restore nunca ensaiado.</p>
+<p><strong>Evidência:</strong> política RPO/RTO, comando e log sanitizado de backup/restore, manifest/checksum, query de validação e relatório de restore drill.</p>
+<p><strong>Aceitação:</strong> dado apagado é recuperado por PITR dentro do RPO/RTO do laboratório; aluno demonstra por que réplica não recupera exclusão já replicada.</p>
+<h2 id="bloco-6--incidente-multiworker-e-defesa-das-garantias">Bloco 6 · Incidente multiworker e defesa das garantias</h2>
+<p><strong>IDs:</strong> LT02-B06-C01..07 · <strong>Matriz:</strong> DIST-01..03, DATA-02, OBS-01, SRE-02.</p>
+<p><strong>Conteúdo:</strong> invariant e failure matrix; observabilidade de mensagens; propagation de trace context; queue age/in-flight/redelivery/DLQ; reconciliação; mitigação; restore e postmortem; diferença entre garantia projetada, verificada e apenas assumida.</p>
+<p><strong>Prática:</strong> cenário inédito combina ao menos três falhas: confirm perdido, worker morto em ponto sorteado e upstream lento/ambíguo. O aluno diagnostica, contém, reconcilia efeitos, restaura dado se necessário e prova invariantes por consulta independente.</p>
+<p><strong>Saída:</strong> <code>guarantees.md</code>, <code>failure-matrix.md</code>, traces, métricas, ledger de efeitos, patch, teste de regressão, restore report e postmortem curto.</p>
+<p><strong>Aceitação:</strong> nenhum claim excede a evidência; o sistema drena backlog após recuperação sem retry storm, efeito lógico duplicado ou mensagem silenciosamente perdida.</p>
+<h2 id="5-agenda-determinística-de-falhas">5. Agenda determinística de falhas</h2>
+<table>
+<thead>
+<tr>
+<th>Ponto</th>
+<th>Falha injetada</th>
+<th>Invariante esperado</th>
+<th>Mecanismo de recuperação</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>após commit de <code>job + outbox</code>, antes de publish</td>
+<td>kill producer</td>
+<td>job não some</td>
+<td>relay lê outbox pendente</td>
+</tr>
+<tr>
+<td>após publish, antes de receber confirm</td>
+<td>perda de conexão</td>
+<td>duplicata é possível</td>
+<td>message ID + inbox</td>
+</tr>
+<tr>
+<td>após dequeue, antes do efeito</td>
+<td>kill worker</td>
+<td>mensagem volta</td>
+<td>ack somente após processamento</td>
+</tr>
+<tr>
+<td>após efeito, antes de persistir conclusão</td>
+<td>kill worker</td>
+<td>efeito lógico não duplica</td>
+<td>operation ID + reconciliação</td>
+</tr>
+<tr>
+<td>durante duas execuções concorrentes</td>
+<td>atraso/lease expirada</td>
+<td>apenas dono válido conclui</td>
+<td>lock/fencing + unique constraint</td>
+</tr>
+<tr>
+<td>em erro 429/timeout</td>
+<td>burst de workers</td>
+<td>sem tempestade</td>
+<td>deadline + retry/concurrency budget + jitter</td>
+</tr>
+<tr>
+<td>em mensagem inválida</td>
+<td>redelivery repetida</td>
+<td>fila saudável não bloqueia</td>
+<td>limite + DLQ/quarentena</td>
+</tr>
+<tr>
+<td>após exclusão acidental</td>
+<td>dado ausente</td>
+<td>recuperação até ponto anterior</td>
+<td>restore isolado + PITR</td>
+</tr>
+</tbody>
+</table>
+<p>Cada teste registra seed, relógio, ponto de falha e contagem externa de efeitos. A variante de checkpoint muda a combinação e o instante; não muda os invariantes.</p>
+<h2 id="6-catálogo-de-aceitação">6. Catálogo de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Cenário</th>
+<th>Condição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LT02-AT-001</td>
+<td>partição controlada</td>
+<td>disponibilidade/consistência decididas por requisito e provadas</td>
+</tr>
+<tr>
+<td>LT02-AT-002</td>
+<td>timeout ambíguo</td>
+<td>não classificado automaticamente como operação não executada</td>
+</tr>
+<tr>
+<td>LT02-AT-003</td>
+<td>CAP/PACELC</td>
+<td>explicação distingue partição de operação normal</td>
+</tr>
+<tr>
+<td>LT02-AT-010</td>
+<td>produtor excede consumidores</td>
+<td>memória limitada e pressão/fila observável</td>
+</tr>
+<tr>
+<td>LT02-AT-011</td>
+<td>crash antes de ack</td>
+<td>redelivery ocorre sem perda</td>
+</tr>
+<tr>
+<td>LT02-AT-012</td>
+<td>confirmação perdida</td>
+<td>republish não duplica efeito lógico</td>
+</tr>
+<tr>
+<td>LT02-AT-013</td>
+<td>ordenação por chave</td>
+<td>sequência da chave preservada ou conflito detectado</td>
+</tr>
+<tr>
+<td>LT02-AT-014</td>
+<td>poison message</td>
+<td>quarentena após tentativas finitas, com causa e replay seguro</td>
+</tr>
+<tr>
+<td>LT02-AT-015</td>
+<td>evolução de schema</td>
+<td>consumidor aceita versão compatível e rejeita incompatível claramente</td>
+</tr>
+<tr>
+<td>LT02-AT-020</td>
+<td>crash producer após commit</td>
+<td>outbox publica o evento pendente</td>
+</tr>
+<tr>
+<td>LT02-AT-021</td>
+<td>mesma chave/mesma intenção</td>
+<td>resposta anterior é reutilizada</td>
+</tr>
+<tr>
+<td>LT02-AT-022</td>
+<td>mesma chave/intenção distinta</td>
+<td>conflito é rejeitado e auditado</td>
+</tr>
+<tr>
+<td>LT02-AT-023</td>
+<td>dois workers</td>
+<td>unique constraint/coordenação permite um efeito lógico</td>
+</tr>
+<tr>
+<td>LT02-AT-024</td>
+<td>crash após efeito</td>
+<td>reconciliação fecha estado sem repetir efeito</td>
+</tr>
+<tr>
+<td>LT02-AT-030</td>
+<td>429/timeout em massa</td>
+<td>retry budget e jitter impedem sincronização</td>
+</tr>
+<tr>
+<td>LT02-AT-031</td>
+<td>deadline insuficiente</td>
+<td>nova tentativa não começa</td>
+</tr>
+<tr>
+<td>LT02-AT-032</td>
+<td>saga falha após reserva</td>
+<td>compensação idempotente ou intervenção explícita</td>
+</tr>
+<tr>
+<td>LT02-AT-033</td>
+<td>replay de DLQ</td>
+<td>IDs e causalidade preservados</td>
+</tr>
+<tr>
+<td>LT02-AT-040</td>
+<td>anomalia de isolamento</td>
+<td>reproduzida, explicada e mitigada</td>
+</tr>
+<tr>
+<td>LT02-AT-041</td>
+<td>réplica atrasada</td>
+<td>stale read detectada e tratada conforme requisito</td>
+</tr>
+<tr>
+<td>LT02-AT-042</td>
+<td>exclusão acidental</td>
+<td>PITR recupera dado em instância isolada</td>
+</tr>
+<tr>
+<td>LT02-AT-043</td>
+<td>backup inválido</td>
+<td>restore falha de modo visível; evidência não é promovida</td>
+</tr>
+<tr>
+<td>LT02-AT-050</td>
+<td>trace por mensagem</td>
+<td>producer, broker e consumer correlacionados sem PII</td>
+</tr>
+<tr>
+<td>LT02-AT-060</td>
+<td>incidente inédito</td>
+<td>invariantes provados após três falhas combinadas</td>
+</tr>
+<tr>
+<td>LT02-AT-061</td>
+<td>restauração do lab</td>
+<td>backlog drenado, faults desligados e smoke verde</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-checkpoint-lt02">7. Checkpoint LT02</h2>
+<p>O aluno recebe uma combinação inédita e deve:</p>
+<ol>
+<li>escrever as garantias e sua fronteira antes de executar o teste;</li>
+<li>enumerar perda, duplicação, atraso, reorder e falha ambígua;</li>
+<li>instrumentar a contagem externa do efeito;</li>
+<li>executar a agenda de falha com seed registrada;</li>
+<li>explicar o papel de transação, outbox, inbox, ack e reconciliação;</li>
+<li>demonstrar backpressure e ausência de retry storm;</li>
+<li>restaurar um dado por PITR e medir RPO/RTO;</li>
+<li>declarar risco residual e condição de NO-GO.</li>
+</ol>
+<p>Perguntas incluem: quando CAP se aplica; diferença entre serializability e linearizability; por que publisher confirm não prova consumo; onde “exactly once” termina; por que TTL de idempotência é decisão de negócio; como lease expirada gera concorrência; quando compensação não é possível; por que réplica não é backup; como queue age antecipa violação de SLO.</p>
+<h2 id="8-fontes">8. Fontes</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte</th>
+<th>Versão/data</th>
+<th>Uso</th>
+<th>Obsolescência</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-LT02-01</td>
+<td><a href="https://dl.acm.org/doi/10.1145/564585.564601">Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services</a></td>
+<td>Gilbert &amp; Lynch, 2002</td>
+<td>resultado formal de CAP</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT02-02</td>
+<td><a href="https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf">Consistency Tradeoffs in Modern Distributed Database System Design</a></td>
+<td>Abadi, 2012</td>
+<td>PACELC</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT02-03</td>
+<td><a href="https://www.reactive-streams.org/">Reactive Streams</a></td>
+<td>especificação 1.0.4</td>
+<td>demanda assíncrona e backpressure</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT02-04</td>
+<td><a href="https://github.com/cloudevents/spec/tree/ce%40v1.0.2">CloudEvents Specification</a></td>
+<td>1.0.2</td>
+<td>envelope interoperável de eventos</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT02-05</td>
+<td><a href="https://www.asyncapi.com/docs/reference/specification/v3.0.0">AsyncAPI Specification</a></td>
+<td>3.0.0</td>
+<td>contrato de API orientada a mensagens</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT02-06</td>
+<td><a href="https://www.rabbitmq.com/resources/specs/amqp0-9-1.pdf">AMQP 0-9-1</a></td>
+<td>especificação de protocolo</td>
+<td>modelo de fila/ack/qos</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT02-07</td>
+<td><a href="https://www.rabbitmq.com/docs/confirms">RabbitMQ acknowledgements and publisher confirms</a></td>
+<td>documentação vigente, consultada 14/08/2026</td>
+<td>comportamento do adapter didático</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT02-08</td>
+<td><a href="https://www.rabbitmq.com/docs/reliability">RabbitMQ reliability guide</a></td>
+<td>documentação vigente, consultada 14/08/2026</td>
+<td>redelivery e duplicação</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT02-09</td>
+<td><a href="https://www.postgresql.org/docs/18/transaction-iso.html">PostgreSQL transaction isolation</a></td>
+<td>PostgreSQL 18</td>
+<td>isolamento e anomalias</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT02-10</td>
+<td><a href="https://www.postgresql.org/docs/18/wal-intro.html">PostgreSQL WAL</a></td>
+<td>PostgreSQL 18</td>
+<td>durabilidade e WAL</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT02-11</td>
+<td><a href="https://www.postgresql.org/docs/18/continuous-archiving.html">PostgreSQL continuous archiving and PITR</a></td>
+<td>PostgreSQL 18</td>
+<td>backup, archive e restore</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT02-12</td>
+<td><a href="https://www.postgresql.org/docs/18/wal-reliability.html">PostgreSQL reliability</a></td>
+<td>PostgreSQL 18</td>
+<td>limites físicos da durabilidade</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT02-13</td>
+<td><a href="https://opentelemetry.io/docs/specs/semconv/messaging/">OpenTelemetry messaging semantic conventions</a></td>
+<td>vigente; estado Development em 14/08/2026</td>
+<td>telemetria de mensagens</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT02-14</td>
+<td><a href="https://sre.google/sre-book/data-processing-pipelines/">Google SRE — Data Processing Pipelines</a></td>
+<td>edição online</td>
+<td>retries, idempotência e operação</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT02-15</td>
+<td><a href="https://www.enterpriseintegrationpatterns.com/patterns/messaging/">Enterprise Integration Patterns</a></td>
+<td>catálogo canônico</td>
+<td>padrões, outbox conceitual e DLQ</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT02-16</td>
+<td><a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">AWS Builders' Library — Timeouts, retries and backoff with jitter</a></td>
+<td>artigo técnico canônico</td>
+<td>fundamento operacional; não cria dependência AWS</td>
+<td>média</td>
+</tr>
+</tbody>
+</table>
+<p>Fontes de fornecedor só descrevem o adapter ou uma experiência operacional concreta. Nenhuma semântica do domínio depende delas; os conceitos são confrontados com especificações, papers e comportamento observado.</p>
+<h2 id="9-critérios-editoriais-e-g0">9. Critérios editoriais e G0</h2>
+<ul>
+<li>9.000–11.000 palavras visíveis mais laboratório executável;</li>
+<li>exemplos Python 3.14 tipados e concorrência testada com relógio/falhas controláveis;</li>
+<li>fake e RabbitMQ passam pela mesma suíte de contrato dentro da semântica suportada;</li>
+<li>nenhuma afirmação “exactly once” sem escopo e prova explícitos;</li>
+<li>pelo menos 25 cenários de aceitação automatizados ou documentados com evidência;</li>
+<li>resultados de efeito vêm de ledger externo consultado após o teste, nunca de fixture hardcoded;</li>
+<li>restore acontece em destino isolado e nunca sobrescreve a origem;</li>
+<li>falhas são reprodutíveis, reversíveis e não executam ação destrutiva no host;</li>
+<li>
+<p>conteúdo diferencia padrão, mecanismo, implementação e decisão local.</p>
+</li>
+<li>
+<p>[x] seis blocos, competências e dependências definidos;</p>
+</li>
+<li>[x] arquitetura neutral e adapters definidos;</li>
+<li>[x] agenda de falhas e invariantes definidos;</li>
+<li>[x] 25 cenários de aceitação definidos;</li>
+<li>[x] backup/restore e evidências definidos;</li>
+<li>[x] fontes primárias/canônicas selecionadas e versionadas;</li>
+<li>[x] escopo separado de LT01, LT03 e M12.</li>
+</ul>
+<p><strong>Decisão:</strong> LT02 está <code>ESPECIFICADO</code> e pode entrar em produção de material após as especificações LT03–LT04. Gate G0 aprovado.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

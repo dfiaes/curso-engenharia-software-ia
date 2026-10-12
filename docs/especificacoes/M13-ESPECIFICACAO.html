@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M13-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Especificação do M13 — Capstone Cartógrafo</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="especificação-do-m13--capstone-cartógrafo">Especificação do M13 — Capstone Cartógrafo</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/08/2026 · <strong>Estado:</strong> G0 APROVADO · <strong>Carga:</strong> 20 blocos / 40h</p>
+<p>Esta especificação converte o M13 em roteiro de integração, validação e lançamento. O módulo não introduz uma nova pilha: ele obriga as peças construídas em M01–M12 e LT01–LT04 a funcionar como um produto único, mensurável e operável.</p>
+<p>O HTML atual está bloqueado para estudo. Código simulado, <code>passed=True</code>, respostas hardcoded, chamadas <code>sleep()</code> fingindo integração e números de marketing não medidos são incompatíveis com esta especificação.</p>
+<h2 id="1-produto-e-resultado-final">1. Produto e resultado final</h2>
+<p><strong>Nome de trabalho:</strong> Cartógrafo / LegacyLens AI.</p>
+<p><strong>Problema:</strong> equipes gastam tempo e assumem risco para entender bases legadas antes de manutenção, incidente, auditoria ou modernização.</p>
+<p><strong>Produto:</strong> serviço multi-tenant que ingere uma base de código autorizada, extrai estrutura deterministicamente, cria índices de recuperação e grafo, responde perguntas com evidências, calcula sinais arquiteturais, conduz investigação por tools controladas e gera documentação útil.</p>
+<p><strong>Linguagem de implementação:</strong> Python 3.14. O produto pode analisar fixtures de C#, Python e outras linguagens por Tree-sitter; isso é dado do domínio, não ensino de .NET.</p>
+<p>Ao concluir M13, o aluno deve possuir:</p>
+<ul>
+<li>repositório reproduzível e documentado;</li>
+<li>API, worker e experiência web mínima utilizável;</li>
+<li>ingestão e análise determinísticas onde o problema permite;</li>
+<li>RAG, grafo e agente avaliados por datasets versionados;</li>
+<li>contratos OpenAPI, MCP e A2A testados;</li>
+<li>isolamento multi-tenant, segurança e billing demonstrados;</li>
+<li>deploy, rollback, backup/restore, SLO e runbooks exercitados;</li>
+<li>usuário piloto e feedback registrado;</li>
+<li>custo, qualidade, latência e valor medidos;</li>
+<li>release dossier e defesa técnica pública sem números inventados.</li>
+</ul>
+<h2 id="2-princípios-do-capstone">2. Princípios do capstone</h2>
+<ol>
+<li><strong>Determinístico primeiro:</strong> parse, símbolos, referências, paths, autorização e políticas não são delegados ao LLM.</li>
+<li><strong>Evidência antes de afirmação:</strong> toda claim de qualidade, economia ou produtividade aponta para execução, dataset ou entrevista.</li>
+<li><strong>Uma arquitetura, adapters substituíveis:</strong> modelos, billing, storage e deployment ficam atrás de portas explícitas.</li>
+<li><strong>Async para trabalho longo:</strong> ingestão retorna job; polling/evento informa estado; request HTTP não fica presa por horas.</li>
+<li><strong>Falha é requisito:</strong> cada etapa longa é retomável e idempotente.</li>
+<li><strong>Segurança atravessa tudo:</strong> tenant, identidade, autorização, secrets e audit não são middleware decorativo.</li>
+<li><strong>Release é operação:</strong> pronto inclui observabilidade, suporte, rollback, dados e custo.</li>
+<li><strong>Usuário real pode rejeitar a hipótese:</strong> feedback negativo é evidência válida; depoimento inventado reprova.</li>
+</ol>
+<h2 id="3-escopo-mínimo-e-cortes-explícitos">3. Escopo mínimo e cortes explícitos</h2>
+<h3 id="obrigatório">Obrigatório</h3>
+<ul>
+<li>ingestão de repositório local ou snapshot autorizado;</li>
+<li>suporte comprovado a ao menos duas linguagens por Tree-sitter;</li>
+<li>extração de símbolos e relações com fixtures douradas;</li>
+<li>busca híbrida e grafo;</li>
+<li>respostas com citações para arquivo/linhas e abstenção;</li>
+<li>workflow durável com tools estreitas;</li>
+<li>API HTTP e servidor MCP; A2A demonstrado em fluxo delimitado;</li>
+<li>fake de modelo obrigatório e pelo menos um adapter live opcional/configurável;</li>
+<li>multi-tenancy, RLS, quotas, usage ledger e billing fake;</li>
+<li>OpenTelemetry, SLO, alertas e runbooks;</li>
+<li>deploy reproduzível e restauração testada.</li>
+</ul>
+<h3 id="pode-ser-simplificado">Pode ser simplificado</h3>
+<ul>
+<li>UI server-rendered em Python/HTML; TypeScript não é pré-requisito;</li>
+<li>billing live permanece em test-mode;</li>
+<li>um único ambiente de produção de baixo custo, desde que rollback seja real;</li>
+<li>execução local de modelo pode ser um modo opcional se hardware for limitante.</li>
+</ul>
+<h3 id="fora-de-escopo">Fora de escopo</h3>
+<ul>
+<li>IDE completa, refatoração automática irrestrita ou geração de PR sem aprovação;</li>
+<li>suporte universal a linguagens;</li>
+<li>substituição de SAST, revisão humana ou ferramenta de migração;</li>
+<li>prometer precisão perfeita ou redução percentual antes do piloto;</li>
+<li>armazenar código real de empregador sem autorização formal.</li>
+</ul>
+<h2 id="4-arquitetura-integrada">4. Arquitetura integrada</h2>
+<pre><code class="language-text">Web/API/MCP/A2A
+      │ authn → authz → tenant → quota
+      ▼
+Application services / job API
+      │
+      ├── Ingestion pipeline ──► object store / source snapshot
+      │       └── Tree-sitter adapters ─► symbols/references
+      │
+      ├── Retrieval ─► lexical + vector + ACL ─► reranker
+      │
+      ├── Knowledge graph ─► relationships + architecture metrics
+      │
+      ├── Investigation workflow
+      │       ├── deterministic tools
+      │       ├── model port → fake/cloud/local adapters
+      │       └── checkpoint + policy + approval
+      │
+      └── Report/document generation with provenance
+
+PostgreSQL/RLS ─ job state ─ idempotency/outbox ─ usage/billing ledger
+      │
+OpenTelemetry ─ eval pipeline ─ SLI/SLO ─ alert/runbook
+      │
+declarative deployment ─ backup/restore ─ canary/rollback
+</code></pre>
+<h3 id="portas-mínimas">Portas mínimas</h3>
+<p><code>SourceRepository</code>, <code>LanguageParser</code>, <code>EmbeddingProvider</code>, <code>ModelGateway</code>, <code>VectorIndex</code>, <code>GraphStore</code>, <code>JobQueue</code>, <code>PolicyEngine</code>, <code>BillingProvider</code>, <code>ObjectStore</code> e <code>TelemetrySink</code>.</p>
+<p>Cada porta crítica tem fake determinístico e contract tests. Adapters podem compartilhar infraestrutura, mas não tipos proprietários no domínio.</p>
+<h2 id="5-os-vinte-blocos-executáveis">5. Os vinte blocos executáveis</h2>
+<p>Cada bloco termina com commit, evidência em <code>capstone/evidence/m13/BXX/</code> e decisão explícita <code>PASS</code>, <code>FAIL</code> ou <code>BLOCKED</code> com causa. <code>PASS</code> não pode ser digitado manualmente sem comando/artefato que o sustente.</p>
+<h2 id="bloco-1--release-contract-escopo-e-orçamento-de-evidência">Bloco 1 · Release contract, escopo e orçamento de evidência</h2>
+<p><strong>IDs:</strong> M13-B01-C01..05 · <strong>Dependências:</strong> M01, M04.</p>
+<p><strong>Entrada:</strong> PRD, ADRs, definição do Cartógrafo e matriz curricular.</p>
+<p><strong>Trabalho:</strong> congelar persona, problema, três jornadas críticas, não objetivos, supported languages, datasets, SLOs preliminares, orçamento/custo máximo e critérios go/no-go antes de observar o release candidate.</p>
+<p><strong>Saída:</strong> <code>docs/release-contract.md</code>, trace matrix detalhada e risk register inicial.</p>
+<p><strong>Aceitação:</strong> toda claim planejada possui método de medição; nenhuma meta pode ser relaxada silenciosamente após o teste.</p>
+<h2 id="bloco-2--baseline-reproduzível-do-repositório">Bloco 2 · Baseline reproduzível do repositório</h2>
+<p><strong>IDs:</strong> M13-B02-C01..04 · <strong>Dependências:</strong> M02, M03, LT04.</p>
+<p><strong>Entrada:</strong> peças produzidas nos módulos.</p>
+<p><strong>Trabalho:</strong> integrar workspace Python 3.14, <code>uv.lock</code>, configuração tipada, Compose, migrations, seeds não sensíveis, lint, type checking, unit/integration tests e build de imagem.</p>
+<p><strong>Saída:</strong> um comando documentado sobe o sistema limpo; CI gera artefato identificável.</p>
+<p><strong>Aceitação:</strong> clone limpo → setup → testes → build sem passos ocultos ou segredo local.</p>
+<h2 id="bloco-3--ingestão-segura-e-job-assíncrono">Bloco 3 · Ingestão segura e job assíncrono</h2>
+<p><strong>IDs:</strong> M13-B03-C01..05 · <strong>Dependências:</strong> M03, LT01, LT02, M12.</p>
+<p><strong>Trabalho:</strong> source snapshot autorizado, ignore rules, limites de arquivo/repositório, detecção de binário, secret policy, job idempotente, progresso, cancelamento e retomada.</p>
+<p><strong>Saída:</strong> endpoint/job ingere fixture grande sem prender request HTTP.</p>
+<p><strong>Aceitação:</strong> cancel/retry/crash não duplica snapshot nem deixa job impossível de reconciliar.</p>
+<h2 id="bloco-4--parsing-multi-language-com-tree-sitter">Bloco 4 · Parsing multi-language com Tree-sitter</h2>
+<p><strong>IDs:</strong> M13-B04-C01..06 · <strong>Dependências:</strong> M02, M10, M11.</p>
+<p><strong>Trabalho:</strong> adapters Tree-sitter em Python, queries por linguagem, símbolos, spans, imports/chamadas, tratamento de erro, versão de gramática e corpus dourado. Python <code>ast</code> pode existir apenas como adapter Python especializado, nunca fingir suporte multi-language.</p>
+<p><strong>Saída:</strong> <code>LanguageParser</code> com pelo menos duas implementações e fixtures esperadas.</p>
+<p><strong>Aceitação:</strong> 100% dos símbolos/relações definidos no corpus contratual são reproduzidos; erros de parse são medidos e não somem silenciosamente.</p>
+<h2 id="bloco-5--modelo-de-dados-migrations-e-isolamento">Bloco 5 · Modelo de dados, migrations e isolamento</h2>
+<p><strong>IDs:</strong> M13-B05-C01..05 · <strong>Dependências:</strong> M03, M07, M10, M12.</p>
+<p><strong>Trabalho:</strong> schema para tenant/repository/snapshot/file/symbol/edge/chunk/job/report/usage, constraints, lifecycle e RLS. Definir identificadores estáveis e estratégia incremental.</p>
+<p><strong>Saída:</strong> migrations forward e rollback seguro; dados de fixtures A/B.</p>
+<p><strong>Aceitação:</strong> integridade referencial, <code>WITH CHECK</code>, pool reuse e exclusão cross-store passam.</p>
+<h2 id="bloco-6--busca-híbrida-acl-e-abstenção">Bloco 6 · Busca híbrida, ACL e abstenção</h2>
+<p><strong>IDs:</strong> M13-B06-C01..06 · <strong>Dependências:</strong> M06, M07.</p>
+<p><strong>Trabalho:</strong> lexical + vector, filtros antes da recuperação, reranking, citations, threshold de abstenção e dataset de retrieval.</p>
+<p><strong>Saída:</strong> serviço de busca com benchmark versionado.</p>
+<p><strong>Aceitação:</strong> atinge limiar pré-registrado de Recall@k/MRR, zero vazamento cross-tenant e regressão dentro do budget definido em B1.</p>
+<h2 id="bloco-7--grafo-e-métricas-arquiteturais">Bloco 7 · Grafo e métricas arquiteturais</h2>
+<p><strong>IDs:</strong> M13-B07-C01..05 · <strong>Dependências:</strong> M10.</p>
+<p><strong>Trabalho:</strong> materializar entidades/relações, atualização incremental, travessias, provenance e métricas I/A/distância quando aplicáveis. Separar fato extraído de inferência do modelo.</p>
+<p><strong>Saída:</strong> consultas estruturais respondem perguntas que o RAG isolado não responde.</p>
+<p><strong>Aceitação:</strong> respostas estruturais conferem com corpus dourado e cada aresta aponta à origem.</p>
+<h2 id="bloco-8--gateway-de-modelos-e-outputs-estruturados">Bloco 8 · Gateway de modelos e outputs estruturados</h2>
+<p><strong>IDs:</strong> M13-B08-C01..05 · <strong>Dependências:</strong> M05, M06, M11.</p>
+<p><strong>Trabalho:</strong> tipos internos, fake, adapter cloud e/ou local, structured output, timeout, retry budget, token/cost usage e fallback compatível com requisitos.</p>
+<p><strong>Saída:</strong> mesma suíte roda no fake e nos adapters habilitados.</p>
+<p><strong>Aceitação:</strong> remover SDK proprietário não altera domínio; erros e usage são normalizados.</p>
+<h2 id="bloco-9--agente-tools-e-workflow-durável">Bloco 9 · Agente, tools e workflow durável</h2>
+<p><strong>IDs:</strong> M13-B09-C01..06 · <strong>Dependências:</strong> M08, M10, LT02, M12.</p>
+<p><strong>Trabalho:</strong> tools estreitas, estado tipado, budget de passos, stop conditions, checkpoint, retomada, idempotência, policy e aprovação ligada.</p>
+<p><strong>Saída:</strong> investigação longa retoma após kill sem repetir chamada paga/efeito.</p>
+<p><strong>Aceitação:</strong> execução real aparece em trace; nenhuma resposta hardcoded ou <code>sleep()</code> conta como agente.</p>
+<h2 id="bloco-10--contratos-openapi-mcp-e-a2a">Bloco 10 · Contratos OpenAPI, MCP e A2A</h2>
+<p><strong>IDs:</strong> M13-B10-C01..05 · <strong>Dependências:</strong> M03, M08, M09.</p>
+<p><strong>Trabalho:</strong> OpenAPI versionado, Problem Details, paginação/job API, servidor MCP interoperável e fluxo A2A limitado. Contract tests verificam schemas, auth e erros.</p>
+<p><strong>Saída:</strong> clientes independentes descobrem e exercitam capacidades documentadas.</p>
+<p><strong>Aceitação:</strong> breaking change é detectada; protocolo não depende do framework interno.</p>
+<h2 id="bloco-11--evals-e-quality-gate">Bloco 11 · Evals e quality gate</h2>
+<p><strong>IDs:</strong> M13-B11-C01..06 · <strong>Dependências:</strong> M06, M07, M10.</p>
+<p><strong>Trabalho:</strong> datasets golden path, fora de escopo, injection, leakage, edge cases e regressão; retrieval, structural e answer metrics; judge calibrado; intervalos/variância quando cabível.</p>
+<p><strong>Saída:</strong> relatório comparável por commit/model/prompt/dataset.</p>
+<p><strong>Aceitação:</strong> CI falha por regressão real; trocar <code>passed</code> manualmente não altera cálculo.</p>
+<h2 id="bloco-12--hardening-de-segurança-e-multi-tenancy">Bloco 12 · Hardening de segurança e multi-tenancy</h2>
+<p><strong>IDs:</strong> M13-B12-C01..06 · <strong>Dependências:</strong> M12.</p>
+<p><strong>Trabalho:</strong> executar M12-AT-001..060 aplicáveis, atualizar threat model, corrigir P0/P1 e registrar risco residual.</p>
+<p><strong>Saída:</strong> relatório red-team e tenant isolation report.</p>
+<p><strong>Aceitação:</strong> zero P0/P1 aberto; nenhum controle depende apenas de prompt/regex.</p>
+<h2 id="bloco-13--metering-entitlement-e-billing">Bloco 13 · Metering, entitlement e billing</h2>
+<p><strong>IDs:</strong> M13-B13-C01..05 · <strong>Dependências:</strong> M05, M12.</p>
+<p><strong>Trabalho:</strong> usage ledger, quotas, planos, entitlement, fake provider, Stripe test-mode opcional, webhooks e reconciliação. Medir custo completo por análise.</p>
+<p><strong>Saída:</strong> dashboard de custo, receita simulada pelo test-mode e margem por plano.</p>
+<p><strong>Aceitação:</strong> eventos duplicados/desordenados convergem; números derivam do ledger.</p>
+<h2 id="bloco-14--observabilidade-slos-e-runbooks">Bloco 14 · Observabilidade, SLOs e runbooks</h2>
+<p><strong>IDs:</strong> M13-B14-C01..06 · <strong>Dependências:</strong> M06, M12, LT01.</p>
+<p><strong>Trabalho:</strong> traces ponta a ponta, métricas de usuário/qualidade/custo, logs sanitizados, SLO, burn-rate alerts e runbooks.</p>
+<p><strong>Saída:</strong> dashboard permite ir do sintoma à dependência/execução.</p>
+<p><strong>Aceitação:</strong> failure injection aciona alerta correto; PII/código não aparecem na telemetria por padrão.</p>
+<h2 id="bloco-15--experiência-web-onboarding-e-documentação">Bloco 15 · Experiência web, onboarding e documentação</h2>
+<p><strong>IDs:</strong> M13-B15-C01..06 · <strong>Dependências:</strong> M03, M04.</p>
+<p><strong>Trabalho:</strong> jornada cadastro → ingestão → primeira pergunta → relatório; empty/error/progress states; acessibilidade WCAG 2.2 AA nas telas críticas; tutorial, how-to, reference e explanation pelo Diátaxis.</p>
+<p><strong>Saída:</strong> usuário piloto conclui jornada sem intervenção do autor.</p>
+<p><strong>Aceitação:</strong> teste de usabilidade produz observações; problemas não são reescritos como sucesso.</p>
+<h2 id="bloco-16--performance-capacidade-e-modo-local">Bloco 16 · Performance, capacidade e modo local</h2>
+<p><strong>IDs:</strong> M13-B16-C01..06 · <strong>Dependências:</strong> LT01, LT02, M11.</p>
+<p><strong>Trabalho:</strong> perfil de carga, p50/p95/p99, saturação, backpressure, capacity estimate, repositório grande e comparação local/cloud no mesmo dataset.</p>
+<p><strong>Saída:</strong> relatório de capacidade, custo e limites conhecidos.</p>
+<p><strong>Aceitação:</strong> SLO e budget do B1 são exercitados; teste registra ambiente e não extrapola conclusão além da amostra.</p>
+<h2 id="bloco-17--deploy-dados-e-rollback">Bloco 17 · Deploy, dados e rollback</h2>
+<p><strong>IDs:</strong> M13-B17-C01..06 · <strong>Dependências:</strong> LT03, LT04.</p>
+<p><strong>Trabalho:</strong> infraestrutura declarativa, configuração/secrets, migrations compatíveis, canary, backup, restore e rollback de aplicação/dados.</p>
+<p><strong>Saída:</strong> staging/produção reproduzível e restore report.</p>
+<p><strong>Aceitação:</strong> release ruim é detectada e revertida; restore recupera RPO/RTO declarados.</p>
+<h2 id="bloco-18--production-readiness-review-e-game-day">Bloco 18 · Production Readiness Review e game day</h2>
+<p><strong>IDs:</strong> M13-B18-C01..06 · <strong>Dependências:</strong> M12, LT03, LT04.</p>
+<p><strong>Trabalho:</strong> revisar arquitetura, dependências, capacidade, segurança, dados, observabilidade, operação, acesso, suporte e rollback. Conduzir game day com papéis e comunicação.</p>
+<p><strong>Saída:</strong> <code>production-readiness-review.md</code>, incident timeline e postmortem.</p>
+<p><strong>Aceitação:</strong> go/no-go é decidido por evidência; NO-GO é resultado legítimo e deve gerar plano.</p>
+<h2 id="bloco-19--piloto-com-usuário-e-validação-do-problema">Bloco 19 · Piloto com usuário e validação do problema</h2>
+<p><strong>IDs:</strong> M13-B19-C01..06 · <strong>Dependências:</strong> B1–B18.</p>
+<p><strong>Trabalho:</strong> recrutar usuário autorizado, observar tarefa real, medir baseline manual, tempo/erros com produto, confiança, utilidade e disposição para repetir/pagar. Separar evidência de opinião.</p>
+<p><strong>Saída:</strong> notas anonimizadas, métricas, oportunidades, objeções e decisão de produto.</p>
+<p><strong>Aceitação:</strong> existe consentimento e contexto; nenhuma citação/depoimento é fabricado; hipótese pode ser rejeitada.</p>
+<h2 id="bloco-20--lançamento-portfólio-e-defesa-técnica">Bloco 20 · Lançamento, portfólio e defesa técnica</h2>
+<p><strong>IDs:</strong> M13-B20-C01..07 · <strong>Dependências:</strong> todos.</p>
+<p><strong>Trabalho:</strong> fechar changelog/versionamento, launch checklist, landing page factual, demo, post técnico, defesa arquitetural, retrospective e roadmap de 30/60/90 dias.</p>
+<p><strong>Saída:</strong> release versionada, dossier público sem dados sensíveis e dossier privado completo.</p>
+<p><strong>Aceitação:</strong> toda métrica publicada aponta para evidência; limitações e riscos aparecem; defesa explica trade-offs e incidentes, não apenas componentes.</p>
+<h2 id="6-acceptance-suite-do-produto">6. Acceptance suite do produto</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Área</th>
+<th>Cenário</th>
+<th>Condição de aprovação</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CAP-REP-001</td>
+<td>reprodutibilidade</td>
+<td>clone limpo até build</td>
+<td>um fluxo documentado, sem passo oculto</td>
+</tr>
+<tr>
+<td>CAP-ING-001</td>
+<td>ingestão</td>
+<td>snapshot pequeno/grande</td>
+<td>job conclui, progresso correto e artefato íntegro</td>
+</tr>
+<tr>
+<td>CAP-ING-002</td>
+<td>ingestão</td>
+<td>cancel/retry/crash</td>
+<td>retomada sem duplicidade</td>
+</tr>
+<tr>
+<td>CAP-PAR-001</td>
+<td>parser</td>
+<td>corpus de duas linguagens</td>
+<td>100% do contrato de símbolos/relações esperado</td>
+</tr>
+<tr>
+<td>CAP-PAR-002</td>
+<td>parser</td>
+<td>arquivo parcial/inválido</td>
+<td>erro medido, análise útil preservada</td>
+</tr>
+<tr>
+<td>CAP-DAT-001</td>
+<td>dados</td>
+<td>migrations e rollback</td>
+<td>schema íntegro e compatível com estratégia declarada</td>
+</tr>
+<tr>
+<td>CAP-TEN-001</td>
+<td>tenant</td>
+<td>todos os data planes</td>
+<td>zero vazamento A↔B</td>
+</tr>
+<tr>
+<td>CAP-RAG-001</td>
+<td>retrieval</td>
+<td>dataset versionado</td>
+<td>limiar pré-registrado e regressão dentro do budget</td>
+</tr>
+<tr>
+<td>CAP-RAG-002</td>
+<td>resposta</td>
+<td>evidência ausente</td>
+<td>sistema se abstém sem inventar localização</td>
+</tr>
+<tr>
+<td>CAP-GRA-001</td>
+<td>grafo</td>
+<td>perguntas estruturais</td>
+<td>resultado confere com corpus e provenance</td>
+</tr>
+<tr>
+<td>CAP-LLM-001</td>
+<td>adapters</td>
+<td>fake/cloud/local habilitados</td>
+<td>mesma suíte de contrato passa</td>
+</tr>
+<tr>
+<td>CAP-AGT-001</td>
+<td>workflow</td>
+<td>kill e retomada</td>
+<td>sem repetição de efeito/chamada paga</td>
+</tr>
+<tr>
+<td>CAP-API-001</td>
+<td>HTTP</td>
+<td>OpenAPI/Problem Details/job</td>
+<td>contract tests passam</td>
+</tr>
+<tr>
+<td>CAP-MCP-001</td>
+<td>MCP</td>
+<td>cliente independente</td>
+<td>descoberta e execução interoperáveis</td>
+</tr>
+<tr>
+<td>CAP-A2A-001</td>
+<td>A2A</td>
+<td>fluxo delimitado</td>
+<td>auth, estado e artifact verificáveis</td>
+</tr>
+<tr>
+<td>CAP-EVL-001</td>
+<td>evals</td>
+<td>regressão semeada</td>
+<td>CI falha pelo cálculo correto</td>
+</tr>
+<tr>
+<td>CAP-SEC-001</td>
+<td>segurança</td>
+<td>catálogo M12</td>
+<td>zero P0/P1 falhando</td>
+</tr>
+<tr>
+<td>CAP-BIL-001</td>
+<td>billing</td>
+<td>duplicidade/desordem</td>
+<td>ledger e entitlement convergem</td>
+</tr>
+<tr>
+<td>CAP-CST-001</td>
+<td>custo</td>
+<td>análise completa</td>
+<td>custo e margem derivados de uso real/test-mode</td>
+</tr>
+<tr>
+<td>CAP-OBS-001</td>
+<td>observabilidade</td>
+<td>request → job → tools</td>
+<td>correlação ponta a ponta sem dado sensível</td>
+</tr>
+<tr>
+<td>CAP-SLO-001</td>
+<td>confiabilidade</td>
+<td>burn-rate failure</td>
+<td>alerta/runbook corretos</td>
+</tr>
+<tr>
+<td>CAP-PRF-001</td>
+<td>performance</td>
+<td>perfil de carga declarado</td>
+<td>SLO cumprido ou NO-GO documentado</td>
+</tr>
+<tr>
+<td>CAP-DR-001</td>
+<td>dados</td>
+<td>backup/restore</td>
+<td>RPO/RTO medidos e atendidos ou NO-GO</td>
+</tr>
+<tr>
+<td>CAP-RBK-001</td>
+<td>release</td>
+<td>canary ruim</td>
+<td>rollback concluído e observado</td>
+</tr>
+<tr>
+<td>CAP-UX-001</td>
+<td>usabilidade</td>
+<td>primeira jornada</td>
+<td>piloto conclui ou bloqueios são registrados</td>
+</tr>
+<tr>
+<td>CAP-VAL-001</td>
+<td>valor</td>
+<td>tarefa real</td>
+<td>baseline e resultado medidos, sem claim fabricada</td>
+</tr>
+<tr>
+<td>CAP-DOC-001</td>
+<td>documentação</td>
+<td>onboarding/operação/API</td>
+<td>quatro modos Diátaxis presentes e testados</td>
+</tr>
+<tr>
+<td>CAP-ACC-001</td>
+<td>acessibilidade</td>
+<td>jornadas críticas</td>
+<td>WCAG 2.2 AA avaliada com teste automático + humano</td>
+</tr>
+<tr>
+<td>CAP-SUP-001</td>
+<td>supply chain</td>
+<td>release artifact</td>
+<td>SBOM/proveniência/assinatura verificáveis</td>
+</tr>
+<tr>
+<td>CAP-LCH-001</td>
+<td>lançamento</td>
+<td>dossier e texto público</td>
+<td>cada claim possui evidence ID</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-stop-conditions-e-gono-go">7. Stop conditions e go/no-go</h2>
+<p>O release é <strong>NO-GO</strong> se qualquer condição ocorrer:</p>
+<ul>
+<li>P0/P1 de segurança aberto;</li>
+<li>vazamento cross-tenant em qualquer data plane;</li>
+<li>restore não testado ou RPO/RTO desconhecidos;</li>
+<li>regressão acima do budget pré-registrado;</li>
+<li>custo unitário torna o plano vendido estruturalmente negativo;</li>
+<li>ausência de rollback observável;</li>
+<li>telemetria contém código, secret ou PII sem justificativa/controle;</li>
+<li>jornada central não pode ser concluída por usuário piloto;</li>
+<li>métricas do material público não podem ser reproduzidas.</li>
+</ul>
+<p>NO-GO não reprova o aluno se ele identifica corretamente a causa, preserva evidência e produz plano. Lançar apesar do bloqueador reprova.</p>
+<h2 id="8-release-dossier">8. Release dossier</h2>
+<pre><code class="language-text">capstone/evidence/release/
+  manifest.yaml                 # commit, versões, ambiente, datasets
+  traceability.csv              # requisito → teste → evidência
+  test-results/
+  eval-results/
+  security/
+  tenant-isolation/
+  performance/
+  cost-and-margin/
+  slo-and-incidents/
+  backup-restore/
+  supply-chain/
+  usability-and-pilot/
+  production-readiness-review.md
+  go-no-go.md
+  known-limitations.md
+</code></pre>
+<p>Cada artefato recebe ID estável, timestamp, comando, versão e resultado. Material público referencia apenas evidências anonimizadas e autorizadas.</p>
+<h2 id="9-checkpoint-e-defesa-final">9. Checkpoint e defesa final</h2>
+<h3 id="demonstração-de-45-minutos">Demonstração de 45 minutos</h3>
+<ol>
+<li>problema e jornada do usuário;</li>
+<li>ingestão real e resposta com provenance;</li>
+<li>pergunta estrutural resolvida pelo grafo;</li>
+<li>workflow interrompido e retomado;</li>
+<li>troca de adapter de modelo;</li>
+<li>ataque e isolamento cross-tenant;</li>
+<li>dashboard de eval/custo/SLO;</li>
+<li>rollback ou restore demonstrado;</li>
+<li>evidência do piloto e limitações;</li>
+<li>decisão go/no-go.</li>
+</ol>
+<h3 id="defesa-técnica">Defesa técnica</h3>
+<ul>
+<li>justificar fronteiras e trade-offs;</li>
+<li>localizar três pontos de maior blast radius;</li>
+<li>explicar por que uma parte foi determinística e outra probabilística;</li>
+<li>defender consistência/idempotência e modelo de tenant;</li>
+<li>demonstrar como mede qualidade e evita eval theater;</li>
+<li>calcular custo/margem de um caso real;</li>
+<li>explicar o incidente do game day e mudanças decorrentes;</li>
+<li>escolher o próximo investimento e o que deliberadamente não fará.</li>
+</ul>
+<h2 id="10-fontes-e-versões">10. Fontes e versões</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte</th>
+<th>Versão/data</th>
+<th>Uso</th>
+<th>Obsolescência</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M13-01</td>
+<td><a href="https://tree-sitter.github.io/tree-sitter/">Tree-sitter</a></td>
+<td>docs consultadas 14/08/2026</td>
+<td>parsing multi-language</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-M13-02</td>
+<td><a href="https://tree-sitter.github.io/py-tree-sitter/">py-tree-sitter</a></td>
+<td>0.26.0</td>
+<td>binding Python</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-M13-03</td>
+<td><a href="https://spec.openapis.org/oas/v3.2.0.html">OpenAPI</a></td>
+<td>3.2.0, 19/09/2025</td>
+<td>contrato HTTP</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-M13-04</td>
+<td><a href="https://json-schema.org/specification">JSON Schema</a></td>
+<td>Draft 2020-12</td>
+<td>contratos de dados</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-M13-05</td>
+<td><a href="https://www.rfc-editor.org/rfc/rfc9457.html">Problem Details</a></td>
+<td>RFC 9457</td>
+<td>erros interoperáveis</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-M13-06</td>
+<td><a href="https://modelcontextprotocol.io/specification/">MCP Specification</a></td>
+<td>versão vigente na regeneração</td>
+<td>interoperabilidade tool/context</td>
+<td>crítica</td>
+</tr>
+<tr>
+<td>SRC-M13-07</td>
+<td><a href="https://a2a-protocol.org/latest/specification/">A2A Specification</a></td>
+<td>versão vigente na regeneração</td>
+<td>comunicação entre agentes</td>
+<td>crítica</td>
+</tr>
+<tr>
+<td>SRC-M13-08</td>
+<td><a href="https://opentelemetry.io/docs/specs/semconv/">OpenTelemetry Semantic Conventions</a></td>
+<td>vigente na regeneração</td>
+<td>observabilidade</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-M13-09</td>
+<td><a href="https://dora.dev/research/2025/dora-report/">DORA 2025</a></td>
+<td>relatório v2025.2</td>
+<td>entrega e IA como amplificador</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-M13-10</td>
+<td><a href="https://sre.google/sre-book/launch-checklist/">Google SRE Launch Checklist</a></td>
+<td>edição online</td>
+<td>prontidão de lançamento</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-M13-11</td>
+<td><a href="https://sre.google/sre-book/evolving-sre-engagement-model/">Google SRE Production Readiness Review</a></td>
+<td>edição online</td>
+<td>PRR</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-M13-12</td>
+<td><a href="https://sre.google/resources/practices-and-processes/production-launch-planning/">Google SRE Production Launch Planning</a></td>
+<td>consultada 14/08/2026</td>
+<td>plano de lançamento</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-M13-13</td>
+<td><a href="https://semver.org/">Semantic Versioning</a></td>
+<td>2.0.0</td>
+<td>versionamento público</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-M13-14</td>
+<td><a href="https://diataxis.fr/">Diátaxis</a></td>
+<td>consultada 14/08/2026</td>
+<td>documentação para uso/estudo</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-M13-15</td>
+<td><a href="https://www.w3.org/TR/WCAG22/">WCAG</a></td>
+<td>2.2 Recommendation</td>
+<td>acessibilidade</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-M13-16</td>
+<td><a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/">OWASP Agentic Top 10</a></td>
+<td>edição 2026</td>
+<td>acceptance de segurança</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-M13-17</td>
+<td><a href="https://slsa.dev/spec/v1.2/">SLSA</a></td>
+<td>1.2</td>
+<td>proveniência do release</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-M13-18</td>
+<td><a href="https://www.finops.org/framework/capabilities/unit-economics/">FinOps Unit Economics</a></td>
+<td>Framework 2026</td>
+<td>custo e valor</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-M13-19</td>
+<td><a href="https://www.producttalk.org/sourcing-opportunities/">Product Talk — opportunity mapping</a></td>
+<td>Teresa Torres; consultada 14/08/2026</td>
+<td>organizar evidência do piloto</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-M13-20</td>
+<td>fontes de M06, M07, M09, M10, M12 e LT01–LT04</td>
+<td>versões registradas nesses artefatos</td>
+<td>integração</td>
+<td>variável</td>
+</tr>
+</tbody>
+</table>
+<h2 id="11-critérios-editoriais-do-novo-m13">11. Critérios editoriais do novo M13</h2>
+<ul>
+<li>20 blocos reais, um <code>&lt;h2&gt;</code> por bloco, sem condensar em cinco seções;</li>
+<li>14.000–18.000 palavras visíveis, priorizando comandos, critérios e diagnóstico;</li>
+<li>mínimo de 30 resultados esperados;</li>
+<li>código somente quando integra peças; não repetir teoria dos módulos anteriores;</li>
+<li>exemplos executáveis ou explicitamente marcados como pseudocódigo arquitetural;</li>
+<li>nenhum teste com resultado fixo e nenhuma métrica de marketing pré-preenchida;</li>
+<li>diagnóstico com pelo menos 20 falhas de integração/lançamento;</li>
+<li>cada bloco aponta para módulos-fonte e evidence path;</li>
+<li>companion permitido para release checklist e catálogo de falhas;</li>
+<li>o post público é template com placeholders derivados de evidências, nunca números prontos.</li>
+</ul>
+<h2 id="12-gate-g0">12. Gate G0</h2>
+<ul>
+<li>[x] produto, usuário e problema delimitados;</li>
+<li>[x] escopo obrigatório, simplificável e fora de escopo definidos;</li>
+<li>[x] vinte blocos com dependências, entrada, saída e aceitação;</li>
+<li>[x] arquitetura e portas agnósticas definidas;</li>
+<li>[x] acceptance suite com 30 cenários definida;</li>
+<li>[x] stop conditions e go/no-go definidos;</li>
+<li>[x] release dossier e checkpoint definidos;</li>
+<li>[x] validação com usuário real sem fabricação definida;</li>
+<li>[x] fontes primárias/canônicas selecionadas;</li>
+<li>[x] Python confirmado como linguagem de implementação;</li>
+<li>[x] métricas simuladas explicitamente proibidas.</li>
+</ul>
+<p><strong>Decisão:</strong> M13 está <code>ESPECIFICADO</code> e pode entrar em regeneração no marco R2. O HTML atual permanece <code>REFAZER / BLOQUEADO PARA ESTUDO</code> até aprovação dos gates G1–G6.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

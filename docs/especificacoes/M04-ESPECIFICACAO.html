@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M04-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M04 — especificação de escopo e evidência</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="m04--especificação-de-escopo-e-evidência">M04 — especificação de escopo e evidência</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/09/2026 · <strong>Estado:</strong> G0 aprovado; G1 em produção</p>
+<h2 id="1-decisão-curricular">1. Decisão curricular</h2>
+<p>O M04 ensina documentação como artefato de engenharia com dois leitores:
+humano e agente. O agente lê tudo, obedece com confiança e não tem colega
+para perguntar — por isso doc ausente vira invenção e doc desatualizada vira
+erro confiante. O módulo cobre taxonomia e contexto, diagrama como código,
+ADR/postmortem e manutenção automatizada com verificação executável.</p>
+<p>Python 3.14 é a linguagem canônica. O laboratório é um verificador de
+documentação (<code>design_guard</code>) com fixtures locais: ADR lint, checagem de
+diagramas, detecção de drift e fitness functions de estrutura. Nenhum
+serviço externo, conta ou rede é requisito. A integração no Capstone
+(<code>capstone/docs/</code>) ocorre somente após especificação própria do Capstone;
+neste módulo, o produto é o gabarito + o verificador, exercitados sobre um
+diretório de demonstração local.</p>
+<h2 id="2-resultado-limites-e-integração">2. Resultado, limites e integração</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Definição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carga</td>
+<td>quatro blocos de duas horas, total de 8 h</td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>M01 (specs, guardrails), M02 (Python, testes), M03 (CI, check.sh)</td>
+</tr>
+<tr>
+<td>Saída</td>
+<td>gabarito de docs (PRD/arquitetura/ADR/runbook/output-spec) + verificador com exit code + prompt de revisor versionado</td>
+</tr>
+<tr>
+<td>Peça do capstone</td>
+<td>gabarito e verificador reutilizáveis; a aplicação em <code>capstone/</code> só ocorre após spec própria</td>
+</tr>
+<tr>
+<td>Não cobre</td>
+<td>evals de LLM (M06), RAG/grafos (M07/M10), billing/segurança (M12)</td>
+</tr>
+<tr>
+<td>Evidência mínima</td>
+<td>comandos, versões e saída executada; nenhum número universal sem método</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-arquitetura-do-laboratório">3. Arquitetura do laboratório</h2>
+<pre><code class="language-text">docs de demonstração (demo_docs/)
+        │
+        ▼
+design_guard ──► ADR lint (seções, status, &quot;porque&quot;)
+             ──► referências (caminhos citados existem)
+             ──► mermaid (cerca, tipo conhecido)
+             ──► obsolescência (git: doc parada, código andou)
+             ──► fitness (cobertura de decisão por área)
+        │
+        ▼
+exit code (0 limpo / 1 violação) + relatório
+</code></pre>
+<p>A referência fica em <code>modulos/M04-design-docs-com-ia/lab/</code>. O roteiro
+<code>Laboratório guiado M04</code>, no final do HTML, cria cópia de trabalho em
+diretório temporário possuído pelo laboratório.</p>
+<h2 id="4-blocos-competências-e-evidência">4. Blocos, competências e evidência</h2>
+<table>
+<thead>
+<tr>
+<th>Bloco</th>
+<th>Competências observáveis</th>
+<th>Evidência planejada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B01 · taxonomia e contexto</td>
+<td>classificar docs; separar Diátaxis; aplicar 3 camadas de contexto; hierarquia da verdade</td>
+<td>auditoria de docs + AGENTS enxuto</td>
+</tr>
+<tr>
+<td>B02 · diagrama como código</td>
+<td>escolher nível C4; escrever 5 tipos Mermaid; alternativa textual; distinguir gerado vs. escrito</td>
+<td>C4 L1/L2 + sequence com erro</td>
+</tr>
+<tr>
+<td>B03 · ADR e postmortem</td>
+<td>anatomia do ADR; critério de custo de reversão; imutabilidade; postmortem blameless</td>
+<td>ADR com custo + postmortem com ações</td>
+</tr>
+<tr>
+<td>B04 · manutenção</td>
+<td>4 classes de drift; linter com exit code; revisor com restrições; runbook/front matter</td>
+<td><code>design_guard</code> verde + mutante rejeitado</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-cenários-de-aceitação">5. Cenários de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Oráculo e caso relevante</th>
+<th>Bloco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M04-AT-001</td>
+<td>classificar 5 documentos nas categorias sem misturar tipos Diátaxis</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M04-AT-002</td>
+<td>auditoria aponta doc desatualizada como bug (hierarquia da verdade)</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M04-AT-003</td>
+<td>AGENTS com &lt;200 linhas, só invariantes, sem duplicar CLAUDE</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M04-AT-004</td>
+<td>C4 L1/L2 com ≤7 elementos, uma pergunta por diagrama</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M04-AT-005</td>
+<td>sequence com caminho de erro; state para coluna <code>status</code></td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M04-AT-006</td>
+<td>diagrama tem alternativa textual/legenda equivalente</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M04-AT-007</td>
+<td>ADR com todas as seções, status válido e "porque" na Decisão</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M04-AT-008</td>
+<td>classificar merece/não-merece ADR pelo custo de reversão</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M04-AT-009</td>
+<td>postmortem com linha do tempo, fatores plurais, ações com dono</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M04-AT-010</td>
+<td>linter acusa ref quebrada, ADR sem porque, mermaid inválido e obsoleta</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M04-AT-011</td>
+<td>mutante (ref quebrada inserida) é rejeitado com exit 1; revertido, verde</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M04-AT-012</td>
+<td>runbook sintoma→comando; front matter <code>documenta:</code> liga doc a código</td>
+<td>B04</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-fontes-e-versões">6. Fontes e versões</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte e uso</th>
+<th>Tipo</th>
+<th>Risco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M04-01</td>
+<td><a href="https://diataxis.fr/">Diátaxis</a> — os quatro tipos de doc</td>
+<td>canônica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M04-02</td>
+<td><a href="https://c4model.com/">C4 model (Simon Brown)</a> — níveis de abstração</td>
+<td>canônica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M04-03</td>
+<td><a href="https://adr.github.io/madr/">MADR 4.0</a> — template e seções de ADR</td>
+<td>canônica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M04-04</td>
+<td><a href="https://sre.google/workbook/table-of-contents/">Google SRE workbook — postmortem</a> — cultura blameless</td>
+<td>canônica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M04-05</td>
+<td><a href="https://mermaid.js.org/">Mermaid docs</a> — sintaxe dos diagramas</td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M04-06</td>
+<td><a href="https://structurizr.com/">Structurizr DSL</a> — alternativa com layout automático</td>
+<td>documentação oficial</td>
+<td>médio</td>
+</tr>
+</tbody>
+</table>
+<p>Consultadas em 14/09/2026. Ferramenta e sintaxe (Mermaid) revalidar em até
+90 dias. Sinais de mercado (adoção de <code>AGENTS.md</code>) são contextuais e não
+fundamentam regras.</p>
+<h2 id="7-panorama-de-prática-vigente">7. Panorama de prática vigente</h2>
+<p>Arquivos de instruções de repositório (<code>AGENTS.md</code>/<code>CLAUDE.md</code>) e diagramas
+Mermaid renderizados no GitHub são prática observável em 2026 — sustentam a
+decisão didática de ensinar esses formatos. Não provam qualidade de doc nem
+autorizam recomendação universal de ferramenta.</p>
+<h2 id="8-gates-e-decisão-g0">8. Gates e decisão G0</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Estado</th>
+<th>Critério</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G0 · escopo</td>
+<td><strong>APROVADO</strong></td>
+<td>quatro blocos, 12 cenários, fontes classificadas, lab local e limites definidos</td>
+</tr>
+<tr>
+<td>G1–G6</td>
+<td>EM PRODUÇÃO/PENDENTE</td>
+<td>HTML legado em revisão; lab e avaliação em construção neste ciclo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisão de G0:</strong> aprovada em 14/09/2026 pelo orquestrador. Define o
+trabalho; não certifica HTML legado ou lab inexistente.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

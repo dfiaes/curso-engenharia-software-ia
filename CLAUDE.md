@@ -53,7 +53,7 @@ Um único arquivo, [`STATUS.md`](STATUS.md), com uma linha por módulo: `pronto`
 
 - Commits, PRs e READMEs de lab em inglês, imperativo e escopo curto (`F03: add heap exercise`). Material didático e conversa em português.
 - Segredos em `.env` (nunca commitados), `.env.example` atualizado, sem caminho absoluto de máquina no código.
-- `python3 tools/build_course_portal.py` regenera o portal a partir de `portal/course-source.json` e dos `h2` dos módulos; `python3 tools/check_course.py` verifica links e âncoras.
+- `python3 tools/build_course_portal.py` regenera o portal (e chama `tools/build_docs.py`, que gera o `.html` de cada `.md` de documentação ao lado dele; precisa do pacote `markdown`, ou `uv run --with markdown python tools/build_course_portal.py`; não edite os `.html` gerados) a partir de `portal/course-source.json` e dos `h2` dos módulos; `python3 tools/check_course.py` verifica links e âncoras.
 
 ## Tutoria (como o aluno pede ajuda)
 

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M07-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M07 — especificação de escopo e evidência</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="m07--especificação-de-escopo-e-evidência">M07 — especificação de escopo e evidência</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/09/2026 · <strong>Estado:</strong> G0 aprovado; G1 em produção</p>
+<h2 id="1-decisão-curricular">1. Decisão curricular</h2>
+<p>O M07 ensina RAG como pipeline de 18 etapas, não como "embedar e
+buscar": chunking que preserva sentido, armazenamento com metadados,
+busca híbrida com fusão, reranking, filtro de permissão antes da
+relevância e abstenção calibrada. Similaridade é candidato barato, nunca
+veredito — a arquitetura é funil.</p>
+<p>O corpus do laboratório é código Python com origem declarada (autoria do
+curso, licença MIT no fixture) — sem pré-requisito de outra linguagem e
+sem conta, rede ou banco externo. Embeddings e rerank usam falsos
+determinísticos locais; pgvector/HNSW e modelos reais são retratados na
+teoria com SQL de referência, e a execução contra PostgreSQL real fica
+marcada como bloqueada sem Docker. A integração no Capstone
+(<code>services/retrieval/</code>) só ocorre após spec própria.</p>
+<h2 id="2-resultado-limites-e-integração">2. Resultado, limites e integração</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Definição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carga</td>
+<td>oito blocos de duas horas, total de 16 h</td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>M02 (Python/AST), M03 (PostgreSQL), M05 (custo/cache), M06 (evals)</td>
+</tr>
+<tr>
+<td>Saída</td>
+<td>pipeline local com chunking, híbrida, rerank, ACL, abstenção e eval</td>
+</tr>
+<tr>
+<td>Peça do capstone</td>
+<td>camada <code>services/retrieval/</code>; integração só após spec própria</td>
+</tr>
+<tr>
+<td>Não cobre</td>
+<td>grafos (M10), agentes (M08), produção multi-tenant (M12)</td>
+</tr>
+<tr>
+<td>Evidência mínima</td>
+<td>comandos, versões e saída executada; recall só com corpus e queries declarados</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-arquitetura-do-laboratório">3. Arquitetura do laboratório</h2>
+<pre><code class="language-text">corpus Python (fixture) ──► chunking estrutural (AST) ──► metadados
+        │                            │
+        ▼                            ▼
+ fake embeddings ──► store ──► ACL primeiro ──► híbrida (léxico+vetor, RRF)
+                                                     │
+                                                     ▼
+                                              rerank falso ──► limiar ──► contexto/abstenção
+                                                     │
+                                                     ▼
+                                              eval (recall/MRR/citação) + ablação
+</code></pre>
+<p>A referência fica em <code>modulos/M07-rag-de-verdade/lab/</code>. O roteiro
+<code>Laboratório guiado M07</code>, no final do HTML, cria cópia de trabalho em
+diretório temporário possuído pelo laboratório.</p>
+<h2 id="4-blocos-competências-e-evidência">4. Blocos, competências e evidência</h2>
+<table>
+<thead>
+<tr>
+<th>Bloco</th>
+<th>Competências observáveis</th>
+<th>Evidência planejada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B01 · embeddings</td>
+<td>limites, métricas, migração</td>
+<td>sondas de negação/identificador</td>
+</tr>
+<tr>
+<td>B02 · chunking</td>
+<td>estratégias, metadados, id estável</td>
+<td>chunker AST + fixo comparado</td>
+</tr>
+<tr>
+<td>B03 · pgvector</td>
+<td>schema, HNSW, over-filtering</td>
+<td>SQL de referência; execução PG bloqueada</td>
+</tr>
+<tr>
+<td>B04 · híbrida</td>
+<td>léxico, RRF, funil</td>
+<td>tabela léxico×vetor×híbrido</td>
+</tr>
+<tr>
+<td>B05 · rerank</td>
+<td>cross-encoder, limiar, routing</td>
+<td>ganho medido + limiar calibrado</td>
+</tr>
+<tr>
+<td>B06 · ACL</td>
+<td>ordem do pipeline, defesa, abstenção</td>
+<td>leak test + abstenção</td>
+</tr>
+<tr>
+<td>B07 · pipeline+eval</td>
+<td>18 etapas, métricas, ablação</td>
+<td>tabela de ablação</td>
+</tr>
+<tr>
+<td>B08 · mini-projeto</td>
+<td>pipeline completo, 3 perguntas</td>
+<td>corpus + <code>tres-perguntas</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-cenários-de-aceitação">5. Cenários de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Oráculo e caso relevante</th>
+<th>Bloco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M07-AT-001</td>
+<td>sonda de negação: embedding falso ordena sem distinguir (limite)</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M07-AT-002</td>
+<td>identificador exato perde no vetorial e vence no léxico</td>
+<td>B01/B04</td>
+</tr>
+<tr>
+<td>M07-AT-003</td>
+<td>chunker estrutural não corta unidade sintática; fixo corta</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M07-AT-004</td>
+<td><code>id_estavel</code> sobrevive a mudança de linha</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M07-AT-005</td>
+<td>schema de referência com metadados, índices e modelo gravado</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M07-AT-006</td>
+<td>comparar RRF e métodos isolados por tipo de query; registrar ganhos, empates e perdas</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M07-AT-007</td>
+<td>medir delta de recall@5 do rerank nos mesmos candidatos; explicar ganho nulo ou negativo</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M07-AT-008</td>
+<td>limiar calibrado separa bons/ruins; cópia de blog reprovaria</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M07-AT-009</td>
+<td>roteamento determinístico classifica sem LLM</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M07-AT-010</td>
+<td>tenant sem filtro obrigatório é erro de construção</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M07-AT-011</td>
+<td>cross-tenant retorna vazio; verificação de saída acusa</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M07-AT-012</td>
+<td>abaixo do limiar abstém com motivo; acima responde</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M07-AT-013</td>
+<td>recall@k/MRR/citação calculados deterministicamente</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M07-AT-014</td>
+<td>ablação mostra custo de cada etapa omitida</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M07-AT-015</td>
+<td>modelo de embedding distinto invalida comparação (migração)</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M07-AT-016</td>
+<td>3 perguntas estruturais marcadas <code>esperado_falhar</code> com diagnóstico</td>
+<td>B08</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-fontes-e-versões">6. Fontes e versões</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte e uso</th>
+<th>Tipo</th>
+<th>Risco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M07-01</td>
+<td><a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching">Anthropic — contextual retrieval</a> — chunk contextualizado</td>
+<td>fornecedor</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M07-02</td>
+<td><a href="https://github.com/pgvector/pgvector">pgvector docs</a> — tipos, operadores, HNSW</td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M07-03</td>
+<td><a href="https://www.postgresql.org/docs/current/textsearch.html">PostgreSQL — full text search</a> — tsvector/ranking</td>
+<td>documentação oficial</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M07-04</td>
+<td><a href="https://doi.org/10.1145/1571941.1572114">Cormack et al. — RRF (SIGIR 2009)</a> — fusão por posição</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M07-05</td>
+<td><a href="https://docs.python.org/3/library/ast.html">Python — ast</a> — chunking estrutural</td>
+<td>normativa</td>
+<td>baixo</td>
+</tr>
+</tbody>
+</table>
+<p>Consultadas em 14/09/2026. Versões de modelo, dimensões, preços e
+capacidades de produto: revalidar em até 90 dias.</p>
+<h2 id="7-panorama-de-prática-vigente">7. Panorama de prática vigente</h2>
+<p>pgvector, Mermaid/C4 e arquivos de instrução de repositório são prática
+observável — sustentam decisões didáticas sem definir fundamentos.</p>
+<h2 id="8-gates-e-decisão-g0">8. Gates e decisão G0</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Estado</th>
+<th>Critério</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G0 · escopo</td>
+<td><strong>APROVADO</strong></td>
+<td>oito blocos, 16 cenários, fontes classificadas, corpus Python e limites definidos</td>
+</tr>
+<tr>
+<td>G1–G6</td>
+<td>EM PRODUÇÃO/PENDENTE</td>
+<td>HTML legado em revisão; lab e avaliação em construção neste ciclo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisão de G0:</strong> aprovada em 14/09/2026 pelo orquestrador. Define o
+trabalho; não certifica HTML legado ou lab inexistente.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

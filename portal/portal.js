@@ -17,6 +17,9 @@
   function save() { try { localStorage.setItem(KEY, P.serialize(state)); } catch (e) { /* sem armazenamento */ } }
   function say(text, bad) { const m = $("msg"); m.textContent = text; m.style.color = bad ? "var(--bad)" : "var(--ok)"; }
 
+  const DOCS = new Set(window.COURSE_DOCS || []);
+  const docHref = (path) => (DOCS.has(path) ? path.replace(/\.md$/, ".html") : path);
+
   function card(href, code, title, desc, extra, hl) {
     return `<li><a class="p-card${hl ? " p-hl" : ""}" href="${esc(href)}"><span class="p-code">${esc(code)}</span><h3>${esc(title)}</h3><p>${esc(desc)}</p>${extra || ""}</a></li>`;
   }
@@ -30,8 +33,8 @@
       : card("#phases", "Em breve", "Continuar de onde parei", "Os módulos estão em escrita.", "", true);
     $("featured").innerHTML = cont
       + card("trilha-rapida/TR.html", "Trilha rápida", "Trilha rápida: desenvolvimento com agentes", "Caminho curto para trabalhar com agentes de código antes de percorrer o currículo completo.")
-      + card("docs/nivelamento.md", "Nivelamento", "Nivelamento", "Descubra por onde começar de acordo com a sua experiência.")
-      + card("kit/README.md", "Kit", "Kit de arranque", "Modelos agnósticos para copiar no seu projeto: AGENTS.md, intent/spec/plan, hooks e esteira dev → cert → prod.");
+      + card(docHref("docs/nivelamento.md"), "Nivelamento", "Nivelamento", "Descubra por onde começar de acordo com a sua experiência.")
+      + card(docHref("kit/README.md"), "Kit", "Kit de arranque", "Modelos agnósticos para copiar no seu projeto: AGENTS.md, intent/spec/plan, hooks e esteira dev → cert → prod.");
   }
 
   function unitCard(u) {
@@ -83,11 +86,43 @@
     say("Progresso importado com sucesso.");
   }
 
+  function setupReset() {
+    const dlg = $("reset-dialog"), form = $("reset-form"), sel = $("reset-unit");
+    sel.innerHTML = M.units.map((u) => `<option value="${esc(u.code)}">${esc(u.code)} · ${esc(u.title)}</option>`).join("");
+    const scope = () => form.elements.scope.value;
+    form.addEventListener("change", () => { sel.disabled = scope() !== "unit"; });
+    let opener = null;
+    function close() { if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); if (opener) opener.focus(); }
+    $("reset").addEventListener("click", (e) => {
+      opener = e.currentTarget;
+      form.reset(); sel.disabled = true;
+      if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+      form.elements.scope.value = "all";
+      $("reset-cancel").focus();
+    });
+    $("reset-cancel").addEventListener("click", close);
+    dlg.addEventListener("cancel", (e) => { e.preventDefault(); close(); });
+    dlg.addEventListener("click", (e) => { if (e.target === dlg) close(); });
+    $("reset-export").addEventListener("click", (e) => { e.preventDefault(); exportProgress(); });
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const unitOnly = scope() === "unit", code = sel.value;
+      try {
+        if (unitOnly) P.resetUnit(localStorage, code); else P.resetAll(localStorage);
+      } catch (err) { /* sem armazenamento */ }
+      state = P.emptyState(M.courseVersion);
+      load(); featured(); phases();
+      close();
+      say(unitOnly ? `Progresso apagado: ${code}.` : "Progresso apagado.");
+    });
+  }
+
   const total = M.units.length;
   $("hero-sub").textContent = `${total} módulos em cinco fases, cerca de ${M.totalHours} horas de estudo. Cada módulo abre com um diagnóstico rápido: acertou tudo, vá direto ao checkpoint.`;
   load(); featured(); phases();
   $("q").addEventListener("input", applyFilter);
   $("export").addEventListener("click", exportProgress);
+  setupReset();
   $("import").addEventListener("change", async (e) => {
     try { await importProgress(e.target.files[0]); } catch (err) { say(err instanceof Error ? err.message : "Não foi possível importar.", true); }
     e.target.value = "";

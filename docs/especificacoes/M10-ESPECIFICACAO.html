@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M10-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M10 — especificação de escopo e evidência</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="m10--especificação-de-escopo-e-evidência">M10 — especificação de escopo e evidência</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/09/2026 · <strong>Estado:</strong> G0 aprovado; G1 em produção</p>
+<h2 id="1-decisão-curricular">1. Decisão curricular</h2>
+<p>O M10 ensina duas disciplinas ortogonais que o nome "grafo" costuma
+confundir: grafo de execução (durabilidade, retomada, intervenção
+humana) e grafo de conhecimento (relações extraídas, travessias,
+métricas de saúde). O laboratório implementa as duas sem dependência
+externa: motor de workflow com checkpoint em arquivo, grafo de código
+extraído por AST, travessias das três perguntas, memória temporal e
+métricas I/A/D. LangGraph, AGE/Neo4j e modelos reais são trilha externa;
+o SQL de persistência vive como referência documentada.</p>
+<p>A integração no Capstone (<code>orchestration/</code>, <code>graph/</code>, <code>metrics/</code>) só
+ocorre após spec própria.</p>
+<h2 id="2-resultado-limites-e-integração">2. Resultado, limites e integração</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Definição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carga</td>
+<td>dez blocos de duas horas, total de 20 h</td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>M02 (AST), M06 (evals), M07 (retrieval), M08 (loop/HITL)</td>
+</tr>
+<tr>
+<td>Saída</td>
+<td>workflow durável, grafo consultável, memória temporal, relatório de saúde</td>
+</tr>
+<tr>
+<td>Peça do capstone</td>
+<td><code>orchestration/</code> + <code>graph/</code> + <code>metrics/</code>; integração só após spec própria</td>
+</tr>
+<tr>
+<td>Não cobre</td>
+<td>RAG vetorial (M07), protocolos (M09), produção (M12)</td>
+</tr>
+<tr>
+<td>Evidência mínima</td>
+<td>comandos, versões e saída executada; travessia PG real, só com Docker</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-arquitetura-do-laboratório">3. Arquitetura do laboratório</h2>
+<pre><code class="language-text">fixture Python ──► extração AST ──► digrafo ──► travessias (impacto, mortos, rotas)
+                                              ──► métricas I/A/D + ciclos
+workflow (nós+arestas) ──► checkpointer (arquivo/thread) ──► run/resume/HITL
+memória temporal (valido_de/ate) ──► invalidação por símbolo
+</code></pre>
+<p>A referência fica em <code>modulos/M10-graph-engineering-saude-arquitetural/lab/</code>.
+O roteiro <code>Laboratório guiado M10</code>, no final do HTML, cria cópia de
+trabalho em diretório temporário possuído pelo laboratório.</p>
+<h2 id="4-blocos-competências-e-evidência">4. Blocos, competências e evidência</h2>
+<table>
+<thead>
+<tr>
+<th>Bloco</th>
+<th>Competências observáveis</th>
+<th>Evidência planejada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B01 · dualidade</td>
+<td>classificar pergunta por estrutura</td>
+<td>roteamento pergunta→ferramenta</td>
+</tr>
+<tr>
+<td>B02 · execução</td>
+<td>estado, reducers, fan-out</td>
+<td>merge sem perda</td>
+</tr>
+<tr>
+<td>B03 · persistência</td>
+<td>checkpoint, resume sem repetir</td>
+<td>kill simulado + contagem</td>
+</tr>
+<tr>
+<td>B04 · HITL</td>
+<td>pausa durável, reexecução</td>
+<td>efeito uma vez</td>
+</tr>
+<tr>
+<td>B05 · extração</td>
+<td>ontologia, determinístico, fqn</td>
+<td>censo + não-resolvidos</td>
+</tr>
+<tr>
+<td>B06 · persistência PG</td>
+<td>SQL referência, grafo por tenant</td>
+<td>documento (Docker bloqueado)</td>
+</tr>
+<tr>
+<td>B07 · GraphRAG</td>
+<td>híbrido, comunidades, custo</td>
+<td>âncora→expansão</td>
+</tr>
+<tr>
+<td>B08 · memória</td>
+<td>temporal, invalidação</td>
+<td>ciclo de validade</td>
+</tr>
+<tr>
+<td>B09 · saúde</td>
+<td>I/A/D, zonas, ciclos</td>
+<td>relatório por componente</td>
+</tr>
+<tr>
+<td>B10 · integração</td>
+<td>3 perguntas, virada de eval</td>
+<td>taxa documentada</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-cenários-de-aceitação">5. Cenários de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Oráculo e caso relevante</th>
+<th>Bloco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M10-AT-001</td>
+<td>classificar 5 perguntas (busca/grafo/SQL/híbrido)</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M10-AT-002</td>
+<td>fan-out com reducer soma; default sobrescreve (mutante)</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M10-AT-003</td>
+<td>kill no meio + resume na mesma thread: sem repetir efeito</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M10-AT-004</td>
+<td><code>thread_id</code> estável por unidade; aleatório nunca retoma</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M10-AT-005</td>
+<td>pausa HITL retoma em outra instância com a decisão</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M10-AT-006</td>
+<td>efeito antes da pausa acontece 2x; depois, 1x</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M10-AT-007</td>
+<td>extração encontra tipos/métodos/chamadas do fixture</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M10-AT-008</td>
+<td>fqn estável após deslocar linhas</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M10-AT-009</td>
+<td>impacto reverte CHAMA com distância e rota</td>
+<td>B06/B10</td>
+</tr>
+<tr>
+<td>M10-AT-010</td>
+<td>mortos = não alcançáveis de entry points (candidatos)</td>
+<td>B06/B10</td>
+</tr>
+<tr>
+<td>M10-AT-011</td>
+<td>híbrido: âncora léxica + expansão com orçamento</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M10-AT-012</td>
+<td>fato fora da validade some dos vigentes sem delete</td>
+<td>B08</td>
+</tr>
+<tr>
+<td>M10-AT-013</td>
+<td>I/A/D calculados; zona de dor apontada</td>
+<td>B09</td>
+</tr>
+<tr>
+<td>M10-AT-014</td>
+<td>ciclo entre componentes detectado com aresta sugerida</td>
+<td>B09</td>
+</tr>
+<tr>
+<td>M10-AT-015</td>
+<td>medidas indefinidas (A sem dado) reportadas, não inventadas</td>
+<td>B09</td>
+</tr>
+<tr>
+<td>M10-AT-016</td>
+<td>3 perguntas respondidas com evidência e confiança</td>
+<td>B10</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-fontes-e-versões">6. Fontes e versões</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte e uso</th>
+<th>Tipo</th>
+<th>Risco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M10-01</td>
+<td><a href="https://docs.langchain.com/">LangGraph docs</a> — execução e checkpoint</td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M10-02</td>
+<td><a href="https://blog.cleancoder.com/">Martin — Clean Architecture (métricas)</a> — I/A/D</td>
+<td>canônica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M10-03</td>
+<td><a href="https://age.apache.org/">Apache AGE docs</a> — grafo no Postgres</td>
+<td>documentação oficial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M10-04</td>
+<td><a href="https://microsoft.github.io/graphrag/">Microsoft — GraphRAG</a> — local/global e custo</td>
+<td>fornecedor</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M10-05</td>
+<td><a href="https://docs.python.org/3/library/ast.html">Python — ast</a> — extração</td>
+<td>normativa</td>
+<td>baixo</td>
+</tr>
+</tbody>
+</table>
+<p>Consultadas em 14/09/2026. Versões de framework, extensão e modelo:
+revalidar em até 90 dias.</p>
+<h2 id="7-panorama-de-prática-vigente">7. Panorama de prática vigente</h2>
+<p>LangGraph, AGE/Neo4j e GraphRAG são prática observável — o módulo os
+posiciona pelo que entregam, sem recomendar produto.</p>
+<h2 id="8-gates-e-decisão-g0">8. Gates e decisão G0</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Estado</th>
+<th>Critério</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G0 · escopo</td>
+<td><strong>APROVADO</strong></td>
+<td>dez blocos, 16 cenários, fontes classificadas, lab local e limites definidos</td>
+</tr>
+<tr>
+<td>G1–G6</td>
+<td>EM PRODUÇÃO/PENDENTE</td>
+<td>HTML legado em revisão; lab e avaliação em construção neste ciclo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisão de G0:</strong> aprovada em 14/09/2026 pelo orquestrador. Define o
+trabalho; não certifica HTML legado ou lab inexistente.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

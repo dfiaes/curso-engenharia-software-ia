@@ -26,6 +26,37 @@
     return n;
   }
   function href(path) { return new URL(path, ROOT).href; }
+  /* ---------- Documentos gerados (.md -> .html) ---------- */
+  function docSet() {
+    var set = {}; (window.COURSE_DOCS || []).forEach(function (d) { set[d] = true; }); return set;
+  }
+  // Link do curso para um documento: usa a versão HTML quando ela é gerada.
+  function docHref(path) { return href(docSet()[path] ? path.replace(/\.md$/, ".html") : path); }
+  function rewriteDocLinks(root) {
+    var docs = docSet(), base = ROOT.href;
+    (root || document).querySelectorAll("a[href]").forEach(function (a) {
+      var raw = a.getAttribute("href");
+      if (!raw || !/\.md(#|\?|$)/.test(raw) || /^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.indexOf("//") === 0) return;
+      try {
+        var abs = new URL(raw, a.baseURI || document.baseURI);
+        if (abs.href.indexOf(base) !== 0) return;
+        var rel = decodeURIComponent(abs.pathname.slice(new URL(base).pathname.length));
+        if (docs[rel]) a.setAttribute("href", raw.replace(/\.md(?=#|\?|$)/, ".html"));
+      } catch (e) { /* href inválido: mantém */ }
+    });
+  }
+  function withDocs(fn) {
+    if (window.COURSE_DOCS) return fn();
+    var done = false;
+    function go() { if (done) return; done = true; fn(); }
+    try {
+      var sc = document.createElement("script");
+      sc.src = new URL("assets/docs-manifest.js", ROOT).href;
+      sc.onload = go; sc.onerror = go;
+      document.head.appendChild(sc);
+      setTimeout(go, 1500);
+    } catch (e) { go(); }
+  }
   var ICON = {
     menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
     sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
@@ -135,9 +166,51 @@
     });
     html += "</ol>";
     html += '<h2>Curso</h2><ul><li><a href="' + href("index.html") + '">Todas as fases e módulos</a></li>' +
-      '<li><a href="' + href("trilha-rapida/TR.html") + '">Trilha rápida: dev com agentes</a></li>' +
-      '<li><a href="' + href("docs/nivelamento.md") + '">Nivelamento</a></li></ul>';
+      '<li><a href="' + href("trilha-rapida/TR.html") + '">Trilha rápida: dev com agentes</a></li></ul>';
+    html += '<h2>Documentos</h2><ul>' + [
+      ["CURRICULO.md", "Currículo"], ["docs/nivelamento.md", "Nivelamento"], ["docs/como-estudar.md", "Como estudar"],
+      ["docs/leituras-complementares.md", "Leituras complementares"], ["kit/README.md", "Kit de arranque"], ["STATUS.md", "Status"]
+    ].map(function (d) { return '<li><a href="' + docHref(d[0]) + '">' + d[1] + "</a></li>"; }).join("") + "</ul>";
+    if (unit) html += '<h2>Progresso</h2><div class="c-reset"><button type="button" class="c-reset-btn">Recomeçar este módulo</button></div>';
     side.innerHTML = html;
+    var rb = side.querySelector(".c-reset-btn");
+    if (rb) rb.addEventListener("click", function () { confirmReset(unit, rb); });
+  }
+
+  /* ---------- Recomeçar módulo ---------- */
+  function resetUnitStorage(code) {
+    var removed = 0;
+    try {
+      var s = loadState();
+      Object.keys(s.blocks).forEach(function (id) { if (id.indexOf(code + ":") === 0) { delete s.blocks[id]; removed++; } });
+      if (s.optional[code]) delete s.optional[code];
+      if (s.lastVisited && s.lastVisited.unit === code) s.lastVisited = null;
+      saveState(s);
+    } catch (e) { /* ignora */ }
+    try {
+      var prefixes = ["check", "quiz", "order"].map(function (k) { return "curso." + k + "." + code + "-"; });
+      var keys = [];
+      for (var i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+      keys.forEach(function (k) { if (prefixes.some(function (p) { return k && k.indexOf(p) === 0; })) { localStorage.removeItem(k); removed++; } });
+    } catch (e) { /* ignora */ }
+    return removed;
+  }
+  function confirmReset(unit, opener) {
+    var dlg = el("dialog", { "class": "c-dialog", "aria-labelledby": "c-reset-title" });
+    dlg.innerHTML = '<h2 id="c-reset-title">Recomeçar ' + unit.code + '?</h2>' +
+      '<p>Isto apaga neste navegador os blocos concluídos, as respostas de quiz, os checklists e as ordenações de <b>' + unit.code + ' · ' + unit.title + '</b>. Outros módulos e o tema não mudam.</p>' +
+      '<div class="c-dialog-actions"><button type="button" class="ix-btn" data-act="cancel">Cancelar</button>' +
+      '<button type="button" class="ix-btn primary" data-act="ok">Apagar e recomeçar</button></div>';
+    document.body.appendChild(dlg);
+    function close() { if (dlg.close) dlg.close(); dlg.remove(); if (opener && opener.focus) opener.focus(); }
+    dlg.addEventListener("click", function (e) {
+      var act = e.target.getAttribute && e.target.getAttribute("data-act");
+      if (act === "cancel" || e.target === dlg) close();
+      if (act === "ok") { resetUnitStorage(unit.code); location.reload(); }
+    });
+    dlg.addEventListener("cancel", function (e) { e.preventDefault(); close(); });
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+    var first = dlg.querySelector('[data-act="cancel"]'); if (first) first.focus();
   }
 
   function buildPager(main, i) {
@@ -347,6 +420,7 @@
   function start() {
     if (document.body.dataset.layout !== "none") { buildLayout(); trackProgress(); }
     else { applyTheme(currentTheme()); }
+    rewriteDocLinks(document);
     enhanceReading();
     initAll(document);
     if (location.hash) { var t = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (t) t.scrollIntoView(); }
@@ -355,8 +429,9 @@
   }
 
   window.Course = {
-    unit: UNIT, manifest: M, root: ROOT.href, el: el, init: initAll, applyTheme: applyTheme,
+    unit: UNIT, manifest: M, root: ROOT.href, el: el, init: initAll, applyTheme: applyTheme, docHref: docHref, rewriteDocLinks: rewriteDocLinks,
     ready: function (fn) { if (ready) ready.push(fn); else fn(window.Course); }
   };
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+  function boot() { withDocs(start); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

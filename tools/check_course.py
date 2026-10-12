@@ -282,6 +282,19 @@ def course_paths(root: Path, include_history: bool = False) -> list[Path]:
         if directory.is_dir():
             paths.extend(directory.glob("*.md"))
             paths.extend(directory.glob("*.html"))
+    # HTML pages generated from Markdown by tools/build_docs.py (links and anchors are checked too).
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import build_docs
+
+        for source in build_docs.doc_sources(root):
+            html_path = (root / source).with_suffix(".html")
+            if html_path.is_file() and not include_history and html_path.is_relative_to(historical):
+                continue
+            if html_path.is_file():
+                paths.append(html_path)
+    except ImportError:
+        pass
     return sorted(set(paths))
 
 

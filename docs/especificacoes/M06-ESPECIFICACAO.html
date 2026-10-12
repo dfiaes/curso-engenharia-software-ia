@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M06-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M06 — especificação de escopo e evidência</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="m06--especificação-de-escopo-e-evidência">M06 — especificação de escopo e evidência</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/09/2026 · <strong>Estado:</strong> G0 aprovado; G1 em produção</p>
+<h2 id="1-decisão-curricular">1. Decisão curricular</h2>
+<p>O M06 ensina a medir se a IA funciona: evals offline por categoria de
+comportamento, graders na escada certa e avaliação do juiz contra
+referências humanas quando disponíveis, com proveniência documentada;
+prompt versionado, gate na CI e observabilidade sanitizada. Testes
+unitários verificam invariantes determinísticas do runtime, mas não
+bastam para caracterizar comportamento variável de modelos. Evals
+complementam esses testes com medições por categoria e decisão explícita
+sobre amostragem e incerteza.</p>
+<p>O laboratório obrigatório roda 100% offline: sistema sob teste falso e
+determinístico, juiz roteirizado, tracing em memória, datasets locais.
+Chamadas a modelos reais (juiz live, matriz contra provedor) são trilha
+opcional com conta e crédito próprios — nunca a única evidência. A fixture
+roteirizada só exercita o cálculo de concordância; ela não calibra
+probabilidades nem substitui um conjunto humano de referência devidamente
+documentado.</p>
+<h2 id="2-resultado-limites-e-integração">2. Resultado, limites e integração</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Definição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carga</td>
+<td>seis blocos de duas horas, total de 12 h</td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>M02 (Python, testes), M04 (ADR, docs), M05 (contrato, custo, gateway)</td>
+</tr>
+<tr>
+<td>Saída</td>
+<td>runner de evals, datasets versionados, registry de prompts, gate e relatório</td>
+</tr>
+<tr>
+<td>Peça do capstone</td>
+<td>suíte <code>evals/</code>; a integração no Capstone só ocorre após spec própria</td>
+</tr>
+<tr>
+<td>Não cobre</td>
+<td>RAG (M07), agentes (M08), produção multi-tenant (M12)</td>
+</tr>
+<tr>
+<td>Evidência mínima</td>
+<td>comandos, versões e saída executada; acordo de juiz só com conjunto humano</td>
+</tr>
+</tbody>
+</table>
+<p>Referência interna de matemática e dependências do principal: ponte do M06. A interpretação de proporções e incerteza deve permanecer autossuficiente em B01; ML01 é somente aprofundamento opcional.</p>
+<h2 id="3-arquitetura-do-laboratório">3. Arquitetura do laboratório</h2>
+<pre><code class="language-text">datasets/*.jsonl ──► runner ──► SUT falso (v1/v2) ──► graders determinísticos
+     │                              │                      │
+     │                              ▼                      ▼
+     │                         juiz roteirizado      universais por caso
+     │                              │
+     └──── registry (prompt@v) ─────┴──► relatório JSON ──► gate vs baseline
+</code></pre>
+<p>Tracing sanitizado em memória valida a política de conteúdo. A referência
+fica em <code>modulos/M06-evals-observabilidade/lab/</code>. O roteiro <code>Laboratório
+guiado M06</code>, no final do HTML, cria cópia de trabalho em diretório
+temporário possuído pelo laboratório.</p>
+<h2 id="4-blocos-competências-e-evidência">4. Blocos, competências e evidência</h2>
+<table>
+<thead>
+<tr>
+<th>Bloco</th>
+<th>Competências observáveis</th>
+<th>Evidência planejada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B01 · complementaridade entre testes unitários e evals</td>
+<td>3 propriedades, anatomia, níveis, análise de erro</td>
+<td>20 casos rotulados</td>
+</tr>
+<tr>
+<td>B02 · datasets</td>
+<td>6 categorias, regressão comportamental, versionamento</td>
+<td>6 arquivos + manifesto</td>
+</tr>
+<tr>
+<td>B03 · graders</td>
+<td>escada, runner, vieses do juiz, calibração</td>
+<td>runner + acordo medido</td>
+</tr>
+<tr>
+<td>B04 · prompt como código</td>
+<td>registry, imutabilidade, matriz, experimento</td>
+<td>matriz + baseline</td>
+</tr>
+<tr>
+<td>B05 · observabilidade</td>
+<td>tracing GenAI, sanitização, painéis</td>
+<td>spans sem vazamento</td>
+</tr>
+<tr>
+<td>B06 · gate e entrega</td>
+<td>tolerância, pisos, relatório, nightly</td>
+<td>gate com exit code</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-cenários-de-aceitação">5. Cenários de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Oráculo e caso relevante</th>
+<th>Bloco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M06-AT-001</td>
+<td>eval tem dataset + SUT versionado + grader + limiar (anatomia)</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M06-AT-002</td>
+<td>análise de erro agrupa falhas antes de qualquer métrica</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M06-AT-003</td>
+<td>seis categorias presentes com casos que falham hoje</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M06-AT-004</td>
+<td>caso corrigido vira <code>deprecated</code> + novo, nunca edição</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M06-AT-005</td>
+<td>grader determinístico aprova/reprova; mutante enfraquecido é pego</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M06-AT-006</td>
+<td>juiz mede acordo contra conjunto humano rotulado com proveniência e rubrica documentadas; ≥85% é apenas o corte local da fixture, não validade universal</td>
+<td>B03; a fixture roteirizada não verifica este AT</td>
+</tr>
+<tr>
+<td>M06-AT-007</td>
+<td>juiz desalinhado é rejeitado antes de uso</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M06-AT-008</td>
+<td>prompt imutável após uso; tag em todo resultado</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M06-AT-009</td>
+<td>matriz mostra regressão comportamental (v2 piora categoria)</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M06-AT-010</td>
+<td>gate reprova queda &gt; tolerância; piso de segurança bloqueia</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M06-AT-011</td>
+<td>custo/latência geram aviso, não reprovação</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M06-AT-012</td>
+<td>tracing registra metadados e acusa vazamento de conteúdo</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M06-AT-013</td>
+<td>hash do input permite correlacionar sem guardar conteúdo</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M06-AT-014</td>
+<td>relatório em linguagem de negócio com decisão, custo e risco</td>
+<td>B06</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-fontes-e-versões">6. Fontes e versões</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte e uso</th>
+<th>Tipo</th>
+<th>Risco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M06-01</td>
+<td><a href="https://arxiv.org/abs/2306.05685">Zheng et al. — Judging LLM-as-a-Judge (2023)</a> — vieses do juiz</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M06-02</td>
+<td><a href="https://github.com/open-telemetry/semantic-conventions-genai">OpenTelemetry GenAI semantic conventions</a> — spans, atributos e métricas</td>
+<td>padrão aberto</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M06-03</td>
+<td><a href="https://sre.google/workbook/table-of-contents/">Google SRE workbook</a> — postmortem e operação</td>
+<td>canônica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M06-04</td>
+<td><a href="https://diataxis.fr/">Diátaxis</a> — tipos de doc do relatório</td>
+<td>canônica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M06-05</td>
+<td><a href="https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm">NIST/SEMATECH e-Handbook, Wilson intervals</a> — intervalo de proporção binomial</td>
+<td>referência técnica pública</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M06-06</td>
+<td><a href="https://www.itl.nist.gov/div898/handbook/prc/section2/prc242.htm">NIST/SEMATECH e-Handbook, sample-size planning</a> — amostra em função de diferença, α e poder</td>
+<td>referência técnica pública</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M06-07</td>
+<td><a href="https://www.itl.nist.gov/div898/handbook/prc/section1/prc13.htm">NIST/SEMATECH e-Handbook, tests of hypotheses</a> — hipóteses, α e β</td>
+<td>referência técnica pública</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M06-08</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20254758/">McNemar (1947)</a> — diferença entre proporções correlacionadas</td>
+<td>artigo original</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M06-09</td>
+<td><a href="https://journals.sagepub.com/doi/10.1177/001316446002000104">Cohen (1960)</a> — concordância nominal corrigida por acaso (kappa)</td>
+<td>artigo original</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M06-10</td>
+<td><a href="https://proceedings.mlr.press/v70/guo17a.html">Guo et al. (2017)</a> — calibração de probabilidades prevista versus frequência de acerto</td>
+<td>artigo original</td>
+<td>baixo</td>
+</tr>
+</tbody>
+</table>
+<p>Fontes 01–04 consultadas em 14/09/2026; SRC-M06-02 revalidada em
+25/09/2026. Foi consultada a branch <code>main</code>, não uma versão imutável;
+fixar release/commit e revalidar nomes/estabilidade antes de atualizar as
+afirmações no HTML. SRC-M06-05–08 consultadas em 25/09/2026 para os
+fundamentos estatísticos. O limiar de concordância de 85% no AT-006 é
+política local do cenário roteirizado deste laboratório, não evidência
+universal de validade; tamanho e composição do conjunto, incerteza e
+consequências de erro precisam acompanhar uma aplicação real.
+No B03, diferenciar concordância observada total e por classe, medidas
+corrigidas por chance e calibração probabilística. A fixture determinística
+não contém rótulos humanos nem probabilidades; os resultados do laboratório
+não demonstram concordância humana ou calibração de confiança. Duas
+configurações podem empatar na acurácia e errar classes diferentes, então
+limiares reais dependem da prevalência e do custo de falsos positivos e
+negativos; abstenção e revisão humana são resultados válidos. SRC-M06-09–10
+consultadas em 26/09/2026. O helper local <code>medir_acordo</code> aceita apenas rótulos
+de referência sem inferir proveniência, exige limiar explícito por chamada e
+rejeita conjunto vazio/limiar fora de [0, 1]. Ele mede concordância observada;
+não calibra probabilidades. Para alegar referência humana, o processo externo
+precisa registrar anotadores, rubrica e resolução de desacordos; o helper não
+certifica isso.
+<code>LLM-as-judge</code> nunca substitui calibração humana; concordância não é a
+margem de erro da acurácia do produto. O ledger focal e as correções
+pendentes estão em <code>docs/planejamento-v4/fontes.json</code>.</p>
+<p>O exemplo de planejamento do B01 usa a aproximação de uma proporção do
+NIST com <code>p₀=0,90</code>, <code>p₁=0,95</code>, <code>α=0,05</code> bilateral e poder <code>0,80</code>. A
+fórmula sem correção de continuidade resulta em aproximadamente 238
+observações (<code>n′</code> na notação do NIST); a correção de continuidade que o NIST/SEMATECH relata como recomendada por Fleiss, Levin e Paik
+usa <code>n = n′ + 1/δ</code> e resulta em 258. Com alvo <code>0,85</code>, os valores correspondentes são 316 e 336 pela
+mudança de variância. São contas didáticas sob aproximação normal e
+independência, não um dimensionamento universal nem fórmula para A/B pareado. O HTML também
+marca <code>12/15 → 13/15</code> como caso de borda: uma mudança de um caso pode
+produzir 80% → 86,7%, mas a decisão permanece inconclusiva sem desenho,
+discordâncias e incerteza apropriados.</p>
+<h2 id="7-panorama-de-prática-vigente">7. Panorama de prática vigente</h2>
+<p>Ferramentas de eval (promptfoo, Langfuse, LangSmith, Ragas, DeepEval) são
+prática observável — o curso constrói o runner à mão para ensinar as
+decisões (categorias, graders, limiar) e declara a migração como trabalho
+de uma tarde, sem recomendar produto.</p>
+<h2 id="8-gates-e-decisão-g0">8. Gates e decisão G0</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Estado</th>
+<th>Critério</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G0 · escopo</td>
+<td><strong>APROVADO</strong></td>
+<td>seis blocos, 14 cenários, fontes classificadas, lab local e limites definidos</td>
+</tr>
+<tr>
+<td>G1–G6</td>
+<td>EM PRODUÇÃO/PENDENTE</td>
+<td>HTML legado em revisão; lab e avaliação em construção neste ciclo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisão de G0:</strong> aprovada em 14/09/2026 pelo orquestrador. Define o
+trabalho; não certifica HTML legado ou lab inexistente.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

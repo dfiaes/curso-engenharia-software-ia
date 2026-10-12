@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/LT01-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Especificação do LT01 — Runtime, Linux e redes</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="especificação-do-lt01--runtime-linux-e-redes">Especificação do LT01 — Runtime, Linux e redes</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/08/2026 · <strong>Estado:</strong> G0 APROVADO · <strong>Carga:</strong> 6 blocos / 12h</p>
+<p>LT01 acontece depois do M03. Seu propósito não é formar administrador Linux ou engenheiro de redes: é tornar o engenheiro Python capaz de explicar, medir e diagnosticar o caminho entre uma requisição e o processo que a atende.</p>
+<h2 id="1-resultado-do-laboratório">1. Resultado do laboratório</h2>
+<p>Ao concluir LT01, o aluno consegue:</p>
+<ul>
+<li>observar processos, threads, file descriptors, memória e sinais;</li>
+<li>explicar inicialização, shutdown gracioso e processos órfãos/zumbis;</li>
+<li>trabalhar com permissões, filesystem, ambiente e secrets sem depender de “funcionou no meu computador”;</li>
+<li>seguir resolução DNS, conexão TCP ou QUIC, negociação TLS e protocolo HTTP;</li>
+<li>projetar deadlines, timeouts, cancelamento e pools coerentes;</li>
+<li>reconhecer saturação de CPU, memória, FD, conexão, event loop e upstream;</li>
+<li>diagnosticar uma API degradada por hipótese e evidência.</li>
+</ul>
+<h2 id="2-pré-requisitos-e-limites">2. Pré-requisitos e limites</h2>
+<p><strong>Pré-requisitos:</strong> M02 e M03. M06 aprofundará traces; M12 reutilizará isolamento, secrets e operação.</p>
+<p><strong>Fora de escopo:</strong> administração completa de distribuição Linux, roteamento BGP, implementação de TCP/TLS, tuning prematuro de kernel, Kubernetes e cloud networking.</p>
+<p>O laboratório roda em containers Linux para ser reproduzível em Windows, macOS e Linux. Ferramentas são exemplos de observação, não o fundamento.</p>
+<h2 id="3-ambiente-de-laboratório">3. Ambiente de laboratório</h2>
+<pre><code class="language-text">client/load generator
+        │ DNS + HTTP/TLS
+        ▼
+reverse proxy/fault proxy
+        │
+        ▼
+FastAPI/Uvicorn ───► PostgreSQL
+        │
+        └──────────► fake upstream
+
+OTel Collector ◄── traces/metrics/logs
+fault controller ─► latency, reset, DNS, pool, FD, CPU, memory, shutdown
+</code></pre>
+<p>Estrutura prevista:</p>
+<pre><code class="language-text">labs/LT01-runtime-linux-redes/
+  compose.yaml
+  app/
+  upstream/
+  load/
+  faults/
+  observability/
+  runbooks/
+  evidence/
+</code></pre>
+<p>Cada falha tem versão guiada e variante inédita de checkpoint. A interface <code>FaultScenario</code> permite ativar/restaurar cenários sem comandos destrutivos no host.</p>
+<h2 id="4-blocos">4. Blocos</h2>
+<h2 id="bloco-1--processo-thread-event-loop-sinais-e-shutdown">Bloco 1 · Processo, thread, event loop, sinais e shutdown</h2>
+<p><strong>IDs:</strong> LT01-B01-C01..06 · <strong>Matriz:</strong> OPS-01, PY-02.</p>
+<p><strong>Conteúdo:</strong> PID/PPID, processo versus thread versus coroutine, scheduler e event loop cooperativo, foreground/background, exit code, stdin/stdout/stderr, SIGINT/SIGTERM/SIGKILL, zombies, PID 1 em container e shutdown gracioso.</p>
+<p><strong>Prática:</strong> instrumentar uma API com endpoint de trabalho longo; observar árvore de processos; enviar SIGTERM durante requests; implementar lifespan, cancelamento e grace period.</p>
+<p><strong>Falhas:</strong> handler que ignora cancelamento, processo que não coleta child, shutdown que aceita trabalho novo e <code>time.sleep()</code> no event loop.</p>
+<p><strong>Evidência:</strong> process tree, timeline de shutdown, contagem de requests concluídas/canceladas e teste automatizado.</p>
+<p><strong>Aceitação:</strong> SIGTERM deixa de aceitar tráfego, encerra ou cancela trabalho dentro do prazo e retorna exit code esperado; SIGKILL é explicado como não recuperável.</p>
+<h2 id="bloco-2--filesystem-permissões-ambiente-limites-e-secrets">Bloco 2 · Filesystem, permissões, ambiente, limites e secrets</h2>
+<p><strong>IDs:</strong> LT01-B02-C01..06 · <strong>Matriz:</strong> OPS-01, SEC-03.</p>
+<p><strong>Conteúdo:</strong> path absoluto/relativo, inode/link/symlink, mount e volume, usuário/grupo/mode, umask, ownership, arquivos temporários, atomic rename, environment, <code>/proc</code>, file descriptors, <code>ulimit</code>/RLIMIT e secret exposure em args/env/logs.</p>
+<p><strong>Prática:</strong> executar como usuário não-root; criar diretório de dados com permissões mínimas; escrita atômica; inspecionar <code>/proc/&lt;pid&gt;/fd</code>; provocar e corrigir vazamento de FD.</p>
+<p><strong>Falhas:</strong> symlink escape, volume read-only, permissão incorreta, disco cheio simulado, arquivo temporário previsível e segredo no command line.</p>
+<p><strong>Evidência:</strong> mapa de permissões, gráfico de FD ao longo da carga e teste de cleanup.</p>
+<p><strong>Aceitação:</strong> FD retorna ao baseline, app não requer root, paths externos são negados e segredo não aparece em process args/logs.</p>
+<h2 id="bloco-3--dns-endereços-tcp-tls-e-o-caminho-da-conexão">Bloco 3 · DNS, endereços, TCP, TLS e o caminho da conexão</h2>
+<p><strong>IDs:</strong> LT01-B03-C01..07 · <strong>Matriz:</strong> OPS-01.</p>
+<p><strong>Conteúdo:</strong> hostname, resolver, records A/AAAA/CNAME, cache/TTL e negative caching; IP/port/socket; TCP handshake, retransmissão, close/reset e estados; TLS 1.3, SNI, certificado, chain, hostname e validade; QUIC como transporte do HTTP/3.</p>
+<p><strong>Prática:</strong> seguir <code>nome → IP → conexão → TLS → HTTP</code> com <code>dig/getent</code>, <code>ss</code>, <code>curl -v</code> e <code>openssl s_client</code>; correlacionar tempo de DNS/connect/TLS/TTFB.</p>
+<p><strong>Falhas:</strong> nome inexistente, resposta DNS lenta, porta errada, connection refused, reset, certificado expirado/hostname incorreto e IPv6 sem rota.</p>
+<p><strong>Evidência:</strong> connection breakdown e tabela sintoma → camada → comando → conclusão.</p>
+<p><strong>Aceitação:</strong> aluno distingue falha de resolução, transporte, TLS e aplicação sem usar “erro de rede” como diagnóstico final.</p>
+<h2 id="bloco-4--http-proxies-pools-deadlines-e-cancelamento">Bloco 4 · HTTP, proxies, pools, deadlines e cancelamento</h2>
+<p><strong>IDs:</strong> LT01-B04-C01..07 · <strong>Matriz:</strong> OPS-01, WEB-01, PY-02.</p>
+<p><strong>Conteúdo:</strong> semântica versus framing; HTTP/1.1 keep-alive/head-of-line, HTTP/2 streams/multiplexação, HTTP/3/QUIC; reverse proxy; connection pool; timeout de connect/read/write/pool; deadline end-to-end; propagação de cancelamento; retry somente quando seguro.</p>
+<p><strong>Prática:</strong> medir reutilização de conexão; esgotar pool; configurar timeouts por fase; propagar deadline para upstream; cancelar client e confirmar cleanup server-side.</p>
+<p><strong>Falhas:</strong> timeout infinito, pool menor que concorrência, retry além do deadline, response body não fechado e proxy timeout menor/maior incoerente.</p>
+<p><strong>Evidência:</strong> waterfall de latência, métricas do pool e testes com relógio controlado.</p>
+<p><strong>Aceitação:</strong> nenhuma operação excede deadline sem justificativa; recursos são liberados após timeout/cancel; retry não amplifica carga.</p>
+<h2 id="bloco-5--saturação-littles-law-e-observabilidade-do-runtime">Bloco 5 · Saturação, Little's Law e observabilidade do runtime</h2>
+<p><strong>IDs:</strong> LT01-B05-C01..07 · <strong>Matriz:</strong> OPS-01, OBS-01.</p>
+<p><strong>Conteúdo:</strong> throughput, latency, concurrency e queue; CPU-bound/I/O-bound; RSS versus virtual memory; leak versus cache; FD/socket/pool exhaustion; load average e throttling; percentis; USE method e golden signals; process/system/HTTP semantic conventions.</p>
+<p><strong>Prática:</strong> aumentar carga por degraus, localizar knee point, comparar sync blocking/async, limitar concorrência e observar fila/backpressure.</p>
+<p><strong>Falhas:</strong> CPU loop, memory growth, connection leak, blocking call, upstream lento e cardinalidade explosiva de métricas.</p>
+<p><strong>Evidência:</strong> gráfico carga → throughput/p95/erro/recursos, hipótese e limite de capacidade declarado.</p>
+<p><strong>Aceitação:</strong> conclusão identifica primeiro recurso saturado e não confunde correlação temporal com causa.</p>
+<h2 id="bloco-6--incidente-diagnosticar-a-api-degradada">Bloco 6 · Incidente: diagnosticar a API degradada</h2>
+<p><strong>IDs:</strong> LT01-B06-C01..07 · <strong>Matriz:</strong> OPS-01, OBS-01, SRE-02.</p>
+<p><strong>Conteúdo:</strong> triagem, impacto, timeline, hipóteses concorrentes, mudança recente, comparação com baseline, mitigação versus correção, verificação e postmortem curto.</p>
+<p><strong>Prática:</strong> receber cenário sem nome da falha, orçamento de 60 minutos e acesso apenas aos sinais definidos. Registrar cada hipótese antes do comando, evidência que a refuta/confirma e próxima decisão.</p>
+<p><strong>Saída:</strong> <code>incident.md</code>, comandos/outputs sanitizados, patch mínimo, teste de regressão e runbook.</p>
+<p><strong>Aceitação:</strong> causa provada, impacto mitigado, regression test falha antes/passa depois e ambiente retorna ao baseline.</p>
+<h2 id="5-catálogo-de-aceitação">5. Catálogo de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Cenário</th>
+<th>Condição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LT01-AT-001</td>
+<td><code>time.sleep</code> no event loop</td>
+<td>degradação reproduzida e corrigida</td>
+</tr>
+<tr>
+<td>LT01-AT-002</td>
+<td>SIGTERM sob carga</td>
+<td>shutdown dentro do grace period</td>
+</tr>
+<tr>
+<td>LT01-AT-003</td>
+<td>child/zombie</td>
+<td>processo coletado e explicado</td>
+</tr>
+<tr>
+<td>LT01-AT-010</td>
+<td>FD leak</td>
+<td>crescimento detectado; baseline restaurado</td>
+</tr>
+<tr>
+<td>LT01-AT-011</td>
+<td>symlink/path escape</td>
+<td>acesso negado antes de I/O sensível</td>
+</tr>
+<tr>
+<td>LT01-AT-012</td>
+<td>execução non-root/read-only</td>
+<td>app inicia e escreve apenas onde permitido</td>
+</tr>
+<tr>
+<td>LT01-AT-020</td>
+<td>DNS NXDOMAIN/timeout</td>
+<td>camada identificada corretamente</td>
+</tr>
+<tr>
+<td>LT01-AT-021</td>
+<td>refused/reset</td>
+<td>estados distinguidos por evidência</td>
+</tr>
+<tr>
+<td>LT01-AT-022</td>
+<td>TLS hostname/expiry</td>
+<td>falha validada; nunca desabilitar verificação como correção</td>
+</tr>
+<tr>
+<td>LT01-AT-030</td>
+<td>pool exhaustion</td>
+<td>fila/timeout observados e dimensionamento defendido</td>
+</tr>
+<tr>
+<td>LT01-AT-031</td>
+<td>deadline/retry</td>
+<td>orçamento respeitado e sem retry storm</td>
+</tr>
+<tr>
+<td>LT01-AT-032</td>
+<td>client cancellation</td>
+<td>trabalho e recursos liberados</td>
+</tr>
+<tr>
+<td>LT01-AT-040</td>
+<td>CPU saturation</td>
+<td>knee point e recurso limitante identificados</td>
+</tr>
+<tr>
+<td>LT01-AT-041</td>
+<td>memory growth</td>
+<td>leak/cache/baseline distinguidos</td>
+</tr>
+<tr>
+<td>LT01-AT-042</td>
+<td>upstream latency</td>
+<td>sintoma separado da causa externa</td>
+</tr>
+<tr>
+<td>LT01-AT-050</td>
+<td>cardinalidade de métrica</td>
+<td>série problemática removida sem perder diagnóstico</td>
+</tr>
+<tr>
+<td>LT01-AT-060</td>
+<td>incidente inédito</td>
+<td>hipótese → evidência → correção → regressão completos</td>
+</tr>
+<tr>
+<td>LT01-AT-061</td>
+<td>restauração do lab</td>
+<td>todos os faults desligados e smoke verde</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-checkpoint-lt01">6. Checkpoint LT01</h2>
+<p>O aluno recebe uma variante inédita. Deve:</p>
+<ol>
+<li>declarar impacto e baseline;</li>
+<li>formular no máximo três hipóteses iniciais;</li>
+<li>escolher cada comando explicando o sinal esperado;</li>
+<li>localizar a camada da falha;</li>
+<li>mitigar sem esconder o problema;</li>
+<li>corrigir e escrever teste de regressão;</li>
+<li>explicar trade-off e risco residual;</li>
+<li>restaurar o laboratório.</li>
+</ol>
+<p>Perguntas incluem: processo versus coroutine; por que SIGKILL impede cleanup; FD versus conexão; NXDOMAIN versus refused; o que TLS autentica; timeout versus deadline; por que aumentar pool pode piorar; como Little's Law aparece; por que média esconde cauda; como cancelamento se propaga.</p>
+<h2 id="7-fontes">7. Fontes</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte</th>
+<th>Versão/data</th>
+<th>Uso</th>
+<th>Obsolescência</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-LT01-01</td>
+<td><a href="https://man7.org/linux/man-pages/">Linux man-pages</a></td>
+<td>6.18+, consultada 14/08/2026</td>
+<td>processos, sinais, proc, FD, limits</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT01-02</td>
+<td><a href="https://man7.org/linux/man-pages/man7/signal.7.html">signal(7)</a></td>
+<td>Linux man-pages</td>
+<td>sinais</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT01-03</td>
+<td><a href="https://man7.org/linux/man-pages/man5/proc.5.html">proc(5)</a></td>
+<td>Linux man-pages</td>
+<td>observação de processo</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT01-04</td>
+<td><a href="https://docs.python.org/3.14/library/asyncio-task.html">Python asyncio tasks</a></td>
+<td>Python 3.14.6</td>
+<td>cancelamento, timeout, TaskGroup</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT01-05</td>
+<td><a href="https://docs.python.org/3.14/library/signal.html">Python signal</a></td>
+<td>Python 3.14</td>
+<td>sinais no runtime</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT01-06</td>
+<td><a href="https://www.rfc-editor.org/rfc/rfc1034.html">DNS concepts</a> e <a href="https://www.rfc-editor.org/rfc/rfc1035.html">implementation</a></td>
+<td>RFC 1034/1035 + atualizações aplicáveis</td>
+<td>fundamentos DNS</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT01-07</td>
+<td><a href="https://www.rfc-editor.org/rfc/rfc9293.html">TCP</a></td>
+<td>RFC 9293</td>
+<td>transporte TCP</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT01-08</td>
+<td><a href="https://www.rfc-editor.org/rfc/rfc8446.html">TLS 1.3</a></td>
+<td>RFC 8446</td>
+<td>handshake e segurança</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT01-09</td>
+<td><a href="https://www.rfc-editor.org/rfc/rfc9110.html">HTTP Semantics</a></td>
+<td>RFC 9110</td>
+<td>semântica HTTP</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT01-10</td>
+<td><a href="https://www.rfc-editor.org/rfc/rfc9112.html">HTTP/1.1</a>, <a href="https://www.rfc-editor.org/rfc/rfc9113.html">HTTP/2</a>, <a href="https://www.rfc-editor.org/rfc/rfc9114.html">HTTP/3</a></td>
+<td>RFC 9112–9114</td>
+<td>framing/transporte</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT01-11</td>
+<td><a href="https://www.rfc-editor.org/rfc/rfc9000.html">QUIC</a></td>
+<td>RFC 9000</td>
+<td>base do HTTP/3</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT01-12</td>
+<td><a href="https://opentelemetry.io/docs/specs/semconv/system/">OpenTelemetry system conventions</a></td>
+<td>vigente na regeneração; partes Development</td>
+<td>métricas de sistema/processo</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT01-13</td>
+<td><a href="https://opentelemetry.io/docs/specs/semconv/http/">OpenTelemetry HTTP conventions</a></td>
+<td>vigente na regeneração</td>
+<td>métricas/traces HTTP</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT01-14</td>
+<td><a href="https://sre.google/workbook/monitoring/">Google SRE Monitoring</a></td>
+<td>edição online</td>
+<td>sinais e diagnóstico</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT01-15</td>
+<td><a href="https://sre.google/sre-book/handling-overload/">Google SRE Handling Overload</a></td>
+<td>edição online</td>
+<td>saturação e load shedding</td>
+<td>baixa</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-critérios-editoriais-e-g0">8. Critérios editoriais e G0</h2>
+<ul>
+<li>8.000–10.000 palavras visíveis mais lab executável;</li>
+<li>mínimo de 18 resultados esperados e 15 comandos explicados;</li>
+<li>ferramentas apresentadas por sinal que observam, não como lista para decorar;</li>
+<li>toda falha tem restauração automática/idempotente;</li>
+<li>nenhuma ação destrutiva é executada no host;</li>
+<li>variantes de checkpoint não aparecem resolvidas no material;</li>
+<li>
+<p>exemplos Python 3.14 tipados; Compose fornece o Linux reproduzível.</p>
+</li>
+<li>
+<p>[x] seis blocos, competências e dependências definidos;</p>
+</li>
+<li>[x] ambiente e segurança do laboratório definidos;</li>
+<li>[x] 18 cenários de aceitação definidos;</li>
+<li>[x] evidências e checkpoint definidos;</li>
+<li>[x] fontes primárias selecionadas;</li>
+<li>[x] escopo separado de LT02/LT03.</li>
+</ul>
+<p><strong>Decisão:</strong> LT01 está <code>ESPECIFICADO</code> e pode entrar em produção de material após as especificações LT02–LT04. Gate G0 aprovado.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

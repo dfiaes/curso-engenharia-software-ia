@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M02-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Especificação do M02 — Python 3.14 para engenharia profissional</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="especificação-do-m02--python-314-para-engenharia-profissional">Especificação do M02 — Python 3.14 para engenharia profissional</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.1 · <strong>Data-base:</strong> 15/08/2026 · <strong>Estado:</strong> G0 APROVADO · <strong>Carga:</strong> 8 blocos / 16h</p>
+<p><strong>Baseline de execução de 15/08/2026:</strong> o orquestrador aprovou G0–G6 e os 38 cenários daquela edição; os comandos e saídas são evidência histórica em <code>modulos/M02-python-profissional/RASTREABILIDADE.md</code>. A edição editorial de setembro requer revalidação, especialmente G6; consulte <code>docs/STATUS-IMPLEMENTACAO-CURSO.md</code> para o estado operacional atual. Esta especificação preserva o registro de agosto e não promove gate.</p>
+<h2 id="1-decisão-de-escopo">1. Decisão de escopo</h2>
+<p>O M02 cresce de seis para oito blocos, de 12h para 16h. A versão anterior mistura sintaxe, runtime, typing, validação, concorrência, paralelismo, packaging e testes em uma carga que permite repetir exemplos, mas não formar julgamento sênior. A ampliação separa responsabilidades sem transformar o módulo em enciclopédia.</p>
+<p>Python 3.14 é a linguagem e o runtime canônicos. A explicação independe de outra stack e ensina a semântica no ponto de uso. <code>uv</code>, mypy, Pydantic, pytest e Hypothesis são implementações usadas no laboratório; padrões Python, typing specification, PyPA e contratos observáveis são o núcleo transferível.</p>
+<h2 id="2-resultado-do-módulo">2. Resultado do módulo</h2>
+<p>Ao concluir o M02, o aluno deve construir, empacotar, testar, medir e diagnosticar um CLI Python 3.14 profissional, explicando mecanismos, decisões e limites com exemplos Python. A aprovação exige demonstrar que ele:</p>
+<ul>
+<li>explica nomes, objetos, referências, mutabilidade, identidade, igualdade e hash;</li>
+<li>diagnostica import/path/package sem depender de “funcionou no editor”;</li>
+<li>distingue metadata, build backend, wheel/sdist, ambiente e lockfile;</li>
+<li>usa typing gradual sem confundir anotação, checker e validação runtime;</li>
+<li>projeta Protocols e genéricos com variance/narrowing conscientes;</li>
+<li>valida trust boundaries com Pydantic sem prometer invariantes inexistentes;</li>
+<li>implementa concorrência estruturada, cancelamento, timeout e backpressure;</li>
+<li>escolhe entre event loop, threads, processos, subinterpreters e free-threading por medição;</li>
+<li>gerencia recursos, exceções, encoding, logging e exit codes de forma cross-platform;</li>
+<li>executa testes unitários, integração, propriedade e mutação/controle negativo;</li>
+<li>produz wheel instalável em ambiente limpo e evidência reproduzível;</li>
+<li>usa IA para acelerar hipóteses e diffs sem aceitar código plausível como prova.</li>
+</ul>
+<h2 id="3-pré-requisitos-e-fora-de-escopo">3. Pré-requisitos e fora de escopo</h2>
+<h3 id="pré-requisitos">Pré-requisitos</h3>
+<ul>
+<li>M00: harness, capabilities, tool safety e evidência.</li>
+<li>M01: spec, task contract, gates, casos negativos e handoff.</li>
+<li>Git básico e terminal em Windows ou Linux.</li>
+</ul>
+<h3 id="fora-de-escopo">Fora de escopo</h3>
+<ul>
+<li>ensinar FastAPI, SQLAlchemy, containers e CI completos — M03;</li>
+<li>arquitetura distribuída, filas duráveis e sagas — LT02;</li>
+<li>internals completos de CPython/C API ou autoria de extensão nativa — M11/M02A;</li>
+<li>escolher um único type checker, build backend ou package manager como padrão universal;</li>
+<li>publicar pacote real em PyPI ou usar credencial de registry;</li>
+<li>benchmark de hardware como ranking universal;</li>
+<li>afirmar equivalência semântica entre <code>Task</code>, coroutine, thread e process;</li>
+<li>tratar tipagem como substituta de testes ou Pydantic como substituto de regra de negócio.</li>
+</ul>
+<h2 id="4-arquitetura-do-laboratório">4. Arquitetura do laboratório</h2>
+<pre><code class="language-text">modulos/M02-python-profissional/
+├── M02.html
+├── README.md
+├── RASTREABILIDADE.md
+└── lab/
+    ├── pyproject.toml
+    ├── uv.lock
+    ├── README.md
+    ├── contracts/
+    │   ├── transaction.schema.json
+    │   └── evidence.schema.json
+    ├── src/python_senior_lab/
+    │   ├── __init__.py
+    │   ├── cli.py
+    │   ├── domain.py
+    │   ├── parsing.py
+    │   ├── ports.py
+    │   ├── async_pipeline.py
+    │   ├── parallelism.py
+    │   ├── diagnostics.py
+    │   └── evidence.py
+    ├── tests/
+    │   ├── unit/
+    │   ├── integration/
+    │   ├── property/
+    │   └── negative/
+    ├── fixtures/
+    │   ├── csv/
+    │   ├── packages/
+    │   └── generated_defects/
+    └── evidence/
+        └── .gitkeep
+</code></pre>
+<p>O produto didático tem nome de distribuição/comando <code>csv-cleaner</code> e import package <code>python_senior_lab</code>. A diferença é intencional e torna executável o cenário M02-AT-005: distribution package, import package e comando instalado são namespaces distintos. O domínio exige parsing, validação, números decimais, encoding, streaming, concorrência opcional, arquivos e exit codes sem banco ou rede externa. Um servidor local descartável simula I/O no bloco de <code>asyncio</code>.</p>
+<h3 id="gates-canônicos">Gates canônicos</h3>
+<pre><code class="language-text">uv sync --python 3.14 --locked
+uv run ruff format --check .
+uv run ruff check .
+uv run mypy --strict src tests
+uv run pytest -q
+uv build
+uv run python -m python_senior_lab.cli --help
+</code></pre>
+<p>O gate de distribuição instala o wheel produzido em ambiente temporário sem usar o checkout como import path. O gate de benchmark registra ambiente, warm-up, amostras, mediana e percentis; não compara com número fixo universal.</p>
+<h2 id="5-regras-inegociáveis">5. Regras inegociáveis</h2>
+<ol>
+<li>Todo comando usa Python 3.14 e é confirmado em Windows; comandos POSIX possuem alternativa portátil.</li>
+<li>Saída “esperada” descreve propriedades e intervalos locais, nunca um número fabricado de desempenho.</li>
+<li>Nenhum teste obrigatório depende de internet, relógio de parede remoto ou serviço de terceiros.</li>
+<li><code>uv.lock</code> é lock específico do uv; <code>pylock.toml</code> é formato padronizado distinto. O módulo ensina ambos sem prometer equivalência total.</li>
+<li><code>requirements.txt</code> não é declarado morto: é um formato ainda suportado, com usos e limites próprios.</li>
+<li>Ambiente virtual isola instalação/imports; não é definido como “cópia integral do interpretador”.</li>
+<li>Hints são parte do sistema de typing gradual; checker e configuração determinam diagnósticos. <code>--strict</code> é conveniência versionada do mypy, não norma estável.</li>
+<li>Pydantic valida nos caminhos que realmente executam validação. <code>model_construct()</code>, mutação sem <code>validate_assignment</code> e invariantes externas demonstram limites.</li>
+<li>Um event loop executa tarefas cooperativamente em sua thread; aplicações podem possuir múltiplos processos, threads ou interpreters. A simplificação “Python tem um único loop” é proibida.</li>
+<li>Cancelamento é parte do contrato. Cleanup usa <code>try/finally</code>; <code>CancelledError</code> não é engolido sem decisão explícita.</li>
+<li>Backpressure é demonstrado com fila limitada ou semaphore e métrica de espera; “disparar tudo com gather” não é solução universal.</li>
+<li>Free-threading oficialmente suportado não implica compatibilidade de extensões, ausência de sincronização ou ganho automático.</li>
+<li><code>frozen=True</code> e <code>slots=True</code> não são vendidos como imutabilidade profunda nem segurança de concorrência.</li>
+<li>Código gerado por IA recebe ao menos type check, caso negativo e revisão de contrato antes de promoção.</li>
+</ol>
+<h2 id="6-roteiro-de-oito-blocos">6. Roteiro de oito blocos</h2>
+<h3 id="bloco-1--projeto-ambientes-dependências-e-distribuição">Bloco 1 · Projeto, ambientes, dependências e distribuição</h3>
+<p><strong>Competências:</strong> <code>M02-B01-C01..05</code>.</p>
+<ul>
+<li>distinguir distribuição, import package, módulo, script, aplicação e library;</li>
+<li>configurar <code>pyproject.toml</code>, <code>[build-system]</code>, <code>[project]</code> e <code>[project.scripts]</code>;</li>
+<li>explicar ambiente, resolução, lock, sync e instalação sem acoplar o conceito ao uv;</li>
+<li>comparar <code>uv.lock</code>, export de requirements e <code>pylock.toml</code>;</li>
+<li>construir sdist/wheel e instalar o wheel em ambiente limpo.</li>
+</ul>
+<p><strong>Prática:</strong> inicializar pacote Python 3.14 com layout <code>src</code>, CLI instalada por entry point e lock versionado. Gerar wheel, inspecionar conteúdo e testar import/execução fora do checkout.</p>
+<p><strong>Falhas semeadas:</strong> build system ausente, package name diferente do import name, lock desatualizado, arquivo de dados ausente no wheel e execução acidental contra o source tree.</p>
+<p><strong>Resultado esperado:</strong> o aluno explica cada falha usando metadata, import path e artefato distribuído; não resolve com <code>sys.path.append()</code>.</p>
+<h3 id="bloco-2--modelo-de-objetos-imports-recursos-e-exceções">Bloco 2 · Modelo de objetos, imports, recursos e exceções</h3>
+<p><strong>Competências:</strong> <code>M02-B02-C01..05</code>.</p>
+<ul>
+<li>raciocinar sobre nome, binding, objeto, identidade, igualdade e hash;</li>
+<li>prever efeitos de mutabilidade, aliasing e default mutável;</li>
+<li>explicar busca/import, <code>sys.modules</code>, <code>__main__</code> e imports relativos;</li>
+<li>implementar context manager síncrono/assíncrono com cleanup em falha;</li>
+<li>preservar causa por exception chaining e produzir diagnóstico acionável.</li>
+</ul>
+<p><strong>Prática:</strong> corrigir um parser com aliasing, chave mutável, import circular, arquivo não fechado e exceção que perde a causa. Explicar referências, identidade e igualdade diretamente em Python.</p>
+<p><strong>Resultado esperado:</strong> os cinco defeitos falham antes da correção; testes verificam identidade/igualdade, cleanup e cadeia de exceções.</p>
+<h3 id="bloco-3--typing-gradual-protocols-e-apis-verificáveis">Bloco 3 · Typing gradual, Protocols e APIs verificáveis</h3>
+<p><strong>Competências:</strong> <code>M02-B03-C01..06</code>.</p>
+<ul>
+<li>separar linguagem, typing specification, annotations runtime e checker;</li>
+<li>controlar <code>Any</code> e justificar quando <code>object</code>/Protocol é mais seguro;</li>
+<li>usar <code>TypedDict</code>, <code>Literal</code>, <code>Self</code>, <code>Never</code>, <code>TypeGuard</code>/<code>TypeIs</code> e narrowing;</li>
+<li>projetar Protocol estrutural e provar substituibilidade por dois adapters;</li>
+<li>usar genéricos modernos e explicar invariância/covariância/contravariância;</li>
+<li>lidar com annotations diferidas do Python 3.14 e introspecção por <code>annotationlib</code>/APIs adequadas.</li>
+</ul>
+<p><strong>Prática:</strong> uma porta <code>RateProvider</code> recebe fake determinístico e adapter local; defeitos incluem <code>Any</code> vazando, variance incorreta, narrowing inseguro, <code>cast</code> que mente e introspecção antiga de annotation.</p>
+<p><strong>Resultado esperado:</strong> mypy estrito bloqueia os defeitos estáticos; um teste runtime demonstra que hint válido não impede valor inválido quando a fronteira não valida.</p>
+<h3 id="bloco-4--pydantic-e-contratos-de-trust-boundary">Bloco 4 · Pydantic e contratos de trust boundary</h3>
+<p><strong>Competências:</strong> <code>M02-B04-C01..05</code>.</p>
+<ul>
+<li>escolher coerção ou strictness por risco e origem do dado;</li>
+<li>negar extras e normalizar antes de aplicar invariantes;</li>
+<li>projetar field/model validators sem efeitos ocultos;</li>
+<li>diferenciar JSON Schema, validação Pydantic e invariantes de domínio;</li>
+<li>demonstrar caminhos que contornam ou não repetem validação.</li>
+</ul>
+<p><strong>Prática:</strong> validar transações CSV/webhook com moeda, timestamp, decimal, categoria e origem. Comparar lax/strict, <code>extra</code>, <code>model_construct()</code>, mutação e serialização.</p>
+<p><strong>Resultado esperado:</strong> fixture adversarial não vira objeto confiável silenciosamente; o relatório mostra qual camada rejeitou e por quê.</p>
+<h3 id="bloco-5--asyncio-estruturado-cancelamento-e-backpressure">Bloco 5 · <code>asyncio</code> estruturado, cancelamento e backpressure</h3>
+<p><strong>Competências:</strong> <code>M02-B05-C01..06</code>.</p>
+<ul>
+<li>explicar coroutine, Task, Future e scheduling cooperativo;</li>
+<li>comparar <code>gather</code> e <code>TaskGroup</code> por semântica de falha;</li>
+<li>propagar cancelamento e garantir cleanup com <code>try/finally</code>;</li>
+<li>aplicar timeout sem deixar tarefa/efeito órfão;</li>
+<li>limitar concorrência com semaphore/fila bounded e observar espera;</li>
+<li>diagnosticar loop bloqueado com debug e introspecção do Python 3.14.</li>
+</ul>
+<p><strong>Prática:</strong> servidor local descartável simula latência, erro e resposta lenta. Pipeline ingere N transações com TaskGroup e fila limitada. Casos negativos bloqueiam o loop, engolem <code>CancelledError</code>, criam task sem ownership e removem backpressure.</p>
+<p><strong>Resultado esperado:</strong> testes provam cancelamento de siblings, cleanup, fila limitada e ausência de tarefa pendente; benchmark registra distribuição local em vez de prometer “40x”.</p>
+<h3 id="bloco-6--threads-processos-subinterpreters-e-free-threading">Bloco 6 · Threads, processos, subinterpreters e free-threading</h3>
+<p><strong>Competências:</strong> <code>M02-B06-C01..05</code>.</p>
+<ul>
+<li>separar concorrência de paralelismo e I/O-bound de CPU-bound;</li>
+<li>usar <code>to_thread</code>/executor para chamada síncrona com contexto e limite;</li>
+<li>escolher processo ou <code>InterpreterPoolExecutor</code> considerando serialização/isolamento;</li>
+<li>detectar build free-threaded e estado real do GIL;</li>
+<li>medir compatibilidade, sincronização e custo antes de recomendar threads paralelas.</li>
+</ul>
+<p><strong>Prática:</strong> executar a mesma transformação CPU-bound pequena em loop, thread, processo e interpreter quando disponível. Free-threaded é matriz opcional: o gate obrigatório não depende do build 3.14t.</p>
+<p><strong>Resultado esperado:</strong> relatório explica por que o vencedor depende de payload, overhead, hardware, build e extensões; nenhuma conclusão universal nasce de uma amostra.</p>
+<h3 id="bloco-7--python-idiomático-com-operabilidade">Bloco 7 · Python idiomático com operabilidade</h3>
+<p><strong>Competências:</strong> <code>M02-B07-C01..05</code>.</p>
+<ul>
+<li>usar iterables, iterators e generators com memória limitada;</li>
+<li>escolher dataclass, model Pydantic, mapping ou classe por responsabilidade;</li>
+<li>usar comprehensions/pattern matching sem esconder controle ou erro;</li>
+<li>projetar logging estruturado, encoding explícito e exit codes;</li>
+<li>medir tempo/memória e investigar traceback antes de otimizar.</li>
+</ul>
+<p><strong>Prática:</strong> refatorar código Python com estado e abstrações desnecessários para pipeline simples, mantendo contrato. Rodar arquivo UTF-8 com newline distinto, input grande em streaming e falha com correlação preservada.</p>
+<p><strong>Resultado esperado:</strong> a refatoração reduz estado/acoplamento sem sacrificar observabilidade; memória cresce de forma compatível com streaming, não com o arquivo inteiro.</p>
+<h3 id="bloco-8--estratégia-de-testes-cli-e-entrega-para-o-capstone">Bloco 8 · Estratégia de testes, CLI e entrega para o Capstone</h3>
+<p><strong>Competências:</strong> <code>M02-B08-C01..06</code>.</p>
+<ul>
+<li>separar teste unitário, integração de filesystem/processo e contrato;</li>
+<li>compor fixtures com teardown e parametrização legível;</li>
+<li>definir propriedades e gerar casos com Hypothesis;</li>
+<li>executar mutação/controle negativo e localizar oráculo fraco;</li>
+<li>testar CLI instalada, stdout/stderr, encoding e exit codes em subprocesso;</li>
+<li>revisar defeitos plausíveis gerados por IA com evidência.</li>
+</ul>
+<p><strong>Prática:</strong> concluir <code>csv-cleaner</code>, buildar wheel, instalar em temp, executar casos feliz/triste e produzir <code>evidence/run.json</code>. Um catálogo de defeitos gerados previamente por IA contém problemas de tipo, path, decimal, async, cleanup e teste tautológico.</p>
+<p><strong>Resultado esperado:</strong> Ruff, mypy e testes passam; wheel executa fora do checkout; pelo menos um mutante é morto por cada propriedade crítica; relatório separa evidência de risco residual.</p>
+<h2 id="7-cenários-de-aceitação">7. Cenários de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Cenário</th>
+<th>Resultado obrigatório</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M02-AT-001</td>
+<td>bootstrap em Python 3.14</td>
+<td>versão real registrada; ambiente criado sem depender de Python global implícito</td>
+</tr>
+<tr>
+<td>M02-AT-002</td>
+<td>lock desatualizado</td>
+<td><code>--locked</code>/gate equivalente falha sem alterar lock</td>
+</tr>
+<tr>
+<td>M02-AT-003</td>
+<td>build de distribuição</td>
+<td>sdist e wheel são produzidos e inspecionados</td>
+</tr>
+<tr>
+<td>M02-AT-004</td>
+<td>instalação limpa</td>
+<td>CLI instalada executa fora do checkout</td>
+</tr>
+<tr>
+<td>M02-AT-005</td>
+<td>package/import name distintos</td>
+<td>diagnóstico explica metadata versus import package</td>
+</tr>
+<tr>
+<td>M02-AT-006</td>
+<td>arquivo ausente no wheel</td>
+<td>teste de distribuição falha antes da publicação</td>
+</tr>
+<tr>
+<td>M02-AT-007</td>
+<td>default mutável</td>
+<td>duas chamadas expõem aliasing; correção elimina compartilhamento</td>
+</tr>
+<tr>
+<td>M02-AT-008</td>
+<td>identidade, igualdade e hash</td>
+<td>testes cobrem chave estável e objeto não-hashable</td>
+</tr>
+<tr>
+<td>M02-AT-009</td>
+<td>import circular/path</td>
+<td>erro é reproduzido e corrigido sem <code>sys.path.append()</code></td>
+</tr>
+<tr>
+<td>M02-AT-010</td>
+<td>recurso com exceção</td>
+<td>context manager executa cleanup e preserva causa</td>
+</tr>
+<tr>
+<td>M02-AT-011</td>
+<td><code>Any</code> entra na fronteira</td>
+<td>checker deixa de provar invariantes; gate identifica vazamento</td>
+</tr>
+<tr>
+<td>M02-AT-012</td>
+<td>Protocol com dois adapters</td>
+<td>ambos passam a mesma suíte sem herança nominal obrigatória</td>
+</tr>
+<tr>
+<td>M02-AT-013</td>
+<td>variance incorreta</td>
+<td>checker rejeita substituição insegura</td>
+</tr>
+<tr>
+<td>M02-AT-014</td>
+<td>narrowing inseguro</td>
+<td>caso negativo alcança branch impossível alegado e falha</td>
+</tr>
+<tr>
+<td>M02-AT-015</td>
+<td>annotation diferida</td>
+<td>introspecção funciona no Python 3.14 sem avaliar nome ausente por acidente</td>
+</tr>
+<tr>
+<td>M02-AT-016</td>
+<td>Pydantic lax versus strict</td>
+<td>política muda por trust boundary e teste documenta diferença</td>
+</tr>
+<tr>
+<td>M02-AT-017</td>
+<td>campo extra</td>
+<td>contrato externo nega dado não declarado</td>
+</tr>
+<tr>
+<td>M02-AT-018</td>
+<td><code>model_construct()</code></td>
+<td>teste prova que instância inválida pode ser construída sem validação</td>
+</tr>
+<tr>
+<td>M02-AT-019</td>
+<td>mutação pós-criação</td>
+<td>comportamento com/sem <code>validate_assignment</code> é explícito</td>
+</tr>
+<tr>
+<td>M02-AT-020</td>
+<td>invariante de domínio</td>
+<td>schema válido ainda falha regra de negócio no domínio</td>
+</tr>
+<tr>
+<td>M02-AT-021</td>
+<td>chamada bloqueante no loop</td>
+<td>diagnóstico detecta starvation e correção libera o loop</td>
+</tr>
+<tr>
+<td>M02-AT-022</td>
+<td>falha em TaskGroup</td>
+<td>siblings são cancelados e ExceptionGroup é tratado conscientemente</td>
+</tr>
+<tr>
+<td>M02-AT-023</td>
+<td>cancelamento externo</td>
+<td>cleanup ocorre e <code>CancelledError</code> é propagado</td>
+</tr>
+<tr>
+<td>M02-AT-024</td>
+<td>timeout</td>
+<td>tarefa/efeito não fica órfão após expiração</td>
+</tr>
+<tr>
+<td>M02-AT-025</td>
+<td>backpressure removido</td>
+<td>fila/latência/memória pioram e o gate detecta limite ausente</td>
+</tr>
+<tr>
+<td>M02-AT-026</td>
+<td>task sem ownership</td>
+<td>inspeção identifica pendência/exception não recuperada</td>
+</tr>
+<tr>
+<td>M02-AT-027</td>
+<td>I/O síncrono inevitável</td>
+<td>thread executa com limite e contexto esperado</td>
+</tr>
+<tr>
+<td>M02-AT-028</td>
+<td>workload CPU-bound</td>
+<td>loop/thread/process/interpreter são medidos no ambiente registrado</td>
+</tr>
+<tr>
+<td>M02-AT-029</td>
+<td>free-thread extension incompatível</td>
+<td>GIL reabilitado ou incompatibilidade é detectada, não ignorada</td>
+</tr>
+<tr>
+<td>M02-AT-030</td>
+<td>corrida em estado compartilhado</td>
+<td>lock/message passing corrige sem confiar em lock interno de <code>dict</code></td>
+</tr>
+<tr>
+<td>M02-AT-031</td>
+<td>arquivo grande</td>
+<td>generator limita memória e preserva resultado</td>
+</tr>
+<tr>
+<td>M02-AT-032</td>
+<td>UTF-8/newline</td>
+<td>CLI produz saída estável em Windows e Linux</td>
+</tr>
+<tr>
+<td>M02-AT-033</td>
+<td>erro operacional</td>
+<td>stderr, exit code e exception chain são acionáveis</td>
+</tr>
+<tr>
+<td>M02-AT-034</td>
+<td>property test</td>
+<td>entradas geradas encontram caso de borda não coberto pelo exemplo</td>
+</tr>
+<tr>
+<td>M02-AT-035</td>
+<td>mutante/controle negativo</td>
+<td>suíte falha quando regra crítica é removida</td>
+</tr>
+<tr>
+<td>M02-AT-036</td>
+<td>defeito gerado por IA</td>
+<td>revisão identifica pelo menos tipo, semântica e risco operacional com evidência</td>
+</tr>
+<tr>
+<td>M02-AT-037</td>
+<td>gate final</td>
+<td>Ruff, mypy, pytest e build passam com versões e durações registradas</td>
+</tr>
+<tr>
+<td>M02-AT-038</td>
+<td>entrega Capstone</td>
+<td><code>core/</code> expõe contratos/ports sem importar framework web ou provedor de IA</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-checkpoint-e-rubrica">8. Checkpoint e rubrica</h2>
+<p>O checkpoint possui dez perguntas no total, baseadas nos cenários, sem consulta, e demonstração de oito entregáveis. Aprovação:</p>
+<ul>
+<li>mínimo de 80% nas perguntas;</li>
+<li>100% nos itens de cancelamento, trust boundary, encoding/path, distribuição limpa e casos negativos;</li>
+<li>execução ao vivo do gate final e de duas falhas semeadas;</li>
+<li>defesa de uma escolha entre asyncio/thread/process/interpreter com evidência do próprio ambiente;</li>
+<li>explicação de duas escolhas de implementação Python e de seus limites.</li>
+</ul>
+<p>Não contam como evidência: saída copiada do HTML, benchmark sem ambiente/amostras, teste marcado <code>skip</code>, número hardcoded, execução só dentro do checkout ou resposta de IA sem reprodução.</p>
+<h2 id="9-fontes-e-risco-de-obsolescência">9. Fontes e risco de obsolescência</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte primária</th>
+<th>Uso</th>
+<th>Risco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M02-01</td>
+<td><a href="https://docs.python.org/3.14/whatsnew/3.14.html">Python 3.14 — What’s New</a></td>
+<td>baseline, annotations, interpreters, asyncio e free-threading</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M02-02</td>
+<td><a href="https://docs.python.org/3.14/reference/">Python Language Reference</a></td>
+<td>modelo de objetos, execução, imports e linguagem</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M02-03</td>
+<td><a href="https://docs.python.org/3.14/reference/import.html">Python import system</a></td>
+<td>busca, cache, loading e <code>__main__</code></td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M02-04</td>
+<td><a href="https://docs.python.org/3.14/library/asyncio-task.html">Python asyncio tasks</a></td>
+<td>TaskGroup, gather, cancelamento e threads</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M02-05</td>
+<td><a href="https://docs.python.org/3.14/library/asyncio-queue.html">Python asyncio queues</a></td>
+<td>backpressure e shutdown</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M02-06</td>
+<td><a href="https://docs.python.org/3.14/howto/free-threading-python.html">Python free-threading HOWTO</a></td>
+<td>detecção, compatibilidade, sincronização e limites</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M02-07</td>
+<td><a href="https://docs.python.org/3.14/library/concurrency.html">Python concurrent execution</a></td>
+<td>threads, processos, interpreters e subprocess</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M02-08</td>
+<td><a href="https://typing.python.org/en/latest/spec/">Python typing specification</a></td>
+<td>semântica agnóstica de checker</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M02-09</td>
+<td><a href="https://packaging.python.org/en/latest/guides/writing-pyproject-toml/">PyPA — pyproject.toml</a></td>
+<td>metadata, build backend e entry points</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M02-10</td>
+<td><a href="https://packaging.python.org/en/latest/specifications/pylock-toml/">PyPA — pylock.toml</a></td>
+<td>lockfile interoperável</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M02-11</td>
+<td><a href="https://docs.astral.sh/uv/guides/projects/">uv projects</a></td>
+<td>implementação de ambiente/projeto</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M02-12</td>
+<td><a href="https://docs.astral.sh/uv/concepts/projects/sync/">uv locking and syncing</a></td>
+<td>lock, sync, frozen e locked</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M02-13</td>
+<td><a href="https://docs.astral.sh/uv/guides/package/">uv package guide</a></td>
+<td>build, instalação limpa e publicação simulada</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M02-14</td>
+<td><a href="https://mypy.readthedocs.io/en/stable/command_line.html">mypy command line</a></td>
+<td>implementação do checker e <code>--strict</code></td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M02-15</td>
+<td><a href="https://docs.pydantic.dev/latest/concepts/models/">Pydantic models</a></td>
+<td>validação, construct e configuração</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M02-16</td>
+<td><a href="https://docs.pydantic.dev/latest/concepts/strict_mode/">Pydantic strict mode</a></td>
+<td>coerção e trust boundary</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M02-17</td>
+<td><a href="https://docs.pytest.org/en/stable/how-to/fixtures.html">pytest fixtures</a></td>
+<td>fixtures, teardown e scopes</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M02-18</td>
+<td><a href="https://docs.pytest.org/en/stable/how-to/parametrize.html">pytest parametrization</a></td>
+<td>matriz de casos</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M02-19</td>
+<td><a href="https://hypothesis.readthedocs.io/en/latest/">Hypothesis documentation</a></td>
+<td>property-based testing</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M02-20</td>
+<td><a href="https://docs.python.org/3.14/library/contextlib.html">Python contextlib</a></td>
+<td>gestão determinística de recursos</td>
+<td>baixo</td>
+</tr>
+</tbody>
+</table>
+<p>Documentação Python 3.14 e PyPA foi revalidada em 15/08/2026. Fontes de implementação (<code>uv</code>, mypy, Pydantic, pytest, Hypothesis) devem ser revalidadas em até 90 dias e ter versões gravadas na evidência do lab.</p>
+<h2 id="10-integração-curricular">10. Integração curricular</h2>
+<ul>
+<li><strong>Entrada do M01:</strong> task contract, gates, evidence e caso negativo definem como o M02 é construído.</li>
+<li><strong>Saída para M03:</strong> wheel/CLI, settings/ports e domínio tipado; M03 adiciona HTTP/banco sem reensinar Python básico.</li>
+<li><strong>Saída para M05/M08/M09:</strong> Protocols e Pydantic formam os contratos agnósticos de provider/tool/protocolo.</li>
+<li><strong>Saída para M06:</strong> property/mutation tests e evidence runner tornam evals menos frágeis.</li>
+<li><strong>Saída para M10/LT02:</strong> TaskGroup, cancelamento e backpressure sustentam durabilidade e sistemas distribuídos, sem substituí-los.</li>
+<li><strong>Limite com M02A:</strong> M02 ensina domínio profissional da linguagem; M02A amplia arquitetura, dados, segurança, entrega, liderança e compatibilidade entre implementações Python em sistema maior.</li>
+</ul>
+<h2 id="11-gate-g0">11. Gate G0</h2>
+<ul>
+<li>[x] oito blocos e ampliação para 16h justificados;</li>
+<li>[x] 38 cenários positivos, negativos, cross-platform e de falha;</li>
+<li>[x] laboratório local, instalável e sem dependência obrigatória de rede;</li>
+<li>[x] Python 3.14 e mudanças relevantes incluídos sem hype;</li>
+<li>[x] padrões separados de uv/mypy/Pydantic/pytest;</li>
+<li>[x] afirmações absolutas incorretas substituídas por contratos com limites;</li>
+<li>[x] testing, operação, distribuição e evidência fazem parte da conclusão;</li>
+<li>[x] explicação autossuficiente e Python mantido como linguagem canônica;</li>
+<li>[x] fontes primárias classificadas, datadas e com risco de obsolescência;</li>
+<li>[x] escopo não duplica M03, LT02, M11 ou M02A.</li>
+</ul>
+<p><strong>Decisão em 15/08/2026:</strong> G0–G6 aprovados. O HTML regenerado, o laboratório, a rastreabilidade, a portabilidade Windows/3.14t/Linux e a inspeção visual substituíram o artefato legado; o M02 está <code>VERIFICADO</code>.</p>
+<h2 id="revisão-didática--12092026">Revisão didática — 12/09/2026</h2>
+<p>Removida a exigência de analogias com outra stack na autoria e na rubrica. Os 38 cenários técnicos foram preservados. A evidência de agosto permanece histórica; a apresentação e o checkpoint revisados exigem revalidação editorial. As 16h são estimativa de escopo, sem duração obrigatória por sessão.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

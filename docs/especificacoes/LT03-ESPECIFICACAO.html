@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/LT03-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Especificação do LT03 — Cloud-native, IaC, GitOps e plataforma</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="especificação-do-lt03--cloud-native-iac-gitops-e-plataforma">Especificação do LT03 — Cloud-native, IaC, GitOps e plataforma</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/08/2026 · <strong>Estado:</strong> G0 APROVADO · <strong>Carga:</strong> 6 blocos / 12h</p>
+<p>LT03 acontece depois do M10. Seu propósito é levar o serviço Python do artefato OCI a um ambiente declarativo, reconciliado e operável, sem transformar o aluno em operador de um único provedor de nuvem.</p>
+<h2 id="1-resultado-do-laboratório">1. Resultado do laboratório</h2>
+<p>Ao concluir LT03, o aluno consegue:</p>
+<ul>
+<li>explicar compute, rede, storage, região, zona, failure domain, responsabilidade e custo de cloud;</li>
+<li>construir e distribuir imagem OCI reproduzível, imutável e executada como non-root;</li>
+<li>projetar workloads Kubernetes com configuração, probes, recursos, segurança e shutdown coerentes;</li>
+<li>dimensionar réplicas e autoscaling a partir de carga, fila, SLO e tempo de inicialização;</li>
+<li>provisionar sandbox por IaC com estado, locking, drift, imports e plano revisável;</li>
+<li>operar reconciliação GitOps e entender por que edição manual não é fonte da verdade;</li>
+<li>promover canary por métricas e executar abort/rollback com evidência;</li>
+<li>diagnosticar falha de deploy distinguindo aplicação, manifesto, controlador, nó, rede e dependência.</li>
+</ul>
+<h2 id="2-pré-requisitos-e-limites">2. Pré-requisitos e limites</h2>
+<p><strong>Pré-requisitos:</strong> M03, M04, LT01, LT02 e M10. M12 fornece SLO, segurança e custo; LT04 verificará supply chain e políticas; M13 integra o release.</p>
+<p><strong>Fora de escopo:</strong> certificação de administrador Kubernetes; construir control plane; decorar serviços AWS/Azure/GCP; service mesh obrigatório; multi-cloud como objetivo automático; cluster de produção sem equipe/plataforma; guardar secrets em Git; tratar <code>kubectl apply</code> como GitOps.</p>
+<h3 id="regras-conceituais-inegociáveis">Regras conceituais inegociáveis</h3>
+<ol>
+<li>Cloud-native é um modelo operacional e arquitetural, não sinônimo de “rodar Kubernetes”.</li>
+<li>Container compartilha kernel; não é VM nem fronteira de segurança absoluta.</li>
+<li>Tag é ponteiro mutável; promoção e rollback referenciam digest OCI imutável.</li>
+<li>Readiness controla tráfego, liveness reinicia e startup protege inicialização; uma não substitui a outra.</li>
+<li>Requests influenciam scheduling; limits influenciam enforcement. Valores sem medição são hipótese.</li>
+<li>PDB limita certas disrupções voluntárias; não protege contra crash, delete direto ou capacity shortage.</li>
+<li>Autoscaling é control loop atrasado; não cria capacidade instantânea nem corrige dependência saturada.</li>
+<li>IaC exige state protegido e revisado. <code>plan</code> não é prova de segurança nem disponibilidade.</li>
+<li>GitOps exige estado declarativo, versionado, puxado/reconciliado continuamente; CI fazendo push no cluster não satisfaz sozinho esses princípios.</li>
+<li>Rollback de aplicação não reverte automaticamente schema, mensagem, dado ou efeito externo.</li>
+</ol>
+<h2 id="3-sandbox-e-arquitetura-do-laboratório">3. Sandbox e arquitetura do laboratório</h2>
+<pre><code class="language-text">source + tests
+      │ build
+      ▼
+local OCI registry ── image@sha256:digest
+      │
+Git desired-state repository
+      │ reconciliation
+      ▼
+Flux adapter ───────────────► Kubernetes 1.36 sandbox (kind)
+                              ├─ gateway/service
+                              ├─ FastAPI replicas
+                              ├─ LT02 workers
+                              ├─ PostgreSQL/broker dev dependencies
+                              ├─ metrics + OTel
+                              └─ policy/RBAC/network boundaries
+
+OpenTofu 1.11 ─► sandbox lifecycle + namespaces + baseline resources
+rollout adapter ─► stable/canary + analysis + abort/promotion
+fault controller ─► bad image, bad probe, OOM, node drain, dependency latency, drift
+</code></pre>
+<p>Estrutura prevista:</p>
+<pre><code class="language-text">labs/LT03-cloud-native-iac-gitops/
+  app/
+  image/
+  infra/
+    modules/
+    environments/lab/
+    .terraform.lock.hcl
+  platform/
+    base/
+    overlays/lab/
+    policies/
+  gitops/
+    clusters/lab/
+    apps/
+  rollout/
+  faults/
+  observability/
+  runbooks/
+  evidence/
+</code></pre>
+<p>O sandbox usa cluster local multi-node chamado <code>course-lt03</code>, registry local e contas sem acesso a cloud. Scripts validam contexto, nome e diretório antes de <code>destroy</code>. O restore do laboratório é idempotente; nenhuma ação alcança outros clusters ou recursos do host.</p>
+<p>As portas pedagógicas são <code>ArtifactRegistry</code>, <code>InfrastructureRunner</code>, <code>DesiredStateReconciler</code>, <code>RolloutController</code> e <code>MetricsReader</code>. OCI, APIs Kubernetes e OpenGitOps definem os conceitos. <code>kind</code>, OpenTofu, Flux e o controlador de rollout são adapters substituíveis, pinados por versão e cercados por testes de comportamento.</p>
+<h2 id="4-blocos">4. Blocos</h2>
+<h2 id="bloco-1--cloud-failure-domains-e-artefatos-oci">Bloco 1 · Cloud, failure domains e artefatos OCI</h2>
+<p><strong>IDs:</strong> LT03-B01-C01..07 · <strong>Matriz:</strong> PLAT-01, PY-03, FIN-01.</p>
+<p><strong>Conteúdo:</strong> IaaS/PaaS/SaaS e responsabilidade compartilhada; região, zona, nó e failure domain; compute, network, block/object storage, managed service, egress e quotas; elasticidade versus capacidade; custo fixo/variável; portabilidade versus menor denominador comum; OCI image/index/layers/config/digest/distribution; PID 1, usuário, filesystem e multi-arch.</p>
+<p><strong>Prática:</strong> construir imagem Python em estágios, dependências bloqueadas, non-root, read-only root filesystem e shutdown por SIGTERM; publicar em registry local; inspecionar manifest/layers; executar pelo digest e comparar tamanho, cold start e superfície instalada.</p>
+<p><strong>Evidência:</strong> threat/cost/portability decision table, digest, manifest OCI, tempos/tamanho medidos e teste de shutdown.</p>
+<p><strong>Aceitação:</strong> rebuild controlado é explicado; runtime não depende de tag mutável, root ou ferramenta de build; escolha de serviço gerenciado explicita responsabilidade, egress e saída.</p>
+<h2 id="bloco-2--apis-declarativas-workloads-rede-e-configuração">Bloco 2 · APIs declarativas, workloads, rede e configuração</h2>
+<p><strong>IDs:</strong> LT03-B02-C01..08 · <strong>Matriz:</strong> PLAT-01, SEC-03, OPS-01.</p>
+<p><strong>Conteúdo:</strong> control loop e desired/observed state; Pod versus Deployment/StatefulSet/Job; labels/selectors/owner references; Service, DNS e Gateway/Ingress; ConfigMap versus Secret; volume e persistência; namespace; ServiceAccount/RBAC; security context e Pod Security Standards; NetworkPolicy L3/L4 e dependência do CNI.</p>
+<p><strong>Prática:</strong> modelar API e worker com Kustomize base/overlay; usar Deployment/Job conforme lifecycle; expor apenas API; default-deny com regras DNS/API/banco; service accounts distintas; validar permissões com <code>auth can-i</code>.</p>
+<p><strong>Falhas:</strong> selector sem endpoints, config ausente, secret vazado, service account ampla, volume efêmero assumido persistente e default-deny bloqueando DNS.</p>
+<p><strong>Evidência:</strong> manifests renderizados, topology map, permission matrix, network tests positivos/negativos e eventos do controlador.</p>
+<p><strong>Aceitação:</strong> app inicia pelo estado declarativo; worker não recebe credencial/permissão da API; comunicação não autorizada falha; dado que precisa sobreviver não reside apenas no container.</p>
+<h2 id="bloco-3--probes-recursos-scheduling-disrupção-e-autoscaling">Bloco 3 · Probes, recursos, scheduling, disrupção e autoscaling</h2>
+<p><strong>IDs:</strong> LT03-B03-C01..09 · <strong>Matriz:</strong> PLAT-01, SRE-01, OBS-01.</p>
+<p><strong>Conteúdo:</strong> startup/readiness/liveness; preStop, termination grace e endpoint draining; requests/limits, cgroups, CPU throttling, OOMKill e ephemeral storage; QoS; scheduling, affinity/spread e taints; rollout strategy; PDB; HPA e métricas; capacidade mínima, queue age e cold start; scale-to-zero como trade-off.</p>
+<p><strong>Prática:</strong> medir steady state e startup; definir requests por evidência; provocar CPU throttle/OOM; retirar readiness em dependência crítica sem criar restart loop; drenar nó; configurar spread/PDB; escalar API por sinal adequado e worker por backlog em adapter opcional.</p>
+<p><strong>Falhas:</strong> liveness chama dependência externa, probe custa mais que handler, request ausente, limit arbitrário, HPA oscila, réplicas cabem em um nó e drain encontra PDB impossível.</p>
+<p><strong>Evidência:</strong> capacity worksheet, eventos/metrics, curva carga → réplicas → p95/queue age, shutdown timeline e disruption report.</p>
+<p><strong>Aceitação:</strong> deploy mantém capacidade mínima; autoscaling estabiliza sem thrash; pod termina sem request truncado; aluno demonstra os limites de PDB e HPA.</p>
+<h2 id="bloco-4--iac-estado-módulos-drift-e-lifecycle-seguro">Bloco 4 · IaC, estado, módulos, drift e lifecycle seguro</h2>
+<p><strong>IDs:</strong> LT03-B04-C01..08 · <strong>Matriz:</strong> PLAT-02, SEC-03.</p>
+<p><strong>Conteúdo:</strong> declarativo versus procedural; resource graph; provider/module/input/output; dependency lock; plan/apply/destroy; state como dado sensível; backend/locking; drift, refresh e import; replace/move; environment separation; policy/checks; secrets e credenciais curtas; blast radius.</p>
+<p><strong>Prática:</strong> provisionar sandbox e baseline com OpenTofu; salvar plan binário; revisar mudanças destrutivas; alterar recurso fora da IaC e detectar drift; importar recurso preexistente; mover endereço sem recriar; destruir apenas sandbox validado.</p>
+<p><strong>Falhas:</strong> state concorrente, provider flutuante, secret em state/output, target usado como rotina, rename que força replace e contexto errado.</p>
+<p><strong>Evidência:</strong> plan sanitizado, lockfile, state security note, drift/import/move transcript e teste pós-destroy.</p>
+<p><strong>Aceitação:</strong> <code>plan</code> converge para zero após apply; drift é reconciliado intencionalmente; secret não aparece em evidência; tentativa contra target/contexto não autorizado é bloqueada antes da mutação.</p>
+<h2 id="bloco-5--gitops-reconciliação-promoção-e-configuração-por-ambiente">Bloco 5 · GitOps, reconciliação, promoção e configuração por ambiente</h2>
+<p><strong>IDs:</strong> LT03-B05-C01..08 · <strong>Matriz:</strong> PLAT-03, GOV-01.</p>
+<p><strong>Conteúdo:</strong> princípios OpenGitOps; desired state declarativo, versionado/imutável, puxado e continuamente reconciliado; source versus build artifact versus environment config; branch versus directory/repository; promotion por digest; overlays sem copy/paste; drift; ownership; secrets criptografados/externos; break-glass e trilha de auditoria.</p>
+<p><strong>Prática:</strong> bootstrap do adapter Flux em repositório local; reconciliar overlay; promover digest por commit; aplicar patch manual e observar reversão; pausar com motivo/TTL para incidente; reverter pelo histórico; comparar estado Git, artifact e observed state.</p>
+<p><strong>Falhas:</strong> Git aponta tag mutável, controlador sem acesso à source, configuração inválida, dependência fora de ordem, drift manual e duas automações editando o mesmo campo.</p>
+<p><strong>Evidência:</strong> commit → artifact → reconciliation → workload trace, diff antes da promoção, drift event e break-glass record.</p>
+<p><strong>Aceitação:</strong> mudança sem commit não persiste; commit ruim falha de modo visível sem apagar último estado saudável quando configurado; promoção preserva identidade do artefato.</p>
+<h2 id="bloco-6--progressive-delivery-rollback-e-incidente-de-plataforma">Bloco 6 · Progressive delivery, rollback e incidente de plataforma</h2>
+<p><strong>IDs:</strong> LT03-B06-C01..09 · <strong>Matriz:</strong> PLAT-03, SRE-01, SRE-02, SEN-01.</p>
+<p><strong>Conteúdo:</strong> rolling, blue/green e canary; segmentação e representatividade; análise por erro, latência e métrica de negócio; janela, threshold e inconclusive; pause/approval; auto-promotion/abort; rollback de workload versus roll-forward; compatibilidade expand/migrate/contract; feature flags; diagnóstico por eventos, conditions, logs, metrics e traces.</p>
+<p><strong>Prática:</strong> promover versão com regressão de p95 e erro em percentuais graduais; abortar automaticamente; confirmar que stable mantém SLO; executar versão compatível com schema anterior/posterior; conduzir incidente combinando bad probe, node drain e dependência lenta.</p>
+<p><strong>Saída:</strong> rollout policy, analysis run, dashboard, rollback/roll-forward decision, migration compatibility tests, incident timeline e postmortem.</p>
+<p><strong>Aceitação:</strong> versão ruim não alcança 100%; decisão deriva de dados calculados; rollback não corrompe contrato/dado; serviço retorna ao SLO e Git volta a representar o estado desejado.</p>
+<h2 id="5-catálogo-de-aceitação">5. Catálogo de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Cenário</th>
+<th>Condição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LT03-AT-001</td>
+<td>build OCI</td>
+<td>imagem non-root, mínima e identificada por digest</td>
+</tr>
+<tr>
+<td>LT03-AT-002</td>
+<td>SIGTERM no container</td>
+<td>tráfego drenado e processo termina no grace period</td>
+</tr>
+<tr>
+<td>LT03-AT-003</td>
+<td>portability/cost ADR</td>
+<td>failure domains, egress, responsabilidade e saída explícitos</td>
+</tr>
+<tr>
+<td>LT03-AT-010</td>
+<td>apply declarativo</td>
+<td>observed state converge ao manifesto</td>
+</tr>
+<tr>
+<td>LT03-AT-011</td>
+<td>selector incorreto</td>
+<td>ausência de endpoints diagnosticada por condition/event</td>
+</tr>
+<tr>
+<td>LT03-AT-012</td>
+<td>RBAC</td>
+<td>service account só executa verbos/recursos necessários</td>
+</tr>
+<tr>
+<td>LT03-AT-013</td>
+<td>NetworkPolicy</td>
+<td>default-deny e allowlist passam testes positivos/negativos</td>
+</tr>
+<tr>
+<td>LT03-AT-014</td>
+<td>storage efêmero</td>
+<td>reinício não é confundido com persistência</td>
+</tr>
+<tr>
+<td>LT03-AT-020</td>
+<td>startup/readiness/liveness</td>
+<td>cada probe produz somente a reação pretendida</td>
+</tr>
+<tr>
+<td>LT03-AT-021</td>
+<td>OOM/throttle</td>
+<td>causa identificada e recursos recalculados por medida</td>
+</tr>
+<tr>
+<td>LT03-AT-022</td>
+<td>node drain</td>
+<td>capacidade respeita spread e PDB dentro de seu escopo</td>
+</tr>
+<tr>
+<td>LT03-AT-023</td>
+<td>shutdown sob carga</td>
+<td>nenhuma requisição nova; in-flight termina/cancela corretamente</td>
+</tr>
+<tr>
+<td>LT03-AT-024</td>
+<td>HPA sob degraus</td>
+<td>escala estabiliza e mantém métrica/SLO-alvo</td>
+</tr>
+<tr>
+<td>LT03-AT-025</td>
+<td>upstream saturado</td>
+<td>autoscaling não amplifica dependência; limite aplicado</td>
+</tr>
+<tr>
+<td>LT03-AT-030</td>
+<td><code>tofu plan/apply</code></td>
+<td>segundo plan não contém mudança inesperada</td>
+</tr>
+<tr>
+<td>LT03-AT-031</td>
+<td>drift</td>
+<td>diferença detectada e decisão registrada</td>
+</tr>
+<tr>
+<td>LT03-AT-032</td>
+<td>import/move</td>
+<td>recurso adotado/reendereçado sem recriação indevida</td>
+</tr>
+<tr>
+<td>LT03-AT-033</td>
+<td>state sensível</td>
+<td>acesso mínimo; nenhum secret em log/evidence</td>
+</tr>
+<tr>
+<td>LT03-AT-034</td>
+<td>destroy guard</td>
+<td>target fora do sandbox é recusado antes da ação</td>
+</tr>
+<tr>
+<td>LT03-AT-040</td>
+<td>reconciliação GitOps</td>
+<td>commit converge e status registra revision/digest</td>
+</tr>
+<tr>
+<td>LT03-AT-041</td>
+<td>edição manual</td>
+<td>drift é revertido ou exceção break-glass expira</td>
+</tr>
+<tr>
+<td>LT03-AT-042</td>
+<td>config inválida</td>
+<td>falha visível preserva último workload saudável</td>
+</tr>
+<tr>
+<td>LT03-AT-043</td>
+<td>promoção</td>
+<td>mesmo digest atravessa ambientes</td>
+</tr>
+<tr>
+<td>LT03-AT-050</td>
+<td>canary saudável</td>
+<td>etapas e análise promovem até 100%</td>
+</tr>
+<tr>
+<td>LT03-AT-051</td>
+<td>canary regressiva</td>
+<td>threshold aborta antes de 100%</td>
+</tr>
+<tr>
+<td>LT03-AT-052</td>
+<td>análise inconclusiva</td>
+<td>não é convertida silenciosamente em sucesso</td>
+</tr>
+<tr>
+<td>LT03-AT-053</td>
+<td>rollback com migration</td>
+<td>compatibilidade provada ou rollback bloqueado</td>
+</tr>
+<tr>
+<td>LT03-AT-060</td>
+<td>incidente inédito</td>
+<td>causa localizada por camada; SLO e desired state restaurados</td>
+</tr>
+<tr>
+<td>LT03-AT-061</td>
+<td>restauração do lab</td>
+<td>controllers saudáveis, faults off e recursos sandbox removíveis</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-checkpoint-lt03">6. Checkpoint LT03</h2>
+<p>O aluno recebe versão, manifesto e condição de plataforma inéditos. Deve:</p>
+<ol>
+<li>declarar SLO, capacidade mínima e failure domains;</li>
+<li>produzir artifact OCI e manifest renderizado com digest;</li>
+<li>revisar plan IaC e diff GitOps;</li>
+<li>demonstrar RBAC/rede por testes negativos;</li>
+<li>promover canary com análise reproduzível;</li>
+<li>diagnosticar falha sem editar permanentemente o cluster;</li>
+<li>abortar, reverter ou avançar com justificativa de dados/schema;</li>
+<li>restaurar reconciliação e destruir apenas o sandbox autorizado.</li>
+</ol>
+<p>Perguntas incluem: container versus VM; tag versus digest; readiness versus liveness; request versus limit; por que HPA depende de requests; o que PDB não cobre; state versus desired/observed state; por que CI push não basta para GitOps; quando rollback é impossível; como evitar que autoscaling amplifique uma fila/upstream saturado; qual custo real da portabilidade.</p>
+<h2 id="7-fontes">7. Fontes</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte</th>
+<th>Versão/data</th>
+<th>Uso</th>
+<th>Obsolescência</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-LT03-01</td>
+<td><a href="https://csrc.nist.gov/pubs/sp/800/145/final">NIST SP 800-145 — Definition of Cloud Computing</a></td>
+<td>publicação final</td>
+<td>características e modelos de cloud</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT03-02</td>
+<td><a href="https://github.com/cncf/toc/blob/main/DEFINITION.md">CNCF Cloud Native Definition</a></td>
+<td>repositório canônico</td>
+<td>modelo cloud-native</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT03-03</td>
+<td><a href="https://github.com/opencontainers/image-spec">OCI Image Specification</a></td>
+<td>1.1.1</td>
+<td>imagem, manifest, layers e digest</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT03-04</td>
+<td><a href="https://github.com/opencontainers/runtime-spec">OCI Runtime Specification</a></td>
+<td>1.3.0</td>
+<td>runtime bundle/processo</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT03-05</td>
+<td><a href="https://github.com/opencontainers/distribution-spec">OCI Distribution Specification</a></td>
+<td>1.1</td>
+<td>registry e distribuição</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT03-06</td>
+<td><a href="https://kubernetes.io/releases/">Kubernetes releases</a></td>
+<td>1.36.2 na data-base</td>
+<td>baseline e version skew</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-07</td>
+<td><a href="https://kubernetes.io/docs/concepts/workloads/controllers/">Kubernetes workload controllers</a></td>
+<td>docs 1.36</td>
+<td>APIs declarativas</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-08</td>
+<td><a href="https://kubernetes.io/docs/concepts/workloads/pods/probes/">Kubernetes probes</a></td>
+<td>docs 1.36</td>
+<td>startup/readiness/liveness</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-09</td>
+<td><a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">Kubernetes resource management</a></td>
+<td>docs 1.36</td>
+<td>requests, limits, cgroups</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-10</td>
+<td><a href="https://kubernetes.io/docs/concepts/workloads/pods/disruptions/">Kubernetes disruptions</a></td>
+<td>docs 1.36</td>
+<td>PDB e failure domains</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-11</td>
+<td><a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/">Kubernetes HPA</a></td>
+<td>autoscaling/v2, docs 1.36</td>
+<td>control loop de escala</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-12</td>
+<td><a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">Kubernetes NetworkPolicy</a></td>
+<td>networking.k8s.io/v1, docs 1.36</td>
+<td>isolamento L3/L4</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-13</td>
+<td><a href="https://kubernetes.io/docs/concepts/security/rbac-good-practices/">Kubernetes RBAC good practices</a></td>
+<td>docs 1.36</td>
+<td>least privilege</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-14</td>
+<td><a href="https://opentofu.org/docs/">OpenTofu documentation</a></td>
+<td>1.11</td>
+<td>linguagem, state e lifecycle IaC</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-15</td>
+<td><a href="https://opentofu.org/docs/cli/run/">OpenTofu provisioning workflow</a></td>
+<td>1.11</td>
+<td>plan/apply/destroy</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-16</td>
+<td><a href="https://opengitops.dev/">OpenGitOps Principles</a></td>
+<td>1.0.0</td>
+<td>fundamento vendor-neutral de GitOps</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT03-17</td>
+<td><a href="https://fluxcd.io/flux/concepts/">Flux core concepts</a></td>
+<td>2.8.8 baseline</td>
+<td>adapter de reconciliação</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-18</td>
+<td><a href="https://argo-rollouts.readthedocs.io/en/stable/features/canary/">Argo Rollouts canary</a> e <a href="https://argo-rollouts.readthedocs.io/en/stable/features/analysis/">analysis</a></td>
+<td>1.9.1</td>
+<td>adapter de progressive delivery</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT03-19</td>
+<td><a href="https://www.finops.org/framework/">FinOps Framework</a></td>
+<td>vigente na regeneração</td>
+<td>custo, accountability e decisão</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT03-20</td>
+<td><a href="https://sre.google/workbook/canarying-releases/">Google SRE — Canarying Releases</a></td>
+<td>edição online</td>
+<td>desenho de análise e rollout</td>
+<td>baixa</td>
+</tr>
+</tbody>
+</table>
+<p>Implementações são usadas para tornar mecanismos observáveis. A avaliação cobra OCI/Kubernetes/OpenGitOps/IaC e comportamento operacional, não comandos exclusivos de <code>kind</code>, Flux ou Argo.</p>
+<h2 id="8-critérios-editoriais-e-g0">8. Critérios editoriais e G0</h2>
+<ul>
+<li>9.000–11.000 palavras visíveis mais laboratório executável;</li>
+<li>versões de Kubernetes, OpenTofu, controllers e providers pinadas;</li>
+<li>manifests renderizados e validados antes de apply;</li>
+<li>imagem referenciada por digest em promoção e evidência;</li>
+<li>pelo menos 29 cenários de aceitação, incluindo negativos;</li>
+<li>métricas de canary calculadas de tráfego real do lab, nunca hardcoded;</li>
+<li>nenhuma credencial real de cloud e nenhum requisito de conta paga;</li>
+<li>qualquer ação destrutiva valida nome/contexto absoluto do sandbox;</li>
+<li>comandos manuais de incidente viram commit, expiram ou são revertidos pelo reconciler;</li>
+<li>
+<p>conteúdo diferencia padrão, API, controlador, provider e decisão local.</p>
+</li>
+<li>
+<p>[x] seis blocos, competências e dependências definidos;</p>
+</li>
+<li>[x] sandbox local seguro e adapters definidos;</li>
+<li>[x] lifecycle OCI → IaC → GitOps → rollout definido;</li>
+<li>[x] 29 cenários de aceitação definidos;</li>
+<li>[x] falhas, evidências e checkpoint definidos;</li>
+<li>[x] fontes primárias/canônicas atuais selecionadas;</li>
+<li>[x] escopo separado de LT02, LT04 e M12.</li>
+</ul>
+<p><strong>Decisão:</strong> LT03 está <code>ESPECIFICADO</code> e pode entrar em produção de material após a especificação LT04. Gate G0 aprovado.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

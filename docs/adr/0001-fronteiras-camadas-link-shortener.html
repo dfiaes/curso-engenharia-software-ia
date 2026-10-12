@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/adr/0001-fronteiras-camadas-link-shortener.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADR 0001 — Fronteiras em camadas no link-shortener</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="adr-0001--fronteiras-em-camadas-no-link-shortener">ADR 0001 — Fronteiras em camadas no link-shortener</h1>
+<ul>
+<li><strong>Data:</strong> 2026-09-13</li>
+<li><strong>Módulo:</strong> M03 (bloco 4)</li>
+<li><strong>Status:</strong> aceita</li>
+</ul>
+<h2 id="contexto">Contexto</h2>
+<p>O laboratório nasceu com módulos planos (<code>domain</code>, <code>db</code>, <code>models</code>, <code>counters</code>).
+Enquanto o encurtador tinha dois fluxos, isso bastava. Ao adicionar criação
+via HTTP com validação, tradução de conflito e persistência, a rota passaria
+a acumular três responsabilidades — e nada impediria um import direto da
+rota ao SQLAlchemy, o que tornaria qualquer troca de persistência uma
+reescrita do HTTP. A restrição é manter a regra testável sem banco e a
+infraestrutura trocável sem tocar na regra, com verificação executável
+(AT-013–016).</p>
+<h2 id="opções-consideradas">Opções consideradas</h2>
+<h3 id="opção-a--manter-módulos-planos">Opção A — manter módulos planos</h3>
+<ul>
+<li>A favor: menos arquivos, menos indireção, suficiente para o escopo atual.</li>
+<li>Contra: regra e tradução HTTP se misturam na primeira rota; nenhum ponto
+  único para a decisão "criar link"; a decadência estrutural não é detectada.</li>
+</ul>
+<h3 id="opção-b--camadas-com-protocolo-e-guardrail-executável">Opção B — camadas com protocolo e guardrail executável</h3>
+<ul>
+<li>A favor: <code>api</code> traduz, <code>services</code> decide via <code>Protocol</code>, <code>repositories</code>
+  persiste; override troca a infraestrutura em teste; varredura AST rejeita
+  import ilegal com exit code.</li>
+<li>Contra: mais arquivos e uma indireção (protocolo) para um domínio pequeno;
+  o guardrail precisa de manutenção quando pacotes novos surgirem.</li>
+</ul>
+<h2 id="decisão">Decisão</h2>
+<p>Escolhi <strong>B</strong> porque o custo (alguns arquivos e um protocolo) é fixo e pago
+uma vez, enquanto o custo de A (regra espalhada, troca de adapter que exige
+reescrita) cresce a cada endpoint e é pago para sempre. O protocolo mantém
+o service agnóstico à implementação; o guardrail impede regressão silenciosa.</p>
+<h2 id="consequências">Consequências</h2>
+<p><strong>Ganhei:</strong> regra testável sem banco (fake em memória); app testável sem
+porta (override de dependência); violações de fronteira viram falha de suíte.</p>
+<p><strong>Perdi / aceitei como custo:</strong> indireção extra para ler um fluxo simples;
+<code>FORBIDDEN</code> em <code>test_layers.py</code> precisa ser estendido a cada pacote novo;
+o fake precisa acompanhar o protocolo (a suíte acusa divergência de
+comportamento, não de assinatura — <code>mypy --strict</code> cobre a assinatura).</p>
+<p><strong>O que me faria mudar de ideia:</strong> se o laboratório ganhar workers e filas
+(LT02) e o protocolo de repositório síncrono-por-sessão passar a vazar
+conceitos de mensageria para o service; ou se a suíte ficar mais lenta por
+causa das camadas do que por causa do I/O — aí a indireção deixou de se pagar.</p>
+<h2 id="notas-de-produção">Notas de produção</h2>
+<ol>
+<li><strong>Concorrência</strong> — camadas não mudam o perfil: sessão por request, pool
+   de 10 no engine; a prova de concorrência continua nos testes de B03/B06.</li>
+<li><strong>Falha externa</strong> — erro de banco sobe traduzido (<code>errors</code>) ou cru;
+   a rota nunca decide retry: política de retry pertence a B07/LT02.</li>
+<li><strong>Versionamento</strong> — camadas são código, versionadas com o repo; mudança
+   de fronteira exige atualizar <code>FORBIDDEN</code>, o ADR e a rastreabilidade.</li>
+</ol>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

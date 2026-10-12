@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/M11-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M11 — especificação de escopo e evidência</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="m11--especificação-de-escopo-e-evidência">M11 — especificação de escopo e evidência</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.0 · <strong>Data-base:</strong> 14/09/2026 · <strong>Estado:</strong> G0 aprovado; G1 em produção</p>
+<h2 id="1-decisão-curricular">1. Decisão curricular</h2>
+<p>O M11 ensina o nível de fundamento em que o modelo deixa de ser caixa
+preta para o sênior: tensor, gradiente e loop de treino; atenção e seu
+preço quadrático; transformer completo com tokenização; pós-treino e
+amostragem; pesos abertos, quantização e VRAM; serving local atrás do
+gateway do M05; avaliação honesta (modelo ≠ harness ≠ agente) com a
+escada que coloca fine-tuning por último. O laboratório é 100% local
+com CPU como baseline (GPU só acelera): um transformer mínimo em
+PyTorch treinado sobre o próprio código Python do Capstone,
+equivalência mão-vs-framework medida, instrumentação de logprobs no
+gateway, calculadoras de VRAM e custo, provider local atrás da porta do
+M05 e categoria de abstenção nos evals. Download de pesos, perfil
+Compose com Ollama, chaves de API para comparação e qualquer conta são
+trilha externa opcional, nunca evidência obrigatória.</p>
+<p>O lab PyTorch dos blocos B02–B04 é entendimento, não peça: a única
+parte do curso que não gera peça do Capstone, declarado aqui para que
+nenhum lote cobre integração onde a spec não promete. O legado em dois
+HTML é normalizado nesta spec: o companheiro vira anexo de execução do
+lab; as práticas espalhadas consolidam-se no <code>Laboratório guiado M11</code>
+final em G1.</p>
+<h2 id="2-resultado-limites-e-integração">2. Resultado, limites e integração</h2>
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Definição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carga</td>
+<td>oito blocos de duas horas, total de 16 h</td>
+</tr>
+<tr>
+<td>Entrada</td>
+<td>M05 (gateway, adapters, custo), M06 (evals, graders, calibração), M08 (orçamento de atenção, loop, memória)</td>
+</tr>
+<tr>
+<td>Saída</td>
+<td>transformer mínimo explicado/testado, provider local no gateway, benchmark API×local e relatório com decisão</td>
+</tr>
+<tr>
+<td>Peça do capstone</td>
+<td><code>services/llm</code> (provider local + métricas), <code>evals/</code> (categoria abstencao), <code>docs/adr/0005</code>, <code>tools/orcamento_vram.py</code> + <code>tools/custo_local.py</code>; integração só após spec própria</td>
+</tr>
+<tr>
+<td>Não cobre</td>
+<td>RAG vetorial (M07), protocolos MCP/A2A (M09), grafos de execução/conhecimento (M10), produção multi-tenant (M12)</td>
+</tr>
+<tr>
+<td>Evidência mínima</td>
+<td>comandos, versões e saída executada; loss/latência/custo só com ambiente e amostras; perplexidade nunca como substituto de eval por tarefa; acordo de juiz só com conjunto humano</td>
+</tr>
+</tbody>
+</table>
+<p>Referência interna de matemática e dependências do principal: ponte do M11. Vetores, gradientes e a execução necessária são ensinados no percurso M11; ML01/ML05 são somente aprofundamentos opcionais.</p>
+<h2 id="3-arquitetura-do-laboratório">3. Arquitetura do laboratório</h2>
+<pre><code class="language-text">corpus próprio (código Python do Capstone, char-level offline)
+  ──► regressão/autograd ──► atenção manual ══ SDPA (oráculo) ──► medida O(n²)
+  ──► BPE local ──► GPT mínimo ──► treino CPU ──► holdout (overfitting visível)
+gateway M05 ◄── provider local (porta) ◄── servidor local opcional
+evals M06 ◄── categoria abstencao (rubrica assimétrica) ◄── matriz API×local
+</code></pre>
+<p>A referência fica em <code>modulos/M11-fundamentos-ml-dl-modelos-locais/lab/</code>.
+O roteiro <code>Laboratório guiado M11</code>, no final do HTML, cria cópia de
+trabalho em diretório temporário possuído pelo laboratório.</p>
+<p>O núcleo obrigatório é offline-first: corpus próprio, tokenização
+char-level local e fixtures versionadas; <code>tiktoken</code>/pesos externos são
+trilha opcional com cache declarado. AT-024–029 e AT-035 exercitam
+Ollama/Docker quando disponíveis; sem eles, o lote <code>-L</code> constrói o
+oráculo e registra <code>BLOCKED</code>, nunca <code>skip</code> verde.</p>
+<h2 id="4-blocos-competências-e-evidência">4. Blocos, competências e evidência</h2>
+<table>
+<thead>
+<tr>
+<th>Bloco</th>
+<th>Competências observáveis</th>
+<th>Evidência planejada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B01 · fundamento e observabilidade</td>
+<td>vocabulário, mapa do que não estudar</td>
+<td>logprobs no gateway + limiar</td>
+</tr>
+<tr>
+<td>B02 · tensores e loop de treino</td>
+<td>shape/dtype/device, autograd, 5 passos</td>
+<td>regressão + quebra <code>zero_grad</code></td>
+</tr>
+<tr>
+<td>B03 · atenção e custo quadrático</td>
+<td>QKV, <code>√d</code>, máscara causal, multi-head</td>
+<td>equivalência SDPA + medida O(n²)</td>
+</tr>
+<tr>
+<td>B04 · tokenização e transformer</td>
+<td>BPE, residual, arquiteturas, overfitting</td>
+<td>GPT mínimo treinado + holdout</td>
+</tr>
+<tr>
+<td>B05 · pós-treino e amostragem</td>
+<td>SFT/DPO, template, T/top-p/top-k, abstenção</td>
+<td>categoria abstencao + rubrica</td>
+</tr>
+<tr>
+<td>B06 · pesos abertos e quantização</td>
+<td>licenças, VRAM/KV, GGUF</td>
+<td><code>orcamento_vram</code> + pull/medir</td>
+</tr>
+<tr>
+<td>B07 · serving local e gateway</td>
+<td>Ollama/vLLM, 3 armadilhas, provider</td>
+<td><code>OllamaProvider</code> + ADR-0005</td>
+</tr>
+<tr>
+<td>B08 · avaliação honesta e fine-tuning</td>
+<td>BFCL/formato, escadas, custo, LoRA</td>
+<td>matriz API×local + break-even</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-cenários-de-aceitação">5. Cenários de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Oráculo e caso relevante</th>
+<th>Bloco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M11-AT-001</td>
+<td>seed fixa reproduz loss; seed solta diverge</td>
+<td>B01/B02</td>
+</tr>
+<tr>
+<td>M11-AT-002</td>
+<td>sem <code>zero_grad()</code>, gradientes acumulam e as atualizações diferem; registrar o loss observado sem exigir divergência universal</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M11-AT-003</td>
+<td>logprob vazio rende <code>None</code>; limiar −1.0 e perplexidade calculados</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M11-AT-004</td>
+<td>SQL de <code>pct_incerto</code> separa arquivo bem-comportado de estranho</td>
+<td>B01</td>
+</tr>
+<tr>
+<td>M11-AT-005</td>
+<td>broadcast <code>(4,1)+(1,4)→(4,4)</code> detectado por assert de shape</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M11-AT-006</td>
+<td>junção de tensores com shape errado falha antes do treino</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M11-AT-007</td>
+<td>sem ativação, duas camadas colapsam numa (linear ≈ MLP rasa)</td>
+<td>B02</td>
+</tr>
+<tr>
+<td>M11-AT-008</td>
+<td>máscara <code>triu</code> no lugar de <code>tril</code> prende o loss em <code>ln(vocab)</code></td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M11-AT-009</td>
+<td>atenção manual bate SDPA em ~1e-7 (<code>atol=1e-5</code>)</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M11-AT-010</td>
+<td>medir custo ao dobrar o contexto em CPU, registrar dispersão e comparar com O(n²) sem exigir multiplicador fixo</td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M11-AT-011</td>
+<td><code>view</code> após <code>transpose</code> exige <code>contiguous()</code></td>
+<td>B03</td>
+</tr>
+<tr>
+<td>M11-AT-012</td>
+<td>BPE segmenta números vizinhos de forma distinta (<code>1234</code> vs <code>1235</code>)</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M11-AT-013</td>
+<td><code>gerar()</code> amostra via <code>multinomial</code>, não escolhe o argmax</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M11-AT-014</td>
+<td>treino cai e validação sobe: overfitting declarado com early stop</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M11-AT-015</td>
+<td>encoder-only posto para gerar degrada; arquiteturas não intercambiam</td>
+<td>B04</td>
+</tr>
+<tr>
+<td>M11-AT-016</td>
+<td>temperatura redistribui massa sem inverter a ordem (entropia medida)</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M11-AT-017</td>
+<td>T=0 repete o mesmo erro; não é determinístico bit-a-bit</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M11-AT-018</td>
+<td>base sem template divaga/não para; instruct com template errado ignora system</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M11-AT-019</td>
+<td>rubrica +1/+0,5/−1 derruba o prompt chutador no antes/depois</td>
+<td>B05</td>
+</tr>
+<tr>
+<td>M11-AT-020</td>
+<td>estimar pesos + KV para configurações declaradas e confrontar com VRAM disponível; registrar se cabe ou excede</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M11-AT-021</td>
+<td>comparar quantizações em tarefas e benchmarks declarados; reportar variação por tarefa sem impor perda fixa</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M11-AT-022</td>
+<td>perplexidade estável com raciocínio degradado: eval por tarefa decide</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M11-AT-023</td>
+<td>licença NC/destilado fechado bloqueia uso comercial no ADR</td>
+<td>B06</td>
+</tr>
+<tr>
+<td>M11-AT-024</td>
+<td>contexto padrão 4096 trunca em silêncio descartando o system</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M11-AT-025</td>
+<td>variar concorrência com <code>NUM_PARALLEL</code> declarado e medir fila, p95 e throughput sem exigir explosão</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M11-AT-026</td>
+<td>medir cold/warm e descarregamento segundo <code>keep_alive</code> e versão declarados; não presumir cinco minutos</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M11-AT-027</td>
+<td><code>HOST 0.0.0.0</code> sem auth expõe o servidor; proxy autenticado exigido</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M11-AT-028</td>
+<td><code>OllamaProvider</code>: um arquivo novo e duas linhas, <code>usage</code> preservado, pytest verde</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M11-AT-029</td>
+<td>reproduzir limite de memória na configuração declarada, variar um parâmetro e medir o efeito observado</td>
+<td>B07</td>
+</tr>
+<tr>
+<td>M11-AT-030</td>
+<td>doc JSON Schema supera Python/XML em tool-calling no mesmo modelo</td>
+<td>B08</td>
+</tr>
+<tr>
+<td>M11-AT-031</td>
+<td>escada de 8 degraus (template→quant→4 tools) antes de trocar de modelo</td>
+<td>B08</td>
+</tr>
+<tr>
+<td>M11-AT-032</td>
+<td>matriz API×Q4×Q8 com mesma carga, aquecimento, p50/p95, dispersão e fronteira</td>
+<td>B08</td>
+</tr>
+<tr>
+<td>M11-AT-033</td>
+<td>calcular break-even com hardware, API e volume declarados; explicar qual opção custa menos no cenário medido</td>
+<td>B08</td>
+</tr>
+<tr>
+<td>M11-AT-034</td>
+<td>LoRA (&lt;1% treinável) resolve formato/comportamento, não fatos (RAG/tool primeiro)</td>
+<td>B08</td>
+</tr>
+<tr>
+<td>M11-AT-035</td>
+<td>break-even relatórios/mês + <code>compose --profile local</code> com evals verdes</td>
+<td>B08</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-fontes-e-versões">6. Fontes e versões</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte e uso</th>
+<th>Tipo</th>
+<th>Risco</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-M11-01</td>
+<td><a href="https://pytorch.org/docs/stable/">PyTorch docs</a> — Tensor, autograd, <code>nn</code>, SDPA</td>
+<td>documentação oficial</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M11-02</td>
+<td><a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a> — QKV, atenção, transformer</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-03</td>
+<td><a href="https://arxiv.org/abs/1810.04805">BERT</a> — encoder-only bidirecional</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-04</td>
+<td><a href="https://arxiv.org/abs/2203.02155">InstructGPT</a> — SFT + RLHF</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-05</td>
+<td><a href="https://arxiv.org/abs/2305.18290">DPO</a> — preferência direta sem PPO</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-06</td>
+<td><a href="https://arxiv.org/abs/2307.09288">Llama 2</a> — referência de arquitetura aberta</td>
+<td>científica</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M11-07</td>
+<td><a href="https://arxiv.org/abs/2309.06180">PagedAttention</a> — KV em páginas, throughput</td>
+<td>científica</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M11-08</td>
+<td><a href="https://arxiv.org/abs/2205.14135">FlashAttention</a> — economia de memória, não de computação</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-09</td>
+<td><a href="https://arxiv.org/abs/1508.07909">BPE/Sennrich</a> — subword e falha em números</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-10</td>
+<td><a href="https://arxiv.org/abs/1607.06450">LayerNorm</a> — normalização por camada</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-11</td>
+<td><a href="https://arxiv.org/abs/1412.6980">Adam</a> — otimizador do treino</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-12</td>
+<td><a href="https://arxiv.org/abs/2106.09685">LoRA</a> — adaptador de baixo posto</td>
+<td>científica</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-13</td>
+<td><a href="https://huggingface.co/docs/tokenizers">tokenizers (HF)</a> — BPE/WordPiece no produto</td>
+<td>documentação oficial</td>
+<td>baixo</td>
+</tr>
+<tr>
+<td>SRC-M11-14</td>
+<td><a href="https://huggingface.co/docs/peft">PEFT (HF)</a> — LoRA/QLoRA no produto</td>
+<td>documentação oficial</td>
+<td>médio</td>
+</tr>
+<tr>
+<td>SRC-M11-15</td>
+<td><a href="https://github.com/ggerganov/llama.cpp">llama.cpp</a> — GGUF, quants, servidor local</td>
+<td>projeto aberto</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M11-16</td>
+<td><a href="https://github.com/ollama/ollama">Ollama</a> — <code>num_ctx</code>, <code>parallel</code>, <code>keep_alive</code></td>
+<td>fornecedor</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M11-17</td>
+<td><a href="https://github.com/vllm-project/vllm">vLLM</a> — batching contínuo em produção GPU</td>
+<td>projeto aberto</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M11-18</td>
+<td><a href="https://github.com/ShishirPatil/gorilla">BFCL/gorilla</a> — tool-calling e sensibilidade a formato</td>
+<td>industrial</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M11-19</td>
+<td>Kalai et al. 2025 (alucinação) + SimpleQA — citados no legado sem URL; referência a confirmar no lote C05; números não herdados como evidência</td>
+<td>científica</td>
+<td>alto</td>
+</tr>
+<tr>
+<td>SRC-M11-20</td>
+<td>estudo de quantização citado no legado sem autoria — não herdado; o lab mede no hardware local; confirmar ou substituir no lote C06</td>
+<td>industrial</td>
+<td>alto</td>
+</tr>
+</tbody>
+</table>
+<p>Consultadas em 14/09/2026. Pesos, versões de servidor/modelo,
+preços, vazões e benchmarks: revalidar em até 90 dias. O invariante
+ensinado (tensor, gradiente, atenção, amostragem, VRAM, avaliação
+honesta) não depende de nenhum fornecedor; retratos de produto e
+famílias de pesos pertencem aos adapters e à trilha externa.</p>
+<h2 id="7-panorama-de-prática-vigente">7. Panorama de prática vigente</h2>
+<p>Modelos de pesos abertos servidos localmente atrás de API compatível
+com OpenAI são prática observável — sustentam a decisão didática
+(porta do M05, ADR por etapa) sem definir fundamento nem recomendar
+produto.</p>
+<h2 id="8-gates-e-decisão-g0">8. Gates e decisão G0</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Estado</th>
+<th>Critério</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G0 · escopo</td>
+<td><strong>APROVADO</strong></td>
+<td>oito blocos, 35 cenários, fontes classificadas, lab local CPU e limites definidos</td>
+</tr>
+<tr>
+<td>G1–G6</td>
+<td>EM PRODUÇÃO/PENDENTE</td>
+<td>HTML legado em dois arquivos em revisão; lab e avaliação em construção neste ciclo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisão de G0:</strong> aprovada em 14/09/2026 pelo orquestrador. Define o
+trabalho; não certifica HTML legado ou lab inexistente.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

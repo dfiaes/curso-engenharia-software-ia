@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de kit/README.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kit de arranque para trabalhar com agentes</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="kit-de-arranque-para-trabalhar-com-agentes">Kit de arranque para trabalhar com agentes</h1>
+<p>Conjunto de arquivos para copiar para qualquer projeto e conduzir o ciclo <strong>intenção → spec → plano → implementação → verificação → PR → CI/CD → operação</strong>, com a documentação sempre atualizada. Agnóstico de ferramenta: funciona com Cursor, Codex, OpenCode, Claude Code ou um agente próprio. O passo a passo didático está na <a href="../trilha-rapida/TR.html">Trilha rápida</a>.</p>
+<h2 id="o-que-vem-no-kit-template">O que vem no kit (<code>template/</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Arquivo</th>
+<th>Para quê</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AGENTS.md</code></td>
+<td>Fonte única de instruções (comandos, fluxo, limites). <code>CLAUDE.md</code> e <code>.cursor/rules/projeto.mdc</code> só apontam para ele.</td>
+</tr>
+<tr>
+<td><code>REVIEW.md</code></td>
+<td>Roteiro de revisão para humano ou agente revisor (sessão separada).</td>
+</tr>
+<tr>
+<td><code>docs/{intent,specs,plans,adr,runbooks}/_modelo.md</code></td>
+<td>Modelos dos artefatos versionados de cada etapa.</td>
+</tr>
+<tr>
+<td><code>.github/pull_request_template.md</code>, <code>CODEOWNERS</code></td>
+<td>PR com checklist; donos obrigatórios em caminhos sensíveis.</td>
+</tr>
+<tr>
+<td><code>.github/workflows/ci.yml</code>, <code>deploy.yml</code></td>
+<td>CI (<code>make check</code>) e esteira dev → cert → prod com environments e OIDC Azure; comentários para runner self-hosted on-premise.</td>
+</tr>
+<tr>
+<td><code>azure-pipelines.yml</code></td>
+<td>Equivalente para Azure DevOps.</td>
+</tr>
+<tr>
+<td><code>Makefile</code></td>
+<td><code>make check</code> = lint + testes + checagens de doc e de hooks. Troque os comandos de exemplo pelos da sua stack.</td>
+</tr>
+<tr>
+<td><code>scripts/hooks/</code></td>
+<td>Bloqueio de caminhos protegidos, bloqueio de edição de testes em <code>fix/</code>, busca de segredos no diff, checagem de docs/drift. Usados pelo pre-commit e pelo CI.</td>
+</tr>
+<tr>
+<td><code>.pre-commit-config.yaml</code></td>
+<td>Liga os hooks localmente (<code>pip install pre-commit &amp;&amp; pre-commit install</code>).</td>
+</tr>
+<tr>
+<td><code>jira/historia.md</code>, <code>jira/bug.md</code></td>
+<td>Modelos de ticket com o vínculo ao repositório.</td>
+</tr>
+<tr>
+<td><code>.agents/commands/</code>, <code>.agents/skills/</code></td>
+<td>Fonte única de comandos (<code>/nova-feature</code>, <code>/corrigir-bug</code>, <code>/atualizar-docs</code>) e de skills (<code>gerar-teste-playwright</code>). <code>--tools</code> copia para o formato de cada ferramenta.</td>
+</tr>
+<tr>
+<td><code>.cursor/mcp.json</code>, <code>.mcp.json</code>, <code>opencode.json</code>, <code>docs/agentes/codex-config.toml</code></td>
+<td>Configs de exemplo de MCP (Playwright e Atlassian/Jira) para Cursor, Claude Code, OpenCode e Codex. Sem segredos: OAuth ou variável de ambiente.</td>
+</tr>
+<tr>
+<td><code>tests/e2e/exemplo.spec.ts</code></td>
+<td>Teste Playwright mínimo, modelo para os testes gerados pela skill.</td>
+</tr>
+<tr>
+<td><code>prompts/</code></td>
+<td>Prompts agnósticos: onboarding de repo existente, nova feature, corrigir bug, módulo grande, atualizar docs, revisar PR.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="projeto-novo">Projeto novo</h2>
+<pre><code class="language-bash">git init meu-projeto &amp;&amp; cd meu-projeto
+python3 /caminho/do/curso/kit/bootstrap.py . --dry-run   # veja o que será criado
+python3 /caminho/do/curso/kit/bootstrap.py .
+</code></pre>
+<ol>
+<li>Preencha os <code>[PREENCHER]</code> do <code>AGENTS.md</code> e ajuste os comandos do <code>Makefile</code>; confirme que <code>make check</code> roda.</li>
+<li>Em <em>Settings</em>: proteja a <code>main</code> (PR obrigatório, status check <code>check</code>, Code Owners), crie os environments <code>dev</code>, <code>cert</code>, <code>prod</code> (aprovadores em cert e prod).</li>
+<li>Troque <code>@org/...</code> do <code>CODEOWNERS</code>. Rode <code>pre-commit install</code>.</li>
+<li>Abra o primeiro ticket com <code>jira/historia.md</code> e siga <code>prompts/nova-feature.md</code>.</li>
+</ol>
+<h2 id="comandos-skills-e-mcp-por-ferramenta">Comandos, skills e MCP por ferramenta</h2>
+<pre><code class="language-bash">python3 /caminho/do/curso/kit/bootstrap.py . --tools cursor,claude,codex,opencode
+</code></pre>
+<p><code>--tools</code> (qualquer subconjunto) copia a fonte única em <code>.agents/</code> para onde cada ferramenta procura, sem sobrescrever:</p>
+<table>
+<thead>
+<tr>
+<th>Ferramenta</th>
+<th>Comandos</th>
+<th>Skills</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cursor</td>
+<td><code>.cursor/commands/</code></td>
+<td>lê <code>.agents/skills/</code> direto</td>
+</tr>
+<tr>
+<td>Claude Code</td>
+<td><code>.claude/commands/</code></td>
+<td><code>.claude/skills/</code></td>
+</tr>
+<tr>
+<td>OpenCode</td>
+<td><code>.opencode/commands/</code></td>
+<td>lê <code>.agents/skills/</code> direto</td>
+</tr>
+<tr>
+<td>Codex</td>
+<td>cada comando vira uma skill em <code>.agents/skills/&lt;nome&gt;/</code> (<code>$nome</code>), pois prompts personalizados são só do usuário e obsoletos</td>
+<td>lê <code>.agents/skills/</code> direto</td>
+</tr>
+</tbody>
+</table>
+<p>Os MCP não são copiados por <code>--tools</code>: já vêm nos arquivos de config acima (Codex: copie <code>docs/agentes/codex-config.toml</code> para <code>~/.codex/config.toml</code>). Veja o passo de MCP da <a href="../trilha-rapida/TR.html#passo-7">Trilha rápida</a>.</p>
+<h2 id="projeto-existente">Projeto existente</h2>
+<pre><code class="language-bash">python3 /caminho/do/curso/kit/bootstrap.py . --existing --dry-run
+python3 /caminho/do/curso/kit/bootstrap.py . --existing
+</code></pre>
+<p><code>--existing</code> nunca sobrescreve e <strong>não copia</strong> <code>deploy.yml</code> nem <code>azure-pipelines.yml</code> (compare com a sua esteira e adote por partes; o <code>diff</code> é seu amigo).</p>
+<ol>
+<li>Rode <code>prompts/onboarding-repo-existente.md</code> numa sessão <strong>só-leitura</strong>; aprove e grave <code>docs/architecture.md</code> e o <code>AGENTS.md</code>.</li>
+<li>Peça testes de caracterização das áreas de maior risco <strong>antes</strong> de qualquer mudança funcional.</li>
+<li>Só então adote as regras do dia a dia (branch protection, hooks, template de PR).</li>
+</ol>
+<h2 id="testes-do-kit">Testes do kit</h2>
+<pre><code class="language-bash">cd kit &amp;&amp; uv run -q --with pytest python -m pytest -q tests
+</code></pre>
+<h2 id="regra-de-ouro">Regra de ouro</h2>
+<p>Quando o agente errar duas vezes a mesma coisa, a correção vai para o <code>AGENTS.md</code> (ou para um hook), não para o chat.</p>
+</div>
+<script src="../assets/course-manifest.js"></script>
+<script src="../assets/docs-manifest.js"></script>
+<script src="../assets/course.js" data-unit="" defer></script>
+</body>
+</html>

@@ -10,6 +10,8 @@ from pathlib import Path
 import re
 from typing import Any
 
+import build_docs
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "portal" / "course-source.json"
@@ -181,7 +183,7 @@ def main() -> int:
     manifest_js = "window.COURSE_MANIFEST = " + json.dumps(manifest, ensure_ascii=False, separators=(",", ":")) + ";\n"
 
     if args.check:
-        errors: list[str] = []
+        errors: list[str] = build_docs.build(check=True)
         if not MANIFEST.is_file() or MANIFEST.read_text(encoding="utf-8") != manifest_text:
             errors.append("portal/course-manifest.json is stale; run tools/build_course_portal.py")
         if not MANIFEST_JS.is_file() or MANIFEST_JS.read_text(encoding="utf-8") != manifest_js:
@@ -192,6 +194,7 @@ def main() -> int:
             print("\n".join(errors))
             return 1
     else:
+        build_docs.build()
         MANIFEST.write_text(manifest_text, encoding="utf-8")
         OUTPUT.write_text(output_text, encoding="utf-8")
         MANIFEST_JS.write_text(manifest_js, encoding="utf-8")

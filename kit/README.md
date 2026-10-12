@@ -16,6 +16,9 @@ Conjunto de arquivos para copiar para qualquer projeto e conduzir o ciclo **inte
 | `scripts/hooks/` | Bloqueio de caminhos protegidos, bloqueio de edição de testes em `fix/`, busca de segredos no diff, checagem de docs/drift. Usados pelo pre-commit e pelo CI. |
 | `.pre-commit-config.yaml` | Liga os hooks localmente (`pip install pre-commit && pre-commit install`). |
 | `jira/historia.md`, `jira/bug.md` | Modelos de ticket com o vínculo ao repositório. |
+| `.agents/commands/`, `.agents/skills/` | Fonte única de comandos (`/nova-feature`, `/corrigir-bug`, `/atualizar-docs`) e de skills (`gerar-teste-playwright`). `--tools` copia para o formato de cada ferramenta. |
+| `.cursor/mcp.json`, `.mcp.json`, `opencode.json`, `docs/agentes/codex-config.toml` | Configs de exemplo de MCP (Playwright e Atlassian/Jira) para Cursor, Claude Code, OpenCode e Codex. Sem segredos: OAuth ou variável de ambiente. |
+| `tests/e2e/exemplo.spec.ts` | Teste Playwright mínimo, modelo para os testes gerados pela skill. |
 | `prompts/` | Prompts agnósticos: onboarding de repo existente, nova feature, corrigir bug, módulo grande, atualizar docs, revisar PR. |
 
 ## Projeto novo
@@ -30,6 +33,23 @@ python3 /caminho/do/curso/kit/bootstrap.py .
 2. Em *Settings*: proteja a `main` (PR obrigatório, status check `check`, Code Owners), crie os environments `dev`, `cert`, `prod` (aprovadores em cert e prod).
 3. Troque `@org/...` do `CODEOWNERS`. Rode `pre-commit install`.
 4. Abra o primeiro ticket com `jira/historia.md` e siga `prompts/nova-feature.md`.
+
+## Comandos, skills e MCP por ferramenta
+
+```bash
+python3 /caminho/do/curso/kit/bootstrap.py . --tools cursor,claude,codex,opencode
+```
+
+`--tools` (qualquer subconjunto) copia a fonte única em `.agents/` para onde cada ferramenta procura, sem sobrescrever:
+
+| Ferramenta | Comandos | Skills |
+|---|---|---|
+| Cursor | `.cursor/commands/` | lê `.agents/skills/` direto |
+| Claude Code | `.claude/commands/` | `.claude/skills/` |
+| OpenCode | `.opencode/commands/` | lê `.agents/skills/` direto |
+| Codex | cada comando vira uma skill em `.agents/skills/<nome>/` (`$nome`), pois prompts personalizados são só do usuário e obsoletos | lê `.agents/skills/` direto |
+
+Os MCP não são copiados por `--tools`: já vêm nos arquivos de config acima (Codex: copie `docs/agentes/codex-config.toml` para `~/.codex/config.toml`). Veja o passo de MCP da [Trilha rápida](../trilha-rapida/TR.html#passo-7).
 
 ## Projeto existente
 
@@ -47,7 +67,7 @@ python3 /caminho/do/curso/kit/bootstrap.py . --existing
 ## Testes do kit
 
 ```bash
-uv run --with pytest python -m pytest -q kit/tests
+cd kit && uv run -q --with pytest python -m pytest -q tests
 ```
 
 ## Regra de ouro

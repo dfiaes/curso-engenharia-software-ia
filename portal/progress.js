@@ -139,6 +139,62 @@
     return { unit, block: unit.blocks[unit.blocks.length - 1] };
   }
 
+
+  // ---- Reset (storage-agnostic: takes anything with the localStorage interface) ----
+  const STORAGE_KEY = "tutor-ia.course-progress.v2";
+  const THEME_KEY = "curso.theme";
+  const COURSE_PREFIXES = ["curso.", "tutor-ia."];
+
+  function storageKeys(storage) {
+    const keys = [];
+    for (let i = 0; i < storage.length; i += 1) {
+      const key = storage.key(i);
+      if (typeof key === "string") keys.push(key);
+    }
+    return keys;
+  }
+
+  // Removes every course key (progress, checklists, quiz/order answers) and keeps the theme.
+  function resetAll(storage) {
+    let removed = 0;
+    try {
+      for (const key of storageKeys(storage)) {
+        if (key === THEME_KEY || !COURSE_PREFIXES.some((p) => key.startsWith(p))) continue;
+        storage.removeItem(key);
+        removed += 1;
+      }
+    } catch (e) { /* sem armazenamento */ }
+    return removed;
+  }
+
+  // Clears one unit: read blocks, optional lab/checkpoint, last visit, and per-unit
+  // checklist / quiz / order keys (curso.check.<CODE>-..., curso.quiz.<CODE>-..., curso.order.<CODE>-...).
+  function resetUnit(storage, code) {
+    let removed = 0;
+    try {
+      const raw = storage.getItem(STORAGE_KEY);
+      if (raw) {
+        const state = JSON.parse(raw);
+        if (isPlainObject(state)) {
+          if (isPlainObject(state.blocks)) {
+            for (const id of Object.keys(state.blocks)) if (id.startsWith(code + ":")) { delete state.blocks[id]; removed += 1; }
+          }
+          if (isPlainObject(state.optional) && state.optional[code]) { delete state.optional[code]; removed += 1; }
+          if (state.lastVisited && state.lastVisited.unit === code) state.lastVisited = null;
+          state.updatedAt = new Date().toISOString();
+          storage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+      }
+    } catch (e) { /* progresso ilegível: nada a limpar */ }
+    try {
+      const prefixes = ["check", "quiz", "order"].map((k) => `curso.${k}.${code}-`);
+      for (const key of storageKeys(storage)) {
+        if (prefixes.some((p) => key.startsWith(p))) { storage.removeItem(key); removed += 1; }
+      }
+    } catch (e) { /* sem armazenamento */ }
+    return removed;
+  }
+
   function serialize(state) {
     return JSON.stringify({ ...state, updatedAt: new Date().toISOString() }, null, 2) + "\n";
   }
@@ -154,5 +210,9 @@
     stats,
     nextBlock,
     serialize,
+    resetAll,
+    resetUnit,
+    STORAGE_KEY,
+    THEME_KEY,
   };
 });

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<!-- gerado por tools/build_docs.py a partir de docs/especificacoes/LT04-ESPECIFICACAO.md; não editar -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Especificação do LT04 — Release engineering e aprendizado operacional</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../../assets/course.css">
+</head>
+<body>
+<div class="wrap doc">
+<h1 id="especificação-do-lt04--release-engineering-e-aprendizado-operacional">Especificação do LT04 — Release engineering e aprendizado operacional</h1>
+<blockquote>
+<p>Referência de escopo da versão anterior do módulo. A sequência e o estado atuais estão em <a href="../../CURRICULO.html">CURRICULO.md</a> e <a href="../../STATUS.html">STATUS.md</a>.</p>
+</blockquote>
+<p><strong>Versão:</strong> 1.1 · <strong>Data-base:</strong> 26/09/2026 · <strong>Estado:</strong> PRÉVIA EDITORIAL TIER 1; extensão v4 com G0 aprovado · <strong>Carga:</strong> 6 blocos</p>
+<p>LT04 acontece depois do M12. Na Prévia Editorial v1, seu propósito é transformar “parece pronto” em uma decisão de release comunicável e reversível: versão, gates, rollback e restauração, sinais, comunicação e pós-mortem. Esse é o recorte Tier 1 já produzido no HTML e no laboratório local.</p>
+<p>A extensão de certificação v4 aprofunda estratégia de testes, comportamento probabilístico, cadeia de fornecimento, segurança e riscos humanos/organizacionais da IA. Ela permanece especificada nas seções posteriores e não é apresentada como cobertura concluída da prévia.</p>
+<h3 id="escopo-publicado-na-prévia-editorial-v1">Escopo publicado na Prévia Editorial v1</h3>
+<table>
+<thead>
+<tr>
+<th>Bloco</th>
+<th>Conteúdo disponível</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B01</td>
+<td>versionamento, changelog e digest imutável</td>
+</tr>
+<tr>
+<td>B02</td>
+<td>gates, evidência e GO/CONDITIONAL/NO-GO</td>
+</tr>
+<tr>
+<td>B03</td>
+<td>rollback, restauração e stop conditions</td>
+</tr>
+<tr>
+<td>B04</td>
+<td>sinais, cauda, slices e dados ausentes</td>
+</tr>
+<tr>
+<td>B05</td>
+<td>comunicação, aprovadores e reprodução independente</td>
+</tr>
+<tr>
+<td>B06</td>
+<td>pós-mortem, ações e waivers com expiração</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1-resultado-da-extensão-de-certificação-v4">1. Resultado da extensão de certificação v4</h2>
+<p>Ao concluir LT04, o aluno consegue:</p>
+<ul>
+<li>escolher testes por risco e detectar defeitos que unit tests convencionais não revelam;</li>
+<li>aplicar contract, property-based, mutation, metamorphic, differential, load e chaos testing;</li>
+<li>medir incerteza, calibrar avaliadores automáticos com humanos e evitar overfitting ao benchmark;</li>
+<li>inventariar dependências, licenças, vulnerabilidades, modelos, dados, prompts e serviços externos;</li>
+<li>gerar/validar SBOM, provenance e assinatura associadas ao mesmo artifact imutável;</li>
+<li>aplicar secure SDLC e políticas sem transformar scanner em oráculo;</li>
+<li>classificar e tratar risco de IA por uso, impacto, atores e contexto regulatório aplicável;</li>
+<li>conduzir shadow/canary, red team, game day e release readiness review;</li>
+<li>emitir <code>GO</code>, <code>CONDITIONAL GO</code> ou <code>NO-GO</code> com claims rastreáveis e risco residual explícito.</li>
+</ul>
+<h2 id="2-pré-requisitos-e-limites">2. Pré-requisitos e limites</h2>
+<p><strong>Pré-requisitos:</strong> M01–M12 e LT01–LT03. M13 consumirá o dossiê como gate final de lançamento.</p>
+<p><strong>Fora de escopo:</strong> certificação ISO; parecer jurídico; compliance por checklist; provar ausência total de vulnerabilidade/viés; usar cobertura como proxy de qualidade; aceitar assinatura sem verificar identidade/policy; promover modelo por leaderboard isolado.</p>
+<h3 id="regras-conceituais-inegociáveis">Regras conceituais inegociáveis</h3>
+<ol>
+<li>Testes selecionam evidência contra riscos; quantidade, cobertura e pass rate isolados não provam qualidade.</li>
+<li>Mutation score mede força de uma suíte dentro de um universo de mutações, não correção do sistema.</li>
+<li>Resultado estatístico inclui amostra, definição, intervalo/incerteza e limitações; um número sem proveniência não é evidência.</li>
+<li>LLM-as-judge é um instrumento a calibrar, versionar e monitorar, não ground truth.</li>
+<li>SBOM é inventário, não prova de segurança. Assinatura prova vínculo com uma identidade/chave sob uma policy, não benevolência do conteúdo.</li>
+<li>Provenance só protege quando o consumidor verifica autenticidade e expectativas.</li>
+<li>Scanner produz sinais com falso positivo/negativo; findings têm triagem, owner, prazo e disposição auditável.</li>
+<li>Risco de IA depende do uso e impacto, não apenas do modelo. Trocar modelo não elimina responsabilidade do sistema.</li>
+<li>Governança inclui modelo, dados, prompts, código, tools, memória, avaliações, decisões, operadores e fornecedores.</li>
+<li><code>CONDITIONAL GO</code> exige condição verificável, owner e expiração; não é nome elegante para aceitar bloqueador.</li>
+</ol>
+<h2 id="3-laboratório-e-dossiê-de-release">3. Laboratório e dossiê de release</h2>
+<pre><code class="language-text">release candidate (Python + IA)
+       │
+       ├─ deterministic verification
+       │   contracts / properties / mutations / load / chaos
+       ├─ AI verification
+       │   datasets / human labels / judge calibration / red team
+       ├─ supply-chain evidence
+       │   lock / SBOM / vulnerabilities / provenance / signature
+       ├─ governance evidence
+       │   inventory / lineage / impact / risk / oversight / incidents
+       └─ operational evidence
+           SLO / shadow / canary / rollback / game day
+                         │
+                         ▼
+                  release decision engine
+                  GO | CONDITIONAL GO | NO-GO
+</code></pre>
+<p>Estrutura prevista:</p>
+<pre><code class="language-text">labs/LT04-qualidade-supply-chain-governanca/
+  candidate/
+  test-strategy/
+  contracts/
+  properties/
+  mutations/
+  performance/
+  chaos/
+  evals/
+    datasets/
+    human/
+    calibration/
+    red-team/
+  supply-chain/
+    sbom/
+    provenance/
+    policy/
+  governance/
+    inventory/
+    lineage/
+    risks/
+    impact/
+  release/
+    claims.yaml
+    gates.yaml
+    decision.md
+  evidence/
+</code></pre>
+<p>O candidato contém defeitos semeados por variante: quebra de contrato, condição de corrida, teste fraco, regressão de cauda, dependency confusion simulada, provenance divergente, judge enviesado, vazamento cross-tenant e canary com dano de negócio. O aluno conhece a taxonomia, não a localização.</p>
+<p><code>claims.yaml</code> liga cada alegação a requisito, artifact digest, comando/método, raw evidence, cálculo, threshold, revisor, validade e limitações. O decision engine apenas calcula gates declarados; não fabrica resultados nem substitui assinatura humana responsável.</p>
+<h2 id="4-blocos-da-extensão-de-certificação-v4">4. Blocos da extensão de certificação v4</h2>
+<h2 id="bloco-1--estratégia-de-testes-por-risco-e-oráculos-fortes">Bloco 1 · Estratégia de testes por risco e oráculos fortes</h2>
+<p><strong>IDs:</strong> LT04-B01-C01..09 · <strong>Matriz:</strong> TEST-01, TEST-02, AIW-03.</p>
+<p><strong>Conteúdo:</strong> risk-based testing e níveis unit/component/integration/e2e; test doubles por fronteira; contract/consumer compatibility; property-based e shrinking; stateful/model-based; mutation; metamorphic relations; differential testing; determinismo, clock/random/I/O controláveis; flaky tests e test impact.</p>
+<p><strong>Prática:</strong> mapear riscos para técnicas; definir schemas e contract tests; gerar sequências concorrentes por propriedades; executar mutantes; criar relação metamórfica para ranking/normalização; comparar adapters pela mesma entrada; eliminar flake sem retries cegos.</p>
+<p><strong>Evidência:</strong> strategy matrix risco → técnica → oracle → evidência, corpus de contraexemplos minimizados, survivors triados e teste que falha antes/passa depois.</p>
+<p><strong>Aceitação:</strong> suíte detecta os defeitos semeados relevantes; surviving mutant crítico gera melhoria ou justificativa; teste não depende de resultado hardcoded do candidato.</p>
+<h2 id="bloco-2--performance-resiliência-e-avaliação-estatística-de-ia">Bloco 2 · Performance, resiliência e avaliação estatística de IA</h2>
+<p><strong>IDs:</strong> LT04-B02-C01..10 · <strong>Matriz:</strong> TEST-02, EVAL-01, EVAL-02, GOV-02.</p>
+<p><strong>Conteúdo:</strong> workload model; load/stress/spike/soak; coordinated omission e warm-up; percentis e confidence intervals; capacity versus SLO; chaos hypothesis/steady state/blast radius/abort; dataset slices e leakage; repeated trials; effect size; bootstrap; human rubric/blinding/disagreement; judge calibration; shadow, drift e benchmark overfitting.</p>
+<p><strong>Prática:</strong> executar carga por degraus e soak curto; injetar falha com abort automático; avaliar candidate/baseline em dataset versionado e slices; obter labels humanos cegos; medir concordância/viés do judge; rodar shadow sem efeito; decidir se diferença é material.</p>
+<p><strong>Evidência:</strong> raw samples, seed/config, notebook/script reproduzível, intervals, slice report, confusion/disagreement analysis, chaos report e decisão de capacidade.</p>
+<p><strong>Aceitação:</strong> média não esconde cauda; amostra/intervalo/limitação acompanham claim; judge divergente não é usado sem ajuste/abstenção; chaos para ao ultrapassar blast radius.</p>
+<h2 id="bloco-3--dependências-sbom-provenance-assinatura-e-verificação">Bloco 3 · Dependências, SBOM, provenance, assinatura e verificação</h2>
+<p><strong>IDs:</strong> LT04-B03-C01..10 · <strong>Matriz:</strong> SUP-01, PY-03, GOV-01.</p>
+<p><strong>Conteúdo:</strong> source/build/dependency/package/distribution; lock e hashes; direct/transitive/development dependency; typosquatting/dependency confusion; licença e EOL; SBOM SPDX/CycloneDX; VEX como contexto; SLSA source/build tracks; in-toto attestation; artifact digest; signing/keyless identity/transparency log; verification policy; reproducible builds e rebuildability.</p>
+<p><strong>Prática:</strong> resolver ambiente limpo; gerar SBOM nos formatos escolhidos; comparar com lock e artifact; produzir provenance; assinar artifact OCI; verificar digest, issuer/subject e builder expectation; adulterar artifact/provenance e confirmar rejeição; triar vulnerabilidade por reachability/exposure/fix.</p>
+<p><strong>Evidência:</strong> lock, SBOM validada, license/vulnerability report, provenance, verification transcript, artifact digest e exception record com expiry.</p>
+<p><strong>Aceitação:</strong> SBOM corresponde ao artifact lançado; tampering ou signer/builder inesperado bloqueia; finding crítico não é fechado apenas porque scanner diferente silencia.</p>
+<h2 id="bloco-4--secure-sdlc-abuso-policy-as-code-e-resposta">Bloco 4 · Secure SDLC, abuso, policy-as-code e resposta</h2>
+<p><strong>IDs:</strong> LT04-B04-C01..10 · <strong>Matriz:</strong> SEC-01..03, TEST-02, SUP-01.</p>
+<p><strong>Conteúdo:</strong> NIST SSDF e secure-by-design; threat model vivo; revisão/branch protection; secret, SAST, dependency, container e IaC scanning; DAST/fuzzing; ASVS; agent goal hijack, tool misuse, privilege abuse, memory/context poisoning e agentic supply chain; policy-as-code; waiver; vulnerability disclosure, patch e incident response.</p>
+<p><strong>Prática:</strong> mapear práticas SSDF; atacar candidato por abuse cases de M12; rodar scanners complementares; confirmar exploitability em sandbox; escrever policies para provenance, severity, privilege e manifest; testar bypass; simular disclosure → triage → patch → advisory.</p>
+<p><strong>Evidência:</strong> threat/abuse suite, findings ledger, policy tests, waiver assinada/expirável, patch SLA e disclosure runbook.</p>
+<p><strong>Aceitação:</strong> controles bloqueiam bypass sem depender de prompt; falso positivo é descartado com evidência; falso negativo semeado é capturado por técnica independente; waiver vencida bloqueia release.</p>
+<h2 id="bloco-5--governança-inventário-lineage-e-impacto-de-ia">Bloco 5 · Governança, inventário, lineage e impacto de IA</h2>
+<p><strong>IDs:</strong> LT04-B05-C01..11 · <strong>Matriz:</strong> GOV-01, GOV-02, EVAL-02, SEN-01.</p>
+<p><strong>Conteúdo:</strong> govern/map/measure/manage do NIST AI RMF; intended use/misuse e atores afetados; impacto/direitos; risk tier e apetite; system/model/data cards; W3C PROV/OpenLineage; versões de modelo/dataset/prompt/tool/policy; consentimento, origem, retenção e exclusão; explicabilidade apropriada; human oversight e contestação; third-party risk; monitoring/drift/incidente; contexto LGPD, EU AI Act e ISO/IEC 42001.</p>
+<p><strong>Prática:</strong> inventariar componentes e fornecedores; construir lineage do claim à execução; preencher impact assessment proporcional; definir owners/thresholds/oversight/appeal; testar deleção e trace de provenance; simular mudança silenciosa de modelo/termo e incidente de dano.</p>
+<p><strong>Evidência:</strong> AI system inventory, model/system/data cards, lineage graph, impact/risk register, human-control matrix, supplier exit plan e incident record.</p>
+<p><strong>Aceitação:</strong> toda decisão automatizada relevante tem owner, finalidade, dados, versão, controle e canal de contestação; componente sem origem/licença/uso permitido bloqueia; obrigação legal é marcada para revisão especializada, não inventada pelo curso.</p>
+<h2 id="bloco-6--release-readiness-red-team-e-decisão-gono-go">Bloco 6 · Release readiness, red team e decisão go/no-go</h2>
+<p><strong>IDs:</strong> LT04-B06-C01..11 · <strong>Matriz:</strong> GOV-02, PLAT-03, SRE-01..02, CAP-02, SEN-01.</p>
+<p><strong>Conteúdo:</strong> release contract; entry/exit criteria; claims-evidence graph; independência de revisão; residual risk; stop conditions; red team versus pentest; shadow/canary; rollback/roll-forward; game day; operational readiness; conditional approval; expiry/revalidation; comunicação técnica e executiva.</p>
+<p><strong>Prática:</strong> montar dossiê do mesmo digest; executar red team variante; promover shadow/canary; disparar stop condition; restaurar serviço/dado; fazer revisão cruzada; apresentar decisão em 10 minutos para engenharia, produto, segurança e negócio.</p>
+<p><strong>Saída:</strong> <code>release-dossier/</code> com manifest, claims, evidências brutas, cálculos, gaps, riscos, approvals e decisão reproduzível.</p>
+<p><strong>Aceitação:</strong> claim sem evidência falha fechado; P0/P1 aberto produz NO-GO; conditional item expira automaticamente; reviewer independente reproduz a decisão a partir do dossiê.</p>
+<h2 id="5-catálogo-de-aceitação">5. Catálogo de aceitação</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Cenário</th>
+<th>Condição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LT04-AT-001</td>
+<td>contract break</td>
+<td>incompatibilidade detectada antes do deploy</td>
+</tr>
+<tr>
+<td>LT04-AT-002</td>
+<td>property counterexample</td>
+<td>falha minimizada e persistida como regressão</td>
+</tr>
+<tr>
+<td>LT04-AT-003</td>
+<td>mutant crítico</td>
+<td>morto por oracle relevante ou risco justificado</td>
+</tr>
+<tr>
+<td>LT04-AT-004</td>
+<td>adapter diferencial</td>
+<td>divergência normalizada ou explicitamente suportada</td>
+</tr>
+<tr>
+<td>LT04-AT-005</td>
+<td>flake</td>
+<td>causa removida; retry não mascara defeito</td>
+</tr>
+<tr>
+<td>LT04-AT-010</td>
+<td>load com cauda</td>
+<td>p95/p99, erro e throughput derivados de raw samples</td>
+</tr>
+<tr>
+<td>LT04-AT-011</td>
+<td>coordinated omission</td>
+<td>método detecta/evita medição enganosa</td>
+</tr>
+<tr>
+<td>LT04-AT-012</td>
+<td>chaos blast radius</td>
+<td>experimento aborta e restaura steady state</td>
+</tr>
+<tr>
+<td>LT04-AT-013</td>
+<td>dataset slice</td>
+<td>regressão agregada/segmentada não é ocultada</td>
+</tr>
+<tr>
+<td>LT04-AT-014</td>
+<td>judge calibration</td>
+<td>divergência humana medida; abstenção/threshold aplicados</td>
+</tr>
+<tr>
+<td>LT04-AT-015</td>
+<td>shadow</td>
+<td>nenhuma ação real, billing ou escrita de negócio ocorre</td>
+</tr>
+<tr>
+<td>LT04-AT-020</td>
+<td>ambiente bloqueado</td>
+<td>resolução limpa reproduz dependências/hashes</td>
+</tr>
+<tr>
+<td>LT04-AT-021</td>
+<td>SBOM</td>
+<td>componentes diretos/transitivos correspondem ao artifact</td>
+</tr>
+<tr>
+<td>LT04-AT-022</td>
+<td>provenance</td>
+<td>source, builder, inputs e digest verificam</td>
+</tr>
+<tr>
+<td>LT04-AT-023</td>
+<td>artifact adulterado</td>
+<td>assinatura/provenance falham fechado</td>
+</tr>
+<tr>
+<td>LT04-AT-024</td>
+<td>identidade inesperada</td>
+<td>assinatura válida mas fora da policy é rejeitada</td>
+</tr>
+<tr>
+<td>LT04-AT-025</td>
+<td>vulnerabilidade</td>
+<td>decisão inclui exposure, reachability, fix e expiry</td>
+</tr>
+<tr>
+<td>LT04-AT-030</td>
+<td>secret/scanner</td>
+<td>segredo semeado bloqueado e removido do histórico/evidência</td>
+</tr>
+<tr>
+<td>LT04-AT-031</td>
+<td>agent abuse</td>
+<td>goal/tool/privilege/memory attack contido por controle técnico</td>
+</tr>
+<tr>
+<td>LT04-AT-032</td>
+<td>policy bypass</td>
+<td>teste negativo impede campo/artefato não verificável</td>
+</tr>
+<tr>
+<td>LT04-AT-033</td>
+<td>waiver expirada</td>
+<td>release bloqueada automaticamente</td>
+</tr>
+<tr>
+<td>LT04-AT-034</td>
+<td>disclosure</td>
+<td>triage, patch, advisory e regression test rastreáveis</td>
+</tr>
+<tr>
+<td>LT04-AT-040</td>
+<td>inventory/lineage</td>
+<td>execução liga uso, versões, dados, prompt, tool e owner</td>
+</tr>
+<tr>
+<td>LT04-AT-041</td>
+<td>uso fora do previsto</td>
+<td>bloqueio/oversight/novo assessment acionado</td>
+</tr>
+<tr>
+<td>LT04-AT-042</td>
+<td>deleção/retention</td>
+<td>dado e derivados tratados segundo política verificável</td>
+</tr>
+<tr>
+<td>LT04-AT-043</td>
+<td>fornecedor muda modelo</td>
+<td>drift contratual/técnico detectado antes de promoção</td>
+</tr>
+<tr>
+<td>LT04-AT-044</td>
+<td>contestação humana</td>
+<td>decisão pode ser revista sem loop automatizado opaco</td>
+</tr>
+<tr>
+<td>LT04-AT-050</td>
+<td>claim sem evidência</td>
+<td>gate falha fechado</td>
+</tr>
+<tr>
+<td>LT04-AT-051</td>
+<td>P0/P1 aberto</td>
+<td>decisão obrigatória NO-GO</td>
+</tr>
+<tr>
+<td>LT04-AT-052</td>
+<td>conditional go</td>
+<td>owner, condição, prazo e revalidação presentes</td>
+</tr>
+<tr>
+<td>LT04-AT-053</td>
+<td>canary ruim</td>
+<td>stop condition aborta e rollback/roll-forward é verificado</td>
+</tr>
+<tr>
+<td>LT04-AT-054</td>
+<td>revisão independente</td>
+<td>decisão reproduzida do mesmo digest e raw evidence</td>
+</tr>
+<tr>
+<td>LT04-AT-060</td>
+<td>variante inédita</td>
+<td>defeitos combinados encontrados, tratados e comunicados</td>
+</tr>
+<tr>
+<td>LT04-AT-061</td>
+<td>restauração</td>
+<td>candidate isolado, estado saudável e evidência imutável</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-gates-do-dossiê">6. Gates do dossiê</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Pergunta fechada</th>
+<th>Falha obrigatória</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q1 · Contratos e propriedades</td>
+<td>invariantes e compatibilidade foram provados?</td>
+<td>quebra P0/P1 ou oracle inválido</td>
+</tr>
+<tr>
+<td>Q2 · Capacidade e resiliência</td>
+<td>SLO/capacidade sobrevivem ao workload e falhas?</td>
+<td>stop condition, dado ausente ou teste enganoso</td>
+</tr>
+<tr>
+<td>Q3 · IA e humanos</td>
+<td>qualidade/segurança por slice e calibração são aceitáveis?</td>
+<td>dano crítico, judge não calibrado ou dataset sem provenance</td>
+</tr>
+<tr>
+<td>Q4 · Supply chain</td>
+<td>artifact, SBOM, provenance e identidade verificam?</td>
+<td>digest/identity/builder/policy divergente</td>
+</tr>
+<tr>
+<td>Q5 · Segurança e governança</td>
+<td>abuso, dados, impacto, oversight e owners estão tratados?</td>
+<td>risco proibido/P0/P1 ou obrigação desconhecida</td>
+</tr>
+<tr>
+<td>Q6 · Operação e reversão</td>
+<td>shadow/canary/runbook/restore/rollback foram exercitados?</td>
+<td>não recuperável dentro do objetivo</td>
+</tr>
+<tr>
+<td>Q7 · Claims e decisão</td>
+<td>terceiro reproduz claims e cálculos?</td>
+<td>hardcode, evidência ausente/expirada ou conflito não explicado</td>
+</tr>
+</tbody>
+</table>
+<p><code>GO</code> exige Q1–Q7 aprovados. <code>CONDITIONAL GO</code> só admite itens não bloqueantes explicitamente permitidos por policy. Qualquer stop condition ou P0/P1 aberto resulta em <code>NO-GO</code>.</p>
+<h2 id="7-checkpoint-lt04">7. Checkpoint LT04</h2>
+<p>O aluno recebe candidato e defeitos inéditos. Deve:</p>
+<ol>
+<li>congelar digest, escopo, claims e stop conditions;</li>
+<li>selecionar técnicas por risco e justificar o que não será testado;</li>
+<li>produzir raw evidence e cálculos reproduzíveis;</li>
+<li>verificar SBOM, provenance, assinatura e policy como consumidor;</li>
+<li>calibrar avaliação de IA contra labels humanos;</li>
+<li>atualizar inventory, lineage, impact e risk register;</li>
+<li>executar red team, shadow/canary e cenário de recuperação;</li>
+<li>emitir/defender decisão e comunicar limitações sem suavizá-las.</li>
+</ol>
+<p>Perguntas incluem: cobertura versus adequação; o que mutation score não prova; por que média/leaderboard enganam; assinatura versus confiança; SBOM versus VEX; provenance versus reprodutibilidade; risco do builder; modelo versus sistema de IA; quando revisão humana é controle falso; diferença entre GO condicionado e dívida sem owner; quem pode aceitar qual risco.</p>
+<h2 id="8-fontes">8. Fontes</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fonte</th>
+<th>Versão/data</th>
+<th>Uso</th>
+<th>Obsolescência</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SRC-LT04-01</td>
+<td><a href="https://docs.pytest.org/en/stable/">pytest documentation</a></td>
+<td>stable na regeneração</td>
+<td>fundamentos do runner/fixtures</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-02</td>
+<td><a href="https://hypothesis.readthedocs.io/en/latest/">Hypothesis documentation</a> e <a href="https://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/quick.pdf">QuickCheck paper</a></td>
+<td>vigente + Claessen/Hughes 2000</td>
+<td>property-based/shrinking</td>
+<td>média/baixa</td>
+</tr>
+<tr>
+<td>SRC-LT04-03</td>
+<td><a href="https://github.com/pact-foundation/pact-specification">Pact Specification</a></td>
+<td>vigente na regeneração</td>
+<td>consumer contract</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-04</td>
+<td><a href="https://mutmut.readthedocs.io/en/latest/">mutmut documentation</a></td>
+<td>vigente na regeneração</td>
+<td>adapter de mutation testing Python</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT04-05</td>
+<td><a href="https://grafana.com/docs/k6/latest/">k6 documentation</a></td>
+<td>vigente na regeneração</td>
+<td>adapter de load testing</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT04-06</td>
+<td><a href="https://principlesofchaos.org/">Principles of Chaos Engineering</a></td>
+<td>princípios canônicos</td>
+<td>hipótese/blast radius</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT04-07</td>
+<td><a href="https://airc.nist.gov/">NIST AI Resource Center — TEVV</a></td>
+<td>consultado 14/08/2026</td>
+<td>testing/evaluation/verification/validation de IA</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT04-08</td>
+<td><a href="https://dl.acm.org/doi/10.1145/3287560.3287596">Model Cards for Model Reporting</a></td>
+<td>Mitchell et al., 2019</td>
+<td>documentação de modelo</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT04-09</td>
+<td><a href="https://dl.acm.org/doi/10.1145/3458723">Datasheets for Datasets</a></td>
+<td>Gebru et al., 2021</td>
+<td>documentação de dados</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT04-10</td>
+<td><a href="https://slsa.dev/spec/v1.2/">SLSA Specification</a></td>
+<td>1.2 approved</td>
+<td>source/build/provenance/verification</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-11</td>
+<td><a href="https://spdx.github.io/spdx-spec/">SPDX Specification</a></td>
+<td>3.0.1</td>
+<td>SBOM/licenças</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-12</td>
+<td><a href="https://cyclonedx.org/specification/overview/">CycloneDX Specification</a></td>
+<td>1.7 / ECMA-424</td>
+<td>SBOM/ML-BOM/VEX</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-13</td>
+<td><a href="https://github.com/in-toto/attestation">in-toto Specification</a></td>
+<td>v1 model</td>
+<td>attestation envelope/model</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-14</td>
+<td><a href="https://docs.sigstore.dev/cosign/signing/overview/">Sigstore/Cosign signing overview</a></td>
+<td>vigente na regeneração</td>
+<td>adapter de assinatura/identidade</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT04-15</td>
+<td><a href="https://csrc.nist.gov/pubs/sp/800/218/final">NIST SSDF SP 800-218</a></td>
+<td>final 1.1; revisão 1.2 ainda draft na data-base</td>
+<td>secure SDLC</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-16</td>
+<td><a href="https://csrc.nist.gov/pubs/sp/800/218/a/final">NIST SP 800-218A</a></td>
+<td>final, 2024</td>
+<td>secure development de GenAI/foundation models</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-17</td>
+<td><a href="https://owasp.org/www-project-application-security-verification-standard/">OWASP ASVS</a></td>
+<td>5.0</td>
+<td>requisitos verificáveis de aplicação</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-18</td>
+<td><a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/">OWASP Top 10 for Agentic Applications</a></td>
+<td>2026</td>
+<td>abuse cases agênticos</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT04-19</td>
+<td><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI RMF</a></td>
+<td>1.0; em revisão na data-base</td>
+<td>govern/map/measure/manage</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT04-20</td>
+<td><a href="https://doi.org/10.6028/NIST.AI.600-1">NIST AI 600-1 — Generative AI Profile</a></td>
+<td>final, 2024</td>
+<td>riscos e ações para GenAI</td>
+<td>média</td>
+</tr>
+<tr>
+<td>SRC-LT04-21</td>
+<td><a href="https://www.w3.org/TR/prov-overview/">W3C PROV Overview</a></td>
+<td>W3C Recommendation</td>
+<td>lineage/provenance interoperável</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT04-22</td>
+<td><a href="https://openlineage.io/docs/spec/">OpenLineage Specification</a></td>
+<td>vigente na regeneração</td>
+<td>adapter de lineage operacional</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT04-23</td>
+<td><a href="https://www.iso.org/standard/81230.html">ISO/IEC 42001 overview</a></td>
+<td>2023</td>
+<td>sistema de gestão de IA; referência, não certificação</td>
+<td>baixa</td>
+</tr>
+<tr>
+<td>SRC-LT04-24</td>
+<td><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj">Regulation (EU) 2024/1689</a></td>
+<td>texto oficial consolidável</td>
+<td>contexto regulatório UE</td>
+<td>alta</td>
+</tr>
+<tr>
+<td>SRC-LT04-25</td>
+<td><a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm">Lei Geral de Proteção de Dados</a></td>
+<td>Lei 13.709/2018 e alterações aplicáveis</td>
+<td>contexto brasileiro de dados pessoais</td>
+<td>alta</td>
+</tr>
+</tbody>
+</table>
+<p>O material informa que normas e leis mudam e que aplicabilidade exige análise especializada. Ferramentas são adapters; formatos e decisões permanecem portáveis.</p>
+<h2 id="9-critérios-editoriais-e-g0">9. Critérios editoriais e G0</h2>
+<ul>
+<li>10.000–12.000 palavras visíveis mais laboratório/dossiê executável;</li>
+<li>no mínimo 34 cenários de aceitação com raw evidence persistida;</li>
+<li>variante de checkpoint contém defeitos não revelados na apostila;</li>
+<li>toda métrica possui dataset/workload, versão, seed quando aplicável, cálculo e limitação;</li>
+<li>SBOM/provenance/signature referenciam o mesmo digest;</li>
+<li>verificação testa identidade/expectation, não apenas validade criptográfica;</li>
+<li>decisões regulatórias são rotuladas como contexto e encaminhadas a especialista;</li>
+<li>nenhum scanner/judge pode aprovar sozinho um gate crítico;</li>
+<li>claims hardcoded, evidence ausente ou conflito não explicado geram NO-GO;</li>
+<li>
+<p>dossiê é reproduzível por revisor independente.</p>
+</li>
+<li>
+<p>[x] seis blocos, competências e dependências definidos;</p>
+</li>
+<li>[x] laboratório e dossiê de release definidos;</li>
+<li>[x] 34 cenários e sete gates definidos;</li>
+<li>[x] stop conditions e semântica GO/CONDITIONAL/NO-GO definidos;</li>
+<li>[x] fontes primárias/canônicas atuais selecionadas;</li>
+<li>[x] governança agnóstica e contexto regulatório delimitados;</li>
+<li>[x] escopo separado de M12 e M13.</li>
+</ul>
+<p><strong>Decisão:</strong> LT04 está <code>ESPECIFICADO</code>. As seis unidades críticas de R1 possuem G0 aprovado; o curso pode iniciar R2 pela regeneração integral de M12. Gate G0 aprovado.</p>
+</div>
+<script src="../../assets/course-manifest.js"></script>
+<script src="../../assets/docs-manifest.js"></script>
+<script src="../../assets/course.js" data-unit="" defer></script>
+</body>
+</html>
