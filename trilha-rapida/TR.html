@@ -1117,6 +1117,70 @@ Course.ready(function (C) {
 </ul>
 <p><strong>Em resumo.</strong> Meça em vez de opinar: casos reais verificáveis, k repetições, pass^k para confiabilidade, custo por sucesso para dinheiro, McNemar para saber se a diferença é real, e uma regra de decisão escrita antes. Skill que não ajuda se aposenta; modelo barato entra onde o relatório mostra que dá conta.</p>
 
+<h3>5. Skills da comunidade: como adotar com segurança</h3>
+<p>Existem coleções prontas de skills na internet. Elas poupam tempo, mas uma skill é <strong>instrução que o agente segue</strong> e pode pedir comandos: instalar às cegas é rodar código de terceiros. Como exemplo usamos <a href="https://github.com/mattpocock/skills">mattpocock/skills</a> (licença MIT), verificado em 12/10/2026.</p>
+<p><strong>Filosofia.</strong> Skills pequenas e combináveis, em vez de um framework que toma conta do processo. O repositório parte de quatro falhas comuns e de uma solução para cada uma:</p>
+<ul>
+<li>o agente não fez o que eu queria: sessões de "grilling" (<code>/grill-me</code>, <code>/grill-with-docs</code>);</li>
+<li>o agente é verboso: linguagem compartilhada em <code>GLOSSARY.md</code> e ADRs;</li>
+<li>o código não funciona: loops de feedback e TDD;</li>
+<li>o código vira bola de lama: módulos profundos (<code>codebase-design</code>).</li>
+</ul>
+<p><strong>Dois tipos de skill.</strong> As <em>chamadas só pelo usuário</em>: <code>/to-spec</code>, <code>/to-tickets</code>, <code>/wayfinder</code>, <code>/implement</code>, <code>/implement-spec</code>, <code>/triage</code>, <code>/retro</code>, <code>/handoff</code>, <code>/grill-me</code>, <code>/to-questionnaire</code>, <code>/ask-matt</code>, <code>/setup-matt-pocock-skills</code>. E as <em>acionadas pelo modelo</em>: <code>tdd</code>, <code>diagnosing-bugs</code>, <code>code-review</code>, <code>prototype</code>, <code>pr</code>, <code>domain-modeling</code>, <code>research</code>, <code>writing-for-agents</code>.</p>
+
+<h4>Instalação</h4>
+<div class="tabs">
+<section data-tab="Claude Code"><pre><code>claude plugin install mattpocock-skills@claude-plugins-official</code></pre></section>
+<section data-tab="Codex"><pre><code>codex plugin marketplace add mattpocock/skills
+codex plugin add mattpocock-skills@mattpocock</code></pre></section>
+<section data-tab="Cursor, OpenCode e outros"><pre><code>npx skills@latest add mattpocock/skills -a &lt;agente&gt;
+# atualizar depois:
+npx skills@latest update</code></pre></section>
+</div>
+<p>Rode <code>/setup-matt-pocock-skills</code> uma vez por repositório. <strong>Não instale por dois caminhos</strong>: as skills ficam duplicadas.</p>
+
+<h4>Mapa: skill do Pocock → etapa do nosso ciclo</h4>
+<table>
+<thead><tr><th>Skill</th><th>Onde entra no ciclo / módulo</th></tr></thead>
+<tbody>
+<tr><td><code>grill-me</code>, <code>to-questionnaire</code></td><td>Questionário anti-ambiguidade antes da spec</td></tr>
+<tr><td><code>to-spec</code>, <code>to-tickets</code>, <code>wayfinder</code></td><td>Intenção, spec, plano e Jira (Passos 2 e 3; <a href="../modulos/A01-sdlc-nativo-ia/A01.html">A01</a>)</td></tr>
+<tr><td><code>tdd</code>, <code>diagnosing-bugs</code></td><td><code>/corrigir-bug</code> (Passo 8) e S01</td></tr>
+<tr><td><code>code-review</code>, <code>pr</code></td><td><code>REVIEW.md</code> e revisão em sessão separada (Passo 6)</td></tr>
+<tr><td><code>GLOSSARY.md</code>, ADRs, <code>domain-modeling</code></td><td><a href="../modulos/M04-design-docs-com-ia/M04.html">M04</a> e M02A</td></tr>
+<tr><td><code>codebase-design</code></td><td>S01 e M02A</td></tr>
+<tr><td><code>handoff</code>, <code>retro</code>, <code>writing-for-agents</code></td><td><code>AGENTS.md</code> e melhoria contínua (Passo 5)</td></tr>
+</tbody>
+</table>
+<p><strong>Lacuna importante:</strong> o repositório não tem skill de avaliação. É exatamente o que o kit de evals deste passo complementa: ele diz se cada skill, inclusive as populares, ajuda no <em>seu</em> código.</p>
+
+<h4>Roteiro de adoção segura</h4>
+<p>Ordene os sete passos, do primeiro ao último.</p>
+<ol class="order" data-solution="a,b,c,d,e,f,g">
+<li data-id="e">Adaptar ao seu contexto: copiar para <code>.agents/skills/</code> e editar quando o padrão não servir</li>
+<li data-id="a">Ler o <code>SKILL.md</code> e os scripts antes de instalar</li>
+<li data-id="g">Revisar a cada atualização</li>
+<li data-id="c">Fixar versão ou commit, ou fazer fork, em vez de seguir sempre o último</li>
+<li data-id="b">Começar com 3 a 4 skills num repositório de teste (sugestão: <code>grill-me</code>, <code>to-spec</code>, <code>tdd</code>, <code>code-review</code>)</li>
+<li data-id="f">Aposentar o que for neutro</li>
+<li data-id="d">Medir com <code>--skill-ab</code> do kit: útil, neutra ou prejudicial</li>
+</ol>
+<ul class="checklist" data-key="TR-adotar-skill">
+<li>Li o <code>SKILL.md</code> e os scripts, e sei quais comandos a skill pode pedir</li>
+<li>Testei 3 a 4 skills num repositório de teste, não no de produção</li>
+<li>Fixei versão ou commit (ou fiz fork)</li>
+<li>Medi com <code>--skill-ab</code> e registrei o veredito</li>
+<li>Adaptei para <code>.agents/skills/</code> o que precisava de ajuste</li>
+<li>Aposentei as skills neutras</li>
+<li>Marquei a revisão a cada atualização</li>
+</ul>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma skill popular, com muitas estrelas, vai ser adotada pelo time. Por que medi-la antes?</p>
+<ol><li data-opt="a">Porque skills populares costumam ser piores que as pequenas.</li><li data-opt="b">Porque popularidade não prova ganho no seu código e modelo: skill neutra gasta contexto, e a prejudicial piora o resultado; só o <code>--skill-ab</code> sobre casos seus mostra qual das três é.</li><li data-opt="c">Porque o repositório é MIT e a licença exige avaliação.</li></ol>
+<div class="explain">B. Estrelas medem interesse, não efeito no seu repositório. O erro de quem escolhe A é inverter o viés; o de quem escolhe C é confundir licença com garantia de qualidade. Mede-se, decide-se e aposenta-se o que for neutro.</div>
+</div>
+
 <h2 id="passo-11">Passo 11 · Onde fica cada coisa em cada ferramenta</h2>
 <p><strong>Por que isso importa.</strong> Os conceitos são os mesmos em todas as ferramentas; só o endereço muda. Com a tabela abaixo você traduz o método para a ferramenta que o seu time usa hoje (e para a de amanhã). Versão do quadro: <strong>verificado em 12/10/2026</strong> contra a documentação oficial. Produtos mudam rápido: itens marcados com † não foram lidos em página oficial nesta verificação, confirme antes de depender deles.</p>
 
@@ -1193,6 +1257,7 @@ Course.ready(function (C) {
 <li>A diferença passou do ruído (McNemar) ou aumentei casos e repetições?</li>
 <li>Skill neutra ou com falso positivo: refinei a descrição ou aposentei</li>
 <li>Guardei o relatório aprovado como referência para a próxima mudança</li>
+<li>Skill da comunidade: li o SKILL.md, testei em repositório de teste, fixei versão e medi com <code>--skill-ab</code> antes de adotar</li>
 </ul>
 
 <h3>Exercício final: ordene o ciclo completo</h3>
@@ -1243,6 +1308,9 @@ Course.ready(function (C) {
 <div class="fc"><div class="front">Falso positivo × falso negativo de skill</div><div class="back">Falso positivo: acionou quando não devia (gasta contexto). Falso negativo: não acionou quando devia. Precisa de casos negativos para enxergar o primeiro.</div></div>
 <div class="fc"><div class="front">Veredito de uma skill</div><div class="back">Útil (ganho de pass^k acima da tolerância), neutra (enxugue ou aposente) ou prejudicial (piora).</div></div>
 <div class="fc"><div class="front">Quando rodar os evals de novo</div><div class="back">Ao trocar de modelo, criar ou editar skill, mudar o AGENTS.md e quando o fornecedor atualizar o modelo. Pode virar gate de CI.</div></div>
+<div class="fc"><div class="front">Como adotar uma skill da comunidade com segurança</div><div class="back">Ler SKILL.md e scripts antes; começar com 3 a 4 skills em repositório de teste; fixar versão ou fork; medir com --skill-ab; adaptar em .agents/skills/; aposentar a neutra; revisar a cada atualização.</div></div>
+<div class="fc"><div class="front">Por que não instalar a mesma coleção de skills por dois caminhos?</div><div class="back">As skills ficam duplicadas. Escolha um caminho (plugin ou npx skills) e use só ele.</div></div>
+<div class="fc"><div class="front">Skill só do usuário × skill acionada pelo modelo</div><div class="back">A primeira você chama com barra (/to-spec, /grill-me). A segunda o modelo aciona pela descrição (tdd, code-review).</div></div>
 </div>
 
 <h2>Fontes e versões</h2>
@@ -1251,6 +1319,7 @@ Course.ready(function (C) {
 <li><a href="https://modelcontextprotocol.io/docs/learn/architecture">MCP · arquitetura</a> (host, cliente, servidor, primitivas, transportes) e <a href="https://github.com/microsoft/playwright-mcp">@playwright/mcp</a>.</li>
 <li>MCP por ferramenta: <a href="https://code.claude.com/docs/en/mcp">Claude Code</a>, <a href="https://developers.openai.com/codex/mcp">Codex</a>, <a href="https://opencode.ai/docs/mcp-servers/">OpenCode</a>, <a href="https://docs.cursor.com/context/mcp">Cursor</a>; <a href="https://github.com/github/github-mcp-server">GitHub MCP</a> e <a href="https://www.atlassian.com/platform/remote-mcp-server">Atlassian Remote MCP</a>.</li>
 <li>Comandos e skills: <a href="https://code.claude.com/docs/en/skills">Claude Code · skills</a>, <a href="https://opencode.ai/docs/commands/">OpenCode · commands</a>, <a href="https://opencode.ai/docs/skills/">OpenCode · skills</a>, <a href="https://docs.cursor.com/en/agent/chat/commands">Cursor · commands</a>, <a href="https://cursor.com/docs/context/skills">Cursor · skills</a>, <a href="https://developers.openai.com/codex/custom-prompts">Codex · custom prompts</a>, <a href="https://developers.openai.com/codex/skills">Codex · skills</a>.</li>
+<li><a href="https://github.com/mattpocock/skills">mattpocock/skills</a> (skills da comunidade, licença MIT), verificado em 12/10/2026.</li>
 <li><a href="https://agents.md">agents.md</a>: formato aberto do <code>AGENTS.md</code>.</li>
 <li><a href="https://code.claude.com/docs/en/overview">Claude Code · visão geral</a> (CLAUDE.md, skills, hooks, subagentes, MCP, GitHub Actions).</li>
 <li><a href="https://opencode.ai/docs/">OpenCode · documentação</a> (rules, commands, agents, plugins, MCP, permissions, skills, GitHub).</li>
