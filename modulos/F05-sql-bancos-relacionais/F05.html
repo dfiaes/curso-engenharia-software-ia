@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>F05 · Bancos Relacionais, SQL e Modelagem de Dados</title>
 <meta name="color-scheme" content="light dark">
-<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
 <link rel="stylesheet" href="../../assets/course.css">
 </head>
 <body>
@@ -167,6 +167,17 @@ CREATE TABLE loan (
 <p>Relação é conjunto de fatos; a chave diz o que é um fato. Declare no banco o que é invariante (<code>NOT NULL</code>, <code>UNIQUE</code>, <code>CHECK</code>, chave estrangeira): vale para todo cliente. Normalize até a 3FN para que cada fato exista uma vez e as três anomalias fiquem impossíveis; desnormalize só com medição, dono da consistência e plano de reconciliação, e nunca confunda cópia redundante com snapshot histórico. No SQLite ligue <code>foreign_keys</code> por conexão e lembre que a tipagem é frouxa.</p>
 </div>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que declarar <code>UNIQUE (email)</code> no banco é mais forte do que apenas conferir "já existe?" no código da aplicação?</p>
+<ol><li data-opt="a">Porque o banco valida mais rápido que o Python, e a velocidade é o que importa aqui.</li><li data-opt="b">A restrição vale para todo cliente e continua valendo quando duas requisições conferem ao mesmo tempo; a checagem na aplicação tem corrida entre o SELECT e o INSERT.</li><li data-opt="c">Porque <code>UNIQUE</code> dispensa o índice, o que economiza espaço.</li><li data-opt="d">Porque a aplicação nunca consegue consultar o banco antes de inserir.</li></ol>
+<div class="explain">O erro típico é achar que "checar antes" basta. Duas requisições simultâneas passam pela checagem e ambas inserem. Só a restrição declarada é atômica e vale para qualquer cliente (outro serviço, script de manutenção, console). A aplicação ainda pode checar para dar uma mensagem amigável, mas a garantia mora no banco.</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">A tabela <code>item_pedido(pedido_id, produto_id, produto_nome, qtd)</code> tem chave primária <code>(pedido_id, produto_id)</code>. Qual é o problema de modelagem?</p>
+<ol><li data-opt="a"><code>produto_nome</code> depende só de <code>produto_id</code> (parte da chave): o mesmo fato fica repetido e abre anomalia de atualização.</li><li data-opt="b">Não há problema: repetir o nome do produto em cada linha sempre acelera a leitura.</li><li data-opt="c"><code>qtd</code> deveria estar em outra tabela, porque números não podem ficar numa tabela de junção.</li><li data-opt="d">A chave composta é proibida; toda tabela precisa de um <code>id</code> substituto sozinho.</li></ol>
+<div class="explain">Dependência parcial da chave (viola a 2FN): o nome do produto é um fato sobre o produto, não sobre o item do pedido. Trocar o nome em uma linha deixa as outras desatualizadas. Atenção à exceção que o bloco discute: o <em>preço</em> cobrado no momento da venda é um snapshot histórico legítimo, não redundância; o nome atual do produto não é.</div>
+</div>
+
 <!-- ============================================ BLOCO 2 -->
 <h2 id="b02">Bloco 2 · SQL de consulta: JOINs, agregação, subqueries, NULL e ordem lógica de execução</h2>
 
@@ -199,6 +210,15 @@ CREATE TABLE loan (
 </figure>
 <p>Consequências diretas, todas cobradas em entrevista e em produção: <code>WHERE</code> não enxerga aliases criados no <code>SELECT</code> (no PostgreSQL é erro; o SQLite deixa passar, e por isso o lab usa subquery nos testes); <code>WHERE</code> não filtra agregados (para isso existe <code>HAVING</code>); funções de janela não podem aparecer em <code>WHERE</code> (rodam depois); <code>ORDER BY</code> é a única cláusula, além do <code>SELECT</code>, que enxerga aliases. O otimizador pode reordenar tudo, desde que o resultado seja o mesmo que a ordem lógica daria.</p>
 
+<div class="stepper"><span class="ix-title">Passo a passo: a ordem lógica de execução de uma consulta</span>
+<div class="frame" data-caption="1. FROM monta a tabela de trabalho (joins entram aqui)."><svg viewBox="0 0 660 150" role="img" aria-label="Pipeline lógico de uma consulta SQL"><title>Ordem lógica de execução de uma consulta</title><rect class="s-soft" x="6" y="14" width="98" height="40" rx="8"/><text x="55" y="39" text-anchor="middle" font-size="12" font-weight="700">FROM</text><path class="s-line" d="M104 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="114" y="14" width="98" height="40" rx="8"/><text x="163" y="39" text-anchor="middle" font-size="12" font-weight="400">WHERE</text><path class="s-line" d="M212 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="222" y="14" width="98" height="40" rx="8"/><text x="271" y="39" text-anchor="middle" font-size="12" font-weight="400">GROUP BY</text><path class="s-line" d="M320 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="330" y="14" width="98" height="40" rx="8"/><text x="379" y="39" text-anchor="middle" font-size="12" font-weight="400">HAVING</text><path class="s-line" d="M428 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="438" y="14" width="98" height="40" rx="8"/><text x="487" y="39" text-anchor="middle" font-size="12" font-weight="400">SELECT</text><path class="s-line" d="M536 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="546" y="14" width="98" height="40" rx="8"/><text x="595" y="39" text-anchor="middle" font-size="12" font-weight="400">ORDER/LIMIT</text><text x="330" y="86" text-anchor="middle" font-size="14" font-weight="700">8 linhas</text><text x="330" y="112" text-anchor="middle" font-size="12">Tudo começa pelas linhas da tabela emp.</text><text x="330" y="138" text-anchor="middle" font-size="11" class="s-muted" fill="currentColor" stroke="none">SELECT dept, COUNT(*) AS n FROM emp WHERE ativo GROUP BY dept HAVING COUNT(*) &gt; 1 ORDER BY n DESC LIMIT 2</text></svg></div>
+<div class="frame" data-caption="2. WHERE descarta linhas antes de agrupar. Alias do SELECT ainda não existe."><svg viewBox="0 0 660 150" role="img" aria-label="Pipeline lógico de uma consulta SQL"><title>Ordem lógica de execução de uma consulta</title><rect class="s-box" x="6" y="14" width="98" height="40" rx="8"/><text x="55" y="39" text-anchor="middle" font-size="12" font-weight="400">FROM</text><path class="s-line" d="M104 34h8" fill="none" stroke-width="1.5"/><rect class="s-soft" x="114" y="14" width="98" height="40" rx="8"/><text x="163" y="39" text-anchor="middle" font-size="12" font-weight="700">WHERE</text><path class="s-line" d="M212 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="222" y="14" width="98" height="40" rx="8"/><text x="271" y="39" text-anchor="middle" font-size="12" font-weight="400">GROUP BY</text><path class="s-line" d="M320 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="330" y="14" width="98" height="40" rx="8"/><text x="379" y="39" text-anchor="middle" font-size="12" font-weight="400">HAVING</text><path class="s-line" d="M428 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="438" y="14" width="98" height="40" rx="8"/><text x="487" y="39" text-anchor="middle" font-size="12" font-weight="400">SELECT</text><path class="s-line" d="M536 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="546" y="14" width="98" height="40" rx="8"/><text x="595" y="39" text-anchor="middle" font-size="12" font-weight="400">ORDER/LIMIT</text><text x="330" y="86" text-anchor="middle" font-size="14" font-weight="700">8 → 6 linhas</text><text x="330" y="112" text-anchor="middle" font-size="12">WHERE ativo: 2 linhas inativas saem.</text><text x="330" y="138" text-anchor="middle" font-size="11" class="s-muted" fill="currentColor" stroke="none">SELECT dept, COUNT(*) AS n FROM emp WHERE ativo GROUP BY dept HAVING COUNT(*) &gt; 1 ORDER BY n DESC LIMIT 2</text></svg></div>
+<div class="frame" data-caption="3. GROUP BY colapsa linhas em grupos."><svg viewBox="0 0 660 150" role="img" aria-label="Pipeline lógico de uma consulta SQL"><title>Ordem lógica de execução de uma consulta</title><rect class="s-box" x="6" y="14" width="98" height="40" rx="8"/><text x="55" y="39" text-anchor="middle" font-size="12" font-weight="400">FROM</text><path class="s-line" d="M104 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="114" y="14" width="98" height="40" rx="8"/><text x="163" y="39" text-anchor="middle" font-size="12" font-weight="400">WHERE</text><path class="s-line" d="M212 34h8" fill="none" stroke-width="1.5"/><rect class="s-soft" x="222" y="14" width="98" height="40" rx="8"/><text x="271" y="39" text-anchor="middle" font-size="12" font-weight="700">GROUP BY</text><path class="s-line" d="M320 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="330" y="14" width="98" height="40" rx="8"/><text x="379" y="39" text-anchor="middle" font-size="12" font-weight="400">HAVING</text><path class="s-line" d="M428 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="438" y="14" width="98" height="40" rx="8"/><text x="487" y="39" text-anchor="middle" font-size="12" font-weight="400">SELECT</text><path class="s-line" d="M536 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="546" y="14" width="98" height="40" rx="8"/><text x="595" y="39" text-anchor="middle" font-size="12" font-weight="400">ORDER/LIMIT</text><text x="330" y="86" text-anchor="middle" font-size="14" font-weight="700">6 linhas → 3 grupos</text><text x="330" y="112" text-anchor="middle" font-size="12">Agora o objeto é o grupo, não a linha.</text><text x="330" y="138" text-anchor="middle" font-size="11" class="s-muted" fill="currentColor" stroke="none">SELECT dept, COUNT(*) AS n FROM emp WHERE ativo GROUP BY dept HAVING COUNT(*) &gt; 1 ORDER BY n DESC LIMIT 2</text></svg></div>
+<div class="frame" data-caption="4. HAVING filtra grupos usando agregados; WHERE não pode fazer isso."><svg viewBox="0 0 660 150" role="img" aria-label="Pipeline lógico de uma consulta SQL"><title>Ordem lógica de execução de uma consulta</title><rect class="s-box" x="6" y="14" width="98" height="40" rx="8"/><text x="55" y="39" text-anchor="middle" font-size="12" font-weight="400">FROM</text><path class="s-line" d="M104 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="114" y="14" width="98" height="40" rx="8"/><text x="163" y="39" text-anchor="middle" font-size="12" font-weight="400">WHERE</text><path class="s-line" d="M212 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="222" y="14" width="98" height="40" rx="8"/><text x="271" y="39" text-anchor="middle" font-size="12" font-weight="400">GROUP BY</text><path class="s-line" d="M320 34h8" fill="none" stroke-width="1.5"/><rect class="s-soft" x="330" y="14" width="98" height="40" rx="8"/><text x="379" y="39" text-anchor="middle" font-size="12" font-weight="700">HAVING</text><path class="s-line" d="M428 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="438" y="14" width="98" height="40" rx="8"/><text x="487" y="39" text-anchor="middle" font-size="12" font-weight="400">SELECT</text><path class="s-line" d="M536 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="546" y="14" width="98" height="40" rx="8"/><text x="595" y="39" text-anchor="middle" font-size="12" font-weight="400">ORDER/LIMIT</text><text x="330" y="86" text-anchor="middle" font-size="14" font-weight="700">3 → 2 grupos</text><text x="330" y="112" text-anchor="middle" font-size="12">HAVING COUNT(*) &gt; 1: um grupo com 1 pessoa cai.</text><text x="330" y="138" text-anchor="middle" font-size="11" class="s-muted" fill="currentColor" stroke="none">SELECT dept, COUNT(*) AS n FROM emp WHERE ativo GROUP BY dept HAVING COUNT(*) &gt; 1 ORDER BY n DESC LIMIT 2</text></svg></div>
+<div class="frame" data-caption="5. SELECT calcula as expressões e só aqui nasce o alias n."><svg viewBox="0 0 660 150" role="img" aria-label="Pipeline lógico de uma consulta SQL"><title>Ordem lógica de execução de uma consulta</title><rect class="s-box" x="6" y="14" width="98" height="40" rx="8"/><text x="55" y="39" text-anchor="middle" font-size="12" font-weight="400">FROM</text><path class="s-line" d="M104 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="114" y="14" width="98" height="40" rx="8"/><text x="163" y="39" text-anchor="middle" font-size="12" font-weight="400">WHERE</text><path class="s-line" d="M212 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="222" y="14" width="98" height="40" rx="8"/><text x="271" y="39" text-anchor="middle" font-size="12" font-weight="400">GROUP BY</text><path class="s-line" d="M320 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="330" y="14" width="98" height="40" rx="8"/><text x="379" y="39" text-anchor="middle" font-size="12" font-weight="400">HAVING</text><path class="s-line" d="M428 34h8" fill="none" stroke-width="1.5"/><rect class="s-soft" x="438" y="14" width="98" height="40" rx="8"/><text x="487" y="39" text-anchor="middle" font-size="12" font-weight="700">SELECT</text><path class="s-line" d="M536 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="546" y="14" width="98" height="40" rx="8"/><text x="595" y="39" text-anchor="middle" font-size="12" font-weight="400">ORDER/LIMIT</text><text x="330" y="86" text-anchor="middle" font-size="14" font-weight="700">2 linhas (dept, n)</text><text x="330" y="112" text-anchor="middle" font-size="12">COUNT(*) AS n é calculado agora (por isso WHERE n &gt; 1 falha).</text><text x="330" y="138" text-anchor="middle" font-size="11" class="s-muted" fill="currentColor" stroke="none">SELECT dept, COUNT(*) AS n FROM emp WHERE ativo GROUP BY dept HAVING COUNT(*) &gt; 1 ORDER BY n DESC LIMIT 2</text></svg></div>
+<div class="frame" data-caption="6. ORDER BY (já enxerga o alias) e LIMIT vêm por último."><svg viewBox="0 0 660 150" role="img" aria-label="Pipeline lógico de uma consulta SQL"><title>Ordem lógica de execução de uma consulta</title><rect class="s-box" x="6" y="14" width="98" height="40" rx="8"/><text x="55" y="39" text-anchor="middle" font-size="12" font-weight="400">FROM</text><path class="s-line" d="M104 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="114" y="14" width="98" height="40" rx="8"/><text x="163" y="39" text-anchor="middle" font-size="12" font-weight="400">WHERE</text><path class="s-line" d="M212 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="222" y="14" width="98" height="40" rx="8"/><text x="271" y="39" text-anchor="middle" font-size="12" font-weight="400">GROUP BY</text><path class="s-line" d="M320 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="330" y="14" width="98" height="40" rx="8"/><text x="379" y="39" text-anchor="middle" font-size="12" font-weight="400">HAVING</text><path class="s-line" d="M428 34h8" fill="none" stroke-width="1.5"/><rect class="s-box" x="438" y="14" width="98" height="40" rx="8"/><text x="487" y="39" text-anchor="middle" font-size="12" font-weight="400">SELECT</text><path class="s-line" d="M536 34h8" fill="none" stroke-width="1.5"/><rect class="s-soft" x="546" y="14" width="98" height="40" rx="8"/><text x="595" y="39" text-anchor="middle" font-size="12" font-weight="700">ORDER/LIMIT</text><text x="330" y="86" text-anchor="middle" font-size="14" font-weight="700">2 linhas finais</text><text x="330" y="112" text-anchor="middle" font-size="12">ORDER BY n DESC LIMIT 2 usa o alias criado no passo 5.</text><text x="330" y="138" text-anchor="middle" font-size="11" class="s-muted" fill="currentColor" stroke="none">SELECT dept, COUNT(*) AS n FROM emp WHERE ativo GROUP BY dept HAVING COUNT(*) &gt; 1 ORDER BY n DESC LIMIT 2</text></svg></div>
+</div>
+
 <h3>Todos os JOINs, por conjuntos</h3>
 <p>Um join começa pelo produto cartesiano (<code>CROSS JOIN</code>: |A| × |B| linhas; no lab, 5 autores × 7 categorias = 35) e o predicado <code>ON</code> escolhe as combinações. O tipo de join define o que acontece com as linhas sem par:</p>
 <table>
@@ -223,6 +243,41 @@ SELECT COUNT(*) FROM author a LEFT JOIN book b ON b.author_id = a.id WHERE b.cop
 
 <h4>O join que multiplica</h4>
 <p>Um join um-para-muitos repete a linha do lado "um" por cada filho. Somar uma coluna do lado "um" depois do join conta o valor várias vezes. Exemplo: <code>SUM(book.copies)</code> sobre <code>book JOIN loan</code> soma o estoque de um livro <em>uma vez por empréstimo</em>. Cure com agregação em subquery/CTE antes do join (agrupe os empréstimos por livro, depois junte) ou calcule cada agregado separadamente. Dois joins um-para-muitos independentes na mesma consulta (livro → empréstimos e livro → avaliações) produzem o produto das contagens: 3 empréstimos × 4 avaliações = 12 linhas por livro.</p>
+
+<div class="ix"><span class="ix-title">Simulador: visualizador de JOINs</span>
+<p>Tabelas: <code>autor</code> (Machado, Alencar, Clarice) e <code>livro</code> (4 livros; um deles sem autor). Escolha o tipo de JOIN e, se quiser, aplique o filtro <code>livro.ano &lt; 1895</code> no <code>ON</code> ou no <code>WHERE</code>.</p>
+<div class="ix-row"><label>JOIN <select id="f05-join-type"><option value="inner">INNER</option><option value="left" selected>LEFT</option><option value="right">RIGHT</option><option value="full">FULL</option></select></label>
+<label>Filtro <select id="f05-join-where"><option value="none">nenhum</option><option value="on">no ON</option><option value="where">no WHERE</option></select></label></div>
+<div id="f05-join-out"></div></div>
+<script>Course.ready(function (C) {
+  var A = [{id:1,n:'Machado'},{id:2,n:'Alencar'},{id:3,n:'Clarice'}];
+  var B = [{id:10,aid:1,t:'Dom Casmurro',y:1899},{id:11,aid:1,t:'Quincas Borba',y:1891},{id:12,aid:2,t:'Iracema',y:1865},{id:13,aid:null,t:'Sem autor',y:1950}];
+  var sel = document.getElementById('f05-join-type'), wh = document.getElementById('f05-join-where'), out = document.getElementById('f05-join-out');
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function render() {
+    var type = sel.value, mode = wh.value, rows = [], seen = {};
+    function ok(b) { return b.y < 1895; }
+    A.forEach(function (a) {
+      var m = false;
+      B.forEach(function (b) {
+        if (b.aid === a.id && (mode !== 'on' || ok(b))) { rows.push({a:a,b:b}); seen[b.id] = 1; m = true; }
+      });
+      if (!m && (type === 'left' || type === 'full')) rows.push({a:a,b:null});
+    });
+    if (type === 'right' || type === 'full') B.forEach(function (b) { if (!seen[b.id]) rows.push({a:null,b:b}); });
+    if (mode === 'where') rows = rows.filter(function (r) { return r.b && ok(r.b); });
+    var h = '<table><thead><tr><th>autor.nome</th><th>livro.titulo</th><th>livro.ano</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      h += '<tr><td>' + (r.a ? esc(r.a.n) : '<em>NULL</em>') + '</td><td>' + (r.b ? esc(r.b.t) : '<em>NULL</em>') + '</td><td>' + (r.b ? r.b.y : '<em>NULL</em>') + '</td></tr>';
+    });
+    h += '</tbody></table><p><strong>' + rows.length + ' linha(s).</strong> ';
+    if (mode === 'where' && (type === 'left' || type === 'full')) h += 'Repare: o filtro no WHERE eliminou as linhas com NULL do lado direito; o join externo virou interno.';
+    else if (mode === 'on') h += 'O filtro no ON só decide quem casa; o lado preservado continua aparecendo com NULL.';
+    else h += 'Sem filtro: a linha sem par aparece com NULL no lado preservado.';
+    out.innerHTML = h + '</p>';
+  }
+  sel.addEventListener('change', render); wh.addEventListener('change', render); render();
+});</script>
 
 <h3>Agregação: GROUP BY e HAVING</h3>
 <p><code>GROUP BY</code> particiona as linhas em grupos; cada coluna do <code>SELECT</code> precisa ser uma coluna do grupo ou um agregado (PostgreSQL impõe; o MySQL antigo e o SQLite aceitam colunas "soltas" e devolvem uma linha arbitrária do grupo: outro motivo para rodar a CI contra o mesmo banco da produção). <code>HAVING</code> filtra <em>grupos</em> pelo resultado de agregados; filtros que não dependem de agregado pertencem ao <code>WHERE</code>, que roda antes e reduz o trabalho. A consulta <code>q04</code> do lab usa os dois:</p>
@@ -311,6 +366,17 @@ WHERE NOT EXISTS (SELECT 1 FROM book b WHERE b.category_id = c.id) ORDER BY c.id
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>A ordem lógica é <code>FROM/JOIN → WHERE → GROUP BY → HAVING → janelas → SELECT → DISTINCT → ORDER BY → LIMIT</code>; cada fase só vê o que a anterior produziu. Join externo + filtro da tabela opcional no <code>WHERE</code> vira join interno. <code>NULL</code> torna a lógica de três valores: só <code>TRUE</code> passa; <code>NOT IN</code> com um único <code>NULL</code> na lista não devolve nada; agregados ignoram <code>NULL</code>, <code>COUNT(*)</code> não. Prefira <code>NOT EXISTS</code> a <code>NOT IN</code>, <code>COUNT(coluna_da_direita)</code> em joins externos e jamais use <code>DISTINCT</code> para esconder multiplicação de linhas.</p>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q"><code>FROM cliente c LEFT JOIN pedido p ON p.cliente_id = c.id WHERE p.status = 'PAGO'</code> devolve clientes sem nenhum pedido?</p>
+<ol><li data-opt="a">Sim: o LEFT JOIN garante que todo cliente apareça, não importa o que vem depois.</li><li data-opt="b">Não: para o cliente sem pedido, <code>p.status</code> é NULL, o <code>WHERE</code> rejeita a linha e o LEFT JOIN vira, na prática, um INNER JOIN.</li><li data-opt="c">Sim, mas só se houver um índice em <code>pedido.cliente_id</code>.</li><li data-opt="d">Depende do SGBD: o PostgreSQL devolve e o SQLite não.</li></ol>
+<div class="explain">O <code>WHERE</code> roda depois do join e só deixa passar TRUE; <code>NULL = 'PAGO'</code> é desconhecido. Para manter os clientes sem pedido pago, mova a condição para o <code>ON</code> (<code>... AND p.status = 'PAGO'</code>). Use o visualizador de JOINs acima para ver as duas versões lado a lado.</div>
+</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q"><code>SELECT * FROM livro WHERE id NOT IN (SELECT livro_id FROM emprestimo)</code> devolve zero linhas, embora existam livros nunca emprestados. Qual é a causa mais provável?</p>
+<ol><li data-opt="a">O otimizador descartou o índice e a consulta estourou o tempo limite silenciosamente.</li><li data-opt="b"><code>NOT IN</code> só funciona com valores literais, nunca com subquery.</li><li data-opt="c">Há pelo menos um <code>livro_id</code> NULL na subquery: <code>x NOT IN (..., NULL)</code> nunca é TRUE.</li><li data-opt="d">Falta um <code>DISTINCT</code> dentro da subquery.</li></ol>
+<div class="explain">Com NULL na lista, cada comparação vira "desconhecido" e nenhuma linha passa. A correção é <code>NOT EXISTS</code> (ou filtrar <code>WHERE livro_id IS NOT NULL</code> dentro da subquery). Em <code>IN</code> o NULL é inofensivo; em <code>NOT IN</code> ele contamina tudo.</div>
 </div>
 
 <!-- ============================================ BLOCO 3 -->
@@ -454,6 +520,12 @@ RETURNING id, copies;</code></pre>
 <p>CTE nomeia passos; desde o PostgreSQL 12 ela não é mais barreira de otimização por padrão. A CTE recursiva (âncora + passo, <code>UNION ALL</code>) percorre árvores e grafos, mas exige proteção contra ciclos e índice na coluna de ligação. Janelas calculam sem colapsar linhas e só podem ser filtradas por quem as enxerga depois (subquery/CTE); cuidado com empates (<code>ROW_NUMBER</code> vs <code>RANK</code> vs <code>DENSE_RANK</code>) e com a moldura padrão. UPSERT + <code>RETURNING</code> fazem o "grava ou atualiza" de forma atômica, em uma ida ao banco.</p>
 </div>
 
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Você quer só a linha mais recente de cada cliente e escreve <code>WHERE ROW_NUMBER() OVER (PARTITION BY cliente_id ORDER BY criado_em DESC) = 1</code>. O que acontece e qual é a correção?</p>
+<ol><li data-opt="a">Erro: janelas são calculadas depois do <code>WHERE</code>; calcule numa subquery/CTE e filtre <code>rn = 1</code> por fora.</li><li data-opt="b">Funciona, mas é lento; basta adicionar um índice em <code>criado_em</code>.</li><li data-opt="c">Funciona e devolve a linha mais antiga, porque o <code>DESC</code> é ignorado no <code>WHERE</code>.</li><li data-opt="d">Funciona só se trocar <code>ROW_NUMBER</code> por <code>COUNT(*)</code>.</li></ol>
+<div class="explain">A ordem lógica é FROM, WHERE, GROUP BY, HAVING, janelas, SELECT. No momento do <code>WHERE</code> a função de janela ainda não existe. O padrão é: CTE com <code>ROW_NUMBER() ... AS rn</code> e, fora, <code>WHERE rn = 1</code>. Se empates devem trazer todas as linhas empatadas, troque por <code>RANK()</code>.</div>
+</div>
+
 <!-- ============================================ BLOCO 4 -->
 <h2 id="b04">Bloco 4 · Índices e desempenho: B-tree, índice composto, seletividade, cobertura, EXPLAIN e N+1</h2>
 
@@ -498,6 +570,31 @@ RETURNING id, copies;</code></pre>
 </tbody>
 </table>
 <p><strong>Como ordenar as colunas.</strong> Regra prática, com exceções: primeiro as colunas comparadas por <em>igualdade</em>, depois a coluna de <em>intervalo</em> ou de <em>ordenação</em>. Entre colunas de igualdade, a mais seletiva primeiro ajuda quando a consulta usa só o prefixo; mas a consulta mais frequente manda: um índice <code>(status, created_at)</code> serve a "todos os pendentes por data", enquanto <code>(created_at, status)</code> não. Depois de uma coluna com intervalo, as colunas seguintes deixam de ser usadas para posicionar a busca (podem ainda filtrar dentro do índice). Um índice composto <code>(a, b)</code> torna redundante um índice isolado em <code>(a)</code>.</p>
+
+<div class="ix"><span class="ix-title">Simulador: prefixo à esquerda em índice composto</span>
+<p>Índice <code>(estado, cidade, nome)</code>. Defina que tipo de predicado a consulta usa em cada coluna e veja até onde a B-tree consegue navegar.</p>
+<div class="ix-row"><label>estado <select id="f05-ix-0"><option value="n">sem filtro</option><option value="e" selected>= ?</option><option value="r">intervalo</option></select></label>
+<label>cidade <select id="f05-ix-1"><option value="n">sem filtro</option><option value="e" selected>= ?</option><option value="r">intervalo</option></select></label>
+<label>nome <select id="f05-ix-2"><option value="n">sem filtro</option><option value="e">= ?</option><option value="r">intervalo</option></select></label></div>
+<div class="ix-out" id="f05-ix-out"></div></div>
+<script>Course.ready(function (C) {
+  var cols = ['estado', 'cidade', 'nome'], sels = [0, 1, 2].map(function (i) { return document.getElementById('f05-ix-' + i); }), out = document.getElementById('f05-ix-out');
+  function render() {
+    var used = [], stop = false, rest = [], note = '';
+    cols.forEach(function (c, i) {
+      var v = sels[i].value;
+      if (stop) { if (v !== 'n') rest.push(c); return; }
+      if (v === 'e') used.push(c + ' (igualdade)');
+      else if (v === 'r') { used.push(c + ' (intervalo)'); stop = true; }
+      else { stop = true; }
+    });
+    if (!used.length) note = 'Sem a coluna líder, a B-tree não ajuda a navegar: varredura completa (ou do índice inteiro).';
+    else note = 'A B-tree desce usando: ' + used.join(' → ') + '.';
+    out.textContent = note + (rest.length ? '\nEstas colunas só filtram depois de lidas, sem navegação: ' + rest.join(', ') + '.' : '') +
+      '\nRegra: igualdades da esquerda para a direita; o primeiro intervalo ou buraco encerra a navegação.';
+  }
+  sels.forEach(function (s) { s.addEventListener('change', render); }); render();
+});</script>
 
 <h3>Seletividade e quando o otimizador ignora o índice</h3>
 <p><strong>Seletividade</strong> é a fração de linhas que um predicado seleciona: baixa fração = muito seletivo = bom candidato. Um índice em <code>returned_on</code> (95% das linhas fechadas, 5% nulas) é pouco útil para <code>returned_on IS NOT NULL</code>: ler 95% da tabela via índice, com salto aleatório a cada linha, custa mais do que a varredura sequencial. O otimizador sabe disso <em>se tiver estatísticas atualizadas</em> (<code>ANALYZE</code>; no PostgreSQL, o autovacuum faz isso, mas após cargas grandes vale rodar manualmente) e escolhe a varredura por conta própria. Daí três consequências:</p>
@@ -561,6 +658,17 @@ JOIN: 1 statement</code></pre>
 <p>B-tree guarda chaves ordenadas: serve igualdade, intervalo e ordenação em O(log N), com custo de espaço e escrita. Índice composto obedece ao prefixo à esquerda: igualdades primeiro, intervalo/ordenação depois. O otimizador pode (e deve) ignorar índice pouco seletivo; função sobre a coluna o inutiliza, e índices parciais, de expressão e de cobertura atacam esses casos. Leia o plano antes e depois, com volume realista. N+1 é erro de aplicação: conte as instruções em teste e traga os dados em lote.</p>
 </div>
 
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Existe o índice <code>(estado, cidade, nome)</code>. Qual consulta aproveita MENOS o índice para navegar?</p>
+<ol><li data-opt="a"><code>WHERE estado = ?</code></li><li data-opt="b"><code>WHERE estado = ? AND cidade = ?</code></li><li data-opt="c"><code>WHERE cidade = ? AND nome = ?</code> (sem a coluna líder <code>estado</code>).</li><li data-opt="d"><code>WHERE estado = ? AND cidade = ? AND nome = ?</code></li></ol>
+<div class="explain">Prefixo à esquerda: o índice é ordenado primeiro por <code>estado</code>; sem a coluna líder, as cidades iguais estão espalhadas por toda a árvore e não há por onde descer. Igualdades devem vir primeiro, intervalo e ordenação depois. Teste combinações no simulador de índice composto acima.</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Há um índice em <code>cliente(email)</code>, mas <code>WHERE lower(email) = 'ana@x.com'</code> faz varredura completa. Qual é a solução mais direta?</p>
+<ol><li data-opt="a">Criar um índice de expressão em <code>lower(email)</code> (ou normalizar o e-mail ao gravar).</li><li data-opt="b">Criar mais um índice em <code>email</code>, desta vez com <code>DESC</code>.</li><li data-opt="c">Trocar <code>=</code> por <code>LIKE</code>, que sempre usa índice.</li><li data-opt="d">Aumentar a memória do servidor.</li></ol>
+<div class="explain">Aplicar função sobre a coluna impede a busca na B-tree, que está ordenada pelo valor cru. Duas saídas honestas: índice de expressão que bate exatamente com a expressão da consulta, ou guardar o valor já normalizado. Confirme sempre com EXPLAIN, antes e depois.</div>
+</div>
+
 <!-- ============================================ BLOCO 5 -->
 <h2 id="b05">Bloco 5 · Transações: ACID, isolamento e anomalias, locks, MVCC e deadlock</h2>
 
@@ -598,6 +706,56 @@ JOIN: 1 statement</code></pre>
 <tr><td><code>SERIALIZABLE</code></td><td>Serializable Snapshot Isolation (SSI): detecta dependências perigosas e aborta uma transação (40001). Exige <strong>retry</strong>.</td><td>Transforma leituras em leituras com lock compartilhado.</td><td>Efetivamente o único modo: um escritor por vez no banco todo.</td></tr>
 </tbody>
 </table>
+
+<div class="ix"><span class="ix-title">Simulador: anomalias por nível de isolamento</span>
+<p>Duas transações, T1 e T2, intercaladas. Escolha o cenário e o nível (comportamento do PostgreSQL) e avance passo a passo.</p>
+<div class="ix-row"><label>Cenário <select id="f05-iso-sc"><option value="nr">Leitura não repetível</option><option value="lu">Lost update (ler, calcular, gravar)</option><option value="ws">Write skew (plantão)</option><option value="ph">Fantasma (contagem)</option></select></label>
+<label>Nível <select id="f05-iso-lv"><option value="rc">READ COMMITTED</option><option value="rr">REPEATABLE READ</option><option value="ser">SERIALIZABLE</option></select></label>
+<button class="ix-btn primary" id="f05-iso-next" type="button">Próximo passo</button><button class="ix-btn" id="f05-iso-reset" type="button">Reiniciar</button></div>
+<div id="f05-iso-out"></div></div>
+<script>Course.ready(function (C) {
+  var sc = document.getElementById('f05-iso-sc'), lv = document.getElementById('f05-iso-lv'), out = document.getElementById('f05-iso-out');
+  var nextB = document.getElementById('f05-iso-next'), resetB = document.getElementById('f05-iso-reset'), k = 0;
+  var S = {
+    nr: { init: 'conta: id=1, saldo=100', steps: [
+      ['T1', 'BEGIN; SELECT saldo FROM conta WHERE id=1;', function () { return 'lê 100'; }],
+      ['T2', 'BEGIN; UPDATE conta SET saldo=150 WHERE id=1; COMMIT;', function () { return 'confirma 150'; }],
+      ['T1', 'SELECT saldo FROM conta WHERE id=1;', function (l) { return l === 'rc' ? 'lê 150 (mudou dentro da mesma transação)' : 'lê 100 (mesmo snapshot)'; }],
+      ['T1', 'COMMIT;', function () { return 'ok'; }]],
+      v: function (l) { return l === 'rc' ? [1, 'Anomalia: duas leituras da mesma linha deram valores diferentes.'] : [0, 'Sem anomalia: T1 enxerga um snapshot estável até o COMMIT.']; } },
+    lu: { init: 'conta: id=1, saldo=100. Cada transação lê, soma no código e grava.', steps: [
+      ['T1', 'BEGIN; SELECT saldo ... (lê 100)', function () { return 'calcula 100+10 = 110'; }],
+      ['T2', 'BEGIN; SELECT saldo ... (lê 100)', function () { return 'calcula 100+20 = 120'; }],
+      ['T1', 'UPDATE conta SET saldo=110; COMMIT;', function () { return 'confirma 110'; }],
+      ['T2', 'UPDATE conta SET saldo=120; COMMIT;', function (l) { return l === 'rc' ? 'confirma 120 (sobrescreve o +10 de T1)' : 'ERRO 40001: could not serialize access due to concurrent update'; }]],
+      v: function (l) { return l === 'rc' ? [1, 'Lost update: saldo final 120, o depósito de 10 sumiu. Defesa simples: UPDATE ... SET saldo = saldo + 20.'] : [0, 'T2 foi abortada e deve repetir a transação inteira: relê 110, grava 130. Nada se perdeu.']; } },
+    ws: { init: 'plantao: Alice e Bob de plantão. Regra de negócio: pelo menos 1 de plantão.', steps: [
+      ['T1', 'BEGIN; SELECT count(*) WHERE de_plantao;', function () { return 'conta 2, pode sair'; }],
+      ['T2', 'BEGIN; SELECT count(*) WHERE de_plantao;', function () { return 'conta 2, pode sair'; }],
+      ['T1', 'UPDATE plantao SET de_plantao=false WHERE nome=\'Alice\'; COMMIT;', function () { return 'confirma'; }],
+      ['T2', 'UPDATE plantao SET de_plantao=false WHERE nome=\'Bob\'; COMMIT;', function (l) { return l === 'ser' ? 'ERRO 40001: falha de serialização (dependência rw detectada)' : 'confirma (linhas diferentes, sem conflito de escrita)'; }]],
+      v: function (l) { return l === 'ser' ? [0, 'SERIALIZABLE abortou T2. No retry ela conta 1 e recusa. Regra preservada.'] : [1, 'Write skew: ninguém de plantão, regra violada. O snapshot não enxerga conflito entre linhas diferentes.']; } },
+    ph: { init: 'reserva: sala 1 tem 2 reservas.', steps: [
+      ['T1', 'BEGIN; SELECT count(*) FROM reserva WHERE sala=1;', function () { return 'lê 2'; }],
+      ['T2', 'BEGIN; INSERT INTO reserva (sala) VALUES (1); COMMIT;', function () { return 'confirma a 3ª reserva'; }],
+      ['T1', 'SELECT count(*) FROM reserva WHERE sala=1;', function (l) { return l === 'rc' ? 'lê 3 (fantasma apareceu)' : 'lê 2 (snapshot)'; }],
+      ['T1', 'COMMIT;', function () { return 'ok'; }]],
+      v: function (l) { return l === 'rc' ? [1, 'Leitura fantasma: o conjunto de linhas mudou no meio da transação.'] : [0, l === 'rr' ? 'No PostgreSQL o REPEATABLE READ é snapshot e já impede o fantasma (o padrão SQL permitiria; outros SGBDs variam).' : 'Sem anomalia.']; } }
+  };
+  function render() {
+    var s = S[sc.value], l = lv.value, h = '<p><em>' + s.init + '</em></p><table><thead><tr><th>T1</th><th>T2</th></tr></thead><tbody>';
+    for (var i = 0; i < k && i < s.steps.length; i++) {
+      var st = s.steps[i], cell = '<code>' + st[1].replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</code><br><strong>' + st[2](l) + '</strong>';
+      h += st[0] === 'T1' ? '<tr><td>' + cell + '</td><td></td></tr>' : '<tr><td></td><td>' + cell + '</td></tr>';
+    }
+    h += '</tbody></table>';
+    if (k >= s.steps.length) { var v = s.v(l); h += '<div class="box ' + (v[0] ? 'bad' : 'ok') + '"><span class="lbl">' + (v[0] ? 'Anomalia' : 'Sem anomalia') + '</span><p>' + v[1] + '</p></div>'; }
+    out.innerHTML = h; nextB.disabled = k >= s.steps.length;
+  }
+  function reset() { k = 0; render(); }
+  nextB.addEventListener('click', function () { k++; render(); });
+  resetB.addEventListener('click', reset); sc.addEventListener('change', reset); lv.addEventListener('change', reset); reset();
+});</script>
 
 <h3>MVCC, conceitualmente</h3>
 <p><em>Multi-Version Concurrency Control</em> é a razão de leitores não bloquearem escritores no PostgreSQL, no Oracle e no InnoDB. Em vez de modificar uma linha no lugar, o <code>UPDATE</code> cria uma <strong>nova versão</strong> e marca a antiga como substituída. No PostgreSQL, cada versão carrega <code>xmin</code> (id da transação que a criou) e <code>xmax</code> (a que a removeu/substituiu); cada transação enxerga o snapshot de "quais transações já tinham confirmado quando comecei" e escolhe, por linha, a versão visível. Consequências práticas:</p>
@@ -692,6 +850,17 @@ two writers: 'database is locked'</code></pre>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>ACID: atomicidade e durabilidade vêm do log; consistência é o que você declarou como restrição; isolamento é negociável e o padrão do PostgreSQL (<code>READ COMMITTED</code>) admite lost update e write skew em read-modify-write. MVCC deixa leitor e escritor em paz, ao custo de versões a limpar e de transações longas que prejudicam todos. Defenda-se por ordem de simplicidade: expressão atômica no <code>UPDATE</code>, restrição declarativa, lock da linha (<code>FOR UPDATE</code>/<code>SKIP LOCKED</code>), versão otimista, <code>SERIALIZABLE</code> com retry. Deadlock se previne com ordem global de locks; <code>40001</code> e <code>40P01</code> pedem retry da transação inteira.</p>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Duas requisições leem <code>saldo = 100</code>, calculam no código e gravam 110 e 120. No <code>READ COMMITTED</code> o saldo final é 120. Qual é a defesa mais simples?</p>
+<ol><li data-opt="a">Subir direto para <code>SERIALIZABLE</code> em todo o sistema e esquecer o assunto.</li><li data-opt="b">Trocar o read-modify-write por uma expressão atômica: <code>UPDATE conta SET saldo = saldo + 10 WHERE id = 1</code>.</li><li data-opt="c">Adicionar <code>sleep</code> entre a leitura e a escrita.</li><li data-opt="d">Colocar um <code>COMMIT</code> logo após o <code>SELECT</code>.</li></ol>
+<div class="explain">A anomalia é o lost update: a segunda gravação sobrescreve a primeira com base num valor velho. A escada de defesas vai do mais simples ao mais pesado: expressão atômica, restrição declarativa, lock de linha (<code>FOR UPDATE</code>), versão otimista, <code>SERIALIZABLE</code> com retry. Comece pelo degrau mais barato que resolve.</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Duas transações checam "há pelo menos 2 médicos de plantão?" e cada uma tira um médico diferente. Em <code>REPEATABLE READ</code> (snapshot) as duas confirmam e sobra zero. Que anomalia é essa e o que a impede?</p>
+<ol><li data-opt="a">Write skew; <code>SERIALIZABLE</code> (com retry em <code>40001</code>), ou um lock sobre o conjunto lido, a impede.</li><li data-opt="b">Dirty read; basta usar <code>READ COMMITTED</code>.</li><li data-opt="c">Deadlock; o banco aborta uma transação e o problema some.</li><li data-opt="d">Lost update; o snapshot sempre detecta escrita na mesma linha.</li></ol>
+<div class="explain">As duas escrevem linhas <em>diferentes</em>, então o snapshot não vê conflito de escrita, mas cada decisão dependia de uma leitura que a outra invalidou. Só o isolamento serializável (ou travar as linhas lidas) detecta. Quando o banco devolve <code>40001</code>, a transação inteira deve ser repetida, não só o último comando.</div>
 </div>
 
 <!-- ============================================ BLOCO 6 -->
@@ -798,6 +967,17 @@ safe member: None</code></pre>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Do domínio ao esquema: entidades, cardinalidades, chaves (substituta + natural única), invariantes declaradas, normalização, índices a partir das consultas, histórico congelado onde precisa. Migrations versionadas e transacionais, nunca editadas depois de aplicadas, em etapas expand/contract para evitar parada. No código, parâmetros sempre (valores) e lista de permissão (identificadores), mais menor privilégio; escapar à mão não é defesa. Relacional é o padrão; troque ou some outro armazenamento quando o padrão de acesso medido pedir, e declare uma fonte única da verdade.</p>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">A consulta usa <code>cursor.execute("SELECT * FROM livro ORDER BY " + coluna)</code>. Parâmetros <code>?</code> resolvem a injeção neste caso?</p>
+<ol><li data-opt="a">Não: parâmetros valem para <em>valores</em>, não para identificadores; use lista de permissão de nomes de coluna.</li><li data-opt="b">Sim: basta trocar por <code>ORDER BY ?</code> e passar a coluna como parâmetro.</li><li data-opt="c">Sim, desde que a coluna seja escapada com aspas simples.</li><li data-opt="d">Não há risco, porque <code>ORDER BY</code> não executa comandos.</li></ol>
+<div class="explain"><code>ORDER BY ?</code> ordenaria por uma constante textual, não pela coluna. Identificadores (tabela, coluna, direção) não são parametrizáveis: valide contra um dicionário fixo (<code>{"titulo": "titulo", "ano": "ano"}</code>) e rejeite o resto. Escapar à mão é o caminho clássico para o próximo bypass.</div>
+</div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">A migration 002 já foi aplicada em produção e esqueceu um índice. O que fazer?</p>
+<ol><li data-opt="a">Editar a 002 e reaplicar, já que o histórico é só documentação.</li><li data-opt="b">Criar a migration 003 com o índice; nunca editar uma migration já aplicada.</li><li data-opt="c">Criar o índice manualmente no servidor e não registrar em lugar nenhum.</li><li data-opt="d">Apagar a tabela de controle de versões para o runner rodar tudo de novo.</li></ol>
+<div class="explain">Migration aplicada é história: ambientes diferentes estariam em estados que o arquivo não descreve mais. Corrigir para frente mantém todos os bancos reprodutíveis a partir do mesmo histórico, e a etapa expand/contract evita parar o serviço.</div>
 </div>
 
 <!-- ============================================ LAB -->
@@ -1015,6 +1195,23 @@ Success: no issues found in 20 source files</code></pre>
 </tbody>
 </table>
 <p>As saídas vêm de execução real em 11/10/2026 com SQLite 3.53.1 e Python 3.14.7. Mensagens de erro, planos e a disponibilidade de recursos (<code>RIGHT/FULL JOIN</code> a partir da 3.39, <code>RETURNING</code> a partir da 3.35, <code>STRICT</code> a partir da 3.37) variam por versão do SQLite. Comportamentos do PostgreSQL descritos aqui valem para as versões 12 a 17 (<code>MERGE</code>: 15+; <code>CYCLE</code>: 14+; <code>UNIQUE NULLS NOT DISTINCT</code>: 15+) e devem ser revalidados em até 90 dias. Sem servidor PostgreSQL disponível no laboratório, as afirmações sobre ele vêm da documentação oficial, não de execução local.</p>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique para virar. Tente responder de cabeça antes.</p>
+<div class="flashcards">
+<div class="fc"><div class="front">O que a chave primária declara?</div><div class="back">Qual atributo identifica cada fato (linha) da relação. Unicidade e não nulidade garantidas pelo banco.</div></div>
+<div class="fc"><div class="front">Dependência parcial (2FN)</div><div class="back">Atributo que depende de só uma parte da chave composta. Vira anomalia de atualização; separe em outra tabela.</div></div>
+<div class="fc"><div class="front">Snapshot histórico vs redundância</div><div class="back">Preço copiado no item do pedido é fato daquele momento (legítimo). Nome atual do produto copiado é redundância.</div></div>
+<div class="fc"><div class="front">Ordem lógica de execução</div><div class="back">FROM/JOIN, WHERE, GROUP BY, HAVING, janelas, SELECT, DISTINCT, ORDER BY, LIMIT.</div></div>
+<div class="fc"><div class="front">Por que NOT IN com NULL devolve vazio?</div><div class="back">x NOT IN (…, NULL) nunca é TRUE (é desconhecido). Prefira NOT EXISTS.</div></div>
+<div class="fc"><div class="front">LEFT JOIN + WHERE na tabela da direita</div><div class="back">O WHERE rejeita os NULL e o join externo vira interno. Ponha o filtro no ON.</div></div>
+<div class="fc"><div class="front">Como filtrar o resultado de uma window function?</div><div class="back">Calcule numa subquery/CTE e filtre por fora; a janela é avaliada depois do WHERE.</div></div>
+<div class="fc"><div class="front">Prefixo à esquerda</div><div class="back">Índice (a,b,c) serve a, a+b, a+b+c. Igualdades primeiro, intervalo ou ordenação depois.</div></div>
+<div class="fc"><div class="front">Lost update</div><div class="back">Duas transações leem o mesmo valor e a segunda sobrescreve a primeira. Defesa mais simples: UPDATE com expressão atômica.</div></div>
+<div class="fc"><div class="front">Write skew</div><div class="back">Escritas em linhas diferentes que, juntas, quebram uma regra. Snapshot não detecta; SERIALIZABLE (com retry) ou lock sim.</div></div>
+<div class="fc"><div class="front">O que fazer ao receber 40001 ou 40P01?</div><div class="back">Repetir a transação inteira (releitura incluída), com limite de tentativas.</div></div>
+<div class="fc"><div class="front">Parâmetros vs identificadores</div><div class="back">Parâmetros protegem valores. Nomes de tabela/coluna exigem lista de permissão.</div></div>
+</div>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

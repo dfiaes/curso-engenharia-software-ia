@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>M03 · FastAPI, Postgres, Docker, CI</title>
 <meta name="color-scheme" content="light dark">
-<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
 <link rel="stylesheet" href="../../assets/course.css">
 </head>
 <body>
@@ -204,6 +204,14 @@ async def request_id_e_tempo(request: Request, call_next) -> Response:  # type: 
     return response</code></pre>
 <p>O middleware envolve o processamento: o que vem antes do <code>call_next</code> roda na ida, o que vem depois roda na volta, e a ordem de registro importa. O exemplo só preserva um UUID válido; confiar em qualquer header de um cliente permite conteúdo arbitrário no log. Em uma borda com gateway confiável, a política de confiança precisa ser declarada. O <code>x-request-id</code> é a semente da observabilidade do M06 — um request rastreável do edge ao banco.</p>
 
+<div class="stepper"><span class="ix-title">Passo a passo: o caminho de uma requisição POST /links</span>
+<div class="frame" data-caption="1. Entra pelo middleware: cria ou normaliza o x-request-id e inicia o cronômetro (antes do call_next)."><svg viewBox="0 0 760 150" role="img" aria-label="Ciclo de vida de uma requisição FastAPI: Ida: middleware cria o correlation id" xmlns="http://www.w3.org/2000/svg"><title>Ciclo de vida de uma requisição FastAPI: Ida: middleware cria o correlation id</title><defs><marker id="ar7059688416706358597" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-soft" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">Middleware</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">x-request-id</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar7059688416706358597)" style="color:var(--fg)"/><rect class="s-box" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Validação</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">Pydantic → 422</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar7059688416706358597)" style="color:var(--fg)"/><rect class="s-box" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Depends</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">get_session</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar7059688416706358597)" style="color:var(--fg)"/><rect class="s-box" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Rota + service</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">regra, flush</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar7059688416706358597)" style="color:var(--fg)"/><rect class="s-box" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Banco</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">constraint, commit</text><text x="380" y="136" text-anchor="middle" font-size="12">Ida: middleware cria o correlation id</text></svg></div>
+<div class="frame" data-caption="2. FastAPI constrói o modelo de entrada. Se violar o schema, a rota nem chega a ser chamada: resposta 422."><svg viewBox="0 0 760 150" role="img" aria-label="Ciclo de vida de uma requisição FastAPI: Validação de representação, não de negócio" xmlns="http://www.w3.org/2000/svg"><title>Ciclo de vida de uma requisição FastAPI: Validação de representação, não de negócio</title><defs><marker id="ar6156854666206318339" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">Middleware</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">x-request-id</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar6156854666206318339)" style="color:var(--fg)"/><rect class="s-soft" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Validação</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">Pydantic → 422</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar6156854666206318339)" style="color:var(--fg)"/><rect class="s-box" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Depends</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">get_session</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar6156854666206318339)" style="color:var(--fg)"/><rect class="s-box" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Rota + service</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">regra, flush</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar6156854666206318339)" style="color:var(--fg)"/><rect class="s-box" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Banco</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">constraint, commit</text><text x="380" y="136" text-anchor="middle" font-size="12">Validação de representação, não de negócio</text></svg></div>
+<div class="frame" data-caption="3. Depends(get_session) abre a AsyncSession (um request, uma sessão) e entrega ao handler; o yield guarda o teardown."><svg viewBox="0 0 760 150" role="img" aria-label="Ciclo de vida de uma requisição FastAPI: Dependência com yield abre a unidade de trabalho" xmlns="http://www.w3.org/2000/svg"><title>Ciclo de vida de uma requisição FastAPI: Dependência com yield abre a unidade de trabalho</title><defs><marker id="ar9113113530633288980" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">Middleware</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">x-request-id</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar9113113530633288980)" style="color:var(--fg)"/><rect class="s-box" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Validação</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">Pydantic → 422</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar9113113530633288980)" style="color:var(--fg)"/><rect class="s-soft" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Depends</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">get_session</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar9113113530633288980)" style="color:var(--fg)"/><rect class="s-box" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Rota + service</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">regra, flush</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar9113113530633288980)" style="color:var(--fg)"/><rect class="s-box" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Banco</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">constraint, commit</text><text x="380" y="136" text-anchor="middle" font-size="12">Dependência com yield abre a unidade de trabalho</text></svg></div>
+<div class="frame" data-caption="4. A rota chama o service: regra de negócio e session.add. Nada está confirmado ainda."><svg viewBox="0 0 760 150" role="img" aria-label="Ciclo de vida de uma requisição FastAPI: Decisão de aplicação; transação aberta" xmlns="http://www.w3.org/2000/svg"><title>Ciclo de vida de uma requisição FastAPI: Decisão de aplicação; transação aberta</title><defs><marker id="ar9008191834358478855" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">Middleware</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">x-request-id</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar9008191834358478855)" style="color:var(--fg)"/><rect class="s-box" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Validação</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">Pydantic → 422</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar9008191834358478855)" style="color:var(--fg)"/><rect class="s-box" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Depends</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">get_session</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar9008191834358478855)" style="color:var(--fg)"/><rect class="s-soft" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Rota + service</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">regra, flush</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar9008191834358478855)" style="color:var(--fg)"/><rect class="s-box" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Banco</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">constraint, commit</text><text x="380" y="136" text-anchor="middle" font-size="12">Decisão de aplicação; transação aberta</text></svg></div>
+<div class="frame" data-caption="5. O banco aplica constraints. Sem erro: commit na dependência. Com IntegrityError: rollback e tradução para 409; em ambos, a sessão fecha."><svg viewBox="0 0 760 150" role="img" aria-label="Ciclo de vida de uma requisição FastAPI: Constraint decide; commit ou rollback na fronteira" xmlns="http://www.w3.org/2000/svg"><title>Ciclo de vida de uma requisição FastAPI: Constraint decide; commit ou rollback na fronteira</title><defs><marker id="ar3677290505703573443" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">Middleware</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">x-request-id</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar3677290505703573443)" style="color:var(--fg)"/><rect class="s-box" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Validação</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">Pydantic → 422</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar3677290505703573443)" style="color:var(--fg)"/><rect class="s-box" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Depends</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">get_session</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar3677290505703573443)" style="color:var(--fg)"/><rect class="s-box" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Rota + service</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">regra, flush</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar3677290505703573443)" style="color:var(--fg)"/><rect class="s-soft" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Banco</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">constraint, commit</text><text x="380" y="136" text-anchor="middle" font-size="12">Constraint decide; commit ou rollback na fronteira</text></svg></div>
+<div class="frame" data-caption="6. Na volta, o middleware acrescenta x-request-id e o tempo decorrido à resposta, inclusive em 409/404/422/503."><svg viewBox="0 0 760 150" role="img" aria-label="Ciclo de vida de uma requisição FastAPI: Volta: o mesmo middleware fecha o ciclo" xmlns="http://www.w3.org/2000/svg"><title>Ciclo de vida de uma requisição FastAPI: Volta: o mesmo middleware fecha o ciclo</title><defs><marker id="ar4231944264880861083" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-soft" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">Middleware</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">x-request-id</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar4231944264880861083)" style="color:var(--fg)"/><rect class="s-box" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Validação</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">Pydantic → 422</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar4231944264880861083)" style="color:var(--fg)"/><rect class="s-box" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Depends</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">get_session</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar4231944264880861083)" style="color:var(--fg)"/><rect class="s-box" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Rota + service</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">regra, flush</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar4231944264880861083)" style="color:var(--fg)"/><rect class="s-box" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Banco</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">constraint, commit</text><text x="380" y="136" text-anchor="middle" font-size="12">Volta: o mesmo middleware fecha o ciclo</text></svg></div>
+</div>
 <h3 id="sec-leitura-aplicada-acompanhe-uma-requisicao">Leitura aplicada: acompanhe uma requisição <a class="section-link" href="#sec-leitura-aplicada-acompanhe-uma-requisicao" aria-label="Link para esta seção">#</a></h3>
 <ol>
 <li><code>POST /links</code> chega com um JSON. Uvicorn entrega o evento ao FastAPI; o middleware cria ou normaliza o correlation id.</li>
@@ -213,6 +221,16 @@ async def request_id_e_tempo(request: Request, call_next) -> Response:  # type: 
 </ol>
 <p>Este exemplo serve à leitura do fluxo. O laboratório final ainda está pendente: falta criar a referência executável e verificar respostas e falhas. Você pode retomar por esta seção; o texto não representa uma prática já aprovada.</p>
 
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um handler <code>async def</code> chama <code>requests.get()</code> (síncrono, 2 s) dentro do endpoint. Com um único worker Uvicorn, o que acontece com as outras requisições?</p>
+<ol><li data-opt="a">Nada: o FastAPI roda cada handler em sua própria thread automaticamente.</li><li data-opt="b">Elas são atendidas em paralelo, porque ASGI é assíncrono por definição.</li><li data-opt="c">Ficam esperando: a chamada bloqueante trava o event loop daquele worker durante os 2 s.</li><li data-opt="d">O FastAPI detecta a chamada bloqueante e a move para um pool de processos.</li></ol>
+<div class="explain">ASGI descreve a interface, não cria paralelismo. Em <code>async def</code> você roda <em>dentro</em> do loop; uma chamada bloqueante segura o loop inteiro daquele worker. Quem escolhe A acredita que o framework paralelizou por você (só vale para handlers <code>def</code> comuns, que o FastAPI roda em threadpool). A solução é cliente assíncrono ou <code>def</code> síncrono.</div>
+</div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Um cliente envia <code>POST /links</code> com JSON bem-formado, mas <code>url</code> não respeita o pattern do schema. Qual resposta é a deliberada e por quê?</p>
+<ol><li data-opt="a">400 Bad Request, porque o cliente errou o formato.</li><li data-opt="b">422 com corpo de erro estruturado, porque a sintaxe é válida mas a representação não satisfaz o schema.</li><li data-opt="c">500, porque a validação falhou dentro do servidor.</li><li data-opt="d">409 Conflict, porque o estado enviado conflita com o contrato.</li></ol>
+<div class="explain">422 é o que o Pydantic devolve: JSON válido (sintaxe ok) que viola o schema (semântica). 400 fica para requisição malformada de fato; 409 é conflito com o estado do recurso (slug repetido); 500 é culpa do servidor — validação de entrada nunca deve cair aqui.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 1</span>
 <ul>
@@ -310,6 +328,40 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 uv run alembic upgrade head</code></pre>
 <p>Três regras separam migration revisada de incidente futuro. Primeira: <strong>migration é código revisado</strong> — o <code>--autogenerate</code> escreve um rascunho comparando modelos e banco, e rascunho se revisa. Segunda: <strong>todo <code>upgrade</code> tem <code>downgrade</code> testado</strong>, porque rollback de deploy depende dele (bloco 7). Terceira: <strong>migration destrutiva</strong> (remover coluna com dado) acontece em duas releases — primeiro o código para de usar a coluna, depois outra migration a remove. E a proibição que o laboratório verifica com oráculo: nenhum startup de produção cria schema com <code>create_all</code>; o schema nasce de migration, sempre.</p>
 
+<div class="ix" id="m03-pool"><span class="ix-title">Simulador: pool de conexões e concorrência</span>
+<p>Cada request mantém uma conexão ocupada por <em>T</em> ms. Quando todas as conexões do pool estão em uso, o request espera na fila. Mexa nos controles e veja onde a API "morre".</p>
+<div class="ix-row"><label>Requests simultâneos: <strong id="m03-pool-nv">40</strong></label><input id="m03-pool-n" type="range" min="1" max="200" value="40"></div>
+<div class="ix-row"><label>pool_size + max_overflow: <strong id="m03-pool-cv">15</strong></label><input id="m03-pool-c" type="range" min="1" max="60" value="15"></div>
+<div class="ix-row"><label>Tempo com a conexão presa (ms): <strong id="m03-pool-tv">50</strong></label><input id="m03-pool-t" type="range" min="5" max="2000" value="50"></div>
+<div class="ix-row"><label><input id="m03-pool-slow" type="checkbox"> Transação atravessa uma chamada lenta de modelo (+8000 ms)</label></div>
+<div class="ix-row"><label>Workers Uvicorn: <select id="m03-pool-w"><option>1</option><option>2</option><option selected>4</option><option>8</option></select></label><span>max_connections do Postgres: 100</span></div>
+<svg id="m03-pool-svg" viewBox="0 0 760 120" role="img" aria-label="Conexões ocupadas e fila de requests"><title>Pool de conexões: ocupadas e em espera</title></svg>
+<div class="ix-out" id="m03-pool-out" aria-live="polite"></div></div>
+<script>(function(f){if(window.Course)Course.ready(f);else document.addEventListener("DOMContentLoaded",function(){Course.ready(f)});})(function(C){
+ function $(i){return document.getElementById('m03-pool-'+i);}
+ function draw(){
+  var n=+$('n').value,c=+$('c').value,t=+$('t').value+($('slow').checked?8000:0),w=+$('w').value;
+  $('nv').textContent=n;$('cv').textContent=c;$('tv').textContent=t;
+  var inuse=Math.min(n,c),queued=Math.max(0,n-c);
+  var waves=Math.ceil(n/c),worst=(waves-1)*t,thr=Math.round(c/(t/1000));
+  var total=w*c,s='';
+  var cols=Math.min(60,Math.max(c,inuse+queued)),cw=Math.min(24,730/Math.max(cols,1));
+  for(var i=0;i<c&&i<60;i++){s+='<rect class="'+(i<inuse?'s-soft':'s-box')+'" x="'+(10+i*cw)+'" y="14" width="'+(cw-3)+'" height="30" rx="3"/>';}
+  s+='<text x="10" y="10" font-size="11">Conexões do pool ('+inuse+' de '+c+' ocupadas)</text>';
+  var qs=Math.min(queued,200),qw=Math.min(8,730/Math.max(qs,1));
+  for(var j=0;j<qs;j++){s+='<rect class="s-box" x="'+(10+j*qw)+'" y="82" width="'+Math.max(qw-1,1)+'" height="24" style="stroke:var(--bad);fill:var(--bad-soft)"/>';}
+  s+='<text x="10" y="76" font-size="11">Fila de espera ('+queued+' requests)</text>';
+  $('svg').innerHTML='<title>Pool de conexões: ocupadas e em espera</title>'+s;
+  var msg='Vazão máxima do pool: ~'+thr+' requests/s por worker.\nEspera do último da fila: ~'+worst+' ms ('+waves+' "ondas" de atendimento).\nConexões abertas no total: '+total+' ('+w+' workers x '+c+') contra max_connections=100.';
+  if(worst>30000)msg+='\nALERTA: espera maior que pool_timeout (30 s): requests falham com QueuePool limit reached.';
+  else if(worst>1000)msg+='\nAtenção: p99 de pelo menos '+worst+' ms só de espera por conexão.';
+  if(total>100)msg+='\nALERTA: '+total+' conexões ultrapassam o max_connections do Postgres; o banco recusa novas conexões.';
+  if($('slow').checked)msg+='\nLição: a chamada lenta dentro da transação multiplicou o tempo de posse da conexão. Transacione só a gravação.';
+  $('out').textContent=msg;
+ }
+ ['n','c','t','slow','w'].forEach(function(k){$(k).addEventListener('input',draw);$(k).addEventListener('change',draw);});
+ draw();
+})</script>
 <h3 id="sec-b02-leitura-aplicada">Leitura aplicada: acompanhe um request com banco <a class="section-link" href="#sec-b02-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
 <ol>
 <li><code>POST /links</code> chega validado pelo schema do bloco 1. A dependência <code>get_session</code> abre uma <code>AsyncSession</code> — uma unidade de trabalho vazia, presa a uma conexão do pool.</li>
@@ -329,6 +381,16 @@ uv run alembic upgrade head</code></pre>
 </ul>
 </div>
 
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Duas requisições criam o mesmo slug ao mesmo tempo. A rota faz <code>SELECT</code> para ver se existe e só então <code>INSERT</code>, sem constraint. Qual é o resultado provável?</p>
+<ol><li data-opt="a">Ambas passam pela checagem e ambas inserem: a janela entre checar e escrever é o problema; só a constraint UNIQUE a fecha.</li><li data-opt="b">A segunda falha com 409 automaticamente, porque a transação é isolada.</li><li data-opt="c">O PostgreSQL serializa as duas e rejeita a segunda sem precisar de constraint.</li><li data-opt="d">Nada de errado: o <code>if</code> prévio é equivalente a uma constraint.</li></ol>
+<div class="explain">Em READ COMMITTED as duas transações não enxergam a escrita uma da outra antes do commit; ambas veem "não existe". O banco só rejeita o duplicado se houver <code>UNIQUE</code>, verificado dentro da escrita. A rota então traduz <code>IntegrityError</code> em 409.</div>
+</div>
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma rota abre uma transação, chama um modelo de linguagem (8 s) e só depois grava. Sob carga, a API trava com <code>QueuePool limit reached</code>. Qual é a causa raiz e a correção?</p>
+<ol><li data-opt="a">O banco é lento; aumentar <code>max_connections</code> sempre resolve.</li><li data-opt="b">O pool é pequeno demais; o correto é criar uma sessão global compartilhada.</li><li data-opt="c">A rota deveria usar <code>create_all</code> para reduzir o tempo de transação.</li><li data-opt="d">A transação atravessa uma chamada lenta e segura a conexão do pool por 8 s; deve-se chamar o modelo fora da transação e transacionar só a gravação.</li></ol>
+<div class="explain">Conexão presa durante I/O externo esgota o pool mesmo com banco ocioso. Regra do bloco: transação curta, "transacione o banco, nunca o workflow". Aumentar o pool só adia a falha; sessão global corrompe a unidade de trabalho; <code>create_all</code> não tem relação com isso.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 2</span>
 <ul>
@@ -376,6 +438,18 @@ Execution Time: 0.071 ms</code></pre>
 </ul>
 <p>A decisão que o plano sustenta: o predicado crítico — busca por slug, listagem recente por data — usa o índice escolhido, e isso se lê no nó do plano, não no cronômetro. Tempo absoluto varia por máquina; presença do nó <code>Index Scan</code> sobre o índice certo é o invariante.</p>
 
+<p><strong>Antes e depois de um índice, lado a lado:</strong></p>
+<div class="tabs">
+<section data-tab="Antes: sem índice"><pre><code>Limit  (cost=18334.1..18334.2 rows=20)
+  -&gt;  Sort  (cost=18334.1..19584.1 rows=500000)
+        Sort Key: created_at DESC
+        -&gt;  Seq Scan on links  (cost=0.00..8334.00 rows=500000)
+Execution Time: 412.7 ms</code></pre><p><em>Saída ilustrativa.</em> A tabela inteira é lida e ordenada para devolver 20 linhas: o nó <code>Seq Scan</code> + <code>Sort</code> é o alarme.</p></section>
+<section data-tab="Depois: índice (created_at DESC)"><pre><code>Limit  (cost=0.42..1.95 rows=20)
+  -&gt;  Index Scan using ix_links_created_at on links
+        (cost=0.42..38000.00 rows=500000)
+Execution Time: 0.4 ms</code></pre><p><em>Saída ilustrativa.</em> O invariante é o nó certo sobre o índice certo, não os milissegundos. O preço: cada INSERT agora também mantém esse índice.</p></section>
+</div>
 <h3 id="sec-jsonb-por-que-ele-salva-produto-de-ia">JSONB: coluna relacional para o estável, documento para o variável <a class="section-link" href="#sec-jsonb-por-que-ele-salva-produto-de-ia" aria-label="Link para esta seção">#</a></h3>
 <p>Sistemas que consomem modelos produzem dado semiestruturado com frequência: respostas com campos que variam por versão, metadados de execução (modelo, tokens, custo, latência), configurações por tenant. Modelar cada variação como coluna significa uma migration por semana; despejar tudo num armazenamento sem schema significa perder junções, transações e validação. <strong>JSONB é a terceira via do PostgreSQL:</strong> colunas relacionais para o que é estável e consultado sempre; uma coluna JSONB para a cauda variável — indexável com GIN e consultável com operadores:</p>
 
@@ -398,6 +472,31 @@ SELECT * FROM analises WHERE resultado ? 'warnings';           -- tem a chave?</
 
 <div class="box"><span class="lbl">Referência do conceito</span><p>JSONB armazena documentos JSON em representação própria do PostgreSQL e oferece operadores de consulta. O formato não elimina a necessidade de schema, validação e índices: o que se consulta sempre vira coluna; o schema do documento mora no Pydantic; o acesso por chave usa índice GIN. Usar JSONB como substituto do schema relacional — sem validação e sem índice — troca uma migration por semana por consultas sem plano estável.</p></div>
 
+<div class="ix" id="m03-lost"><span class="ix-title">Simulador: lost update em READ COMMITTED</span>
+<p>N requests incrementam o contador <code>hits</code> ao mesmo tempo. Escolha a estratégia e rode: o valor final deveria ser exatamente N.</p>
+<div class="ix-row"><label>Requests concorrentes: <input id="m03-lost-n" type="number" min="2" max="500" value="50" style="width:5em"></label>
+<label>Estratégia: <select id="m03-lost-m"><option value="rmw">Python: ler, somar 1, gravar</option><option value="atomic">SQL: UPDATE hits = hits + 1</option><option value="lock">SELECT ... FOR UPDATE, depois gravar</option><option value="ver">Coluna de versão (otimista, com retry)</option></select></label>
+<button class="ix-btn primary" id="m03-lost-go" type="button">Rodar</button></div>
+<div class="ix-out" id="m03-lost-out" aria-live="polite">Clique em "Rodar".</div></div>
+<script>(function(f){if(window.Course)Course.ready(f);else document.addEventListener("DOMContentLoaded",function(){Course.ready(f)});})(function(C){
+ function $(i){return document.getElementById('m03-lost-'+i);}
+ $('go').addEventListener('click',function(){
+  var n=Math.max(2,Math.min(500,+$('n').value||50)),m=$('m').value,db=0,retries=0;
+  if(m==='rmw'){
+   // cada rodada: g requests leem o mesmo valor antes de qualquer escrita; todos gravam base+1
+   var i2=0;while(i2<n){var g=Math.min(n-i2,1+Math.floor(Math.random()*6));var base=db;for(var u=0;u<g;u++){db=base+1;}i2+=g;}
+  }else if(m==='atomic'){db=n;}
+  else if(m==='lock'){db=n;}
+  else{var left=n,cur=0;while(left>0){var batch=Math.min(left,1+Math.floor(Math.random()*5));cur+=1;retries+=batch-1;left-=1;}db=n;}
+  var lost=n-db;
+  var txt='Esperado: '+n+'\nObtido:   '+db+'\n';
+  if(lost>0)txt+='Perdidos:  '+lost+' incrementos, sem nenhum erro. Dois requests leram o mesmo valor e um sobrescreveu o outro.\nCorreção: some no banco, trave a linha ou use versão.';
+  else if(m==='atomic')txt+='Correto: o banco soma dentro do UPDATE; não há janela entre ler e gravar. É a correção mais simples e a mais barata.';
+  else if(m==='lock')txt+='Correto: FOR UPDATE serializa os requests naquela linha. Custa espera e risco de deadlock se a ordem de travas variar.';
+  else txt+='Correto: quem perde a corrida de versão refaz a leitura ('+retries+' retries nesta rodada). Bom para baixa contenção.';
+  $('out').textContent=txt;
+ });
+})</script>
 <h3 id="sec-b03-leitura-aplicada">Leitura aplicada: do sintoma ao conserto <a class="section-link" href="#sec-b03-leitura-aplicada" aria-label="Link para esta seção">#</a></h3>
 <ol>
 <li>A listagem "links recentes" ordena por <code>created_at</code> sem índice. O plano mostra <code>Seq Scan + Sort</code>: a tabela inteira lida e ordenada para devolver 20 linhas. O conserto é um índice <code>(created_at DESC)</code>; o plano passa a <code>Index Scan</code>. O preço aparece do outro lado: cada índice novo torna cada escrita mensuravelmente mais lenta — a troca leitura×escrita, decidida por predicado, não por hábito.</li>
@@ -415,6 +514,16 @@ SELECT * FROM analises WHERE resultado ? 'warnings';           -- tem a chave?</
 </ul>
 </div>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Existe um índice composto em <code>(user_id, created_at)</code>. Qual consulta <strong>não</strong> consegue usá-lo de forma eficiente?</p>
+<ol><li data-opt="a"><code>WHERE user_id = 7</code></li><li data-opt="b"><code>WHERE created_at &gt; now() - interval '1 day'</code> (sem filtrar por <code>user_id</code>)</li><li data-opt="c"><code>WHERE user_id = 7 ORDER BY created_at DESC</code></li><li data-opt="d"><code>WHERE user_id = 7 AND created_at &gt; '2026-01-01'</code></li></ol>
+<div class="explain">Índice composto vale pelo prefixo: serve a <code>(a)</code> e <code>(a,b)</code>, não a <code>(b)</code> sozinho. A consulta B filtra só pela segunda coluna e tende a cair em varredura sequencial. A ordem das colunas deve seguir o padrão de consulta.</div>
+</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">O <code>EXPLAIN ANALYZE</code> mostra <code>rows=1</code> estimado e <code>actual rows=80000</code> no mesmo nó. Qual é o diagnóstico mais provável?</p>
+<ol><li data-opt="a">Falta um índice B-tree em qualquer coluna da tabela.</li><li data-opt="b">O hardware está lento; os tempos absolutos explicam tudo.</li><li data-opt="c">As estatísticas do planejador estão desatualizadas; o primeiro passo é <code>ANALYZE</code> na tabela.</li><li data-opt="d">O JSONB deveria virar texto simples.</li></ol>
+<div class="explain">Divergência grande entre estimativa e realidade é sintoma de estatística velha: o planejador decide com um mapa desatualizado. Adicionar índice sem corrigir a estimativa pode nem ser usado. Tempo absoluto varia por máquina; o invariante é o nó e a estimativa.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 3</span>
 <ul>
@@ -468,6 +577,22 @@ SELECT * FROM analises WHERE resultado ? 'warnings';           -- tem a chave?</
 </ul>
 </div>
 
+<figure><svg viewBox="0 0 760 250" role="img" aria-label="Camadas e direção dos imports" xmlns="http://www.w3.org/2000/svg"><title>Camadas: a seta de import só aponta para baixo</title>
+<defs><marker id="m03ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<rect class="s-soft" x="20" y="10" width="260" height="44" rx="8"/><text x="150" y="37" text-anchor="middle" font-size="13" font-weight="700">api (rotas, schemas HTTP)</text>
+<rect class="s-box" x="20" y="90" width="260" height="44" rx="8"/><text x="150" y="117" text-anchor="middle" font-size="13" font-weight="700">services (decisão)</text>
+<rect class="s-box" x="20" y="170" width="260" height="44" rx="8"/><text x="150" y="197" text-anchor="middle" font-size="13" font-weight="700">repositories (query)</text>
+<rect class="s-box" x="360" y="90" width="170" height="44" rx="8"/><text x="445" y="117" text-anchor="middle" font-size="13" font-weight="700">domain + errors</text>
+<rect class="s-box" x="560" y="170" width="180" height="44" rx="8"/><text x="650" y="197" text-anchor="middle" font-size="13" font-weight="700">models / SQLAlchemy</text>
+<g style="color:var(--fg)"><line class="s-line" x1="150" y1="54" x2="150" y2="88" marker-end="url(#m03ar)" stroke-width="1.6"/>
+<line class="s-line" x1="150" y1="134" x2="150" y2="168" marker-end="url(#m03ar)" stroke-width="1.6"/>
+<line class="s-line" x1="282" y1="112" x2="358" y2="112" marker-end="url(#m03ar)" stroke-width="1.6"/>
+<line class="s-line" x1="282" y1="192" x2="558" y2="192" marker-end="url(#m03ar)" stroke-width="1.6"/></g>
+<g style="color:var(--bad);stroke:var(--bad)"><line x1="282" y1="28" x2="560" y2="168" stroke-dasharray="6 4" stroke-width="2"/>
+<text x="420" y="64" font-size="12" style="fill:var(--bad);stroke:none">api -&gt; models/SQLAlchemy: PROIBIDO</text>
+<line x1="20" y1="30" x2="8" y2="30" stroke-width="0"/></g>
+<text x="380" y="240" text-anchor="middle" font-size="12">Linha tracejada vermelha = import rejeitado pelo guardrail (AST) com exit code. Composition root é a única exceção.</text></svg>
+<figcaption>Diagrama: a direção dos imports é o contrato do pacote.</figcaption></figure>
 <h3 id="sec-b04-override">Override: trocar a infraestrutura sem tocar na regra <a class="section-link" href="#sec-b04-override" aria-label="Link para esta seção">#</a></h3>
 <p>O service recebe um repositório que atende ao protocolo — no laboratório, a implementação SQLAlchemy; no teste, um fake em memória com o mesmo comportamento. Nada na regra muda entre os dois: a construção escolhe o objeto, a lógica só usa o contrato. No nível HTTP, o mesmo princípio aparece como <code>dependency_overrides</code>: a aplicação real atende requests com a sessão de teste injetada, sem startup alternativo e sem condicional de ambiente. É assim que isso se prova — mesma regra, duas infraestruturas, mesmos resultados.</p>
 
@@ -483,6 +608,11 @@ SELECT * FROM analises WHERE resultado ? 'warnings';           -- tem a chave?</
 </ol>
 <p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — service, repositório, app com override e guardrail verde — fica no <code>Laboratório guiado M03</code>, depois do bloco 8. A decisão de fronteiras, com custo e condição de revisão, está registrada no ADR do laboratório.</p>
 
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma rota em <code>api</code> importa <code>repositories.LinkRepository</code> "porque é só um CRUD". Qual é o problema real e como o módulo o previne?</p>
+<ol><li data-opt="a">A dependência aponta para a camada errada: no dia em que o CRUD ganhar regra, ela não terá lugar; o guardrail com AST rejeita o import com exit code.</li><li data-opt="b">Nenhum: repositórios podem ser importados por qualquer camada.</li><li data-opt="c">O problema é só de estilo; o guardrail serve para formatar imports.</li><li data-opt="d">O problema é de performance, pois repositórios são lentos.</li></ol>
+<div class="explain">A regra "a seta só aponta para baixo" (api → services → repositories) protege o futuro: regra fugida para a rota duplica decisão a cada endpoint. Convenção oral decai; o teste que varre a árvore sintática e falha o build é o que permanece, com controle negativo (mutante) provando que ele realmente pega.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 4</span>
 <ul>
@@ -611,6 +741,16 @@ networks:
 </ol>
 <p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — build, inspeção, subida, migrations no ambiente e observação da degradação — fica no <code>Laboratório guiado M03</code>, depois do bloco 8. Sem Docker Engine, a execução fica marcada como bloqueada e os oráculos estáticos verificam os artefatos.</p>
 
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um Dockerfile faz <code>COPY . .</code> antes de instalar dependências. O que acontece a cada alteração de uma linha de código?</p>
+<ol><li data-opt="a">Nada: o Docker detecta que só o código mudou.</li><li data-opt="b">O build falha, pois o código precisa vir depois do lock.</li><li data-opt="c">O cache é invalidado dali para baixo e todas as dependências são reinstaladas a cada build.</li><li data-opt="d">Apenas a última camada é refeita, sempre.</li></ol>
+<div class="explain">O cache funciona por camada, de cima para baixo: mudou uma camada, tudo abaixo rebuilda. Por isso manifests (<code>pyproject</code>/<code>uv.lock</code>) vêm antes do código: dependências mudam por semana, código por hora.</div>
+</div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">No Compose, a API usa <code>postgresql://...@localhost:5432/app</code> e falha com <em>connection refused</em> mesmo com o banco saudável. Qual é a correção?</p>
+<ol><li data-opt="a">Expor a porta 5432 no host e manter <code>localhost</code>.</li><li data-opt="b">Usar o nome do serviço (<code>@db:5432</code>): dentro da rede do Compose, <code>localhost</code> é o próprio container da API.</li><li data-opt="c">Trocar o healthcheck por um <code>sleep 10</code>.</li><li data-opt="d">Rodar a API como root.</li></ol>
+<div class="explain">Cada serviço do Compose é um hostname na rede interna. <code>localhost</code> dentro do container aponta para ele mesmo. Publicar a porta no host serve ao seu navegador, não à comunicação entre containers.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 5</span>
 <ul>
@@ -705,6 +845,11 @@ async def pg_client(pg_factory):
 </ol>
 <p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável fica no <code>Laboratório guiado M03</code>, depois do bloco 8. Sem Docker Engine, a execução fica marcada como bloqueada; a indisponibilidade do banco (erro observável com cleanup) tem oráculo parcial executável sem Docker no lab.</p>
 
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Um teste de integração passa sozinho, mas falha quando a suíte inteira roda, porque outro teste deixou uma linha com o mesmo slug. Qual prática do módulo evita isso?</p>
+<ol><li data-opt="a">Rodar sempre os testes em ordem alfabética.</li><li data-opt="b">Mockar o SQLAlchemy para não tocar o banco.</li><li data-opt="c">Usar um slug aleatório com <code>random</code> em cada teste.</li><li data-opt="d">Rodar cada teste dentro de uma transação-envelope que sofre rollback no teardown, sobre PostgreSQL descartável com schema vindo de migration.</li></ol>
+<div class="explain">Isolamento significa não depender de ordem nem de resíduo. A transação-envelope desfaz tudo ao final de cada teste. Mock de ORM aprova o mock e deixa a constraint real sem prova; aleatoriedade introduz instabilidade (o módulo prefere entrada explícita).</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 6</span>
 <ul>
@@ -792,6 +937,14 @@ jobs:
 </ul>
 </div>
 
+<div class="ix"><span class="ix-title">Exercício: ordene o release</span><p>Coloque as etapas do pipeline de um release seguro na ordem correta.</p>
+<ol class="order" data-solution="a,b,c,d,e">
+<li data-id="c">Aplicar a migration (<code>alembic upgrade head</code>) num passo efêmero</li>
+<li data-id="e">Verificar <code>/health</code> e logs; se falhar, redeployar a SHA anterior</li>
+<li data-id="a">Gates verdes no push: lint, formato, tipos, testes</li>
+<li data-id="d">Promover a nova versão do serviço</li>
+<li data-id="b">Construir a imagem e taguear pela SHA do commit (só na main)</li>
+</ol></div>
 <h3 id="sec-b07-trilha-opcional">Trilha opcional · Publicação externa <a class="section-link" href="#sec-b07-trilha-opcional" aria-label="Link para esta seção">#</a></h3>
 <p>Publicar o encurtador numa plataforma (PaaS com suporte a container e Postgres, qualquer fornecedor) é trilha opcional e não condiciona a aprovação do módulo. Quem a percorrer registra no contrato de release: ambiente, revisão publicada, método de rollback ensaiado e limite do ensaio. Conta, cartão e URL pública ficam fora do caminho obrigatório — por isso o laboratório nunca os exige.</p>
 
@@ -803,6 +956,16 @@ jobs:
 </ol>
 <p>Este percurso é leitura: nenhum comando é executado aqui. O roteiro executável — workflow, script local equivalente, build do wheel e contrato de release — fica no <code>Laboratório guiado M03</code>, depois do bloco 8.</p>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que o job de build da imagem só roda na branch <code>main</code> e a imagem é tagueada pela SHA do commit além de <code>latest</code>?</p>
+<ol><li data-opt="a">Para economizar minutos de CI, sem outro motivo.</li><li data-opt="b">PR apenas verifica; <code>main</code> endereça. A tag por SHA dá imagem imutável e endereçável, o que torna rollback uma operação (redeployar a SHA anterior).</li><li data-opt="c">Porque <code>latest</code> é proibida pelo Docker.</li><li data-opt="d">Para que cada desenvolvedor possa sobrescrever a imagem em produção.</li></ol>
+<div class="explain"><code>latest</code> é um ponteiro móvel: não diz o que está rodando nem permite voltar com precisão. A SHA liga imagem a commit verificado. Manter segredos e caminhos de deploy fora do contexto de PR é o outro ganho.</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Em qual ordem a migration deve rodar no release, e por quê?</p>
+<ol><li data-opt="a">Antes de promover a versão nova, num passo efêmero; se falhar, o release aborta e a versão anterior segue no ar.</li><li data-opt="b">Depois de promover, para não atrasar o deploy.</li><li data-opt="c">No startup da aplicação via <code>create_all</code>.</li><li data-opt="d">Manualmente, quando alguém notar o erro.</li></ol>
+<div class="explain">Migration depois de promover cria janela em que código novo roda sobre schema velho. <code>create_all</code> em produção não tem histórico nem volta. Por isso o padrão é o comando de release antes da promoção, combinado com expandir/contrair para compatibilidade durante o rollout.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 7</span>
 <ul>
@@ -839,6 +1002,11 @@ jobs:
 </ul>
 </div>
 
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">O <code>/health</code> devolve <code>{"status":"ok"}</code> sempre, sem tocar no banco. O que há de errado?</p>
+<ol><li data-opt="a">Nada: saúde é só dizer que o processo está de pé.</li><li data-opt="b">O correto seria devolver 500 quando o banco cair, sem corpo.</li><li data-opt="c">Declara saudável um serviço que não atende nada; a checagem de serviço deve executar <code>select 1</code> e responder 503 estruturado quando o banco não é alcançado.</li><li data-opt="d">O endpoint deveria exigir autenticação.</li></ol>
+<div class="explain">Há duas saúdes: a do processo (HEALTHCHECK do Dockerfile) e a do serviço (alcança o banco). Só a segunda autoriza tráfego. Saúde de enfeite mantém tráfego numa API morta; 503 com Problem Details e correlation id dá ao operador algo para correlacionar.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 8</span>
 <ul>
@@ -925,6 +1093,22 @@ uv sync --frozen</code></pre>
 <li>Suíte <code>postgres</code> como contrato: verde com Docker, BLOCKED sem ele.</li>
 <li>Contrato de release (<code>RELEASE.md</code>) com gates, SHA, migrations, segredos e trilha opcional registrada.</li>
 </ol>
+</div>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<div class="flashcards">
+<div class="fc"><div class="front">Por que a assinatura da rota é "o contrato"?</div><div class="back">Hints geram binding, validação, OpenAPI e docs; mudar a assinatura muda o contrato.</div></div>
+<div class="fc"><div class="front">400 × 404 × 409 × 422 × 500</div><div class="back">Malformado × não existe × conflito de estado × bem-formado porém inválido (Pydantic) × culpa do servidor.</div></div>
+<div class="fc"><div class="front">Sessão ou engine: o que é por request?</div><div class="back">Sessão (unidade de trabalho, nunca compartilhada); engine e pool são do processo.</div></div>
+<div class="fc"><div class="front">Quem fecha a corrida de slug duplicado?</div><div class="back">A constraint UNIQUE; o <code>if</code> prévio tem janela. A rota traduz IntegrityError em 409.</div></div>
+<div class="fc"><div class="front">Lost update em READ COMMITTED: três correções</div><div class="back">UPDATE atômico no banco, SELECT FOR UPDATE, ou coluna de versão (otimista).</div></div>
+<div class="fc"><div class="front">Como ler um EXPLAIN?</div><div class="back">Comparar estimado × real; procurar o nó certo (Index Scan) sobre o índice certo; ANALYZE se divergir.</div></div>
+<div class="fc"><div class="front">JSONB: quando usar?</div><div class="back">Para a cauda variável, com schema no Pydantic e índice GIN; o que se consulta sempre vira coluna.</div></div>
+<div class="fc"><div class="front">Direção dos imports</div><div class="back">api → services → repositories; domain e errors sem framework; entidade de banco não vaza para HTTP.</div></div>
+<div class="fc"><div class="front">Por que manifests antes do código no Dockerfile?</div><div class="back">Cache por camada, de cima para baixo: dependências mudam raramente, código sempre.</div></div>
+<div class="fc"><div class="front">depends_on + service_healthy</div><div class="back">"Depois de" não é "pronto": a API espera o healthcheck do Postgres, evitando ConnectionRefused no boot.</div></div>
+<div class="fc"><div class="front">Teste de integração honesto</div><div class="back">PostgreSQL real descartável, schema por migration, transação-envelope com rollback; mock de ORM não prova constraint.</div></div>
+<div class="fc"><div class="front">As três perguntas do release</div><div class="back">Como sei que quebrou? Como volto? O banco volta junto?</div></div>
 </div>
 
 <div class="box">

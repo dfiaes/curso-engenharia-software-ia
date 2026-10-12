@@ -1,0 +1,71 @@
+name: deploy
+# dev -> cert -> prod. Environments (Settings > Environments) guardam aprovações e segredos:
+#   dev  : sem aprovação, deploy automático após CI verde na main.
+#   cert : required reviewers (QA/líder) + wait timer opcional.
+#   prod : required reviewers (humanos autorizados), "prevent self-review", só branch main.
+on:
+  workflow_run:
+    workflows: [ci]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # OIDC com Azure (sem segredo de longa duração)
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  dev:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy dev
+        run: ./scripts/deploy.sh dev "${{ github.sha }}"   # [PREENCHER] seu script/az cli
+
+  cert:
+    needs: dev
+    # On-premise: runner self-hosted dentro da rede (conexão de saída para o GitHub, sem porta aberta).
+    # runs-on: [self-hosted, linux, onprem-cert]
+    runs-on: ubuntu-latest
+    environment: cert          # aprovação obrigatória configurada no environment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy cert
+        run: ./scripts/deploy.sh cert "${{ github.sha }}"
+      - name: Smoke test cert
+        run: ./scripts/smoke.sh cert
+
+  prod:
+    needs: cert
+    # runs-on: [self-hosted, linux, onprem-prod]   # runner dedicado e isolado para produção
+    runs-on: ubuntu-latest
+    environment: prod          # somente humanos autorizados aprovam; agente nunca aprova
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy prod
+        run: ./scripts/deploy.sh prod "${{ github.sha }}"
+      - name: Smoke test prod
+        run: ./scripts/smoke.sh prod
+      # Rollback: re-executar este workflow (workflow_dispatch) apontando o SHA anterior estável,
+      # ou ./scripts/deploy.sh prod <sha-anterior>. Ensaie em cert antes de precisar.

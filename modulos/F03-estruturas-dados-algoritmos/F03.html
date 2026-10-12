@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>F03 · Estruturas de Dados, Algoritmos e Complexidade</title>
 <meta name="color-scheme" content="light dark">
-<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
 <link rel="stylesheet" href="../../assets/course.css">
 </head>
 <body>
@@ -91,6 +91,33 @@
 </tbody>
 </table>
 
+
+<div class="ix"><span class="ix-title">Simulador: quanto cresce o custo de cada classe</span>
+<p>Arraste o tamanho <em>n</em> e compare o número de passos e o tempo estimado. A escala das barras é logarítmica: cada divisão representa 10 vezes mais passos.</p>
+<div class="ix-row"><label for="f03-gr-n">n = <strong id="f03-gr-nv">1.000</strong></label><input type="range" id="f03-gr-n" min="10" max="70" value="30" step="1" aria-label="Tamanho n (escala logarítmica)"></div>
+<div class="ix-row"><label for="f03-gr-sp">Velocidade:</label><select id="f03-gr-sp"><option value="1e7">Python puro (~10 milhões de passos/s)</option><option value="1e9">Código compilado (~1 bilhão de passos/s)</option></select></div>
+<div id="f03-gr-t"></div></div>
+
+<script>
+(function(){function go(C){
+
+var sl=document.getElementById("f03-gr-n"),nv=document.getElementById("f03-gr-nv"),sp=document.getElementById("f03-gr-sp"),host=document.getElementById("f03-gr-t");
+var CL=[["O(1)",function(n){return 1;}],["O(log n)",function(n){return Math.max(1,Math.log2(n));}],["O(n)",function(n){return n;}],["O(n log n)",function(n){return n*Math.max(1,Math.log2(n));}],["O(n²)",function(n){return n*n;}]];
+function fmtN(x){return Math.round(x).toLocaleString("pt-BR");}
+function fmtT(s){if(s<1e-6)return "< 1 µs";if(s<1e-3)return (s*1e6).toFixed(1)+" µs";if(s<1)return (s*1e3).toFixed(1)+" ms";if(s<60)return s.toFixed(1)+" s";if(s<3600)return (s/60).toFixed(1)+" min";if(s<86400)return (s/3600).toFixed(1)+" h";return (s/86400).toFixed(1)+" dias";}
+function fmtOps(x){return x>=1e15?x.toExponential(1):fmtN(x);}
+function upd(){
+  var n=Math.round(Math.pow(10,sl.value/10)),rate=+sp.value,h='<div class="table-wrap"><table><thead><tr><th>Classe</th><th>Passos</th><th>Tempo estimado</th><th style="width:36%">Escala (log)</th></tr></thead><tbody>';
+  nv.textContent=n.toLocaleString("pt-BR");
+  CL.forEach(function(c){var ops=c[1](n),t=ops/rate,w=Math.max(2,Math.min(100,Math.log10(ops+1)/12*100));
+    h+='<tr><td><code>'+c[0]+'</code></td><td>'+fmtOps(ops)+'</td><td'+(t>1?' style="font-weight:700;color:var(--bad)"':'')+'>'+fmtT(t)+'</td><td><div style="height:12px;border-radius:6px;background:var(--line)"><div style="height:12px;border-radius:6px;background:var(--accent);width:'+w+'%"></div></div></td></tr>';});
+  host.innerHTML=h+'</tbody></table></div><p class="meta">Estimativa de ordem de grandeza, sem constantes: o assintótico diz como o custo CRESCE, não quanto custa.</p>';
+}
+sl.addEventListener("input",upd);sp.addEventListener("change",upd);upd();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
 <h3>Casos e custo amortizado</h3>
 <p>Três perguntas distintas costumam ser confundidas:</p>
 <ul>
@@ -110,6 +137,12 @@ len  bytes (sys.getsizeof) at each reallocation of a list built by append
  33  376</code></pre>
 <p class="clock">Medido nesta máquina (CPython 3.14.7, aarch64). A lista vazia ocupa 56 bytes; a primeira realocação reserva 4 ponteiros de 8 bytes (88 = 56 + 32), a seguinte 8 (120), depois 16 (184). Os saltos mudam entre versões; o padrão "poucas realocações, espaçadas por fator" não.</p>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma lista de Python diz que <code>append</code> é "O(1) amortizado". O que isso garante?</p>
+<ol><li data-opt="a">Que cada chamada individual de <code>append</code> leva tempo constante</li><li data-opt="b">Que uma sequência de <em>n</em> appends custa O(n) no total, ainda que alguma chamada isolada (a que redimensiona) custe O(n)</li><li data-opt="c">Que o <code>append</code> nunca copia elementos</li><li data-opt="d">Que o custo médio de um append aleatório é constante, dependendo da sorte da entrada</li></ol>
+<div class="explain">Amortizado é uma garantia sobre a <strong>soma</strong> de uma sequência de operações no pior caso, sem sorte nem aleatoriedade (isso seria "caso médio"). Algumas chamadas pagam a cópia do vetor; as demais saem baratas. Para um sistema com prazo rígido por requisição, o pico isolado pode importar.</div>
+</div>
 <h3>Espaço, e o que "O(1) de memória" realmente promete</h3>
 <p>Complexidade de espaço conta memória <em>auxiliar</em> além da entrada. Três armadilhas de contagem: (a) a pilha de chamadas é memória: uma recursão de profundidade n é O(n) de espaço mesmo sem alocar nada explícito; (b) fatiar cria cópia (<code>a[:mid]</code> custa O(mid) tempo e espaço, e esconde um fator no merge sort do tipo "ingênuo"); (c) em Python o "elemento" é um ponteiro de 8 bytes para um objeto que tem cabeçalho próprio: uma lista de um milhão de <code>int</code> pequenos ocupa muito mais que 8 MB quando os inteiros não são os interned (−5 a 256). Para dados numéricos densos, <code>array.array</code> ou NumPy mudam a constante em uma ordem de grandeza (mais no <a href="../M11-fundamentos-ml-dl-modelos-locais/M11.html">M11</a>).</p>
 
@@ -162,6 +195,12 @@ for n in (1_000, 10_000, 100_000):
 <li>Esquecer a constante do tamanho: comparar o custo de hash de strings longas (O(comprimento) na primeira vez) como se fosse O(1).</li>
 </ul>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Ao dobrar o tamanho da entrada, o tempo medido do seu código foi de 2 s para 8 s. Qual a hipótese mais razoável?</p>
+<ol><li data-opt="a">Crescimento linear, O(n)</li><li data-opt="b">Crescimento logarítmico, O(log n)</li><li data-opt="c">Crescimento quadrático, O(n²): dobrar n multiplicou o tempo por 4</li><li data-opt="d">Crescimento constante, O(1), com ruído</li></ol>
+<div class="explain">A <strong>razão entre tamanhos</strong> é a ferramenta: ×2 no tempo sugere O(n) ou O(n log n); ×4, O(n²); ×8, O(n³). Meça com vários valores de n, repetições e use o mínimo, para filtrar o ruído. Uma única medição não distingue classes; pelo menos três tamanhos mostram a tendência.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>O, Ω, Θ são limites de uma função; pior/médio/amortizado dizem qual entrada se analisa. Amortizado garante a soma de uma sequência, não cada chamada. Espaço inclui a pilha de chamadas e as cópias de fatias. A constante vem de quem executa (C ou bytecode) e da localidade de memória; meça com repetição, mínimo e vários n, e olhe a razão entre tamanhos.</p>
@@ -198,6 +237,37 @@ for n in (1_000, 10_000, 100_000):
 </table>
 <p class="clock">Medido nesta máquina. Observe o fator quando n dobra: a lista multiplica por ≈4,3 / 4,7 / 4,1 (quadrático); o deque por ≈1,8 / 2,2 / 1,9 (linear). A versão em Python puro do lab (<code>CircularDeque</code>) também é linear, mas com constante ~7x maior que o deque em C: a ordem vence a constante só a partir de um certo n, e o deque em C vence nos dois.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: vetor dinâmico e custo amortizado</span>
+<p>Cada <code>push</code> que enche a capacidade dobra o vetor e copia os elementos. Veja o custo médio por <code>push</code> ficar abaixo de 2 cópias, e o encolhimento só em 25% de ocupação (histerese).</p>
+<div class="ix-row"><button type="button" class="ix-btn primary" data-n="1">+1 push</button><button type="button" class="ix-btn primary" data-n="10">+10</button><button type="button" class="ix-btn primary" data-n="100">+100</button><button type="button" class="ix-btn" data-n="-1">-1 pop</button><button type="button" class="ix-btn" data-n="-10">-10</button><button type="button" class="ix-btn" data-n="0">Reiniciar</button></div>
+<div id="f03-ar-cells" style="display:flex;flex-wrap:wrap;gap:2px;margin:8px 0"></div><div class="ix-out" id="f03-ar-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var size=0,cap=1,copies=0,pushes=0,last="";
+var cells=document.getElementById("f03-ar-cells"),out=document.getElementById("f03-ar-out");
+function push(){if(size===cap){copies+=size;last="redimensionou: copiou "+size+" elementos e a capacidade foi para "+cap*2;cap*=2;}size++;pushes++;}
+function pop(){if(size===0)return;size--;if(cap>1&&size<cap/4){copies+=size;cap=Math.max(1,Math.floor(cap/2));last="encolheu para "+cap+" (ocupação caiu abaixo de 25%)";}}
+function draw(){
+  var h="",lim=Math.min(cap,128),i;
+  for(i=0;i<lim;i++)h+='<span style="width:12px;height:18px;border-radius:3px;border:1px solid var(--line);background:'+(i<size?'var(--accent)':'var(--bg)')+'"></span>';
+  cells.innerHTML=h+(cap>lim?'<span class="meta">… (+'+(cap-lim)+' posições)</span>':'');
+  out.textContent="tamanho="+size+"  capacidade="+cap+"  pushes="+pushes+"  cópias acumuladas="+copies+"\ncópias por push = "+(pushes?(copies/pushes).toFixed(2):"0")+"  (O(1) amortizado: fica abaixo de 2)\n"+(last?"último evento: "+last:"");
+}
+document.querySelectorAll('.ix button[data-n]').forEach(function(b){
+  if(!b.closest(".ix").querySelector("#f03-ar-cells"))return;
+  b.addEventListener("click",function(){var n=+b.getAttribute("data-n"),k;last="";
+    if(n===0){size=0;cap=1;copies=0;pushes=0;}
+    else if(n>0)for(k=0;k<n;k++)push();else for(k=0;k<-n;k++)pop();
+    draw();});
+});
+draw();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
 <h3>Lista ligada: a estrutura que ensina mais do que serve</h3>
 <p>Numa lista ligada cada nó guarda o valor e um ponteiro para o próximo. Inserir ou remover <em>numa posição já conhecida</em> é O(1) (troca de ponteiros), mas achar a posição é O(n), e o acesso por índice também. Em linguagens com ponteiros ela tem lugar (listas intrusivas em kernels, listas de blocos livres). Em Python quase nunca: cada nó é um objeto com cabeçalho (dezenas de bytes por elemento), cada passo é um salto de memória que derrota o cache (bloco 1) e <code>deque</code> já cobre o caso útil. O que vale levar é a ideia: <strong>O(1) de inserção exige já ter o ponteiro para a posição</strong>. É o princípio de um cache LRU, onde um <code>dict</code> guarda a chave e aponta para o nó numa lista duplamente ligada para mover-para-frente em O(1) (a <code>collections.OrderedDict</code> faz exatamente isso).</p>
 
@@ -209,6 +279,14 @@ for n in (1_000, 10_000, 100_000):
 </ul>
 <p>O <code>deque</code> do CPython é uma lista duplamente ligada de <em>blocos</em> de 64 ponteiros: mistura as duas ideias e dá O(1) nas pontas, mas acesso <code>d[i]</code> no meio é O(n) (anda pelos blocos). Quem precisa de acesso aleatório e pontas ao mesmo tempo precisa de outra estrutura, e normalmente a resposta é perguntar de novo qual é o padrão de acesso.</p>
 
+
+<div class="tabs"><section data-tab="list (array dinâmico)"><ul><li>Índice <code>a[i]</code>: O(1)</li><li><code>append</code> / <code>pop()</code> no fim: O(1) amortizado</li><li><code>insert(0, x)</code> / <code>pop(0)</code> / meio: O(n), desloca tudo</li><li><code>x in a</code>: O(n)</li></ul></section><section data-tab="deque"><ul><li><code>append</code>, <code>appendleft</code>, <code>pop</code>, <code>popleft</code>: O(1) nas duas pontas</li><li>Acesso pelo meio <code>d[i]</code>: O(n)</li><li>Com <code>maxlen</code>, descarta do lado oposto: ótimo para janelas</li></ul></section><section data-tab="Lista ligada"><ul><li>Inserir/remover <em>dado o nó</em>: O(1)</li><li>Achar o nó por posição ou valor: O(n)</li><li>Em Python, cada nó é um objeto: pior localidade de memória que <code>list</code> e <code>deque</code></li></ul></section></div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Você processa uma fila com 1 milhão de tarefas usando <code>fila.pop(0)</code> numa <code>list</code>. Qual o problema e a correção?</p>
+<ol><li data-opt="a">Nenhum: <code>pop(0)</code> é O(1)</li><li data-opt="b">Memória: troque por tupla</li><li data-opt="c">O <code>pop(0)</code> falha com listas grandes; use <code>try/except</code></li><li data-opt="d">Cada <code>pop(0)</code> desloca todos os elementos (O(n)), o total vira O(n²); use <code>collections.deque</code> com <code>popleft()</code></li></ol>
+<div class="explain">Remover do início de um array exige mover os demais uma posição. Com 1 milhão de itens são bilhões de movimentos. O <code>deque</code> é feito para as duas pontas. O módulo mediu 448 ms contra 1 ms em 80 mil itens, e a diferença cresce com n.</div>
+</div>
 <h3>Exemplo trabalhado: um anel (ring buffer) com redimensionamento</h3>
 <p>A forma clássica de fazer fila O(1) em array é o <strong>buffer circular</strong>: guarde o índice da cabeça e o tamanho; o i-ésimo elemento está em <code>(cabeça + i) mod capacidade</code>. Nada se desloca. O <code>CircularDeque</code> do laboratório usa capacidade potência de dois (então o módulo vira máscara de bits), dobra quando enche e <em>reduz à metade quando fica com um quarto</em>:</p>
 <pre><code>def _slot(self, offset: int) -> int:
@@ -250,6 +328,12 @@ after appendleft(0): [0, 4, 5]</code></pre>
 </tbody>
 </table>
 
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">No ring buffer do exemplo, dobra-se a capacidade quando enche (100%), mas só se encolhe quando a ocupação cai a 25%. Por que não encolher a 50%?</p>
+<ol><li data-opt="a">Com 50%, um <code>push</code>/<code>pop</code> alternado na fronteira redimensionaria a cada operação (thrashing) e perderia o O(1) amortizado</li><li data-opt="b">Porque a memória é mais cara que o tempo</li><li data-opt="c">Porque encolher exige ordenar os elementos</li><li data-opt="d">Não há razão: 50% também funciona sem custo extra</li></ol>
+<div class="explain">Depois de dobrar, o vetor fica 50% cheio. Se encolhesse a 50%, bastaria um pop para encolher e um push para dobrar de novo, copiando tudo a cada passo. A <strong>histerese</strong> (dobra em 100%, encolhe em 25%) deixa um intervalo largo entre os gatilhos, o que garante que cada redimensionamento é pago por muitas operações baratas.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p><code>list</code> é um array de ponteiros: índice e fim são rápidos, frente e meio são O(n) (<code>pop(0)</code> medido: 448 ms contra 1 ms em 80 mil itens). Fila e janela pedem <code>deque</code>. Lista ligada vale pela ideia (O(1) com o ponteiro na mão), não pela implementação em Python. Redimensionar por fator, com histerese (dobrar em 100%, encolher em 25%), mantém o O(1) amortizado.</p>
@@ -293,6 +377,87 @@ after one insert: live=15 tombstones=10
 300 equal hashes:    last key inspects    300</code></pre>
 <p>Leia a saída: a tabela de capacidade 8 reconstrói no sexto elemento (limite 2/3 de 8 = 5,33); a reconstrução escolhe uma capacidade em que o resultado fique com no máximo metade de ocupação, por isso os saltos de 8 para 16 e depois 16 para 32 e 64. Remover 10 chaves deixa 10 <em>lápides</em>: o slot não volta a "vazio" porque isso cortaria a cadeia de sondagem de outras chaves que passaram por ali. A lápide só é consumida quando uma nova chave a reaproveita ou numa reconstrução. Na última linha, 300 chaves com o mesmo hash viram uma varredura linear de 300 passos.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: tabela hash com colisões</span>
+<p>O índice é <code>hash(chave) % tamanho</code> (hash didático: polinômio de base 31 sobre os caracteres, estável entre execuções). Insira, busque e remova; use <strong>Forçar colisão</strong> para ver duas chaves disputando o mesmo balde.</p>
+<div class="ix-row"><label for="f03-ht-mode">Resolução:</label><select id="f03-ht-mode"><option value="open">Endereçamento aberto (como o dict do CPython; aqui sondagem linear)</option><option value="chain">Encadeamento (lista por balde)</option></select></div>
+<div class="ix-row"><label for="f03-ht-key">Chave:</label><input type="text" id="f03-ht-key" value="ana" style="max-width:14ch"><button type="button" class="ix-btn primary" id="f03-ht-ins">Inserir</button><button type="button" class="ix-btn" id="f03-ht-get">Buscar</button><button type="button" class="ix-btn" id="f03-ht-del">Remover</button><button type="button" class="ix-btn" id="f03-ht-col">Forçar colisão</button><button type="button" class="ix-btn" id="f03-ht-clr">Limpar</button></div>
+<div id="f03-ht-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;margin:10px 0"></div>
+<div class="ix-out" id="f03-ht-log" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var $=function(i){return document.getElementById(i);};
+var modeEl=$("f03-ht-mode"),keyEl=$("f03-ht-key"),grid=$("f03-ht-grid"),logEl=$("f03-ht-log");
+var DUM="†",m=8,tab,filled,live,hl={},logs=[];
+function H(k){var h=0,i;for(i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0;return h;}
+function mk(){tab=[];for(var i=0;i<m;i++)tab.push(modeEl.value==="chain"?[]:null);filled=0;live=0;}
+function say(s){logs.push(s);if(logs.length>9)logs.shift();}
+function insertRaw(k,verbose){
+  var h=H(k),i=h%m,chain=modeEl.value==="chain";
+  if(verbose)say('"'+k+'": hash='+h+' -> '+h+' % '+m+' = índice '+i);
+  hl={};hl[i]=1;
+  if(chain){if(tab[i].length&&verbose)say("colisão: o balde "+i+" já tem "+tab[i].length+" chave(s); encadeia no fim");tab[i].push(k);live++;return;}
+  var steps=0;
+  while(tab[i]!==null&&tab[i]!==DUM){if(verbose)say("colisão: índice "+i+" ocupado por "+tab[i]+"; sonda "+((i+1)%m));i=(i+1)%m;hl[i]=1;steps++;}
+  if(tab[i]===null)filled++;tab[i]=k;live++;
+  if(verbose)say("gravou no índice "+i+(steps?" após "+steps+" sondagem(ns)":""));
+}
+function find(k){
+  var h=H(k),i=h%m,chain=modeEl.value==="chain",p=0;hl={};hl[i]=1;
+  if(chain){var j=tab[i].indexOf(k);return {i:i,j:j,probes:(j<0?tab[i].length:j+1)};}
+  while(tab[i]!==null&&p<m){p++;if(tab[i]===k)return {i:i,probes:p};i=(i+1)%m;hl[i]=1;}
+  return {i:-1,probes:p};
+}
+function resizeIf(){
+  var chain=modeEl.value==="chain",need=chain?(live+1>m):((filled+1)*3>m*2);
+  if(!need)return;
+  var keys=[];tab.forEach(function(b){if(chain)b.forEach(function(x){keys.push(x);});else if(b!==null&&b!==DUM)keys.push(b);});
+  say("fator de carga alto ("+(chain?live+1:filled+1)+"/"+m+"): dobra para "+m*2+" e REINSERE as "+keys.length+" chaves (rehash)");
+  m*=2;mk();keys.forEach(function(x){insertRaw(x,false);});
+}
+function draw(){
+  var chain=modeEl.value==="chain",h="",i;
+  for(i=0;i<m;i++){
+    var c=chain?(tab[i].length?tab[i].map(function(x){return '<div>'+x+'</div>';}).join(""):'<span class="meta">vazio</span>'):(tab[i]===null?'<span class="meta">vazio</span>':tab[i]===DUM?'<span class="meta">removido '+DUM+'</span>':tab[i]);
+    h+='<div style="border:1px solid '+(hl[i]?'var(--accent)':'var(--line)')+';background:'+(hl[i]?'var(--accent-soft)':'var(--surface-2)')+';border-radius:8px;padding:4px 8px;min-height:54px;font-size:.85rem"><div class="meta" style="font-size:.7rem">[' + i + ']</div>'+c+'</div>';
+  }
+  grid.innerHTML=h;
+  logEl.textContent="tamanho da tabela="+m+"  chaves vivas="+live+"  fator de carga="+(live/m).toFixed(2)+"\n"+logs.join("\n");
+}
+function reset(){m=8;mk();hl={};logs=[];draw();}
+$("f03-ht-ins").addEventListener("click",function(){
+  var k=keyEl.value.trim();if(!k)return;
+  if(find(k).i>=0&&(modeEl.value==="open"||find(k).j>=0)){say('"'+k+'" já existe: atualizaria o valor, sem nova entrada');draw();return;}
+  resizeIf();insertRaw(k,true);draw();
+});
+$("f03-ht-get").addEventListener("click",function(){
+  var k=keyEl.value.trim(),r=find(k),ok=modeEl.value==="chain"?r.j>=0:r.i>=0;
+  say('buscar "'+k+'": '+(ok?"achou":"não achou")+" com "+r.probes+" comparação(ões)/sondagem(ns)");draw();
+});
+$("f03-ht-del").addEventListener("click",function(){
+  var k=keyEl.value.trim(),r=find(k);
+  if(modeEl.value==="chain"){if(r.j>=0){tab[r.i].splice(r.j,1);live--;say('removeu "'+k+'" do balde '+r.i);}else say('"'+k+'" não existe');}
+  else if(r.i>=0){tab[r.i]=DUM;live--;say('removeu "'+k+'": marcou lápide '+DUM+' (não pode virar vazio, senão quebraria a sondagem de outras chaves)');}
+  else say('"'+k+'" não existe');
+  draw();
+});
+$("f03-ht-col").addEventListener("click",function(){
+  var chain=modeEl.value==="chain",ex=[],j;
+  tab.forEach(function(b,i){if(chain)b.forEach(function(x){ex.push([x,i]);});else if(b!==null&&b!==DUM)ex.push([b,i]);});
+  if(!ex.length){say("insira uma chave primeiro");draw();return;}
+  var target=ex[0][1];
+  for(j=0;j<100000;j++){var c="k"+j;if(H(c)%m===target&&ex.every(function(e){return e[0]!==c;})){keyEl.value=c;say('"'+c+'" cai no índice '+target+', o mesmo de "'+ex[0][0]+'": clique em Inserir');break;}}
+  draw();
+});
+$("f03-ht-clr").addEventListener("click",reset);
+modeEl.addEventListener("change",reset);
+reset();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
 <h3>O contrato <code>__hash__</code> / <code>__eq__</code></h3>
 <p>Três regras formam o contrato; violá-las produz bugs silenciosos, não exceções:</p>
 <ol>
@@ -321,6 +486,18 @@ p in d            # False: procura no slot errado; o item "sumiu" e continua ocu
 </table>
 <p class="clock">Medido nesta máquina, com chaves de classe Python com <code>__hash__</code> constante (o <code>dict</code> real do CPython). Dobrar n multiplica por ≈4: o custo total deixou de ser linear e virou quadrático, porque cada inserção varre a cadeia inteira e chama <code>__eq__</code> em Python a cada passo.</p>
 
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Você define <code>def __hash__(self): return 1</code> para uma classe que também tem um <code>__eq__</code> correto. O que acontece com um <code>set</code> de 100 mil desses objetos?</p>
+<ol><li data-opt="a">Funciona corretamente, porém lento: todos colidem e cada operação vira O(n)</li><li data-opt="b">Levanta <code>TypeError</code>: hash constante é inválido</li><li data-opt="c">Funciona e é até mais rápido</li><li data-opt="d">Perde elementos, pois iguais deixam de ser detectados</li></ol>
+<div class="explain">O contrato só exige que objetos iguais tenham o mesmo hash; um hash constante o cumpre. Mas todas as chaves caem na mesma sequência de sondagem e o custo esperado O(1) degenera para O(n). É também a base de ataques de "hash flooding", que o Python mitiga com hash aleatorizado de strings.</div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">O que acontece com <code>d = {}; d[(1, [2, 3])] = "x"</code>?</p>
+<ol><li data-opt="a">Funciona: tuplas sempre são hashable</li><li data-opt="b"><code>TypeError: unhashable type: 'list'</code>: o hash da tupla depende do hash de seus elementos</li><li data-opt="c">Funciona, mas a lista é copiada</li><li data-opt="d">Funciona, mas só se a lista não mudar depois</li></ol>
+<div class="explain">Uma tupla só é hashable se todos os seus elementos forem. A lista é mutável (seu conteúdo, e portanto sua igualdade, pode mudar), e uma chave que muda de hash ficaria no balde errado e seria "perdida". Imutabilidade (ao menos superficial e estável) é a condição.</div>
+</div>
 <h3>Aplicações que valem reconhecer</h3>
 <ul>
 <li><strong>Contagem e agrupamento</strong>: <code>Counter</code>, <code>defaultdict(list)</code>. Um único passe O(n) substitui um laço aninhado O(n²).</li>
@@ -343,6 +520,12 @@ p in d            # False: procura no slot errado; o item "sumiu" e continua ocu
 <h3>Trade-offs</h3>
 <p>Tabela hash vence quando a pergunta é de <em>igualdade exata</em>. Ela não ordena, não responde "menor chave maior que x" nem "tudo no intervalo [a,b]": para isso, árvore ou array ordenado com busca binária (blocos 4 e 5). Em memória, o dict gasta bem mais que uma lista de pares; para milhões de pequenos registros, dataclasses com <code>slots=True</code>, tuplas nomeadas ou colunas em arrays reduzem muito.</p>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Você grava no banco o <code>hash("usuario@exemplo.com")</code> para localizar o registro depois. Qual o risco?</p>
+<ol><li data-opt="a">Nenhum: o hash de uma string é determinístico</li><li data-opt="b">O hash é sempre negativo e não cabe no banco</li><li data-opt="c">O hash de <code>str</code> é aleatorizado por processo (<code>PYTHONHASHSEED</code>): o valor muda entre execuções</li><li data-opt="d">Strings não têm hash</li></ol>
+<div class="explain">Desde o Python 3.3, o hash de <code>str</code> e <code>bytes</code> usa uma semente aleatória por processo para mitigar ataques de colisão. Serve apenas para dicts e sets dentro daquela execução. Para identidade persistente use <code>hashlib</code> (SHA-256, por exemplo) sobre bytes com codificação definida.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Hash transforma chave em índice; colisões são inevitáveis e resolvidas por encadeamento ou por endereçamento aberto (CPython). O fator de carga mantém o custo esperado constante e a reconstrução é amortizada. O contrato exige que iguais tenham o mesmo hash e que o hash não mude; hash constante ou chave mutada degradam ou perdem dados. Hash de string é aleatorizado por processo: nunca persista <code>hash()</code>.</p>
@@ -361,9 +544,67 @@ BST height, 1000 keys inserted shuffled:    20</code></pre>
 <p class="clock">Resultado determinístico (semente fixa no demo). Mil chaves inseridas em ordem crescente produzem altura 1000; embaralhadas, 20 (o mínimo teórico seria 10; o esperado numa BST aleatória é cerca de 2·ln n ≈ 14 de profundidade média e alturas em torno de 20–25).</p>
 <p>Isso quer dizer que "BST é O(log n)" é verdade só <em>em média, sob inserção aleatória</em>. Dados reais chegam ordenados (ids sequenciais, timestamps), que é o pior caso. A implementação do lab é iterativa de propósito: uma árvore degenerada de 100 mil nós custa tempo, mas com recursão estouraria o limite de profundidade do Python (bloco 7).</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: a altura da BST depende da ordem de inserção</span>
+<p>Insira os mesmos valores em ordens diferentes. A altura é o pior caso de uma busca.</p>
+<div class="ix-row"><button type="button" class="ix-btn primary" data-o="asc">Crescente 1..15</button><button type="button" class="ix-btn primary" data-o="mix">Ordem equilibrada</button><button type="button" class="ix-btn primary" data-o="rnd">Embaralhado (novo sorteio)</button></div>
+<div class="ix-row"><label for="f03-bt-in">Sua ordem:</label><input type="text" id="f03-bt-in" value="8 3 10 1 6 14 4 7 13" style="min-width:24ch"><button type="button" class="ix-btn" id="f03-bt-go">Inserir</button></div>
+<div id="f03-bt-svg"></div><div class="ix-out" id="f03-bt-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var $=function(i){return document.getElementById(i);},host=$("f03-bt-svg"),out=$("f03-bt-out"),inp=$("f03-bt-in");
+function build(vals){
+  var root=null,nodes=[],i;
+  vals.forEach(function(v){
+    var n={v:v,l:null,r:null,d:0};
+    if(!root){root=n;nodes.push(n);return;}
+    var c=root,d=0;
+    while(true){d++;if(v===c.v)return;if(v<c.v){if(!c.l){c.l=n;break;}c=c.l;}else{if(!c.r){c.r=n;break;}c=c.r;}}
+    n.d=d;n.p=c;nodes.push(n);
+  });
+  return {root:root,nodes:nodes};
+}
+function draw(vals){
+  var t=build(vals),idx=0,maxd=0,N=t.nodes.length;
+  if(!N){out.textContent="Informe números separados por espaço.";host.innerHTML="";return;}
+  (function walk(n){if(!n)return;walk(n.l);n.x=idx++;walk(n.r);})(t.root);
+  t.nodes.forEach(function(n){if(n.d>maxd)maxd=n.d;});
+  var sx=Math.min(44,620/Math.max(N,1)),sy=40,W=Math.max(N*sx+40,200),H=(maxd+1)*sy+30,s='<svg viewBox="0 0 '+W+' '+H+'" role="img" style="width:100%;height:auto;max-width:'+W+'px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Árvore binária de busca</title>';
+  t.nodes.forEach(function(n){if(n.p)s+='<line x1="'+(n.p.x*sx+20+sx/2)+'" y1="'+(n.p.d*sy+22)+'" x2="'+(n.x*sx+20+sx/2)+'" y2="'+(n.d*sy+22)+'" class="s-line" stroke-width="1.2"/>';});
+  t.nodes.forEach(function(n){s+='<circle cx="'+(n.x*sx+20+sx/2)+'" cy="'+(n.d*sy+22)+'" r="'+Math.min(14,sx/2.1)+'" class="'+(n.d===maxd?'s-soft':'s-box')+'"/><text x="'+(n.x*sx+20+sx/2)+'" y="'+(n.d*sy+26)+'" text-anchor="middle" font-size="'+(sx<26?9:12)+'">'+n.v+'</text>';});
+  host.innerHTML=s+'</svg>';
+  var best=Math.ceil(Math.log2(N+1));
+  out.textContent="nós="+N+"  altura (níveis)="+(maxd+1)+"  altura mínima possível="+best+"\npior caso de busca: "+(maxd+1)+" comparações"+((maxd+1)>=N&&N>3?"  <- árvore degenerou numa lista ligada: O(n)":"");
+}
+function parse(){return inp.value.split(/[\s,]+/).map(Number).filter(function(x){return isFinite(x)&&x===x;}).slice(0,31);}
+document.querySelectorAll('button[data-o]').forEach(function(b){
+  if(!b.closest(".ix").querySelector("#f03-bt-svg"))return;
+  b.addEventListener("click",function(){
+    var o=b.getAttribute("data-o"),a;
+    if(o==="asc")a=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+    else if(o==="mix")a=[8,4,12,2,6,10,14,1,3,5,7,9,11,13,15];
+    else{a=[];for(var i=1;i<=15;i++)a.push(i);for(i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}}
+    inp.value=a.join(" ");draw(a);
+  });
+});
+$("f03-bt-go").addEventListener("click",function(){draw(parse());});
+inp.addEventListener("keydown",function(e){if(e.key==="Enter")draw(parse());});
+draw(parse());
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
 <h3>Balanceamento: o conceito, sem decorar rotações</h3>
 <p>Árvores balanceadas (AVL, rubro-negra, treap, skip list) garantem h = O(log n) mantendo um invariante local e corrigindo-o com <em>rotações</em>, que reorganizam três ponteiros preservando a ordem. AVL: as alturas dos dois filhos diferem em no máximo 1 (busca mais rápida, mais rotações). Rubro-negra: coloração que limita o caminho mais longo a 2x o mais curto (menos rotações na escrita; usada em <code>std::map</code> e no TreeMap do Java). Você não vai implementá-las em trabalho real, mas precisa saber três coisas: (1) elas existem para fechar o pior caso da BST; (2) custam constante e ponteiros; (3) em Python a biblioteca padrão não traz nenhuma: o substituto é <strong>array ordenado + <code>bisect</code></strong> (leitura O(log n), inserção O(n) por <code>memmove</code>, ótimo até centenas de milhares de itens) ou o pacote <code>sortedcontainers</code> (lista de listas, de terceiros) quando há muita escrita.</p>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Você insere os números 1, 2, 3, ..., 1000 nesta ordem, um a um, numa BST simples (sem balanceamento). Qual a altura e o custo de buscar o 1000?</p>
+<ol><li data-opt="a">Cerca de 10 níveis; busca O(log n)</li><li data-opt="b">Cerca de 100 níveis; busca O(√n)</li><li data-opt="c">1000 níveis; busca O(n): a árvore vira uma lista ligada</li><li data-opt="d">500 níveis; busca O(n/2) e, portanto, ainda logarítmica</li></ol>
+<div class="explain">Sem balanceamento a forma depende da ordem de inserção. Entradas já ordenadas (muito comuns na vida real) criam uma "espinha" à direita. O módulo mediu altura 1000 para a entrada ordenada contra 20 para a embaralhada. Árvores balanceadas (AVL, rubro-negra) ou B-trees fecham esse pior caso.</div>
+</div>
 <h3>B-tree: por que bancos de dados não usam árvore binária</h3>
 <p>Um disco (ou SSD) lê em páginas de 4–16 KB; ler 1 byte custa o mesmo que ler a página. Uma árvore binária de 100 milhões de chaves tem altura ≈ 27: 27 leituras de página para uma busca. A B-tree põe <em>centenas de chaves por nó</em>, ajustado ao tamanho da página: com 500 filhos por nó, 100 milhões de chaves cabem em altura 3 ou 4 (500³ = 125 milhões). As duas primeiras camadas ficam em cache de memória, então uma busca custa 1–2 leituras de disco.</p>
 <figure>
@@ -430,6 +671,8 @@ push 9: [1, 3, 8, 5, 9]
 push 2: [1, 3, 2, 5, 9, 8]
 pops: [1, 2, 3, 5, 8, 9]</code></pre>
 
+
+<div class="ix"><span class="ix-title">Diagrama: o heap é uma árvore completa guardada num array</span><svg viewBox="0 0 640 262" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Min-heap como árvore e como array, com as fórmulas de pai e filhos</title><defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><line x1="250" y1="46" x2="130" y2="74" class="s-line" stroke-width="1.3"/><line x1="250" y1="46" x2="370" y2="74" class="s-line" stroke-width="1.3"/><line x1="130" y1="106" x2="70" y2="134" class="s-line" stroke-width="1.3"/><line x1="130" y1="106" x2="190" y2="134" class="s-line" stroke-width="1.3"/><line x1="370" y1="106" x2="310" y2="134" class="s-line" stroke-width="1.3"/><line x1="370" y1="106" x2="430" y2="134" class="s-line" stroke-width="1.3"/><circle cx="250" cy="30" r="17" class="s-soft"/><text x="250" y="35" font-size="14" text-anchor="middle">1</text><text x="274" y="18" font-size="10" text-anchor="start">i=0</text><circle cx="130" cy="90" r="17" class="s-box"/><text x="130" y="95" font-size="14" text-anchor="middle">3</text><text x="154" y="78" font-size="10" text-anchor="start">i=1</text><circle cx="370" cy="90" r="17" class="s-box"/><text x="370" y="95" font-size="14" text-anchor="middle">2</text><text x="394" y="78" font-size="10" text-anchor="start">i=2</text><circle cx="70" cy="150" r="17" class="s-box"/><text x="70" y="155" font-size="14" text-anchor="middle">7</text><text x="94" y="138" font-size="10" text-anchor="start">i=3</text><circle cx="190" cy="150" r="17" class="s-box"/><text x="190" y="155" font-size="14" text-anchor="middle">4</text><text x="214" y="138" font-size="10" text-anchor="start">i=4</text><circle cx="310" cy="150" r="17" class="s-box"/><text x="310" y="155" font-size="14" text-anchor="middle">5</text><text x="334" y="138" font-size="10" text-anchor="start">i=5</text><circle cx="430" cy="150" r="17" class="s-box"/><text x="430" y="155" font-size="14" text-anchor="middle">6</text><text x="454" y="138" font-size="10" text-anchor="start">i=6</text><rect x="40" y="205" width="56" height="34" rx="4" class="s-soft" /><text x="68" y="227" font-size="14" text-anchor="middle">1</text><text x="68" y="254" font-size="11" text-anchor="middle">[0]</text><rect x="100" y="205" width="56" height="34" rx="4" class="s-box" /><text x="128" y="227" font-size="14" text-anchor="middle">3</text><text x="128" y="254" font-size="11" text-anchor="middle">[1]</text><rect x="160" y="205" width="56" height="34" rx="4" class="s-box" /><text x="188" y="227" font-size="14" text-anchor="middle">2</text><text x="188" y="254" font-size="11" text-anchor="middle">[2]</text><rect x="220" y="205" width="56" height="34" rx="4" class="s-box" /><text x="248" y="227" font-size="14" text-anchor="middle">7</text><text x="248" y="254" font-size="11" text-anchor="middle">[3]</text><rect x="280" y="205" width="56" height="34" rx="4" class="s-box" /><text x="308" y="227" font-size="14" text-anchor="middle">4</text><text x="308" y="254" font-size="11" text-anchor="middle">[4]</text><rect x="340" y="205" width="56" height="34" rx="4" class="s-box" /><text x="368" y="227" font-size="14" text-anchor="middle">5</text><text x="368" y="254" font-size="11" text-anchor="middle">[5]</text><rect x="400" y="205" width="56" height="34" rx="4" class="s-box" /><text x="428" y="227" font-size="14" text-anchor="middle">6</text><text x="428" y="254" font-size="11" text-anchor="middle">[6]</text><text x="470" y="190" font-size="12" text-anchor="start">pai(i) = (i-1)//2</text><text x="470" y="208" font-size="12" text-anchor="start">filhos: 2i+1 e 2i+2</text><text x="470" y="226" font-size="12" text-anchor="start">raiz = o menor (min-heap)</text></svg></div>
 <h3>Exemplo trabalhado: top-k em fluxo</h3>
 <p>"Os k maiores de n itens" tem três soluções com custos distintos: ordenar tudo (O(n log n) tempo, O(n) memória), selecionar com quickselect (O(n) esperado, destrói a ordem, exige tudo em memória), ou um <strong>min-heap de tamanho k</strong> (O(n log k) tempo, O(k) memória, uma passada, funciona em fluxo). O heap guarda os k melhores vistos; a raiz é o <em>pior dos melhores</em>, o item a ser batido:</p>
 <pre><code>def top_k(items, k):
@@ -446,6 +689,12 @@ pops: [1, 2, 3, 5, 8, 9]</code></pre>
 <pre><code>top_k([31, 4, 15, 92, 6, 53, 58, 97, 93, 23], 3)  ->  [97, 93, 92]</code></pre>
 <p>Em produção use <code>heapq.nlargest(k, it)</code> (é o mesmo algoritmo, em C, e <code>heapq.merge</code> para fundir listas ordenadas). Duas ressalvas de <code>heapq</code>: é só um min-heap (para max-heap, negue as chaves ou empacote <code>(-prioridade, contador, item)</code>); e itens com a mesma prioridade são comparados pelo elemento seguinte da tupla, que pode nem ser comparável. O <em>contador de desempate</em> evita o <code>TypeError</code> e dá ordem FIFO entre iguais. O heap do lab foi escrito para falhar com segurança: toda operação <em>lê</em> o destino do elemento primeiro (única parte que chama <code>&lt;</code>, que pode lançar exceção) e só então <em>escreve</em>, de modo que uma comparação que falha deixa o heap intacto (<code>test_heap_bst_trie.py</code> injeta o erro).</p>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Para manter os 3 MAIORES valores de um fluxo infinito com memória O(k), que heap usar e o que comparar a cada novo valor?</p>
+<ol><li data-opt="a">Um max-heap de tamanho 3; descarta o valor novo se for menor que a raiz</li><li data-opt="b">Um min-heap de tamanho 3; se o valor novo for MAIOR que a raiz (o menor dos 3), troque a raiz por ele</li><li data-opt="c">Um heap com todos os valores já vistos</li><li data-opt="d">Uma lista ordenada reordenada a cada valor</li></ol>
+<div class="explain">A raiz do min-heap é o "menor dos k maiores": o primeiro candidato a sair. Cada valor novo custa O(log k). Total O(n log k) e O(k) de memória, contra O(n log n) e O(n) de ordenar tudo. O erro típico é usar max-heap, que deixa o elemento que você quer descartar enterrado dentro.</div>
+</div>
 <h3>Trie: árvore sobre o prefixo</h3>
 <p>Uma trie guarda strings pelo caminho de caracteres: cada nó tem filhos indexados por caractere e uma marca de "fim de palavra". Inserir ou buscar uma palavra de comprimento L custa O(L), independentemente de quantas palavras existem; listar tudo com um prefixo desce o prefixo (O(L)) e enumera a subárvore. Aplicações: autocompletar, roteamento por prefixo (rotas de URL, tabelas de IP com a variante Patricia), dicionários de tokenização (a divisão de texto em tokens por maior prefixo conhecido, em tokenizadores como WordPiece, usa estruturas desse tipo). O preço é memória: um nó por caractere, cada um com um dict; árvores radix comprimem cadeias sem ramificação.</p>
 <pre><code>t = Trie()
@@ -510,6 +759,12 @@ t.with_prefix("cas")   # ['casa', 'caso']</code></pre>
 <p class="clock">Medido nesta máquina, entrada já ordenada. Dobrar n multiplica o pivô-último por ≈4,1 (quadrático) e o aleatório por ≈2,1. O <code>sorted</code> aparece com 0,00–0,01 ms: ele detecta que a entrada é uma única sequência crescente e termina em O(n). Com 100 mil itens ordenados, o pivô-último faria 10⁴ vezes mais trabalho que com 1.000.</p>
 <p>Dois detalhes do lab valem como boa prática. (1) <strong>Partição em três vias</strong> (menor/igual/maior, o "problema da bandeira holandesa"): uma lista com muitas chaves repetidas deixa de ser quadrática. (2) <strong>Pilha explícita que adia o lado maior</strong>: a pilha nunca passa de O(log n) intervalos, então nem o pior caso de tempo estoura a recursão do Python nem a memória.</p>
 
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Um quicksort que sempre escolhe o primeiro elemento como pivô recebe uma lista já ordenada com 4.000 itens. O que esperar?</p>
+<ol><li data-opt="a">Tempo quadrático: cada partição separa só 1 elemento (o módulo mediu 268 ms contra 2,8 ms)</li><li data-opt="b">O melhor caso, O(n log n)</li><li data-opt="c">Tempo linear, pois já está ordenada</li><li data-opt="d">Erro de recursão, mas apenas em C</li></ol>
+<div class="explain">Com pivô fixo no extremo e entrada ordenada, uma das partições fica vazia a cada nível: n níveis de custo O(n). Pivô aleatório, mediana de três ou o Timsort do Python (que explora trechos já ordenados, "runs", e roda em O(n) nesse caso) evitam o problema.</div>
+</div>
 <h3>Timsort: o que o Python realmente faz</h3>
 <p>O <code>list.sort</code> usa Timsort (Tim Peters, 2002), um merge sort adaptativo pensado para dados reais, que raramente são aleatórios: costumam ter trechos já ordenados. Ele (1) varre a entrada procurando <em>runs</em>: sequências já crescentes (ou estritamente decrescentes, que ele inverte); (2) estende runs curtos até um tamanho mínimo (<code>minrun</code>, entre 32 e 64) com <em>insertion sort</em> binário, eficiente em pedaços pequenos; (3) funde runs adjacentes seguindo uma política de pilha que mantém as fusões equilibradas (desde o CPython 3.11, a política de <em>powersort</em>); (4) usa <em>galloping</em> na fusão: quando um lado vence várias vezes seguidas, troca a comparação linear por busca exponencial, o que torna a fusão de dados com blocos quase disjuntos sublinear. Resultado: O(n) em entrada ordenada ou quase, Θ(n log n) no pior caso, estável, com até n/2 de memória auxiliar.</p>
 <p>Consequência prática: <strong>reordenar dados "quase ordenados" é barato</strong>, e acrescentar poucos itens a uma lista ordenada e chamar <code>sort()</code> de novo é razoável, melhor do que parece. Também: <code>key=</code> é avaliada uma vez por elemento (decorate-sort-undecorate embutido); <code>reverse=True</code> preserva a estabilidade (não é "ordenar e inverter"); comparar tipos incomparáveis levanta <code>TypeError</code>.</p>
@@ -546,6 +801,50 @@ t.with_prefix("cas")   # ['casa', 'caso']</code></pre>
 <p>Use <code>bisect.bisect_left</code>/<code>bisect_right</code> (em C, com <code>key=</code> desde o 3.10). A tabela do bloco 1 mostra a diferença para a versão em Python do lab: 0,56 µs contra 0,08 µs em 10⁵ itens. Escreva a sua só para aprender, ou quando o predicado não é um array. Em linguagens com inteiros de largura fixa, <code>(lo + hi) // 2</code> pode estourar; escreva <code>lo + (hi - lo) // 2</code>. O erro apareceu na biblioteca padrão do Java durante anos.</p>
 </div>
 
+
+<div class="ix"><span class="ix-title">Simulador: busca binária com invariante</span>
+<p>Intervalo semiaberto <code>[lo, hi)</code>: tudo antes de <code>lo</code> é menor que o alvo; tudo a partir de <code>hi</code> é maior ou igual. Cada passo descarta metade.</p>
+<div class="ix-row"><label for="f03-bs-x">Alvo:</label><input type="number" id="f03-bs-x" value="47" style="max-width:9ch"><button type="button" class="ix-btn primary" id="f03-bs-step">Próximo passo</button><button type="button" class="ix-btn" id="f03-bs-run">Rodar até o fim</button><button type="button" class="ix-btn" id="f03-bs-rst">Reiniciar</button></div>
+<div id="f03-bs-cells" style="display:flex;flex-wrap:wrap;gap:3px;margin:8px 0"></div><div class="ix-out" id="f03-bs-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var $=function(i){return document.getElementById(i);};
+var A=[3,8,12,19,23,27,31,36,42,47,51,58,63,66,72,79,85,91,95,99],lo,hi,steps,done,mid,msg;
+var cells=$("f03-bs-cells"),out=$("f03-bs-out"),xi=$("f03-bs-x");
+function reset(){lo=0;hi=A.length;steps=0;done=false;mid=-1;msg="Intervalo inicial [0, "+A.length+"). Clique em Próximo passo.";draw();}
+function draw(){
+  var h="";
+  A.forEach(function(v,i){
+    var inside=i>=lo&&i<hi,isMid=i===mid;
+    h+='<span style="min-width:34px;text-align:center;padding:5px 3px;border-radius:6px;border:2px solid '+(isMid?'var(--accent)':'var(--line)')+';background:'+(inside?'var(--accent-soft)':'var(--surface-2)')+';opacity:'+(inside||done?1:.4)+';font-family:var(--mono);font-size:.85rem">'+v+'<div class="meta" style="font-size:.65rem">'+i+(i===lo?" lo":"")+(i===hi?" hi":"")+(isMid?" mid":"")+'</div></span>';
+  });
+  if(hi===A.length)h+='<span class="meta" style="align-self:center">hi=20</span>';
+  cells.innerHTML=h;out.textContent=msg+"\nlo="+lo+"  hi="+hi+"  comparações="+steps+"  (limite: "+Math.ceil(Math.log2(A.length+1))+")";
+}
+function step(){
+  if(done)return;var x=+xi.value;
+  if(lo>=hi){done=true;mid=-1;msg=(A[lo]===x?"Achou "+x+" na posição "+lo+".":"Fim: "+x+" não está na lista; posição de inserção = "+lo+" (igual a bisect_left).");draw();return;}
+  mid=(lo+hi)>>1;steps++;
+  if(A[mid]<x){msg="A["+mid+"]="+A[mid]+" < "+x+": descarta a metade esquerda, lo = mid + 1 = "+(mid+1);lo=mid+1;}
+  else{msg="A["+mid+"]="+A[mid]+" >= "+x+": descarta a metade direita, hi = mid = "+mid;hi=mid;}
+  draw();
+}
+$("f03-bs-step").addEventListener("click",step);
+$("f03-bs-run").addEventListener("click",function(){var g=0;while(!done&&g++<100)step();});
+$("f03-bs-rst").addEventListener("click",reset);xi.addEventListener("change",reset);
+reset();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Em <code>while lo &lt; hi: mid = (lo + hi) // 2; if a[mid] &lt; x: lo = mid else: hi = mid</code>, onde está o erro?</p>
+<ol><li data-opt="a">Nenhum: o código está correto</li><li data-opt="b">O correto seria <code>mid = lo + hi</code></li><li data-opt="c">O laço deveria ser <code>while lo &lt;= hi</code></li><li data-opt="d"><code>lo = mid</code> pode não avançar (com <code>hi = lo + 1</code> e <code>a[lo] &lt; x</code>): laço infinito. O invariante pede <code>lo = mid + 1</code></li></ol>
+<div class="explain">O invariante do intervalo <code>[lo, hi)</code> diz que <code>a[mid]</code> já foi descartado quando é menor que <em>x</em>; logo o novo <code>lo</code> é <code>mid + 1</code>. Sem isso, com dois elementos o <code>mid</code> é igual a <code>lo</code> e o estado não muda. Escreva o invariante primeiro e deduza as atualizações.</div>
+</div>
 <h3>Dois ponteiros</h3>
 <p>Em dados <em>ordenados</em>, dois índices que andam um em direção ao outro eliminam um laço aninhado. O raciocínio é sempre "este elemento não pode fazer parte de nenhuma resposta, descarte-o". Em <code>two_sum_sorted</code>: se <code>a[i] + a[j] &lt; alvo</code>, então <code>a[i]</code> é pequeno demais até com o maior parceiro restante; ande <code>i</code>. Se for maior, <code>a[j]</code> é grande demais até com o menor parceiro; recue <code>j</code>. Cada passo descarta um elemento: O(n) tempo, O(1) espaço, contra O(n²) da força bruta. Se a entrada <em>não</em> está ordenada, ordenar custa O(n log n); a alternativa é o dicionário de valores vistos (O(n) tempo, O(n) espaço, <code>two_sum_hash</code>): a escolha é um trade-off tempo × espaço × se você pode alterar a entrada. Outros usos: remover duplicatas in-loco, particionar (a bandeira holandesa do quicksort), mesclar duas listas ordenadas, verificar palíndromo, o "maior recipiente de água".</p>
 
@@ -572,6 +871,24 @@ for i in range(k, len(a)):
 <p><strong>Ordenar com comparador inconsistente.</strong> Uma função <code>key</code> que devolve tipos mistos (<code>None</code> e <code>int</code>), ou um <code>__lt__</code> que não é uma ordem total (<code>NaN</code> em floats: toda comparação com NaN é falsa), não levanta erro e produz uma ordem sem sentido, que pode variar com o tamanho da entrada. Antes de ordenar dados externos, normalize: remova ou isole NaN, e converta chaves para um tipo único.</p>
 </div>
 
+
+<div class="tabs"><section data-tab="Dois ponteiros"><pre><code>def par_com_soma(a, alvo):          # a ordenado
+    i, j = 0, len(a) - 1
+    while i &lt; j:
+        s = a[i] + a[j]
+        if s == alvo:
+            return i, j
+        if s &lt; alvo:
+            i += 1                      # precisa de soma maior
+        else:
+            j -= 1                      # precisa de soma menor
+    return None</code></pre><p>O(n): cada ponteiro só anda em uma direção.</p></section><section data-tab="Janela deslizante"><pre><code>def maior_soma_k(a, k):
+    s = sum(a[:k])
+    melhor = s
+    for i in range(k, len(a)):
+        s += a[i] - a[i - k]            # entra a[i], sai a[i-k]
+        melhor = max(melhor, s)
+    return melhor</code></pre><p>O(n) em vez de O(n·k): a soma é atualizada em O(1) por passo.</p></section></div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Merge sort é Θ(n log n) e estável pela regra do empate à esquerda; quicksort é rápido em média, mas pivô fixo em entrada ordenada é quadrático (medido: 268 ms contra 2,8 ms em 4.000 itens); Timsort aproveita runs e é O(n) em dados ordenados. Por comparação, n log n é o piso. Busca binária se escreve a partir do invariante; vale para respostas monótonas, não só arrays. Dois ponteiros e janela deslizante derivam seu O(n) de nunca recuar os ponteiros.</p>
@@ -594,6 +911,8 @@ for i in range(k, len(a)):
 </table>
 <p>Para um milhão de nós com cinco arestas cada, a lista de adjacência guarda cinco milhões de entradas; a matriz guardaria um trilhão de células. Em Python, <code>dict</code> de listas é quase sempre a resposta (o <code>Graph</code> do lab é exatamente isso); para grafos grandes numéricos, matrizes esparsas (SciPy CSR) ou bibliotecas (NetworkX para prototipar; igraph, graph-tool ou um banco de grafos para escala).</p>
 
+
+<div class="tabs"><section data-tab="Lista de adjacência"><ul><li>Espaço O(V + E)</li><li>Vizinhos de <em>u</em>: O(grau de u)</li><li>Existe a aresta (u, v)? O(grau de u)</li><li>Padrão para grafos esparsos (a maioria dos casos reais)</li></ul></section><section data-tab="Matriz de adjacência"><ul><li>Espaço O(V²)</li><li>Existe a aresta (u, v)? O(1)</li><li>Vizinhos de <em>u</em>: O(V), varre uma linha inteira</li><li>Vale para grafos densos ou V pequeno</li></ul></section><section data-tab="Lista de arestas"><ul><li>Espaço O(E)</li><li>Fácil de ordenar por peso (ex.: Kruskal)</li><li>Vizinhos de <em>u</em>: O(E), exige varrer tudo</li></ul></section></div>
 <h3>BFS: busca em largura</h3>
 <p>Uma fila, e uma regra: visitar primeiro tudo a distância 1, depois 2, depois 3. Custo O(V + E). A propriedade que importa: <strong>em grafo não ponderado, a BFS descobre cada nó pelo caminho com menos arestas</strong>; guardando o predecessor de cada nó, reconstrói-se o caminho mais curto. O erro clássico é marcar o nó como visitado ao <em>retirar</em> da fila e não ao <em>inserir</em>: o mesmo nó entra várias vezes e, em grafos densos, a fila cresce e o custo explode.</p>
 <pre><code>def shortest_path_unweighted(g, start, goal):
@@ -609,6 +928,21 @@ for i in range(k, len(a)):
                 queue.append(nxt)</code></pre>
 <p>Aplicações: menor número de saltos, distância em redes sociais, "quantos cliques até a página", propagação por camadas, resolução de labirintos, BFS multi-origem (enfileire várias origens de uma vez: distância ao ponto de interesse mais próximo).</p>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: BFS a partir de A (marca ao enfileirar)</span>
+<div class="frame" data-caption="1. Marca A (d=0) e o enfileira"><svg viewBox="0 0 640 200" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>1. Marca A (d=0) e o enfileira</title><defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><line x1="60" y1="100" x2="170" y2="40" class="s-line" stroke-width="1.4"/><line x1="60" y1="100" x2="170" y2="160" class="s-line" stroke-width="1.4"/><line x1="170" y1="40" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="160" class="s-line" stroke-width="1.4"/><line x1="300" y1="40" x2="420" y2="40" class="s-line" stroke-width="1.4"/><circle cx="60" cy="100" r="20" class="s-soft"/><text x="60" y="105" font-size="14" text-anchor="middle" font-weight="700">A</text><text x="60" y="136" font-size="11" text-anchor="middle">d=0</text><circle cx="170" cy="40" r="20" class="s-box"/><text x="170" y="45" font-size="14" text-anchor="middle" font-weight="700">B</text><circle cx="170" cy="160" r="20" class="s-box"/><text x="170" y="165" font-size="14" text-anchor="middle" font-weight="700">C</text><circle cx="300" cy="40" r="20" class="s-box"/><text x="300" y="45" font-size="14" text-anchor="middle" font-weight="700">D</text><circle cx="300" cy="160" r="20" class="s-box"/><text x="300" y="165" font-size="14" text-anchor="middle" font-weight="700">E</text><circle cx="420" cy="40" r="20" class="s-box"/><text x="420" y="45" font-size="14" text-anchor="middle" font-weight="700">F</text><rect x="480" y="20" width="150" height="64" rx="8" class="s-box" /><text x="555" y="40" font-size="12" text-anchor="middle" font-weight="700">fila (FIFO)</text><text x="555" y="66" font-size="14" text-anchor="middle">[ A ]</text><rect x="480" y="100" width="150" height="64" rx="8" class="s-box" /><text x="555" y="120" font-size="12" text-anchor="middle" font-weight="700">atual</text><text x="555" y="146" font-size="14" text-anchor="middle">-</text></svg></div>
+<div class="frame" data-caption="2. Tira A: marca e enfileira B e C (d=1)"><svg viewBox="0 0 640 200" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>2. Tira A: marca e enfileira B e C (d=1)</title><defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><line x1="60" y1="100" x2="170" y2="40" class="s-line" stroke-width="1.4"/><line x1="60" y1="100" x2="170" y2="160" class="s-line" stroke-width="1.4"/><line x1="170" y1="40" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="160" class="s-line" stroke-width="1.4"/><line x1="300" y1="40" x2="420" y2="40" class="s-line" stroke-width="1.4"/><circle cx="60" cy="100" r="20" class="s-soft" stroke-width="3"/><text x="60" y="105" font-size="14" text-anchor="middle" font-weight="700">A</text><text x="60" y="136" font-size="11" text-anchor="middle">d=0</text><circle cx="170" cy="40" r="20" class="s-soft"/><text x="170" y="45" font-size="14" text-anchor="middle" font-weight="700">B</text><text x="170" y="76" font-size="11" text-anchor="middle">d=1</text><circle cx="170" cy="160" r="20" class="s-soft"/><text x="170" y="165" font-size="14" text-anchor="middle" font-weight="700">C</text><text x="170" y="196" font-size="11" text-anchor="middle">d=1</text><circle cx="300" cy="40" r="20" class="s-box"/><text x="300" y="45" font-size="14" text-anchor="middle" font-weight="700">D</text><circle cx="300" cy="160" r="20" class="s-box"/><text x="300" y="165" font-size="14" text-anchor="middle" font-weight="700">E</text><circle cx="420" cy="40" r="20" class="s-box"/><text x="420" y="45" font-size="14" text-anchor="middle" font-weight="700">F</text><rect x="480" y="20" width="150" height="64" rx="8" class="s-box" /><text x="555" y="40" font-size="12" text-anchor="middle" font-weight="700">fila (FIFO)</text><text x="555" y="66" font-size="14" text-anchor="middle">[ B C ]</text><rect x="480" y="100" width="150" height="64" rx="8" class="s-box" /><text x="555" y="120" font-size="12" text-anchor="middle" font-weight="700">atual</text><text x="555" y="146" font-size="14" text-anchor="middle">A</text></svg></div>
+<div class="frame" data-caption="3. Tira B: o vizinho D é novo, d=2"><svg viewBox="0 0 640 200" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>3. Tira B: o vizinho D é novo, d=2</title><defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><line x1="60" y1="100" x2="170" y2="40" class="s-line" stroke-width="1.4"/><line x1="60" y1="100" x2="170" y2="160" class="s-line" stroke-width="1.4"/><line x1="170" y1="40" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="160" class="s-line" stroke-width="1.4"/><line x1="300" y1="40" x2="420" y2="40" class="s-line" stroke-width="1.4"/><circle cx="60" cy="100" r="20" class="s-soft"/><text x="60" y="105" font-size="14" text-anchor="middle" font-weight="700">A</text><text x="60" y="136" font-size="11" text-anchor="middle">d=0</text><circle cx="170" cy="40" r="20" class="s-soft" stroke-width="3"/><text x="170" y="45" font-size="14" text-anchor="middle" font-weight="700">B</text><text x="170" y="76" font-size="11" text-anchor="middle">d=1</text><circle cx="170" cy="160" r="20" class="s-soft"/><text x="170" y="165" font-size="14" text-anchor="middle" font-weight="700">C</text><text x="170" y="196" font-size="11" text-anchor="middle">d=1</text><circle cx="300" cy="40" r="20" class="s-soft"/><text x="300" y="45" font-size="14" text-anchor="middle" font-weight="700">D</text><text x="300" y="76" font-size="11" text-anchor="middle">d=2</text><circle cx="300" cy="160" r="20" class="s-box"/><text x="300" y="165" font-size="14" text-anchor="middle" font-weight="700">E</text><circle cx="420" cy="40" r="20" class="s-box"/><text x="420" y="45" font-size="14" text-anchor="middle" font-weight="700">F</text><rect x="480" y="20" width="150" height="64" rx="8" class="s-box" /><text x="555" y="40" font-size="12" text-anchor="middle" font-weight="700">fila (FIFO)</text><text x="555" y="66" font-size="14" text-anchor="middle">[ C D ]</text><rect x="480" y="100" width="150" height="64" rx="8" class="s-box" /><text x="555" y="120" font-size="12" text-anchor="middle" font-weight="700">atual</text><text x="555" y="146" font-size="14" text-anchor="middle">B</text></svg></div>
+<div class="frame" data-caption="4. Tira C: D já está marcado (não reenfileira); E é novo, d=2"><svg viewBox="0 0 640 200" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>4. Tira C: D já está marcado (não reenfileira); E é novo, d=2</title><defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><line x1="60" y1="100" x2="170" y2="40" class="s-line" stroke-width="1.4"/><line x1="60" y1="100" x2="170" y2="160" class="s-line" stroke-width="1.4"/><line x1="170" y1="40" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="160" class="s-line" stroke-width="1.4"/><line x1="300" y1="40" x2="420" y2="40" class="s-line" stroke-width="1.4"/><circle cx="60" cy="100" r="20" class="s-soft"/><text x="60" y="105" font-size="14" text-anchor="middle" font-weight="700">A</text><text x="60" y="136" font-size="11" text-anchor="middle">d=0</text><circle cx="170" cy="40" r="20" class="s-soft"/><text x="170" y="45" font-size="14" text-anchor="middle" font-weight="700">B</text><text x="170" y="76" font-size="11" text-anchor="middle">d=1</text><circle cx="170" cy="160" r="20" class="s-soft" stroke-width="3"/><text x="170" y="165" font-size="14" text-anchor="middle" font-weight="700">C</text><text x="170" y="196" font-size="11" text-anchor="middle">d=1</text><circle cx="300" cy="40" r="20" class="s-soft"/><text x="300" y="45" font-size="14" text-anchor="middle" font-weight="700">D</text><text x="300" y="76" font-size="11" text-anchor="middle">d=2</text><circle cx="300" cy="160" r="20" class="s-soft"/><text x="300" y="165" font-size="14" text-anchor="middle" font-weight="700">E</text><text x="300" y="196" font-size="11" text-anchor="middle">d=2</text><circle cx="420" cy="40" r="20" class="s-box"/><text x="420" y="45" font-size="14" text-anchor="middle" font-weight="700">F</text><rect x="480" y="20" width="150" height="64" rx="8" class="s-box" /><text x="555" y="40" font-size="12" text-anchor="middle" font-weight="700">fila (FIFO)</text><text x="555" y="66" font-size="14" text-anchor="middle">[ D E ]</text><rect x="480" y="100" width="150" height="64" rx="8" class="s-box" /><text x="555" y="120" font-size="12" text-anchor="middle" font-weight="700">atual</text><text x="555" y="146" font-size="14" text-anchor="middle">C</text></svg></div>
+<div class="frame" data-caption="5. Tira D: F é novo, d=3"><svg viewBox="0 0 640 200" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>5. Tira D: F é novo, d=3</title><defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><line x1="60" y1="100" x2="170" y2="40" class="s-line" stroke-width="1.4"/><line x1="60" y1="100" x2="170" y2="160" class="s-line" stroke-width="1.4"/><line x1="170" y1="40" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="160" class="s-line" stroke-width="1.4"/><line x1="300" y1="40" x2="420" y2="40" class="s-line" stroke-width="1.4"/><circle cx="60" cy="100" r="20" class="s-soft"/><text x="60" y="105" font-size="14" text-anchor="middle" font-weight="700">A</text><text x="60" y="136" font-size="11" text-anchor="middle">d=0</text><circle cx="170" cy="40" r="20" class="s-soft"/><text x="170" y="45" font-size="14" text-anchor="middle" font-weight="700">B</text><text x="170" y="76" font-size="11" text-anchor="middle">d=1</text><circle cx="170" cy="160" r="20" class="s-soft"/><text x="170" y="165" font-size="14" text-anchor="middle" font-weight="700">C</text><text x="170" y="196" font-size="11" text-anchor="middle">d=1</text><circle cx="300" cy="40" r="20" class="s-soft" stroke-width="3"/><text x="300" y="45" font-size="14" text-anchor="middle" font-weight="700">D</text><text x="300" y="76" font-size="11" text-anchor="middle">d=2</text><circle cx="300" cy="160" r="20" class="s-soft"/><text x="300" y="165" font-size="14" text-anchor="middle" font-weight="700">E</text><text x="300" y="196" font-size="11" text-anchor="middle">d=2</text><circle cx="420" cy="40" r="20" class="s-soft"/><text x="420" y="45" font-size="14" text-anchor="middle" font-weight="700">F</text><text x="420" y="76" font-size="11" text-anchor="middle">d=3</text><rect x="480" y="20" width="150" height="64" rx="8" class="s-box" /><text x="555" y="40" font-size="12" text-anchor="middle" font-weight="700">fila (FIFO)</text><text x="555" y="66" font-size="14" text-anchor="middle">[ E F ]</text><rect x="480" y="100" width="150" height="64" rx="8" class="s-box" /><text x="555" y="120" font-size="12" text-anchor="middle" font-weight="700">atual</text><text x="555" y="146" font-size="14" text-anchor="middle">D</text></svg></div>
+<div class="frame" data-caption="6. Esvazia a fila: d é o menor número de arestas até cada nó"><svg viewBox="0 0 640 200" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>6. Esvazia a fila: d é o menor número de arestas até cada nó</title><defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><line x1="60" y1="100" x2="170" y2="40" class="s-line" stroke-width="1.4"/><line x1="60" y1="100" x2="170" y2="160" class="s-line" stroke-width="1.4"/><line x1="170" y1="40" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="40" class="s-line" stroke-width="1.4"/><line x1="170" y1="160" x2="300" y2="160" class="s-line" stroke-width="1.4"/><line x1="300" y1="40" x2="420" y2="40" class="s-line" stroke-width="1.4"/><circle cx="60" cy="100" r="20" class="s-soft"/><text x="60" y="105" font-size="14" text-anchor="middle" font-weight="700">A</text><text x="60" y="136" font-size="11" text-anchor="middle">d=0</text><circle cx="170" cy="40" r="20" class="s-soft"/><text x="170" y="45" font-size="14" text-anchor="middle" font-weight="700">B</text><text x="170" y="76" font-size="11" text-anchor="middle">d=1</text><circle cx="170" cy="160" r="20" class="s-soft"/><text x="170" y="165" font-size="14" text-anchor="middle" font-weight="700">C</text><text x="170" y="196" font-size="11" text-anchor="middle">d=1</text><circle cx="300" cy="40" r="20" class="s-soft"/><text x="300" y="45" font-size="14" text-anchor="middle" font-weight="700">D</text><text x="300" y="76" font-size="11" text-anchor="middle">d=2</text><circle cx="300" cy="160" r="20" class="s-soft"/><text x="300" y="165" font-size="14" text-anchor="middle" font-weight="700">E</text><text x="300" y="196" font-size="11" text-anchor="middle">d=2</text><circle cx="420" cy="40" r="20" class="s-soft"/><text x="420" y="45" font-size="14" text-anchor="middle" font-weight="700">F</text><text x="420" y="76" font-size="11" text-anchor="middle">d=3</text><rect x="480" y="20" width="150" height="64" rx="8" class="s-box" /><text x="555" y="40" font-size="12" text-anchor="middle" font-weight="700">fila (FIFO)</text><text x="555" y="66" font-size="14" text-anchor="middle">[  ]</text><rect x="480" y="100" width="150" height="64" rx="8" class="s-box" /><text x="555" y="120" font-size="12" text-anchor="middle" font-weight="700">atual</text><text x="555" y="146" font-size="14" text-anchor="middle">-</text></svg></div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Na BFS, por que se marca o nó como visitado ao ENFILEIRAR, e não só ao desenfileirar?</p>
+<ol><li data-opt="a">Para não enfileirar o mesmo nó várias vezes (dois vizinhos podem descobri-lo antes de ele sair da fila)</li><li data-opt="b">Porque a fila é LIFO</li><li data-opt="c">Porque marcar depois é inválido em Python</li><li data-opt="d">Só por convenção: o resultado e o custo são idênticos</li></ol>
+<div class="explain">Se a marca vier só na saída, um nó alcançável por dois caminhos curtos entra duas vezes na fila e é reprocessado, o que pode explodir o custo e atrapalhar as distâncias. Marcar ao enfileirar garante que cada nó entra uma vez: O(V + E).</div>
+</div>
 <h3>DFS: busca em profundidade</h3>
 <p>Uma pilha (explícita, ou a pilha de chamadas): siga um caminho até o fim, volte, tente o próximo. Também O(V + E). A DFS não dá caminhos mais curtos, mas dá <em>estrutura</em>: tempos de entrada e saída de cada nó respondem a perguntas sobre ciclos, componentes conexos, pontes e articulações, e a ordem de saída, invertida, é uma ordenação topológica. A versão recursiva é a mais legível e a mais perigosa em Python: a profundidade da recursão é o comprimento do maior caminho, e o limite padrão é 1000 chamadas. O lab traz as duas versões, e o teste que mostra a recursiva estourando num grafo-caminho de milhares de nós. Em produção, DFS iterativa com pilha explícita:</p>
 <pre><code>stack = [start]; seen = set(); order = []
@@ -637,6 +971,12 @@ distances from A: {'A': 0.0, 'B': 3.0, 'C': 2.0, 'D': 8.0}
 path A -> D: ['A', 'C', 'B', 'D']</code></pre>
 <p>A aresta direta A–B custa 4, mas A→C→B custa 2 + 1 = 3: a BFS (menos arestas) escolheria o caminho errado. O lab também rejeita pesos negativos com <code>ValueError</code>: falhar alto é melhor que devolver um número plausível e errado.</p>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um grafo de rotas tem uma aresta de peso negativo (um "desconto"). O que acontece com o Dijkstra?</p>
+<ol><li data-opt="a">Funciona normalmente, só um pouco mais lento</li><li data-opt="b">Funciona se o grafo for um DAG</li><li data-opt="c">Pode devolver caminhos errados: ele assume que uma distância finalizada não melhora; para pesos negativos use Bellman-Ford</li><li data-opt="d">Entra em recursão infinita sempre</li></ol>
+<div class="explain">Dijkstra é guloso: ao tirar o nó de menor distância do heap, declara-a definitiva. Isso só vale se nenhuma aresta futura puder reduzi-la, ou seja, pesos não negativos. Com negativos use Bellman-Ford (O(V·E)), que também detecta ciclos negativos.</div>
+</div>
 <h3>Aplicações e escolha do algoritmo</h3>
 <table>
 <thead><tr><th>Pergunta</th><th>Algoritmo</th><th>Custo</th></tr></thead>
@@ -675,6 +1015,12 @@ depth reached by a trivial function (varies by interpreter state): 994
 RecursionError: maximum recursion depth exceeded</code></pre>
 <p>A profundidade atingível (994) é menor que 1000 porque o interpretador e as chamadas anteriores já ocupam quadros. Três saídas, em ordem de preferência: (1) <strong>transformar em laço com pilha explícita</strong> (como a DFS iterativa do bloco 6; a pilha vive no heap do processo e só é limitada pela memória); (2) <strong>reformular de baixo para cima</strong> (programação dinâmica iterativa, abaixo); (3) aumentar o limite com <code>sys.setrecursionlimit</code>, que é um paliativo: troca <code>RecursionError</code> limpo por consumo de memória e, em chamadas que passam por C (<code>__eq__</code> recursivo, <code>repr</code>, <code>json</code>), por uma falha do processo. Em dados de tamanho controlado por terceiros, é uma negação de serviço pronta: um JSON profundamente aninhado derruba o parser recursivo.</p>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Em CPython padrão, <code>def soma(n): return n + soma(n - 1) if n else 0</code> e a chamada <code>soma(5000)</code>. O que ocorre?</p>
+<ol><li data-opt="a">Devolve 12502500 normalmente</li><li data-opt="b"><code>RecursionError</code>: o limite padrão é cerca de 1000 quadros; converta em laço (ou pilha explícita)</li><li data-opt="c">Devolve 0</li><li data-opt="d">Trava o computador por falta de memória no heap</li></ol>
+<div class="explain">Cada chamada ocupa um quadro de pilha e o Python limita a profundidade (padrão 1000) para proteger o interpretador. Aumentar <code>sys.setrecursionlimit</code> arrisca estourar a pilha de C. A correção robusta é transformar em iteração (acumulador) ou usar uma pilha explícita, e o Python não faz otimização de chamada de cauda.</div>
+</div>
 <h3>Divisão e conquista</h3>
 <p>Divida em subproblemas <em>independentes</em> do mesmo tipo, resolva cada um, combine. O custo vem da recorrência <code>T(n) = a·T(n/b) + f(n)</code>, e o Teorema Mestre compara f(n) com n^(log_b a): se a combinação domina, T = Θ(f); se as folhas dominam, T = Θ(n^(log_b a)); se empatam, multiplica-se por log n. Casos que você reconhece sem fazer conta:</p>
 <table>
@@ -722,6 +1068,28 @@ fast_power(7, 2026, 1000) = 649 | pow: 649</code></pre>
 <pre><code>edit_distance('kitten', 'sitting') = 3</code></pre>
 <p>Tempo O(m·n), memória O(min(m, n)). A versão top-down com <code>@cache</code> é mais curta e igualmente correta (<code>edit_distance_memo</code> no lab), mas recorre até <code>len(a)+len(b)</code> níveis. Medido: duas strings de 400 caracteres passam (54 ms); de 600, a versão top-down levanta <code>RecursionError</code>, enquanto a bottom-up resolve 1000 × 1000 em 74 ms. Esse é o critério prático: <strong>top-down para escrever e verificar rápido; bottom-up quando o tamanho pode exceder a pilha ou você quer reduzir a memória</strong>. Usos reais: diff de texto, correção ortográfica, alinhamento de sequências (genômica), métricas de avaliação de transcrição (WER), mochila para escolher o que cabe no orçamento de contexto.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: por que a programação dinâmica vale a pena</span>
+<p>Fibonacci recursivo ingênuo recalcula os mesmos subproblemas; com memorização, cada estado é calculado uma vez.</p>
+<div class="ix-row"><label for="f03-fb-n">n = <strong id="f03-fb-nv">30</strong></label><input type="range" id="f03-fb-n" min="1" max="45" value="30" aria-label="n de Fibonacci"></div>
+<div class="ix-out" id="f03-fb-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var sl=document.getElementById("f03-fb-n"),nv=document.getElementById("f03-fb-nv"),out=document.getElementById("f03-fb-out");
+function fib(n){var a=0,b=1,i,t;for(i=0;i<n;i++){t=a+b;a=b;b=t;}return a;}
+function fmtT(s){if(s<1e-3)return "< 1 ms";if(s<1)return (s*1e3).toFixed(0)+" ms";if(s<60)return s.toFixed(1)+" s";if(s<3600)return (s/60).toFixed(1)+" min";return (s/3600).toFixed(1)+" h";}
+function upd(){
+  var n=+sl.value;nv.textContent=n;
+  var calls=2*fib(n+1)-1,states=n+1,rate=1e7;
+  out.textContent="fib("+n+") = "+fib(n).toLocaleString("pt-BR")+"\nIngênuo:   "+calls.toLocaleString("pt-BR")+" chamadas  (~"+fmtT(calls/rate)+" a 10 milhões de chamadas/s)  -> cresce ~1,6x por unidade de n\nMemorizado: "+states+" estados calculados (~"+fmtT(states/rate)+")  -> O(n)\nGanho: "+Math.round(calls/states).toLocaleString("pt-BR")+"x menos trabalho";
+}
+sl.addEventListener("input",upd);upd();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
 <h3>Guloso</h3>
 <p>Uma estratégia gulosa faz, a cada passo, a melhor escolha local e nunca volta atrás. É a mais simples e mais rápida, e só é correta quando o problema tem a <strong>propriedade de escolha gulosa</strong> (existe uma solução ótima que contém a escolha local) mais subestrutura ótima. Casos comprovados: seleção de intervalos por menor tempo de término (agendar o máximo de reuniões sem sobreposição), Huffman, Dijkstra e Prim/Kruskal, troco com moedas "canônicas". O lab confronta guloso e DP no troco:</p>
 <pre><code>$ uv run python -m algos.demo dp       # trecho
@@ -730,6 +1098,12 @@ coins=[1, 3, 4] amount=6: greedy=3 dp=2
 coins=[4, 3] amount=6: greedy=None dp=2</code></pre>
 <p>Com {1,5,10,25} o guloso acerta. Com {1,3,4} e valor 6 ele pega 4+1+1 (3 moedas) e perde 3+3 (2). Com {4,3} e valor 6 o guloso pega o 4 e fica com resto 2, que nenhuma moeda cobre: devolve <em>falha</em> quando existe solução. Moral: quem aplica guloso sem provar a propriedade está apostando. A técnica de prova padrão é o <em>argumento de troca</em>: tome uma solução ótima qualquer e mostre que trocar sua primeira escolha pela gulosa não a piora. Sem prova nem contraexemplo exaustivo (compare com força bruta em entradas pequenas aleatórias, ou com a DP), use DP.</p>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Moedas {1, 3, 4} e troco de 6. O guloso (sempre a maior moeda possível) e a melhor resposta são:</p>
+<ol><li data-opt="a">Os dois dão 4 + 1 + 1</li><li data-opt="b">Os dois dão 3 + 3</li><li data-opt="c">O guloso dá 3 + 3; o ótimo é 4 + 1 + 1</li><li data-opt="d">O guloso dá 4 + 1 + 1 (3 moedas); o ótimo é 3 + 3 (2 moedas), e só a DP acha</li></ol>
+<div class="explain">O guloso exige uma prova de que a escolha local é segura (propriedade de escolha gulosa). Para sistemas de moedas "canônicos", como 1, 5, 10, 25, ele serve; para {1, 3, 4} não. Quando não há prova, a DP sobre "menor número de moedas para cada valor até 6" resolve com segurança.</div>
+</div>
 <h3>Backtracking</h3>
 <p>Construa a solução passo a passo, escolhendo entre candidatos; se uma escolha não pode levar a uma solução válida, <em>desfaça</em> e tente a próxima. É busca em profundidade sobre o espaço de decisões, com <strong>poda</strong>: cortar o ramo assim que uma restrição é violada. Sem poda, é força bruta (2ⁿ subconjuntos, n! permutações). O padrão é sempre: escolher, recursar, desfazer.</p>
 <pre><code>def place(row):
@@ -765,6 +1139,8 @@ coins=[4, 3] amount=6: greedy=None dp=2</code></pre>
 </ol>
 <p>Esse roteiro é também o prompt de revisão para código gerado por IA: peça a solução bruta, o custo declarado, o teste contra o oráculo e as bordas. Um modelo costuma entregar a segunda e a quinta sem pedir; é você quem exige a primeira e a sexta.</p>
 
+
+<div class="ix"><span class="ix-title">Ordene os passos</span><p>Monte o roteiro para um problema novo, na ordem em que ele evita retrabalho.</p><ol class="order" data-solution="a,b,c,d,e,f"><li data-id="a">Reformular: entrada, saída e restrições, com exemplos pequenos</li><li data-id="b">Escrever a solução bruta, simples e correta</li><li data-id="c">Achar o gargalo: o que se repete ou cresce demais</li><li data-id="d">Reconhecer o padrão (dois ponteiros, DP, grafo, heap...)</li><li data-id="e">Declarar o custo de tempo e memória da versão nova</li><li data-id="f">Testar a versão otimizada contra a bruta em entradas aleatórias</li></ol></div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Recursão custa um quadro de pilha por nível e o Python limita a 1000: converta em laço com pilha explícita ou em DP iterativa. Divisão e conquista exige subproblemas independentes; DP resolve os sobrepostos guardando cada estado uma vez (medido: 2,7 milhões de chamadas viram 31). Guloso só vale com prova (moedas {1,3,4} desmentem). Backtracking é busca com escolha, recursão, desfaz e poda. Para um problema novo: reformule, faça a bruta, ache o gargalo, reconheça o padrão, declare o custo, teste contra a bruta.</p>
@@ -925,6 +1301,11 @@ coins=[4, 3] amount=6: greedy=None dp=2</code></pre>
 </tbody>
 </table>
 <p>Medições e saídas vêm de execução real em 11/10/2026 (Linux aarch64, 4 núcleos, CPython 3.14.7, uma execução por tabela): reproduzíveis na forma, não nos valores absolutos. Detalhes internos do CPython (fator de crescimento da lista, layout do dict, política de fusão do Timsort) mudam entre versões menores: revalide em até 90 dias ou ao trocar de versão do interpretador.</p>
+
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique (ou Enter) para virar. Tente responder em voz alta antes de virar.</p>
+<div class="flashcards"><div class="fc"><div class="front">Pior × médio × amortizado?</div><div class="back">Qual entrada se analisa; amortizado é a soma garantida de uma sequência de operações.</div></div><div class="fc"><div class="front">Como diagnosticar o crescimento medindo?</div><div class="back">Pela razão entre tamanhos: dobrar n e o tempo ×2 → linear; ×4 → quadrático.</div></div><div class="fc"><div class="front">Por que <code>list.pop(0)</code> é caro?</div><div class="back">Desloca todos os elementos (O(n)); use <code>deque.popleft()</code>.</div></div><div class="fc"><div class="front">Por que dobrar na cheia e encolher a 25%?</div><div class="back">Histerese evita redimensionar a cada operação e mantém o O(1) amortizado.</div></div><div class="fc"><div class="front">O que é uma colisão e como se resolve?</div><div class="back">Chaves diferentes no mesmo índice; encadeamento ou endereçamento aberto (CPython).</div></div><div class="fc"><div class="front">Contrato de <code>__hash__</code>/<code>__eq__</code>?</div><div class="back">Iguais têm o mesmo hash; o hash não pode mudar durante a vida da chave.</div></div><div class="fc"><div class="front">BST em ordem crescente?</div><div class="back">Degenera numa lista (altura n, busca O(n)); balanceamento resolve.</div></div><div class="fc"><div class="front">Por que min-heap para top-k maiores?</div><div class="back">A raiz é o menor dos k: candidato a sair. O(n log k), memória O(k).</div></div><div class="fc"><div class="front">Por que o Timsort é O(n) em dados ordenados?</div><div class="back">Detecta "runs" já ordenadas e as funde.</div></div><div class="fc"><div class="front">Invariante da busca binária em [lo, hi)?</div><div class="back">Antes de lo: &lt; alvo; de hi em diante: &ge; alvo. Atualizações: lo = mid + 1 ou hi = mid.</div></div><div class="fc"><div class="front">BFS: quando marcar visitado?</div><div class="back">Ao enfileirar, para entrar na fila uma vez só. Dá o menor nº de arestas.</div></div><div class="fc"><div class="front">Quando falha o Dijkstra?</div><div class="back">Com pesos negativos; use Bellman-Ford.</div></div></div>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

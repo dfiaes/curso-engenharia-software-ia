@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>F01 · Terminal, Sistema de Arquivos, Processos e Git</title>
 <meta name="color-scheme" content="light dark">
-<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
 <link rel="stylesheet" href="../../assets/course.css">
 </head>
 <body>
@@ -149,6 +149,12 @@ Terminated
 SIGTERM=143</code></pre>
 <p>Há duas camadas aqui. O exit code <em>do programa</em> é escolha de quem o escreveu (<code>exit 7</code>). O código 128+n é <em>do shell</em>: o processo nem chegou a escolher, o kernel o encerrou por sinal. A distinção importa ao ler logs: "exit 137" quase sempre é SIGKILL, e em container isso costuma significar que o kernel matou o processo por falta de memória.</p>
 
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Sem <code>set -o pipefail</code>, o que <code>false | true; echo $?</code> imprime?</p>
+<ol><li data-opt="a"><code>0</code>: o status do pipeline é o do último comando</li><li data-opt="b"><code>1</code>: qualquer falha no pipeline propaga</li><li data-opt="c"><code>141</code>: o <code>true</code> fecha o pipe antes da hora</li><li data-opt="d">Depende da ordem em que os processos terminam</li></ol>
+<div class="explain">O padrão do shell é devolver o status do <strong>último</strong> comando do pipeline: <code>true</code> sai com 0. Quem marca <code>1</code> esquece que os dois rodam em paralelo e só o último conta; <code>141</code> (128+13, SIGPIPE) aparece quando o <em>produtor</em> escreve num pipe cujo leitor já saiu. Com <code>pipefail</code> o resultado seria 1. Por isso <code>./build.sh | tee build.log</code> pode reportar sucesso com o build quebrado.</div>
+</div>
 <h3>Stdout, stderr e quem enxerga o quê</h3>
 <pre><code>$ ls /nao/existe 2&gt;/dev/null; echo "exit=$?"
 exit=2
@@ -157,6 +163,49 @@ ls: cannot access '/nao/existe': No such file or directory
 (a mensagem acima veio do stderr)</code></pre>
 <p>Na primeira execução a mensagem sumiu (foi para <code>/dev/null</code>) e o exit code 2 permaneceu. Na segunda, o stdout foi descartado e a mensagem de erro continuou visível, porque ela nunca esteve no stdout. A regra de projeto para qualquer ferramenta que você escreva: <strong>dados no stdout, diagnóstico no stderr, resultado no exit code</strong>. É o contrato que permite compor programas, e é a interface pela qual um agente de código decide se o comando funcionou.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: tabela de descritores e redirecionamento</span>
+<p>Redirecionamentos são lidos <strong>da esquerda para a direita</strong>; cada um altera a tabela de descritores do processo antes do <code>exec</code>. Digite só a parte dos redirecionamentos (aceita <code>&gt;arq</code>, <code>&gt;&gt;arq</code>, <code>2&gt;arq</code>, <code>2&gt;&amp;1</code>, <code>1&gt;&amp;2</code>, <code>&amp;&gt;arq</code> e <code>|</code>) ou escolha um exemplo.</p>
+<div class="ix-row"><label for="f01-fd-ex">Exemplo:</label>
+<select id="f01-fd-ex"><option value="&gt; log 2&gt;&amp;1">cmd &gt; log 2&gt;&amp;1</option><option value="2&gt;&amp;1 &gt; log">cmd 2&gt;&amp;1 &gt; log</option><option value="&gt; log">cmd &gt; log</option><option value="2&gt; erros.txt">cmd 2&gt; erros.txt</option><option value="&amp;&gt; log">cmd &amp;&gt; log (bash)</option><option value="2&gt;&amp;1 |">cmd 2&gt;&amp;1 | wc -l</option><option value="| 2&gt;&amp;1">cmd | wc -l (stderr direto)</option></select></div>
+<div class="ix-row"><label for="f01-fd-in">Redirecionamentos:</label><input id="f01-fd-in" type="text" value="> log 2>&1" style="min-width:16ch" aria-label="Redirecionamentos"><button type="button" class="ix-btn primary" id="f01-fd-go">Simular</button></div>
+<div class="ix-out" id="f01-fd-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var sel=document.getElementById("f01-fd-ex"),inp=document.getElementById("f01-fd-in"),out=document.getElementById("f01-fd-out"),go=document.getElementById("f01-fd-go");
+function show(fd){return "0 (stdin) -> "+fd[0]+"\n1 (stdout) -> "+fd[1]+"\n2 (stderr) -> "+fd[2];}
+function sim(s){
+  s=s.replace(/(&?\d?>>?)\s+(?=[^\s&])/g,"$1");var toks=s.trim().split(/\s+/).filter(Boolean),fd={0:"teclado",1:"terminal",2:"terminal"},log=[];
+  var pi=toks.indexOf("|"),hasPipe=pi>=0||toks[toks.length-1]==="|";
+  if(toks.indexOf("|")>=0){ /* tokens depois do | pertencem ao próximo comando */ }
+  var mine=pi>=0?toks.slice(0,pi):toks;
+  if(hasPipe){fd[1]="pipe (entrada do próximo comando)";log.push("Antes de tudo: o pipe liga o stdout ao próximo comando.\n"+show(fd));}
+  else log.push("Estado inicial:\n"+show(fd));
+  for(var i=0;i<mine.length;i++){
+    var t=mine[i],m;
+    if((m=/^&>>?(.+)$/.exec(t))){fd[1]=m[1];fd[2]=m[1];}
+    else if((m=/^(\d?)>>?&(\d)$/.exec(t))){var n=m[1]===""?1:+m[1];fd[n]=fd[+m[2]];}
+    else if((m=/^(\d?)>>?([^&].*)$/.exec(t))){var n2=m[1]===""?1:+m[1];fd[n2]=m[2];}
+    else {log.push("Token não reconhecido: "+t);continue;}
+    log.push("Depois de "+t+":\n"+show(fd));
+  }
+  var f=function(x){return x==="terminal"?"aparece na tela":x.indexOf("pipe")===0?"vai para o próximo comando do pipeline":"vai para "+x;};
+  log.push("Resultado: a saída normal "+f(fd[1])+"; a mensagem de erro "+f(fd[2])+".");
+  if(fd[1]===fd[2]&&fd[1]!=="terminal")log.push("Os dois descritores apontam para o mesmo destino: as mensagens saem intercaladas na ordem de escrita.");
+  return log.join("\n\n");
+}
+function run(){out.textContent=sim(inp.value);}
+sel.addEventListener("change",function(){inp.value=sel.value.replace(/&gt;/g,">").replace(/&amp;/g,"&");run();});
+go.addEventListener("click",run);inp.addEventListener("keydown",function(e){if(e.key==="Enter")run();});
+var tmp=document.createElement("textarea");
+Array.prototype.forEach.call(sel.options,function(o){tmp.innerHTML=o.value;o.value=tmp.value;});
+run();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
 <h3>Sinais</h3>
 <p>Um <strong>sinal</strong> é uma notificação assíncrona que o kernel entrega a um processo. Ele interrompe o fluxo normal e dispara um <em>handler</em>; se o processo não instalou um, vale a ação padrão (quase sempre terminar). Os que importam no dia a dia:</p>
 <ul>
@@ -235,6 +284,12 @@ com pipefail=1</code></pre>
 <p>Exportar <code>API_KEY</code> a entrega a <em>todo</em> filho e a qualquer processo do mesmo usuário via <code>/proc/&lt;pid&gt;/environ</code>. Passe o valor só ao comando que precisa (<code>API_KEY=... comando</code>) ou leia de arquivo com permissão restrita. Mais no <a href="../LT01-novo/LT01.html#b02">LT01, bloco 2</a>.</p>
 </div>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um script faz <code>export FOO=1</code> e termina. De volta ao terminal que o executou (<code>./script.sh</code>), o que <code>echo $FOO</code> mostra?</p>
+<ol><li data-opt="a"><code>1</code>: <code>export</code> publica a variável para todo o sistema</li><li data-opt="b"><code>1</code>, mas só enquanto a janela do terminal ficar aberta</li><li data-opt="c">Nada (vazio): o ambiente é uma cópia entregue ao filho, nunca de volta</li><li data-opt="d">Um erro, pois a variável foi destruída com o processo</li></ol>
+<div class="explain">O processo filho recebe uma <strong>cópia</strong> do ambiente do pai na hora do <code>exec</code>; mudanças no filho morrem com ele. <code>export</code> só marca a variável para ser herdada por filhos <em>futuros</em> daquele mesmo processo. Para o efeito aparecer no terminal, rode com <code>source script.sh</code> (ou <code>. script.sh</code>), que executa no próprio shell. Não gera erro: variável não definida expande para vazio.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Terminal exibe, shell interpreta, processo executa; todo processo tem PID, pai, ambiente e três descritores. Redirecionar é religar descritores antes do <code>exec</code>. O exit code é a resposta (0 = ok; 128+n = sinal) e o status de um pipeline é o do último comando, salvo <code>pipefail</code>. O ambiente é cópia entregue ao filho, nunca de volta. Comandos são achados pelo <code>PATH</code>, da esquerda para a direita; <code>type -a</code> mostra a verdade.</p>
@@ -289,6 +344,12 @@ soft=1
 lrwxrwxrwx 1 ada ada 6 Oct 11 17:16 src/soft.py -&gt; app.py</code></pre>
 <p>Observe as duas escritas. O <code>echo trocado &gt; src/app.py</code> <em>truncou e reescreveu o mesmo inode</em>, por isso o hard link viu a mudança. Já muitos editores gravam salvando num arquivo novo e renomeando por cima (a técnica de <em>escrita atômica</em>): o nome passa a apontar para outro inode, e hard links antigos continuam com o conteúdo velho. O mecanismo de rename atômico e o que o <code>fsync</code> garante estão no <a href="../LT01-novo/LT01.html#b02">LT01, bloco 2</a>.</p>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Depois de <code>ln -s alvo.txt atalho</code> e <code>rm alvo.txt</code>, o que faz <code>cat atalho</code>? E se fosse <code>ln alvo.txt atalho</code> (hard link)?</p>
+<ol><li data-opt="a">Symlink: continua mostrando o conteúdo; hard link: erro</li><li data-opt="b">Symlink: erro "No such file or directory"; hard link: continua mostrando o conteúdo</li><li data-opt="c">Os dois continuam mostrando o conteúdo</li><li data-opt="d">Os dois dão erro, pois o original sumiu</li></ol>
+<div class="explain">Symlink guarda um <em>caminho</em>: ao apagar o alvo, o link fica quebrado. Hard link é outro <em>nome</em> para o mesmo inode: o conteúdo só é liberado quando o contador de links chega a zero e ninguém mais o mantém aberto. Por isso <code>rm</code> remove um nome, não "o arquivo".</div>
+</div>
 <h3>Permissões e dono</h3>
 <p>Cada inode tem um dono (usuário), um grupo e nove bits: <code>r</code>, <code>w</code>, <code>x</code> para dono, grupo e outros. Em octal, <code>r=4 w=2 x=1</code>, então <code>644</code> é <code>rw-r--r--</code> e <code>755</code> é <code>rwxr-xr-x</code>. Em <strong>arquivo</strong>, <code>x</code> permite executar. Em <strong>diretório</strong>, <code>r</code> permite listar os nomes e <code>x</code> permite atravessar (acessar entradas dentro dele); sem <code>x</code> você nem abre um arquivo cujo nome conhece.</p>
 <pre><code>$ ls -l src/app.py; stat -c "%n modo=%a (%A) dono=%U inode=%i links=%h tamanho=%s" src/app.py
@@ -300,6 +361,35 @@ ls=2</code></pre>
 <p>A <strong>umask</strong> é uma máscara subtraída das permissões de criação: com <code>0022</code>, arquivos novos nascem <code>644</code>; com <code>077</code>, <code>600</code>.</p>
 <p>Duas ressalvas sobre o Git: ele registra só <em>um</em> bit de permissão (modos <code>100644</code> e <code>100755</code>) e nenhum dono. E <code>chmod 777</code> como "conserto" esconde que o dono ou o grupo estava errado.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: calculadora de permissões</span>
+<p>Marque as caixas e veja o modo octal, a forma simbólica e o que a <code>umask</code> faz na criação.</p>
+<div class="table-wrap"><table><thead><tr><th></th><th>Leitura (r=4)</th><th>Escrita (w=2)</th><th>Execução (x=1)</th></tr></thead><tbody>
+<tr><th scope="row">Dono (u)</th><td><input type="checkbox" id="f01-pm-0" checked aria-label="dono leitura"></td><td><input type="checkbox" id="f01-pm-1" checked aria-label="dono escrita"></td><td><input type="checkbox" id="f01-pm-2" checked aria-label="dono execução"></td></tr>
+<tr><th scope="row">Grupo (g)</th><td><input type="checkbox" id="f01-pm-3" checked aria-label="grupo leitura"></td><td><input type="checkbox" id="f01-pm-4" aria-label="grupo escrita"></td><td><input type="checkbox" id="f01-pm-5" checked aria-label="grupo execução"></td></tr>
+<tr><th scope="row">Outros (o)</th><td><input type="checkbox" id="f01-pm-6" checked aria-label="outros leitura"></td><td><input type="checkbox" id="f01-pm-7" aria-label="outros escrita"></td><td><input type="checkbox" id="f01-pm-8" checked aria-label="outros execução"></td></tr></tbody></table></div>
+<div class="ix-row"><label for="f01-pm-um">umask:</label><select id="f01-pm-um"><option value="022">022 (padrão comum)</option><option value="002">002 (grupo escreve)</option><option value="077">077 (só o dono)</option></select></div>
+<div class="ix-out" id="f01-pm-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var boxes=[],i;for(i=0;i<9;i++)boxes.push(document.getElementById("f01-pm-"+i));
+var um=document.getElementById("f01-pm-um"),out=document.getElementById("f01-pm-out");
+function oct(n){var s=n.toString(8);while(s.length<3)s="0"+s;return s;}
+function upd(){
+  var bits=0,sym="",lab="rwx",k;
+  for(k=0;k<9;k++){var on=boxes[k].checked;bits=bits*2+(on?1:0);sym+=on?lab[k%3]:"-";}
+  var u=parseInt(um.value,8),f=0o666&~u,dd=0o777&~u;
+  out.textContent="Modo: "+oct(bits)+"  ("+sym+")\nchmod "+oct(bits)+" arquivo\n\numask "+um.value+" -> arquivo novo nasce "+oct(f)+", diretório novo nasce "+oct(dd)+"\n(a umask só remove bits; nunca acrescenta)\n\nEm diretório: r lista nomes, w cria/remove entradas (precisa de x), x permite atravessar.";
+}
+boxes.forEach(function(b){b.addEventListener("change",upd);});um.addEventListener("change",upd);upd();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
+
+<div class="tabs"><section data-tab="Octal"><p>Soma por papel: <code>r=4</code>, <code>w=2</code>, <code>x=1</code>. <code>754</code> = dono <code>rwx</code>, grupo <code>r-x</code>, outros <code>r--</code>. Valores comuns: <code>644</code> para arquivos, <code>755</code> para programas e diretórios, <code>600</code> para segredos.</p></section><section data-tab="Simbólico"><p>Altera só o que você diz: <code>chmod u+x script.sh</code>, <code>chmod go-w arquivo</code>, <code>chmod a=r arquivo</code>. Útil quando você não quer recalcular os outros bits.</p></section><section data-tab="Em diretório"><p><code>r</code> lista os nomes, <code>w</code> cria e remove entradas (junto com <code>x</code>), <code>x</code> permite atravessar o diretório. Sem <code>x</code> você não alcança nem os arquivos que conhece o nome.</p></section></div>
 <h3>Codificação e fim de linha</h3>
 <p>Um arquivo é uma sequência de bytes. Texto é uma <em>interpretação</em> desses bytes por uma codificação. A palavra <code>café</code> ocupa 5 bytes em UTF-8 (o <code>é</code> vale 2) e 4 em Latin-1. Abrir um com a codificação do outro gera <em>mojibake</em> (<code>cafÃ©</code>) ou erro de decodificação.</p>
 <pre><code>$ printf "caf\xc3\xa9\n" &gt; utf8.txt; printf "caf\xe9\n" &gt; latin1.txt; file utf8.txt latin1.txt; wc -c utf8.txt latin1.txt; iconv -f latin1 -t utf-8 latin1.txt | cmp - utf8.txt &amp;&amp; echo iguais
@@ -378,6 +468,12 @@ bash: line 1: D: D vazio</code></pre>
 <p><code>find . -name *.md</code> sem aspas funciona até o dia em que existe um <code>.md</code> no diretório corrente: o shell expande o glob antes do <code>find</code> rodar, que recebe <code>-name README.md</code> e silenciosamente procura só esse nome. O erro não aparece como erro; aparece como "faltou resultado". Em contrapartida, <code>grep "TODO" *.py</code> <em>precisa</em> da expansão do shell. A pergunta que resolve qualquer caso: "quem deve interpretar este padrão, o shell ou o programa?". Se for o programa, use aspas simples.</p>
 </div>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Existe um arquivo chamado <code>meu relatorio.tmp</code>. O que acontece com <code>find . -name "*.tmp" | xargs rm</code>?</p>
+<ol><li data-opt="a">Apaga o arquivo normalmente, o <code>xargs</code> entende espaços</li><li data-opt="b">Apaga o arquivo e pede confirmação</li><li data-opt="c">Apaga todos os <code>.tmp</code> menos o que tem espaço</li><li data-opt="d">O <code>xargs</code> separa por espaço e tenta apagar <code>meu</code> e <code>relatorio.tmp</code>, dois nomes errados</li></ol>
+<div class="explain">O <code>xargs</code> divide a entrada em espaços e quebras de linha por padrão, então um nome com espaço vira dois argumentos: o <code>rm</code> falha em um e pode apagar o <em>outro arquivo</em> que por acaso exista. Corrija com <code>find . -name "*.tmp" -print0 | xargs -0 rm</code> ou, mais simples, <code>find . -name "*.tmp" -exec rm {} +</code>.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Nome é entrada de diretório que aponta para um inode; hard link compartilha inode, symlink guarda caminho. Permissão tem nove bits mais a umask; em diretório, <code>x</code> é atravessar. Texto é bytes mais codificação: UTF-8 e LF por convenção explícita. Redirecionamentos são lidos da esquerda para a direita; pipes rodam em paralelo com contrapressão. Aspas em tudo; <code>-print0</code> ou <code>-exec {} +</code> em vez de <code>xargs</code> cego; <code>${VAR:?}</code> antes de <code>rm</code>.</p>
@@ -482,6 +578,8 @@ $ git ls-tree -r HEAD; echo; git ls-tree -r HEAD~1
 <p>No segundo commit, <code>a.txt</code> e <code>b.txt</code> apontam para o mesmo blob de antes; só <code>lib/m.py</code> ganhou um blob novo (<code>407de30</code>), e por consequência a tree <code>lib</code> e a tree raiz também são novas. Custo de um commit = objetos dos arquivos alterados + trees ao longo dos caminhos + o commit. O modelo "commit = diff" explicaria mal por que <code>git checkout</code> de qualquer commit é rápido (basta ler uma tree) e por que o hash do commit depende de <em>tudo</em> abaixo dele: mudar um byte em um blob muda a tree, o commit e, em cadeia, todos os descendentes.</p>
 <p>Armazenamento é outra camada. Objetos novos ficam <em>soltos</em> (um arquivo por objeto); o <code>git gc</code> (ou o envio/recebimento via rede) os agrupa em <strong>packfiles</strong>, guardando objetos parecidos como delta. É otimização física: o modelo lógico segue sendo "snapshot por commit". O leitor do laboratório lê só objetos soltos e, depois de um <code>git gc</code>, acusa o que não encontra, de propósito.</p>
 
+
+<div class="ix"><span class="ix-title">Diagrama: dois commits compartilham o que não mudou</span><svg viewBox="0 0 640 270" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Dois commits apontando para trees que reaproveitam o mesmo blob do README</title><defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20" y="20" width="110" height="40" rx="8" class="s-soft" /><text x="75" y="45" font-size="13" text-anchor="middle" font-weight="700">commit C2</text><rect x="20" y="190" width="110" height="40" rx="8" class="s-soft" /><text x="75" y="215" font-size="13" text-anchor="middle" font-weight="700">commit C1</text><line x1="75" y1="60" x2="75" y2="188" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><text x="88" y="128" font-size="11" text-anchor="start">pai</text><rect x="210" y="20" width="110" height="40" rx="8" class="s-box" /><text x="265" y="45" font-size="13" text-anchor="middle">tree T2</text><rect x="210" y="190" width="110" height="40" rx="8" class="s-box" /><text x="265" y="215" font-size="13" text-anchor="middle">tree T1</text><line x1="130" y1="40" x2="208" y2="40" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><line x1="130" y1="210" x2="208" y2="210" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><rect x="430" y="10" width="150" height="36" rx="8" class="s-box" /><text x="505" y="33" font-size="12" text-anchor="middle">blob app.py (novo)</text><rect x="430" y="115" width="150" height="40" rx="8" class="s-soft" /><text x="505" y="139" font-size="12" text-anchor="middle">blob README (igual)</text><rect x="430" y="215" width="150" height="36" rx="8" class="s-box" /><text x="505" y="238" font-size="12" text-anchor="middle">blob app.py (antigo)</text><line x1="320" y1="32" x2="428" y2="28" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><line x1="320" y1="44" x2="428" y2="128" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><line x1="320" y1="200" x2="428" y2="142" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><line x1="320" y1="215" x2="428" y2="232" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><text x="320" y="262" font-size="12" text-anchor="middle">README não mudou: um único blob, apontado pelas duas trees (mesmo hash).</text></svg></div>
 <h3>Refs e HEAD: os únicos arquivos mutáveis</h3>
 <p>Objetos são imutáveis; o que muda é o ponteiro. Uma <strong>ref</strong> é um arquivo de texto com um hash. Um branch é <code>refs/heads/&lt;nome&gt;</code>; tag leve é <code>refs/tags/&lt;nome&gt;</code>; branch remoto rastreado é <code>refs/remotes/origin/&lt;nome&gt;</code>. O <strong>HEAD</strong> é uma ref especial: normalmente <em>simbólica</em> (<code>ref: refs/heads/main</code>, "estou no main"); se contém um hash cru, estamos em <strong>detached HEAD</strong>. Fazer um commit = criar o objeto commit e reescrever a ref à qual HEAD aponta.</p>
 <pre><code>$ cat .git/HEAD; cat .git/refs/heads/main; git rev-parse HEAD
@@ -501,6 +599,18 @@ tagger Ada Lovelace &lt;ada@example.com&gt; 1767268980 +0000
 versão 1</code></pre>
 <p>Um branch tem 41 bytes (40 hex mais <code>\n</code>). Criar, mover e apagar branches é barato por isso. Tag leve é só uma ref; <strong>tag anotada</strong> é um objeto próprio (com tagger, mensagem e opcionalmente assinatura), e a ref aponta para ele. Com muitas refs, o Git as agrupa no arquivo <code>packed-refs</code>; o leitor do laboratório resolve ambos.</p>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: do git add ao git commit</span>
+<div class="frame" data-caption="1. Você editou a.txt: só o diretório de trabalho mudou"><svg viewBox="0 0 710 222" role="img" style="width:100%;height:auto;max-width:710px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>1. Você editou a.txt: só o diretório de trabalho mudou</title><defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="10" width="220" height="200" rx="8" class="s-soft" /><text x="120" y="34" font-size="13" text-anchor="middle" font-weight="700">Diretório de trabalho</text><text x="120" y="62" font-size="12" text-anchor="middle">a.txt = "v2"</text><text x="120" y="81" font-size="12" text-anchor="middle">(modificado)</text><rect x="245" y="10" width="220" height="200" rx="8" class="s-box" /><text x="355" y="34" font-size="13" text-anchor="middle" font-weight="700">Índice (staging)</text><text x="355" y="62" font-size="12" text-anchor="middle">a.txt -&gt; blob v1</text><rect x="480" y="10" width="220" height="200" rx="8" class="s-box" /><text x="590" y="34" font-size="13" text-anchor="middle" font-weight="700">Repositório (.git)</text><text x="590" y="62" font-size="12" text-anchor="middle">commit C1 -&gt; tree T1</text><text x="590" y="81" font-size="12" text-anchor="middle">main -&gt; C1</text><line x1="232" y1="110" x2="244" y2="110" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar1)"/><line x1="467" y1="110" x2="479" y2="110" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar1)"/></svg></div>
+<div class="frame" data-caption="2. git add a.txt: o blob v2 é gravado em objects e o índice passa a apontar para ele"><svg viewBox="0 0 710 222" role="img" style="width:100%;height:auto;max-width:710px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>2. git add a.txt: o blob v2 é gravado em objects e o índice passa a apontar para ele</title><defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="10" width="220" height="200" rx="8" class="s-box" /><text x="120" y="34" font-size="13" text-anchor="middle" font-weight="700">Diretório de trabalho</text><text x="120" y="62" font-size="12" text-anchor="middle">a.txt = "v2"</text><rect x="245" y="10" width="220" height="200" rx="8" class="s-soft" /><text x="355" y="34" font-size="13" text-anchor="middle" font-weight="700">Índice (staging)</text><text x="355" y="62" font-size="12" text-anchor="middle">a.txt -&gt; blob v2</text><text x="355" y="81" font-size="12" text-anchor="middle">(novo)</text><rect x="480" y="10" width="220" height="200" rx="8" class="s-box" /><text x="590" y="34" font-size="13" text-anchor="middle" font-weight="700">Repositório (.git)</text><text x="590" y="62" font-size="12" text-anchor="middle">objects: blob v1, blob v2</text><text x="590" y="81" font-size="12" text-anchor="middle">commit C1 -&gt; tree T1</text><text x="590" y="100" font-size="12" text-anchor="middle">main -&gt; C1</text><line x1="232" y1="110" x2="244" y2="110" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar2)"/><line x1="467" y1="110" x2="479" y2="110" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar2)"/></svg></div>
+<div class="frame" data-caption="3. git commit: o índice vira tree T2, nasce o commit C2 e o arquivo main avança"><svg viewBox="0 0 710 222" role="img" style="width:100%;height:auto;max-width:710px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>3. git commit: o índice vira tree T2, nasce o commit C2 e o arquivo main avança</title><defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="10" width="220" height="200" rx="8" class="s-box" /><text x="120" y="34" font-size="13" text-anchor="middle" font-weight="700">Diretório de trabalho</text><text x="120" y="62" font-size="12" text-anchor="middle">a.txt = "v2"</text><rect x="245" y="10" width="220" height="200" rx="8" class="s-box" /><text x="355" y="34" font-size="13" text-anchor="middle" font-weight="700">Índice (staging)</text><text x="355" y="62" font-size="12" text-anchor="middle">a.txt -&gt; blob v2</text><rect x="480" y="10" width="220" height="200" rx="8" class="s-soft" /><text x="590" y="34" font-size="13" text-anchor="middle" font-weight="700">Repositório (.git)</text><text x="590" y="62" font-size="12" text-anchor="middle">tree T2 (do índice)</text><text x="590" y="81" font-size="12" text-anchor="middle">commit C2 -&gt; T2, pai C1</text><text x="590" y="100" font-size="12" text-anchor="middle">main -&gt; C2 (ref movida)</text><line x1="232" y1="110" x2="244" y2="110" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar3)"/><line x1="467" y1="110" x2="479" y2="110" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar3)"/></svg></div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Você roda <code>git branch ideia</code> num repositório com 5 mil arquivos. O que o Git grava?</p>
+<ol><li data-opt="a">Uma cópia dos 5 mil arquivos em <code>.git/refs/heads/ideia/</code></li><li data-opt="b">Um arquivo pequeno em <code>refs/heads/ideia</code> contendo o hash do commit atual</li><li data-opt="c">Um novo commit vazio chamado <code>ideia</code></li><li data-opt="d">Um novo objeto tree com as diferenças desde o <code>main</code></li></ol>
+<div class="explain">Um branch é apenas uma ref: um arquivo de ~41 bytes (hash mais quebra de linha). Criar é instantâneo e independente do tamanho do projeto. Os objetos já existem e são compartilhados. Só quando você faz commits com o branch ativo é que a ref anda.</div>
+</div>
 <h3>O índice e as três árvores</h3>
 <p>Entre o diretório de trabalho e o histórico existe o <strong>índice</strong> (staging area): a tree que <em>será</em> o próximo commit, já materializada como lista de <code>modo, hash, estágio, caminho</code>. Isso dá três "versões" de cada arquivo ao mesmo tempo: a do <strong>HEAD</strong> (último commit), a do <strong>índice</strong> e a do <strong>diretório de trabalho</strong>.</p>
 <table>
@@ -540,6 +650,12 @@ v3
 <p>Dois commits com árvore idêntica e mensagem idêntica têm hashes diferentes se o autor, o committer ou o horário diferirem. Por isso <code>cherry-pick</code> e <code>rebase</code> geram novos hashes mesmo quando o conteúdo é igual, e por isso comparar "este commit já entrou?" pelo hash falha. O laboratório fixa autor e relógio justamente para tornar os hashes reproduzíveis. Para saber se um patch equivalente já foi aplicado, use <code>git cherry</code> ou <code>git log --cherry-pick</code>, que comparam o patch.</p>
 </div>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Você edita <code>a.txt</code> (v2), roda <code>git add a.txt</code>, edita de novo (v3) e roda <code>git commit</code> sem <code>-a</code>. O que entra no commit e o que sobra?</p>
+<ol><li data-opt="a">v3 entra no commit; nada sobra</li><li data-opt="b">Nada entra: o commit exige um novo <code>add</code></li><li data-opt="c">v2 entra no commit; v3 continua como modificação não preparada</li><li data-opt="d">v2 e v3 entram como dois blobs no mesmo commit</li></ol>
+<div class="explain">O commit é feito a partir do <strong>índice</strong>, e o índice guarda o blob que foi gravado no momento do <code>add</code> (v2). A edição v3 só existe no diretório de trabalho, então <code>git status</code> mostrará "alterações não preparadas". É o motivo de rodar <code>git add</code> de novo, ou <code>git add -p</code>, antes de commitar.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>O Git é um armazém imutável de objetos (blob, tree, commit, tag) endereçados pelo SHA-1 do conteúdo, mais refs mutáveis. Commit aponta para uma tree completa; o que não mudou é reaproveitado por hash. Branch é um arquivo de 41 bytes; HEAD aponta para um branch ou, destacado, para um hash. <code>add</code> grava blob e entra no índice; <code>commit</code> transforma o índice em trees e commit e move o ponteiro.</p>
@@ -611,6 +727,12 @@ author Ada Lovelace &lt;ada@example.com&gt; 1767269100 +0000</code></pre>
 <figcaption>Esquerda: <code>git merge feature</code> mantém F1 e F2 e adiciona um commit de merge. Direita: <code>git rebase main</code> recria F1 e F2 sobre a ponta nova de <code>main</code>; os originais ficam órfãos.</figcaption>
 </figure>
 
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">O <code>main</code> não recebeu nenhum commit desde que você criou <code>feature</code> (que tem 3 commits). Você roda <code>git merge feature</code> no <code>main</code>. O que acontece por padrão?</p>
+<ol><li data-opt="a">Fast-forward: o <code>main</code> só avança para o commit de <code>feature</code>, sem commit de merge</li><li data-opt="b">Cria um commit de merge com dois pais</li><li data-opt="c">Conflito, pois os dois branches mudaram</li><li data-opt="d">Nada: é preciso rebasear antes</li></ol>
+<div class="explain">Se um branch é ancestral direto do outro, não há trabalho paralelo a combinar: o Git apenas move a ref (fast-forward). O commit de merge só aparece no three-way, quando as duas pontas têm commits próprios. Dá para forçar o commit com <code>--no-ff</code> se você quiser registrar a integração.</div>
+</div>
 <h3>Conflitos: o que o Git entrega e como resolver</h3>
 <p>Num conflito o Git para no meio da operação e deixa três coisas: o diretório de trabalho com <strong>marcadores</strong> no arquivo, o índice com <strong>três versões</strong> (estágios 1 = base, 2 = "nossa", 3 = "deles") e o estado "merge em andamento".</p>
 <pre><code>$ git merge ana
@@ -646,6 +768,8 @@ olá, mundo</code></pre>
 olá, Brasil</code></pre>
 <p>Duas configurações ajudam: <code>merge.conflictStyle=zdiff3</code> (Git 2.35+) mostra também o texto da base entre os marcadores, e <code>rerere</code> memoriza como você resolveu um conflito para reaplicar em rebases repetidos.</p>
 
+
+<div class="ix"><span class="ix-title">Ordene os passos</span><p>Monte a sequência típica de resolução de um conflito de merge.</p><ol class="order" data-solution="a,b,c,d,e,f"><li data-id="a"><code>git merge feature</code> para no meio e avisa do conflito</li><li data-id="b"><code>git status</code> lista os arquivos "both modified"</li><li data-id="c">Editar o arquivo, escolher o resultado e remover os marcadores <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>, <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code></li><li data-id="d">Rodar os testes: um merge limpo (ou resolvido) ainda pode estar quebrado</li><li data-id="e"><code>git add arquivo</code> marca o conflito como resolvido</li><li data-id="f"><code>git commit</code> conclui o merge (ou <code>git merge --abort</code> teria desfeito tudo)</li></ol></div>
 <h3>Rebase: reescrever sobre uma base nova</h3>
 <p><strong>Rebase</strong> pega os commits do seu branch que não estão na base nova, guarda o patch de cada um e o reaplica, em ordem, sobre a nova ponta. Como o pai do primeiro commit muda, seu hash muda, e em cadeia o de todos os seguintes.</p>
 <pre><code>$ git log --format="%h %s" --graph --all
@@ -684,6 +808,50 @@ $ git log --format="%h %s" --graph --all
 </table>
 <p>Regra operacional: <strong>rebase para limpar o seu trabalho local antes de publicar; merge (ou squash) para integrar trabalho compartilhado.</strong> Reescrever commits que já estão em <code>origin</code> obriga cada colega a reconciliar versões duplicadas.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: o mesmo trabalho integrado por merge e por rebase</span>
+<p><code>feature</code> saiu de B; depois disso <code>main</code> ganhou o commit C. Escolha como integrar e compare o desenho do histórico e os hashes.</p>
+<div class="ix-row"><button type="button" class="ix-btn" data-m="antes" id="f01-mr-a">Antes de integrar</button><button type="button" class="ix-btn primary" data-m="merge" id="f01-mr-m">git merge main (em feature)</button><button type="button" class="ix-btn primary" data-m="rebase" id="f01-mr-r">git rebase main (em feature)</button></div>
+<div id="f01-mr-svg"></div><div class="ix-out" id="f01-mr-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var host=document.getElementById("f01-mr-svg"),out=document.getElementById("f01-mr-out");
+function c(x,y,l,h,cls,dash){return '<circle cx="'+x+'" cy="'+y+'" r="19" class="'+cls+'"'+(dash?' stroke-dasharray="4 3"':'')+'/><text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="13" font-weight="700">'+l+'</text><text x="'+x+'" y="'+(y+38)+'" text-anchor="middle" font-size="10" class="s-muted" style="fill:var(--muted);stroke:none">'+h+'</text>';}
+function ln(x1,y1,x2,y2,dash){var dx=x2-x1,dy=y2-y1,L=Math.sqrt(dx*dx+dy*dy),ux=dx/L,uy=dy/L;return '<line x1="'+(x1+ux*20)+'" y1="'+(y1+uy*20)+'" x2="'+(x2-ux*21)+'" y2="'+(y2-uy*21)+'" class="s-line" stroke-width="1.5" marker-end="url(#f01-mr-ar)"'+(dash?' stroke-dasharray="4 3"':'')+'/>';}
+function tag(x,y,t){return '<text x="'+x+'" y="'+y+'" font-size="12" font-weight="700" class="s-accent" style="stroke:none">'+t+'</text>';}
+function draw(m){
+  var s='<svg viewBox="0 0 640 230" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Grafo de commits após '+m+'</title><defs><marker id="f01-mr-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>';
+  var A=[50,60],B=[150,60],C=[250,60],D=[250,160],E=[350,160];
+  s+=ln(B[0],B[1],A[0],A[1])+ln(C[0],C[1],B[0],B[1]);
+  var box="s-box";
+  if(m==="antes"){
+    s+=ln(D[0],D[1],B[0],B[1])+ln(E[0],E[1],D[0],D[1]);
+    s+=c(A[0],A[1],"A","a1f3","s-box")+c(B[0],B[1],"B","7c2e","s-box")+c(C[0],C[1],"C","e90b","s-box")+c(D[0],D[1],"D","3b8d","s-soft")+c(E[0],E[1],"E","c4a7","s-soft");
+    s+=tag(C[0]+28,C[1]+4,"main")+tag(E[0]+28,E[1]+4,"feature");
+  }else if(m==="merge"){
+    var M=[350,60];
+    s+=ln(D[0],D[1],B[0],B[1])+ln(E[0],E[1],D[0],D[1])+ln(M[0],M[1],C[0],C[1])+ln(M[0],M[1],E[0],E[1]);
+    s+=c(A[0],A[1],"A","a1f3","s-box")+c(B[0],B[1],"B","7c2e","s-box")+c(C[0],C[1],"C","e90b","s-box")+c(D[0],D[1],"D","3b8d","s-box")+c(E[0],E[1],"E","c4a7","s-box")+c(M[0],M[1],"M","5d10","s-soft");
+    s+=tag(M[0]+28,M[1]+4,"feature")+tag(C[0]-18,C[1]-28,"main");
+  }else{
+    var D2=[350,60],E2=[450,60];
+    s+=ln(D[0],D[1],B[0],B[1],1)+ln(E[0],E[1],D[0],D[1],1)+ln(D2[0],D2[1],C[0],C[1])+ln(E2[0],E2[1],D2[0],D2[1]);
+    s+=c(A[0],A[1],"A","a1f3","s-box")+c(B[0],B[1],"B","7c2e","s-box")+c(C[0],C[1],"C","e90b","s-box")+c(D[0],D[1],"D","3b8d","s-box",1)+c(E[0],E[1],"E","c4a7","s-box",1)+c(D2[0],D2[1],"D'","91ab","s-soft")+c(E2[0],E2[1],"E'","0f5e","s-soft");
+    s+=tag(E2[0]+28,E2[1]+4,"feature")+tag(C[0]-18,C[1]-28,"main")+'<text x="395" y="165" font-size="11" style="fill:var(--muted);stroke:none">D e E ficam órfãos (só o reflog os acha)</text>';
+  }
+  host.innerHTML=s+"</svg>";
+  out.textContent={antes:"Dois históricos divergentes a partir de B. Nada foi reescrito ainda.",
+   merge:"Merge: nasce o commit M com DOIS pais (C e E). D e E mantêm hashes e continuam iguais para quem já os baixou. O histórico preserva a forma real do trabalho em paralelo.",
+   rebase:"Rebase: D e E são COPIADOS sobre C, viram D' e E' com hashes NOVOS. O histórico fica linear, mas quem tinha D e E vai divergir se você já os publicou: use só no que é seu."}[m];
+}
+["a","m","r"].forEach(function(k){var b=document.getElementById("f01-mr-"+k);b.addEventListener("click",function(){draw(b.getAttribute("data-m"));});});
+draw("antes");
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
 <h3>Cherry-pick e stash</h3>
 <p><code>git cherry-pick &lt;commit&gt;</code> recalcula o patch daquele commit e o aplica sobre o HEAD atual, criando um commit <em>novo</em> com a mesma mensagem e autor. É a ferramenta de backport (levar um hotfix para um branch de release). Duplica a mudança no histórico, então prefira merge quando for integrar um branch inteiro; use <code>-x</code> para anotar a origem na mensagem.</p>
 <pre><code>$ git cherry-pick hotfix~1; git log --format="%h %s" --all --graph
@@ -719,6 +887,12 @@ committer Ada Lovelace &lt;ada@example.com&gt;</code></pre>
 <p>Por padrão, <code>pull</code> é <code>fetch</code> seguido de <code>merge</code>. Quem puxa com commits locais ainda não publicados ganha um commit de merge "Merge branch 'main' of origin/main" que ninguém quis. Defina a política explicitamente: <code>git config pull.rebase true</code> (ou <code>pull.ff only</code>) e o comportamento deixa de depender de humor.</p>
 </div>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Seu branch <code>feature</code> já foi enviado ao remoto e um colega fez checkout dele. Você roda <code>git rebase main</code> e um <code>git push --force</code>. Qual o problema central?</p>
+<ol><li data-opt="a">Nenhum: rebase sempre é seguro se os testes passam</li><li data-opt="b">O push será recusado porque o remoto tem hashes novos</li><li data-opt="c">Os commits ganham hashes novos; o colega ainda tem os antigos e volta a trazê-los, duplicando/divergindo o histórico</li><li data-opt="d">O rebase apaga os arquivos do colega</li></ol>
+<div class="explain">Rebase <em>copia</em> commits: o conteúdo é parecido, mas os hashes mudam. Quem partiu dos commits antigos precisa reconciliar (ou ressuscitará os commits velhos num novo merge). Regra prática: reescreva só o que é seu e ainda não foi usado por outros; para o resto, prefira merge ou combine antes.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Branch é ponteiro. Merge compara três trees (base, minha, deles): fast-forward só move a ref; three-way cria commit com dois pais; conflito deixa marcadores e estágios 1/2/3 no índice, e <code>--abort</code> desfaz. Rebase copia commits para uma base nova, com hashes novos; use no que é só seu. Cherry-pick copia um patch; stash é um par de commits em <code>refs/stash</code>. Merge limpo ainda precisa de teste.</p>
@@ -772,6 +946,12 @@ Successfully rebased and updated refs/heads/main.
 $ git push origin main 2&gt;&amp;1 | head -3
 To /tmp/demo-b5/origin.git
    0c9a943..61c1f14  main -&gt; main</code></pre>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual dos comandos nunca altera seu branch atual nem seus arquivos de trabalho?</p>
+<ol><li data-opt="a"><code>git pull</code></li><li data-opt="b"><code>git fetch</code></li><li data-opt="c"><code>git pull --rebase</code></li><li data-opt="d"><code>git merge origin/main</code></li></ol>
+<div class="explain"><code>fetch</code> só baixa objetos e atualiza os <code>origin/*</code> (um cache local do estado remoto). <code>pull</code> é <code>fetch</code> mais integração (merge ou rebase), e essa segunda etapa mexe no seu branch. Por isso o hábito seguro é <code>fetch</code>, olhar <code>git log HEAD..origin/main</code>, e só então integrar.</div>
+</div>
 <h3>Reescrever o que já foi publicado</h3>
 <p>Quando é <em>necessário</em> reescrever um branch publicado (por exemplo, o seu branch de PR), o push precisa ser forçado. <code>--force</code> sobrescreve a ref remota sem olhar; <code>--force-with-lease</code> só sobrescreve se a ref remota ainda for a que <em>você viu</em> no último fetch:</p>
 <pre><code>$ git commit -q --amend -m "A1 reescrito"; git push --force-with-lease origin main
@@ -793,6 +973,8 @@ error: failed to push some refs to '/tmp/demo-b5/origin.git'</code></pre>
 </table>
 <p>O que decide é o <em>tempo de vida do branch</em>: quanto mais ele vive, mais dor de integração. Escolha o fluxo mais simples que cabe no modelo de release.</p>
 
+
+<div class="tabs"><section data-tab="Merge commit"><p>Mantém todos os commits do branch e acrescenta um commit de merge. Preserva a história real e os hashes; o histórico fica ramificado.</p></section><section data-tab="Squash"><p>Colapsa o branch inteiro em <strong>um</strong> commit na <code>main</code>. Histórico limpo e fácil de reverter, mas perde a granularidade dos commits e o commit resultante tem hash diferente dos do branch.</p></section><section data-tab="Rebase and merge"><p>Reaplica os commits do PR sobre a <code>main</code> sem commit de merge. Histórico linear, mas os commits ganham hashes novos (não são os do seu branch local).</p></section></div>
 <h3>.gitignore, hooks e commits assinados</h3>
 <p><code>.gitignore</code> lista padrões de arquivos <em>não rastreados</em> que o Git deve ignorar (<code>*.log</code>, <code>.env</code>, <code>__pycache__/</code>). A última regra que casa vence; <code>!padrão</code> reverte. Há três níveis: o <code>.gitignore</code> do repositório (versionado), <code>.git/info/exclude</code> (só seu) e <code>core.excludesFile</code> (global da máquina, bom para arquivos de editor). Não afeta o que já está rastreado:</p>
 <pre><code>$ git check-ignore -v a.log .env keep.log
@@ -832,6 +1014,12 @@ exit=0</code></pre>
 <p>Após o push, o segredo está no servidor, nos clones dos colegas, em caches de CI e, em repositório público, em coletores automáticos que varrem commits em segundos. Remover o arquivo em outro commit (bloco 3) não remove o blob; reescrever histórico (<code>git filter-repo</code>) não alcança clones nem forks. A ordem correta é: <strong>revogar e trocar a credencial primeiro</strong>; só depois, limpar o histórico por higiene. Hook de <code>pre-commit</code> com detector de segredos reduz a chance; o scanner no CI e o push protection da plataforma fecham a porta.</p>
 </div>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Para publicar um branch que você reescreveu com rebase, qual é a forma preferida e por quê?</p>
+<ol><li data-opt="a"><code>git push --force</code>, porque é mais rápido</li><li data-opt="b"><code>git push</code> simples; o Git resolve sozinho</li><li data-opt="c"><code>git pull</code> primeiro, depois <code>push</code>, para não perder nada</li><li data-opt="d"><code>git push --force-with-lease</code>: recusa se o remoto tiver commits que você ainda não viu</li></ol>
+<div class="explain"><code>--force</code> sobrescreve cegamente e pode apagar o trabalho que um colega enviou entre o seu último fetch e o push. <code>--force-with-lease</code> confere se a ref remota ainda é a que você conhece. Atenção: se você fez um <code>fetch</code> automático (ferramentas de IDE), o lease pode passar sem você ter olhado os commits novos.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Remote = nome + URL + refspec; <code>origin/*</code> é cache do último fetch. <code>fetch</code> é seguro; <code>pull</code> = fetch + integrar; <code>push</code> só avança por fast-forward. Para reescrever o publicado: <code>--force-with-lease</code>, nunca <code>--force</code>. PR é recurso da plataforma; escolha a estratégia de integração por repositório. Prefira fluxo com branches curtos. <code>.gitignore</code> não afeta rastreados; hooks locais são conveniência; assinatura prova a chave, não a pessoa; segredo publicado se revoga.</p>
@@ -936,6 +1124,14 @@ a
 b</code></pre>
 <p>Reverter um commit de merge exige dizer qual pai é a linha principal (<code>git revert -m 1 &lt;merge&gt;</code>); para reintroduzir o trabalho depois, reverta o revert. Para arquivos, o par moderno (Git 2.23+) é <code>git restore &lt;arq&gt;</code> (descarta a edição) e <code>git restore --staged &lt;arq&gt;</code> (tira do índice). <code>git clean -n</code> lista o que removeria dos não rastreados; <code>-f</code> remove sem volta.</p>
 
+
+<div class="tabs"><section data-tab="--soft"><p><code>git reset --soft HEAD~1</code>: move só a <strong>ref</strong> do branch. O índice e os arquivos ficam como estavam; o commit desfeito vira "alterações preparadas".</p></section><section data-tab="--mixed (padrão)"><p><code>git reset HEAD~1</code>: move a ref e <strong>zera o índice</strong>. Os arquivos continuam como estavam; as alterações voltam a "não preparadas".</p></section><section data-tab="--hard"><p><code>git reset --hard HEAD~1</code>: move a ref, zera o índice <strong>e sobrescreve o diretório de trabalho</strong>. Edições não commitadas são perdidas para sempre; os commits ainda aparecem no reflog.</p></section></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Um commit ruim já está em <code>origin/main</code> e outras pessoas baseiam trabalho nele. Qual é a forma segura de desfazer o efeito?</p>
+<ol><li data-opt="a"><code>git revert &lt;hash&gt;</code>: cria um commit novo que inverte a mudança, sem reescrever o histórico</li><li data-opt="b"><code>git reset --hard HEAD~1</code> e push forçado</li><li data-opt="c"><code>git commit --amend</code> e push forçado</li><li data-opt="d"><code>git restore .</code></li></ol>
+<div class="explain"><code>revert</code> é aditivo: o histórico publicado continua válido e o efeito é anulado por um commit novo. Reset com push forçado reescreve o que outros já usam. <code>restore</code> só mexe nos arquivos locais.</div>
+</div>
 <h3>Reflog: o diário dos ponteiros</h3>
 <p>Cada vez que HEAD ou um branch se move, o Git anota no <strong>reflog</strong> (<code>.git/logs/</code>) de onde e para onde. O <code>reset --hard</code> que "perdeu" dois commits apenas moveu o branch; os objetos continuam lá, alcançáveis pelo reflog:</p>
 <pre><code>$ git reset --hard HEAD~2; git reflog --format="%h %gd %gs"
@@ -981,6 +1177,12 @@ fatal: 'main' is already checked out at '/tmp/demo-b6/W'</code></pre>
 <p>O <code>bisect</code> faz checkout de commits antigos. Se o script de teste é um arquivo rastreado criado depois do bug, ele <em>não existe</em> nos commits mais antigos; se existe mas mudou, cada commit testa uma coisa diferente. No laboratório, <code>check.py</code> é commitado desde o primeiro commit para evitar isso; em casos reais, copie o script para fora do repositório (<code>/tmp/teste.sh</code>) e chame-o por caminho absoluto. E o ambiente: dependência instalada hoje pode não existir para o código de seis meses atrás; use 125 para "este commit não é testável".</p>
 </div>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Você escreveu um script para o <code>git bisect run</code>. Em alguns commits antigos o projeto nem compila. Que exit code o script deve devolver nesses commits?</p>
+<ol><li data-opt="a"><code>0</code>: o commit é bom</li><li data-opt="b"><code>1</code>: o commit é ruim</li><li data-opt="c"><code>125</code>: pular este commit (não dá para testar)</li><li data-opt="d">Qualquer valor acima de 127</li></ol>
+<div class="explain"><code>0</code> marca bom, <code>1</code> a <code>127</code> (exceto 125) marca ruim, e <code>125</code> manda pular um commit que não pode ser testado. Um valor acima de 127 aborta o bisect inteiro. Marcar como "ruim" um commit que apenas não compila aponta o culpado errado.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Use <code>log -S/-G</code> para saber quando um texto entrou, <code>blame</code> para a última mudança por linha e <code>bisect run</code> (exit 0 bom, 1–127 ruim, 125 pular) para achar o commit que quebrou. <code>reset</code> desce por três árvores: soft move a ref, mixed também o índice, hard também o trabalho. <code>revert</code> desfaz sem reescrever. O reflog é o diário local dos ponteiros (90/30 dias); objetos só somem depois do <code>gc</code>. Worktrees compartilham objetos e não repetem branch.</p>
@@ -1157,6 +1359,11 @@ Success: no issues found in 11 source files</code></pre>
 </tbody>
 </table>
 <p>As saídas vêm de execução real em 11/10/2026 com Git 2.34.1; versões mais novas mudam mensagens e padrões (<code>zdiff3</code> exige Git 2.35+). Comportamento de Git, <code>uv</code> e plataformas (PR, "Verified") é de alto risco: revalidar em até 90 dias.</p>
+
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique (ou Enter) para virar. Tente responder em voz alta antes de virar.</p>
+<div class="flashcards"><div class="fc"><div class="front">O que é um exit code e qual a convenção?</div><div class="back">0 = sucesso; diferente de 0 = falha. 128+n = morto pelo sinal n (141 = SIGPIPE).</div></div><div class="fc"><div class="front">Qual o status de um pipeline?</div><div class="back">O do último comando, salvo <code>set -o pipefail</code>.</div></div><div class="fc"><div class="front">Por que <code>2&gt;&amp;1 &gt; log</code> difere de <code>&gt; log 2&gt;&amp;1</code>?</div><div class="back">Redirecionamentos são lidos da esquerda para a direita: no primeiro, stderr copia o terminal antes de stdout ir ao arquivo.</div></div><div class="fc"><div class="front">Por que o filho não altera o ambiente do pai?</div><div class="back">O ambiente é uma cópia entregue no exec; nada volta ao pai.</div></div><div class="fc"><div class="front">Hard link × symlink?</div><div class="back">Hard link: outro nome para o mesmo inode. Symlink: arquivo que guarda um caminho (quebra se o alvo sumir).</div></div><div class="fc"><div class="front">Como ler <code>chmod 754</code>?</div><div class="back">dono rwx (7), grupo r-x (5), outros r-- (4).</div></div><div class="fc"><div class="front">Quais os 4 objetos do Git?</div><div class="back">blob, tree, commit e tag, endereçados pelo hash do conteúdo.</div></div><div class="fc"><div class="front">O que é um branch?</div><div class="back">Um ponteiro: arquivo de ~41 bytes em <code>refs/heads</code> com o hash de um commit.</div></div><div class="fc"><div class="front">O que o commit grava, o diretório de trabalho ou o índice?</div><div class="back">O índice (já montado pelo <code>git add</code>).</div></div><div class="fc"><div class="front">Merge × rebase?</div><div class="back">Merge junta (hashes preservados, commit com 2 pais). Rebase copia commits para uma nova base (hashes novos): só no que é seu.</div></div><div class="fc"><div class="front">Quando usar <code>--force-with-lease</code>?</div><div class="back">Ao publicar história reescrita: recusa se o remoto tem commits que você não viu.</div></div><div class="fc"><div class="front">Códigos de saída no <code>bisect run</code>?</div><div class="back">0 = bom; 1–127 (exceto 125) = ruim; 125 = pular; &gt;127 = aborta.</div></div></div>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

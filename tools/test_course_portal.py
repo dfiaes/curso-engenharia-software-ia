@@ -32,22 +32,28 @@ class CoursePortalTests(unittest.TestCase):
                 source = (ROOT / block["file"]).read_text(encoding="utf-8")
                 self.assertIn(f'id="{block["anchor"]}"', source, block["id"])
 
-    def test_index_embeds_the_manifest(self) -> None:
-        page = render(self.manifest)
-        self.assertNotIn("__COURSE_MANIFEST__", page)
-        self.assertNotIn("fetch(", page)
-        payload = json.dumps(self.manifest, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-        self.assertIn(payload, page)
+    def test_a01_in_phase_2_after_m01(self) -> None:
+        codes = [unit["code"] for unit in self.manifest["units"]]
+        self.assertEqual(codes[codes.index("M01") + 1], "A01")
+        unit = self.manifest["units"][codes.index("A01")]
+        self.assertEqual(unit["prerequisites"], ["M01"])
+        self.assertEqual(unit["hours"], 14)
 
-    def test_portal_assets_and_module_bridge_exist(self) -> None:
+    def test_index_is_standalone_home(self) -> None:
         page = render(self.manifest)
-        for asset in ("portal/portal.css", "portal/progress.js", "portal/portal.js"):
-            self.assertTrue((ROOT / asset).is_file(), asset)
+        self.assertNotIn("<iframe", page)
+        self.assertIn('data-layout="none"', page)
+        self.assertIn("trilha-rapida/TR.html", (ROOT / "portal" / "portal.js").read_text(encoding="utf-8"))
+        for asset in ("assets/course.css", "assets/course-manifest.js", "portal/progress.js", "assets/course.js", "portal/portal.js"):
             self.assertIn(asset, page)
-        source_files = {block["file"] for unit in self.manifest["units"] for block in unit["blocks"]}
-        for source_file in source_files:
-            source = (ROOT / source_file).read_text(encoding="utf-8")
-            self.assertIn("course-bridge.js", source, source_file)
+        for asset in ("assets/course.css", "assets/course.js", "portal/progress.js", "portal/portal.js"):
+            self.assertTrue((ROOT / asset).is_file(), asset)
+
+    def test_modules_use_course_js(self) -> None:
+        for unit in self.manifest["units"]:
+            path = ROOT / unit["file"]
+            if path.is_file():
+                self.assertIn("course.js", path.read_text(encoding="utf-8"), unit["code"])
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@
   var STORAGE_KEY = "tutor-ia.course-progress.v2";
   var THEME_KEY = "curso.theme";
   var M = window.COURSE_MANIFEST || { units: [], phases: [] };
-  var ready = [];
+  var ready = (window.__courseQ || []).slice();
 
   function store(get, key, value) {
     try {

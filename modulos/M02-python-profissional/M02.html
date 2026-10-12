@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>M02 · Python 3.14 para engenharia profissional</title>
 <meta name="color-scheme" content="light dark">
-<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
 <link rel="stylesheet" href="../../assets/course.css">
 </head>
 <body><main>
@@ -163,6 +163,17 @@ uv run --isolated --no-project --with ./dist/csv_cleaner-0.1.0-py3-none-any.whl 
 <li>No lab: <code>uv add</code> declara, <code>uv run</code> executa, <code>uv sync --locked</code> restaura e <code>uv build</code> produz o que será instalado.</li>
 </ul>
 </div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual é o papel de cada arquivo: <code>pyproject.toml</code> e <code>uv.lock</code>?</p>
+<ol><li data-opt="a"><code>uv.lock</code> é o arquivo que se edita à mão; <code>pyproject.toml</code> é gerado e deve ser ignorado pelo Git.</li><li data-opt="b">Os dois são equivalentes; o uv escolhe um deles conforme o sistema operacional.</li><li data-opt="c"><code>pyproject.toml</code> declara metadados e dependências pretendidas; <code>uv.lock</code> registra a resolução exata feita pelo uv, para reproduzir o mesmo ambiente.</li><li data-opt="d"><code>pyproject.toml</code> guarda as versões exatas e <code>uv.lock</code> guarda apenas o nome do projeto.</li></ol>
+<div class="explain">Intenção versus resolução: você escreve restrições (<code>requests&gt;=2</code>), a ferramenta resolve e trava versões e hashes. O erro comum é versionar só um dos dois e perder reprodutibilidade, ou editar o lock à mão. Ambos entram no controle de versão em aplicações.</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">No CI você quer reconstruir o ambiente exatamente como o lock descreve e <strong>falhar</strong> se o lock estiver desatualizado em relação ao <code>pyproject.toml</code>. Qual comando expressa isso?</p>
+<ol><li data-opt="a"><code>uv sync --locked</code></li><li data-opt="b"><code>uv add .</code></li><li data-opt="c"><code>uv lock --upgrade</code> seguido de <code>uv run</code></li><li data-opt="d"><code>pip install -r pyproject.toml</code></li></ol>
+<div class="explain"><code>--locked</code> verifica o lock e erra se ele não bate com o <code>pyproject.toml</code>, em vez de reescrevê-lo silenciosamente. <code>--upgrade</code> faz o oposto: muda versões. Em CI, previsibilidade vale mais que conveniência.</div>
+</div>
+
 </section>
 
 <!-- ============================================ BLOCO 2 -->
@@ -205,6 +216,14 @@ b.ids.append("B")       # permitido: a LISTA interna continua mutável
 from python_senior_lab.domain import SUPPORTED_CURRENCIES</code></pre>
 <p>Layout <code>src/</code> ajuda a detectar import acidental do checkout, mas só a instalação do wheel em ambiente limpo prova que metadata e arquivos distribuídos estão corretos. Não “conserte” import com <code>sys.path.append()</code>; descubra se o erro é ambiente, instalação, nome do package, ciclo ou artefato incompleto.</p>
 
+<div class="stepper"><span class="ix-title">Passo a passo: o que o import faz</span>
+<div class="frame" data-caption="1. Consulta sys.modules: se o nome já está lá, devolve o objeto e acaba."><svg viewBox="0 0 640 110" role="img" aria-label="Etapas do import"><title>Etapas do sistema de import</title><rect class="s-soft" x="6" y="14" width="116" height="40" rx="8"/><text x="64" y="39" text-anchor="middle" font-size="12" font-weight="700">sys.modules?</text><rect class="s-box" x="132" y="14" width="116" height="40" rx="8"/><text x="190" y="39" text-anchor="middle" font-size="12" font-weight="400">finders</text><rect class="s-box" x="258" y="14" width="116" height="40" rx="8"/><text x="316" y="39" text-anchor="middle" font-size="12" font-weight="400">cria módulo</text><rect class="s-box" x="384" y="14" width="116" height="40" rx="8"/><text x="442" y="39" text-anchor="middle" font-size="12" font-weight="400">executa topo</text><rect class="s-box" x="510" y="14" width="116" height="40" rx="8"/><text x="568" y="39" text-anchor="middle" font-size="12" font-weight="400">cache</text><text x="320" y="88" text-anchor="middle" font-size="12">Segundo import do mesmo módulo: acerto no cache, nada é reexecutado.</text></svg></div>
+<div class="frame" data-caption="2. Não achou: os finders procuram o nome em sys.path."><svg viewBox="0 0 640 110" role="img" aria-label="Etapas do import"><title>Etapas do sistema de import</title><rect class="s-box" x="6" y="14" width="116" height="40" rx="8"/><text x="64" y="39" text-anchor="middle" font-size="12" font-weight="400">sys.modules?</text><rect class="s-soft" x="132" y="14" width="116" height="40" rx="8"/><text x="190" y="39" text-anchor="middle" font-size="12" font-weight="700">finders</text><rect class="s-box" x="258" y="14" width="116" height="40" rx="8"/><text x="316" y="39" text-anchor="middle" font-size="12" font-weight="400">cria módulo</text><rect class="s-box" x="384" y="14" width="116" height="40" rx="8"/><text x="442" y="39" text-anchor="middle" font-size="12" font-weight="400">executa topo</text><rect class="s-box" x="510" y="14" width="116" height="40" rx="8"/><text x="568" y="39" text-anchor="middle" font-size="12" font-weight="400">cache</text><text x="320" y="88" text-anchor="middle" font-size="12">Pasta, zip, namespace package: quem acha primeiro, vence.</text></svg></div>
+<div class="frame" data-caption="3. Cria o objeto módulo vazio e o registra em sys.modules."><svg viewBox="0 0 640 110" role="img" aria-label="Etapas do import"><title>Etapas do sistema de import</title><rect class="s-box" x="6" y="14" width="116" height="40" rx="8"/><text x="64" y="39" text-anchor="middle" font-size="12" font-weight="400">sys.modules?</text><rect class="s-box" x="132" y="14" width="116" height="40" rx="8"/><text x="190" y="39" text-anchor="middle" font-size="12" font-weight="400">finders</text><rect class="s-soft" x="258" y="14" width="116" height="40" rx="8"/><text x="316" y="39" text-anchor="middle" font-size="12" font-weight="700">cria módulo</text><rect class="s-box" x="384" y="14" width="116" height="40" rx="8"/><text x="442" y="39" text-anchor="middle" font-size="12" font-weight="400">executa topo</text><rect class="s-box" x="510" y="14" width="116" height="40" rx="8"/><text x="568" y="39" text-anchor="middle" font-size="12" font-weight="400">cache</text><text x="320" y="88" text-anchor="middle" font-size="12">O registro acontece antes da execução (por isso imports circulares veem módulo pela metade).</text></svg></div>
+<div class="frame" data-caption="4. Executa o código do topo do arquivo, preenchendo o módulo."><svg viewBox="0 0 640 110" role="img" aria-label="Etapas do import"><title>Etapas do sistema de import</title><rect class="s-box" x="6" y="14" width="116" height="40" rx="8"/><text x="64" y="39" text-anchor="middle" font-size="12" font-weight="400">sys.modules?</text><rect class="s-box" x="132" y="14" width="116" height="40" rx="8"/><text x="190" y="39" text-anchor="middle" font-size="12" font-weight="400">finders</text><rect class="s-box" x="258" y="14" width="116" height="40" rx="8"/><text x="316" y="39" text-anchor="middle" font-size="12" font-weight="400">cria módulo</text><rect class="s-soft" x="384" y="14" width="116" height="40" rx="8"/><text x="442" y="39" text-anchor="middle" font-size="12" font-weight="700">executa topo</text><rect class="s-box" x="510" y="14" width="116" height="40" rx="8"/><text x="568" y="39" text-anchor="middle" font-size="12" font-weight="400">cache</text><text x="320" y="88" text-anchor="middle" font-size="12">Efeitos no topo (print, conexões) ocorrem agora, uma única vez.</text></svg></div>
+<div class="frame" data-caption="5. A partir daí, qualquer import usa o cache."><svg viewBox="0 0 640 110" role="img" aria-label="Etapas do import"><title>Etapas do sistema de import</title><rect class="s-box" x="6" y="14" width="116" height="40" rx="8"/><text x="64" y="39" text-anchor="middle" font-size="12" font-weight="400">sys.modules?</text><rect class="s-box" x="132" y="14" width="116" height="40" rx="8"/><text x="190" y="39" text-anchor="middle" font-size="12" font-weight="400">finders</text><rect class="s-box" x="258" y="14" width="116" height="40" rx="8"/><text x="316" y="39" text-anchor="middle" font-size="12" font-weight="400">cria módulo</text><rect class="s-box" x="384" y="14" width="116" height="40" rx="8"/><text x="442" y="39" text-anchor="middle" font-size="12" font-weight="400">executa topo</text><rect class="s-soft" x="510" y="14" width="116" height="40" rx="8"/><text x="568" y="39" text-anchor="middle" font-size="12" font-weight="700">cache</text><text x="320" y="88" text-anchor="middle" font-size="12">importlib.reload é a exceção explícita.</text></svg></div>
+</div>
+
 <h3 id="sec-2-4-recursos-e-excecoes-formam-um-contrato">2.4 Recursos e exceções formam um contrato <a class="section-link" href="#sec-2-4-recursos-e-excecoes-formam-um-contrato" aria-label="Link para esta seção">#</a></h3>
 <p><code>with</code> garante a chamada de saída do context manager tanto no sucesso quanto na exceção. O equivalente mental de <code>using</code> ajuda, mas Python permite que <code>__exit__</code> suprima a exceção; faça isso somente quando o contrato realmente considera a falha tratada.</p>
 <pre><code>from collections.abc import Iterator
@@ -229,6 +248,17 @@ def load_text(path: Path) -> str:
 
 <div class="practice"><strong>Prática B2.</strong> Comece pelos testes de <code>domain.py</code> e <code>parsing.py</code> para aliasing, default mutável, hash, cleanup e exception chain. Depois plante em um diretório temporário dois módulos que se importam e acessam nome ainda não inicializado; diagnostique o ciclo sem <code>sys.path.append()</code>.</div>
 <div class="expected"><strong>Resultado esperado.</strong> Os cinco controles negativos falham antes da correção. Depois, testes provam independência entre chamadas, igualdade/hash coerentes, import pelo pacote instalado, cleanup em exceção e cadeia de causa preservada.</div>
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Um <code>@dataclass(frozen=True)</code> tem um campo <code>tags: list[str]</code>. O que o <code>frozen</code> garante?</p>
+<ol><li data-opt="a">A lista interna também fica imutável, em profundidade.</li><li data-opt="b">O objeto passa a ser copiado a cada acesso ao atributo.</li><li data-opt="c">Nada: <code>frozen</code> só afeta a assinatura do <code>__init__</code>.</li><li data-opt="d">Impede reatribuir o campo (<code>obj.tags = ...</code>), mas a lista continua mutável: <code>obj.tags.append("x")</code> funciona. A imutabilidade é rasa.</li></ol>
+<div class="explain">Variável é um nome ligado a um objeto; <code>frozen</code> trava o nome dentro da instância, não o conteúdo do objeto apontado. Para imutabilidade de verdade use <code>tuple</code>/<code>frozenset</code> nos campos, ou copie na fronteira.</div>
+</div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">O módulo <code>util.py</code> tem um <code>print("carregando")</code> no topo. Dois arquivos diferentes fazem <code>import util</code>. Quantas vezes a mensagem aparece (mesmo processo)?</p>
+<ol><li data-opt="a">Duas, uma para cada arquivo que importa.</li><li data-opt="b">Uma: o import executa o módulo uma vez e guarda o objeto em <code>sys.modules</code>; os demais imports reutilizam o cache.</li><li data-opt="c">Nenhuma: <code>print</code> é suprimido durante imports.</li><li data-opt="d">Depende da ordem alfabética dos arquivos.</li></ol>
+<div class="explain">Import é busca, criação do módulo, execução do código do topo e cache. Por isso efeitos colaterais no topo de módulos (conexões, leitura de arquivo) são perigosos: acontecem uma vez, na hora do primeiro import, e <code>importlib.reload</code> é exceção, não regra.</div>
+</div>
+
 </section>
 
 <!-- ============================================ BLOCO 3 -->
@@ -365,7 +395,18 @@ def relatorio(dados: dict[str, list[Decimal]]) -> None:
 <li>Type checker pega erro de tipo, não de valor: lista vazia, divisão por zero e afins são domínio de teste.</li>
 </ul>
 </div>
- </section>
+ <div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Com <code>def dobra(x: int) -&gt; int: return x * 2</code>, o que acontece ao rodar <code>dobra("ab")</code>?</p>
+<ol><li data-opt="a"><code>TypeError</code> imediato, porque o interpretador valida as anotações.</li><li data-opt="b">O Python converte <code>"ab"</code> para inteiro automaticamente.</li><li data-opt="c">O programa nem inicia: anotações são checadas no import.</li><li data-opt="d">O Python executa sem objeção e devolve <code>"abab"</code>; só o mypy (ou outro checker) apontaria o erro antes de rodar.</li></ol>
+<div class="explain">Anotações não são validação em runtime. Por isso o curso separa três defesas: checker estático (mypy/pyright) para o código que você escreve, Pydantic para dados que chegam de fora, e testes para o comportamento.</div>
+</div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma classe <code>Mongo</code> tem os métodos que o <code>Protocol Repo</code> exige, mas não herda dele. O que é verdade?</p>
+<ol><li data-opt="a">Ela precisa herdar de <code>Repo</code>, senão o mypy rejeita.</li><li data-opt="b">O checker estático a aceita como <code>Repo</code> (subtipagem estrutural); <code>isinstance</code> só funcionaria com <code>@runtime_checkable</code> e então confere apenas a presença dos nomes.</li><li data-opt="c"><code>isinstance(m, Repo)</code> funciona sempre e valida as assinaturas.</li><li data-opt="d">Protocol exige registrar a classe com <code>Repo.register</code>.</li></ol>
+<div class="explain">Compatibilidade estrutural: importa a forma, não a árvore de herança. A ressalva do runtime é a armadilha: <code>runtime_checkable</code> verifica nomes, não tipos de argumentos nem retorno.</div>
+</div>
+
+</section>
 <!-- ============================================ BLOCO 4 -->
 <section id="b4">
 <h2>Bloco 4 · Pydantic v2 e contratos de trust boundary</h2>
@@ -494,6 +535,17 @@ settings = Settings()  # lê ambiente + .env, valida, ou explode AGORA</code></p
 <li><code>pydantic-settings</code> pode adaptar configuração externa para modelo tipado; validar no startup é uma decisão explícita do composition root.</li>
 </ul>
 </div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Com um <code>BaseModel</code> padrão do Pydantic v2 (modo lax), o campo <code>idade: int</code> recebe <code>"42"</code>. Resultado?</p>
+<ol><li data-opt="a">Aceita e converte para <code>42</code>; para recusar strings seria preciso modo strict (por campo, modelo ou chamada).</li><li data-opt="b">Sempre <code>ValidationError</code>, pois "42" é <code>str</code>.</li><li data-opt="c">Guarda a string "42" sem converter, apenas anotada como <code>int</code>.</li><li data-opt="d">Converte para <code>42.0</code>.</li></ol>
+<div class="explain">Coerção é útil em payloads JSON de formulários, mas pode mascarar contratos frouxos. Em fronteiras onde o tipo exato importa (dinheiro, ids), use strict e teste o caso negativo.</div>
+</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual caminho cria uma instância de modelo Pydantic <strong>sem</strong> executar a validação?</p>
+<ol><li data-opt="a"><code>Modelo.model_validate(dados)</code></li><li data-opt="b"><code>Modelo(**dados)</code></li><li data-opt="c"><code>Modelo.model_construct(**dados)</code></li><li data-opt="d"><code>Modelo.model_validate_json(texto)</code></li></ol>
+<div class="explain">O curso chama de "caminhos sem validação": <code>model_construct</code> confia no chamador; atribuições também não revalidam por padrão (a menos que <code>validate_assignment</code> esteja ligado). Validação só protege os caminhos que de fato a executam.</div>
+</div>
+
 </section>
 <!-- ============================================ BLOCO 5 -->
 <section id="b5">
@@ -512,6 +564,65 @@ settings = Settings()  # lê ambiente + .env, valida, ou explode AGORA</code></p
 <li><strong>Não bloqueie o loop.</strong> Para API síncrona inevitável, confirme thread safety, imponha limite e use <code>to_thread</code>/executor. Cancelar o await não mata magicamente o trabalho na thread.</li>
 <li><strong>Verifique o contrato da biblioteca:</strong> prefira API async quando o recurso a oferece; para API síncrona, confirme bloqueio, thread safety, propagação de contexto e limite do executor. O nome do pacote sozinho não prova o comportamento.</li>
 </ul>
+
+<div class="stepper"><span class="ix-title">Passo a passo: o event loop do asyncio</span>
+<div class="frame" data-caption="1. create_task(A) e create_task(B) colocam as duas tasks na fila pronta."><svg viewBox="0 0 640 170" role="img" aria-label="Estado do event loop"><title>Estado do event loop: fila pronta, timers e tarefa em execução</title><rect class="s-box" x="10" y="10" width="190" height="96" rx="8"/><text x="105" y="30" text-anchor="middle" font-size="12" font-weight="700">Fila pronta</text><text x="105" y="54" text-anchor="middle" font-size="13">A</text><text x="105" y="74" text-anchor="middle" font-size="13">B</text><rect class="s-box" x="225" y="10" width="190" height="96" rx="8"/><text x="320" y="30" text-anchor="middle" font-size="12" font-weight="700">Executando</text><text x="320" y="58" text-anchor="middle" font-size="12" class="s-muted" stroke="none">(vazio)</text><rect class="s-box" x="440" y="10" width="190" height="96" rx="8"/><text x="535" y="30" text-anchor="middle" font-size="12" font-weight="700">Timers (aguardando)</text><text x="535" y="58" text-anchor="middle" font-size="12" class="s-muted" stroke="none">(vazio)</text><text x="320" y="130" text-anchor="middle" font-size="13" font-weight="700">relógio: t = 0 s</text><text x="320" y="154" text-anchor="middle" font-size="12">O loop pega a próxima da fila.</text></svg></div>
+<div class="frame" data-caption="2. A roda (uma Task por vez) até o primeiro await."><svg viewBox="0 0 640 170" role="img" aria-label="Estado do event loop"><title>Estado do event loop: fila pronta, timers e tarefa em execução</title><rect class="s-box" x="10" y="10" width="190" height="96" rx="8"/><text x="105" y="30" text-anchor="middle" font-size="12" font-weight="700">Fila pronta</text><text x="105" y="54" text-anchor="middle" font-size="13">B</text><rect class="s-soft" x="225" y="10" width="190" height="96" rx="8"/><text x="320" y="30" text-anchor="middle" font-size="12" font-weight="700">Executando</text><text x="320" y="54" text-anchor="middle" font-size="13">A</text><rect class="s-box" x="440" y="10" width="190" height="96" rx="8"/><text x="535" y="30" text-anchor="middle" font-size="12" font-weight="700">Timers (aguardando)</text><text x="535" y="58" text-anchor="middle" font-size="12" class="s-muted" stroke="none">(vazio)</text><text x="320" y="130" text-anchor="middle" font-size="13" font-weight="700">relógio: t = 0 s</text><text x="320" y="154" text-anchor="middle" font-size="12">A está executando; B espera a vez.</text></svg></div>
+<div class="frame" data-caption="3. A faz await asyncio.sleep(2): registra um timer e cede o controle."><svg viewBox="0 0 640 170" role="img" aria-label="Estado do event loop"><title>Estado do event loop: fila pronta, timers e tarefa em execução</title><rect class="s-box" x="10" y="10" width="190" height="96" rx="8"/><text x="105" y="30" text-anchor="middle" font-size="12" font-weight="700">Fila pronta</text><text x="105" y="54" text-anchor="middle" font-size="13">B</text><rect class="s-box" x="225" y="10" width="190" height="96" rx="8"/><text x="320" y="30" text-anchor="middle" font-size="12" font-weight="700">Executando</text><text x="320" y="58" text-anchor="middle" font-size="12" class="s-muted" stroke="none">(vazio)</text><rect class="s-box" x="440" y="10" width="190" height="96" rx="8"/><text x="535" y="30" text-anchor="middle" font-size="12" font-weight="700">Timers (aguardando)</text><text x="535" y="54" text-anchor="middle" font-size="13">A acorda em 2 s</text><text x="320" y="130" text-anchor="middle" font-size="13" font-weight="700">relógio: t = 0 s</text><text x="320" y="154" text-anchor="middle" font-size="12">A saiu da CPU; o loop escolhe B.</text></svg></div>
+<div class="frame" data-caption="4. B também faz await sleep(3). Fila vazia: o loop espera os timers."><svg viewBox="0 0 640 170" role="img" aria-label="Estado do event loop"><title>Estado do event loop: fila pronta, timers e tarefa em execução</title><rect class="s-box" x="10" y="10" width="190" height="96" rx="8"/><text x="105" y="30" text-anchor="middle" font-size="12" font-weight="700">Fila pronta</text><text x="105" y="58" text-anchor="middle" font-size="12" class="s-muted" stroke="none">(vazio)</text><rect class="s-box" x="225" y="10" width="190" height="96" rx="8"/><text x="320" y="30" text-anchor="middle" font-size="12" font-weight="700">Executando</text><text x="320" y="58" text-anchor="middle" font-size="12" class="s-muted" stroke="none">(vazio)</text><rect class="s-box" x="440" y="10" width="190" height="96" rx="8"/><text x="535" y="30" text-anchor="middle" font-size="12" font-weight="700">Timers (aguardando)</text><text x="535" y="54" text-anchor="middle" font-size="13">A acorda em 2 s</text><text x="535" y="74" text-anchor="middle" font-size="13">B acorda em 3 s</text><text x="320" y="130" text-anchor="middle" font-size="13" font-weight="700">relógio: t = 0 s</text><text x="320" y="154" text-anchor="middle" font-size="12">Nenhuma Task pronta: o loop dorme no seletor, sem gastar CPU.</text></svg></div>
+<div class="frame" data-caption="5. Aos 2 s o timer de A vence: A volta à fila e termina o resto do trabalho."><svg viewBox="0 0 640 170" role="img" aria-label="Estado do event loop"><title>Estado do event loop: fila pronta, timers e tarefa em execução</title><rect class="s-box" x="10" y="10" width="190" height="96" rx="8"/><text x="105" y="30" text-anchor="middle" font-size="12" font-weight="700">Fila pronta</text><text x="105" y="54" text-anchor="middle" font-size="13">A</text><rect class="s-box" x="225" y="10" width="190" height="96" rx="8"/><text x="320" y="30" text-anchor="middle" font-size="12" font-weight="700">Executando</text><text x="320" y="58" text-anchor="middle" font-size="12" class="s-muted" stroke="none">(vazio)</text><rect class="s-box" x="440" y="10" width="190" height="96" rx="8"/><text x="535" y="30" text-anchor="middle" font-size="12" font-weight="700">Timers (aguardando)</text><text x="535" y="54" text-anchor="middle" font-size="13">B acorda em 3 s</text><text x="320" y="130" text-anchor="middle" font-size="13" font-weight="700">relógio: t = 2 s</text><text x="320" y="154" text-anchor="middle" font-size="12">A é movida dos timers para a fila pronta.</text></svg></div>
+<div class="frame" data-caption="6. Contraste: se A chamasse time.sleep(3) em vez de await, o loop ficaria parado."><svg viewBox="0 0 640 170" role="img" aria-label="Estado do event loop"><title>Estado do event loop: fila pronta, timers e tarefa em execução</title><rect class="s-box" x="10" y="10" width="190" height="96" rx="8"/><text x="105" y="30" text-anchor="middle" font-size="12" font-weight="700">Fila pronta</text><text x="105" y="54" text-anchor="middle" font-size="13">B (já deveria rodar)</text><rect class="s-soft" x="225" y="10" width="190" height="96" rx="8"/><text x="320" y="30" text-anchor="middle" font-size="12" font-weight="700">Executando</text><text x="320" y="54" text-anchor="middle" font-size="13">A (time.sleep)</text><rect class="s-box" x="440" y="10" width="190" height="96" rx="8"/><text x="535" y="30" text-anchor="middle" font-size="12" font-weight="700">Timers (aguardando)</text><text x="535" y="58" text-anchor="middle" font-size="12" class="s-muted" stroke="none">(vazio)</text><text x="320" y="130" text-anchor="middle" font-size="13" font-weight="700">relógio: t = 0 → 3 s</text><text x="320" y="154" text-anchor="middle" font-size="12">Ninguém cede: B e todo o resto aguardam a thread.</text></svg></div>
+</div>
+<div class="ix"><span class="ix-title">Simulador: event loop passo a passo</span>
+<p>Três tasks (A, B, C) com 1 ms de CPU, uma espera e mais 1 ms de CPU. Avance um evento por vez. No cenário bloqueante, A usa <code>time.sleep</code> no lugar de <code>await asyncio.sleep</code>.</p>
+<div class="ix-row"><label>Cenário <select id="m02-loop-sc"><option value="coop">Todas usam await (cooperativo)</option><option value="blk">A usa time.sleep (bloqueia o loop)</option></select></label>
+<button class="ix-btn primary" id="m02-loop-next" type="button">Próximo evento</button><button class="ix-btn" id="m02-loop-reset" type="button">Reiniciar</button></div>
+<div id="m02-loop-out"></div></div>
+<script>Course.ready(function (C) {
+  var sc = document.getElementById('m02-loop-sc'), out = document.getElementById('m02-loop-out');
+  var nb = document.getElementById('m02-loop-next'), rb = document.getElementById('m02-loop-reset'), k = 0, snaps = [];
+  function build() {
+    var blk = sc.value === 'blk';
+    var tasks = { A: { ops: [['run', 1], [blk ? 'block' : 'await', 3], ['run', 1]] }, B: { ops: [['run', 1], ['await', 2], ['run', 1]] }, C: { ops: [['run', 1], ['await', 1], ['run', 1]] } };
+    var ready = ['A', 'B', 'C'], timers = [], clock = 0, log = [], out2 = [];
+    function snap(msg) { out2.push({ clock: clock, ready: ready.slice(), timers: timers.map(function (t) { return t.n + '@' + t.at; }), msg: msg }); }
+    snap('create_task(A), create_task(B), create_task(C): três tasks na fila pronta.');
+    var guard = 0;
+    while ((ready.length || timers.length) && guard++ < 50) {
+      if (ready.length) {
+        var n = ready.shift(), t = tasks[n], msgs = [];
+        while (t.ops.length) {
+          var op = t.ops.shift();
+          if (op[0] === 'run') { clock += op[1]; msgs.push('executa ' + op[1] + ' ms de CPU'); }
+          else if (op[0] === 'block') { clock += op[1]; msgs.push('chama time.sleep(' + op[1] + '): a thread do loop fica PARADA ' + op[1] + ' ms, ninguém mais roda'); }
+          else { timers.push({ n: n, at: clock + op[1] }); timers.sort(function (a, b) { return a.at - b.at; }); msgs.push('await sleep(' + op[1] + '): registra timer e cede o controle'); break; }
+        }
+        if (!t.ops.length && msgs[msgs.length - 1].indexOf('await') < 0) msgs.push('termina');
+        snap(n + ' ' + msgs.join('; ') + '.');
+      } else {
+        var first = timers[0].at; if (first > clock) clock = first;
+        var woke = [];
+        while (timers.length && timers[0].at <= clock) woke.push(timers.shift().n);
+        ready = ready.concat(woke);
+        snap('Fila vazia: o loop dorme até t = ' + clock + ' ms; timers vencidos movem ' + woke.join(', ') + ' para a fila pronta.');
+      }
+      // timers vencidos durante um bloqueio
+      var due = [];
+      while (timers.length && timers[0].at <= clock) due.push(timers.shift().n);
+      if (due.length) { ready = ready.concat(due); out2[out2.length - 1].msg += ' Timers já vencidos (' + due.join(', ') + ') só voltam à fila agora.'; out2[out2.length - 1].ready = ready.slice(); out2[out2.length - 1].timers = timers.map(function (t) { return t.n + '@' + t.at; }); }
+    }
+    snaps = out2;
+  }
+  function render() {
+    var s = snaps[Math.min(k, snaps.length - 1)], h = '<p><strong>t = ' + s.clock + ' ms</strong> &middot; fila pronta: [' + s.ready.join(', ') + '] &middot; timers: [' + s.timers.join(', ') + ']</p><ol>';
+    for (var i = 0; i <= Math.min(k, snaps.length - 1); i++) h += '<li>' + snaps[i].msg.replace(/</g, '&lt;') + '</li>';
+    h += '</ol>';
+    if (k >= snaps.length - 1) h += '<div class="box ' + (sc.value === 'blk' ? 'bad' : 'ok') + '"><span class="lbl">Fim: ' + s.clock + ' ms</span><p>' + (sc.value === 'blk' ? 'Com time.sleep em A as esperas de B e C deixaram de ser concorrentes: o total soma os bloqueios.' : 'As esperas se sobrepõem: o total é a maior espera mais o trabalho de CPU, não a soma das esperas.') + '</p></div>';
+    out.innerHTML = h; nb.disabled = k >= snaps.length - 1;
+  }
+  function reset() { k = 0; build(); render(); }
+  nb.addEventListener('click', function () { k++; render(); }); rb.addEventListener('click', reset); sc.addEventListener('change', reset); reset();
+});</script>
 
 <h3 id="sec-5-2-taskgroup-cancelamento-e-limites">5.2 TaskGroup, cancelamento e limites <a class="section-link" href="#sec-5-2-taskgroup-cancelamento-e-limites" aria-label="Link para esta seção">#</a></h3>
 <pre><code>import asyncio
@@ -567,6 +678,17 @@ if __name__ == "__main__":
 <div class="box"><strong>Diagnóstico causal de starvation.</strong> <code>tests/integration/test_local_starvation.py</code> sobe um servidor stdlib em <code>127.0.0.1</code> e porta efêmera. <code>/blocking</code> espera em <code>threading.Event</code> dentro do loop; <code>/cooperative</code> aguarda <code>asyncio.Event</code>.</p>
 <p><strong>Propriedade observável:</strong> o heartbeat não progride enquanto o handler bloqueante segura o loop e progride quando a request cooperativa permanece pendente. O teste prova starvation naquele loop/thread; não inventa throughput nem representa multiworker.</p></div>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Dentro de uma <code>async def</code> chamada por um servidor, alguém escreve <code>time.sleep(2)</code>. Qual é o efeito?</p>
+<ol><li data-opt="a">Só a coroutine atual espera; as outras seguem normalmente.</li><li data-opt="b">Bloqueia a thread do event loop por 2 s: nenhuma outra Task daquele loop avança nesse tempo. O correto é <code>await asyncio.sleep(2)</code>.</li><li data-opt="c">O Python detecta e converte automaticamente em <code>await</code>.</li><li data-opt="d">Cria uma nova thread para aquela coroutine.</li></ol>
+<div class="explain">Cooperação: o loop só alterna quando uma Task cede em um <code>await</code>. Código bloqueante segura a única thread do loop. Use o simulador acima e compare os dois cenários.</div>
+</div>
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Um bloco captura <code>except Exception:</code> ao redor de um <code>await</code> dentro de um <code>TaskGroup</code> com timeout. Por que isso é seguro quanto ao cancelamento, e o que seria perigoso?</p>
+<ol><li data-opt="a">Seria perigoso, porque <code>CancelledError</code> deriva de <code>Exception</code> e seria engolida.</li><li data-opt="b">Os dois são igualmente seguros: o asyncio ignora exceções capturadas.</li><li data-opt="c">O perigo é só de desempenho: capturar exceções deixa o loop mais lento.</li><li data-opt="d"><code>CancelledError</code> deriva de <code>BaseException</code>, então <code>except Exception</code> não a engole; perigoso seria <code>except BaseException</code> ou <code>except:</code> sem repropagar.</li></ol>
+<div class="explain">O cancelamento é implementado com exceção. Engolir <code>CancelledError</code> faz o timeout e o TaskGroup perderem o controle. Se precisar capturar para limpar, faça cleanup e relance (<code>raise</code>).</div>
+</div>
+
 </section>
 
 <!-- ============================================ BLOCO 6 -->
@@ -605,6 +727,40 @@ def runtime_capabilities() -> dict[str, object]:
 </table>
 <div class="box"><strong>Unidades distintas.</strong> Coroutine, Task, thread e processo têm ciclos de vida e custos diferentes. Escolha pela forma de execução, isolamento, cancelamento e responsabilidade pelo encerramento.</div>
 
+<div class="ix"><span class="ix-title">Simulador: qual executor para este trabalho?</span>
+<div class="ix-row"><label>Carga <select id="m02-ex-w"><option value="ioa">I/O com API assíncrona disponível</option><option value="iob">I/O bloqueante sem API async</option><option value="cpup">CPU em Python puro</option><option value="cpun">CPU em extensão nativa que libera o GIL</option></select></label>
+<label>Build <select id="m02-ex-b"><option value="gil">CPython padrão (com GIL)</option><option value="ft">CPython free-threaded</option></select></label></div>
+<div class="ix-out" id="m02-ex-out"></div></div>
+<script>Course.ready(function (C) {
+  var w = document.getElementById('m02-ex-w'), b = document.getElementById('m02-ex-b'), out = document.getElementById('m02-ex-out');
+  function render() {
+    var r = '', ft = b.value === 'ft';
+    if (w.value === 'ioa') r = 'asyncio com TaskGroup e limite de admissão (Semaphore ou fila bounded).\nPor quê: muitas esperas baratas na mesma thread. Não precisa de outro executor.';
+    else if (w.value === 'iob') r = 'asyncio.to_thread / ThreadPoolExecutor com limite de workers.\nPor quê: a espera de I/O libera o GIL. Confirme thread safety; cancelar o await não interrompe a função na thread.';
+    else if (w.value === 'cpup') r = ft ? 'Threads podem escalar sem GIL, mas só depois de testar suas dependências e travar estado compartilhado.\nCompare com ProcessPoolExecutor: processos continuam sendo a opção de menor risco.' : 'ProcessPoolExecutor (ou InterpreterPoolExecutor se os dados e extensões forem compatíveis).\nPor quê: threads de Python puro disputam o GIL. Custos: startup, serialização e memória: o trabalho precisa ser grande.';
+    else r = 'ThreadPoolExecutor.\nPor quê: extensões nativas que liberam o GIL rodam em paralelo' + (ft ? ' (e, sem GIL, o resto do seu código também)' : '') + '. Confira na documentação da biblioteca que ela realmente libera.';
+    out.textContent = r + '\n\nEm todos os casos: meça com a carga real antes de decidir.';
+  }
+  w.addEventListener('change', render); b.addEventListener('change', render); render();
+});</script>
+<div class="ix"><span class="ix-title">Calculadora: Lei de Little (L = λ · W)</span>
+<div class="ix-row"><label>λ (requisições/s) <input type="number" id="m02-lt-l" value="100" min="1" step="1"></label>
+<label>W (s por requisição) <input type="number" id="m02-lt-w" value="2" min="0.01" step="0.1"></label>
+<label>Limite (Semaphore) <input type="number" id="m02-lt-c" value="100" min="1" step="1"></label></div>
+<div class="ix-out" id="m02-lt-out"></div></div>
+<script>Course.ready(function (C) {
+  var l = document.getElementById('m02-lt-l'), w = document.getElementById('m02-lt-w'), c = document.getElementById('m02-lt-c'), out = document.getElementById('m02-lt-out');
+  function render() {
+    var L = +l.value, W = +w.value, cap = +c.value;
+    if (!(L > 0 && W > 0 && cap > 0)) { out.textContent = 'Informe valores positivos.'; return; }
+    var inflight = L * W, maxTp = cap / W;
+    out.textContent = 'Requisições em voo (L = λ·W): ' + inflight.toFixed(1) + '\nVazão máxima com limite ' + cap + ': ' + maxTp.toFixed(1) + ' req/s\n' +
+      (L > maxTp ? 'λ > vazão máxima: a fila de admissão cresce sem parar. Recuse (backpressure) ou aumente o limite/reduza W.' : 'λ cabe no limite: o sistema se estabiliza com cerca de ' + inflight.toFixed(1) + ' em voo.') +
+      '\nVálido para sistema estável, com λ, W e L medidos na mesma fronteira e janela.';
+  }
+  [l, w, c].forEach(function (e) { e.addEventListener('input', render); }); render();
+});</script>
+
 <h3 id="sec-6-3-capacidade-nao-e-um-numero-fora-da-fronteira-do-sistema">6.3 Capacidade não é um número fora da fronteira do sistema <a class="section-link" href="#sec-6-3-capacidade-nao-e-um-numero-fora-da-fronteira-do-sistema" aria-label="Link para esta seção">#</a></h3>
 <p>A Lei de Little, <strong>L = λW</strong>, vale para sistema estável quando as três medidas usam a mesma fronteira e janela. Em um batch fechado de 50 itens, “50 criados” não significa que 50 estão simultaneamente em serviço: parte pode estar na fila. Meça separadamente itens admitidos, executando e aguardando; então use a lei para verificar coerência, não para inventar throughput. Filas bounded, semáforos e rate limits controlam admissão; não eliminam a capacidade necessária.</p>
 
@@ -619,6 +775,17 @@ def runtime_capabilities() -> dict[str, object]:
 </ol>
 </div>
 <div class="expected"><strong>Resultado observável.</strong> <code>compare_cpu_executors()</code> registra input/result hashes, capabilities, amostras e mediana; estratégias ausentes recebem estado e razão. <code>demonstrate_shared_counter()</code> força read→barrier→write, demonstra lost update e prova as correções por lock e message passing. Não há ranking universal.</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Python padrão (com GIL), tarefa em Python puro que gasta CPU em cálculos grandes e serializáveis. Qual executor tende a escalar entre núcleos?</p>
+<ol><li data-opt="a"><code>ThreadPoolExecutor</code>: mais threads sempre usam mais núcleos.</li><li data-opt="b"><code>asyncio.gather</code> com muitas coroutines.</li><li data-opt="c"><code>ProcessPoolExecutor</code>: cada processo tem seu próprio interpretador e GIL.</li><li data-opt="d">Nenhum: Python nunca usa mais de um núcleo.</li></ol>
+<div class="explain">Com GIL, threads de Python puro não executam bytecode em paralelo; threads funcionam bem quando a espera é I/O ou quando a extensão nativa libera o GIL. Processos custam startup, IPC e serialização, por isso o trabalho precisa ser "suficientemente grande". Meça.</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">No build free-threaded do Python 3.14, o que muda para o seu código multithread?</p>
+<ol><li data-opt="a">Threads de Python podem rodar em paralelo, mas corridas de dados ficam reais: locks, compatibilidade das extensões e regressão em single-thread precisam ser testados.</li><li data-opt="b">Nada: o GIL continua obrigatório em todo build.</li><li data-opt="c">Todo código thread-unsafe vira thread-safe automaticamente.</li><li data-opt="d">Processos deixam de existir e viram threads.</li></ol>
+<div class="explain">Remover o GIL tira uma proteção implícita que muito código usava sem perceber. É uma decisão de workload e de ecossistema, não um slogan de velocidade. Detecte o GIL efetivo em runtime em vez de presumir.</div>
+</div>
+
 </section>
 
 <!-- ============================================ BLOCO 7 -->
@@ -765,6 +932,17 @@ class ResumoCategoria:
 <li>Tudo é referência; <code>==</code> é Equals, <code>is</code> é ReferenceEquals (só para None); typo em atributo CRIA atributo — slots barra.</li>
 </ul>
 </div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q"><code>g = (x*x for x in range(3)); print(list(g)); print(list(g))</code>. Qual é a saída?</p>
+<ol><li data-opt="a"><code>[0, 1, 4]</code> e depois <code>[]</code>: o gerador é de uso único e já foi consumido.</li><li data-opt="b"><code>[0, 1, 4]</code> duas vezes.</li><li data-opt="c"><code>[0, 1, 4]</code> e depois <code>StopIteration</code>.</li><li data-opt="d"><code>[]</code> as duas vezes, pois é preguiçoso.</li></ol>
+<div class="explain">Geradores têm estado e ownership: quem consome gasta. Se precisar iterar duas vezes, materialize numa lista ou recrie o gerador. Preguiça economiza memória, mas troca por um contrato de lifetime.</div>
+</div>
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Em <code>match cor:</code> com <code>case VERMELHO:</code> (nome simples, sem ponto) o que acontece?</p>
+<ol><li data-opt="a">Compara <code>cor == VERMELHO</code> usando a variável global.</li><li data-opt="b">Dá <code>SyntaxError</code> porque faltou o ponto.</li><li data-opt="c">Casa só se <code>cor</code> for do mesmo tipo de <code>VERMELHO</code>.</li><li data-opt="d"><code>VERMELHO</code> vira um padrão de captura: casa com qualquer valor e o liga ao nome. Para comparar com constante use nome pontuado (<code>Cor.VERMELHO</code>).</li></ol>
+<div class="explain">Esta é a armadilha clássica do pattern matching: nomes simples capturam, nomes pontuados comparam. Um <code>case</code> assim, no meio, esconde os seguintes (que nunca rodam).</div>
+</div>
+
 </section>
 <!-- ============================================ BLOCO 8 -->
 <section id="b8">
@@ -885,6 +1063,17 @@ uv run python -m python_senior_lab.cli --help</code></pre>
 
 <h3 id="sec-peca-do-produto">Peça do produto <a class="section-link" href="#sec-peca-do-produto" aria-label="Link para esta seção">#</a></h3>
 <p><strong>Entrega para o Capstone:</strong> o núcleo de domínio e os ports tipados permanecem sem framework HTTP e sem SDK de provedor. M03 poderá adaptá-los para API e persistência sem inverter a dependência. A entrega inclui riscos residuais e itens opcionais não executados, em vez de promovê-los silenciosamente.</p>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Um teste gerado por IA passa, mas copia a mesma fórmula da implementação para calcular o esperado. Por que isso é um risco?</p>
+<ol><li data-opt="a">Não há risco: teste verde significa código correto.</li><li data-opt="b">É uma tautologia: se a fórmula estiver errada, o teste herda o erro e passa; um bom teste tem oráculo independente, e a mutação/controle negativo mostra se ele consegue falhar.</li><li data-opt="c">O risco é só de estilo, não de correção.</li><li data-opt="d">O pytest reprova automaticamente testes que repetem a fórmula.</li></ol>
+<div class="explain">Teste é especificação executável. Teste que nunca falha por motivo nenhum não protege. Propriedades (Hypothesis), casos negativos preparados e mutação sensibilizam a suíte, principalmente contra código de IA que parece plausível.</div>
+</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que o laboratório instala o wheel e roda o CLI <strong>fora</strong> do checkout?</p>
+<ol><li data-opt="a">Para o teste rodar mais rápido.</li><li data-opt="b">Porque wheels só funcionam fora de pastas Git.</li><li data-opt="c">Porque dentro do checkout o código-fonte e arquivos locais mascaram falhas de empacotamento (módulo ou dado faltando no wheel).</li><li data-opt="d">Para evitar o uso de ambiente virtual.</li></ol>
+<div class="explain">Distribuição só está entregue quando o artefato funciona sozinho. Rodar da raiz do projeto deixa o import cair no <code>src/</code> local e um arquivo esquecido no <code>pyproject.toml</code> só aparece no usuário final.</div>
+</div>
 
 </section>
 
@@ -1043,6 +1232,23 @@ uv run python -m python_senior_lab.cli --help</code></pre>
 <li><code>evidence/run.json</code> com versões, ambiente, comandos, durações e hashes reais.</li>
 <li>Núcleo/ports do Capstone importáveis sem framework web e sem provedor de IA.</li>
 </ol>
+</div>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique para virar. Tente responder de cabeça antes.</p>
+<div class="flashcards">
+<div class="fc"><div class="front">pyproject.toml vs uv.lock</div><div class="back">Intenção (dependências declaradas) vs resolução exata e reproduzível.</div></div>
+<div class="fc"><div class="front">uv sync --locked</div><div class="back">Restaura o ambiente do lock e falha se o lock não bate com o pyproject.</div></div>
+<div class="fc"><div class="front">O que acontece num import?</div><div class="back">Busca em sys.modules, finders, cria o módulo, executa o topo uma vez, cacheia.</div></div>
+<div class="fc"><div class="front">frozen=True é profundo?</div><div class="back">Não. Impede reatribuir campos; listas e dicts internos continuam mutáveis.</div></div>
+<div class="fc"><div class="front">Type hints em runtime</div><div class="back">Não validam nada. Checker estático cobre seu código; Pydantic cobre dados externos.</div></div>
+<div class="fc"><div class="front">Protocol</div><div class="back">Compatibilidade estrutural. isinstance só com @runtime_checkable e confere apenas nomes.</div></div>
+<div class="fc"><div class="front">Caminhos sem validação no Pydantic</div><div class="back">model_construct e atribuições sem validate_assignment. Validação só vale onde roda.</div></div>
+<div class="fc"><div class="front">time.sleep dentro de async def</div><div class="back">Trava a thread do loop; use await asyncio.sleep ou to_thread.</div></div>
+<div class="fc"><div class="front">CancelledError</div><div class="back">Deriva de BaseException. Não engula; limpe e relance.</div></div>
+<div class="fc"><div class="front">CPU puro com GIL</div><div class="back">ProcessPoolExecutor; threads servem a I/O ou extensões que liberam o GIL.</div></div>
+<div class="fc"><div class="front">Lei de Little</div><div class="back">L = λ·W em sistema estável, mesma fronteira e janela. Fila bounded limita admissão.</div></div>
+<div class="fc"><div class="front">Gerador de uso único</div><div class="back">Depois de consumido, volta vazio. Materialize ou recrie.</div></div>
 </div>
 
 <div class="box">

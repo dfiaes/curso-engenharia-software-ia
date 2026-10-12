@@ -1,0 +1,74 @@
+# Equivalente Azure DevOps Pipelines: CI + dev -> cert -> prod.
+# Aprovações: Pipelines > Environments > (cert|prod) > Approvals and checks.
+# On-premise: troque 'vmImage' por 'name: <pool-self-hosted>'.
+trigger:
+  branches:
+    include: [main]
+pr:
+  branches:
+    include: [main]
+
+variables:
+  azureSubscription: 'sc-azure-oidc'   # service connection com workload identity federation
+
+stages:
+  - stage: CI
+    jobs:
+      - job: check
+        pool:
+          vmImage: ubuntu-latest
+          # name: pool-onprem
+        steps:
+          - checkout: self
+            fetchDepth: 0
+          - script: make check BASE=origin/main
+            displayName: make check
+            env:
+              PR_BODY: ''   # [PREENCHER] o Azure DevOps não expõe o corpo do PR em variável; busque via API se quiser a checagem de drift
+
+  - stage: Dev
+    dependsOn: CI
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: dev
+        environment: dev
+        pool: { vmImage: ubuntu-latest }
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: $(azureSubscription)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: ./scripts/deploy.sh dev "$(Build.SourceVersion)"
+
+  - stage: Cert
+    dependsOn: Dev
+    jobs:
+      - deployment: cert
+        environment: cert        # approvals and checks no environment
+        pool: { vmImage: ubuntu-latest }
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - script: ./scripts/deploy.sh cert "$(Build.SourceVersion)" && ./scripts/smoke.sh cert
+                  displayName: deploy + smoke cert
+
+  - stage: Prod
+    dependsOn: Cert
+    jobs:
+      - deployment: prod
+        environment: prod        # aprovadores humanos obrigatórios
+        pool: { vmImage: ubuntu-latest }
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - script: ./scripts/deploy.sh prod "$(Build.SourceVersion)" && ./scripts/smoke.sh prod
+                  displayName: deploy + smoke prod

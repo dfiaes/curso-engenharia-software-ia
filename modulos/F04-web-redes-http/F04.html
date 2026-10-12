@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>F04 · Como a web funciona: redes, DNS, TLS, HTTP, JSON e APIs REST</title>
 <meta name="color-scheme" content="light dark">
-<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
 <link rel="stylesheet" href="../../assets/course.css">
 </head>
 <body>
@@ -85,6 +85,8 @@
 <figcaption>Cada camada embrulha a de cima. Um roteador abre só o envelope IP.</figcaption>
 </figure>
 
+
+<div class="ix"><span class="ix-title">Diagrama: encapsulamento, uma camada dentro da outra</span><svg viewBox="0 0 640 212" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Mensagem HTTP dentro de segmento TCP, dentro de pacote IP, dentro de quadro de enlace</title><defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="10" width="620" height="190" rx="10" class="s-box" /><text x="24" y="32" font-size="13" text-anchor="start" font-weight="700">Enlace: quadro Ethernet/Wi-Fi (endereço MAC, salto a salto)</text><rect x="30" y="44" width="580" height="148" rx="10" class="s-box" /><text x="44" y="66" font-size="13" text-anchor="start" font-weight="700">Rede: pacote IP (endereço IP, de máquina a máquina)</text><rect x="50" y="78" width="540" height="106" rx="10" class="s-box" /><text x="64" y="100" font-size="13" text-anchor="start" font-weight="700">Transporte: segmento TCP (porta de origem e destino, ordem e retransmissão)</text><rect x="70" y="112" width="500" height="62" rx="10" class="s-soft" /><text x="84" y="134" font-size="13" text-anchor="start" font-weight="700">Aplicação: mensagem HTTP</text><text x="84" y="156" font-size="12" text-anchor="start">GET /pedidos/42 HTTP/1.1   Host: api.exemplo.com</text></svg><p class="meta">Cada camada acrescenta um cabeçalho ao que recebe da de cima; o receptor desfaz a ordem inversa.</p></div>
 <h3>IP e porta: dois endereços para duas perguntas</h3>
 <p>O endereço IP responde "qual máquina (interface)?"; a porta (16 bits, 0 a 65535) responde "qual conversa dentro dela?". Uma conexão TCP é identificada pela quíntupla <code>(protocolo, IP origem, porta origem, IP destino, porta destino)</code>. O servidor usa sempre a porta 443 e atende milhares de clientes porque cada cliente chega com uma porta de origem <em>efêmera</em> diferente (no Linux, por padrão, de 32768 a 60999; veja <code>net.ipv4.ip_local_port_range</code>). Consequência prática: um cliente que abre conexões demais contra o mesmo destino esgota portas efêmeras, e o sintoma é erro de <code>bind</code>/<code>connect</code> sem nenhuma falha de rede de verdade; o remédio é reutilizar conexões (<em>keep-alive</em>, <em>pool</em>).</p>
 <p>IPv4 tem 32 bits (≈4,3 bilhões de endereços), IPv6 tem 128. Faixas privadas (<code>10.0.0.0/8</code>, <code>172.16.0.0/12</code>, <code>192.168.0.0/16</code>, no IPv6 <code>fc00::/7</code>) não são roteadas na internet pública; o NAT traduz o par privado para um público. <code>127.0.0.0/8</code> é loopback (a própria máquina) e <code>169.254.0.0/16</code> é <em>link-local</em>, onde nuvens costumam expor o serviço de metadados, detalhe que volta no bloco 5 (SSRF). A notação <code>/24</code> (CIDR) diz quantos bits iniciais identificam a rede: <code>192.168.1.0/24</code> tem 256 endereços.</p>
@@ -107,6 +109,12 @@
 <p>O encerramento usa <code>FIN</code> de cada lado, e quem fecha primeiro fica em <code>TIME_WAIT</code> (tipicamente 60 s no Linux) para absorver pacotes atrasados. Um servidor que fecha milhares de conexões curtas acumula <code>TIME_WAIT</code>; é normal, e só vira problema combinado com esgotamento de portas efêmeras no lado cliente. Um <code>RST</code> aborta a conexão sem cerimônia: é o que um host devolve ao receber um SYN para porta fechada (<em>refused</em>), e o que um balanceador envia ao derrubar uma conexão ociosa (<em>reset</em>).</p>
 <p>Escolha entre os dois: precisa de ordem e entrega garantida (quase tudo na web) → TCP. Tolera perda e prefere frescor a completude (voz, jogos, DNS com consulta pequena) ou quer controlar a recuperação de perdas por conta própria (QUIC, que é a base do HTTP/3) → UDP.</p>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">O cliente faz dois <code>send()</code> seguidos ("OLA" e "MUNDO") numa conexão TCP. Na outra ponta, uma chamada <code>recv()</code> pode devolver:</p>
+<ol><li data-opt="a">Sempre exatamente "OLA", depois "MUNDO"</li><li data-opt="b">Nunca mais de um byte por vez</li><li data-opt="c">"OLAMUNDO" de uma vez, ou "OLAMU" e depois "NDO": TCP é fluxo de bytes sem fronteiras de mensagem</li><li data-opt="d">Um erro, pois cada mensagem exige uma conexão</li></ol>
+<div class="explain">TCP garante ordem e entrega, mas <strong>não preserva os limites</strong> das escritas. O protocolo de cima precisa delimitar (tamanho no início, linha terminada em <code>\n</code>, <code>Content-Length</code> do HTTP) e o receptor deve ler em laço até ter a mensagem inteira. É a fonte clássica de bugs "funciona na minha máquina" em protocolos caseiros.</div>
+</div>
 <h3>Sockets: a fronteira com o seu código</h3>
 <p>Um <em>socket</em> é o objeto do sistema operacional que representa uma ponta de comunicação. O servidor faz <code>bind</code> (reserva IP:porta), <code>listen</code> (aceita pedidos de conexão numa fila de tamanho limitado, o <em>backlog</em>) e <code>accept</code> (devolve um novo socket para cada cliente). O cliente faz <code>connect</code>. Depois, <code>send</code>/<code>recv</code>. Duas armadilhas sempre presentes: <code>recv(n)</code> devolve <em>até</em> n bytes (nunca "a mensagem"), e <code>send</code> pode escrever só parte, por isso <code>sendall</code>. O laboratório isola isso em três funções: <code>build_request</code> monta os bytes, <code>fetch</code> abre o socket e envia, <code>parse_response</code> lê da conexão até o limite da mensagem.</p>
 <pre><code>import socket
@@ -135,6 +143,39 @@ print(b"".join(chunks).split(b"\r\n", 1)[0])    # b'HTTP/1.1 200 OK'</code></pre
 <p>Mais de 250 ms antes de o código do servidor executar uma linha. Com TLS 1.2 seriam 2 RTTs de TLS (340 ms). Com HTTP/3 sobre QUIC, transporte e criptografia se negociam juntos (1 RTT em vez de 2), e numa conexão <em>retomada</em> o cliente pode enviar dados já no primeiro voo (0-RTT, com risco de repetição, bloco 2). Uma segunda requisição na mesma conexão custa só o último passo.</p>
 </div>
 
+
+<div class="ix"><span class="ix-title">Simulador: latência × banda no tempo de uma requisição</span>
+<p>Ajuste o RTT (ida e volta), a banda e o tamanho da resposta. Veja onde o tempo vai e qual remédio adianta.</p>
+<div class="ix-row"><label for="f04-lt-rtt">RTT: <strong id="f04-lt-rttv">80</strong> ms</label><input type="range" id="f04-lt-rtt" min="5" max="300" value="80"></div>
+<div class="ix-row"><label for="f04-lt-bw">Banda: <strong id="f04-lt-bwv">50</strong> Mbps</label><input type="range" id="f04-lt-bw" min="1" max="1000" value="50"></div>
+<div class="ix-row"><label for="f04-lt-sz">Resposta: <strong id="f04-lt-szv">200</strong> KB</label><input type="range" id="f04-lt-sz" min="1" max="50000" value="200"></div>
+<div class="ix-row"><label for="f04-lt-tls">Segurança:</label><select id="f04-lt-tls"><option value="1">TLS 1.3 (1 RTT)</option><option value="2">TLS 1.2 (2 RTT)</option><option value="0">Sem TLS (só para teste)</option></select>
+<label><input type="checkbox" id="f04-lt-dns"> consulta DNS sem cache (+1 RTT)</label><label><input type="checkbox" id="f04-lt-ka"> conexão reaproveitada (keep-alive)</label></div>
+<div id="f04-lt-bar" style="display:flex;height:22px;border-radius:6px;overflow:hidden;border:1px solid var(--line);margin:8px 0"></div>
+<div class="ix-out" id="f04-lt-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var $=function(i){return document.getElementById(i);};
+var ids=["rtt","bw","sz","tls","dns","ka"],E={};ids.forEach(function(k){E[k]=$("f04-lt-"+k);});
+var bar=$("f04-lt-bar"),out=$("f04-lt-out");
+function fmt(ms){return ms>=1000?(ms/1000).toFixed(2)+" s":ms.toFixed(0)+" ms";}
+function upd(){
+  var rtt=+E.rtt.value,bw=+E.bw.value,sz=+E.sz.value,tls=+E.tls.value,dns=E.dns.checked,ka=E.ka.checked;
+  $("f04-lt-rttv").textContent=rtt;$("f04-lt-bwv").textContent=bw;$("f04-lt-szv").textContent=sz.toLocaleString("pt-BR");
+  var parts=[["DNS",dns?rtt:0,"#8a8a8a"],["TCP",ka?0:rtt,"var(--info)"],["TLS",ka?0:tls*rtt,"var(--fund)"],["Requisição até o 1º byte",rtt,"var(--warn)"],["Transferência",sz*8/bw,"var(--accent)"]];
+  var tot=parts.reduce(function(a,p){return a+p[1];},0),h="",txt="";
+  parts.forEach(function(p){if(p[1]>0){h+='<div title="'+p[0]+'" style="width:'+(p[1]/tot*100)+'%;background:'+p[2]+'"></div>';}txt+=p[0].padEnd(26)+fmt(p[1])+"\n";});
+  bar.innerHTML=h;
+  var lat=tot-parts[4][1],tr=parts[4][1],dica=tr>lat?"Limitado por BANDA: reduza bytes (compressão, imagens menores, paginação) ou aumente a banda.":"Limitado por LATÊNCIA: reduza round-trips (reaproveitar conexão, HTTP/2 ou 3, CDN mais perto, menos chamadas em série). Mais banda quase não ajuda.";
+  out.textContent=txt+"".padEnd(40,"-")+"\nTotal".padEnd(27)+fmt(tot)+"\n\n"+dica+"\n(Modelo simplificado: ignora slow start e perdas, que pesam em respostas médias.)";
+}
+ids.forEach(function(k){E[k].addEventListener("input",upd);E[k].addEventListener("change",upd);});upd();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
 <h3>Trade-offs</h3>
 <ul>
 <li><strong>Conexão longa × curta.</strong> Longa amortiza handshakes, mas segura recursos no servidor e sofre com balanceadores que derrubam ociosas (configure <em>keep-alive</em> do cliente abaixo do <em>idle timeout</em> do balanceador).</li>
@@ -154,6 +195,12 @@ print(b"".join(chunks).split(b"\r\n", 1)[0])    # b'HTTP/1.1 200 OK'</code></pre
 <p><code>localhost</code> resolve para <code>::1</code> (IPv6) e <code>127.0.0.1</code>. Um servidor que escuta só em <code>127.0.0.1</code> recusa a tentativa em <code>::1</code>. Com recusa (RST) o cliente cai para IPv4 em milissegundos; a lentidão aparece quando o pacote é <em>descartado</em> (regra de firewall, proxy mal configurado) e o cliente espera o timeout da primeira família antes de tentar a segunda. É o clássico "lento só na minha máquina". Quando o primeiro byte demora de forma inexplicável, confira para quais famílias o nome resolve, quais o servidor atende e qual o cliente tenta primeiro. O laboratório fixa <code>127.0.0.1</code> de propósito.</p>
 </div>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Ao chamar um serviço, o erro é <code>Connection refused</code> em 2 ms. Outro serviço trava 30 s e dá <code>timeout</code>. Qual a leitura mais provável?</p>
+<ol><li data-opt="a">Os dois são o mesmo problema: o servidor caiu</li><li data-opt="b">Refused: a máquina respondeu que nada escuta naquela porta (recusa ativa); timeout: silêncio (firewall descartando, host fora do ar, rota ruim)</li><li data-opt="c">Refused: DNS errado; timeout: certificado inválido</li><li data-opt="d">Refused: a porta está aberta e ocupada; timeout: banda insuficiente</li></ol>
+<div class="explain">Um RST imediato indica que o host está de pé e a porta não tem serviço (ou foi recusada ativamente). O silêncio até o limite sugere pacotes descartados no caminho. E <em>sempre</em> defina timeouts de conexão e de leitura: sem eles, um servidor mudo pode prender sua thread por minutos.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Camadas encapsulam; IP acha o host, a porta acha a conversa; TCP dá fluxo confiável sem fronteiras de mensagem, então o protocolo de cima precisa delimitar. Abrir conexão custa um RTT; latência e banda têm remédios diferentes. <em>Refused</em> é recusa ativa, <em>timeout</em> é silêncio, <em>reset</em> é queda de conexão existente. Defina sempre timeouts de conexão e leitura.</p>
@@ -196,6 +243,20 @@ print(b"".join(chunks).split(b"\r\n", 1)[0])    # b'HTTP/1.1 200 OK'</code></pre
 <p>Na resposta, o nome do registro volta como <code>c0 0c</code>: dois bits <code>11</code> seguidos de um deslocamento (12) significam "o nome está no byte 12 da mensagem" (<em>compressão de nomes</em>). O decodificador precisa recusar ponteiros que apontam para frente ou formam laço, senão um pacote malicioso o prende num loop infinito; o teste correspondente está em <code>test_dnswire.py</code>.</p>
 </div>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: resolução DNS de api.exemplo.com</span>
+<div class="frame" data-caption="1. O navegador pergunta ao resolvedor do provedor"><svg viewBox="0 0 650 190" role="img" style="width:100%;height:auto;max-width:650px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Resolução recursiva de DNS</title><defs><marker id="ar8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="6" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="62" y="59" font-size="12" text-anchor="middle">Navegador</text><rect x="134" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="190" y="50" font-size="12" text-anchor="middle">Resolvedor</text><text x="190" y="65" font-size="12" text-anchor="middle">(do provedor)</text><rect x="262" y="30" width="112" height="50" rx="8" class="s-box" /><text x="318" y="59" font-size="12" text-anchor="middle">Servidor raiz</text><rect x="390" y="30" width="112" height="50" rx="8" class="s-box" /><text x="446" y="59" font-size="12" text-anchor="middle">TLD .com</text><rect x="518" y="30" width="112" height="50" rx="8" class="s-box" /><text x="574" y="50" font-size="12" text-anchor="middle">Autoritativo</text><text x="574" y="65" font-size="12" text-anchor="middle">exemplo.com</text><path d="M62 84 Q126.0 114 190 84" class="s-accent" fill="none" stroke-width="2" marker-end="url(#ar8)"/><text x="320" y="150" font-size="14" text-anchor="middle" font-weight="700">api.exemplo.com?</text><text x="320" y="172" font-size="13" text-anchor="middle">(cache vazio)</text></svg></div>
+<div class="frame" data-caption="2. O resolvedor pergunta à raiz, que indica os servidores do TLD"><svg viewBox="0 0 650 190" role="img" style="width:100%;height:auto;max-width:650px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Resolução recursiva de DNS</title><defs><marker id="ar9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="6" y="30" width="112" height="50" rx="8" class="s-box" /><text x="62" y="59" font-size="12" text-anchor="middle">Navegador</text><rect x="134" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="190" y="50" font-size="12" text-anchor="middle">Resolvedor</text><text x="190" y="65" font-size="12" text-anchor="middle">(do provedor)</text><rect x="262" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="318" y="59" font-size="12" text-anchor="middle">Servidor raiz</text><rect x="390" y="30" width="112" height="50" rx="8" class="s-box" /><text x="446" y="59" font-size="12" text-anchor="middle">TLD .com</text><rect x="518" y="30" width="112" height="50" rx="8" class="s-box" /><text x="574" y="50" font-size="12" text-anchor="middle">Autoritativo</text><text x="574" y="65" font-size="12" text-anchor="middle">exemplo.com</text><path d="M190 84 Q254.0 114 318 84" class="s-accent" fill="none" stroke-width="2" marker-end="url(#ar9)"/><text x="320" y="150" font-size="14" text-anchor="middle" font-weight="700">"Quem cuida de .com?"</text><text x="320" y="172" font-size="13" text-anchor="middle">-&gt; lista de servidores do TLD .com</text></svg></div>
+<div class="frame" data-caption="3. O TLD indica quem é autoritativo para o domínio"><svg viewBox="0 0 650 190" role="img" style="width:100%;height:auto;max-width:650px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Resolução recursiva de DNS</title><defs><marker id="ar10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="6" y="30" width="112" height="50" rx="8" class="s-box" /><text x="62" y="59" font-size="12" text-anchor="middle">Navegador</text><rect x="134" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="190" y="50" font-size="12" text-anchor="middle">Resolvedor</text><text x="190" y="65" font-size="12" text-anchor="middle">(do provedor)</text><rect x="262" y="30" width="112" height="50" rx="8" class="s-box" /><text x="318" y="59" font-size="12" text-anchor="middle">Servidor raiz</text><rect x="390" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="446" y="59" font-size="12" text-anchor="middle">TLD .com</text><rect x="518" y="30" width="112" height="50" rx="8" class="s-box" /><text x="574" y="50" font-size="12" text-anchor="middle">Autoritativo</text><text x="574" y="65" font-size="12" text-anchor="middle">exemplo.com</text><path d="M190 84 Q318.0 144 446 84" class="s-accent" fill="none" stroke-width="2" marker-end="url(#ar10)"/><text x="320" y="150" font-size="14" text-anchor="middle" font-weight="700">"Quem cuida de exemplo.com?"</text><text x="320" y="172" font-size="13" text-anchor="middle">-&gt; servidores autoritativos (NS)</text></svg></div>
+<div class="frame" data-caption="4. O autoritativo responde com o endereço e o TTL"><svg viewBox="0 0 650 190" role="img" style="width:100%;height:auto;max-width:650px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Resolução recursiva de DNS</title><defs><marker id="ar11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="6" y="30" width="112" height="50" rx="8" class="s-box" /><text x="62" y="59" font-size="12" text-anchor="middle">Navegador</text><rect x="134" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="190" y="50" font-size="12" text-anchor="middle">Resolvedor</text><text x="190" y="65" font-size="12" text-anchor="middle">(do provedor)</text><rect x="262" y="30" width="112" height="50" rx="8" class="s-box" /><text x="318" y="59" font-size="12" text-anchor="middle">Servidor raiz</text><rect x="390" y="30" width="112" height="50" rx="8" class="s-box" /><text x="446" y="59" font-size="12" text-anchor="middle">TLD .com</text><rect x="518" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="574" y="50" font-size="12" text-anchor="middle">Autoritativo</text><text x="574" y="65" font-size="12" text-anchor="middle">exemplo.com</text><path d="M190 84 Q382.0 144 574 84" class="s-accent" fill="none" stroke-width="2" marker-end="url(#ar11)"/><text x="320" y="150" font-size="14" text-anchor="middle" font-weight="700">"Qual o A de api.exemplo.com?"</text><text x="320" y="172" font-size="13" text-anchor="middle">-&gt; 203.0.113.10, TTL 300 s</text></svg></div>
+<div class="frame" data-caption="5. O resolvedor devolve a resposta e a guarda pelo TTL: o cache faz as próximas consultas custarem quase nada"><svg viewBox="0 0 650 190" role="img" style="width:100%;height:auto;max-width:650px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Resolução recursiva de DNS</title><defs><marker id="ar12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="6" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="62" y="59" font-size="12" text-anchor="middle">Navegador</text><rect x="134" y="30" width="112" height="50" rx="8" class="s-soft" /><text x="190" y="50" font-size="12" text-anchor="middle">Resolvedor</text><text x="190" y="65" font-size="12" text-anchor="middle">(do provedor)</text><rect x="262" y="30" width="112" height="50" rx="8" class="s-box" /><text x="318" y="59" font-size="12" text-anchor="middle">Servidor raiz</text><rect x="390" y="30" width="112" height="50" rx="8" class="s-box" /><text x="446" y="59" font-size="12" text-anchor="middle">TLD .com</text><rect x="518" y="30" width="112" height="50" rx="8" class="s-box" /><text x="574" y="50" font-size="12" text-anchor="middle">Autoritativo</text><text x="574" y="65" font-size="12" text-anchor="middle">exemplo.com</text><path d="M190 84 Q126.0 114 62 84" class="s-accent" fill="none" stroke-width="2" marker-end="url(#ar12)"/><text x="320" y="150" font-size="14" text-anchor="middle" font-weight="700">203.0.113.10</text><text x="320" y="172" font-size="13" text-anchor="middle">guardado em cache por 300 s</text></svg></div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Você vai migrar <code>api.exemplo.com</code> para outro IP amanhã às 10h. O TTL atual é 86400 (24 h). O que fazer?</p>
+<ol><li data-opt="a">Baixar o TTL (ex.: 300) com pelo menos 24 h de antecedência, migrar, e depois subir o TTL de novo</li><li data-opt="b">Trocar o IP às 10h e esperar: o DNS propaga na hora</li><li data-opt="c">Aumentar o TTL para garantir que todos vejam a mudança</li><li data-opt="d">Apagar o registro por alguns minutos para forçar a limpeza do cache</li></ol>
+<div class="explain">Resolvedores guardam a resposta pelo TTL <em>que existia quando a consulta foi feita</em>. Para que a troca valha em minutos, o TTL baixo precisa estar publicado pelo menos um TTL antigo antes. Subir o TTL ou apagar o registro piora a transição (cache negativo, falhas).</div>
+</div>
 <h3>TLS: o que ele garante e como</h3>
 <p>TLS entrega ao TCP (ou ao QUIC) três propriedades: <strong>confidencialidade</strong> (terceiros não leem), <strong>integridade</strong> (ninguém altera sem ser detectado) e <strong>autenticação do servidor</strong> (você fala com o dono do nome que pediu). A terceira é a que a maioria esquece, e sem ela as duas primeiras valem pouco: criptografar para o atacante é perfeitamente possível.</p>
 
@@ -228,6 +289,21 @@ ClientHello  (versões, cifras, SNI, ALPN,
 # -servername envia o SNI; sem ele, um IP com vários sites devolve o certificado "padrão"
 $ openssl x509 -noout -subject -issuer -dates -ext subjectAltName   # lê um certificado PEM</code></pre>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: TCP + TLS 1.3 até a primeira resposta</span>
+<div class="frame" data-caption="1. SYN: o cliente pede para abrir a conexão TCP"><svg viewBox="0 0 780 290" role="img" style="width:100%;height:auto;max-width:780px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Sequência TCP e TLS 1.3 até a primeira resposta</title><defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><text x="80" y="20" font-size="14" text-anchor="middle" font-weight="700">Cliente</text><text x="560" y="20" font-size="14" text-anchor="middle" font-weight="700">Servidor</text><line x1="80" y1="30" x2="80" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="560" y1="30" x2="560" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="84" y1="50" x2="556" y2="68" class="s-accent" stroke-width="1.6" fill="none" marker-end="url(#ar2)"/><text x="320" y="48" font-size="12" text-anchor="middle" font-weight="700">SYN</text></svg></div>
+<div class="frame" data-caption="2. SYN-ACK: o servidor aceita; ao chegar, 1 RTT foi gasto"><svg viewBox="0 0 780 290" role="img" style="width:100%;height:auto;max-width:780px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Sequência TCP e TLS 1.3 até a primeira resposta</title><defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><text x="80" y="20" font-size="14" text-anchor="middle" font-weight="700">Cliente</text><text x="560" y="20" font-size="14" text-anchor="middle" font-weight="700">Servidor</text><line x1="80" y1="30" x2="80" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="560" y1="30" x2="560" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="84" y1="50" x2="556" y2="68" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar3)"/><text x="320" y="48" font-size="12" text-anchor="middle">SYN</text><line x1="556" y1="88" x2="84" y2="106" class="s-accent" stroke-width="1.6" fill="none" marker-end="url(#ar3)"/><text x="320" y="84" font-size="12" text-anchor="middle" font-weight="700">SYN-ACK</text><text x="600" y="78" font-size="10" text-anchor="start">1 RTT: TCP aberto</text></svg></div>
+<div class="frame" data-caption="3. ACK fecha o TCP e já vai o ClientHello (versões, cifras, chave efêmera)"><svg viewBox="0 0 780 290" role="img" style="width:100%;height:auto;max-width:780px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Sequência TCP e TLS 1.3 até a primeira resposta</title><defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><text x="80" y="20" font-size="14" text-anchor="middle" font-weight="700">Cliente</text><text x="560" y="20" font-size="14" text-anchor="middle" font-weight="700">Servidor</text><line x1="80" y1="30" x2="80" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="560" y1="30" x2="560" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="84" y1="50" x2="556" y2="68" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><text x="320" y="48" font-size="12" text-anchor="middle">SYN</text><line x1="556" y1="88" x2="84" y2="106" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><text x="320" y="84" font-size="12" text-anchor="middle">SYN-ACK</text><line x1="84" y1="126" x2="556" y2="144" class="s-accent" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><text x="320" y="124" font-size="12" text-anchor="middle" font-weight="700">ACK + ClientHello</text><text x="600" y="78" font-size="10" text-anchor="start">1 RTT: TCP aberto</text></svg></div>
+<div class="frame" data-caption="4. O servidor responde com chave, certificado e Finished: o canal já pode ser cifrado"><svg viewBox="0 0 780 290" role="img" style="width:100%;height:auto;max-width:780px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Sequência TCP e TLS 1.3 até a primeira resposta</title><defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><text x="80" y="20" font-size="14" text-anchor="middle" font-weight="700">Cliente</text><text x="560" y="20" font-size="14" text-anchor="middle" font-weight="700">Servidor</text><line x1="80" y1="30" x2="80" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="560" y1="30" x2="560" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="84" y1="50" x2="556" y2="68" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar5)"/><text x="320" y="48" font-size="12" text-anchor="middle">SYN</text><line x1="556" y1="88" x2="84" y2="106" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar5)"/><text x="320" y="84" font-size="12" text-anchor="middle">SYN-ACK</text><line x1="84" y1="126" x2="556" y2="144" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar5)"/><text x="320" y="124" font-size="12" text-anchor="middle">ACK + ClientHello</text><line x1="556" y1="164" x2="84" y2="182" class="s-accent" stroke-width="1.6" fill="none" marker-end="url(#ar5)"/><text x="320" y="160" font-size="12" text-anchor="middle" font-weight="700">ServerHello + certificado + Finished</text><text x="600" y="78" font-size="10" text-anchor="start">1 RTT: TCP aberto</text><text x="600" y="154" font-size="10" text-anchor="start">+1 RTT: TLS 1.3 pronto</text></svg></div>
+<div class="frame" data-caption="5. O cliente valida o certificado (nome, validade, cadeia), deriva as chaves e envia o GET já cifrado"><svg viewBox="0 0 780 290" role="img" style="width:100%;height:auto;max-width:780px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Sequência TCP e TLS 1.3 até a primeira resposta</title><defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><text x="80" y="20" font-size="14" text-anchor="middle" font-weight="700">Cliente</text><text x="560" y="20" font-size="14" text-anchor="middle" font-weight="700">Servidor</text><line x1="80" y1="30" x2="80" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="560" y1="30" x2="560" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="84" y1="50" x2="556" y2="68" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar6)"/><text x="320" y="48" font-size="12" text-anchor="middle">SYN</text><line x1="556" y1="88" x2="84" y2="106" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar6)"/><text x="320" y="84" font-size="12" text-anchor="middle">SYN-ACK</text><line x1="84" y1="126" x2="556" y2="144" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar6)"/><text x="320" y="124" font-size="12" text-anchor="middle">ACK + ClientHello</text><line x1="556" y1="164" x2="84" y2="182" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar6)"/><text x="320" y="160" font-size="12" text-anchor="middle">ServerHello + certificado + Finished</text><line x1="84" y1="202" x2="556" y2="220" class="s-accent" stroke-width="1.6" fill="none" marker-end="url(#ar6)"/><text x="320" y="200" font-size="12" text-anchor="middle" font-weight="700">Finished + GET /</text><text x="600" y="78" font-size="10" text-anchor="start">1 RTT: TCP aberto</text><text x="600" y="154" font-size="10" text-anchor="start">+1 RTT: TLS 1.3 pronto</text></svg></div>
+<div class="frame" data-caption="6. Resposta cifrada: 3 RTT no total (TCP 1 + TLS 1 + HTTP 1) em conexão nova"><svg viewBox="0 0 780 290" role="img" style="width:100%;height:auto;max-width:780px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Sequência TCP e TLS 1.3 até a primeira resposta</title><defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><text x="80" y="20" font-size="14" text-anchor="middle" font-weight="700">Cliente</text><text x="560" y="20" font-size="14" text-anchor="middle" font-weight="700">Servidor</text><line x1="80" y1="30" x2="80" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="560" y1="30" x2="560" y2="270" class="s-line" stroke-width="1" stroke-dasharray="3 4"/><line x1="84" y1="50" x2="556" y2="68" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar7)"/><text x="320" y="48" font-size="12" text-anchor="middle">SYN</text><line x1="556" y1="88" x2="84" y2="106" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar7)"/><text x="320" y="84" font-size="12" text-anchor="middle">SYN-ACK</text><line x1="84" y1="126" x2="556" y2="144" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar7)"/><text x="320" y="124" font-size="12" text-anchor="middle">ACK + ClientHello</text><line x1="556" y1="164" x2="84" y2="182" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar7)"/><text x="320" y="160" font-size="12" text-anchor="middle">ServerHello + certificado + Finished</text><line x1="84" y1="202" x2="556" y2="220" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar7)"/><text x="320" y="200" font-size="12" text-anchor="middle">Finished + GET /</text><line x1="556" y1="240" x2="84" y2="258" class="s-accent" stroke-width="1.6" fill="none" marker-end="url(#ar7)"/><text x="320" y="236" font-size="12" text-anchor="middle" font-weight="700">resposta HTTP (criptografada)</text><text x="600" y="78" font-size="10" text-anchor="start">1 RTT: TCP aberto</text><text x="600" y="154" font-size="10" text-anchor="start">+1 RTT: TLS 1.3 pronto</text><text x="600" y="230" font-size="10" text-anchor="start">+1 RTT: 1º byte da resposta</text></svg></div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Um serviço envia só o certificado do próprio domínio (sem os intermediários). Navegadores abrem, mas um cliente Python/curl falha com "unable to get local issuer certificate". Qual a causa e a correção?</p>
+<ol><li data-opt="a">O certificado expirou; renovar</li><li data-opt="b">Cadeia incompleta: alguns navegadores buscam o intermediário sozinhos, bibliotecas não. Configure o servidor para enviar a cadeia completa</li><li data-opt="c">O cliente deve desligar a verificação (<code>verify=False</code>)</li><li data-opt="d">O servidor precisa usar HTTP em vez de HTTPS</li></ol>
+<div class="explain">A validação exige uma cadeia do certificado até uma raiz confiável; o servidor deve enviar folha + intermediários. Desligar a verificação "resolve" removendo justamente a garantia de autenticidade do TLS: qualquer um no caminho poderia se passar pelo servidor.</div>
+</div>
 <h3>Trade-offs e decisões</h3>
 <ul>
 <li><strong>Terminar TLS no balanceador ou no serviço.</strong> No balanceador: certificado em um lugar só, inspeção de HTTP; o trecho interno trafega em claro, a menos que você recifre (mTLS). No serviço: ponta a ponta, mais certificados para operar.</li>
@@ -312,6 +388,53 @@ If-None-Match: "0996f450b0c7959c" →  304 Not Modified   (sem corpo; economiza 
 </table>
 <p>Também <code>Vary</code>: se a resposta depende de um cabeçalho de requisição (<code>Accept-Encoding</code>, <code>Accept-Language</code>, <code>Origin</code>), o cache precisa saber disso, ou entrega a versão em português para quem pediu inglês. O mesmo ETag serve a <em>concorrência otimista</em>: <code>If-Match</code> num <code>PUT</code> faz o servidor recusar com <code>412</code> se a versão mudou desde a leitura, evitando o <em>lost update</em>. A comparação difere: <code>If-None-Match</code> usa comparação fraca (ignora o prefixo <code>W/</code>), <code>If-Match</code> exige comparação forte; o lab implementa e testa as duas.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: cache HTTP com ETag</span>
+<p>Escolha uma política, faça requisições, avance o relógio e mude o recurso no servidor. Observe o que trafega e o que o usuário vê.</p>
+<div class="ix-row"><label for="f04-ca-pol">Resposta do servidor:</label><select id="f04-ca-pol"><option value="maxage">Cache-Control: max-age=60 (sem ETag)</option><option value="maxage-etag" selected>Cache-Control: max-age=60 + ETag</option><option value="nocache">Cache-Control: no-cache + ETag (revalida sempre)</option><option value="nostore">Cache-Control: no-store</option></select></div>
+<div class="ix-row"><button type="button" class="ix-btn primary" id="f04-ca-get">GET /relatorio</button><button type="button" class="ix-btn" id="f04-ca-t">Avançar 30 s</button><button type="button" class="ix-btn" id="f04-ca-chg">Alterar recurso no servidor</button><button type="button" class="ix-btn" id="f04-ca-rst">Zerar</button></div>
+<div class="ix-out" id="f04-ca-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var $=function(i){return document.getElementById(i);};
+var pol=$("f04-ca-pol"),out=$("f04-ca-out"),t,sv,cache,shown,st,log;
+function reset(){t=0;sv=1;cache=null;shown=null;st={net:0,hit:0,bytes:0};log=[];draw();}
+function say(s){log.push(s);if(log.length>8)log.shift();}
+function full(){st.net++;st.bytes+=50300;cache={ver:sv,at:t};shown=sv;return 'ETag: "v'+sv+'"';}
+function get(){
+  var p=pol.value,fresh=false,hasTag=p!=="maxage",age;
+  if(p==="nostore"){st.net++;st.bytes+=50300;shown=sv;say("t="+t+"s  GET -> 200 OK, corpo completo (50 KB). no-store: nada é guardado.");draw();return;}
+  if(!cache){say("t="+t+"s  GET -> 200 OK, corpo completo (50 KB)"+(hasTag?" "+full():(full(),""))+". Guardado no cache.");draw();return;}
+  age=t-cache.at;fresh=p.indexOf("maxage")===0&&age<60;
+  if(fresh){st.hit++;shown=cache.ver;say("t="+t+"s  servido do CACHE (idade "+age+"s < max-age 60s). Nenhuma requisição de rede.");}
+  else if(hasTag){
+    st.net++;
+    if(cache.ver===sv){st.bytes+=300;cache.at=t;shown=cache.ver;say("t="+t+'s  GET + If-None-Match: "v'+cache.ver+'" -> 304 Not Modified (sem corpo, ~300 B). Cache revalidado.');}
+    else{st.bytes+=50300;say("t="+t+'s  GET + If-None-Match: "v'+cache.ver+'" -> 200 OK com corpo novo, ETag "v'+sv+'" (50 KB).');cache={ver:sv,at:t};shown=sv;}
+  }else{say("t="+t+"s  vencido e sem ETag: não há como validar -> 200 OK, corpo completo (50 KB).");full();}
+  draw();
+}
+function draw(){
+  var stale=shown!==null&&shown!==sv;
+  out.textContent="relógio t="+t+"s   versão no servidor: v"+sv+"   usuário vê: "+(shown===null?"-":"v"+shown)+(stale?"   << OBSOLETO (frescor sem validação)":"")+"\nidas à rede="+st.net+"   servidos do cache="+st.hit+"   bytes trafegados="+st.bytes.toLocaleString("pt-BR")+"\n\n"+log.join("\n");
+}
+$("f04-ca-get").addEventListener("click",get);
+$("f04-ca-t").addEventListener("click",function(){t+=30;say("-- passaram 30 s (t="+t+"s)");draw();});
+$("f04-ca-chg").addEventListener("click",function(){sv++;say("-- o recurso mudou no servidor: agora v"+sv);draw();});
+$("f04-ca-rst").addEventListener("click",reset);pol.addEventListener("change",reset);
+reset();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">O que significa <code>Cache-Control: no-cache</code>?</p>
+<ol><li data-opt="a">Não guarde a resposta em nenhum cache</li><li data-opt="b">Guarde por zero segundos e apague</li><li data-opt="c">Pode guardar, mas é preciso revalidar com o servidor (ex.: <code>If-None-Match</code>) antes de reutilizar</li><li data-opt="d">Só proxies devem ignorar a resposta</li></ol>
+<div class="explain">O nome engana: <code>no-cache</code> permite armazenar, mas exige validação a cada uso (com ETag, a resposta pode ser um 304 barato). Quem proíbe armazenar é <code>no-store</code>, indicado para dados sensíveis. E <code>max-age</code> define por quanto tempo a cópia é "fresca" sem consultar o servidor.</div>
+</div>
 <h3>Cookies: estado que o navegador carrega por você</h3>
 <p>O servidor envia <code>Set-Cookie: sid=abc; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=3600</code>; dali em diante o navegador envia <code>Cookie: sid=abc</code> em toda requisição que case com o escopo. Os atributos são o controle de segurança: <code>Secure</code> (só sobre HTTPS), <code>HttpOnly</code> (JavaScript não lê, mitiga roubo de sessão por XSS), <code>SameSite</code> (<code>Strict</code>/<code>Lax</code>/<code>None</code>: se vai em requisições originadas em outro site, mitiga CSRF), <code>Domain</code>/<code>Path</code> (escopo) e <code>Max-Age</code>/<code>Expires</code> (vida). O prefixo <code>__Host-</code> obriga <code>Secure</code>, <code>Path=/</code> e proíbe <code>Domain</code>, impedindo que um subdomínio comprometido sobrescreva o cookie. Note a assimetria que dá origem ao CSRF: o navegador anexa o cookie <em>automaticamente</em>, também quando a requisição foi disparada por outra página. Autenticação por cookie exige, portanto, <code>SameSite</code> e/ou token anti-CSRF; autenticação por cabeçalho <code>Authorization</code> posto explicitamente pelo código não tem esse problema.</p>
 
@@ -326,6 +449,8 @@ If-None-Match: "0996f450b0c7959c" →  304 Not Modified   (sem corpo; economiza 
 </table>
 <p>A semântica (métodos, status, cabeçalhos) é a mesma nas três; muda a forma de transportar. Seu código de aplicação quase nunca vê a diferença. Ela aparece em desempenho (menos conexões, menos cabeçalho repetido) e em operação: o navegador descobre HTTP/3 por <code>Alt-Svc</code> ou pelo registro DNS <code>HTTPS</code>, e cai para h2 se UDP estiver bloqueado. Para <em>streaming</em> de respostas (SSE, tokens de um LLM), HTTP/1.1 com <code>chunked</code> e HTTP/2 funcionam; proxies que fazem buffer da resposta inteira são o inimigo conhecido.</p>
 
+
+<div class="tabs"><section data-tab="HTTP/1.1"><ul><li>Texto; uma requisição por vez em cada conexão (navegadores abrem várias)</li><li>Bloqueio de fila na camada HTTP</li><li>Sobre TCP</li></ul></section><section data-tab="HTTP/2"><ul><li>Binário, com <strong>multiplexação</strong>: vários fluxos numa conexão</li><li>Compressão de cabeçalhos (HPACK)</li><li>Sobre TCP: uma perda de pacote ainda bloqueia todos os fluxos</li></ul></section><section data-tab="HTTP/3"><ul><li>Sobre <strong>QUIC</strong> (UDP), com TLS 1.3 integrado</li><li>Perda de pacote afeta só o fluxo atingido</li><li>Handshake mais curto e migração de conexão (trocar de rede)</li></ul></section></div>
 <h3>CORS: uma regra do navegador, não do servidor</h3>
 <p>A <em>same-origin policy</em> impede que o JavaScript de <code>https://app.com</code> leia respostas de <code>https://api.com</code> (origem = esquema + host + porta). <strong>CORS</strong> é o mecanismo pelo qual a API <em>autoriza</em> certas origens a ler. Requisições "simples" (GET/HEAD/POST com tipos de conteúdo de formulário) saem direto, e o navegador decide se entrega a resposta ao JavaScript conforme o <code>Access-Control-Allow-Origin</code>. Qualquer coisa fora disso (<code>PUT</code>, <code>DELETE</code>, <code>Content-Type: application/json</code>, <code>Authorization</code>) dispara antes um <em>preflight</em>:</p>
 <pre><code>OPTIONS /notes/1
@@ -346,6 +471,12 @@ Vary: Origin</code></pre>
 <p>CORS não protege o servidor. A requisição <em>chega e é executada</em>; o que o navegador bloqueia é a leitura da resposta pelo script. Um <code>POST</code> simples com cookie vindo de página maliciosa executa no servidor mesmo sem CORS liberado (por isso existe CSRF e <code>SameSite</code>). E <code>curl</code> não implementa CORS: "funciona no curl, falha no navegador" é CORS quase sempre. Duas más soluções comuns: refletir o cabeçalho <code>Origin</code> recebido como se fosse permitido (equivale a <code>*</code> com credenciais) e liberar <code>*</code> em API que usa cookie. A allowlist de origens explícitas é a única forma segura.</p>
 </div>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma página em <code>app.exemplo.com</code> chama <code>api.outro.com</code> e o navegador mostra um erro de CORS. Mas o mesmo <code>curl</code> funciona. O que isso demonstra?</p>
+<ol><li data-opt="a">O servidor é seguro, pois bloqueou a requisição</li><li data-opt="b">O <code>curl</code> contorna a autenticação</li><li data-opt="c">O servidor ficou fora do ar para o navegador</li><li data-opt="d">CORS é uma regra do navegador sobre a leitura da resposta; não é controle de acesso ao servidor (a requisição pode até ter chegado)</li></ol>
+<div class="explain">O navegador aplica a política de mesma origem e só libera a leitura se o servidor responder com <code>Access-Control-Allow-Origin</code> compatível. Requisições "simples" chegam ao servidor mesmo assim. Por isso autenticação e autorização têm de ser verificadas no servidor, nunca "protegidas" por CORS.</div>
+</div>
 <h3>Erros comuns</h3>
 <ul>
 <li>Mutação em <code>GET</code> (link "excluir" que um <em>prefetch</em> aciona).</li>
@@ -381,6 +512,12 @@ Vary: Origin</code></pre>
 &gt;&gt;&gt; json.loads('[NaN]', parse_constant=lambda c: (_ for _ in ()).throw(ValueError(c)))
 ValueError: NaN</code></pre>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma API devolve <code>{"id": 9007199254740993}</code>. O que acontece ao ler isso com <code>JSON.parse</code> em JavaScript?</p>
+<ol><li data-opt="a">Lê o inteiro exato, pois JSON suporta inteiros grandes</li><li data-opt="b">O número vira o double mais próximo (9007199254740992): perde precisão acima de 2^53</li><li data-opt="c">Erro de sintaxe</li><li data-opt="d">O valor vira string automaticamente</li></ol>
+<div class="explain">A especificação do JSON não limita números, mas a maioria dos clientes usa double IEEE 754 e só representa inteiros exatos até 2^53. IDs grandes (como os snowflake de 64 bits) devem trafegar como <strong>string</strong>; dinheiro também (<code>"19.90"</code> ou centavos inteiros). Outro canto afiado: <code>NaN</code> e <code>Infinity</code> não são JSON válido.</div>
+</div>
 <h3>Recursos, não procedimentos</h3>
 <p>"REST" no uso corrente significa: modelar o domínio como <strong>recursos</strong> identificados por URL (substantivos), manipulados pelos métodos HTTP com sua semântica, representados em JSON, sem estado de sessão no servidor entre requisições. A tabela do laboratório:</p>
 <table>
@@ -407,6 +544,40 @@ ValueError: NaN</code></pre>
 <h3>Paginação: offset × cursor</h3>
 <p>Nunca devolva coleção sem limite. <strong>Offset</strong> (<code>?page=3&amp;size=20</code>, SQL <code>OFFSET 40</code>) é simples, permite "ir à página 7", mas tem dois defeitos: o banco precisa percorrer e descartar as linhas puladas (custo cresce com a página) e, se um item é inserido ou removido entre duas requisições, a lista desloca e o cliente <em>pula ou repete</em> itens. <strong>Cursor</strong> (<em>keyset</em>) usa o valor do último item visto como âncora: <code>?after=40&amp;limit=20</code> vira <code>WHERE id &gt; 40 ORDER BY id LIMIT 21</code>. Usa o índice, tem custo constante, e é estável sob inserção e remoção. O truque do <code>LIMIT n+1</code> descobre se há próxima página sem fazer <code>COUNT(*)</code> (caro em tabelas grandes). A chave de ordenação precisa ser única e estável; para ordenar por um campo não único (data de criação), o cursor vira o par <code>(data, id)</code>. Cursores opacos (codificados) deixam você mudar a implementação depois. O lab devolve <code>{"items": [...], "next": "/notes?limit=2&amp;after=2"}</code>, com <code>next: null</code> na última página, e há um teste mostrando que apagar um item anterior não desloca a leitura.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: paginação por offset × por cursor com dados mudando</span>
+<p>Dois clientes percorrem a mesma lista (mais novos primeiro), 5 itens por página. Entre as páginas, chegam itens novos no topo.</p>
+<div class="ix-row"><button type="button" class="ix-btn primary" id="f04-pg-next">Carregar próxima página</button><button type="button" class="ix-btn" id="f04-pg-new">Chega 1 item novo no topo</button><button type="button" class="ix-btn" id="f04-pg-rst">Reiniciar</button></div>
+<div class="ix-row" style="align-items:flex-start;gap:24px"><div style="flex:1;min-width:220px"><strong><code>?offset=N&amp;limit=5</code></strong><div id="f04-pg-a" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div></div><div style="flex:1;min-width:220px"><strong><code>?cursor=ultimo_id&amp;limit=5</code></strong><div id="f04-pg-b" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div></div></div>
+<div class="ix-out" id="f04-pg-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var $=function(i){return document.getElementById(i);};
+var items,maxid,offset,cur,A,B,dupA;
+function reset(){items=[];for(var i=20;i>=1;i--)items.push(i);maxid=20;offset=0;cur=null;A=[];B=[];dupA=0;draw();}
+function chip(v,dup){return '<span style="min-width:30px;text-align:center;padding:3px 6px;border-radius:6px;border:2px solid '+(dup?'var(--bad)':'var(--line)')+';background:'+(dup?'var(--bad-soft)':'var(--surface-2)')+';font-family:var(--mono);font-size:.85rem">'+v+'</span>';}
+function draw(){
+  var seen={},ha="";A.forEach(function(v){ha+=chip(v,!!seen[v]);seen[v]=1;});
+  $("f04-pg-a").innerHTML=ha||'<span class="meta">(nada carregado)</span>';
+  $("f04-pg-b").innerHTML=B.map(function(v){return chip(v,false);}).join("")||'<span class="meta">(nada carregado)</span>';
+  $("f04-pg-out").textContent="itens repetidos no cliente com offset: "+dupA+"\nitens repetidos no cliente com cursor: 0\n"+(dupA?"Com offset, inserir no topo desloca tudo uma posição: o item que era o último da página anterior reaparece. (Remoções causam o oposto: itens pulados.)":"Clique em 'Chega 1 item novo' entre duas páginas e carregue de novo.");
+}
+$("f04-pg-next").addEventListener("click",function(){
+  var pa=items.slice(offset,offset+5),pb=items.filter(function(v){return cur===null||v<cur;}).slice(0,5);
+  pa.forEach(function(v){if(A.indexOf(v)>=0)dupA++;A.push(v);});offset+=5;
+  pb.forEach(function(v){B.push(v);});if(pb.length)cur=pb[pb.length-1];
+  draw();
+});
+$("f04-pg-new").addEventListener("click",function(){items.unshift(++maxid);draw();});
+$("f04-pg-rst").addEventListener("click",reset);reset();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
+
+<div class="tabs"><section data-tab="Offset"><ul><li>Simples: <code>?page=3</code> ou <code>?offset=40</code>; permite "ir para a página 7"</li><li>Instável com dados mudando: repete ou pula itens</li><li>Custo cresce com o offset (o banco varre e descarta)</li></ul></section><section data-tab="Cursor"><ul><li>Estável: continua do último item visto (<code>?cursor=...</code>)</li><li>Custo constante, usando índice</li><li>Não pula para a página N; o cursor deve ser opaco e o <code>limit</code> máximo imposto pelo servidor</li></ul></section></div>
 <h3>Erros: Problem Details (RFC 9457)</h3>
 <p>Um formato único de erro, legível por máquina, evita que cada cliente escreva um parser por endpoint. O RFC 9457 (que substitui o 7807) define o tipo de mídia <code>application/problem+json</code> com os membros <code>type</code> (URI que identifica a classe do problema), <code>title</code> (resumo estável, igual para todo problema do mesmo tipo), <code>status</code>, <code>detail</code> (explicação desta ocorrência) e <code>instance</code> (identifica esta ocorrência); extensões livres, como <code>errors</code>. Saída real do lab para um <code>limit=0</code>:</p>
 <pre><code>HTTP/1.1 400 Bad Request
@@ -439,6 +610,12 @@ PUT  /notes/1  (If-Match: "0000")                                    → 412 Pre
 <p>Cada linha corresponde a um passo do laboratório guiado, com a saída real do servidor.</p>
 </div>
 
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">O cliente envia <code>POST /pagamentos</code> com <code>Idempotency-Key: abc-123</code>, recebe timeout e repete a mesma requisição, com a mesma chave. O que o servidor deve fazer?</p>
+<ol><li data-opt="a">Reconhecer a chave e devolver o resultado da primeira execução, sem cobrar outra vez</li><li data-opt="b">Processar de novo: POST sempre cria um recurso novo</li><li data-opt="c">Recusar com 405</li><li data-opt="d">Cobrar de novo e avisar o usuário por e-mail</li></ol>
+<div class="explain">POST não é idempotente por natureza; a chave transforma o retry em operação segura: o servidor guarda (chave, resultado) por um período e repete a resposta. Sem isso, um timeout (o cliente não sabe se o servidor processou) leva a cobranças duplicadas. A mesma chave com corpo diferente deve ser rejeitada.</div>
+</div>
 <h3>OpenAPI: o contrato em forma de dado</h3>
 <p>OpenAPI (3.1) descreve paths, métodos, parâmetros, corpos e respostas em YAML/JSON, com JSON Schema para os tipos. Rende três coisas: documentação navegável, geração de clientes e de testes de contrato, e validação automática. Duas abordagens: <em>contract-first</em> (você escreve o contrato, revisa com os consumidores e gera o esqueleto) e <em>code-first</em> (o framework deduz do código; FastAPI faz isso a partir dos tipos Pydantic, no M03). Code-first é mais rápido; contract-first força a discussão antes do código. Em qualquer caso, o arquivo OpenAPI entra no CI, e uma mudança que remove campo ou endurece validação deve ser detectada como <em>breaking change</em> por uma ferramenta de comparação, não por um cliente em produção.</p>
 <pre><code>paths:
@@ -490,6 +667,8 @@ PUT  /notes/1  (If-Match: "0000")                                    → 412 Pre
 </table>
 <p>A pergunta que decide: <em>preciso revogar já?</em> Se sim (conta comprometida, demissão, logout real), sessão com ID opaco é mais simples e mais segura. Quando usar token, mantenha o <em>access token</em> curto (minutos) e use um <em>refresh token</em> de vida longa, guardado com mais cuidado e rotacionado a cada uso. Em navegador, a combinação mais defensável é sessão em cookie <code>__Host-</code>, <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>.</p>
 
+
+<div class="tabs"><section data-tab="Sessão de servidor"><ul><li>O navegador guarda um id opaco no cookie; o estado fica no servidor</li><li><strong>Revogação imediata</strong>: apague a sessão</li><li>Exige armazenamento compartilhado entre instâncias</li></ul></section><section data-tab="Token autocontido (JWT)"><ul><li>As informações viajam assinadas no token; qualquer serviço valida sem consultar um estado central</li><li>Revogar antes do <code>exp</code> é difícil: use vida curta + refresh</li><li>Não cabe dado secreto: o corpo é só codificado, não cifrado</li></ul></section></div>
 <h3>OAuth 2 e OpenID Connect em um parágrafo cada</h3>
 <p><strong>OAuth 2</strong> (RFC 6749) é um protocolo de <em>delegação de autorização</em>: o usuário (<em>resource owner</em>) permite que um aplicativo (<em>client</em>) acesse recursos dele em uma API (<em>resource server</em>) sem entregar a senha, via um <em>authorization server</em> que emite tokens com <em>escopos</em>. Ele diz o que o app pode fazer, <strong>não quem é o usuário</strong>. <strong>OpenID Connect (OIDC)</strong> é a camada de identidade sobre OAuth: acrescenta o <em>ID token</em> (um JWT que afirma "este é o usuário X, autenticado agora por este emissor, para este client") e o endpoint <code>userinfo</code>. "Login com Google/Microsoft" é OIDC.</p>
 
@@ -506,6 +685,8 @@ PUT  /notes/1  (If-Match: "0000")                                    → 412 Pre
    → só então emite access token (e ID token, se openid)</code></pre>
 <p>Por que PKCE existe: o <code>code</code> viaja pelo navegador (URL, histórico, logs, apps maliciosos que registram o mesmo esquema de URL no celular). Quem o interceptar não consegue trocá-lo por token sem o <code>code_verifier</code>, que nunca saiu do cliente. O <code>state</code> amarra a resposta à sessão que a iniciou (anti-CSRF no <em>callback</em>); o <code>redirect_uri</code> precisa casar <em>exatamente</em> com o cadastrado. No OIDC, o <code>nonce</code> amarra o ID token à requisição. O lab implementa o cálculo e a verificação do PKCE e valida contra o vetor do Apêndice B da RFC 7636.</p>
 
+
+<div class="ix"><span class="ix-title">Ordene os passos</span><p>Ordene o fluxo <em>authorization code com PKCE</em>. Note por que interceptar o <code>code</code> sozinho não basta ao atacante.</p><ol class="order" data-solution="a,b,c,d,e,f,g"><li data-id="a">O app gera o <code>code_verifier</code> aleatório e calcula o <code>code_challenge</code> = SHA-256 dele</li><li data-id="b">O app redireciona o usuário a <code>/authorize</code> com <code>client_id</code>, <code>redirect_uri</code>, <code>state</code> e <code>code_challenge</code></li><li data-id="c">O usuário autentica e consente no provedor de identidade</li><li data-id="d">O provedor redireciona de volta ao <code>redirect_uri</code> com <code>code</code> e <code>state</code></li><li data-id="e">O app confere se o <code>state</code> é o mesmo que enviou (protege contra CSRF)</li><li data-id="f">O app troca o <code>code</code> em <code>/token</code>, enviando o <code>code_verifier</code></li><li data-id="g">O provedor confere SHA-256(verifier) = challenge e devolve os tokens</li></ol></div>
 <h3>JWT: o que é e onde falha</h3>
 <p>JWT (RFC 7519) são três partes base64url separadas por ponto: <code>cabeçalho.payload.assinatura</code>. O payload é <strong>apenas codificado, não cifrado</strong>: qualquer um lê. A assinatura (HMAC com segredo compartilhado, HS256; ou RSA/ECDSA com chave privada, RS256/ES256) só garante integridade e origem. Claims padrão: <code>iss</code> (emissor), <code>sub</code> (sujeito), <code>aud</code> (destinatário), <code>exp</code>/<code>nbf</code>/<code>iat</code> (tempos), <code>jti</code> (identificador).</p>
 <p>As falhas conhecidas (RFC 8725) são todas de <em>verificação</em>, não de criptografia:</p>
@@ -527,6 +708,12 @@ TokenError: audiência inesperada
 TokenError: algoritmo não permitido: 'none'</code></pre>
 <p>Note que <code>verify_jwt</code> recebe <code>now</code> explicitamente: relógio injetado é o que permite testar expiração sem <code>sleep</code>, e o motivo de <code>leeway</code> existir (pequena tolerância para relógios dessincronizados entre emissor e verificador). A mensagem do <code>TokenError</code> serve ao log; ao cliente, devolva só <code>401</code>, sem dizer qual verificação falhou.</p>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Ao validar um JWT, o servidor lê o campo <code>alg</code> do próprio token e usa o algoritmo indicado. Qual o problema?</p>
+<ol><li data-opt="a">Nenhum: o cabeçalho é confiável</li><li data-opt="b">O token fica maior</li><li data-opt="c">O atacante controla o cabeçalho (ex.: <code>alg: none</code>, ou trocar RS256 por HS256 usando a chave pública como segredo); o servidor deve fixar o algoritmo esperado</li><li data-opt="d">Só afeta tokens com mais de 1 KB</li></ol>
+<div class="explain">Dados do token não são confiáveis até a assinatura ser verificada, e o <code>alg</code> faz parte desses dados. Fixe o algoritmo (e a chave) no servidor e confira também <code>exp</code> (validade), <code>iss</code> (emissor) e <code>aud</code> (destinatário). Lembre ainda que o payload é apenas codificado em Base64: não coloque segredos nele.</div>
+</div>
 <h3>Senhas: hash lento, com sal, nunca criptografia</h3>
 <p>Nunca guarde a senha, nem cifrada (quem rouba o banco costuma roubar a chave). Guarde um <strong>hash lento e com sal</strong>: o sal (16+ bytes aleatórios por usuário) impede que a mesma senha produza o mesmo hash e inutiliza tabelas pré-computadas; a lentidão (e, em scrypt/Argon2, o consumo de memória) torna cara a tentativa em massa com GPUs. Funções gerais como SHA-256 são rápidas demais para isso, justamente o defeito. Opções aceitas hoje (OWASP Password Storage Cheat Sheet): <strong>Argon2id</strong> (primeira escolha; mínimo de 19 MiB de memória, 2 iterações, paralelismo 1), <strong>scrypt</strong> (N=2<sup>17</sup>, r=8, p=1, o padrão do lab, vem na biblioteca padrão), <strong>bcrypt</strong> (custo ≥ 10; trunca senha em 72 bytes). O resultado é guardado num formato autodescritivo, <code>scrypt$131072$8$1$sal$hash</code>, que carrega os parâmetros. Isso permite <em>subir o custo</em> depois: no login bem-sucedido, se <code>needs_rehash</code> indica parâmetros fracos, recalcule e grave o hash novo. Compare em tempo constante. Parâmetro de custo vindo de dentro do hash armazenado é entrada não confiável: o lab recusa valores que consumiriam memória absurda.</p>
 
@@ -560,6 +747,12 @@ subprocess.run(["convert", name, "out.png"], check=True)</code></pre>
 </ol>
 <p><code>ssrf.py</code> implementa o passo 2 e devolve os IPs validados para o chamador conectar neles. Ele bloqueia <code>10.0.0.5</code>, <code>169.254.169.254</code>, <code>::ffff:127.0.0.1</code> (IPv4 mapeado em IPv6 é desembrulhado antes de testar), credenciais na URL (<code>https://user:senha@host</code>) e esquemas fora da lista; e basta <em>um</em> IP interno entre vários para bloquear o nome inteiro, que é o caso do rebinding por múltiplos registros.</p>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">A rota <code>GET /pedidos/123</code> exige login e devolve o pedido. O usuário A, autenticado, troca o 123 por 124 (pedido do usuário B) e vê os dados. Qual falha e qual a correção?</p>
+<ol><li data-opt="a">Falha de autenticação; exigir senha mais forte</li><li data-opt="b">Injeção de SQL; usar consultas parametrizadas</li><li data-opt="c">Falha de CORS; restringir origens</li><li data-opt="d">Autorização por objeto quebrada (BOLA/IDOR): checar, em toda consulta, que o pedido pertence ao usuário (<code>WHERE id = ? AND dono = ?</code>)</li></ol>
+<div class="explain">Autenticação diz <em>quem</em> é; autorização diz <em>o que</em> pode. A falha mais comum em APIs é autenticar e esquecer de conferir o dono do objeto. IDs não adivinháveis (UUID) atrapalham o atacante, mas não substituem a checagem no servidor.</div>
+</div>
 <h3>Mais cinco hábitos de baixo custo</h3>
 <ul>
 <li><strong>Limite de taxa</strong> por usuário/IP e na rota de login, com <code>429</code> e <code>Retry-After</code>; bloqueio progressivo, não permanente (permanente vira ataque de negação de serviço contra a vítima).</li>
@@ -812,6 +1005,11 @@ FAILED tests/test_authn.py::test_jwt_algorithm_is_pinned[] - AssertionError ...
 <li>Python: documentação de <code>socket</code>, <code>http.server</code>, <code>hashlib.scrypt</code>, <code>hmac</code> e <code>ipaddress</code> da biblioteca padrão.</li>
 </ul>
 <p>Separação entre invariante, padrão aberto e adapter: o formato de mensagem HTTP, o handshake TCP e o formato de pacote DNS são invariantes; OAuth/OIDC/PKCE e Problem Details são padrões abertos; HS256 em biblioteca padrão e <code>http.server</code> são adapters didáticos (em produção entram o framework do M03 e um provedor de identidade).</p>
+
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique (ou Enter) para virar. Tente responder em voz alta antes de virar.</p>
+<div class="flashcards"><div class="fc"><div class="front">O que o TCP garante e não garante?</div><div class="back">Ordem e entrega confiáveis; <em>não</em> preserva limites de mensagem.</div></div><div class="fc"><div class="front">Latência × banda: remédios?</div><div class="back">Latência: menos round-trips, reuso de conexão, CDN. Banda: menos bytes, compressão.</div></div><div class="fc"><div class="front">Refused × timeout × reset?</div><div class="back">Recusa ativa; silêncio; queda de conexão existente.</div></div><div class="fc"><div class="front">Quantos RTT até o 1º byte numa conexão nova com TLS 1.3?</div><div class="back">3: TCP 1 + TLS 1 + HTTP 1 (mais DNS se sem cache).</div></div><div class="fc"><div class="front">Como planejar uma migração de DNS?</div><div class="back">Baixar o TTL com pelo menos um TTL antigo de antecedência.</div></div><div class="fc"><div class="front">O que o TLS autentica?</div><div class="back">O servidor, pelo certificado: nome nos SANs, validade e cadeia até uma raiz confiável.</div></div><div class="fc"><div class="front"><code>no-cache</code> × <code>no-store</code>?</div><div class="back">no-cache: guarda, mas revalida sempre. no-store: não guarda.</div></div><div class="fc"><div class="front">ETag e 304?</div><div class="back">Validador do conteúdo; <code>If-None-Match</code> igual → 304 sem corpo.</div></div><div class="fc"><div class="front">Por que CORS não é segurança do servidor?</div><div class="back">É regra do navegador sobre ler respostas; autorização é no servidor.</div></div><div class="fc"><div class="front">Offset × cursor?</div><div class="back">Offset repete/pula itens com dados mudando e fica lento; cursor é estável e de custo constante.</div></div><div class="fc"><div class="front">Para que serve a Idempotency-Key?</div><div class="back">Tornar o retry de POST seguro: mesma chave, mesmo resultado.</div></div><div class="fc"><div class="front">Por que PKCE?</div><div class="back">O code interceptado é inútil sem o code_verifier.</div></div></div>
 
 <div class="box ok">
 <span class="lbl">Conclusão</span>

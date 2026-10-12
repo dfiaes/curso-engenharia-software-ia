@@ -160,12 +160,10 @@ def build_manifest(allow_missing: bool = False) -> dict[str, Any]:
 
 
 def render(manifest: dict[str, Any]) -> str:
+    """The portal is a static page; the manifest comes from assets/course-manifest.js."""
     rendered = TEMPLATE.read_text(encoding="utf-8")
-    marker = "__COURSE_MANIFEST__"
-    if rendered.count(marker) != 1:
-        raise ValueError(f"portal template must contain exactly one {marker} marker")
     payload = json.dumps(manifest, ensure_ascii=False, separators=(",", ":"))
-    return rendered.replace(marker, payload.replace("</", "<\\/"))
+    return rendered.replace("__COURSE_MANIFEST__", payload.replace("</", "<\\/"))
 
 
 def main() -> int:

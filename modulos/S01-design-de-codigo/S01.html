@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>S01 · Design de Código: OO, Funcional, Padrões, Refatoração e TDD</title>
 <meta name="color-scheme" content="light dark">
-<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
 <link rel="stylesheet" href="../../assets/course.css">
 </head>
 <body>
@@ -123,6 +123,26 @@ src/design_lab/exemplos/b01_legivel.py:importar_misturado     13     5     2
 src/design_lab/exemplos/b01_legivel.py:importar          11     3     2</code></pre>
 <p><code>decidir_aninhado</code> e <code>decidir</code> têm <em>a mesma</em> ciclomática (5) e o mesmo comportamento, mas aninhamento 3 contra 1. Essa diferença é exatamente a que o número ciclomático esconde, e é por isso que o medidor mostra as duas colunas.</p>
 
+<div class="ix"><span class="ix-title">Simulador: complexidade ciclomática × cognitiva</span>
+<p>Mesmo número de decisões, formatos diferentes. Veja como a ciclomática não muda, mas o esforço de leitura sim.</p>
+<div class="ix-row"><label>Decisões (<code>if</code>) <input type="range" id="s01-cx-n" min="1" max="10" value="5"></label><output id="s01-cx-nv">5</output>
+<label>Formato <select id="s01-cx-f"><option value="flat">em sequência (plano)</option><option value="nest">aninhado</option><option value="guard">guard clauses (return antecipado)</option></select></label></div>
+<pre class="ix-out" id="s01-cx-code"></pre><div class="ix-out" id="s01-cx-out"></div></div>
+<script>Course.ready(function (C) {
+  var rn = document.getElementById('s01-cx-n'), nv = document.getElementById('s01-cx-nv'), f = document.getElementById('s01-cx-f'), code = document.getElementById('s01-cx-code'), out = document.getElementById('s01-cx-out');
+  function render() {
+    var n = +rn.value, mode = f.value, i, lines = [], cog = 0;
+    nv.textContent = n;
+    if (mode === 'nest') { for (i = 0; i < n; i++) { lines.push('    '.repeat(i) + 'if c' + (i + 1) + ':'); cog += 1 + i; } lines.push('    '.repeat(n) + 'return ok'); }
+    else if (mode === 'flat') { for (i = 0; i < n; i++) { lines.push('if c' + (i + 1) + ':'); lines.push('    passos += 1'); cog += 1; } lines.push('return passos'); }
+    else { for (i = 0; i < n; i++) { lines.push('if not c' + (i + 1) + ':'); lines.push('    raise ValueError("c' + (i + 1) + '")'); cog += 1; } lines.push('return ok'); }
+    code.textContent = lines.join('\n');
+    out.textContent = 'Ciclomática = decisões + 1 = ' + (n + 1) + '  (mínimo de casos de teste: ' + (n + 1) + ')\nCognitiva (aprox.) = ' + cog + '  (cada if custa 1 + nível de aninhamento)\n' +
+      (mode === 'nest' ? 'Aninhamento faz a cognitiva crescer de forma quadrática: refatore para guard clauses.' : 'Sem aninhamento, cada decisão custa só 1: o leitor trata uma condição por vez.');
+  }
+  rn.addEventListener('input', render); f.addEventListener('change', render); render();
+});</script>
+
 <h3>Guard clauses: tratar o que não presta primeiro</h3>
 <p>O padrão: validar pré-condições no topo e retornar (ou lançar) cedo, deixando o caminho feliz no nível de indentação mais externo. Compare:</p>
 <pre><code>def decidir_aninhado(r: Reembolso, papel: str) -&gt; str:
@@ -151,6 +171,36 @@ def decidir(r: Reembolso, papel: str) -&gt; str:
     return "escalar"</code></pre>
 <p>Na primeira, a mensagem "recusado: não pago" está a 8 linhas e três níveis do <code>if</code> que a causa; é preciso manter na cabeça o contexto de todas as condições abertas. Na segunda, cada recusa está colada à sua condição, e a regra de negócio ("supervisor aprova qualquer valor") virou uma expressão. Observe também a troca de <code>else</code> aninhado por uma condição combinada: <em>guard clause não é só early return, é também achatar o que é uma única decisão</em>. Dois cuidados: não use guard clause quando as duas saídas são igualmente "normais" (um <code>if/else</code> simétrico lê melhor), e cuidado com muitos <code>return</code> em funções com recursos a liberar (use <code>with</code>/<code>try/finally</code>; ver M02).</p>
 
+<div class="tabs">
+<section data-tab="Antes (aninhado)"><pre><code>def calcular_frete(pedido):
+    if pedido is not None:
+        if pedido.itens:
+            if pedido.cep_valido:
+                if pedido.peso_kg &lt;= 30:
+                    return FRETE_POR_KG[pedido.zona] * pedido.peso_kg
+                else:
+                    raise ValueError("peso acima do limite")
+            else:
+                raise ValueError("CEP inválido")
+        else:
+            raise ValueError("pedido vazio")
+    else:
+        raise ValueError("pedido ausente")</code></pre>
+<p>Para entender qual erro corresponde a qual condição o leitor precisa descer quatro níveis e voltar. O caminho feliz fica enterrado.</p></section>
+<section data-tab="Depois (guard clauses)"><pre><code>def calcular_frete(pedido):
+    if pedido is None:
+        raise ValueError("pedido ausente")
+    if not pedido.itens:
+        raise ValueError("pedido vazio")
+    if not pedido.cep_valido:
+        raise ValueError("CEP inválido")
+    if pedido.peso_kg &gt; 30:
+        raise ValueError("peso acima do limite")
+    return FRETE_POR_KG[pedido.zona] * pedido.peso_kg</code></pre>
+<p>Mesmo comportamento e mesma ciclomática; cada recusa fica ao lado da sua condição e o caminho feliz sai sem indentação.</p></section>
+<section data-tab="O que mudou"><ul><li>Ciclomática: igual (5), os mesmos caminhos precisam de teste.</li><li>Cognitiva: cai de cerca de 14 para 4 (cada if aninhado custa 1 + o nível, e cada else soma 1).</li><li>Comportamento observável: idêntico, o que é o que define uma refatoração.</li></ul></section>
+</div>
+
 <h3>Coesão: o que mora junto muda junto</h3>
 <p>Coesão é o grau em que as partes de um módulo ou classe existem pelo mesmo motivo. O teste prático: liste os métodos e os atributos que cada um usa. Se a classe se parte em dois grupos que não compartilham atributos, são duas classes coladas. Um sintoma frequente é a classe <code>Utils</code> ou o módulo <code>helpers.py</code> que cresce sem fim: nada une os itens além de "não sabíamos onde pôr". O antídoto é nomear o módulo pelo conceito (<code>frete.py</code>, <code>descontos.py</code>) e deixar a função morar onde o dado que ela usa mora. Acoplamento é o par da coesão: quanto uma parte precisa saber da outra. O alvo é alta coesão dentro, baixo acoplamento entre; o bloco 4 volta a isso como SRP.</p>
 
@@ -175,6 +225,17 @@ Ciclomática conta caminhos (e casos de teste); aninhamento conta esforço de le
 Guard clauses põem a recusa ao lado da condição e deixam o caminho feliz sem indentação.<br>
 Coesão: o que muda pelo mesmo motivo mora junto. Comentário explica o porquê.<br>
 Extrair só vale com nome de domínio; número menor não é legibilidade maior.</p>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Duas funções têm complexidade ciclomática 6. A primeira tem cinco <code>if</code> em sequência; a segunda tem cinco <code>if</code> aninhados uns dentro dos outros. Qual métrica distingue o esforço de leitura delas?</p>
+<ol><li data-opt="a">Nenhuma: se a ciclomática é igual, o esforço de leitura é igual.</li><li data-opt="b">A ciclomática, porque ela já conta os níveis de indentação.</li><li data-opt="c">A complexidade cognitiva: ela penaliza o aninhamento, então a segunda é bem mais difícil de ler, embora precise do mesmo número mínimo de casos de teste.</li><li data-opt="d">O número de linhas, que sempre difere entre as duas.</li></ol>
+<div class="explain">Ciclomática conta caminhos independentes (e portanto casos de teste mínimos); cognitiva estima o esforço humano e cobra a mais por cada nível de aninhamento. Meça as duas: uma sozinha engana. Use o simulador acima.</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual comentário agrega valor e não apodrece?</p>
+<ol><li data-opt="a"><code># Arredonda para cima: o gateway cobra por minuto iniciado</code></li><li data-opt="b"><code># incrementa i em 1</code></li><li data-opt="c"><code># retorna o resultado</code></li><li data-opt="d"><code># função que calcula o total</code></li></ol>
+<div class="explain">Comentário bom registra o porquê (restrição externa, decisão, armadilha) que o código não consegue dizer. O que repete o código vira mentira na primeira edição. Para o "o quê", use nomes melhores e funções menores.</div>
 </div>
 
 <!-- ============================================ BLOCO 2 -->
@@ -222,6 +283,14 @@ comp 3 3                     # composição: certo nas duas versões</code></pre
 <p>Ela só depende do que a interface promete, e funciona com qualquer implementação (V1, V2, uma que escreva em disco). O custo é o boilerplate de delegação e a perda do polimorfismo de subtipo <em>nominal</em> (a classe não "é uma" Colecao; ela satisfaz o Protocol). Em Python o segundo custo quase não existe, como se vê adiante.</p>
 <p>Quando herdar é bom: (1) a relação é "é um" no sentido de substituibilidade total (bloco 4, LSP); (2) o pai foi <em>projetado para extensão</em> e documenta o que as subclasses podem sobrescrever (<code>Exception</code>, <code>unittest.TestCase</code>, <code>ABC</code> com método de gabarito); (3) você controla pai e filhos e eles evoluem juntos. Fora disso, composição. A fórmula do <em>Design Patterns</em> (GoF, 1994) continua sendo a mais útil: "prefira composição de objetos a herança de classe".</p>
 
+<div class="stepper"><span class="ix-title">Passo a passo: a classe base frágil</span>
+<div class="frame" data-caption="1. A subclasse quer contar quantos itens entram: sobrescreve add e add_all."><svg viewBox="0 0 640 190" role="img" aria-label="Classe base frágil"><title>Classe base frágil: add_all chama add</title><rect class="s-box" x="20" y="10" width="260" height="70" rx="8"/><text x="150" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaBase</text><text x="150" y="52" text-anchor="middle" font-size="12">add(x): guarda x</text><text x="150" y="70" text-anchor="middle" font-size="12">add_all(xs): for x in xs: self.add(x)</text><rect class="s-soft" x="360" y="10" width="260" height="70" rx="8"/><text x="490" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaContadora(ListaBase)</text><text x="490" y="52" text-anchor="middle" font-size="12">add(x): n += 1; super().add(x)</text><text x="490" y="70" text-anchor="middle" font-size="12">add_all(xs): n += len(xs); super().add_all(xs)</text><path class="s-line" d="M360 45H280" stroke-width="1.5" fill="none"/><text x="320" y="112" text-anchor="middle" font-size="13">c = ListaContadora()</text><text x="320" y="132" text-anchor="middle" font-size="13">c.add_all([a, b, c])</text><text x="320" y="178" text-anchor="middle" font-size="12" class="s-muted" stroke="none">Parece certo: a subclasse só "acrescenta" a contagem.</text></svg></div>
+<div class="frame" data-caption="2. add_all da subclasse soma len(xs) = 3 e chama super().add_all."><svg viewBox="0 0 640 190" role="img" aria-label="Classe base frágil"><title>Classe base frágil: add_all chama add</title><rect class="s-box" x="20" y="10" width="260" height="70" rx="8"/><text x="150" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaBase</text><text x="150" y="52" text-anchor="middle" font-size="12">add(x): guarda x</text><text x="150" y="70" text-anchor="middle" font-size="12">add_all(xs): for x in xs: self.add(x)</text><rect class="s-soft" x="360" y="10" width="260" height="70" rx="8"/><text x="490" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaContadora(ListaBase)</text><text x="490" y="52" text-anchor="middle" font-size="12">add(x): n += 1; super().add(x)</text><text x="490" y="70" text-anchor="middle" font-size="12">add_all(xs): n += len(xs); super().add_all(xs)</text><path class="s-line" d="M360 45H280" stroke-width="1.5" fill="none"/><text x="320" y="112" text-anchor="middle" font-size="13">n = 3  (contado em add_all)</text><text x="320" y="132" text-anchor="middle" font-size="13">depois: super().add_all(xs)</text><text x="320" y="178" text-anchor="middle" font-size="12" class="s-muted" stroke="none">Até aqui, contagem 3.</text></svg></div>
+<div class="frame" data-caption="3. A base implementa add_all chamando self.add: volta para a subclasse."><svg viewBox="0 0 640 190" role="img" aria-label="Classe base frágil"><title>Classe base frágil: add_all chama add</title><rect class="s-box" x="20" y="10" width="260" height="70" rx="8"/><text x="150" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaBase</text><text x="150" y="52" text-anchor="middle" font-size="12">add(x): guarda x</text><text x="150" y="70" text-anchor="middle" font-size="12">add_all(xs): for x in xs: self.add(x)</text><rect class="s-soft" x="360" y="10" width="260" height="70" rx="8"/><text x="490" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaContadora(ListaBase)</text><text x="490" y="52" text-anchor="middle" font-size="12">add(x): n += 1; super().add(x)</text><text x="490" y="70" text-anchor="middle" font-size="12">add_all(xs): n += len(xs); super().add_all(xs)</text><path class="s-line" d="M360 45H280" stroke-width="1.5" fill="none"/><text x="320" y="112" text-anchor="middle" font-size="13">ListaBase.add_all chama self.add(x)</text><text x="320" y="132" text-anchor="middle" font-size="13">self é ListaContadora: add da subclasse roda 3 vezes</text><text x="320" y="178" text-anchor="middle" font-size="12" class="s-muted" stroke="none">Detalhe interno da base que a interface pública não promete.</text></svg></div>
+<div class="frame" data-caption="4. Resultado: n = 6. A contagem dobrou por causa de um detalhe de implementação."><svg viewBox="0 0 640 190" role="img" aria-label="Classe base frágil"><title>Classe base frágil: add_all chama add</title><rect class="s-box" x="20" y="10" width="260" height="70" rx="8"/><text x="150" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaBase</text><text x="150" y="52" text-anchor="middle" font-size="12">add(x): guarda x</text><text x="150" y="70" text-anchor="middle" font-size="12">add_all(xs): for x in xs: self.add(x)</text><rect class="s-soft" x="360" y="10" width="260" height="70" rx="8"/><text x="490" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaContadora(ListaBase)</text><text x="490" y="52" text-anchor="middle" font-size="12">add(x): n += 1; super().add(x)</text><text x="490" y="70" text-anchor="middle" font-size="12">add_all(xs): n += len(xs); super().add_all(xs)</text><path class="s-line" d="M360 45H280" stroke-width="1.5" fill="none"/><text x="320" y="112" text-anchor="middle" font-size="13">n = 3 + 3 = 6</text><text x="320" y="132" text-anchor="middle" font-size="13">Esperado: 3</text><text x="320" y="178" text-anchor="middle" font-size="12" class="s-muted" stroke="none">Se a base mudar add_all para não chamar add, vira 3: quebra silenciosa.</text></svg></div>
+<div class="frame" data-caption="5. Com composição, a classe guarda uma lista e conta só o que ela mesma delega."><svg viewBox="0 0 640 190" role="img" aria-label="Classe base frágil"><title>Classe base frágil: add_all chama add</title><rect class="s-box" x="20" y="10" width="260" height="70" rx="8"/><text x="150" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaBase</text><text x="150" y="52" text-anchor="middle" font-size="12">add(x): guarda x</text><text x="150" y="70" text-anchor="middle" font-size="12">add_all(xs): for x in xs: self.add(x)</text><rect class="s-box" x="360" y="10" width="260" height="70" rx="8"/><text x="490" y="32" text-anchor="middle" font-size="13" font-weight="700">ListaContadora(ListaBase)</text><text x="490" y="52" text-anchor="middle" font-size="12">add(x): n += 1; super().add(x)</text><text x="490" y="70" text-anchor="middle" font-size="12">add_all(xs): n += len(xs); super().add_all(xs)</text><path class="s-line" d="M360 45H280" stroke-width="1.5" fill="none"/><text x="320" y="112" text-anchor="middle" font-size="13">ListaContadora tem uma lista interna</text><text x="320" y="132" text-anchor="middle" font-size="13">add_all: n += len(xs); self._itens.extend(xs)</text><text x="320" y="178" text-anchor="middle" font-size="12" class="s-muted" stroke="none">Resultado 3, independente de como a lista interna é implementada.</text></svg></div>
+</div>
+
 <h3>Polimorfismo e duck typing</h3>
 <p>Polimorfismo é tratar objetos diferentes pela mesma interface. Python o resolve em tempo de execução por <strong>duck typing</strong>: o chamador usa <code>obj.enviar(...)</code> e funciona com qualquer objeto que tenha <code>enviar</code>, sem herança comum. O custo é que o erro só aparece na chamada. Por isso a prática moderna combina duck typing com <strong>tipagem estrutural verificada em tempo de análise</strong>: o <code>Protocol</code> descreve a forma esperada e o mypy checa. Em tempo de execução nada muda; o ganho é feedback antes do deploy.</p>
 
@@ -266,6 +335,25 @@ comp 3 3                     # composição: certo nas duas versões</code></pre
 <pre><code>Cannot create a consistent method resolution order (MRO) for bases Base, Auditoria</code></pre>
 <p>(<code>class X(Base, Auditoria)</code> exige Base antes de Auditoria, mas Auditoria herda de Base.) Regras que mantêm a herança múltipla sob controle: use apenas para <em>mixins</em> pequenos sem estado próprio; todo método cooperativo chama <code>super()</code>; aceite <code>*args, **kwargs</code> no <code>__init__</code> cooperativo; e inspecione <code>Classe.__mro__</code> quando duvidar. Se precisa desenhar o MRO para entender o código, considere composição.</p>
 
+<div class="ix"><span class="ix-title">Simulador: super() e a MRO</span>
+<p>Classes <code>A</code>, <code>B(A)</code>, <code>C(A)</code> e <code>D(B, C)</code>. Cada <code>__init__</code> imprime seu nome. Marque quais chamam <code>super().__init__()</code>.</p>
+<div class="ix-row"><label><input type="checkbox" id="s01-mro-d" checked> D chama super()</label><label><input type="checkbox" id="s01-mro-b" checked> B chama super()</label><label><input type="checkbox" id="s01-mro-c" checked> C chama super()</label></div>
+<div class="ix-out" id="s01-mro-out"></div></div>
+<script>Course.ready(function (C) {
+  var chk = { D: document.getElementById('s01-mro-d'), B: document.getElementById('s01-mro-b'), C: document.getElementById('s01-mro-c') }, out = document.getElementById('s01-mro-out');
+  function render() {
+    var mro = ['D', 'B', 'C', 'A', 'object'], run = [], skipped = [], i;
+    for (i = 0; i < mro.length - 1; i++) {
+      run.push(mro[i]);
+      var calls = mro[i] === 'A' ? false : chk[mro[i]].checked;
+      if (!calls) { skipped = mro.slice(i + 1, mro.length - 1); break; }
+    }
+    out.textContent = 'MRO de D: ' + mro.join(' → ') + '\nOrdem de execução dos __init__: ' + run.join(' → ') +
+      (skipped.length ? '\nNunca executam: ' + skipped.join(', ') + '  (a cadeia foi cortada em ' + run[run.length - 1] + ')' : '\nTodos os elos cooperaram: A roda uma única vez, apesar do losango.');
+  }
+  Object.keys(chk).forEach(function (k) { chk[k].addEventListener('change', render); }); render();
+});</script>
+
 <h3>Encapsulamento por convenção</h3>
 <p>Python não tem <code>private</code>. A convenção <code>_atributo</code> diz "interno, não dependa". Já <code>__atributo</code> (dois sublinhados, sem sublinhado final) dispara <strong>name mangling</strong>: dentro da classe <code>Conta</code>, <code>self.__historico</code> vira <code>self._Conta__historico</code>. Isso evita colisão acidental com subclasses, <em>não</em> é segurança:</p>
 <pre><code>cp = ContaPoupanca(100); cp.depositar(5)
@@ -291,6 +379,17 @@ A classe base frágil quebra subclasses por mudanças que a interface pública n
 <code>Protocol</code> é contrato do consumidor, verificado no mypy; <code>ABC</code> é gabarito da sua hierarquia, verificado ao instanciar. <code>runtime_checkable</code> só confere nomes.<br>
 <code>super()</code> segue a MRO da instância; um elo sem <code>super()</code> corta o resto da cadeia sem aviso.<br>
 <code>__x</code> é mangling para evitar colisão, não privacidade.</p>
+</div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Reusar o código de uma classe existente é o único motivo para criar a nova classe. Qual relação costuma ser mais segura?</p>
+<ol><li data-opt="a">Herança, porque é o acoplamento mais fraco entre classes.</li><li data-opt="b">Herança múltipla, para reaproveitar o máximo possível.</li><li data-opt="c">Copiar e colar o código para não criar dependência nenhuma.</li><li data-opt="d">Composição: guardar a classe como atributo e delegar. Herança só se o novo tipo puder substituir o antigo em todo lugar.</li></ol>
+<div class="explain">Herança é o acoplamento mais forte: a subclasse depende de detalhes internos da base (a "classe base frágil" do stepper acima). Composição expõe só o que você escolhe delegar e permite trocar a peça depois.</div>
+</div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Em <code>class D(B, C)</code>, com <code>B</code> e <code>C</code> herdando de <code>A</code>, o <code>B.__init__</code> não chama <code>super().__init__()</code>. O que acontece com <code>C</code> e <code>A</code> ao criar um <code>D</code>?</p>
+<ol><li data-opt="a">Rodam normalmente, porque o Python chama todos os pais automaticamente.</li><li data-opt="b">Seus <code>__init__</code> não rodam: a cadeia da MRO (D, B, C, A) é cortada no elo que não chama <code>super()</code>.</li><li data-opt="c">O Python levanta <code>TypeError</code> ao definir a classe.</li><li data-opt="d">Só o <code>A.__init__</code> roda, porque é a raiz.</li></ol>
+<div class="explain"><code>super()</code> não significa "meu pai", e sim "o próximo na MRO da instância". Um elo que não cooperar interrompe o resto da cadeia sem aviso. Experimente no simulador de MRO.</div>
 </div>
 
 <!-- ============================================ BLOCO 3 -->
@@ -405,6 +504,17 @@ def fechar(self, pedido_id: str, pedido: Pedido) -&gt; Resultado:
 <code>functools</code>: <code>partial</code>, <code>reduce</code>, <code>singledispatch</code>, <code>cache</code>; memoize só o que é puro, e nunca métodos com <code>@cache</code>.<br>
 Núcleo funcional decide, casca imperativa executa: regras testadas sem mock, casca testada pela orquestração.<br>
 Preserve determinismo (desempate explícito) e cuidado com geradores de uso único.</p>
+</div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual das funções é pura?</p>
+<ol><li data-opt="a"><code>def hoje_formatado(): return datetime.now().strftime("%d/%m")</code></li><li data-opt="b"><code>def proximo_id(): global n; n += 1; return n</code></li><li data-opt="c"><code>def adiciona(xs, x): xs.append(x); return xs</code></li><li data-opt="d"><code>def ordenada(xs): return sorted(xs)</code></li></ol>
+<div class="explain">Pura = resultado só dos argumentos e nenhum efeito observável. <code>sorted</code> devolve uma lista nova; as outras dependem do relógio, de estado global ou mutam o argumento. Dependência escondida vira parâmetro (por exemplo, receba <code>agora</code>).</div>
+</div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que usar <code>@functools.cache</code> diretamente em um <em>método</em> é uma armadilha?</p>
+<ol><li data-opt="a">Porque <code>@cache</code> só funciona em funções com mais de um argumento.</li><li data-opt="b">O cache guarda <code>self</code> como parte da chave: mantém instâncias vivas (vazamento) e exige que <code>self</code> seja hashable e imutável o bastante para fazer sentido.</li><li data-opt="c">Porque o cache é apagado a cada chamada do método.</li><li data-opt="d">Não há armadilha: métodos e funções se comportam igual.</li></ol>
+<div class="explain">Memoize apenas o que é puro. Em métodos, o objeto inteiro entra na chave e fica referenciado pelo cache até o fim do processo. Prefira cache por instância, ou função pura de módulo recebendo os dados.</div>
 </div>
 
 <!-- ============================================ BLOCO 4 -->
@@ -530,6 +640,17 @@ OCP: tabela de despacho resolve a cadeia que cresce; três variantes estáveis n
 LSP: o subtipo não pode rejeitar o que a base aceitava; o mypy não vê, o contrato sim.<br>
 ISP: o consumidor declara a fatia que usa, com <code>Protocol</code>.<br>
 DIP: a política define a interface no vocabulário dela; abstraia fronteiras que você troca, não a biblioteca padrão.</p>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q"><code>Rectangle.set_width</code> funciona em qualquer retângulo. Alguém cria <code>Square(Rectangle)</code> cujo <code>set_width</code> também altera a altura. O que está violado?</p>
+<ol><li data-opt="a">Liskov: o subtipo não honra o contrato da base (largura e altura independentes); um código que usava <code>Rectangle</code> quebra com <code>Square</code>.</li><li data-opt="b">Aberto/fechado, porque foi preciso editar a classe base.</li><li data-opt="c">Responsabilidade única, porque <code>Square</code> tem dois métodos.</li><li data-opt="d">Nada: o mypy aceita, então o desenho está correto.</li></ol>
+<div class="explain">Substituibilidade é sobre contrato (pré e pós-condições, invariantes), não sobre assinatura. O checker não vê isso; teste de contrato compartilhado vê. Subtipo não pode rejeitar o que a base aceitava nem prometer menos.</div>
+</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Na inversão de dependência, quem deve ser dono da interface <code>EnviaNotificacao</code> que o caso de uso consome?</p>
+<ol><li data-opt="a">A biblioteca de e-mail, para que o domínio importe a interface dela.</li><li data-opt="b">Um módulo <code>utils</code> compartilhado por todos.</li><li data-opt="c">A política (o caso de uso, a camada de alto nível), que a define no vocabulário do domínio; o adapter de e-mail/SMS se adapta a ela.</li><li data-opt="d">Ninguém: interfaces são dispensáveis em Python.</li></ol>
+<div class="explain">DIP inverte a direção do código-fonte: o detalhe depende da política, não o contrário. Abstraia fronteiras que você realmente troca (banco, gateway), não a biblioteca padrão.</div>
 </div>
 
 <!-- ============================================ BLOCO 5 -->
@@ -701,6 +822,17 @@ Observer precisa de política explícita para falha de assinante; repository pre
 DI por construtor com composition root explícito; o Python raramente pede container.</p>
 </div>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Com <code>@a</code> acima de <code>@b</code> acima de <code>def f()</code>, em que ordem os decoradores são <em>aplicados</em>?</p>
+<ol><li data-opt="a">De cima para baixo: primeiro <code>a</code>, depois <code>b</code>.</li><li data-opt="b">De baixo para cima: <code>f = a(b(f))</code>. Primeiro <code>b</code> envolve <code>f</code>, depois <code>a</code> envolve o resultado; na chamada, o wrapper de <code>a</code> roda primeiro.</li><li data-opt="c">Em ordem alfabética dos nomes.</li><li data-opt="d">Em paralelo, sem ordem definida.</li></ol>
+<div class="explain">Confundir isso gera bugs sutis (por exemplo, cache fora de autenticação ou o contrário). Lembre: aplicação sobe de baixo para cima; a execução do wrapper desce de fora para dentro.</div>
+</div>
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Você precisa trocar o algoritmo de desconto em tempo de execução, sem estado interno. Qual é a implementação mais idiomática em Python?</p>
+<ol><li data-opt="a">Uma hierarquia com classe abstrata, uma subclasse por algoritmo e uma fábrica.</li><li data-opt="b">Um Singleton para guardar o algoritmo atual.</li><li data-opt="c">Herança múltipla combinando todos os descontos.</li><li data-opt="d">Uma função (ou um dict de funções): o Strategy sem estado é só um callable.</li></ol>
+<div class="explain">Python tem funções como valores, então muito padrão de livro vira uma função ou um dicionário. Use classe quando houver configuração/estado (uma <code>dataclass</code> pequena). Cerimônia sem ganho é custo.</div>
+</div>
+
 <!-- ============================================ BLOCO 6 -->
 <h2 id="b06">Bloco 6 · Refatoração</h2>
 
@@ -810,6 +942,17 @@ Passos pequenos com suíte verde; diferencial em volume; controle negativo prova
 Refatoração e mudança de comportamento em commits (e chapéus) separados.</p>
 </div>
 
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Ao escrever testes de caracterização do legado, você percebe que o código arredonda errado em um caso. O que fazer na refatoração?</p>
+<ol><li data-opt="a">Corrigir o arredondamento no meio da refatoração, já que é a mesma região de código.</li><li data-opt="b">Apagar o teste que falha.</li><li data-opt="c">Preservar o comportamento atual no teste, registrar a dúvida e decidir a correção em um commit separado, depois da refatoração.</li><li data-opt="d">Reescrever o módulo inteiro a partir da especificação ideal.</li></ol>
+<div class="explain">Refatorar preserva o comportamento observável. Misturar correção com reestruturação torna a revisão impossível e esconde regressão. Duas mudanças, dois commits, dois "chapéus".</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">O que é uma <em>costura</em> (seam) e por que ela ajuda a testar código legado?</p>
+<ol><li data-opt="a">Um ponto onde o comportamento pode ser trocado sem editar o código ali (por exemplo, o relógio), permitindo testar sem reescrever tudo.</li><li data-opt="b">Uma linha de comentário que marca onde o código foi dividido.</li><li data-opt="c">Um tipo especial de teste que roda no CI.</li><li data-opt="d">Uma ferramenta que gera mocks automaticamente.</li></ol>
+<div class="explain">Costuras tornam o legado testável com mudança mínima: depois de achar a costura, ela vira parâmetro e a dependência fica explícita. É o primeiro passo seguro antes de qualquer refatoração maior.</div>
+</div>
+
 <!-- ============================================ BLOCO 7 -->
 <h2 id="b07">Bloco 7 · TDD</h2>
 
@@ -823,6 +966,16 @@ Refatoração e mudança de comportamento em commits (e chapéus) separados.</p>
 <li><strong>Refatorar.</strong> Com tudo verde, limpe duplicação e nomes, em passos pequenos, rodando os testes a cada um. Aqui moram as decisões de design.</li>
 </ol>
 <p>O ritmo é de minutos por volta, não de horas. Cada teste novo força uma decisão: o que a função devolve em caso de erro? Aceita espaço? A ordem importa? Essas decisões ficam <em>escritas como testes</em>.</p>
+
+<p><strong>Exercício:</strong> coloque as etapas de um ciclo de TDD na ordem correta usando as setas.</p>
+<ol class="order" data-solution="a,b,c,d,e,f">
+<li data-id="e">Refatorar o código e o teste, sem mudar comportamento</li>
+<li data-id="c">Escrever o mínimo de código de produção para o teste passar</li>
+<li data-id="a">Escrever um teste pequeno que descreve o próximo comportamento</li>
+<li data-id="f">Rodar a suíte de novo e confirmar que continua tudo verde</li>
+<li data-id="b">Rodar e ver o teste falhar pelo motivo certo (vermelho)</li>
+<li data-id="d">Rodar e ver o teste passar (verde)</li>
+</ol>
 
 <h3>Exemplo trabalhado: o kata <code>parse_duration</code></h3>
 <p>O lab traz um kata com oito voltas (<code>tests/test_kata_duration.py</code>, comentadas por volta). Converter <code>"1h30m"</code> em segundos. A sequência mostra como o design emerge:</p>
@@ -906,6 +1059,17 @@ Dummy, stub, spy, fake e mock são coisas diferentes: prefira verificar estado; 
 Não mocke o que você não é dono: envolva em adapter e teste o adapter contra o real.<br>
 Teste de contrato dá ao fake o direito de substituir o real.<br>
 Dificuldade de testar é diagnóstico de design: dependência escondida, responsabilidade demais, efeito misturado à regra.</p>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">No ciclo vermelho/verde/refatorar, um teste novo falha com <code>NameError</code> porque a função ainda nem existe. Esse vermelho está correto?</p>
+<ol><li data-opt="a">Não é o vermelho certo: o teste deve falhar pelo <em>motivo certo</em> (assertion sobre o comportamento). Crie o esqueleto, veja a asserção falhar e então implemente.</li><li data-opt="b">Sim: qualquer falha prova que o teste é válido.</li><li data-opt="c">Sim, e deve-se pular direto para o refatorar.</li><li data-opt="d">Não importa: o vermelho serve só para cumprir o ritual.</li></ol>
+<div class="explain">Um teste que falha por erro de nome não demonstra que a asserção funciona. Ver a asserção falhar é a prova de que o teste consegue detectar o defeito, e fixa uma decisão de borda.</div>
+</div>
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Seu código chama uma biblioteca HTTP de terceiros. Como evitar testes frágeis que dependem de mockar essa biblioteca?</p>
+<ol><li data-opt="a">Mockar a biblioteca em todo teste com <code>patch</code> profundo.</li><li data-opt="b">Nunca testar o código que usa rede.</li><li data-opt="c">Fazer chamadas reais à internet em toda a suíte.</li><li data-opt="d">Envolver a biblioteca em um adapter seu e usar um fake do adapter nos testes; o adapter em si é testado contra o real (teste de contrato).</li></ol>
+<div class="explain">Não mocke o que você não é dono: o mock acopla o teste ao funcionamento interno de outro e mente quando a biblioteca muda. A fronteira é sua; o fake é barato e o teste de contrato dá a ele o direito de substituir o real.</div>
 </div>
 
 <!-- ============================================ LAB -->
@@ -1071,6 +1235,23 @@ Success: no issues found in 28 source files</code></pre>
 </tbody>
 </table>
 <p>As saídas vêm de execução real em 11/10/2026 (Python 3.14.7, pytest 9.1.1, ruff 0.17.0). Regras de lint e mensagens de erro mudam entre versões; revalide em até 90 dias. Livros e artigos de praticante são complemento rotulado: as definições normativas estão nos papers e na documentação oficial.</p>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique para virar. Tente responder de cabeça antes.</p>
+<div class="flashcards">
+<div class="fc"><div class="front">Ciclomática vs cognitiva</div><div class="back">Ciclomática conta caminhos (e testes mínimos). Cognitiva penaliza aninhamento: esforço de leitura.</div></div>
+<div class="fc"><div class="front">Guard clause</div><div class="back">Recusa antecipada ao lado da condição; deixa o caminho feliz sem indentação.</div></div>
+<div class="fc"><div class="front">Composição vs herança</div><div class="back">Reuso pede composição. Herança só para subtipo que substitui a base em tudo.</div></div>
+<div class="fc"><div class="front">Protocol vs ABC</div><div class="back">Protocol: contrato do consumidor, estrutural, checado pelo mypy. ABC: gabarito da sua hierarquia, checado ao instanciar.</div></div>
+<div class="fc"><div class="front">super()</div><div class="back">Próximo da MRO da instância, não "meu pai". Um elo sem super() corta a cadeia.</div></div>
+<div class="fc"><div class="front">Função pura</div><div class="back">Resultado só dos argumentos e nenhum efeito. Relógio, global e I/O viram parâmetros.</div></div>
+<div class="fc"><div class="front">Functional core, imperative shell</div><div class="back">Núcleo puro decide; casca imperativa executa I/O. O núcleo se testa sem mock.</div></div>
+<div class="fc"><div class="front">Liskov (LSP)</div><div class="back">Subtipo não rejeita o que a base aceita nem promete menos. O checker não vê; teste de contrato vê.</div></div>
+<div class="fc"><div class="front">DIP</div><div class="back">A política é dona da interface; o detalhe (adapter) depende dela.</div></div>
+<div class="fc"><div class="front">Ordem dos decoradores</div><div class="back">Aplicam-se de baixo para cima: @a @b f = a(b(f)).</div></div>
+<div class="fc"><div class="front">Teste de caracterização</div><div class="back">Grava o comportamento atual do legado, inclusive dúvidas, antes de refatorar.</div></div>
+<div class="fc"><div class="front">Vermelho pelo motivo certo</div><div class="back">O teste deve falhar numa asserção, não por NameError. Não mocke o que não é seu: use adapter.</div></div>
+</div>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

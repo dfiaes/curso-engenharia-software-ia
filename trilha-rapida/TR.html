@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trilha rápida · Desenvolvimento com agentes, do zero ao ciclo contínuo</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="wrap">
+<h1>Trilha rápida · Desenvolvimento com agentes, do zero ao ciclo contínuo</h1>
+<p class="meta"><a href="../STATUS.md">STATUS</a> · <a href="../CURRICULO.md">Currículo</a> · <a href="../kit/README.md">Kit de arranque</a></p>
+<p class="meta"><span class="badge">TRILHA RÁPIDA</span> &nbsp; 9 passos · carga estimada ≈ 4 h de leitura + prática no seu repositório · pré-requisito: saber usar Git e um terminal · <strong>agnóstico de ferramenta</strong></p>
+
+<div class="box">
+<span class="lbl">Para quem é e o que muda ao final</span>
+<p>Você escreve software há anos, tem GitHub, Jira, servidores locais ou Azure e uma esteira dev → cert → prod. O que falta não é conhecimento de engenharia: é <em>um método repetível</em> para abrir um agente (Cursor, Codex, OpenCode, Claude Code ou um agente que você mesmo montou) e conduzir um trabalho do começo ao fim sem perder o controle: da intenção ao requisito, do requisito ao código, do código à produção, da produção à próxima mudança, sempre com a documentação viva.</p>
+<p>Ao terminar você tem: (1) um repositório preparado (instruções, estrutura de docs, comando único de verificação, hooks, proteção de branch); (2) um fluxo escrito para feature pequena, bug, módulo grande e manutenção; (3) Jira e GitHub costurados pela chave do ticket; (4) uma esteira com autonomia do agente graduada por ambiente; (5) um hábito de revisão por agente separado. Tudo o que você precisa copiar está no <a href="../kit/README.md">kit</a>; aqui você aprende <em>por que</em> cada peça existe e quando encurtar o caminho.</p>
+</div>
+
+<div class="box warn">
+<span class="lbl">O que esta trilha NÃO é</span>
+<p>Não é um módulo de fase: não tem laboratório com gabarito nem checkpoint de aprovação. É a rota curta para trabalhar bem já. Os fundamentos (por que o ciclo funciona, onde ele falha, como medir) estão em <a href="../modulos/A01-sdlc-nativo-ia/A01.html">A01 · SDLC nativo em IA</a>; ferramental e hooks em <a href="../modulos/M00-ferramental/M00.html">M00</a>; fluxo orientado por especificação em <a href="../modulos/M01-workflow-ia-driven/M01.html">M01</a>; documentos de design em <a href="../modulos/M04-design-docs-com-ia/M04.html">M04</a>; esteira e deploy em <a href="../modulos/LT04-novo/LT04.html">LT04</a> e <a href="../modulos/P01-deploy-nuvem/P01.html">P01</a>. Cada passo abaixo aponta para o módulo certo quando você quiser aprofundar.</p>
+</div>
+
+<div class="ix">
+<span class="ix-title">Qual é o meu caso? Seletor de fluxo</span>
+<p class="small">Responda três perguntas e veja o fluxo recomendado, o que pode ser encurtado e o prompt-modelo a usar.</p>
+<div class="ix-row"><label for="tr-q1">O trabalho é:&nbsp;</label>
+<select id="tr-q1">
+<option value="feature">Algo novo e pequeno (cabe em 1 PR, poucas horas)</option>
+<option value="bug">Algo quebrou (bug, incidente, regressão)</option>
+<option value="modulo">Algo novo e grande (módulo, integração, vários PRs)</option>
+<option value="manut">Mudar sem mudar comportamento (upgrade, refatoração)</option>
+</select></div>
+<div class="ix-row"><label for="tr-q2">O repositório já tem testes e <code>AGENTS.md</code>?&nbsp;</label>
+<select id="tr-q2"><option value="sim">Sim, e <code>make check</code> funciona</option><option value="parcial">Tem testes, mas sem instruções para agente</option><option value="nao">Pouco ou nenhum teste / projeto herdado</option></select></div>
+<div class="ix-row"><label for="tr-q3">Toca dinheiro, dados de clientes, segurança ou produção direta?&nbsp;</label>
+<select id="tr-q3"><option value="nao">Não</option><option value="sim">Sim</option></select></div>
+<div class="ix-row"><button class="ix-btn primary" id="tr-q-go" type="button">Mostrar o fluxo</button></div>
+<div class="ix-out" id="tr-q-out" aria-live="polite">Escolha as opções e clique em "Mostrar o fluxo".</div>
+</div>
+<script>
+Course.ready(function (C) {
+  var flows = {
+    feature: {nome: "Feature pequena", passos: ["Ticket no Jira com critérios de aceite (modelo <code>jira/historia.md</code>)", "Intenção em 5 linhas dentro da spec (a intenção pode morar na própria spec)", "Spec curta em <code>docs/specs/</code>, aprovada por você", "Plano em modo leitura (lista de arquivos e passos)", "Branch <code>feat/PROJ-123-slug</code>; teste primeiro, implementação mínima, <code>make check</code> a cada passo", "PR, revisão por agente separado, revisão humana", "Merge, deploy dev, cert, prod com gates"], curto: "Pode fundir intenção e spec num documento só e pular o ADR. Não pule teste, <code>make check</code> nem a revisão.", prompt: "prompts/nova-feature.md", aba: "Feature pequena"},
+    bug: {nome: "Bug", passos: ["Ticket de bug com sintoma, ambiente, passos (modelo <code>jira/bug.md</code>)", "Reproduzir: teste que falha pelo motivo certo, antes de qualquer correção", "Diagnosticar a causa raiz (hipóteses com evidência)", "Branch <code>fix/PROJ-456-slug</code>; correção mínima; testes existentes intocados", "PR com causa raiz e plano de rollback", "Review, merge, cert, prod; nota de aprendizado no <code>AGENTS.md</code> ou runbook"], curto: "Spec e plano formais são dispensáveis: o teste de reprodução é a spec. Não dispense a reprodução nem a causa raiz.", prompt: "prompts/corrigir-bug.md", aba: "Bug"},
+    modulo: {nome: "Módulo grande", passos: ["Épico no Jira; intenção completa em <code>docs/intent/</code>", "2 a 3 alternativas de desenho; decisão registrada em ADR", "Fatiamento vertical: uma história por fatia, esqueleto andante primeiro", "Por fatia: spec curta, plano, branch/worktree próprio", "PRs pequenos (cerca de 400 linhas), revisão por agente separado e humano", "Cada fatia passa por dev e cert; flag desliga o que ainda não está pronto", "Atualizar <code>docs/architecture.md</code> e o plano mestre a cada fatia"], curto: "Aqui quase nada se encurta: o custo do erro de desenho cresce com o tamanho. O que se otimiza é o tamanho de cada PR.", prompt: "prompts/modulo-grande.md", aba: "Módulo grande"},
+    manut: {nome: "Manutenção, upgrade ou refatoração", passos: ["Ticket com objetivo e <em>invariante</em>: o que não pode mudar", "Testes de caracterização cobrindo o comportamento atual", "Plano em passos reversíveis (um tipo de mudança por PR)", "Executar por lotes, <code>make check</code> a cada lote", "Comparar comportamento antes e depois (testes, métricas, diff de saída)", "PR, review, cert com carga representativa, prod gradual"], curto: "Pode pular spec funcional (não há comportamento novo), mas exige o invariante escrito e a rede de testes.", prompt: "prompts/modulo-grande.md (fatiamento) + prompts/atualizar-docs.md", aba: "Manutenção/upgrade/refatoração"}
+  };
+  var q1 = document.getElementById("tr-q1"), q2 = document.getElementById("tr-q2"), q3 = document.getElementById("tr-q3"), out = document.getElementById("tr-q-out");
+  document.getElementById("tr-q-go").addEventListener("click", function () {
+    var f = flows[q1.value], h = "<p><strong>" + f.nome + "</strong>: sequência recomendada</p><ol>";
+    f.passos.forEach(function (p) { h += "<li>" + p + "</li>"; });
+    h += "</ol><p><strong>O que pode ser encurtado:</strong> " + f.curto + "</p>";
+    if (q2.value === "parcial") h += "<p><strong>Antes de tudo:</strong> gere o <code>AGENTS.md</code> numa sessão só-leitura (Passo 1, aba projeto existente).</p>";
+    if (q2.value === "nao") h += "<p><strong>Pare:</strong> sem testes, o agente não tem como saber se quebrou algo. Faça primeiro o onboarding e os testes de caracterização das áreas que você vai tocar (Passo 1, aba projeto existente). Só depois siga o fluxo acima.</p>";
+    if (q3.value === "sim") h += "<p><strong>Risco alto:</strong> nada de encurtar. Spec aprovada por humano, ADR se houver decisão de desenho, revisão por agente separado <em>e</em> por segunda pessoa, deploy só com aprovação humana em cert e prod, rollback ensaiado.</p>";
+    h += "<p>Prompt-modelo: <code>" + f.prompt + "</code> no <a href=\"../kit/README.md\">kit</a>. Detalhes: Passo 2, aba <em>" + f.aba + "</em>.</p>";
+    out.innerHTML = h;
+  });
+});
+</script>
+
+<div class="toc">
+<strong>Roteiro</strong>
+<ol>
+<li><a href="#passo-0"><strong>Passo 0</strong> · O mapa do ciclo</a></li>
+<li><a href="#passo-1"><strong>Passo 1</strong> · Preparar o repositório</a></li>
+<li><a href="#passo-2"><strong>Passo 2</strong> · Fluxos por tipo de trabalho</a></li>
+<li><a href="#passo-3"><strong>Passo 3</strong> · Jira e GitHub juntos</a></li>
+<li><a href="#passo-4"><strong>Passo 4</strong> · Esteira dev → cert → prod</a></li>
+<li><a href="#passo-5"><strong>Passo 5</strong> · Documentação sempre atualizada</a></li>
+<li><a href="#passo-6"><strong>Passo 6</strong> · Paralelismo e revisão</a></li>
+<li><a href="#passo-7"><strong>Passo 7</strong> · Onde fica cada coisa em cada ferramenta</a></li>
+<li><a href="#passo-8"><strong>Passo 8</strong> · Cartão de bolso</a></li>
+</ol>
+</div>
+
+<h2 id="passo-0">Passo 0 · O mapa do ciclo</h2>
+<p><strong>Por que isso importa.</strong> A dificuldade típica de quem começa com agentes é tratar a sessão como uma conversa: pede, recebe código, cola, reza. O que funciona é tratar a sessão como uma <em>etapa de um ciclo</em> em que cada etapa produz um artefato versionado, e um humano decide em pontos precisos. O agente executa rápido; você decide o que vale executar e se o resultado presta.</p>
+
+<p><strong>O ciclo.</strong> Nove etapas que se repetem para qualquer tamanho de trabalho (o que muda é quanto cada etapa pesa):</p>
+
+<div class="stepper"><span class="ix-title">Passo a passo: o ciclo, etapa por etapa (quem decide, o que o agente faz, qual artefato)</span>
+<div class="frame" data-caption="1. Intenção. Humano: decide se o problema vale a pena e qual o resultado esperado. Agente: pergunta, resume contexto. Artefato: docs/intent."><svg viewBox="0 0 640 260" role="img"><title>Ciclo: etapa 1, Intenção</title><line class="s-line" x1="190" y1="48" x2="235" y2="48"/><line class="s-line" x1="405" y1="48" x2="450" y2="48"/><line class="s-line" x1="535" y1="76" x2="535" y2="100"/><line class="s-line" x1="450" y1="128" x2="405" y2="128"/><line class="s-line" x1="235" y1="128" x2="190" y2="128"/><line class="s-line" x1="105" y1="156" x2="105" y2="180"/><line class="s-line" x1="190" y1="208" x2="235" y2="208"/><line class="s-line" x1="405" y1="208" x2="450" y2="208"/><rect class="s-soft" x="20" y="20" width="170" height="56" rx="8"/><text x="105" y="53" text-anchor="middle" fill="currentColor" font-size="14">1. Intenção</text><rect class="s-box" x="235" y="20" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="53" text-anchor="middle" fill="currentColor" font-size="14">2. Spec</text><rect class="s-box" x="450" y="20" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="53" text-anchor="middle" fill="currentColor" font-size="14">3. Plano</text><rect class="s-box" x="450" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="133" text-anchor="middle" fill="currentColor" font-size="14">4. Implementação</text><rect class="s-box" x="235" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="133" text-anchor="middle" fill="currentColor" font-size="14">5. Verificação</text><rect class="s-box" x="20" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="133" text-anchor="middle" fill="currentColor" font-size="14">6. PR e review</text><rect class="s-box" x="20" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="213" text-anchor="middle" fill="currentColor" font-size="13">7. CI/CD dev→cert→prod</text><rect class="s-box" x="235" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="213" text-anchor="middle" fill="currentColor" font-size="14">8. Operar</text><rect class="s-box" x="450" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="213" text-anchor="middle" fill="currentColor" font-size="14">9. Nova intenção</text><text x="320" y="252" text-anchor="middle" fill="currentColor" font-size="12">volta ao passo 1 com a nova intenção</text></svg></div>
+<div class="frame" data-caption="2. Spec. Humano: aprova critérios de aceite e fora do escopo. Agente: redige critérios verificáveis. Artefato: docs/specs."><svg viewBox="0 0 640 260" role="img"><title>Ciclo: etapa 2, Spec</title><line class="s-line" x1="190" y1="48" x2="235" y2="48"/><line class="s-line" x1="405" y1="48" x2="450" y2="48"/><line class="s-line" x1="535" y1="76" x2="535" y2="100"/><line class="s-line" x1="450" y1="128" x2="405" y2="128"/><line class="s-line" x1="235" y1="128" x2="190" y2="128"/><line class="s-line" x1="105" y1="156" x2="105" y2="180"/><line class="s-line" x1="190" y1="208" x2="235" y2="208"/><line class="s-line" x1="405" y1="208" x2="450" y2="208"/><rect class="s-box" x="20" y="20" width="170" height="56" rx="8"/><text x="105" y="53" text-anchor="middle" fill="currentColor" font-size="14">1. Intenção</text><rect class="s-soft" x="235" y="20" width="170" height="56" rx="8"/><text x="320" y="53" text-anchor="middle" fill="currentColor" font-size="14">2. Spec</text><rect class="s-box" x="450" y="20" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="53" text-anchor="middle" fill="currentColor" font-size="14">3. Plano</text><rect class="s-box" x="450" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="133" text-anchor="middle" fill="currentColor" font-size="14">4. Implementação</text><rect class="s-box" x="235" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="133" text-anchor="middle" fill="currentColor" font-size="14">5. Verificação</text><rect class="s-box" x="20" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="133" text-anchor="middle" fill="currentColor" font-size="14">6. PR e review</text><rect class="s-box" x="20" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="213" text-anchor="middle" fill="currentColor" font-size="13">7. CI/CD dev→cert→prod</text><rect class="s-box" x="235" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="213" text-anchor="middle" fill="currentColor" font-size="14">8. Operar</text><rect class="s-box" x="450" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="213" text-anchor="middle" fill="currentColor" font-size="14">9. Nova intenção</text><text x="320" y="252" text-anchor="middle" fill="currentColor" font-size="12">volta ao passo 1 com a nova intenção</text></svg></div>
+<div class="frame" data-caption="3. Plano. Humano: aprova arquivos, passos e rollback. Agente: lê o código em modo leitura e propõe. Artefato: docs/plans."><svg viewBox="0 0 640 260" role="img"><title>Ciclo: etapa 3, Plano</title><line class="s-line" x1="190" y1="48" x2="235" y2="48"/><line class="s-line" x1="405" y1="48" x2="450" y2="48"/><line class="s-line" x1="535" y1="76" x2="535" y2="100"/><line class="s-line" x1="450" y1="128" x2="405" y2="128"/><line class="s-line" x1="235" y1="128" x2="190" y2="128"/><line class="s-line" x1="105" y1="156" x2="105" y2="180"/><line class="s-line" x1="190" y1="208" x2="235" y2="208"/><line class="s-line" x1="405" y1="208" x2="450" y2="208"/><rect class="s-box" x="20" y="20" width="170" height="56" rx="8"/><text x="105" y="53" text-anchor="middle" fill="currentColor" font-size="14">1. Intenção</text><rect class="s-box" x="235" y="20" width="170" height="56" rx="8"/><text x="320" y="53" text-anchor="middle" fill="currentColor" font-size="14">2. Spec</text><rect class="s-soft" x="450" y="20" width="170" height="56" rx="8"/><text x="535" y="53" text-anchor="middle" fill="currentColor" font-size="14">3. Plano</text><rect class="s-box" x="450" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="133" text-anchor="middle" fill="currentColor" font-size="14">4. Implementação</text><rect class="s-box" x="235" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="133" text-anchor="middle" fill="currentColor" font-size="14">5. Verificação</text><rect class="s-box" x="20" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="133" text-anchor="middle" fill="currentColor" font-size="14">6. PR e review</text><rect class="s-box" x="20" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="213" text-anchor="middle" fill="currentColor" font-size="13">7. CI/CD dev→cert→prod</text><rect class="s-box" x="235" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="213" text-anchor="middle" fill="currentColor" font-size="14">8. Operar</text><rect class="s-box" x="450" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="213" text-anchor="middle" fill="currentColor" font-size="14">9. Nova intenção</text><text x="320" y="252" text-anchor="middle" fill="currentColor" font-size="12">volta ao passo 1 com a nova intenção</text></svg></div>
+<div class="frame" data-caption="4. Implementação. Humano: acompanha pontos de parada. Agente: teste primeiro, código mínimo, commits pequenos. Artefato: branch e commits com a chave do ticket."><svg viewBox="0 0 640 260" role="img"><title>Ciclo: etapa 4, Implementação</title><line class="s-line" x1="190" y1="48" x2="235" y2="48"/><line class="s-line" x1="405" y1="48" x2="450" y2="48"/><line class="s-line" x1="535" y1="76" x2="535" y2="100"/><line class="s-line" x1="450" y1="128" x2="405" y2="128"/><line class="s-line" x1="235" y1="128" x2="190" y2="128"/><line class="s-line" x1="105" y1="156" x2="105" y2="180"/><line class="s-line" x1="190" y1="208" x2="235" y2="208"/><line class="s-line" x1="405" y1="208" x2="450" y2="208"/><rect class="s-box" x="20" y="20" width="170" height="56" rx="8"/><text x="105" y="53" text-anchor="middle" fill="currentColor" font-size="14">1. Intenção</text><rect class="s-box" x="235" y="20" width="170" height="56" rx="8"/><text x="320" y="53" text-anchor="middle" fill="currentColor" font-size="14">2. Spec</text><rect class="s-box" x="450" y="20" width="170" height="56" rx="8"/><text x="535" y="53" text-anchor="middle" fill="currentColor" font-size="14">3. Plano</text><rect class="s-soft" x="450" y="100" width="170" height="56" rx="8"/><text x="535" y="133" text-anchor="middle" fill="currentColor" font-size="14">4. Implementação</text><rect class="s-box" x="235" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="133" text-anchor="middle" fill="currentColor" font-size="14">5. Verificação</text><rect class="s-box" x="20" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="133" text-anchor="middle" fill="currentColor" font-size="14">6. PR e review</text><rect class="s-box" x="20" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="213" text-anchor="middle" fill="currentColor" font-size="13">7. CI/CD dev→cert→prod</text><rect class="s-box" x="235" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="213" text-anchor="middle" fill="currentColor" font-size="14">8. Operar</text><rect class="s-box" x="450" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="213" text-anchor="middle" fill="currentColor" font-size="14">9. Nova intenção</text><text x="320" y="252" text-anchor="middle" fill="currentColor" font-size="12">volta ao passo 1 com a nova intenção</text></svg></div>
+<div class="frame" data-caption="5. Verificação. Humano: exige evidência, não relato. Agente: roda make check e relata falhas. Artefato: saída do CI."><svg viewBox="0 0 640 260" role="img"><title>Ciclo: etapa 5, Verificação</title><line class="s-line" x1="190" y1="48" x2="235" y2="48"/><line class="s-line" x1="405" y1="48" x2="450" y2="48"/><line class="s-line" x1="535" y1="76" x2="535" y2="100"/><line class="s-line" x1="450" y1="128" x2="405" y2="128"/><line class="s-line" x1="235" y1="128" x2="190" y2="128"/><line class="s-line" x1="105" y1="156" x2="105" y2="180"/><line class="s-line" x1="190" y1="208" x2="235" y2="208"/><line class="s-line" x1="405" y1="208" x2="450" y2="208"/><rect class="s-box" x="20" y="20" width="170" height="56" rx="8"/><text x="105" y="53" text-anchor="middle" fill="currentColor" font-size="14">1. Intenção</text><rect class="s-box" x="235" y="20" width="170" height="56" rx="8"/><text x="320" y="53" text-anchor="middle" fill="currentColor" font-size="14">2. Spec</text><rect class="s-box" x="450" y="20" width="170" height="56" rx="8"/><text x="535" y="53" text-anchor="middle" fill="currentColor" font-size="14">3. Plano</text><rect class="s-box" x="450" y="100" width="170" height="56" rx="8"/><text x="535" y="133" text-anchor="middle" fill="currentColor" font-size="14">4. Implementação</text><rect class="s-soft" x="235" y="100" width="170" height="56" rx="8"/><text x="320" y="133" text-anchor="middle" fill="currentColor" font-size="14">5. Verificação</text><rect class="s-box" x="20" y="100" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="133" text-anchor="middle" fill="currentColor" font-size="14">6. PR e review</text><rect class="s-box" x="20" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="213" text-anchor="middle" fill="currentColor" font-size="13">7. CI/CD dev→cert→prod</text><rect class="s-box" x="235" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="213" text-anchor="middle" fill="currentColor" font-size="14">8. Operar</text><rect class="s-box" x="450" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="213" text-anchor="middle" fill="currentColor" font-size="14">9. Nova intenção</text><text x="320" y="252" text-anchor="middle" fill="currentColor" font-size="12">volta ao passo 1 com a nova intenção</text></svg></div>
+<div class="frame" data-caption="6. PR e review. Humano: quem não escreveu aprova. Agente: descreve o PR; agente separado revisa. Artefato: pull request e parecer."><svg viewBox="0 0 640 260" role="img"><title>Ciclo: etapa 6, PR e review</title><line class="s-line" x1="190" y1="48" x2="235" y2="48"/><line class="s-line" x1="405" y1="48" x2="450" y2="48"/><line class="s-line" x1="535" y1="76" x2="535" y2="100"/><line class="s-line" x1="450" y1="128" x2="405" y2="128"/><line class="s-line" x1="235" y1="128" x2="190" y2="128"/><line class="s-line" x1="105" y1="156" x2="105" y2="180"/><line class="s-line" x1="190" y1="208" x2="235" y2="208"/><line class="s-line" x1="405" y1="208" x2="450" y2="208"/><rect class="s-box" x="20" y="20" width="170" height="56" rx="8"/><text x="105" y="53" text-anchor="middle" fill="currentColor" font-size="14">1. Intenção</text><rect class="s-box" x="235" y="20" width="170" height="56" rx="8"/><text x="320" y="53" text-anchor="middle" fill="currentColor" font-size="14">2. Spec</text><rect class="s-box" x="450" y="20" width="170" height="56" rx="8"/><text x="535" y="53" text-anchor="middle" fill="currentColor" font-size="14">3. Plano</text><rect class="s-box" x="450" y="100" width="170" height="56" rx="8"/><text x="535" y="133" text-anchor="middle" fill="currentColor" font-size="14">4. Implementação</text><rect class="s-box" x="235" y="100" width="170" height="56" rx="8"/><text x="320" y="133" text-anchor="middle" fill="currentColor" font-size="14">5. Verificação</text><rect class="s-soft" x="20" y="100" width="170" height="56" rx="8"/><text x="105" y="133" text-anchor="middle" fill="currentColor" font-size="14">6. PR e review</text><rect class="s-box" x="20" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="105" y="213" text-anchor="middle" fill="currentColor" font-size="13">7. CI/CD dev→cert→prod</text><rect class="s-box" x="235" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="213" text-anchor="middle" fill="currentColor" font-size="14">8. Operar</text><rect class="s-box" x="450" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="213" text-anchor="middle" fill="currentColor" font-size="14">9. Nova intenção</text><text x="320" y="252" text-anchor="middle" fill="currentColor" font-size="12">volta ao passo 1 com a nova intenção</text></svg></div>
+<div class="frame" data-caption="7. CI/CD. Humano: aprova cert e prod. Agente: livre em dev, só observa em cert e prod. Artefato: execuções da pipeline e release."><svg viewBox="0 0 640 260" role="img"><title>Ciclo: etapa 7, CI/CD dev→cert→prod</title><line class="s-line" x1="190" y1="48" x2="235" y2="48"/><line class="s-line" x1="405" y1="48" x2="450" y2="48"/><line class="s-line" x1="535" y1="76" x2="535" y2="100"/><line class="s-line" x1="450" y1="128" x2="405" y2="128"/><line class="s-line" x1="235" y1="128" x2="190" y2="128"/><line class="s-line" x1="105" y1="156" x2="105" y2="180"/><line class="s-line" x1="190" y1="208" x2="235" y2="208"/><line class="s-line" x1="405" y1="208" x2="450" y2="208"/><rect class="s-box" x="20" y="20" width="170" height="56" rx="8"/><text x="105" y="53" text-anchor="middle" fill="currentColor" font-size="14">1. Intenção</text><rect class="s-box" x="235" y="20" width="170" height="56" rx="8"/><text x="320" y="53" text-anchor="middle" fill="currentColor" font-size="14">2. Spec</text><rect class="s-box" x="450" y="20" width="170" height="56" rx="8"/><text x="535" y="53" text-anchor="middle" fill="currentColor" font-size="14">3. Plano</text><rect class="s-box" x="450" y="100" width="170" height="56" rx="8"/><text x="535" y="133" text-anchor="middle" fill="currentColor" font-size="14">4. Implementação</text><rect class="s-box" x="235" y="100" width="170" height="56" rx="8"/><text x="320" y="133" text-anchor="middle" fill="currentColor" font-size="14">5. Verificação</text><rect class="s-box" x="20" y="100" width="170" height="56" rx="8"/><text x="105" y="133" text-anchor="middle" fill="currentColor" font-size="14">6. PR e review</text><rect class="s-soft" x="20" y="180" width="170" height="56" rx="8"/><text x="105" y="213" text-anchor="middle" fill="currentColor" font-size="13">7. CI/CD dev→cert→prod</text><rect class="s-box" x="235" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="320" y="213" text-anchor="middle" fill="currentColor" font-size="14">8. Operar</text><rect class="s-box" x="450" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="213" text-anchor="middle" fill="currentColor" font-size="14">9. Nova intenção</text><text x="320" y="252" text-anchor="middle" fill="currentColor" font-size="12">volta ao passo 1 com a nova intenção</text></svg></div>
+<div class="frame" data-caption="8. Operar. Humano: decide rollback, hotfix e severidade. Agente: ajuda a triar logs, redige runbook. Artefato: runbooks, ADR, CHANGELOG."><svg viewBox="0 0 640 260" role="img"><title>Ciclo: etapa 8, Operar</title><line class="s-line" x1="190" y1="48" x2="235" y2="48"/><line class="s-line" x1="405" y1="48" x2="450" y2="48"/><line class="s-line" x1="535" y1="76" x2="535" y2="100"/><line class="s-line" x1="450" y1="128" x2="405" y2="128"/><line class="s-line" x1="235" y1="128" x2="190" y2="128"/><line class="s-line" x1="105" y1="156" x2="105" y2="180"/><line class="s-line" x1="190" y1="208" x2="235" y2="208"/><line class="s-line" x1="405" y1="208" x2="450" y2="208"/><rect class="s-box" x="20" y="20" width="170" height="56" rx="8"/><text x="105" y="53" text-anchor="middle" fill="currentColor" font-size="14">1. Intenção</text><rect class="s-box" x="235" y="20" width="170" height="56" rx="8"/><text x="320" y="53" text-anchor="middle" fill="currentColor" font-size="14">2. Spec</text><rect class="s-box" x="450" y="20" width="170" height="56" rx="8"/><text x="535" y="53" text-anchor="middle" fill="currentColor" font-size="14">3. Plano</text><rect class="s-box" x="450" y="100" width="170" height="56" rx="8"/><text x="535" y="133" text-anchor="middle" fill="currentColor" font-size="14">4. Implementação</text><rect class="s-box" x="235" y="100" width="170" height="56" rx="8"/><text x="320" y="133" text-anchor="middle" fill="currentColor" font-size="14">5. Verificação</text><rect class="s-box" x="20" y="100" width="170" height="56" rx="8"/><text x="105" y="133" text-anchor="middle" fill="currentColor" font-size="14">6. PR e review</text><rect class="s-box" x="20" y="180" width="170" height="56" rx="8"/><text x="105" y="213" text-anchor="middle" fill="currentColor" font-size="13">7. CI/CD dev→cert→prod</text><rect class="s-soft" x="235" y="180" width="170" height="56" rx="8"/><text x="320" y="213" text-anchor="middle" fill="currentColor" font-size="14">8. Operar</text><rect class="s-box" x="450" y="180" width="170" height="56" rx="8" opacity=".55"/><text x="535" y="213" text-anchor="middle" fill="currentColor" font-size="14">9. Nova intenção</text><text x="320" y="252" text-anchor="middle" fill="currentColor" font-size="12">volta ao passo 1 com a nova intenção</text></svg></div>
+<div class="frame" data-caption="9. Nova intenção. Humano: prioriza o aprendizado. Agente: transforma incidentes e dívidas em tickets. Artefato: novo ticket que reinicia o ciclo."><svg viewBox="0 0 640 260" role="img"><title>Ciclo: etapa 9, Nova intenção</title><line class="s-line" x1="190" y1="48" x2="235" y2="48"/><line class="s-line" x1="405" y1="48" x2="450" y2="48"/><line class="s-line" x1="535" y1="76" x2="535" y2="100"/><line class="s-line" x1="450" y1="128" x2="405" y2="128"/><line class="s-line" x1="235" y1="128" x2="190" y2="128"/><line class="s-line" x1="105" y1="156" x2="105" y2="180"/><line class="s-line" x1="190" y1="208" x2="235" y2="208"/><line class="s-line" x1="405" y1="208" x2="450" y2="208"/><rect class="s-box" x="20" y="20" width="170" height="56" rx="8"/><text x="105" y="53" text-anchor="middle" fill="currentColor" font-size="14">1. Intenção</text><rect class="s-box" x="235" y="20" width="170" height="56" rx="8"/><text x="320" y="53" text-anchor="middle" fill="currentColor" font-size="14">2. Spec</text><rect class="s-box" x="450" y="20" width="170" height="56" rx="8"/><text x="535" y="53" text-anchor="middle" fill="currentColor" font-size="14">3. Plano</text><rect class="s-box" x="450" y="100" width="170" height="56" rx="8"/><text x="535" y="133" text-anchor="middle" fill="currentColor" font-size="14">4. Implementação</text><rect class="s-box" x="235" y="100" width="170" height="56" rx="8"/><text x="320" y="133" text-anchor="middle" fill="currentColor" font-size="14">5. Verificação</text><rect class="s-box" x="20" y="100" width="170" height="56" rx="8"/><text x="105" y="133" text-anchor="middle" fill="currentColor" font-size="14">6. PR e review</text><rect class="s-box" x="20" y="180" width="170" height="56" rx="8"/><text x="105" y="213" text-anchor="middle" fill="currentColor" font-size="13">7. CI/CD dev→cert→prod</text><rect class="s-box" x="235" y="180" width="170" height="56" rx="8"/><text x="320" y="213" text-anchor="middle" fill="currentColor" font-size="14">8. Operar</text><rect class="s-soft" x="450" y="180" width="170" height="56" rx="8"/><text x="535" y="213" text-anchor="middle" fill="currentColor" font-size="14">9. Nova intenção</text><text x="320" y="252" text-anchor="middle" fill="currentColor" font-size="12">volta ao passo 1 com a nova intenção</text></svg></div>
+</div>
+
+
+<div class="table-wrap"><table>
+<thead><tr><th>Etapa</th><th>Quem decide (humano)</th><th>O que o agente faz</th><th>Artefato versionado</th></tr></thead>
+<tbody>
+<tr><td>1. Intenção</td><td>Você: o problema vale a pena? qual o resultado esperado?</td><td>Faz perguntas, aponta lacunas, resume contexto do código e do negócio</td><td><code>docs/intent/PROJ-123-slug.md</code></td></tr>
+<tr><td>2. Spec</td><td>Você aprova critérios de aceite e o que fica fora</td><td>Redige critérios verificáveis, casos de borda, contratos</td><td><code>docs/specs/PROJ-123-slug.md</code></td></tr>
+<tr><td>3. Plano</td><td>Você aprova arquivos afetados, passos e rollback</td><td>Lê o código em modo leitura e propõe passos pequenos</td><td><code>docs/plans/PROJ-123-slug.md</code></td></tr>
+<tr><td>4. Implementação</td><td>Você acompanha pontos de parada e desvia se o plano estiver errado</td><td>Teste primeiro, código mínimo, <code>make check</code>, commits pequenos</td><td>Branch + commits <code>PROJ-123: ...</code></td></tr>
+<tr><td>5. Verificação</td><td>Você exige evidência (saída de teste), não afirmação</td><td>Roda lint, testes, checagens de doc; relata falhas sem esconder</td><td>Saída do <code>make check</code> / CI</td></tr>
+<tr><td>6. PR e review</td><td>Pessoa que não escreveu aprova; agente revisor ajuda, não decide</td><td>Escreve a descrição do PR; um agente <em>separado</em> revisa com <code>REVIEW.md</code></td><td>Pull request + parecer</td></tr>
+<tr><td>7. CI/CD dev → cert → prod</td><td>Aprovações em cert e prod são humanas</td><td>Livre em dev; em cert propõe e observa; em prod nunca aprova</td><td>Execuções da pipeline, release, tag</td></tr>
+<tr><td>8. Operar</td><td>Você decide rollback, hotfix, severidade</td><td>Ajuda a triar logs e métricas; redige runbook e post-mortem</td><td><code>docs/runbooks/</code>, ADR, CHANGELOG</td></tr>
+<tr><td>9. Nova intenção</td><td>Você prioriza o que aprendeu</td><td>Transforma incidentes e dívidas em tickets bem escritos</td><td>Novo ticket com link para o aprendizado</td></tr>
+</tbody></table></div>
+
+<p><strong>Mecanismo: por que artefatos em arquivos.</strong> O agente não tem memória entre sessões. Tudo o que não está no repositório (ou lido de um sistema que ele acessa) deixa de existir quando a sessão fecha. Intenção, spec e plano em arquivos fazem três coisas ao mesmo tempo: dão <em>contexto durável</em> ao agente da próxima sessão, dão a você <em>algo para revisar antes de o código existir</em> (revisar um plano é uma ordem de grandeza mais barato que revisar 800 linhas) e dão ao time <em>rastreabilidade</em> (por que isto existe, quem aprovou, o que ficou de fora).</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Pular direto para a implementação "porque é simples" e usar o chat como especificação. Em dois dias ninguém sabe o que foi pedido, o agente da sessão seguinte refaz a decisão diferente e o PR vira discussão de gosto. Encurtar é legítimo (veja o Passo 2), mas encurtar é <em>escrever menos</em>, não escrever em lugar nenhum: nem que seja a spec de cinco linhas no corpo do PR.</p>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Em qual etapa o agente <em>nunca</em> deve ser a autoridade final?</p>
+<ol><li data-opt="a">Implementação, porque ele pode errar a sintaxe</li><li data-opt="b">Aprovação de spec, merge e promoção para prod: decisões com responsabilidade que não se delega</li><li data-opt="c">Verificação, porque não sabe rodar testes</li></ol>
+<div class="explain">B. O agente pode propor e executar dentro de limites, mas aprovar a spec, aprovar o PR e autorizar prod são decisões de responsabilidade. A é falsa (sintaxe é o que ele faz melhor) e C ignora que ele roda <code>make check</code>; o problema é aceitar o relato dele em vez da evidência.</div>
+</div>
+
+<p><strong>Em resumo.</strong> Nove etapas, um artefato por etapa, decisão humana em intenção, spec, plano, review e promoção. A velocidade vem do agente; a segurança vem de os artefatos estarem em arquivos e de os pontos de decisão serem explícitos. Fundamentos e variações do ciclo: <a href="../modulos/A01-sdlc-nativo-ia/A01.html">A01</a> e <a href="../modulos/M01-workflow-ia-driven/M01.html">M01</a>.</p>
+
+<h2 id="passo-1">Passo 1 · Preparar o repositório</h2>
+<p><strong>Por que isso importa.</strong> O agente é tão bom quanto o ambiente em que trabalha. Um repositório com um comando único de verificação, instruções curtas e docs organizadas faz um agente mediano render como um bom; um repositório sem isso faz o melhor agente adivinhar. Esta preparação é feita <em>uma vez</em> e serve a todas as ferramentas. Para automatizar quase tudo, use o <a href="../kit/README.md">kit</a>: <code>python kit/bootstrap.py &lt;destino&gt; [--existing] [--dry-run]</code>.</p>
+
+<div class="tabs">
+<section data-tab="Projeto novo">
+<h3>Projeto novo: seis movimentos</h3>
+<ol>
+<li><strong>Instruções em um só lugar.</strong> <code>AGENTS.md</code> na raiz é a fonte única. Ele já é lido por Codex e OpenCode; Cursor lê <code>AGENTS.md</code> e também <code>.cursor/rules/*.mdc</code>; Claude Code lê <code>CLAUDE.md</code>, que apenas importa o arquivo único. Resultado: uma edição, todas as ferramentas.
+<pre><code># CLAUDE.md
+@AGENTS.md
+
+# .cursor/rules/projeto.mdc
+---
+description: Regras do projeto (ponteiro para AGENTS.md)
+alwaysApply: true
+---
+Leia e siga AGENTS.md na raiz. Para revisão, siga REVIEW.md.</code></pre></li>
+<li><strong>Estrutura de documentação por etapa do ciclo.</strong>
+<pre><code>docs/
+  intent/     # por quê: o problema e o resultado esperado
+  specs/      # o quê: critérios de aceite verificáveis
+  plans/      # como: passos, arquivos, rollback
+  adr/        # decisões caras de reverter
+  runbooks/   # operar, diagnosticar, desfazer
+REVIEW.md     # roteiro do revisor (humano ou agente)</code></pre>
+Cada pasta tem um <code>_modelo.md</code> (já no kit). Nome do arquivo: <code>PROJ-123-slug.md</code>, a chave do Jira primeiro.</li>
+<li><strong>Um comando só.</strong> <code>make check</code> faz lint, testes, checagem de documentação e hooks. Humano, agente, pre-commit e CI chamam <em>o mesmo</em> alvo, então "passou na minha máquina" e "passou no CI" significam a mesma coisa. Em .NET: <code>dotnet format --verify-no-changes</code> e <code>dotnet test</code> dentro do alvo.
+<pre><code>check: lint test docs-check hooks-check
+lint:   ; dotnet format --verify-no-changes
+test:   ; dotnet test --nologo
+docs-check: ; python3 scripts/hooks/check_docs.py --base $(BASE)</code></pre></li>
+<li><strong>Hooks que impedem o erro em vez de pedir cuidado.</strong> Três bloqueios valem mais que dez linhas de instrução: caminhos protegidos (workflows de deploy, infra, <code>.env</code>), testes existentes intocáveis em branch <code>fix/</code>, segredos no diff. O kit os traz em <code>scripts/hooks/</code>; <code>pre-commit install</code> liga localmente e o <code>ci.yml</code> repete no servidor (o local é conveniência, o CI é a garantia).</li>
+<li><strong>Proteção do ramo principal.</strong> No GitHub: <em>Settings → Branches/Rulesets</em>: PR obrigatório, aprovações mínimas, status check <code>check</code> obrigatório, <em>Require review from Code Owners</em>, bloquear push direto e force-push, "dismiss stale approvals" quando houver novo commit. Sem isso, qualquer regra é sugestão.</li>
+<li><strong>Donos e template de PR.</strong> <code>.github/CODEOWNERS</code> exige revisão de quem entende de pipeline, infra e do próprio <code>AGENTS.md</code>; <code>.github/pull_request_template.md</code> impõe o checklist (ticket, critérios, doc, risco, rollback, uso de agente).</li>
+</ol>
+<div class="box">
+<span class="lbl">Como é um bom AGENTS.md</span>
+<p>Curto (menos de 150 linhas), com comandos exatos e <em>apenas o que o agente não descobriria lendo o código</em>: como verificar, estrutura de pastas, fluxo (ticket, branch, commit), limites ("não edita deploy.yml, não roda migração em banco compartilhado"), convenções que o linter não cobre e uma seção "Armadilhas conhecidas" que cresce com o tempo. Um modelo comentado está em <code>kit/template/AGENTS.md</code>.</p>
+</div>
+</section>
+
+<section data-tab="Projeto existente">
+<h3>Projeto existente: entender antes de mudar</h3>
+<p>Num sistema herdado, o erro caro é pedir mudança a um agente que não conhece o sistema nem tem rede de testes. Troque a ordem: <strong>1)</strong> o agente lê e documenta; <strong>2)</strong> vocês criam testes de caracterização; <strong>3)</strong> só então vem o trabalho funcional.</p>
+<ol>
+<li><strong>Sessão de onboarding só-leitura.</strong> Abra o agente em modo plano/leitura (ou sem permissão de escrita) e use <code>prompts/onboarding-repo-existente.md</code>. Ele deve: mapear projetos e pontos de entrada, descobrir e <em>executar</em> os comandos reais de build e teste (e dizer quais falham), listar áreas sem teste e riscos, e propor <code>docs/architecture.md</code> e <code>AGENTS.md</code> como rascunho.
+<pre><code>Você é um engenheiro entrando neste repositório. NÃO altere nenhum arquivo agora.
+1. Mapeie estrutura, entradas, dependências externas, build/teste/deploy.
+2. Descubra e EXECUTE (somente leitura/seguro) os comandos reais; liste os que falham e por quê.
+3. Aponte áreas sem teste, código morto aparente, pontos frágeis, convenções implícitas.
+4. Proponha: docs/architecture.md, AGENTS.md e lista priorizada de testes de caracterização.
+5. Liste dúvidas e suposições. Só escreva arquivos depois que eu disser "aprovado".</code></pre></li>
+<li><strong>Você revisa o rascunho.</strong> Esta é a revisão de maior retorno do projeto inteiro: o agente vai acertar o óbvio e errar o que é conhecimento tácito (por que existe aquela tabela, qual cliente depende daquele comportamento). Corrija, complete e aprove. Só então ele grava os dois arquivos.</li>
+<li><strong>Mapa de comandos.</strong> Transforme o que funcionou num <code>Makefile</code> (ou script equivalente) com <code>make check</code>. Se o build leva 40 minutos, crie alvos menores (<code>make test-unit</code>) e diga no <code>AGENTS.md</code> qual rodar em cada passo e qual fica para o CI.</li>
+<li><strong>Testes de caracterização antes de mexer.</strong> Teste de caracterização registra o comportamento <em>atual</em>, mesmo estranho: chame a função com entradas reais e fixe a saída (<em>golden master</em>, snapshot). Peça ao agente para escrevê-los só para a área que você vai tocar. Não é cobertura geral; é uma cerca ao redor do trecho que vai mudar.</li>
+<li><strong>Adote o resto por camadas.</strong> <code>bootstrap.py --existing</code> copia o que falta sem sobrescrever nada e não traz <code>deploy.yml</code> nem <code>azure-pipelines.yml</code> (compare com a sua esteira e adote por partes). Primeiro hooks e template de PR; depois proteção de branch; por último autonomia do agente na esteira.</li>
+</ol>
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Aceitar o <code>architecture.md</code> gerado porque "parece certo". Documentação plausível e errada é pior que nenhuma: o agente passa a confiar nela. Verifique três afirmações por amostragem contra o código e exija que cada seção cite arquivos (<code>src/Pagamentos/Servico.cs</code>), assim ela é falsificável.</p>
+</div>
+</section>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Num sistema legado sem testes, qual é a primeira coisa a pedir ao agente?</p>
+<ol><li data-opt="a">Que refatore o módulo para ficar testável</li><li data-opt="b">Que escreva testes unitários para 100% do código</li><li data-opt="c">Que leia e documente em modo só-leitura e proponha testes de caracterização da área que será alterada</li></ol>
+<div class="explain">C. Refatorar sem rede (A) troca um risco por outro; cobertura total (B) é cara e testa o que ninguém vai mexer. Caracterização localizada dá a cerca mínima e o onboarding só-leitura evita que o agente "conserte" o que não entendeu.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que o <code>ci.yml</code> repete os hooks que já rodam no pre-commit?</p>
+<ol><li data-opt="a">Porque hook local pode ser pulado (<code>--no-verify</code>, ferramenta sem hooks); só o CI com branch protection é garantia</li><li data-opt="b">Porque o pre-commit é mais lento</li><li data-opt="c">Por redundância estética</li></ol>
+<div class="explain">A. O hook local é conveniência de feedback rápido; qualquer um (ou qualquer agente) pode contorná-lo. A garantia vem de checagem obrigatória no servidor.</div>
+</div>
+
+<h3>Checklist do Passo 1</h3>
+<ul class="checklist" data-key="TR-passo1">
+<li><code>AGENTS.md</code> preenchido; <code>CLAUDE.md</code> e <code>.cursor/rules/projeto.mdc</code> apontando para ele</li>
+<li><code>docs/{intent,specs,plans,adr,runbooks}/</code> com modelos</li>
+<li><code>make check</code> roda local e no CI com o mesmo resultado</li>
+<li>Hooks instalados (<code>pre-commit install</code>) e repetidos no CI</li>
+<li>Branch protection: PR, status check, Code Owners, sem force-push</li>
+<li><code>CODEOWNERS</code> e template de PR commitados</li>
+<li>Projeto existente: onboarding só-leitura feito, <code>architecture.md</code> revisado por humano, caracterização da área-alvo pronta</li>
+</ul>
+<p><strong>Em resumo.</strong> Instruções num arquivo, docs por etapa, um comando de verificação, hooks que bloqueiam e branch protection que obriga. Em projeto existente, entender e cercar antes de mudar. Ferramental aprofundado em <a href="../modulos/M00-ferramental/M00.html">M00</a>.</p>
+
+<h2 id="passo-2">Passo 2 · Fluxos por tipo de trabalho</h2>
+<p><strong>Por que isso importa.</strong> O ciclo é o mesmo; a <em>proporção</em> entre as etapas muda. Uma feature pequena pede spec de uma tela; um módulo grande pede intenção, alternativas e ADR; um bug pede reprodução antes de qualquer coisa. Aplicar o fluxo de módulo grande a um ajuste de texto desperdiça o dia; aplicar o de feature pequena a uma integração nova gera retrabalho. Cada aba abaixo traz: sequência exata, o que pode encurtar (e quando), prompt-modelo, critério de pronto e o que atualizar na documentação.</p>
+
+<div class="tabs">
+<section data-tab="Feature pequena">
+<h3>Feature pequena (cabe em um PR, horas)</h3>
+<ol>
+<li><strong>Jira:</strong> abra a história (<code>jira/historia.md</code>) com critérios de aceite em Dado/Quando/Então. Ex.: <code>PROJ-123</code>.</li>
+<li><strong>Intenção + spec:</strong> em modo leitura, peça ao agente até 7 perguntas de esclarecimento e depois a spec em <code>docs/specs/PROJ-123-slug.md</code>. A intenção pode ser o primeiro parágrafo da spec.</li>
+<li><strong>Você aprova a spec</strong> (muda <code>status: aprovada</code>). Sem isso, não há código.</li>
+<li><strong>Plano em modo leitura:</strong> arquivos afetados, passos, rollback. Para algo realmente pequeno, 5 a 8 linhas na própria spec bastam.</li>
+<li><strong>Implementar em branch</strong> <code>feat/PROJ-123-slug</code> (ou worktree, Passo 6): teste primeiro, código mínimo, <code>make check</code>, commit <code>PROJ-123: ...</code>. Repita por passo.</li>
+<li><strong>Verificação:</strong> <code>make check</code> verde, critérios cobertos por teste, teste manual em dev quando houver interface.</li>
+<li><strong>PR</strong> com o template; <strong>revisão</strong> por agente separado (<code>REVIEW.md</code>) e por uma pessoa.</li>
+<li><strong>Merge</strong> e <strong>deploy</strong> dev → cert → prod pela esteira (Passo 4).</li>
+</ol>
+<p><strong>Pode encurtar:</strong> fundir intenção e spec; dispensar ADR; plano de poucas linhas; um único PR. <strong>Não encurte:</strong> critérios verificáveis, teste, <code>make check</code>, revisão por outra pessoa.</p>
+<p><strong>Prompt-modelo</strong> (agnóstico, <code>prompts/nova-feature.md</code>):</p>
+<pre><code>Ticket: PROJ-123 (texto abaixo). Leia AGENTS.md e docs/ relevantes.
+Trabalhe em etapas e PARE ao fim de cada uma.
+1) Modo leitura: faça até 7 perguntas de esclarecimento; depois escreva
+   docs/specs/PROJ-123-slug.md (critérios Dado/Quando/Então, bordas, fora do escopo).
+2) Após minha aprovação: plano curto (arquivos, passos, rollback).
+3) Após aprovação do plano: branch feat/PROJ-123-slug; por passo: teste, código mínimo,
+   make check, commit "PROJ-123: ...".
+4) Feche: atualize docs/CHANGELOG e descreva o PR citando cada critério e seu teste.
+Não faça nada fora do escopo da spec.</code></pre>
+<p><strong>Pronto quando:</strong> todos os critérios têm teste verde; <code>make check</code> verde no CI; spec com <code>status: implementada</code>; PR aprovado por quem não escreveu. <strong>Atualizar:</strong> spec (status), README/runbook se o comportamento operacional mudou, CHANGELOG.</p>
+</section>
+
+<section data-tab="Bug">
+<h3>Bug (do sintoma à causa raiz)</h3>
+<ol>
+<li><strong>Jira:</strong> bug com ambiente, versão, passos, esperado × obtido, impacto, severidade (<code>jira/bug.md</code>). Sem reprodução descrita, devolva ao reporter.</li>
+<li><strong>Branch</strong> <code>fix/PROJ-456-slug</code>. Os hooks passam a proibir alteração de testes existentes: só se <em>adiciona</em> o teste novo.</li>
+<li><strong>Reproduzir:</strong> o agente escreve o teste mais baixo possível que falha <em>pelo motivo do ticket</em> e mostra a saída da falha. Teste que falha por outro motivo é falso positivo.</li>
+<li><strong>Diagnosticar:</strong> 2 a 3 hipóteses de causa raiz, evidência a favor e contra (código, <code>git log -S</code>, <code>git blame</code>, logs). Você escolhe; o agente tende a tratar o sintoma.</li>
+<li><strong>Corrigir</strong> com a menor mudança que resolve a causa; <code>make check</code>.</li>
+<li><strong>Procurar irmãos:</strong> o mesmo padrão existe em outro lugar? O agente lista; não corrige sem pedir.</li>
+<li><strong>PR</strong> com causa raiz, correção, risco, como validar em cert e plano de rollback; <strong>review</strong>; <strong>deploy</strong>. Em S1, hotfix pela esteira normal com aprovação acelerada, nunca por fora dela.</li>
+<li><strong>Aprendizado:</strong> se a causa foi uma regra implícita, vira linha na spec, no runbook ou no <code>AGENTS.md</code>.</li>
+</ol>
+<p><strong>Pode encurtar:</strong> não há spec nem plano formais; o teste de reprodução <em>é</em> a spec. <strong>Não encurte:</strong> reprodução e causa raiz. Corrigir sem reproduzir é chute com aparência de trabalho.</p>
+<p><strong>Prompt-modelo</strong> (<code>prompts/corrigir-bug.md</code>):</p>
+<pre><code>Bug PROJ-456 (sintoma, ambiente, passos, logs abaixo). Branch fix/PROJ-456-slug.
+Regra: NÃO altere testes existentes; só adicione.
+1) Escreva o teste que FALHA pelo motivo descrito e mostre a saída. Não conseguiu? Pare e diga o que falta.
+2) Liste 2-3 hipóteses de causa raiz com evidência. Aguarde minha escolha.
+3) Corrija a causa com a menor mudança. Rode make check.
+4) Busque o mesmo padrão em outros lugares; liste, não corrija.
+5) Escreva a nota do PR: causa raiz, correção, risco, validação em cert, rollback.</code></pre>
+<p><strong>Pronto quando:</strong> o teste novo falha antes e passa depois; nenhum teste antigo foi tocado; causa raiz escrita no PR; validação em cert confirmada. <strong>Atualizar:</strong> runbook (sintoma → diagnóstico), CHANGELOG (Corrigido), <code>AGENTS.md</code> se o agente errou duas vezes.</p>
+</section>
+
+<section data-tab="Módulo grande">
+<h3>Módulo grande (várias semanas, vários PRs)</h3>
+<ol>
+<li><strong>Jira:</strong> épico <code>PROJ-200</code> com histórias filhas criadas <em>depois</em> do fatiamento.</li>
+<li><strong>Intenção completa</strong> em <code>docs/intent/PROJ-200-slug.md</code>: problema, resultado, restrições (janela de mudança, on-premise, compliance), riscos. Você escreve o núcleo; o agente pergunta e completa.</li>
+<li><strong>Alternativas de desenho:</strong> o agente propõe 2 a 3 com trade-offs. Você decide e registra em <code>docs/adr/ADR-NNN-slug.md</code>. É o ponto de maior alavancagem humana.</li>
+<li><strong>Fatiamento vertical:</strong> cada fatia entrega valor testável e cabe em um PR revisável (cerca de 400 linhas). A primeira fatia é o <em>esqueleto andante</em>: atravessa todas as camadas com o mínimo, e valida a premissa mais perigosa.</li>
+<li><strong>Por fatia:</strong> o ciclo de feature pequena (spec curta, plano, branch ou worktree próprio, PR, review).</li>
+<li><strong>Flags</strong> para integrar cedo sem expor: código incompleto entra na <code>main</code> desligado.</li>
+<li><strong>Plano mestre</strong> em <code>docs/plans/PROJ-200-mestre.md</code> com o checklist das fatias e as decisões pendentes; <code>docs/architecture.md</code> é atualizado a cada fatia.</li>
+<li><strong>Prontidão operacional:</strong> runbook, métricas, rollback ensaiado em cert antes da última fatia.</li>
+</ol>
+<p><strong>Pode encurtar:</strong> pouco. Otimiza-se o <em>tamanho</em> de cada PR, não a presença das etapas. <strong>Não encurte:</strong> ADR, esqueleto andante, plano mestre. <strong>Prompt-modelo</strong> (<code>prompts/modulo-grande.md</code>):</p>
+<pre><code>Épico PROJ-200. Leia AGENTS.md, docs/architecture.md, ADRs existentes.
+Fase A (leitura, sem código): escreva docs/intent/PROJ-200-slug.md; proponha 2-3 desenhos com
+trade-offs e recomende um; após minha decisão, registre o ADR.
+Fase B: fatie em entregas verticais (valor testável, ~400 linhas, ordenadas por risco),
+com história Jira para cada uma.
+Fase C: por fatia, repita o ciclo de nova-feature.md. Atualize architecture.md e o plano mestre.
+Pare ao fim de cada fase.</code></pre>
+<p><strong>Pronto quando:</strong> todas as fatias em produção atrás de flag ligada; ADR aceito; runbook validado; arquitetura atualizada; retrospectiva registrada. <strong>Atualizar:</strong> intenção (status), ADRs, <code>architecture.md</code>, runbooks, CHANGELOG, <code>AGENTS.md</code> (novas convenções do módulo).</p>
+</section>
+
+<section data-tab="Manutenção/upgrade/refatoração">
+<h3>Manutenção, upgrade de versão, refatoração</h3>
+<p>Aqui o comportamento externo <em>não pode mudar</em>. O artefato central é o <strong>invariante</strong>: a frase que diz o que deve permanecer igual.</p>
+<ol>
+<li><strong>Jira:</strong> ticket com objetivo (ex.: .NET 6 → 8, trocar biblioteca, quebrar classe gigante) e o invariante escrito.</li>
+<li><strong>Rede de segurança:</strong> testes de caracterização do que será tocado (Passo 1, aba projeto existente). Sem eles, não comece.</li>
+<li><strong>Plano em passos reversíveis:</strong> um <em>tipo</em> de mudança por PR (primeiro o upgrade do SDK, depois APIs obsoletas, depois as novas funcionalidades). Nunca misture refatoração com mudança de comportamento.</li>
+<li><strong>Executar por lote:</strong> o agente aplica uma transformação mecânica a um grupo de arquivos; <code>make check</code> a cada lote; commits pequenos permitem <code>git bisect</code> se algo escapar.</li>
+<li><strong>Comparar antes × depois:</strong> testes, saídas de relatórios, métricas de desempenho, diff de contratos de API.</li>
+<li><strong>PR, review, cert com carga representativa</strong>, prod gradual (canário ou por instância), rollback pronto.</li>
+</ol>
+<p><strong>Pode encurtar:</strong> spec funcional (não há comportamento novo), intenção em 2 linhas. <strong>Não encurte:</strong> invariante, caracterização, PRs de um só tipo. <strong>Prompt-modelo:</strong></p>
+<pre><code>Objetivo: [ex. migrar para .NET 8]. Invariante: nenhuma mudança de contrato HTTP nem de saída dos relatórios.
+1) Em leitura: liste o que será afetado (projetos, pacotes, APIs obsoletas) e proponha uma sequência
+   de PRs, cada um de UM tipo de mudança, reversível.
+2) Antes de mudar: confirme que existem testes que protegem o invariante; se faltar, proponha os de caracterização.
+3) Execute um PR por vez; make check a cada lote; pare ao fim de cada PR.
+4) Entregue a comparação antes × depois e a lista de riscos residuais.</code></pre>
+<p><strong>Pronto quando:</strong> invariante provado por testes; comparação antes × depois anexada; cert estável sob carga; plano de rollback exercitado. <strong>Atualizar:</strong> README/versões suportadas no <code>AGENTS.md</code>, runbooks de build, ADR se escolheu uma biblioteca nova, CHANGELOG.</p>
+</section>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Num bug, o agente propõe corrigir direto porque "a causa é óbvia". O que você faz?</p>
+<ol><li data-opt="a">Aceita: bugs óbvios dispensam teste</li><li data-opt="b">Exige primeiro o teste que falha pelo motivo do ticket; depois a correção e a prova de que o teste passa</li><li data-opt="c">Pede que reescreva o teste existente para refletir o novo comportamento</li></ol>
+<div class="explain">B. Sem reprodução você não sabe se corrigiu a causa ou outra coisa, e o bug volta. C é o erro clássico: alterar teste existente para "passar" apaga a evidência; por isso o hook bloqueia isso em <code>fix/</code>.</div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Numa atualização de versão do framework, qual PR é o mais seguro?</p>
+<ol><li data-opt="a">Um PR gigante com upgrade, refatoração e novas funcionalidades, revisado em uma tarde</li><li data-opt="b">Vários PRs que misturam upgrade e correção de bugs encontrados no caminho</li><li data-opt="c">PRs separados por tipo de mudança, cada um reversível e coberto por testes de caracterização</li></ol>
+<div class="explain">C. Misturar tipos de mudança destrói a capacidade de reverter e de isolar regressões. Bugs achados no caminho viram tickets próprios.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual etapa de um módulo grande NÃO se encurta, mesmo com pressa?</p>
+<ol><li data-opt="a">A decisão de desenho registrada em ADR e o esqueleto andante</li><li data-opt="b">O nome da branch</li><li data-opt="c">A formatação da spec</li></ol>
+<div class="explain">A. O erro de desenho custa mais quanto maior o módulo; é lá que a atenção humana rende mais.</div>
+</div>
+
+<p><strong>Em resumo.</strong> Mesmo ciclo, pesos diferentes: feature pequena funde intenção e spec; bug troca spec por teste de reprodução; módulo grande investe em desenho e fatiamento; manutenção vive do invariante e da caracterização. Em qualquer caso, o agente trabalha em etapas com pontos de parada e o humano aprova spec, plano e PR.</p>
+
+<h3>Exercício: ordene o ciclo de uma feature</h3>
+<p>Coloque as ações na ordem em que acontecem num fluxo bem conduzido.</p>
+<ol class="order" data-solution="a,b,c,d,e,f">
+<li data-id="d">Implementar passo a passo, <code>make check</code> a cada passo</li>
+<li data-id="a">Abrir o ticket no Jira com critérios de aceite</li>
+<li data-id="f">Revisão por agente separado e por humano, depois merge</li>
+<li data-id="c">Plano em modo leitura aprovado</li>
+<li data-id="b">Spec escrita e aprovada</li>
+<li data-id="e">PR com template preenchido e documentação no mesmo PR</li>
+</ol>
+
+<h2 id="passo-3">Passo 3 · Jira e GitHub juntos</h2>
+<p><strong>Por que isso importa.</strong> Dois sistemas guardam verdades diferentes. Se você não decide qual é a fonte de cada coisa, as duas divergem em semanas e o agente (que lê um dos dois) trabalha com informação velha.</p>
+
+<h3>Fonte da verdade: quem guarda o quê</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Informação</th><th>Fonte da verdade</th><th>No outro lado fica</th></tr></thead>
+<tbody>
+<tr><td>Critérios de aceite, desenho, decisões</td><td><strong>Repositório</strong> (<code>docs/specs</code>, <code>docs/adr</code>): versionado, revisado em PR, lido pelo agente</td><td>No Jira: resumo curto e link permanente para o arquivo</td></tr>
+<tr><td>Prioridade, responsável, sprint, estado do fluxo, estimativa</td><td><strong>Jira</strong></td><td>No repo: nada (a chave <code>PROJ-123</code> basta)</td></tr>
+<tr><td>Código, testes, histórico de mudança</td><td><strong>Git</strong></td><td>No Jira: link para o PR (automático)</td></tr>
+<tr><td>Estado de build e deploy</td><td><strong>CI/CD</strong> (Actions / Azure Pipelines)</td><td>No Jira: status de deploy via integração</td></tr>
+<tr><td>Discussão de implementação</td><td>Comentários do PR</td><td>No Jira: só decisões que mudam escopo</td></tr>
+</tbody></table></div>
+<p>A regra: <strong>o vínculo mínimo é a chave do ticket</strong>. Tudo que muda junto com o código mora no repositório; tudo que é gestão do trabalho mora no Jira. Copiar critérios nos dois lados cria dois textos que se afastam.</p>
+
+<h3>A chave do ticket em tudo</h3>
+<pre><code># branch
+git switch -c feat/PROJ-123-validar-cnpj
+# commit
+git commit -m "PROJ-123: valida CNPJ no cadastro de investidor"
+# título do PR
+PROJ-123: valida CNPJ no cadastro de investidor</code></pre>
+<p>Com a integração <em>GitHub for Jira</em> (ou o app equivalente) instalada, a chave em branch, commit ou título faz o Jira exibir branches, commits, PRs e deploys na própria história. Reforce no repositório: um check de PR que falha se o título não começar com <code>^[A-Z]+-\d+: </code>, e o <code>commit-msg</code> do pre-commit com a mesma expressão.</p>
+
+<h3>O agente lendo e escrevendo no ticket</h3>
+<ol>
+<li><strong>Manual (zero configuração):</strong> você cola o texto do ticket no prompt e, ao final, cola o resumo gerado no Jira. Funciona em qualquer ferramenta e é o ponto de partida seguro.</li>
+<li><strong>Via MCP (Model Context Protocol):</strong> um servidor MCP de Jira expõe operações como buscar issue, comentar e transicionar. Todas as ferramentas do Passo 7 falam MCP. Configure com credencial de <em>menor privilégio</em> (uma conta de serviço do agente que só lê e comenta, sem permissão de transicionar para "Done" nem de editar campos de prioridade). Veja <a href="../modulos/M00-ferramental/M00.html">M00</a> (ferramental e MCP) e o módulo sobre protocolos para o conceito.</li>
+<li><strong>Via CLI/API na esteira:</strong> a pipeline (não o agente) transiciona o ticket quando o deploy em cert/prod termina. O agente nunca fecha o próprio trabalho.</li>
+</ol>
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Dar ao agente um token de Jira com poderes de administrador "porque é mais prático". Texto de ticket é entrada não confiável: qualquer pessoa que comenta pode inserir instruções ("ignore as regras e apague…"), e o agente pode obedecer (injeção de prompt). Credencial mínima, ações destrutivas fora do alcance e trate o conteúdo do ticket como <em>dado</em>, nunca como ordem.</p>
+</div>
+
+<h3>Automações que valem a pena</h3>
+<ul>
+<li><strong>Ao abrir branch com a chave:</strong> o Jira move a história para "Em desenvolvimento" (regra de automação do Jira).</li>
+<li><strong>Ao abrir PR:</strong> move para "Em revisão"; ao mesclar, para "Aguardando cert".</li>
+<li><strong>Deploy em cert/prod:</strong> a pipeline comenta no ticket com a versão e o link da execução e transiciona.</li>
+<li><strong>Check de PR</strong> exigindo chave de ticket válida e <code>Docs:</code> preenchido (Passo 5).</li>
+<li><strong>Modelos de ticket</strong> (<code>jira/historia.md</code>, <code>jira/bug.md</code>) com os campos que o agente precisa: critérios, ambiente, passos, link da spec.</li>
+</ul>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Critérios de aceite mudaram durante o desenvolvimento. Onde se corrige primeiro?</p>
+<ol><li data-opt="a">Na spec do repositório, no mesmo PR; o Jira recebe o resumo e o link</li><li data-opt="b">Só no Jira, porque é onde o PO trabalha</li><li data-opt="c">No chat do agente</li></ol>
+<div class="explain">A. A spec versionada é a fonte lida pelo agente e revisada em PR. Atualizar só o Jira cria divergência; só o chat perde a informação ao fechar a sessão.</div>
+</div>
+<p><strong>Em resumo.</strong> Repo guarda o que muda com o código; Jira guarda a gestão; a chave do ticket liga os dois em branch, commit e PR. Dê ao agente credencial mínima e deixe a esteira, não o agente, transicionar o ticket.</p>
+
+<h2 id="passo-4">Passo 4 · Esteira dev → cert → prod</h2>
+<p><strong>Por que isso importa.</strong> A pipeline é o único lugar em que "pronto" é decidido por regra e não por opinião. Para agentes, ela também define <em>até onde eles podem ir sozinhos</em>: a autonomia cresce com a distância da produção.</p>
+
+<h3>Autonomia do agente por ambiente</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Ambiente</th><th>O agente pode</th><th>Gate</th><th>Quem autoriza</th></tr></thead>
+<tbody>
+<tr><td><strong>Local / dev</strong></td><td>Editar, rodar testes, abrir PR, <em>propor</em> e disparar deploy em dev</td><td>CI verde</td><td>Automático (ou o próprio dev)</td></tr>
+<tr><td><strong>Cert</strong></td><td>Acompanhar o deploy, rodar smoke tests, resumir resultados; <em>não</em> aprova</td><td>Environment com aprovadores; smoke test; QA</td><td>QA ou líder técnico</td></tr>
+<tr><td><strong>Prod</strong></td><td>Preparar nota de release e checklist; <em>nunca</em> aprova nem executa sozinho</td><td>Environment com aprovadores humanos, só branch <code>main</code>, janela de mudança</td><td>Humano autorizado (≠ autor do PR)</td></tr>
+</tbody></table></div>
+
+<h3>GitHub Actions: environments e aprovações</h3>
+<p>Crie três <em>environments</em> (Settings → Environments): <code>dev</code> sem proteção; <code>cert</code> com <em>Required reviewers</em>; <code>prod</code> com <em>Required reviewers</em>, <em>Prevent self-review</em> e restrição a branches (<code>main</code>). Um job que declara <code>environment: prod</code> fica pausado até a aprovação. O arquivo completo está em <code>kit/template/.github/workflows/deploy.yml</code>; o esqueleto:</p>
+<pre><code>jobs:
+  dev:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps: [ ... deploy dev ... ]
+  cert:
+    needs: dev
+    environment: cert        # pausa até aprovação
+    steps: [ ... deploy cert + smoke ... ]
+  prod:
+    needs: cert
+    environment: prod        # aprovadores humanos, sem self-review
+    steps: [ ... deploy prod + smoke ... ]</code></pre>
+
+<h3>Deploy no Azure com OIDC (sem segredo de longa duração)</h3>
+<p>Em vez de guardar uma senha de service principal no GitHub, configure <em>credencial federada</em> (workload identity) no Microsoft Entra: o GitHub emite um token efêmero por execução, e o Azure só o aceita se o <code>subject</code> casar (repositório, environment, branch). Passos: (1) registre um app/identidade gerenciada; (2) adicione a credencial federada com <code>subject</code> do tipo <code>repo:ORG/REPO:environment:prod</code>; (3) dê a ela apenas o papel necessário no <em>resource group</em> do ambiente; (4) no workflow, <code>permissions: id-token: write</code> e <code>azure/login@v2</code> com <code>client-id</code>, <code>tenant-id</code>, <code>subscription-id</code> (variáveis, não segredos). Use uma identidade por ambiente: a de dev não consegue tocar prod.</p>
+
+<h3>On-premise: runner self-hosted</h3>
+<p>Para implantar em servidores locais, instale um <em>runner self-hosted</em> dentro da rede: ele faz conexão de <em>saída</em> para o GitHub, sem abrir porta de entrada. Trocar o <code>runs-on</code> para <code>[self-hosted, linux, onprem-cert]</code> basta. Cuidados: um runner por ambiente (o de prod isolado e restrito ao environment <code>prod</code>), runners efêmeros quando possível, nunca usar self-hosted em repositório público (PR de fork executaria código na sua rede), atualizações e limpeza de workspace automatizadas.</p>
+
+<h3>Alternativa: Azure DevOps Pipelines</h3>
+<p>Mesmo desenho: <em>stages</em> <code>CI → Dev → Cert → Prod</code>, jobs do tipo <code>deployment</code> ligados a <em>Environments</em> (Pipelines → Environments → <em>Approvals and checks</em>), service connection com federação de identidade e pools self-hosted (<code>pool: name: pool-onprem</code>). O equivalente completo está em <code>kit/template/azure-pipelines.yml</code>. Branch policies do Azure Repos cumprem o papel da branch protection.</p>
+
+<h3>Rollback ensaiado</h3>
+<ol>
+<li>Todo deploy é de um <strong>artefato imutável identificado pelo SHA</strong>; nunca recompile para voltar.</li>
+<li>Rollback = reimplantar o SHA anterior estável (<code>workflow_dispatch</code> com o SHA, ou <code>deploy.sh prod &lt;sha&gt;</code>). Escreva o comando exato no runbook.</li>
+<li>Mudanças de banco em duas fases (expandir → migrar → contrair), para que o código antigo continue funcionando com o esquema novo.</li>
+<li><strong>Ensaie em cert</strong> a cada release relevante: faça deploy e rollback e cronometre. Um rollback nunca testado é uma esperança.</li>
+<li>Feature flags desligam funcionalidade sem novo deploy.</li>
+</ol>
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Permitir que o agente edite o próprio workflow de deploy no mesmo PR que muda o código ("para ajustar o passo"). Quem controla a pipeline controla o gate. Por isso <code>deploy.yml</code> está nos caminhos protegidos (hook) e no <code>CODEOWNERS</code> da plataforma: mudar a pipeline é um PR separado, revisado por quem a mantém.</p>
+</div>
+
+<div class="stepper"><span class="ix-title">Passo a passo: do merge à produção</span>
+<div class="frame" data-caption="1. Merge na main: o CI roda make check e gera o artefato identificado pelo SHA."><svg viewBox="0 0 640 120" role="img"><title>Merge e CI</title><rect class="s-soft" x="20" y="30" width="130" height="56" rx="8"/><text x="85" y="63" text-anchor="middle" fill="currentColor" font-size="14">merge main</text><line class="s-line" x1="150" y1="58" x2="200" y2="58"/><rect class="s-box" x="200" y="30" width="130" height="56" rx="8"/><text x="265" y="63" text-anchor="middle" fill="currentColor" font-size="14">CI + artefato</text><rect class="s-box" x="380" y="30" width="110" height="56" rx="8" opacity=".5"/><text x="435" y="63" text-anchor="middle" fill="currentColor" font-size="14">dev</text><rect class="s-box" x="510" y="30" width="110" height="56" rx="8" opacity=".5"/><text x="565" y="63" text-anchor="middle" fill="currentColor" font-size="14">cert / prod</text></svg></div>
+<div class="frame" data-caption="2. Dev: deploy automático, sem aprovação. O agente pode disparar e observar."><svg viewBox="0 0 640 120" role="img"><title>Deploy em dev</title><rect class="s-box" x="20" y="30" width="130" height="56" rx="8"/><text x="85" y="63" text-anchor="middle" fill="currentColor" font-size="14">merge main</text><rect class="s-box" x="200" y="30" width="130" height="56" rx="8"/><text x="265" y="63" text-anchor="middle" fill="currentColor" font-size="14">CI + artefato</text><line class="s-line" x1="330" y1="58" x2="380" y2="58"/><rect class="s-soft" x="380" y="30" width="110" height="56" rx="8"/><text x="435" y="63" text-anchor="middle" fill="currentColor" font-size="14">dev</text><rect class="s-box" x="510" y="30" width="110" height="56" rx="8" opacity=".5"/><text x="565" y="63" text-anchor="middle" fill="currentColor" font-size="14">cert / prod</text></svg></div>
+<div class="frame" data-caption="3. Cert: o job pausa até um humano aprovar no environment; depois deploy e smoke test."><svg viewBox="0 0 640 140" role="img"><title>Gate de aprovação em cert</title><rect class="s-box" x="20" y="30" width="110" height="56" rx="8"/><text x="75" y="63" text-anchor="middle" fill="currentColor" font-size="14">dev ok</text><line class="s-line" x1="130" y1="58" x2="190" y2="58"/><rect class="s-soft" x="190" y="30" width="150" height="56" rx="8"/><text x="265" y="55" text-anchor="middle" fill="currentColor" font-size="14">cert</text><text x="265" y="74" text-anchor="middle" fill="currentColor" font-size="12">aguarda aprovação</text><circle class="s-accent" cx="265" cy="112" r="10"/><text x="285" y="117" fill="currentColor" font-size="12">humano (QA / líder)</text><rect class="s-box" x="400" y="30" width="110" height="56" rx="8" opacity=".5"/><text x="455" y="63" text-anchor="middle" fill="currentColor" font-size="14">prod</text></svg></div>
+<div class="frame" data-caption="4. Prod: aprovador humano diferente do autor, janela de mudança, smoke test e rollback pronto para o SHA anterior."><svg viewBox="0 0 640 140" role="img"><title>Produção com rollback</title><rect class="s-box" x="20" y="30" width="110" height="56" rx="8"/><text x="75" y="63" text-anchor="middle" fill="currentColor" font-size="14">cert ok</text><line class="s-line" x1="130" y1="58" x2="190" y2="58"/><rect class="s-soft" x="190" y="30" width="150" height="56" rx="8"/><text x="265" y="55" text-anchor="middle" fill="currentColor" font-size="14">prod</text><text x="265" y="74" text-anchor="middle" fill="currentColor" font-size="12">aprovação humana</text><line class="s-line" x1="340" y1="58" x2="400" y2="58"/><rect class="s-box" x="400" y="30" width="130" height="56" rx="8"/><text x="465" y="63" text-anchor="middle" fill="currentColor" font-size="14">smoke test</text><path class="s-muted" d="M465 86 C465 125 265 125 265 90" style="fill:none" stroke-dasharray="5 4"/><text x="365" y="130" text-anchor="middle" fill="currentColor" font-size="12">rollback: reimplantar SHA anterior</text></svg></div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual é a melhor forma de o workflow autenticar no Azure?</p>
+<ol><li data-opt="a">Segredo de service principal com validade longa guardado no GitHub</li><li data-opt="b">OIDC com credencial federada, uma identidade por ambiente, papel mínimo</li><li data-opt="c">Usuário pessoal do líder com MFA desligado</li></ol>
+<div class="explain">B. O token é efêmero e só vale para o <code>subject</code> configurado (repo e environment). Segredo de longa duração (A) vaza e vale em qualquer lugar; C é pior ainda.</div>
+</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">O agente pode aprovar o deploy em prod se o CI está verde?</p>
+<ol><li data-opt="a">Sim, CI verde é suficiente</li><li data-opt="b">Sim, se o autor do PR delegar</li><li data-opt="c">Não. Prod exige aprovação de um humano autorizado diferente do autor; o agente prepara e observa</li></ol>
+<div class="explain">C. CI verde prova que os testes passaram, não que a mudança deve ir para produção agora (janela, risco, pendências de negócio).</div>
+</div>
+<p><strong>Em resumo.</strong> Dev livre, cert com gate humano, prod só com humano autorizado; OIDC em vez de segredos; runner self-hosted para a rede local; artefato imutável por SHA e rollback ensaiado. Aprofundamento: <a href="../modulos/LT04-novo/LT04.html">LT04</a> e <a href="../modulos/P01-deploy-nuvem/P01.html">P01</a>.</p>
+
+<h2 id="passo-5">Passo 5 · Documentação sempre atualizada</h2>
+<p><strong>Por que isso importa.</strong> Documentação desatualizada sempre foi um problema; com agentes ela vira um problema <em>operacional</em>: o agente lê a doc, confia e produz código coerente com a doc errada. Doc viva é infraestrutura de contexto. E agentes também são a melhor ferramenta já criada para mantê-la, desde que o processo obrigue.</p>
+
+<h3>Regra 1: o mesmo PR atualiza a doc</h3>
+<p>Mudança de comportamento e mudança de documentação entram juntas ou não entram. Três apoios mecânicos, do mais barato ao mais forte:</p>
+<ol>
+<li><strong>Checklist no template de PR</strong> (já no kit): "Spec/runbook/README/CHANGELOG atualizados" ou a frase exata <code>Docs: não se aplica (motivo)</code>.</li>
+<li><strong>Checagem de drift no CI</strong> (<code>scripts/hooks/check_docs.py</code>, chamado por <code>make docs-check</code>): se arquivos de código mudaram e nenhum arquivo de documentação mudou, o PR falha, a menos que o corpo traga a frase de dispensa com motivo.
+<pre><code>python3 scripts/hooks/check_docs.py --base origin/main
+# ERRO: checagem de documentação
+#   - código mudou sem nenhuma doc; atualize a doc no mesmo PR ou
+#     escreva 'Docs: não se aplica (motivo)' no PR</code></pre></li>
+<li><strong>Prompt de fechamento</strong> (<code>prompts/atualizar-docs.md</code>) rodado pelo agente antes de abrir o PR: compara o diff com a doc, lista afirmações que ficaram falsas e comportamentos novos não documentados, e propõe as edições exatas.</li>
+</ol>
+<div class="box">
+<span class="lbl">Limite honesto do drift check</span>
+<p>Ele detecta <em>ausência</em> de edição, não <em>correção</em> da edição. Quem garante que o texto novo está certo é a revisão (item de doc no <code>REVIEW.md</code>) e a regra de que critérios de aceite viram teste: a spec que tem teste não mente por muito tempo.</p>
+</div>
+
+<h3>Regra 2: ADR para decisões caras de reverter</h3>
+<p>Crie ADR quando a decisão (a) é estrutural (banco, fila, fronteira de serviço, biblioteca central), (b) tem alternativas reais, ou (c) alguém perguntará "por que fizemos assim?" daqui a um ano. Formato curto: contexto, opções com prós e contras, decisão, consequências. O agente rascunha; o humano decide e assina. ADR aceito nunca é editado: ele é <em>substituído</em> por outro que o referencia (<code>Status: substituída por ADR-014</code>). Aprofunde em <a href="../modulos/M04-design-docs-com-ia/M04.html">M04</a>.</p>
+
+<h3>Regra 3: CHANGELOG com a chave do ticket</h3>
+<p>Uma linha por mudança, agrupada em Adicionado, Alterado, Corrigido, Removido, com a chave (<code>PROJ-123</code>). É a ponte entre PR e nota de release e o que o suporte lê. O agente escreve a entrada no fechamento; a revisão confere se é verdadeira.</p>
+<pre><code>## [1.8.0] - 2026-10-12
+### Adicionado
+- PROJ-123: validação de CNPJ no cadastro de investidor.
+### Corrigido
+- PROJ-456: arredondamento duplicado na conversão de moeda.</code></pre>
+
+<h3>Regra 4: o agente errou duas vezes? Atualize o AGENTS.md</h3>
+<p>Primeira vez é acidente; segunda é falta de instrução. A correção não vai para o chat (some) e sim para o repositório, na forma <em>mais forte possível</em>:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Tipo de erro</th><th>Onde corrigir</th><th>Força</th></tr></thead>
+<tbody>
+<tr><td>Usou comando errado, ignorou convenção</td><td>Seção correspondente do <code>AGENTS.md</code>, ou "Armadilhas conhecidas" com data</td><td>Instrução (probabilística)</td></tr>
+<tr><td>Editou arquivo que não devia</td><td>Hook de caminho protegido + <code>CODEOWNERS</code></td><td>Bloqueio (determinístico)</td></tr>
+<tr><td>Gerou código fora do padrão que o linter pode detectar</td><td>Regra de lint/analisador no <code>make check</code></td><td>Bloqueio (determinístico)</td></tr>
+<tr><td>Fluxo repetitivo que ele refaz diferente toda vez</td><td>Prompt-modelo em <code>prompts/</code> ou comando/skill da ferramenta</td><td>Procedimento reutilizável</td></tr>
+</tbody></table></div>
+<p>Se uma regra exige cuidado constante, transforme-a em verificação automática. Instrução pede boa vontade; hook não pede.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>Deixar o <code>AGENTS.md</code> crescer sem poda. Um arquivo de 600 linhas dilui as regras importantes e consome contexto em toda sessão. Revise a cada mês: apague o que o linter já cobre, o que virou hook e o que ficou obsoleto; mantenha o arquivo curto e verificável.</p>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">O agente apagou a pasta <code>bin/</code> versionada duas vezes. Qual a correção mais forte?</p>
+<ol><li data-opt="a">Hook/regra que bloqueia o caminho (e, se aplicável, <code>.gitignore</code>), mais uma linha no <code>AGENTS.md</code></li><li data-opt="b">Escrever em maiúsculas "NUNCA APAGUE bin/" no prompt</li><li data-opt="c">Trocar de ferramenta</li></ol>
+<div class="explain">A. Bloqueio determinístico vence instrução. Em B a ênfase não dá garantia e some quando a sessão fecha; C não resolve a falta de guarda.</div>
+</div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Quando uma decisão merece ADR?</p>
+<ol><li data-opt="a">Toda mudança de código</li><li data-opt="b">Quando é cara de reverter, tem alternativas reais ou alguém vai perguntar o porquê no futuro</li><li data-opt="c">Somente quando o agente pede</li></ol>
+<div class="explain">B. ADR em tudo vira burocracia ignorada; ADR só quando o agente pede transfere a decisão para quem não decide.</div>
+</div>
+<p><strong>Em resumo.</strong> Doc e código no mesmo PR, com checklist, drift check e prompt de fechamento; ADR para o que custa caro desfazer; CHANGELOG com a chave; erro repetido do agente vira regra, de preferência executável.</p>
+
+<h2 id="passo-6">Passo 6 · Paralelismo e revisão</h2>
+<p><strong>Por que isso importa.</strong> O ganho de produtividade real com agentes aparece quando você deixa de esperar a sessão terminar e passa a supervisionar mais de uma. O gargalo muda de "digitar código" para "revisar com qualidade". Esse passo ensina a paralelizar sem criar bagunça e a revisar sem se enganar.</p>
+
+<h3>Worktrees: uma pasta por trabalho, um só repositório</h3>
+<p>Um <em>worktree</em> é uma segunda (terceira…) cópia de trabalho do mesmo repositório, com seu próprio branch e arquivos, compartilhando o histórico. Duas sessões de agente no mesmo diretório se atropelam (um troca de branch, o outro perde contexto); em worktrees separados, não.</p>
+<pre><code>git worktree add ../meu-app-PROJ-123 -b feat/PROJ-123-slug origin/main
+git worktree add ../meu-app-PROJ-456 -b fix/PROJ-456-slug origin/main
+git worktree list
+# terminado e mesclado:
+git worktree remove ../meu-app-PROJ-123</code></pre>
+<p>Cuidados: dependências e <code>bin/obj</code> ou <code>node_modules</code> são por pasta (o primeiro build é lento); portas e bancos locais precisam ser distintos por worktree (variável de ambiente por pasta); nunca faça checkout do mesmo branch em dois worktrees (o Git recusa).</p>
+
+<h3>Quantas sessões?</h3>
+<ul>
+<li><strong>Comece com 2.</strong> Uma implementando, outra revisando ou escrevendo a spec do próximo ticket.</li>
+<li><strong>Limite = sua capacidade de revisar, não a do agente.</strong> Se três PRs esperam por você mais de meio dia, você tem sessões demais.</li>
+<li><strong>Só paralelize trabalhos independentes</strong> (arquivos e módulos distintos). Fatias que mexem nos mesmos arquivos geram conflitos que consomem o que ganharam.</li>
+<li>Escolha trabalhos de <em>risco diferente</em> em paralelo: um bug difícil (exige sua atenção) e uma feature mecânica (corre sozinha).</li>
+</ul>
+
+<h3>Revisão por agente separado</h3>
+<p>Quem escreveu o código revisa mal o próprio código: ele compartilha as mesmas premissas do contexto. Abra uma <strong>sessão nova, sem o histórico da implementação</strong>, entregue só o ticket, a spec, o diff e o <code>REVIEW.md</code>, e peça o parecer (<code>prompts/revisar-pr.md</code>). Melhor ainda: use outro modelo ou outra ferramenta, para não repetir os mesmos pontos cegos. Exija achados classificados (bloqueante, importante, sugestão) com arquivo e linha, e a verificação critério por critério da spec.</p>
+
+<h3>Separação de funções</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Função</th><th>Quem pode</th><th>Quem não pode</th></tr></thead>
+<tbody>
+<tr><td>Escrever o código</td><td>Agente A, com um humano responsável</td><td>-</td></tr>
+<tr><td>Revisar o diff</td><td>Agente B (sessão separada) como auxiliar</td><td>Agente A; o autor</td></tr>
+<tr><td>Aprovar o PR</td><td>Pessoa que não escreveu nem pediu o código (Code Owner)</td><td>Qualquer agente; o autor</td></tr>
+<tr><td>Aprovar deploy em cert/prod</td><td>Humano autorizado no environment</td><td>Agente; o autor do PR em prod</td></tr>
+<tr><td>Alterar pipeline, permissões, <code>CODEOWNERS</code></td><td>Plataforma/arquitetura, em PR próprio</td><td>Agente no PR de funcionalidade</td></tr>
+</tbody></table></div>
+<p>Se você é o único humano (projeto solo), a separação ainda vale na medida do possível: revisor-agente separado + você lendo o diff inteiro depois de um intervalo, e aprovações de prod com atraso intencional.</p>
+
+<div class="box warn">
+<span class="lbl">Armadilha que pega sênior</span>
+<p>"Revisão" em que o humano só lê o resumo do agente revisor. O agente revisor também alucina e também deixa passar. A função dele é ampliar sua cobertura, não substituir sua leitura do diff e dos testes. Se você não leu, você não revisou.</p>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Você tem quatro sessões de agente abertas e dois PRs parados esperando revisão há um dia. O que fazer?</p>
+<ol><li data-opt="a">Abrir mais duas sessões para aproveitar o tempo</li><li data-opt="b">Aprovar os PRs pelo resumo do agente para desafogar</li><li data-opt="c">Parar de iniciar trabalhos e esvaziar a fila de revisão; o limite é a sua capacidade de revisar</li></ol>
+<div class="explain">C. Paralelismo sem revisão acumula risco não verificado. A e B aumentam o problema.</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que o revisor deve ser uma sessão nova e sem o histórico da implementação?</p>
+<ol><li data-opt="a">Porque o contexto da implementação carrega as mesmas premissas e pontos cegos do autor</li><li data-opt="b">Porque sessões novas são mais baratas</li><li data-opt="c">Porque o agente não consegue ler o diff na mesma sessão</li></ol>
+<div class="explain">A. Revisão independente só funciona com contexto independente.</div>
+</div>
+<p><strong>Em resumo.</strong> Worktrees para isolar, 2 sessões para começar, limite pela capacidade de revisar, revisor em sessão separada com <code>REVIEW.md</code>, e quem escreveu não aprova.</p>
+
+<h2 id="passo-7">Passo 7 · Onde fica cada coisa em cada ferramenta</h2>
+<p><strong>Por que isso importa.</strong> Os conceitos são os mesmos em todas as ferramentas; só o endereço muda. Com a tabela abaixo você traduz o método para a ferramenta que o seu time usa hoje (e para a de amanhã). Versão do quadro: <strong>verificado em 12/10/2026</strong> contra a documentação oficial. Produtos mudam rápido: itens marcados com † não foram lidos em página oficial nesta verificação, confirme antes de depender deles.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Recurso</th><th>Cursor</th><th>Codex</th><th>OpenCode</th><th>Claude Code</th><th>Agente próprio</th></tr></thead>
+<tbody>
+<tr><td><strong>Instruções do projeto</strong></td><td><code>.cursor/rules/*.mdc</code> (tipos: sempre, por glob, pedida pelo agente, manual) e <code>AGENTS.md</code> na raiz</td><td><code>AGENTS.md</code>: global em <code>~/.codex</code>, depois da raiz do projeto até o diretório atual, concatenados (limite padrão 32 KiB)</td><td><code>AGENTS.md</code> na raiz (criado por <code>/init</code>)</td><td><code>CLAUDE.md</code>; pode importar o <code>AGENTS.md</code> com <code>@AGENTS.md</code></td><td>Carregar <code>AGENTS.md</code> no prompt de sistema ou no primeiro turno</td></tr>
+<tr><td><strong>Regras por área / skills</strong></td><td>Regras com <code>globs</code> por pasta; subpastas podem ter o próprio <code>.cursor/rules</code></td><td>Skills (seção "Skills &amp; Plugins" da documentação)</td><td>Skills (documentação "skills")</td><td>Skills reutilizáveis (ex.: <code>/review-pr</code>)</td><td>Carregar instruções por demanda (arquivo lido pela ferramenta <code>read</code>)</td></tr>
+<tr><td><strong>Comandos reutilizáveis</strong></td><td>Comandos de projeto em <code>.cursor/commands</code> †</td><td>Slash commands (documentação "Slash commands")</td><td>Commands (documentação "commands")</td><td>Skills invocáveis por <code>/nome</code></td><td>Seus <code>prompts/*.md</code> carregados por uma função</td></tr>
+<tr><td><strong>Hooks</strong></td><td>Hooks † (confirme na versão em uso)</td><td>Hooks (documentação "Hooks")</td><td>Plugins (documentação "plugins")</td><td>Hooks (comandos antes/depois de ações da ferramenta)</td><td>Interceptar a chamada de ferramenta no seu loop</td></tr>
+<tr><td><strong>Modo plano / só-leitura</strong></td><td>Modo Plan †</td><td>Sandbox e modos de aprovação †</td><td>Modo Plan: alterna com a tecla Tab; desabilita edições e sugere uma abordagem</td><td>Plan mode (propõe antes de editar)</td><td>Conjunto de ferramentas só com leitura nessa fase</td></tr>
+<tr><td><strong>Subagentes</strong></td><td>Subagentes †</td><td>Subagents (documentação "Subagents")</td><td>Agents/subagents (documentação "agents")</td><td>Sub-agents (agentes paralelos coordenados por um líder)</td><td>Função que abre um loop com contexto próprio</td></tr>
+<tr><td><strong>MCP</strong></td><td>Sim †</td><td>Sim (documentação "MCP")</td><td>Sim (documentação "mcp-servers")</td><td>Sim (conexão a Jira, Drive, Slack, etc.)</td><td>Cliente MCP (SDK) no seu loop</td></tr>
+<tr><td><strong>Permissões</strong></td><td>Aprovação de comandos †</td><td>Sandbox e aprovações †</td><td>Documentação "permissions"</td><td>Regras de permissão em configurações</td><td>Camada de política antes de executar cada ferramenta</td></tr>
+<tr><td><strong>Revisão de PR</strong></td><td>Revisão automática de PR (Bugbot) †</td><td>Revisão de código no GitHub; regras na seção <code>## Code Review Rules</code> do <code>AGENTS.md</code> mais próximo do código</td><td>Integração com GitHub (documentação "github")</td><td>Revisão de código no GitHub e GitHub Actions</td><td>Job de CI que chama seu agente com <code>REVIEW.md</code> e comenta no PR</td></tr>
+<tr><td><strong>Rodar em CI / sem tela</strong></td><td>Agentes em segundo plano †</td><td>Execução não interativa †</td><td>Execução não interativa †</td><td>Modo <code>-p</code> (print) e GitHub Actions</td><td>Seu próprio script</td></tr>
+</tbody></table></div>
+<p class="small">Fontes consultadas em 12/10/2026: documentação do Claude Code (visão geral), do OpenCode (introdução), regras do Cursor, e AGENTS.md do Codex. Detalhes de cada recurso mudam entre versões; trate a tabela como mapa, e a documentação oficial como território.</p>
+
+<h3>Como usar o mapa na prática</h3>
+<ol>
+<li><strong>Conteúdo no repositório, tradução por ferramenta.</strong> Escreva uma vez: <code>AGENTS.md</code>, <code>REVIEW.md</code>, <code>prompts/</code>, <code>docs/</code>, hooks. Cada ferramenta só ganha um ponteiro (<code>CLAUDE.md</code> com <code>@AGENTS.md</code>, <code>.cursor/rules/projeto.mdc</code>).</li>
+<li><strong>Garantias na esteira, não na ferramenta.</strong> O que precisa valer sempre (bloqueios, aprovações) fica em git hooks, CI, branch protection e environments, que funcionam para qualquer agente, inclusive o seu.</li>
+<li><strong>Recursos de conveniência por ferramenta.</strong> Skills, comandos e subagentes aceleram, mas não são onde mora a regra: se a regra só existe como skill de uma ferramenta, ela some quando o time trocar.</li>
+</ol>
+
+<h3>Agente próprio: o mínimo para ser seguro</h3>
+<p>Se você mesmo montou o agente (um loop que chama o modelo, executa ferramentas e devolve resultados), ele precisa do equivalente de cada linha da tabela: (1) carregar <code>AGENTS.md</code>; (2) fases com conjuntos de ferramentas diferentes (leitura na fase de plano); (3) camada de permissão que nega por padrão comandos destrutivos e caminhos protegidos; (4) limite de passos e de custo por tarefa; (5) log de cada ferramenta chamada; (6) entrada externa (tickets, páginas) tratada como dado. O conceito de loop e de limites está em <a href="../modulos/M01-workflow-ia-driven/M01.html">M01</a> e <a href="../modulos/M00-ferramental/M00.html">M00</a>.</p>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">O time usa Cursor e Claude Code. Onde escrever a regra "não alterar <code>deploy.yml</code>"?</p>
+<ol><li data-opt="a">Duplicada em <code>.cursor/rules</code> e em <code>CLAUDE.md</code></li><li data-opt="b">No <code>AGENTS.md</code> (uma vez) e como hook/CODEOWNERS no repositório, que valem para qualquer ferramenta</li><li data-opt="c">Somente numa skill do Claude Code</li></ol>
+<div class="explain">B. Duplicar (A) diverge; regra só numa skill (C) não vale para as outras ferramentas nem protege contra o erro. O bloqueio no repositório é independente da ferramenta.</div>
+</div>
+<p><strong>Em resumo.</strong> Conteúdo no repositório, ponteiros por ferramenta, garantias na esteira. A tabela muda com as versões; o método não.</p>
+
+<h2 id="passo-8">Passo 8 · Cartão de bolso</h2>
+<p>Resumo para colar ao lado do monitor. O estado dos itens fica salvo neste navegador.</p>
+
+<h3>Antes de começar o trabalho</h3>
+<ul class="checklist" data-key="TR-bolso-antes">
+<li>Existe ticket com chave (<code>PROJ-123</code>) e critérios de aceite?</li>
+<li>O agente leu o <code>AGENTS.md</code> e a spec (ou eu escrevi a spec primeiro)?</li>
+<li>Estou em branch/worktree do ticket (<code>feat/</code> ou <code>fix/</code>)?</li>
+<li>Plano feito em modo leitura e aprovado por mim?</li>
+</ul>
+<h3>Durante</h3>
+<ul class="checklist" data-key="TR-bolso-durante">
+<li>Passo pequeno, teste primeiro, <code>make check</code> verde, commit <code>PROJ-123: ...</code></li>
+<li>Pedi evidência (saída de teste) e não aceitei só "pronto"</li>
+<li>Nada fora do escopo da spec; o que apareceu virou ticket novo</li>
+<li>Em <code>fix/</code>: só adicionei teste, não alterei os existentes</li>
+</ul>
+<h3>Antes do PR e do merge</h3>
+<ul class="checklist" data-key="TR-bolso-pr">
+<li>Template de PR preenchido: critérios, testes, risco, rollback</li>
+<li>Documentação e CHANGELOG no mesmo PR (ou <code>Docs: não se aplica (motivo)</code>)</li>
+<li>Revisão por agente em sessão separada com <code>REVIEW.md</code></li>
+<li>Li o diff inteiro; aprovação de quem não escreveu</li>
+<li>Se houve decisão cara, ADR criada</li>
+</ul>
+<h3>Deploy e depois</h3>
+<ul class="checklist" data-key="TR-bolso-deploy">
+<li>Dev automático; cert com aprovação e smoke test; prod com humano autorizado</li>
+<li>Rollback conhecido (SHA anterior) e ensaiado</li>
+<li>Ticket transicionado pela esteira, com versão e link</li>
+<li>O agente errou duas vezes? Corrigi o <code>AGENTS.md</code> ou criei um hook</li>
+</ul>
+
+<h3>Exercício final: ordene o ciclo completo</h3>
+<p>Ordene as nove etapas do ciclo, da primeira à última.</p>
+<ol class="order" data-solution="a,b,c,d,e,f,g,h,i">
+<li data-id="g">CI/CD: dev, cert, prod</li>
+<li data-id="c">Plano</li>
+<li data-id="i">Nova intenção (aprendizados viram tickets)</li>
+<li data-id="a">Intenção</li>
+<li data-id="e">Verificação</li>
+<li data-id="h">Operar</li>
+<li data-id="b">Spec</li>
+<li data-id="f">PR e review</li>
+<li data-id="d">Implementação</li>
+</ol>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste final</span>
+<p class="q">A sessão do agente acabou e ele "esqueceu" tudo. O que deveria garantir que a próxima sessão continue de onde parou?</p>
+<ol><li data-opt="a">Colar de novo todo o histórico do chat</li><li data-opt="b">Confiar no resumo que o próprio agente guardou</li><li data-opt="c">Artefatos versionados: intenção, spec, plano com status, <code>AGENTS.md</code>, commits e PR com ticket</li></ol>
+<div class="explain">C. O repositório é a memória do projeto. Histórico de chat e resumos informais são frágeis e não são revisáveis.</div>
+</div>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<div class="flashcards">
+<div class="fc"><div class="front">As nove etapas do ciclo</div><div class="back">Intenção, spec, plano, implementação, verificação, PR/review, CI/CD dev→cert→prod, operar, nova intenção.</div></div>
+<div class="fc"><div class="front">Por que artefatos em arquivos?</div><div class="back">O agente não lembra entre sessões; arquivos dão contexto durável, algo revisável antes do código e rastreabilidade.</div></div>
+<div class="fc"><div class="front">Fonte única de instruções</div><div class="back"><code>AGENTS.md</code>; <code>CLAUDE.md</code> e <code>.cursor/rules</code> só apontam para ele.</div></div>
+<div class="fc"><div class="front">Projeto herdado: primeira sessão</div><div class="back">Só-leitura: mapear, executar comandos reais, propor architecture.md, AGENTS.md e testes de caracterização.</div></div>
+<div class="fc"><div class="front">Em branch fix/, o que o hook proíbe?</div><div class="back">Alterar, renomear ou apagar testes existentes. Só se adiciona o teste de reprodução.</div></div>
+<div class="fc"><div class="front">Vínculo mínimo Jira ↔ GitHub</div><div class="back">A chave do ticket em branch, commit e título do PR.</div></div>
+<div class="fc"><div class="front">Autonomia por ambiente</div><div class="back">Dev livre; cert com gate humano; prod só humano autorizado, diferente do autor.</div></div>
+<div class="fc"><div class="front">Por que OIDC no deploy Azure?</div><div class="back">Token efêmero ligado ao repo/environment, sem segredo de longa duração.</div></div>
+<div class="fc"><div class="front">Regra da documentação</div><div class="back">O mesmo PR que muda o comportamento atualiza a doc, ou declara <code>Docs: não se aplica (motivo)</code>.</div></div>
+<div class="fc"><div class="front">Agente errou duas vezes</div><div class="back">Corrija no repositório: AGENTS.md; melhor ainda, hook ou lint que bloqueie.</div></div>
+<div class="fc"><div class="front">Por que revisor em sessão separada?</div><div class="back">Contexto independente evita herdar as premissas e pontos cegos do autor.</div></div>
+<div class="fc"><div class="front">Quem aprova o PR?</div><div class="back">Pessoa que não escreveu nem pediu o código; o agente auxilia, nunca aprova.</div></div>
+</div>
+
+<h2>Fontes e versões</h2>
+<p>Verificadas em 12/10/2026. Recursos de produtos mudam entre versões; confirme na documentação oficial antes de adotar um recurso específico.</p>
+<ul>
+<li><a href="https://agents.md">agents.md</a>: formato aberto do <code>AGENTS.md</code>.</li>
+<li><a href="https://code.claude.com/docs/en/overview">Claude Code · visão geral</a> (CLAUDE.md, skills, hooks, subagentes, MCP, GitHub Actions).</li>
+<li><a href="https://opencode.ai/docs/">OpenCode · documentação</a> (rules, commands, agents, plugins, MCP, permissions, skills, GitHub).</li>
+<li><a href="https://docs.cursor.com/context/rules">Cursor · Rules</a> (<code>.cursor/rules</code>, <code>.mdc</code>, <code>AGENTS.md</code>).</li>
+<li><a href="https://developers.openai.com/codex/guides/agents-md">Codex · AGENTS.md</a> (descoberta, concatenação, limite de bytes, regras de revisão no GitHub).</li>
+<li><a href="https://docs.github.com/actions/deployment/targeting-different-environments/using-environments-for-deployment">GitHub · Environments para deploy</a> e <a href="https://docs.github.com/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-azure">OIDC com Azure</a>.</li>
+<li><a href="https://learn.microsoft.com/azure/devops/pipelines/process/environments">Azure DevOps · Environments</a>.</li>
+</ul>
+
+<div class="box">
+<span class="lbl">Conclusão e próximos passos</span>
+<p>Você tem agora o mapa do ciclo, o repositório preparado, os fluxos por tipo de trabalho, a costura Jira–GitHub, a esteira com autonomia graduada, a documentação sob regra e o hábito de revisão separada. Aplique o <a href="../kit/README.md">kit</a> a um repositório real, faça uma feature pequena de ponta a ponta e ajuste o <code>AGENTS.md</code> com o que aprender. Depois aprofunde o porquê em <a href="../modulos/A01-sdlc-nativo-ia/A01.html">A01</a>, o fluxo orientado por especificação em <a href="../modulos/M01-workflow-ia-driven/M01.html">M01</a>, o ferramental em <a href="../modulos/M00-ferramental/M00.html">M00</a>, documentos de design em <a href="../modulos/M04-design-docs-com-ia/M04.html">M04</a> e deploy em <a href="../modulos/LT04-novo/LT04.html">LT04</a> e <a href="../modulos/P01-deploy-nuvem/P01.html">P01</a>.</p>
+</div>
+
+</div>
+<script src="../assets/course-manifest.js"></script>
+<script src="../assets/course.js" data-unit="TR" defer></script>
+</body>
+</html>

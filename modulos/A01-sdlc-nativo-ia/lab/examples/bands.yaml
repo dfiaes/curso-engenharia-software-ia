@@ -1,0 +1,18 @@
+# Response tiers for one metric. Detection is deterministic; only tiers >= 2 invoke a model.
+metric: http_5xx_per_min
+window: 30        # baseline points that precede the lookback
+lookback: 8       # recent points judged against that baseline (WE4 needs 8)
+min_std: 0.5      # floor, so a perfectly flat baseline cannot yield infinite sigma
+rules: [WE1, WE2, WE3, WE4]
+tiers:
+  - name: log
+    sigma: 1
+    action: log
+  - name: diagnose
+    sigma: 2
+    action: diagnose_readonly
+  - name: act
+    sigma: 3
+    action: propose
+    via: runbook
+    runbook: rollback-last-deploy

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>M04 · Design Docs com IA</title>
 <meta name="color-scheme" content="light dark">
-<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
 <link rel="stylesheet" href="../../assets/course.css">
 </head>
 <body>
@@ -137,10 +137,49 @@ Se doc e código divergem, o código é a verdade e a doc é o bug.</code></pre>
 <p>Doc desatualizada não é neutra, é <strong>ativamente danosa</strong>: o agente a trata como verdade e produz código coerente com um sistema que não existe mais. Pior, o erro é difícil de diagnosticar — o código "faz sentido", passa em review superficial, e só quebra na integração. A hierarquia de confiabilidade que você deve ensinar ao agente explicitamente (e que vale para você também): <strong>teste que roda &gt; código &gt; doc gerada &gt; doc escrita à mão</strong>. Quando doc e código divergem, o código é a verdade e a doc é o bug — e o bloco 4 automatiza essa cobrança.</p>
 </div>
 
+<div class="ix"><span class="ix-title">Simulador: orçamento da janela de contexto</span>
+<p>Marque o que você carregaria numa sessão. A janela é recurso escasso: o que sobra é o espaço de trabalho do agente.</p>
+<div class="ix-row"><label>Janela do modelo: <select id="m04-ctx-win"><option value="32000">32k tokens</option><option value="128000" selected>128k tokens</option><option value="200000">200k tokens</option></select></label></div>
+<div class="ix-row"><label>Linhas do AGENTS.md: <strong id="m04-ctx-lv">150</strong></label><input id="m04-ctx-lines" type="range" min="20" max="900" value="150"></div>
+<div class="ix-row"><label><input type="checkbox" id="m04-ctx-spec" checked> Spec da feature (~3.000 tokens)</label></div>
+<div class="ix-row"><label><input type="checkbox" id="m04-ctx-adr" checked> ADR da área tocada (~900)</label></div>
+<div class="ix-row"><label><input type="checkbox" id="m04-ctx-c4" checked> C4 do container (~600)</label></div>
+<div class="ix-row"><label><input type="checkbox" id="m04-ctx-hist"> Todos os 30 ADRs (~27.000)</label></div>
+<div class="ix-row"><label><input type="checkbox" id="m04-ctx-pm"> 8 postmortems antigos (~20.000)</label></div>
+<div class="ix-row"><label><input type="checkbox" id="m04-ctx-prod"> Docs de produto (~15.000)</label></div>
+<svg viewBox="0 0 760 50" role="img" aria-label="Barra de uso da janela" id="m04-ctx-svg"><title>Uso da janela de contexto</title></svg>
+<div class="ix-out" id="m04-ctx-out" aria-live="polite"></div></div>
+<script>(function(f){if(window.Course)Course.ready(f);else document.addEventListener("DOMContentLoaded",function(){Course.ready(f)});})(function(C){
+ function $(i){return document.getElementById('m04-ctx-'+i);}
+ function draw(){
+  var win=+$('win').value,lines=+$('lines').value;$('lv').textContent=lines;
+  var always=lines*12,jit=($('spec').checked?3000:0)+($('adr').checked?900:0)+($('c4').checked?600:0),never=($('hist').checked?27000:0)+($('pm').checked?20000:0)+($('prod').checked?15000:0);
+  var tot=always+jit+never,pct=Math.min(100,tot/win*100);
+  var w1=Math.min(740,always/win*740),w2=Math.min(740-w1,jit/win*740),w3=Math.min(740-w1-w2,never/win*740);
+  $('svg').innerHTML='<title>Uso da janela de contexto</title><rect class="s-box" x="10" y="10" width="740" height="26" rx="4"/><rect x="10" y="10" width="'+w1+'" height="26" style="fill:var(--accent);stroke:none"/><rect x="'+(10+w1)+'" y="10" width="'+w2+'" height="26" style="fill:var(--ok);stroke:none"/><rect x="'+(10+w1+w2)+'" y="10" width="'+w3+'" height="26" style="fill:var(--bad);stroke:none"/><text x="10" y="48" font-size="11">azul = sempre carregado · verde = just-in-time · vermelho = não deveria estar carregado</text>';
+  var m='Sempre carregado (AGENTS.md): ~'+always+' tokens, pago em TODA sessão.\nJust-in-time: ~'+jit+' tokens.\nCarregado sem necessidade: ~'+never+' tokens.\nTotal: ~'+tot+' de '+win+' tokens ('+pct.toFixed(0)+'% da janela). Sobram ~'+Math.max(0,win-tot)+' para o trabalho.';
+  if(lines>200)m+='\nAGENTS.md passou de 200 linhas: extraia para docs específicas e deixe ponteiros.';
+  if(never>0)m+='\nHistórico, postmortems e docs de produto ficam no repositório para consulta, mas fora do contexto por padrão.';
+  if(pct>50)m+='\nMais da metade da janela já foi gasta antes de o agente começar a trabalhar.';
+  $('out').textContent=m;
+ }
+ ['win','lines','spec','adr','c4','hist','pm','prod'].forEach(function(k){$(k).addEventListener('input',draw);$(k).addEventListener('change',draw);});
+ draw();
+})</script>
 <h3>Leitura aplicada · Auditoria de docs</h3>
 <p>Auditar a documentação existente com critério objetivo em vez de sensação é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M04</code>, depois do bloco 4. O percurso: classificar cada documento nas cinco categorias da taxonomia com a data da última mudança real de conteúdo; medir a densidade de decisão do maior documento (quantos parágrafos registram decisão com justificativa ou restrição, contra quantos descrevem o que o código já diz); e enxugar as instruções do agente para invariantes com menos de 200 linhas, movendo contexto de referência para <code>docs/</code> com ponteiros.</p>
 <p>O resultado típico: 10–20% de decisão e o resto de descrição. A parte descritiva é a que envelhece e mente; a parte de decisão é a que não pode ser recuperada lendo o código — <em>é impossível ler um código e saber o que foi considerado e rejeitado</em>. Essa proporção é o argumento para escrever menos e melhor.</p>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Um agente de código lê um <code>ARCHITECTURE.md</code> que ainda diz "o worker processa em lote de 100", mas o código usa 500. Qual é o comportamento esperado do agente e por que isso é pior que não ter doc?</p>
+<ol><li data-opt="a">Ele desconfia, como um humano, e confere o código antes de agir.</li><li data-opt="b">Ele obedece com confiança e produz código coerente com um sistema que não existe mais; doc ausente ao menos dispararia a pergunta ou a verificação.</li><li data-opt="c">Ele ignora o documento por ser antigo.</li><li data-opt="d">Ele atualiza o documento sozinho antes de continuar.</li></ol>
+<div class="explain">O leitor agente não tem colega para perguntar nem faro de "isso está velho". Doc ausente leva a premissa inventada (ruim, mas verificável); doc velha vira erro confiante, o context poisoning. Por isso vale a hierarquia da verdade: teste &gt; código &gt; doc gerada &gt; doc escrita à mão.</div>
+</div>
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Seu <code>AGENTS.md</code> chegou a 900 linhas. Qual é a ação coerente com a regra das três camadas de contexto?</p>
+<ol><li data-opt="a">Deixar como está: janela grande resolve.</li><li data-opt="b">Dividir em dois arquivos, ambos sempre carregados.</li><li data-opt="c">Apagar as convenções antigas.</li><li data-opt="d">Manter só invariantes e comandos (&lt; 200 linhas) e mover o resto para docs específicas, com ponteiros para carga just-in-time.</li></ol>
+<div class="explain">O arquivo sempre carregado é o "system prompt do repositório": cada linha custa em toda sessão. O que é específico de uma tarefa (spec, ADR da área, C4 do container) é buscado quando preciso, e o histórico fica consultável, mas fora do contexto por padrão.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 1</span>
 <ul>
@@ -196,7 +235,18 @@ Se doc e código divergem, o código é a verdade e a doc é o bug.</code></pre>
 </g>
 </svg>
 <figcaption>C4: níveis de zoom. Na prática, 90% do valor está em L1 e L2 — e L4 é território do seu Capstone (gerado a partir do código).</figcaption>
-</figure>
+</figure><p><strong>Os níveis, com um exemplo (um encurtador de links):</strong></p>
+<div class="tabs">
+<section data-tab="L1 Contexto"><svg viewBox="0 0 760 150" role="img" aria-label="C4 nível 1: contexto" xmlns="http://www.w3.org/2000/svg"><title>C4 nível 1: contexto</title><defs><marker id="ar8018801088974428050" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="237.3" height="64" rx="8" stroke-width="1.2"/><text x="128.7" y="69" text-anchor="middle" font-size="13" font-weight="700">Cliente</text><text x="128.7" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">pessoa</text><line class="s-line" x1="248.3" y1="72" x2="260.3" y2="72" stroke-width="1.5" marker-end="url(#ar8018801088974428050)" style="color:var(--fg)"/><rect class="s-soft" x="261.3" y="40" width="237.3" height="64" rx="8" stroke-width="2.5"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Encurtador</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">SISTEMA (uma caixa)</text><line class="s-line" x1="499.7" y1="72" x2="511.7" y2="72" stroke-width="1.5" marker-end="url(#ar8018801088974428050)" style="color:var(--fg)"/><rect class="s-box" x="512.7" y="40" width="237.3" height="64" rx="8" stroke-width="1.2"/><text x="631.3" y="69" text-anchor="middle" font-size="13" font-weight="700">Provedor de e-mail</text><text x="631.3" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">sistema externo</text><text x="380" y="136" text-anchor="middle" font-size="12">Uma caixa para o sistema, usuários e vizinhos. Qualquer pessoa entende.</text></svg><p>Exemplo de um encurtador de links. Responde: <em>quem usa e com o que ele conversa?</em></p></section>
+<section data-tab="L2 Containers"><svg viewBox="0 0 760 150" role="img" aria-label="C4 nível 2: containers" xmlns="http://www.w3.org/2000/svg"><title>C4 nível 2: containers</title><defs><marker id="ar4788126652522812068" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="174.5" height="64" rx="8" stroke-width="1.2"/><text x="97.2" y="69" text-anchor="middle" font-size="13" font-weight="700">SPA</text><text x="97.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">Angular</text><line class="s-line" x1="185.5" y1="72" x2="197.5" y2="72" stroke-width="1.5" marker-end="url(#ar4788126652522812068)" style="color:var(--fg)"/><rect class="s-soft" x="198.5" y="40" width="174.5" height="64" rx="8" stroke-width="2.5"/><text x="285.8" y="69" text-anchor="middle" font-size="13" font-weight="700">API</text><text x="285.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">FastAPI</text><line class="s-line" x1="374.0" y1="72" x2="386.0" y2="72" stroke-width="1.5" marker-end="url(#ar4788126652522812068)" style="color:var(--fg)"/><rect class="s-soft" x="387.0" y="40" width="174.5" height="64" rx="8" stroke-width="2.5"/><text x="474.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Worker</text><text x="474.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">fila de cliques</text><line class="s-line" x1="562.5" y1="72" x2="574.5" y2="72" stroke-width="1.5" marker-end="url(#ar4788126652522812068)" style="color:var(--fg)"/><rect class="s-box" x="575.5" y="40" width="174.5" height="64" rx="8" stroke-width="1.2"/><text x="662.8" y="69" text-anchor="middle" font-size="13" font-weight="700">PostgreSQL</text><text x="662.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">dados</text><text x="380" y="136" text-anchor="middle" font-size="12">Unidades executáveis. É o mapa do deploy.</text></svg><p>Responde: <em>o que é implantado e como se falam?</em> É o nível mais útil no dia a dia.</p></section>
+<section data-tab="L3 Componentes"><svg viewBox="0 0 760 150" role="img" aria-label="C4 nível 3: componentes" xmlns="http://www.w3.org/2000/svg"><title>C4 nível 3: componentes</title><defs><marker id="ar1427493450782333090" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="174.5" height="64" rx="8" stroke-width="1.2"/><text x="97.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Router</text><text x="97.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">HTTP</text><line class="s-line" x1="185.5" y1="72" x2="197.5" y2="72" stroke-width="1.5" marker-end="url(#ar1427493450782333090)" style="color:var(--fg)"/><rect class="s-soft" x="198.5" y="40" width="174.5" height="64" rx="8" stroke-width="2.5"/><text x="285.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Service</text><text x="285.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">regra</text><line class="s-line" x1="374.0" y1="72" x2="386.0" y2="72" stroke-width="1.5" marker-end="url(#ar1427493450782333090)" style="color:var(--fg)"/><rect class="s-box" x="387.0" y="40" width="174.5" height="64" rx="8" stroke-width="1.2"/><text x="474.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Repository</text><text x="474.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">query</text><line class="s-line" x1="562.5" y1="72" x2="574.5" y2="72" stroke-width="1.5" marker-end="url(#ar1427493450782333090)" style="color:var(--fg)"/><rect class="s-box" x="575.5" y="40" width="174.5" height="64" rx="8" stroke-width="1.2"/><text x="662.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Domain</text><text x="662.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">tipos</text><text x="380" y="136" text-anchor="middle" font-size="12">Blocos dentro de UM container. Só para containers complexos.</text></svg><p>Responde: <em>como a API é montada por dentro?</em> Reflete as camadas do M03 bloco 4.</p></section>
+<section data-tab="L4 Código"><p>Classes, funções e schemas. <strong>Gere, nunca desenhe à mão</strong>: o próprio Simon Brown desaconselha manter à mão.</p><pre><code>classDiagram
+  class Link { +slug: str
+               +url: str
+               +hits: int }
+  Service --&gt; Repository</code></pre><p>Em geral o diagrama de classes sai de uma ferramenta que lê o fonte; é o território do seu Capstone.</p></section>
+</div>
+
 
 <div class="box fund">
 <span class="lbl">Fundamento de engenharia · Abstração e níveis — o vício que o C4 corrige</span>
@@ -307,6 +357,16 @@ C4Container
 <p>Produzir os diagramas de um sistema — L1 (contexto) à mão, L2 (containers) a partir do que existe, sequence do fluxo crítico com caminho de falha — é o exercício deste bloco; o roteiro executável fica no <code>Laboratório guiado M04</code>, depois do bloco 4. Três regras atravessam o percurso: cada diagrama responde a uma pergunta e tem parágrafo de contexto antes dele (diagrama sem texto é rorschach); containers planejados e existentes se distinguem no título ("planejado"), senão o diagrama vira ficção; o sequence inclui o caminho de erro com <code>alt</code> ou <code>Note</code> — <em>diagrama que só mostra o caminho feliz é propaganda</em>. Cada dúvida de produto encontrada no desenho ("o consultor analisa o repo do cliente, ou o cliente aponta o próprio?") vira linha de spec ou ADR.</p>
 <p>A aplicação desses diagramas ao Capstone é trilha opcional com especificação própria — o laboratório deste módulo exercita tudo sobre o diretório de demonstração local.</p>
 
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Um diagrama mistura a caixa "Kafka", a caixa "Cliente pessoa física" e a classe <code>OrderValidator</code>. Qual princípio ele viola e qual é a correção?</p>
+<ol><li data-opt="a">Mistura níveis de abstração; separar em diagramas C4 (contexto, containers, componentes), um por pergunta.</li><li data-opt="b">Usa Mermaid em vez de uma ferramenta gráfica; trocar de ferramenta.</li><li data-opt="c">Tem poucas caixas; acrescentar mais detalhe.</li><li data-opt="d">Nada: um diagrama completo é sempre melhor.</li></ol>
+<div class="explain">Abstração é escolher qual detalhe importa para a pergunta. Um diagrama, uma pergunta, no máximo ~7 elementos. L1 e L2 dão 90% do valor; L4 se gera do código.</div>
+</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual destes diagramas deve ser <strong>gerado</strong> a partir do código, e qual deve ser <strong>escrito à mão</strong>?</p>
+<ol><li data-opt="a">Gerar o contexto de negócio; escrever as classes.</li><li data-opt="b">Gerar tudo, pois escrever à mão sempre envelhece.</li><li data-opt="c">Gerar o diagrama de classes (derivado do fonte); escrever o contexto de negócio (nenhum parser infere o porquê).</li><li data-opt="d">Escrever tudo à mão para garantir qualidade.</li></ol>
+<div class="explain">Regra do módulo: o que pode ser derivado do código se gera (sempre correto); o que não pode ser derivado se escreve e se revisa. Ao pedir arquitetura a um agente, exija a distinção "existe hoje × planejado".</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 2</span>
 <ul>
@@ -400,6 +460,29 @@ a primeira consulta de grafo que o AGE não expressar em tempo aceitável.
 3. Versionamento: extensão fixada na imagem; migração de índice em
    release_command, com downgrade escrito.</code></pre>
 
+<p><strong>Comparação rápida:</strong></p>
+<div class="tabs">
+<section data-tab="ADR fraco"><pre><code># ADR 0007: Banco de dados
+
+Status: aceita
+
+Usamos PostgreSQL.
+
+Postgres é robusto, popular e tem boa performance.</code></pre><p>Título vago, nenhuma opção considerada, nenhum custo, nenhum gatilho de revisão. É anotação, não decisão: pode ter sido gerado por um agente sem restrições reais.</p></section>
+<section data-tab="ADR bom"><pre><code># ADR 0007: Usar pgvector em vez de Pinecone
+
+Status: aceita
+
+## Contexto
+Equipe de 3, sem verba para novo fornecedor, dados já no Postgres.
+## Opções
+Pinecone, pgvector, Qdrant.
+## Decisão
+Escolhi pgvector porque evita um serviço novo e usa a transação existente.
+## Consequências
+Ganhei: um sistema a menos. Aceitei: busca mais lenta acima de ~5M vetores.
+Revisar se passar de 5M vetores.</code></pre><p>Título é uma decisão, há alternativas reais, custo declarado e condição de revisão.</p></section>
+</div>
 <h3>Quando NÃO escrever ADR</h3>
 <p>Esta é a parte que a maioria dos times erra — adota ADR, escreve 40 no primeiro mês, ninguém lê, o hábito morre. O critério é <strong>custo de reverter</strong>:</p>
 
@@ -421,6 +504,15 @@ a primeira consulta de grafo que o AGE não expressar em tempo aceitável.
 <p><strong>Errado:</strong> "escreva um ADR sobre usar Postgres". Sai um texto genérico, com prós e contras de blog, sem NENHUMA das suas restrições reais — e como ele parece um ADR, ninguém percebe que está vazio. <strong>Certo:</strong> você escreve as três coisas que só você sabe (o contexto real, as opções que estavam de fato na mesa, a razão da escolha, em bullets crus) e pede: <em>"transforme em ADR no formato do template, aponte inconsistências no meu raciocínio, e liste as consequências negativas que eu não mencionei"</em>. O valor do agente aqui é <strong>contraditório e completude</strong>, não redação. A pergunta que rende mais: <em>"que consequência negativa dessa decisão eu não listei?"</em></p>
 </div>
 
+<div class="ix"><span class="ix-title">Exercício: monte um ADR</span><p>Coloque as seções do template na ordem em que o leitor as encontra.</p>
+<ol class="order" data-solution="a,b,c,d,f,e">
+<li data-id="d">Decisão: "escolhi X porque..."</li>
+<li data-id="a">Título (NNNN-verbo-objeto)</li>
+<li data-id="f">Consequências: o que ganhei, o que aceitei como custo e o que me faria mudar</li>
+<li data-id="c">Opções consideradas</li>
+<li data-id="b">Status e Contexto (restrições do momento)</li>
+<li data-id="e">Notas de produção: concorrência, falha externa e rollback</li>
+</ol></div>
 <h3>Postmortem blameless: o ADR da falha</h3>
 <p>Se o ADR registra a decisão, o <strong>postmortem</strong> registra o que aconteceu quando a realidade discordou. A prática vem da cultura de SRE do Google, e a palavra <em>blameless</em> é o mecanismo central, não um enfeite de RH: <strong>quando a análise busca culpado, as pessoas escondem informação, e você perde a causa real</strong>. O sistema falhou porque permitia aquela ação — não porque o Fulano a executou. A pergunta certa nunca é "quem fez?", é "o que no sistema tornou isso possível, e o que impede que se repita?".</p>
 
@@ -472,6 +564,16 @@ A migration criou índice sem CONCURRENTLY e travou a tabela sob carga.
 <h3>Leitura aplicada · ADR com custo e postmortem com dono</h3>
 <p>Escrever um ADR sobre decisão já tomada (contexto real, opções que estavam na mesa, razão em bullets crus), passá-lo pelo contraditório do agente e escrever um postmortem blameless de incidente real é o exercício deste bloco — o roteiro executável, com o verificador acusando ADR sem "porque", fica no <code>Laboratório guiado M04</code>, depois do bloco 4. O ponto central: se a seção de consequências não dói, a decisão não foi analisada; e postmortem sem três fatores contribuintes e três ações com prazo é redação.</p>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Seis meses depois, o time decide trocar Pinecone por pgvector. O que fazer com o ADR antigo que escolhia Pinecone?</p>
+<ol><li data-opt="a">Editá-lo para refletir a nova decisão.</li><li data-opt="b">Escrever um novo ADR que o substitui e marcar o antigo como "substituída por NNNN"; o histórico é o produto.</li><li data-opt="c">Apagá-lo, para ninguém se confundir.</li><li data-opt="d">Nada: ADR só vale enquanto o time lembra dele.</li></ol>
+<div class="explain">ADR é imutável e datado: registra o raciocínio daquele contexto. Editar o passado destrói a sequência que mostra como o sistema evoluiu e por que as opções foram descartadas.</div>
+</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual das alternativas é a melhor candidata a ADR pelo "teste de bolso" do módulo?</p>
+<ol><li data-opt="a">Escolher a biblioteca de datas.</li><li data-opt="b">Renomear uma variável.</li><li data-opt="c">Decidir o modelo de multi-tenancy do banco, o que custaria mais de uma semana e migração de dados para reverter.</li><li data-opt="d">Ordem dos parâmetros de uma função privada.</li></ol>
+<div class="explain">O critério é o custo de reverter: mais de uma semana de trabalho ou migração de dado pede ADR. Bibliotecas intercambiáveis e detalhes locais não merecem. Registrar "por que NÃO fizemos o óbvio" também é muito valioso.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Síntese do bloco 3</span>
 <ul>
@@ -506,6 +608,27 @@ A migration criou índice sem CONCURRENTLY e travou a tabela sob carga.
 </table>
 <p>As três primeiras são 80% dos casos e custam microssegundos. A quarta é a mais perigosa e a única que justifica gastar tokens.</p>
 
+<div class="ix"><span class="ix-title">Jogo: quem cobra este doc drift?</span>
+<p>Para cada situação, escolha quem deve detectar: o linter (mecânico, barato) ou o agente (semântico, caro).</p>
+<div class="ix-row"><strong id="m04-dr-s"></strong></div>
+<div class="ix-row"><button class="ix-btn" id="m04-dr-l" type="button">Linter</button><button class="ix-btn" id="m04-dr-a" type="button">Agente revisor</button><button class="ix-btn primary" id="m04-dr-n" type="button" style="display:none">Próxima</button></div>
+<div class="ix-out" id="m04-dr-out" aria-live="polite"></div></div>
+<script>(function(f){if(window.Course)Course.ready(f);else document.addEventListener("DOMContentLoaded",function(){Course.ready(f)});})(function(C){
+ function $(i){return document.getElementById('m04-dr-'+i);}
+ var Q=[
+  ['O doc cita <code>services/parser.py</code>, que foi renomeado para <code>services/reader.py</code>.','l','Referência quebrada: verificável por existência de arquivo, microssegundos.'],
+  ['O ADR não tem a seção "Decisão".','l','Estrutura violada: basta procurar o cabeçalho.'],
+  ['O doc diz "o worker processa em lote de 100", mas o código agora usa 500.','a','Contradição semântica: só quem lê doc e código juntos percebe.'],
+  ['O doc do módulo X não muda há 6 meses, mas o código de X mudou 40 vezes.','l','Obsolescência por idade: heurística via git, determinística.'],
+  ['O diagrama Mermaid tem erro de sintaxe e não renderiza.','l','Estrutura inválida: o parser acusa com exit code.'],
+  ['O README diz "a API exige token", mas a rota agora é pública.','a','Contradição de comportamento: exige entender o diff.']];
+ var i=0,score=0,done=false;
+ function show(){ $('s').innerHTML=(i+1)+'/'+Q.length+'. '+Q[i][0];$('out').textContent='Placar: '+score+'.';$('n').style.display='none';done=false;}
+ function ans(k){ if(done)return; done=true; var ok=(k===Q[i][1]); if(ok)score++; $('out').textContent=(ok?'Certo. ':'Não. ')+Q[i][2]+'\nPlacar: '+score+'/'+(i+1)+'.'; $('n').style.display=''; $('n').textContent=(i<Q.length-1)?'Próxima':'Recomeçar';}
+ $('l').addEventListener('click',function(){ans('l');});$('a').addEventListener('click',function(){ans('a');});
+ $('n').addEventListener('click',function(){ if(i<Q.length-1){i++;}else{i=0;score=0;} show();});
+ show();
+})</script>
 <h3>O linter de docs</h3>
 <p>Código completo, tipado, sem dependência externa além da stdlib. A cópia executável e testada vive no laboratório (<code>lab/src/design_guard/</code>); abaixo, a mesma lógica como exemplo trabalhado de leitura:</p>
 
@@ -699,6 +822,13 @@ if __name__ == "__main__":
 </ul>
 </div>
 
+<div class="stepper"><span class="ix-title">Passo a passo: do PR ao merge com a doc verificada</span>
+<div class="frame" data-caption="1. O PR muda código e docs. Nada ainda foi cobrado."><svg viewBox="0 0 760 150" role="img" aria-label="Pipeline de doc no PR: PR com diff de código e docs" xmlns="http://www.w3.org/2000/svg"><title>Pipeline de doc no PR: PR com diff de código e docs</title><defs><marker id="ar8981594802746092099" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-soft" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">PR aberto</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">diff + docs</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar8981594802746092099)" style="color:var(--fg)"/><rect class="s-box" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Linter</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">exit code</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar8981594802746092099)" style="color:var(--fg)"/><rect class="s-box" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Agente revisor</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">só se linter verde</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar8981594802746092099)" style="color:var(--fg)"/><rect class="s-box" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Comentário</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">até 5 achados</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar8981594802746092099)" style="color:var(--fg)"/><rect class="s-box" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Humano</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">decide</text><text x="380" y="136" text-anchor="middle" font-size="12">PR com diff de código e docs</text></svg></div>
+<div class="frame" data-caption="2. O linter roda primeiro: referências quebradas, seções faltando, Mermaid inválido, doc velha. Barato e determinístico; falhou, o PR para."><svg viewBox="0 0 760 150" role="img" aria-label="Pipeline de doc no PR: Mecânico primeiro" xmlns="http://www.w3.org/2000/svg"><title>Pipeline de doc no PR: Mecânico primeiro</title><defs><marker id="ar637222284550966218" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">PR aberto</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">diff + docs</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar637222284550966218)" style="color:var(--fg)"/><rect class="s-soft" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Linter</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">exit code</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar637222284550966218)" style="color:var(--fg)"/><rect class="s-box" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Agente revisor</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">só se linter verde</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar637222284550966218)" style="color:var(--fg)"/><rect class="s-box" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Comentário</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">até 5 achados</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar637222284550966218)" style="color:var(--fg)"/><rect class="s-box" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Humano</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">decide</text><text x="380" y="136" text-anchor="middle" font-size="12">Mecânico primeiro</text></svg></div>
+<div class="frame" data-caption="3. Só com o linter verde entra o agente: lê diff e doc juntos e procura contradições factuais, como lote de 100 que virou 500."><svg viewBox="0 0 760 150" role="img" aria-label="Pipeline de doc no PR: Semântico depois" xmlns="http://www.w3.org/2000/svg"><title>Pipeline de doc no PR: Semântico depois</title><defs><marker id="ar5895496331867302851" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">PR aberto</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">diff + docs</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar5895496331867302851)" style="color:var(--fg)"/><rect class="s-box" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Linter</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">exit code</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar5895496331867302851)" style="color:var(--fg)"/><rect class="s-soft" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Agente revisor</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">só se linter verde</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar5895496331867302851)" style="color:var(--fg)"/><rect class="s-box" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Comentário</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">até 5 achados</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar5895496331867302851)" style="color:var(--fg)"/><rect class="s-box" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Humano</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">decide</text><text x="380" y="136" text-anchor="middle" font-size="12">Semântico depois</text></svg></div>
+<div class="frame" data-caption="4. O agente comenta no máximo 5 divergências, ou responde exatamente Sem divergências. Ele acusa; não reescreve."><svg viewBox="0 0 760 150" role="img" aria-label="Pipeline de doc no PR: Saída previsível" xmlns="http://www.w3.org/2000/svg"><title>Pipeline de doc no PR: Saída previsível</title><defs><marker id="ar6402049196995279453" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">PR aberto</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">diff + docs</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar6402049196995279453)" style="color:var(--fg)"/><rect class="s-box" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Linter</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">exit code</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar6402049196995279453)" style="color:var(--fg)"/><rect class="s-box" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Agente revisor</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">só se linter verde</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar6402049196995279453)" style="color:var(--fg)"/><rect class="s-soft" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Comentário</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">até 5 achados</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar6402049196995279453)" style="color:var(--fg)"/><rect class="s-box" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Humano</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">decide</text><text x="380" y="136" text-anchor="middle" font-size="12">Saída previsível</text></svg></div>
+<div class="frame" data-caption="5. A pessoa revisora decide: corrige a doc, corrige o código ou justifica. A decisão continua humana."><svg viewBox="0 0 760 150" role="img" aria-label="Pipeline de doc no PR: Decisão humana" xmlns="http://www.w3.org/2000/svg"><title>Pipeline de doc no PR: Decisão humana</title><defs><marker id="ar295536803553548942" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><rect class="s-box" x="10.0" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="78.4" y="69" text-anchor="middle" font-size="13" font-weight="700">PR aberto</text><text x="78.4" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">diff + docs</text><line class="s-line" x1="147.8" y1="72" x2="159.8" y2="72" stroke-width="1.5" marker-end="url(#ar295536803553548942)" style="color:var(--fg)"/><rect class="s-box" x="160.8" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="229.2" y="69" text-anchor="middle" font-size="13" font-weight="700">Linter</text><text x="229.2" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">exit code</text><line class="s-line" x1="298.6" y1="72" x2="310.6" y2="72" stroke-width="1.5" marker-end="url(#ar295536803553548942)" style="color:var(--fg)"/><rect class="s-box" x="311.6" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="380.0" y="69" text-anchor="middle" font-size="13" font-weight="700">Agente revisor</text><text x="380.0" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">só se linter verde</text><line class="s-line" x1="449.4" y1="72" x2="461.4" y2="72" stroke-width="1.5" marker-end="url(#ar295536803553548942)" style="color:var(--fg)"/><rect class="s-box" x="462.4" y="40" width="136.8" height="64" rx="8" stroke-width="1.2"/><text x="530.8" y="69" text-anchor="middle" font-size="13" font-weight="700">Comentário</text><text x="530.8" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">até 5 achados</text><line class="s-line" x1="600.2" y1="72" x2="612.2" y2="72" stroke-width="1.5" marker-end="url(#ar295536803553548942)" style="color:var(--fg)"/><rect class="s-soft" x="613.2" y="40" width="136.8" height="64" rx="8" stroke-width="2.5"/><text x="681.6" y="69" text-anchor="middle" font-size="13" font-weight="700">Humano</text><text x="681.6" y="86" text-anchor="middle" font-size="11" class="s-muted" style="stroke:none">decide</text><text x="380" y="136" text-anchor="middle" font-size="12">Decisão humana</text></svg></div>
+</div>
 <h3>O agente revisor de PR — a camada semântica</h3>
 <p>O linter não sabe que "lote de 100" virou 500. Isso exige ler o diff e a doc juntos. A implementação é uma <em>skill</em> (M00 bloco 2) + um job de CI (M03 bloco 7) — e o ponto de design importante: <strong>o agente não escreve a doc, ele acusa a divergência</strong>. Escrever mudança de doc sem revisão humana é como deixar o agente commitar direto na main.</p>
 
@@ -760,6 +890,16 @@ Regras:
 <p>O formato do runbook merece destaque: "sintoma → o que fazer", com comandos executáveis em cada passo, nunca prosa para pensar — de madrugada ninguém pensa bem. E um detalhe que decide o valor do produto que gera docs: gerar C4 e grafo de dependências (deriváveis do código) é legítimo; inventar ADR retroativo como se fosse fato, não — o gerador pode propor "decisões aparentes" para o humano confirmar. Sem essa linha, o produto vira gerador de mentiras convincentes.</p>
 <p>Como exercício de transferência, estenda a fitness function de cobertura de decisão do laboratório: além de mencionar a área, exija que a menção inclua o custo de reversão — com allowlist explícita, porque nem toda pasta merece ADR (o critério é o do bloco 3).</p>
 
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">O doc diz "retenção de 30 dias" e o código agora usa 90. Quem deve detectar essa divergência?</p>
+<ol><li data-opt="a">O linter determinístico, contando seções.</li><li data-opt="b">Ninguém: é impossível de detectar.</li><li data-opt="c">O próprio autor do código, de memória.</li><li data-opt="d">O agente revisor de PR, pois é uma contradição semântica que exige ler diff e doc juntos.</li></ol>
+<div class="explain">As três primeiras classes de drift (referência quebrada, estrutura violada, obsolescência por idade) são mecânicas e baratas para o linter. A contradição semântica é a única que justifica gastar tokens, e o agente só acusa a divergência, não reescreve a doc.</div>
+</div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que o prompt do agente revisor exige "apenas contradições factuais", "máximo de 5 achados" e a resposta exata "Sem divergências"?</p>
+<ol><li data-opt="a">Para evitar ruído e permitir verificação mecânica da saída; bot de PR que opina em tudo é ignorado em semanas.</li><li data-opt="b">Para economizar espaço no repositório.</li><li data-opt="c">Porque modelos não conseguem escrever mais que 5 frases.</li><li data-opt="d">Para o agente poder editar a documentação sem revisão.</li></ol>
+<div class="explain">Cada restrição existe por um modo de falha observado: sem ela o bot vira gerador de sugestões, lista 30 achados, ou devolve texto livre que o CI não consegue interpretar. A saída previsível é o que permite o gate.</div>
+</div>
 <!-- ============================================ LABORATÓRIO GUIADO -->
 <h2 id="lab-guiado">Laboratório guiado M04</h2>
 <p>A prática do módulo, reunida e executável sobre o diretório de demonstração do lab. Pode atravessar várias sessões: cada etapa termina retomável. Lint, tipos e testes são oráculos do programa; o checkpoint vem depois, separado.</p>
@@ -841,6 +981,22 @@ uv sync --frozen</code></pre>
 </tbody>
 </table>
 <p>Sintaxe de ferramenta (Mermaid) é informação de alto risco: revalidar em até 90 dias. Sinais de mercado citados (arquivos de instrução, renderização no GitHub) são contextuais e não fundamentam regras.</p>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<div class="flashcards">
+<div class="fc"><div class="front">Por que doc velha é pior que doc ausente (para agente)?</div><div class="back">Doc ausente vira invenção; doc velha vira erro confiante, sem desconfiança. É o context poisoning.</div></div>
+<div class="fc"><div class="front">As cinco categorias de documento</div><div class="back">Produto, decisão, guidelines, arquitetura, operação.</div></div>
+<div class="fc"><div class="front">Diátaxis em quatro palavras</div><div class="back">Tutorial, how-to, reference, explanation. Doc confusa quase sempre misturou dois.</div></div>
+<div class="fc"><div class="front">As três camadas de contexto</div><div class="back">Sempre carregado (&lt; 200 linhas), just-in-time por tarefa, consultável mas fora do contexto.</div></div>
+<div class="fc"><div class="front">Hierarquia da verdade</div><div class="back">Teste &gt; código &gt; doc gerada &gt; doc escrita à mão.</div></div>
+<div class="fc"><div class="front">Níveis do C4</div><div class="back">L1 contexto, L2 containers, L3 componentes, L4 código (gerado). L1 e L2 dão 90% do valor.</div></div>
+<div class="fc"><div class="front">Um diagrama, uma pergunta</div><div class="back">No máximo ~7 elementos, mesmo nível de abstração, legenda se a cor significa algo.</div></div>
+<div class="fc"><div class="front">Quando escrever um ADR?</div><div class="back">Reverter custa mais de uma semana ou migração de dado; inclua os "por que NÃO fizemos o óbvio".</div></div>
+<div class="fc"><div class="front">ADR é imutável</div><div class="back">Mudou de ideia: novo ADR que substitui; o antigo vira "substituída por NNNN".</div></div>
+<div class="fc"><div class="front">O que torna um postmortem útil</div><div class="back">Linha do tempo com horário, causas no plural, o que funcionou, ações com dono e prazo, sem culpado.</div></div>
+<div class="fc"><div class="front">Mecânico primeiro, semântico depois</div><div class="back">Linter para o verificável; agente só para contradição semântica, com saída restrita e no máximo 5 achados.</div></div>
+<div class="fc"><div class="front">Doc drift: as quatro classes</div><div class="back">Referência quebrada, estrutura violada, obsolescência por idade (linter) e contradição semântica (agente).</div></div>
+</div>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

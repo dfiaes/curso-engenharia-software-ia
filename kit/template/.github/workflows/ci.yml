@@ -1,0 +1,29 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # On-premise: troque por [self-hosted, linux, onprem] (runner próprio, ver deploy.yml).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # necessário para git diff BASE...HEAD
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # - uses: actions/setup-dotnet@v4
+      #   with: { dotnet-version: "8.0.x" }
+      - name: Garantir base de comparação
+        run: git fetch origin ${{ github.base_ref || 'main' }} --depth=1000
+      - name: make check
+        env:
+          BASE: origin/${{ github.base_ref || 'main' }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: make check BASE="$BASE"

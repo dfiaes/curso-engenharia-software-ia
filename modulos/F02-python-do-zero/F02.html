@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>F02 · Python do Zero: Tipos, Coleções, Funções, Erros, Arquivos, Módulos e Testes</title>
 <meta name="color-scheme" content="light dark">
-<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("curso.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}window.Course=window.Course||{ready:function(f){(window.__courseQ=window.__courseQ||[]).push(f)}};</script>
 <link rel="stylesheet" href="../../assets/course.css">
 </head>
 <body>
@@ -97,6 +97,8 @@
 <figcaption>Só módulos importados passam pelo cache <code>.pyc</code>; o script de entrada é recompilado a cada execução.</figcaption>
 </figure>
 
+
+<div class="ix"><span class="ix-title">Diagrama: do arquivo à execução</span><svg viewBox="0 0 700 200" role="img" style="width:100%;height:auto;max-width:700px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Pipeline do CPython: fonte, árvore sintática, bytecode, máquina virtual</title><defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="20" width="120" height="56" rx="8" class="s-box" /><text x="70" y="44" font-size="12" text-anchor="middle">código-fonte</text><text x="70" y="60" font-size="12" text-anchor="middle">.py</text><rect x="150" y="20" width="120" height="56" rx="8" class="s-box" /><text x="210" y="44" font-size="12" text-anchor="middle">tokens e AST</text><text x="210" y="60" font-size="12" text-anchor="middle">(análise)</text><rect x="290" y="20" width="120" height="56" rx="8" class="s-soft" /><text x="350" y="44" font-size="12" text-anchor="middle">bytecode</text><text x="350" y="60" font-size="12" text-anchor="middle">(code object)</text><rect x="430" y="20" width="120" height="56" rx="8" class="s-box" /><text x="490" y="44" font-size="12" text-anchor="middle">máquina virtual</text><text x="490" y="60" font-size="12" text-anchor="middle">(laço de avaliação)</text><rect x="570" y="20" width="120" height="56" rx="8" class="s-box" /><text x="630" y="44" font-size="12" text-anchor="middle">efeitos</text><text x="630" y="60" font-size="12" text-anchor="middle">e resultado</text><line x1="130" y1="48" x2="150" y2="48" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar1)"/><line x1="270" y1="48" x2="290" y2="48" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar1)"/><line x1="410" y1="48" x2="430" y2="48" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar1)"/><line x1="550" y1="48" x2="570" y2="48" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar1)"/><rect x="290" y="120" width="120" height="48" rx="8" class="s-box" /><text x="350" y="142" font-size="12" text-anchor="middle">__pycache__/</text><text x="350" y="158" font-size="12" text-anchor="middle">módulo.pyc</text><line x1="350" y1="76" x2="350" y2="118" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar1)"/><text x="425" y="142" font-size="12" text-anchor="start">só módulos IMPORTADOS</text><text x="425" y="160" font-size="12" text-anchor="start">são salvos; o script de entrada não</text><text x="350" y="190" font-size="12" text-anchor="middle">O bytecode é detalhe de versão do CPython: inspecione com dis, não dependa dele.</text></svg></div>
 <h3>Lendo bytecode com <code>dis</code></h3>
 <p>O módulo <code>dis</code> mostra o que o compilador produziu. Não é algo que você usa todo dia; é a ferramenta que encerra discussões sobre "o que o Python faz nessa linha".</p>
 <pre><code>$ cat a.py
@@ -116,6 +118,12 @@ $ python a.py
 (2,) ('a', 'b')</code></pre>
 <p>Leia assim: empilha <code>a</code> e <code>b</code> (variáveis locais, acesso por índice, sem busca por nome), empilha o inteiro 2, multiplica, soma, devolve. Note a ordem: a multiplicação vem antes da soma porque a precedência já foi resolvida na AST. Os nomes exatos das instruções (<code>LOAD_FAST_BORROW_LOAD_FAST_BORROW</code>, <code>LOAD_SMALL_INT</code>) <strong>mudam entre versões menores</strong>: o bytecode é detalhe de implementação, sem garantia de compatibilidade. Use <code>dis</code> para entender, nunca para depender.</p>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Você roda <code>python app.py</code> e <code>app.py</code> importa <code>util.py</code>. Depois da primeira execução, o que aparece em <code>__pycache__</code>?</p>
+<ol><li data-opt="a"><code>app.cpython-*.pyc</code> e <code>util.cpython-*.pyc</code></li><li data-opt="b">Só <code>util.cpython-*.pyc</code>: o script de entrada não é cacheado</li><li data-opt="c">Nada: o <code>.pyc</code> só é criado com <code>python -O</code></li><li data-opt="d">Só <code>app.cpython-*.pyc</code></li></ol>
+<div class="explain">O cache <code>.pyc</code> existe para acelerar <em>importações</em>. O módulo de entrada é compilado a cada execução e o bytecode não é salvo. O arquivo é específico da versão (<code>cpython-3XX</code>) e é apenas otimização: apagá-lo é sempre seguro.</div>
+</div>
 <h3>REPL, script e módulo: três jeitos de começar</h3>
 <p>O <strong>REPL</strong> (<code>python</code> sem argumentos) lê uma expressão, avalia e imprime; excelente para explorar uma API (<code>help(obj)</code>, <code>dir(obj)</code>, <code>_</code> guarda o último resultado). Mas estado acumulado no REPL é a fonte clássica de "funciona aqui": um nome definido há duas horas continua vivo. Para qualquer coisa que importe, escreva o arquivo.</p>
 <p>Há duas formas de executar um arquivo, e a diferença é <em>como o módulo de entrada é localizado</em>:</p>
@@ -187,6 +195,12 @@ $ command -v -a pip python</code></pre>
 <p>Um <code>types.py</code>, <code>logging.py</code>, <code>queue.py</code> ou <code>test.py</code> ao lado do seu código sombreia o módulo padrão, e o erro aparece longe, dentro de <em>outra</em> biblioteca que importa o módulo da stdlib. O traceback aponta para código de terceiros, não para o seu arquivo. Diagnóstico em dez segundos: <code>python -c "import modulo; print(modulo.__file__)"</code>. Se o caminho cai na sua pasta, achou. Prevenção: nomes de módulo próprios nunca coincidem com a stdlib, e scripts de automação rodam com <code>-I</code>.</p>
 </div>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Você está em <code>/proj</code> e roda <code>python src/app.py</code>. Qual pasta entra em <code>sys.path[0]</code>?</p>
+<ol><li data-opt="a"><code>/proj</code>, o diretório corrente</li><li data-opt="b">O diretório do Python instalado</li><li data-opt="c"><code>/proj/src</code>, a pasta do script</li><li data-opt="d">Nenhuma: o script não altera <code>sys.path</code></li></ol>
+<div class="explain">Com <code>python arquivo.py</code>, <code>sys.path[0]</code> é a pasta do <em>script</em>. Com <code>python -m pacote.modulo</code>, entra o diretório <em>corrente</em>. Essa diferença explica por que um mesmo <code>import</code> funciona de um jeito e falha do outro.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>CPython compila para bytecode e executa numa máquina de pilha adaptativa; só módulos importados vão para o cache <code>.pyc</code>, e o bytecode é detalhe de versão. O módulo de entrada se chama <code>__main__</code>; <code>python arquivo.py</code> põe a pasta do script em <code>sys.path[0]</code>, <code>python -m</code> põe o diretório corrente. Ambiente virtual é uma pasta com seu <code>site-packages</code>; o <code>uv</code> junta Python, venv e lockfile. Para saber "qual Python", olhe <code>sys.executable</code> e <code>sys.path</code>, não o que você acha que instalou.</p>
@@ -252,6 +266,83 @@ TypeError: 'tuple' object does not support item assignment
 (1, [2, 3, 4])</code></pre>
 <p>O <code>+=</code> executa em duas etapas: primeiro <code>t[1].__iadd__([4])</code>, que muta a lista com sucesso; depois tenta atribuir o resultado em <code>t[1]</code>, o que a tupla proíbe. O erro e o efeito acontecem juntos. Isso também define <strong>hashabilidade</strong>: só objetos cujo valor não muda podem ser chave de <code>dict</code> ou elemento de <code>set</code> (<code>hash([1])</code> levanta <code>TypeError: unhashable type: 'list'</code>), e uma tupla com lista dentro herda a proibição.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: nomes, objetos e mutabilidade</span>
+<p>Cada nome é um rótulo que aponta para um objeto. Escolha um cenário e avance linha a linha para ver <em>quem aponta para quê</em>.</p>
+<div class="ix-row"><label for="f02-al-sc">Cenário:</label><select id="f02-al-sc"></select>
+<button type="button" class="ix-btn" id="f02-al-prev">&larr; Voltar</button><button type="button" class="ix-btn primary" id="f02-al-next">Executar próxima linha &rarr;</button></div>
+<pre id="f02-al-code" style="margin:6px 0"></pre>
+<div id="f02-al-svg"></div><div class="ix-out" id="f02-al-out" aria-live="polite"></div></div>
+
+<script>
+(function(){function go(C){
+
+var SC=[
+{n:"Atribuição não copia",steps:[
+ {c:"a = [1, 2]",names:{a:"o1"},objs:[["o1",300,30,[1,2]]],say:"O literal cria um objeto lista; o nome a aponta para ele."},
+ {c:"b = a",names:{a:"o1",b:"o1"},objs:[["o1",300,30,[1,2]]],say:"Nenhum objeto novo: b é outro rótulo para o MESMO objeto (a is b é True)."},
+ {c:"b.append(3)",names:{a:"o1",b:"o1"},objs:[["o1",300,30,[1,2,3]]],say:"Mutar o objeto: quem olha por a ou por b vê [1, 2, 3]."},
+ {c:"b = [9]",names:{a:"o1",b:"o2"},objs:[["o1",300,30,[1,2,3]],["o2",300,110,[9]]],say:"Religar o nome b não afeta a: a continua em [1, 2, 3]."}]},
+{n:"Cópia rasa × profunda",steps:[
+ {c:"a = [[1], [2]]",names:{a:"o1"},objs:[["o1",120,20,[">o2",">o3"]],["o2",120,120,[1]],["o3",190,120,[2]]],say:"a é uma lista de duas referências para duas listas internas."},
+ {c:"b = a.copy()",names:{a:"o1",b:"o4"},objs:[["o1",120,20,[">o2",">o3"]],["o4",300,20,[">o2",">o3"]],["o2",120,120,[1]],["o3",190,120,[2]]],say:"Cópia RASA: a lista externa é nova, mas as listas internas são as mesmas."},
+ {c:"b[0].append(99)",names:{a:"o1",b:"o4"},objs:[["o1",120,20,[">o2",">o3"]],["o4",300,20,[">o2",">o3"]],["o2",120,120,[1,99]],["o3",190,120,[2]]],say:"Mudou o objeto compartilhado: a[0] também é [1, 99]."},
+ {c:"c = copy.deepcopy(a)",names:{a:"o1",b:"o4",c:"o5"},objs:[["o1",120,20,[">o2",">o3"]],["o4",300,20,[">o2",">o3"]],["o5",480,20,[">o6",">o7"]],["o2",120,120,[1,99]],["o3",190,120,[2]],["o6",480,120,[1,99]],["o7",550,120,[2]]],say:"Cópia PROFUNDA: todo o grafo foi duplicado; c não depende mais de a."}]},
+{n:"[[0]*2]*3",steps:[
+ {c:"g = [[0] * 2] * 3",names:{g:"o1"},objs:[["o1",200,20,[">o2",">o2",">o2"]],["o2",230,120,[0,0]]],say:"A multiplicação repete a REFERÊNCIA: as 3 posições apontam para a mesma sublista."},
+ {c:"g[0][0] = 1",names:{g:"o1"},objs:[["o1",200,20,[">o2",">o2",">o2"]],["o2",230,120,[1,0]]],say:"Mudou uma só sublista, mas as três linhas mostram [1, 0]."},
+ {c:"g = [[0] * 2 for _ in range(3)]",names:{g:"o3"},objs:[["o3",200,20,[">o4",">o5",">o6"]],["o4",150,120,[0,0]],["o5",250,120,[0,0]],["o6",350,120,[0,0]]],say:"A comprehension executa [0]*2 três vezes: três sublistas independentes."}]},
+{n:"Função: mutar × religar",steps:[
+ {c:"xs = [1]",names:{xs:"o1"},objs:[["o1",300,30,[1]]],say:"Um objeto lista, um nome."},
+ {c:"def f(l): l.append(2)   ->   f(xs)",names:{xs:"o1",l:"o1"},objs:[["o1",300,30,[1,2]]],say:"O parâmetro l é um novo nome para o mesmo objeto; append muta e quem chamou enxerga."},
+ {c:"def g(l): l = l + [3]   ->   g(xs)",names:{xs:"o1",l:"o2"},objs:[["o1",300,30,[1,2]],["o2",300,110,[1,2,3]]],say:"l + [3] cria uma lista nova e RELIGA o nome local; xs continua [1, 2]."},
+ {c:"def h(l): l += [3]   ->   h(xs)",names:{xs:"o1",l:"o1"},objs:[["o1",300,30,[1,2,3]]],say:"Pegadinha: += em lista é in-place (__iadd__), então MUTA o objeto e xs vê [1, 2, 3]."}]}
+];
+var sel=document.getElementById("f02-al-sc"),code=document.getElementById("f02-al-code"),host=document.getElementById("f02-al-svg"),out=document.getElementById("f02-al-out"),nx=document.getElementById("f02-al-next"),pv=document.getElementById("f02-al-prev");
+SC.forEach(function(s,i){var o=document.createElement("option");o.value=i;o.textContent=s.n;sel.appendChild(o);});
+var si=0,k=0;
+function render(){
+  var st=SC[si].steps[k],s='<svg viewBox="0 0 640 190" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Nomes apontando para objetos</title><defs><marker id="f02-al-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>';
+  var pos={},ids=[];
+  st.objs.forEach(function(o){var w=Math.max(54,o[3].length*34+8);pos[o[0]]={x:o[1],y:o[2],w:w};});
+  var nm=Object.keys(st.names),i;
+  nm.forEach(function(n,j){
+    var y=20+j*38,t=pos[st.names[n]];
+    s+='<rect x="16" y="'+y+'" width="64" height="28" rx="6" class="s-soft"/><text x="48" y="'+(y+19)+'" text-anchor="middle" font-size="14" font-weight="700">'+n+'</text>';
+    s+='<line x1="80" y1="'+(y+14)+'" x2="'+(t.x-2)+'" y2="'+(t.y+17)+'" class="s-line" stroke-width="1.5" marker-end="url(#f02-al-ar)"/>';
+  });
+  st.objs.forEach(function(o){
+    var p=pos[o[0]];
+    s+='<rect x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="34" rx="6" class="s-box" stroke-width="2"/>';
+    o[3].forEach(function(it,j){
+      var cx=p.x+8+j*34+17;
+      if(typeof it==="string"&&it.charAt(0)===">"){
+        var tg=pos[it.slice(1)];
+        s+='<circle cx="'+cx+'" cy="'+(p.y+17)+'" r="4" class="s-accent"/>';
+        s+='<line x1="'+cx+'" y1="'+(p.y+21)+'" x2="'+(tg.x+Math.min(20,tg.w/2))+'" y2="'+(tg.y-2)+'" class="s-accent" stroke-width="1.4" marker-end="url(#f02-al-ar)"/>';
+      }else s+='<text x="'+cx+'" y="'+(p.y+22)+'" text-anchor="middle" font-size="14">'+it+'</text>';
+    });
+  });
+  host.innerHTML=s+'</svg>';
+  var lines=SC[si].steps.map(function(x,j){return (j<=k?"> ":"  ")+x.c;});
+  code.textContent=lines.join("\n");
+  out.textContent=st.say;
+  pv.disabled=k===0;nx.disabled=k===SC[si].steps.length-1;
+}
+sel.addEventListener("change",function(){si=+sel.value;k=0;render();});
+nx.addEventListener("click",function(){k=Math.min(SC[si].steps.length-1,k+1);render();});
+pv.addEventListener("click",function(){k=Math.max(0,k-1);render();});
+render();
+
+}
+if(window.Course)Course.ready(go);else document.addEventListener("DOMContentLoaded",function(){Course.ready(go)});})();
+</script>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Dado <code>def f(l): l += [4]</code> e <code>xs = [1]</code>, o que vale <code>xs</code> depois de <code>f(xs)</code>?</p>
+<ol><li data-opt="a"><code>[1]</code>: o parâmetro é uma cópia</li><li data-opt="b"><code>[1]</code>: <code>+=</code> religa o nome local</li><li data-opt="c"><code>[1, 4]</code>: <code>+=</code> em lista muta o objeto no lugar</li><li data-opt="d">Erro: não se pode alterar um argumento</li></ol>
+<div class="explain">O Python passa o argumento "por atribuição": <code>l</code> e <code>xs</code> são rótulos do mesmo objeto. Em listas, <code>+=</code> chama <code>__iadd__</code>, que estende <em>in-place</em>. Já <code>l = l + [4]</code> criaria outra lista e só religaria o nome local. O mesmo <code>+=</code> em uma tupla ou <code>int</code> religa, porque eles são imutáveis.</div>
+</div>
 <h3>Números: três famílias, três contratos</h3>
 <p><strong><code>int</code> tem precisão arbitrária.</strong> Não existe overflow: <code>2**100</code> é exato (<code>1267650600228229401496703205376</code>) e ocupa só os bytes de que precisa (28 bytes para o 1; 40 para 2**100). O custo é aritmética proporcional ao tamanho, e um limite de segurança: converter inteiros de mais de 4300 dígitos para <code>str</code> levanta <code>ValueError</code> (<code>sys.get_int_max_str_digits()</code>), defesa contra negação de serviço por entrada hostil. A divisão inteira e o módulo seguem o <em>piso</em>: <code>7 // -2</code> é <code>-4</code> e <code>7 % -2</code> é <code>-1</code>, de modo que <code>(a // b) * b + a % b == a</code> sempre. <code>bool</code> é subclasse de <code>int</code> (<code>True + True == 2</code>).</p>
 <p><strong><code>float</code> é o IEEE 754 binário de 64 bits</strong>: 53 bits de mantissa, cerca de 15–17 dígitos decimais significativos. A maioria dos decimais finitos não é representável em base 2, então o <code>float</code> guarda o racional binário mais próximo:</p>
@@ -277,6 +368,8 @@ Decimal('0.1000000000000000055511151231257827021181583404541015625')</code></pre
 (2, 4, 2.67)</code></pre>
 <p>O <code>round()</code> embutido também arredonda metade para o par (2.5 vira 2). Em <code>float</code>, <code>round(2.665, 2)</code> dá 2.67 porque o valor binário real é um pouco maior que 2.665, ou seja, o resultado depende da representação, não da regra. Dinheiro pede <code>Decimal</code> (como no laboratório) ou inteiro de centavos; qual regra de arredondamento vale (fiscal, contratual) é decisão de negócio, não de biblioteca. Estatística e ML usam <code>float</code> de propósito: velocidade e erro relativo pequeno importam mais que exatidão decimal.</p>
 
+
+<div class="tabs"><section data-tab="int"><p>Exato e de tamanho ilimitado: <code>2**200</code> é calculado sem estouro. Divisão <code>/</code> devolve <code>float</code>; use <code>//</code> para a divisão inteira.</p></section><section data-tab="float"><p>Binário aproximado (IEEE 754): <code>0.1 + 0.2 == 0.3</code> é <code>False</code>. Use <code>math.isclose</code> para comparar e nunca use float para dinheiro.</p></section><section data-tab="Decimal"><p>Decimal exato, <em>quando construído de <code>str</code></em>: <code>Decimal("0.10")</code>. <code>Decimal(0.1)</code> herda o erro binário do float. Escolha o contexto (precisão e arredondamento) explicitamente.</p></section></div>
 <h3><code>str</code> versus <code>bytes</code>: texto não é byte</h3>
 <p><code>str</code> é uma sequência imutável de <strong>pontos de código Unicode</strong>. <code>bytes</code> é uma sequência imutável de inteiros 0–255. A ponte é a <strong>codificação</strong>: <code>str.encode(enc)</code> produz bytes; <code>bytes.decode(enc)</code> volta. Sem saber a codificação, bytes não são texto.</p>
 <pre><code>&gt;&gt;&gt; s = "café"
@@ -316,6 +409,12 @@ InvalidRowError: linha 3, campo 'amount': valor inválido: '٣٤'
 <p>Dois caminhos trazem o <code>float</code> de volta sem aviso: construir <code>Decimal</code> a partir de um <code>float</code> (já arredondado em binário) e passar dinheiro por JSON, onde o número é um literal que a maioria dos leitores converte para <code>float</code>. Por isso o <code>report_payload</code> do laboratório serializa os <code>Decimal</code> como <strong>strings</strong>. A regra vale na fronteira: o dado monetário atravessa APIs, CSV e filas como texto decimal (ou centavos inteiros) e só vira <code>Decimal</code> dentro do domínio.</p>
 </div>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">O que <code>Decimal(0.1) == Decimal("0.1")</code> devolve?</p>
+<ol><li data-opt="a"><code>True</code>: os dois representam um décimo</li><li data-opt="b"><code>True</code>, mas só depois de <code>quantize</code></li><li data-opt="c">Erro de tipo</li><li data-opt="d"><code>False</code>: <code>Decimal(0.1)</code> converte o float aproximado, com dezenas de dígitos</li></ol>
+<div class="explain">O literal <code>0.1</code> já é um <code>float</code> aproximado (0.1000000000000000055...). <code>Decimal(float)</code> reproduz esse valor exatamente; só <code>Decimal("0.1")</code> guarda um décimo. A regra: construa de <code>str</code> (ou de inteiros) quando precisar de exatidão decimal.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Nome é rótulo; atribuição liga, não copia; argumento é passado por atribuição, então mutar o objeto se vê de fora e religar o nome não. <code>is</code> é identidade, <code>==</code> é valor. Imutável não é profundamente imutável, e só valor estável é hashável. <code>int</code> é exato e ilimitado, <code>float</code> é binário aproximado, <code>Decimal</code> é decimal exato quando construído de <code>str</code>. <code>str</code> é texto Unicode, <code>bytes</code> são bytes, e a codificação é o contrato entre eles; normalize antes de comparar.</p>
@@ -363,6 +462,14 @@ def g():
 UnboundLocalError: cannot access local variable 'x' where it is not associated with a value</code></pre>
 <p>Para atribuir a um nome de escopo externo é preciso declarar <code>global x</code> (módulo) ou <code>nonlocal x</code> (função envolvente). Ler nunca precisa de declaração; <em>mutar</em> um objeto externo (<code>lista.append</code>) também não, porque não é atribuição ao nome. Variáveis de <code>for</code> e de <code>with</code> vazam para o escopo da função (<code>i</code> existe depois do laço); as de comprehension não (bloco 4).</p>
 
+
+<div class="ix"><span class="ix-title">Diagrama: a regra LEGB</span><svg viewBox="0 0 560 260" role="img" style="width:100%;height:auto;max-width:560px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Regra LEGB: Local dentro de Enclosing dentro de Global dentro de Built-in</title><defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="10" width="540" height="240" rx="10" class="s-box" /><text x="24" y="32" font-size="13" text-anchor="start" font-weight="700">B  Built-in: len, print, ValueError…</text><rect x="30" y="44" width="500" height="190" rx="10" class="s-box" /><text x="44" y="66" font-size="13" text-anchor="start" font-weight="700">G  Global (módulo): nomes definidos no arquivo</text><rect x="50" y="78" width="460" height="140" rx="10" class="s-box" /><text x="64" y="100" font-size="13" text-anchor="start" font-weight="700">E  Enclosing: variáveis de funções externas (closures)</text><rect x="70" y="112" width="420" height="92" rx="10" class="s-soft" /><text x="84" y="134" font-size="13" text-anchor="start" font-weight="700">L  Local: parâmetros e nomes atribuídos na função</text><text x="84" y="158" font-size="12" text-anchor="start">A busca vai de dentro para fora e para no primeiro nome achado.</text><text x="84" y="178" font-size="12" text-anchor="start">Atribuir a um nome em qualquer ponto o torna local em TODA a função.</text></svg></div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Considere <code>x = 1</code> no módulo e <code>def f(): print(x); x = 2</code>. O que ocorre ao chamar <code>f()</code>?</p>
+<ol><li data-opt="a">Imprime <code>1</code></li><li data-opt="b"><code>UnboundLocalError</code>: como há atribuição a <code>x</code>, ele é local em toda a função</li><li data-opt="c">Imprime <code>2</code></li><li data-opt="d"><code>NameError</code>: <code>x</code> não existe</li></ol>
+<div class="explain">O compilador decide o escopo de cada nome <em>antes</em> de executar: se há atribuição a <code>x</code> no corpo, <code>x</code> é local em toda a função, inclusive acima da atribuição. O <code>print(x)</code> lê um local ainda sem valor. Use <code>global x</code>/<code>nonlocal x</code> para alterar o externo, ou melhor, passe e devolva valores.</div>
+</div>
 <h3>Parâmetros: a assinatura completa</h3>
 <p>A forma geral é <code>def f(a, b=2, /, c=3, *args, d, e=5, **kw)</code>. O que cada marca faz:</p>
 <table>
@@ -404,6 +511,20 @@ def add2(item, bag=None):
 ([1], [2])</code></pre>
 <p>Note o primeiro resultado: a tupla de retorno contém o mesmo objeto duas vezes, por isso ambos exibem <code>[1, 2]</code>; a lista só foi impressa depois das duas chamadas. A regra: default só imutável (<code>None</code>, número, string, tupla). Se <code>None</code> for um valor legítimo, use um objeto sentinela próprio (<code>_MISSING = object()</code> e <code>is _MISSING</code>). O mesmo mecanismo faz o <code>dataclass</code> recusar <code>tags: list = []</code> (bloco 8).</p>
 
+
+<div class="tabs"><section data-tab="Errado"><pre><code>def adicionar(item, lista=[]):
+    lista.append(item)
+    return lista
+
+adicionar(1)   # [1]
+adicionar(2)   # [1, 2]  &larr; surpresa: a mesma lista, criada uma vez no def</code></pre></section><section data-tab="Certo"><pre><code>def adicionar(item, lista=None):
+    if lista is None:
+        lista = []
+    lista.append(item)
+    return lista
+
+adicionar(1)   # [1]
+adicionar(2)   # [2]</code></pre></section></div>
 <h3>Closures e a ligação tardia</h3>
 <p>Funções são objetos de primeira classe: podem ser atribuídas, passadas e devolvidas. Uma função definida dentro de outra <strong>captura os nomes</strong> da envolvente que usa (<em>variáveis livres</em>), guardados em "células". Capturam-se <em>variáveis</em>, não valores:</p>
 <pre><code>def counter():
@@ -472,6 +593,12 @@ def dobro(x: int) -&gt; int:
 <p>Um <code>return</code>, <code>break</code> ou <code>continue</code> dentro de <code>finally</code> descarta a exceção em voo e o <code>return</code> do <code>try</code>. No Python 3.14, o compilador avisa (PEP 765): <code>SyntaxWarning: 'continue' in a 'finally' block</code>. Em um teste real, uma função com <code>for i in range(2): try: return i finally: continue</code> devolveu <code>None</code>, não <code>0</code>. Código assim passa em revisão distraída e apaga erros de produção. Trate esse <code>SyntaxWarning</code> como erro (<code>-W error</code> nos testes) e deixe o <code>finally</code> só limpar.</p>
 </div>
 
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual o resultado de <code>fs = [lambda: i for i in range(3)]; [f() for f in fs]</code>?</p>
+<ol><li data-opt="a"><code>[2, 2, 2]</code>: o closure captura a variável <code>i</code>, não o valor</li><li data-opt="b"><code>[0, 1, 2]</code></li><li data-opt="c"><code>[0, 0, 0]</code></li><li data-opt="d">Erro, pois <code>i</code> não existe fora do laço</li></ol>
+<div class="explain">Closures capturam <em>variáveis</em>, e todas as lambdas compartilham a mesma <code>i</code>, que vale 2 quando são chamadas. Para travar o valor: <code>lambda i=i: i</code> (default avaliado na criação) ou use <code>functools.partial</code>.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p><code>def</code> executa uma vez: defaults são avaliados ali, então só imutáveis, ou <code>None</code> mais criação interna. Um nome é local em toda a função se houver atribuição a ele (LEGB). Closures capturam variáveis, não valores: o <code>lambda</code> no laço lê a última; trave com <code>i=i</code>. Parâmetros só-nomeados deixam a API legível. <code>match</code> casa a forma do dado, não igualdade, e nome simples captura. Anotações são metadados, avaliados sob demanda desde o 3.14.</p>
@@ -549,6 +676,14 @@ RuntimeError: dictionary changed size during iteration</code></pre>
 [[1, 0], [0, 0], [0, 0]]</code></pre>
 <p>A cópia rasa <code>s</code> compartilha a sublista com <code>n</code>; a profunda <code>d</code> não. E <code>[[0]*2]*3</code> repete a <em>mesma</em> sublista três vezes (o <code>*</code> copia a referência): o idioma correto para matriz é a comprehension. O laboratório tem o caso fixado em <code>test_shallow_vs_deep_copy</code>.</p>
 
+
+<div class="tabs"><section data-tab="Atribuição"><p><code>b = a</code>: nenhum objeto novo. <code>b is a</code> é <code>True</code>.</p></section><section data-tab="Cópia rasa"><p><code>a.copy()</code>, <code>a[:]</code>, <code>list(a)</code>, <code>copy.copy(a)</code>: container novo, elementos compartilhados. Seguro se os elementos são imutáveis (números, strings).</p></section><section data-tab="Cópia profunda"><p><code>copy.deepcopy(a)</code>: duplica todo o grafo de objetos alcançável (e preserva ciclos). Mais lenta; use quando há mutáveis aninhados que você vai alterar.</p></section></div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Depois de <code>g = [[0] * 2] * 3</code> e <code>g[0][0] = 1</code>, quanto vale <code>g</code>?</p>
+<ol><li data-opt="a"><code>[[1, 0], [0, 0], [0, 0]]</code></li><li data-opt="b"><code>[[1, 0]]</code></li><li data-opt="c"><code>[[1, 0], [1, 0], [1, 0]]</code>: as três posições são a mesma sublista</li><li data-opt="d">Erro: não se pode multiplicar lista de listas</li></ol>
+<div class="explain">O operador <code>*</code> repete a <em>referência</em> à sublista, não a cria três vezes. Use <code>[[0] * 2 for _ in range(3)]</code>, que avalia <code>[0] * 2</code> a cada volta e produz três listas independentes.</div>
+</div>
 <h3>Exemplo trabalhado: agregação do laboratório</h3>
 <p>O núcleo do relatório é uma agregação por categoria. Leia <code>aggregate.py</code> com o que este bloco ensinou:</p>
 <pre><code>def total_by_category(expenses: Iterable[Expense]) -&gt; dict[str, Decimal]:
@@ -581,6 +716,12 @@ def monthly_totals(expenses: Iterable[Expense]) -&gt; dict[str, Decimal]:
 <p>Dois defeitos com a mesma origem. (1) <code>groupby("aabbaa")</code> produz <em>três</em> grupos (<code>a</code>, <code>b</code>, <code>a</code>), porque agrupa corridas adjacentes, ao contrário do <code>GROUP BY</code> do SQL; sem ordenar, o total por mês sai fragmentado e não dá erro nenhum. (2) Cada <code>grupo</code> é um iterador <em>compartilhado</em> com o <code>groupby</code>: avançar para a próxima chave o invalida. Por isso a comprehension acima consome o grupo imediatamente (<code>sum(... for e in group)</code>); guardar <code>group</code> numa lista de "grupos" para usar depois dá grupos vazios.</p>
 </div>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Para <code>itertools.groupby(["a", "b", "a"])</code>, quantos grupos saem?</p>
+<ol><li data-opt="a">2 grupos: <code>a</code> e <code>b</code></li><li data-opt="b">3 grupos: <code>groupby</code> só junta elementos consecutivos iguais</li><li data-opt="c">1 grupo</li><li data-opt="d">Erro: strings não são agrupáveis</li></ol>
+<div class="explain"><code>groupby</code> agrupa <em>sequências consecutivas</em> com a mesma chave, sem olhar o resto, e por isso a entrada deve vir ordenada pela mesma chave. Sem ordenar você obtém "a", "b", "a". Para contar sem ordenar, use <code>collections.Counter</code> ou um <code>dict</code>.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p><code>list</code> é vetor de referências com <code>append</code> amortizado; buscar nela é linear e tirar do início é linear. <code>dict</code> e <code>set</code> são tabelas de hash: pertinência O(1) médio, chaves hashable, <code>dict</code> ordenado por inserção. <code>sorted</code> é estável e usa <code>key</code>. Comprehension tem escopo próprio. Cópia rasa compartilha o que está dentro; <code>[[0]*2]*3</code> repete uma só sublista. <code>groupby</code> exige entrada ordenada pela mesma chave.</p>
@@ -677,6 +818,19 @@ RuntimeError: generator raised StopIteration</code></pre>
 &gt;&gt;&gt; list(itertools.takewhile(lambda v: v &lt; 30, fib()))
 [0, 1, 1, 2, 3, 5, 8, 13, 21]</code></pre>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: um gerador retoma de onde parou</span>
+<div class="frame" data-caption="1. g = contar(2): a função NÃO executa; só nasce o gerador"><svg viewBox="0 0 600 170" role="img" style="width:100%;height:auto;max-width:600px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>1. g = contar(2): a função NÃO executa; só nasce o gerador</title><defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="10" width="300" height="150" rx="8" class="s-box" /><text x="24" y="30" font-size="12" text-anchor="start" font-weight="700">corpo da função</text><text x="26" y="56" font-size="13" text-anchor="start">def contar(n):</text><text x="26" y="76" font-size="13" text-anchor="start">    i = 0</text><text x="26" y="96" font-size="13" text-anchor="start">    while i &lt; n:</text><text x="26" y="116" font-size="13" text-anchor="start">        yield i</text><text x="26" y="136" font-size="13" text-anchor="start">        i += 1</text><rect x="330" y="10" width="260" height="150" rx="8" class="s-box" /><text x="344" y="30" font-size="12" text-anchor="start" font-weight="700">objeto gerador g = contar(2)</text><text x="346" y="56" font-size="13" text-anchor="start">estado: criado</text><text x="346" y="76" font-size="13" text-anchor="start">i: (não existe ainda)</text><text x="344" y="140" font-size="13" text-anchor="start" font-weight="700">nenhum valor produzido</text></svg></div>
+<div class="frame" data-caption="2. next(g): roda até o primeiro yield e suspende"><svg viewBox="0 0 600 170" role="img" style="width:100%;height:auto;max-width:600px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>2. next(g): roda até o primeiro yield e suspende</title><defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="10" width="300" height="150" rx="8" class="s-box" /><text x="24" y="30" font-size="12" text-anchor="start" font-weight="700">corpo da função</text><text x="26" y="56" font-size="13" text-anchor="start">def contar(n):</text><text x="26" y="76" font-size="13" text-anchor="start">    i = 0</text><text x="26" y="96" font-size="13" text-anchor="start">    while i &lt; n:</text><text x="26" y="116" font-size="13" text-anchor="start">        yield i</text><text x="26" y="136" font-size="13" text-anchor="start">        i += 1</text><rect x="16" y="100" width="288" height="22" rx="4" class="s-soft" fill-opacity="0.35"/><line x1="2" y1="112" x2="14" y2="112" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar4)"/><rect x="330" y="10" width="260" height="150" rx="8" class="s-box" /><text x="344" y="30" font-size="12" text-anchor="start" font-weight="700">objeto gerador g = contar(2)</text><text x="346" y="56" font-size="13" text-anchor="start">estado: suspenso</text><text x="346" y="76" font-size="13" text-anchor="start">i = 0</text><text x="344" y="140" font-size="13" text-anchor="start" font-weight="700">next(g) -&gt; 0</text></svg></div>
+<div class="frame" data-caption="3. next(g): retoma logo depois do yield, com o estado preservado"><svg viewBox="0 0 600 170" role="img" style="width:100%;height:auto;max-width:600px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>3. next(g): retoma logo depois do yield, com o estado preservado</title><defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="10" width="300" height="150" rx="8" class="s-box" /><text x="24" y="30" font-size="12" text-anchor="start" font-weight="700">corpo da função</text><text x="26" y="56" font-size="13" text-anchor="start">def contar(n):</text><text x="26" y="76" font-size="13" text-anchor="start">    i = 0</text><text x="26" y="96" font-size="13" text-anchor="start">    while i &lt; n:</text><text x="26" y="116" font-size="13" text-anchor="start">        yield i</text><text x="26" y="136" font-size="13" text-anchor="start">        i += 1</text><rect x="16" y="100" width="288" height="22" rx="4" class="s-soft" fill-opacity="0.35"/><line x1="2" y1="112" x2="14" y2="112" class="s-line" stroke-width="1.6" fill="none" marker-end="url(#ar5)"/><rect x="330" y="10" width="260" height="150" rx="8" class="s-box" /><text x="344" y="30" font-size="12" text-anchor="start" font-weight="700">objeto gerador g = contar(2)</text><text x="346" y="56" font-size="13" text-anchor="start">estado: suspenso</text><text x="346" y="76" font-size="13" text-anchor="start">i = 1</text><text x="344" y="140" font-size="13" text-anchor="start" font-weight="700">next(g) -&gt; 1</text></svg></div>
+<div class="frame" data-caption="4. next(g): i vira 2, o while termina e a função acaba"><svg viewBox="0 0 600 170" role="img" style="width:100%;height:auto;max-width:600px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>4. next(g): i vira 2, o while termina e a função acaba</title><defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="10" y="10" width="300" height="150" rx="8" class="s-box" /><text x="24" y="30" font-size="12" text-anchor="start" font-weight="700">corpo da função</text><text x="26" y="56" font-size="13" text-anchor="start">def contar(n):</text><text x="26" y="76" font-size="13" text-anchor="start">    i = 0</text><text x="26" y="96" font-size="13" text-anchor="start">    while i &lt; n:</text><text x="26" y="116" font-size="13" text-anchor="start">        yield i</text><text x="26" y="136" font-size="13" text-anchor="start">        i += 1</text><rect x="330" y="10" width="260" height="150" rx="8" class="s-box" /><text x="344" y="30" font-size="12" text-anchor="start" font-weight="700">objeto gerador g = contar(2)</text><text x="346" y="56" font-size="13" text-anchor="start">estado: terminado</text><text x="346" y="76" font-size="13" text-anchor="start">i = 2</text><text x="344" y="140" font-size="13" text-anchor="start" font-weight="700">StopIteration</text></svg></div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Depois de <code>g = (x * 2 for x in range(3))</code>, <code>list(g)</code> e novamente <code>list(g)</code>, o que a segunda chamada devolve?</p>
+<ol><li data-opt="a"><code>[]</code>: o gerador está esgotado</li><li data-opt="b"><code>[0, 2, 4]</code>: o gerador reinicia</li><li data-opt="c">Erro <code>StopIteration</code></li><li data-opt="d"><code>None</code></li></ol>
+<div class="explain">Iteradores e geradores são de passagem única. Depois de levantar <code>StopIteration</code> uma vez, continuam esgotados, e <code>list()</code> simplesmente devolve vazio. Um <em>iterável</em> (como <code>range</code> ou uma lista) produz um iterador novo a cada <code>iter()</code>; guarde a lista se precisar percorrer duas vezes.</div>
+</div>
 <h3>Preguiça como ferramenta de memória</h3>
 <p>A vantagem central é memória constante: o dado flui um item por vez. Medição real com <code>tracemalloc</code>, contando as linhas de um arquivo de 1 milhão de linhas:</p>
 <pre><code>sum(1 for _ in open(p, encoding="utf-8"))          # pico: 145 KiB
@@ -738,6 +892,12 @@ FileNotFoundError: [Errno 2] No such file or directory: 'nao-existe.csv'   # só
 <p>Um gerador que abre arquivo/conexão e é descartado antes de acabar só libera o recurso quando é coletado (imediato no CPython por contagem de referências, indeterminado em outras implementações e quando há referência em traceback ou lista). Em código de produção isso vira "too many open files" intermitente. Duas defesas: consumir dentro de <code>with contextlib.closing(gerador):</code> quando for possível abandonar no meio, e preferir passar o <code>Path</code> ao consumidor final a deixar um gerador aberto circulando. O segundo defeito é o simétrico: como o corpo só roda no consumo, validações e erros de configuração (arquivo ausente, coluna faltando) aparecem no primeiro <code>next()</code>, possivelmente num outro módulo ou thread; se quiser falhar cedo, valide numa função comum que <em>devolve</em> o gerador.</p>
 </div>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma função geradora abre um arquivo e dá <code>yield</code> nas linhas. O que acontece ao rodar <code>g = ler("nao_existe.csv")</code>?</p>
+<ol><li data-opt="a"><code>FileNotFoundError</code> imediatamente</li><li data-opt="b"><code>None</code> e o arquivo é aberto em segundo plano</li><li data-opt="c">O gerador devolve uma lista vazia</li><li data-opt="d">Nada: o corpo só roda no primeiro <code>next(g)</code> (ou no <code>for</code>), é ali que o erro aparecerá</li></ol>
+<div class="explain">Chamar uma função geradora só cria o objeto gerador. Erros e a abertura do recurso acontecem no consumo, possivelmente longe da linha que cometeu o erro. Para falhar cedo, valide argumentos numa função normal que devolve o gerador, ou abra o arquivo fora e passe o objeto.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Iterável produz iterador; iterador é de passagem única e levanta <code>StopIteration</code> no fim. O <code>for</code> é <code>iter</code> mais <code>next</code> em laço. Função com <code>yield</code> devolve gerador: o corpo só roda sob demanda e suspende preservando o estado; dá memória constante (145 KiB contra 59 MiB na medição acima) e permite fluxos infinitos. <code>itertools</code> compõe sem listas intermediárias; <code>groupby</code> exige ordenação; <code>batched</code> faz lotes. Erros e abertura de recurso dentro de gerador só ocorrem no consumo.</p>
@@ -768,6 +928,13 @@ FileNotFoundError: [Errno 2] No such file or directory: 'nao-existe.csv'   # só
 </code></pre>
 <p><code>SystemExit</code> e <code>KeyboardInterrupt</code> ficam fora de <code>Exception</code> de propósito, para que um <code>except Exception</code> não impeça o programa de terminar nem o usuário de interromper com Ctrl+C. Capturar a superclasse captura toda a família: <code>except OSError</code> pega <code>FileNotFoundError</code> e <code>PermissionError</code>; <code>except LookupError</code> pega <code>KeyError</code> e <code>IndexError</code>.</p>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: levantar, desenrolar, capturar</span>
+<div class="frame" data-caption="1. Pilha de chamadas: main chamou f, que chamou g"><svg viewBox="0 0 640 170" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>1. Pilha de chamadas: main chamou f, que chamou g</title><defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20" y="10" width="300" height="42" rx="8" class="s-box" /><text x="34" y="36" font-size="13" text-anchor="start">main()  try: ... except ValueError</text><rect x="20" y="62" width="300" height="42" rx="8" class="s-box" /><text x="34" y="88" font-size="13" text-anchor="start">f()   (sem except)</text><rect x="20" y="114" width="300" height="42" rx="8" class="s-soft" /><text x="34" y="140" font-size="13" text-anchor="start">g()   raise ValueError</text><text x="340" y="30" font-size="13" text-anchor="start">Execução normal.</text><text x="340" y="50" font-size="13" text-anchor="start">O try de main está aberto.</text></svg></div>
+<div class="frame" data-caption="2. g executa raise ValueError: nasce o objeto exceção"><svg viewBox="0 0 640 170" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>2. g executa raise ValueError: nasce o objeto exceção</title><defs><marker id="ar8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20" y="10" width="300" height="42" rx="8" class="s-box" /><text x="34" y="36" font-size="13" text-anchor="start">main()  try: ... except ValueError</text><rect x="20" y="62" width="300" height="42" rx="8" class="s-box" /><text x="34" y="88" font-size="13" text-anchor="start">f()   (sem except)</text><rect x="20" y="114" width="300" height="42" rx="8" class="s-soft" /><text x="34" y="140" font-size="13" text-anchor="start">g()   raise ValueError</text><text x="340" y="30" font-size="13" text-anchor="start">g levanta a exceção.</text><text x="340" y="50" font-size="13" text-anchor="start">Nenhuma linha depois do raise roda.</text></svg></div>
+<div class="frame" data-caption="3. Desenrolar: g e f saem da pilha, sem achar except"><svg viewBox="0 0 640 170" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>3. Desenrolar: g e f saem da pilha, sem achar except</title><defs><marker id="ar9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20" y="10" width="300" height="42" rx="8" class="s-soft" /><text x="34" y="36" font-size="13" text-anchor="start">main()  try: ... except ValueError</text><rect x="20" y="62" width="300" height="42" rx="8" class="s-box" stroke-dasharray="4 4" opacity="0.35"/><text x="34" y="88" font-size="13" text-anchor="start">f()   (sem except)  (removido)</text><rect x="20" y="114" width="300" height="42" rx="8" class="s-box" stroke-dasharray="4 4" opacity="0.35"/><text x="34" y="140" font-size="13" text-anchor="start">g()   raise ValueError  (removido)</text><text x="340" y="30" font-size="13" text-anchor="start">g e f foram descartados.</text><text x="340" y="50" font-size="13" text-anchor="start">Se tivessem finally, ele rodaria na saída.</text></svg></div>
+<div class="frame" data-caption="4. main tem except ValueError: captura e segue o programa"><svg viewBox="0 0 640 170" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>4. main tem except ValueError: captura e segue o programa</title><defs><marker id="ar10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20" y="10" width="300" height="42" rx="8" class="s-soft" /><text x="34" y="36" font-size="13" text-anchor="start">main()  try: ... except ValueError</text><rect x="20" y="62" width="300" height="42" rx="8" class="s-box" stroke-dasharray="4 4" opacity="0.35"/><text x="34" y="88" font-size="13" text-anchor="start">f()   (sem except)  (removido)</text><rect x="20" y="114" width="300" height="42" rx="8" class="s-box" stroke-dasharray="4 4" opacity="0.35"/><text x="34" y="140" font-size="13" text-anchor="start">g()   raise ValueError  (removido)</text><text x="340" y="30" font-size="13" text-anchor="start">O except casa e trata o erro.</text><text x="340" y="50" font-size="13" text-anchor="start">A execução continua depois do try.</text></svg></div>
+</div>
 <h3><code>try</code>, <code>except</code>, <code>else</code>, <code>finally</code></h3>
 <table>
 <thead><tr><th>Cláusula</th><th>Executa quando</th><th>Use para</th></tr></thead>
@@ -795,6 +962,12 @@ finally roda
 <li>No Python 3.14 vários tipos podem ser listados sem parênteses (PEP 758): <code>except ValueError, TypeError:</code> (sem <code>as</code>); o formato com parênteses continua válido e é o que funciona em versões anteriores.</li>
 </ul>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Em <code>try: print("a")</code> / <code>except: print("b")</code> / <code>else: print("c")</code> / <code>finally: print("d")</code>, sem nenhuma exceção, o que sai na tela?</p>
+<ol><li data-opt="a"><code>a d</code></li><li data-opt="b"><code>a b d</code></li><li data-opt="c"><code>a c d</code></li><li data-opt="d"><code>a c</code></li></ol>
+<div class="explain">Sem exceção: roda o <code>try</code>, depois o <code>else</code>, e por fim o <code>finally</code>, que roda sempre (com ou sem erro, com ou sem <code>return</code>). O <code>else</code> mantém o <code>try</code> curto: só o que pode falhar fica dentro.</div>
+</div>
 <h3>Encadear: <code>raise ... from</code></h3>
 <p>Camadas de código traduzem erros: o parser vê um <code>ValueError</code>; o domínio quer um <code>InvalidRowError</code> com linha e campo. Se você levanta uma nova exceção dentro de um <code>except</code>, o Python guarda a original em <code>__context__</code> ("durante o tratamento de X, ocorreu Y"). Com <code>raise Nova from original</code>, a relação é declarada: grava <code>__cause__</code> ("Y foi causado diretamente por X"), e o traceback mostra as duas.</p>
 <pre><code>&gt;&gt;&gt; try:
@@ -832,6 +1005,14 @@ class InvalidRowError(ExpensesError):
 <p><strong>LBYL</strong> ("look before you leap") verifica antes: <code>if path.exists(): ler(path)</code>. <strong>EAFP</strong> ("easier to ask forgiveness than permission") tenta e trata: <code>try: ler(path) except FileNotFoundError: ...</code>. Python favorece EAFP, por razões mecânicas: a verificação prévia é uma <em>corrida</em> (o arquivo pode sumir entre o <code>exists()</code> e o <code>open()</code>, TOCTOU), duplica a lógica que o próprio <code>open</code> já faz, e não cobre as outras falhas (permissão, disco). Exceção à regra: quando a verificação é barata, sem corrida e melhora a mensagem (validar entrada de usuário antes de gastar trabalho). Bônus de desempenho: em CPython 3.11+ o <code>try</code> sem exceção custa praticamente zero; levantar custa mais, então use o fluxo normal para o caso comum (<code>dict.get</code> / <code>in</code> quando a ausência é frequente).</p>
 <p>Há também o terceiro modo, usado pelo <code>scan</code>: <em>erros como valores</em>. Quando falhas são esperadas, numerosas e não devem interromper o fluxo (linhas inválidas num CSV), devolver o erro como item do resultado evita um <code>try</code> por elemento e deixa o chamador decidir (estrito ou tolerante). Lançar é melhor para o caso excepcional que torna o resto inútil (coluna ausente).</p>
 
+
+<div class="tabs"><section data-tab="LBYL (olhe antes)"><pre><code>if "chave" in d:
+    valor = d["chave"]
+else:
+    valor = padrao</code></pre><p>Duas consultas e uma janela de corrida em dados compartilhados (o estado pode mudar entre o teste e o uso).</p></section><section data-tab="EAFP (peça perdão)"><pre><code>try:
+    valor = d["chave"]
+except KeyError:
+    valor = padrao</code></pre><p>Idiomático em Python e atômico para o caso comum; reserve para falhas raras. Para este caso específico, <code>d.get("chave", padrao)</code> é ainda mais simples.</p></section></div>
 <h3>Context managers: limpeza como protocolo</h3>
 <p>O <code>with</code> garante que a limpeza ocorra, e é a forma correta de segurar recursos (arquivo, lock, conexão, transação, diretório temporário). O protocolo tem dois métodos: <code>__enter__()</code> (devolve o valor de <code>as</code>) e <code>__exit__(tipo, valor, tb)</code>, chamado <em>sempre</em> ao sair do bloco; se <code>__exit__</code> devolver verdadeiro, a exceção é <strong>suprimida</strong>.</p>
 <pre><code>class A:
@@ -901,6 +1082,12 @@ depois</code></pre>
 <p>Um <code>__exit__</code> terminado em <code>return True</code> (ou um <code>@contextmanager</code> com <code>except Exception: pass</code> em volta do <code>yield</code>) transforma o bloco <code>with</code> em um buraco negro: qualquer erro do corpo, inclusive um <code>NameError</code> por typo, desaparece e o programa "segue". Revise todo gerenciador de contexto procurando o retorno e o que o <code>except</code> captura. A regra: suprima só um tipo conhecido (<code>suppress(FileNotFoundError)</code>), nunca "tudo". E vale o corolário do bloco 3: <code>return</code>/<code>continue</code> em <code>finally</code> faz o mesmo e hoje gera <code>SyntaxWarning</code>.</p>
 </div>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q"><code>except Exception:</code> captura a interrupção do usuário com Ctrl+C?</p>
+<ol><li data-opt="a">Sim, qualquer erro é <code>Exception</code></li><li data-opt="b">Não: <code>KeyboardInterrupt</code> herda de <code>BaseException</code>, fora de <code>Exception</code></li><li data-opt="c">Sim, mas só dentro de laços</li><li data-opt="d">Depende da versão do sistema operacional</li></ol>
+<div class="explain"><code>BaseException</code> é a raiz de tudo, incluindo <code>KeyboardInterrupt</code>, <code>SystemExit</code> e <code>GeneratorExit</code>. <code>Exception</code> é a raiz do que é "erro de programa". Por isso <code>except Exception</code> é seguro, enquanto <code>except:</code> sem tipo (ou <code>BaseException</code>) engole o Ctrl+C e impede o programa de encerrar.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Exceção é um objeto que desenrola a pilha até um <code>except</code> que case; <code>BaseException</code> inclui o que não se captura, <code>Exception</code> é a raiz do que é seu. <code>else</code> mantém o <code>try</code> curto, <code>finally</code> sempre limpa. <code>raise Y from X</code> preserva a causa. Defina uma exceção-base por pacote e dê atributos às subclasses. Prefira EAFP; use erros como valores quando falhar é esperado e em volume. Context manager garante limpeza e não deve suprimir o que não conhece.</p>
@@ -981,6 +1168,14 @@ True d.py</code></pre>
 <p>Duas formas de import: <strong>absoluto</strong> (<code>from expenses.model import Expense</code>, preferido: claro de qualquer lugar) e <strong>relativo</strong> (<code>from .model import Expense</code>, só dentro de pacote). Em projetos reais use o <strong>layout <code>src/</code></strong> (<code>src/expenses/...</code>), como o laboratório: o pacote só é importável depois de instalado (editável, via <code>uv sync</code>), o que impede o teste de passar "por acaso" porque a pasta corrente estava no <code>sys.path</code> e força a existência de um pacote instalável.</p>
 <p>Estilo: <code>import modulo</code> e <code>from pacote import item</code> no <strong>topo do arquivo</strong>, agrupados (stdlib, terceiros, locais; o <code>ruff</code> com regra <code>I</code> ordena). Evite <code>from x import *</code> (polui o espaço de nomes e esconde a origem). Importar dentro de função é legítimo para dependência opcional ou pesada (custo de carga: <code>python -X importtime</code> mostra o tempo por módulo; <code>import json</code> custa ≈2 ms aqui) e para quebrar ciclos.</p>
 
+
+<div class="ix"><span class="ix-title">Ordene os passos</span><p>Ordene o que acontece no primeiro <code>import util</code>. Repare em quando o módulo é registrado: é isso que torna o import circular possível (e confuso).</p><ol class="order" data-solution="a,b,c,d,e"><li data-id="a">Procura o nome em <code>sys.modules</code>; se já está lá, devolve e termina</li><li data-id="b">Localiza o arquivo percorrendo <code>sys.path</code></li><li data-id="c">Cria o objeto módulo e o <strong>registra em <code>sys.modules</code></strong></li><li data-id="d">Executa o corpo do módulo, de cima para baixo, uma única vez</li><li data-id="e">Liga o nome no namespace de quem importou</li></ol></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">O que <code>Path("base") / "/etc/passwd"</code> devolve?</p>
+<ol><li data-opt="a"><code>PosixPath("/etc/passwd")</code>: um componente absoluto reinicia o caminho</li><li data-opt="b"><code>PosixPath("base/etc/passwd")</code></li><li data-opt="c"><code>PosixPath("base//etc/passwd")</code></li><li data-opt="d">Erro de valor</li></ol>
+<div class="explain">No <code>pathlib</code>, juntar com um caminho absoluto descarta o que veio antes (igual a <code>os.path.join</code>). É uma fonte clássica de <em>path traversal</em>: nunca junte à base um nome vindo do usuário sem validar que o resultado continua dentro da base (<code>resolve()</code> e <code>is_relative_to()</code>).</div>
+</div>
 <h3>Import circular</h3>
 <p>Um ciclo ocorre quando A importa B e B importa A. Como o módulo é registrado em <code>sys.modules</code> <em>antes</em> de seu corpo executar (passo 3), o segundo import encontra um módulo <strong>parcialmente inicializado</strong>. O que acontece depende de <em>como</em> se importa:</p>
 <pre><code># pacote/a.py                         # pacote/b.py
@@ -1037,6 +1232,12 @@ exit=0</code></pre>
 <p>Como o módulo é um singleton em <code>sys.modules</code>, "re-importar" não recarrega nada. <code>importlib.reload(m)</code> re-executa o corpo no <em>mesmo</em> objeto módulo, mas quem fez <code>from m import f</code> continua segurando a função <em>antiga</em>, e instâncias de classes velhas não viram instâncias das novas. Em REPL/notebook isso gera "corrigi o código e o comportamento não mudou" ou, pior, mistura de versões. Em testes, estado global de módulo (cache, singleton, configuração) vaza entre testes: isole com fixtures (<code>monkeypatch</code>) ou elimine o estado global. Reiniciar o processo é a única garantia.</p>
 </div>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Um arquivo foi gravado em UTF-8 contendo "ação". Você o lê com <code>open(p, encoding="latin-1")</code>. O que acontece?</p>
+<ol><li data-opt="a"><code>UnicodeDecodeError</code>, pois latin-1 detecta UTF-8</li><li data-opt="b">Lê sem erro, mas o texto vira "aÃ§Ã£o": corrupção silenciosa</li><li data-opt="c">Lê perfeitamente: latin-1 é um superconjunto</li><li data-opt="d">Lê só os caracteres ASCII</li></ol>
+<div class="explain">Latin-1 mapeia qualquer byte para algum caractere, então nunca falha: cada byte do UTF-8 é interpretado isoladamente e vira lixo. UTF-8 é mais rigoroso e falha alto com bytes inválidos. Por isso: declare <code>encoding</code> sempre e trate o erro de decodificação como informação, não como incômodo.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p><code>Path</code> compõe e decompõe caminhos; componente absoluto reinicia o caminho. Texto é <code>str</code> com <code>encoding</code> explícito, nunca o padrão da plataforma; decodificar na codificação errada pode falhar alto (UTF-8) ou corromper em silêncio (Latin-1). Use <code>csv</code> (com <code>newline=""</code>) e <code>json</code>; dinheiro vai como string. <code>import</code> consulta <code>sys.modules</code>, executa o corpo uma vez e registra o módulo antes de terminar de executá-lo, o que explica o ciclo; o remédio é extrair a dependência comum.</p>
@@ -1064,6 +1265,12 @@ exit=0</code></pre>
 (&lt;class 'function'&gt;, &lt;class 'method'&gt;, True)</code></pre>
 <p>Atenção ao mesmo problema do bloco 3 em forma de classe: um atributo de classe mutável (<code>itens = []</code> no corpo) é <strong>compartilhado por todas as instâncias</strong>. Estado por instância se cria no <code>__init__</code>.</p>
 
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Dado <code>class C: n = 0</code> e <code>c = C()</code>, o que valem <code>c.n</code> e <code>C.n</code> depois de <code>c.n += 1</code>?</p>
+<ol><li data-opt="a"><code>c.n == 1</code> e <code>C.n == 0</code>: nasce um atributo de instância que sombreia o da classe</li><li data-opt="b">Os dois valem 1</li><li data-opt="c">Os dois valem 0</li><li data-opt="d">Erro: <code>n</code> é somente leitura</li></ol>
+<div class="explain"><code>c.n += 1</code> lê <code>c.n</code> (achado na classe, 0), soma e <em>atribui</em> <code>c.n</code> no objeto da instância. O atributo da classe segue em 0. Já uma lista na classe seria compartilhada por todas as instâncias: nesse caso <code>c.lista.append</code> muta o objeto único da classe.</div>
+</div>
 <h3>Métodos especiais (dunders): o protocolo de dados do Python</h3>
 <p>Os métodos de nome <code>__x__</code> são os ganchos pelos quais a sintaxe da linguagem chama o seu objeto. Você não os chama; implementa-os, e o resto funciona:</p>
 <table>
@@ -1131,6 +1338,21 @@ dataclasses.FrozenInstanceError: cannot assign to field 'amount'
 True</code></pre>
 <p>Um <code>Expense</code> validado nunca "deriva" depois: quem o recebe confia nele. É a transposição do princípio do bloco 6 (validar na borda) para a modelagem: <em>parse, don't validate</em>: a borda converte texto bruto em tipos de domínio e, daí em diante, o sistema trabalha com valores que já não podem ser inválidos. Alternativas: <code>NamedTuple</code>/<code>tuple</code> (leves, desempacotáveis, sem nomes de campo ao desempacotar), <code>dict</code> (sem contrato), classe comum (quando há invariantes e comportamento próprios).</p>
 
+
+<div class="tabs"><section data-tab="Classe manual"><pre><code>class Ponto:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+    def __repr__(self):
+        return f"Ponto(x={self.x!r}, y={self.y!r})"
+    def __eq__(self, o):
+        return isinstance(o, Ponto) and (self.x, self.y) == (o.x, o.y)
+    # sem __hash__: definir __eq__ desliga o hash</code></pre></section><section data-tab="@dataclass"><pre><code>from dataclasses import dataclass
+
+@dataclass(frozen=True, slots=True)
+class Ponto:
+    x: float
+    y: float
+# __init__, __repr__, __eq__ e __hash__ (por causa do frozen) vêm prontos</code></pre></section></div>
 <h3>Testes com <code>pytest</code></h3>
 <p>Um teste é uma função cujo nome começa com <code>test_</code> em um arquivo <code>test_*.py</code>; o <code>pytest</code> as descobre, executa e reporta. A ferramenta central é o <code>assert</code> simples: o <code>pytest</code> <em>reescreve</em> o AST dos testes para mostrar, na falha, os valores intermediários.</p>
 <pre><code>$ python -m pytest -q test_x.py
@@ -1200,6 +1422,12 @@ def make_csv(tmp_path: Path) -&gt; CsvFactory:
 <p>Três formas comuns: (1) <code>assert</code> sobre tupla não vazia (<code>assert (x, "mensagem")</code> é sempre verdadeiro; o CPython avisa); (2) <code>pytest.raises</code> largo demais (<code>Exception</code>) que passa por causa de um <code>NameError</code> no seu próprio teste; (3) parametrização cujos ids ou valores são calculados a partir do código sob teste. A defesa é o hábito do <em>controle negativo</em> e da <em>mutação manual</em>: estrague de propósito o código de produção e confirme que o teste correspondente fica vermelho (passos 6 e 7 do laboratório). Um agente de código produz testes que passam com facilidade espantosa; a pergunta de revisão é sempre "esse teste falharia se o bug existisse?".</p>
 </div>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Você define <code>__eq__</code> numa classe e não define <code>__hash__</code>. O que acontece ao usar <code>{obj}</code> (um set) ou <code>d[obj]</code>?</p>
+<ol><li data-opt="a">Funciona, usando o <code>id</code> do objeto</li><li data-opt="b">Funciona, usando o hash dos atributos</li><li data-opt="c">Funciona, mas lento</li><li data-opt="d"><code>TypeError: unhashable type</code>: o Python zera <code>__hash__</code> ao definir <code>__eq__</code></li></ol>
+<div class="explain">Se dois objetos podem ser iguais por valor, eles precisariam de hashes iguais; para não quebrar esse contrato, o Python desliga o hash quando só <code>__eq__</code> é definido. Defina <code>__hash__</code> coerente (sobre campos imutáveis) ou use <code>@dataclass(frozen=True)</code>.</div>
+</div>
 <div class="box ok">
 <span class="lbl">Em resumo</span>
 <p>Classe é objeto; atributo de instância sombreia o de classe; método é função ligada à instância. Dunders ligam a sintaxe ao seu objeto, e <code>__eq__</code> sem <code>__hash__</code> desliga o hash. <code>@dataclass</code> gera <code>__init__</code>/<code>__repr__</code>/<code>__eq__</code>; <code>frozen</code> e <code>slots</code> dão imutabilidade e economia; default mutável exige <code>default_factory</code>. <code>pytest</code>: <code>assert</code> simples, <code>parametrize</code>, <code>raises</code>, fixtures (<code>tmp_path</code>, <code>capsys</code>). Um bom teste cobre feliz, borda, falha injetada e controle negativo, e pode falhar.</p>
@@ -1417,6 +1645,11 @@ FAILED tests/test_b06_b08_export_cli.py::test_atomic_writer_keeps_the_old_file_w
 </tbody>
 </table>
 <p>As saídas vêm de execução real em 11/10/2026 com Python 3.14.7 (aarch64, Linux), uv 0.12.13 e pytest 9.1.1; o texto de mensagens de erro, os nomes de instruções do <code>dis</code>, os tamanhos em bytes e o layout do <code>uv init</code> mudam entre versões menores, e os tempos de <code>timeit</code>/<code>tracemalloc</code> variam por máquina. O PEP 686 (UTF-8 como padrão) tem como alvo o Python 3.15: revalide antes de remover <code>encoding=</code>. Comportamento de <code>uv</code> e de versões do Python é de alto risco: revalidar em até 90 dias.</p>
+
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique (ou Enter) para virar. Tente responder em voz alta antes de virar.</p>
+<div class="flashcards"><div class="fc"><div class="front">Quando o bytecode vai para um <code>.pyc</code>?</div><div class="back">Só quando o módulo é <em>importado</em>; o script de entrada é compilado a cada execução.</div></div><div class="fc"><div class="front">O que faz <code>b = a</code> com uma lista?</div><div class="back">Cria outro nome para o mesmo objeto; não copia.</div></div><div class="fc"><div class="front">Por que <code>l += [4]</code> numa função afeta o chamador?</div><div class="back"><code>+=</code> em lista é in-place (<code>__iadd__</code>); <code>l = l + [4]</code> religaria o nome local.</div></div><div class="fc"><div class="front">Por que <code>Decimal(0.1)</code> não é um décimo?</div><div class="back">Converte o float aproximado; use <code>Decimal("0.1")</code>.</div></div><div class="fc"><div class="front">Regra LEGB?</div><div class="back">Local, Enclosing, Global, Built-in; atribuição em qualquer ponto torna o nome local em toda a função.</div></div><div class="fc"><div class="front">Default mutável: o que fazer?</div><div class="back">Usar <code>None</code> e criar a lista dentro da função.</div></div><div class="fc"><div class="front">Por que <code>[[0]*2]*3</code> engana?</div><div class="back">Repete a mesma referência; use comprehension.</div></div><div class="fc"><div class="front">Iterável × iterador?</div><div class="back">Iterável produz iterador; iterador é de passagem única e levanta <code>StopIteration</code>.</div></div><div class="fc"><div class="front">Quando roda o corpo de uma função com <code>yield</code>?</div><div class="back">Só sob demanda, no <code>next()</code>/<code>for</code>; erros também só aí.</div></div><div class="fc"><div class="front">Ordem em try/except/else/finally?</div><div class="back">try; except (se erro) ou else (se não); finally sempre.</div></div><div class="fc"><div class="front"><code>except Exception</code> pega Ctrl+C?</div><div class="back">Não; <code>KeyboardInterrupt</code> é <code>BaseException</code>.</div></div><div class="fc"><div class="front"><code>__eq__</code> sem <code>__hash__</code>?</div><div class="back">O objeto fica não hashable; use <code>frozen=True</code> ou defina ambos.</div></div></div>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>
