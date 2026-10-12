@@ -68,6 +68,26 @@
 <p><strong>Janela grande é uma folga de engenharia, não uma licença para preguiça.</strong> O objetivo continua sendo colocar o <em>mínimo suficiente</em> de contexto relevante — é literalmente o fator 3 do 12-Factor Agents (M01 bloco 3: "own your context window") e o assunto central do M08. Toda vez que alguém disser "com janela de 1M isso deixa de ser problema", a resposta correta tem três palavras: custo, latência, atenção.</p>
 </div>
 
+
+<div class="ix"><span class="ix-title">Simulador: estimador de tokens por idioma</span>
+<p>Cole um texto e escolha o tipo. A regra de bolso do bloco: inglês ≈ 4 caracteres por token; português ≈ 3 a 3,5; código ≈ 3. É uma <strong>estimativa</strong>: a contagem exata vem do campo <code>usage</code> da resposta.</p>
+<div class="ix-row"><textarea id="m05-te-t" rows="4" style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit" aria-label="Texto para estimar tokens">Toda decisão de engenharia deste módulo (custo, latência, cache, escolha de modelo) se reduz a tokens. Estimar antes de enviar evita surpresa na fatura.</textarea></div>
+<div class="ix-row"><label for="m05-te-k">Tipo:</label><select id="m05-te-k"><option value="pt">Português</option><option value="en">Inglês</option><option value="code">Código</option></select></div>
+<div id="m05-te-o"></div>
+</div>
+<script>
+Course.ready(function (C) {
+
+var t=document.getElementById("m05-te-t"),k=document.getElementById("m05-te-k"),o=document.getElementById("m05-te-o");
+var R={pt:[3.5,3.0],en:[4.2,3.8],code:[3.2,2.8]};
+function upd(){
+  var n=t.value.length,r=R[k.value],lo=Math.ceil(n/r[0]),hi=Math.ceil(n/r[1]),mid=Math.round((lo+hi)/2);
+  var extra=k.value==="pt"?'<br>O mesmo conteúdo em inglês custaria, em média, cerca de 20% menos tokens (≈ '+Math.round(mid/1.2)+').':'';
+  o.innerHTML='<div class="ix-out" style="white-space:normal">'+n+' caracteres ⇒ <strong>≈ '+mid+' tokens</strong> (faixa '+lo+' a '+hi+').'+extra+'<br>Como input no Sonnet 5 (US$ 2 por milhão, retrato ago/2026): ≈ US$ '+(mid*2/1e6).toFixed(6)+' por envio. O output é cobrado à parte, e mais caro.</div>';}
+t.addEventListener("input",upd);k.addEventListener("change",upd);upd();
+
+});
+</script>
 <h3>Os parâmetros de amostragem</h3>
 <p>Um LLM não "escolhe" a próxima palavra: ele produz uma <strong>distribuição de probabilidade</strong> sobre todos os tokens possíveis, e um algoritmo de amostragem escolhe um. Os parâmetros controlam esse sorteio:</p>
 
@@ -106,10 +126,64 @@ resposta.content[0].text</code></pre>
 <p>Erro que quase todo mundo comete ao montar a primeira suíte de testes: assumir que <code>temperature=0</code> devolve sempre exatamente a mesma string. Não devolve. Com temperatura 0 o sorteio vira "pegue o mais provável", mas <strong>a distribuição em si pode variar minimamente</strong> — ordem de operações de ponto flutuante em GPU, batching de outras requisições no servidor, roteamento entre réplicas, atualização silenciosa do modelo. Na prática você tem <em>alta</em> reprodutibilidade, não garantia. Consequências diretas: (1) teste de LLM não compara string exata (M06 mostra os graders certos); (2) <em>a versão do modelo é uma dependência</em> — pinne o identificador completo, nunca um alias tipo "latest", ou seu sistema muda de comportamento sem um único commit seu.</p>
 </div>
 
+
+<div class="ix"><span class="ix-title">Simulador: temperatura e top_p sobre a distribuição do próximo token</span>
+<p>Distribuição de brinquedo para o próximo token depois de “A capital da França é”. Mexa na temperatura <em>ou</em> no top_p (o bloco recomenda um OU o outro) e sorteie 20 vezes.</p>
+<div class="ix-row"><label for="m05-tp-t">temperature: <strong id="m05-tp-tv"></strong></label><input type="range" id="m05-tp-t" min="0" max="20" value="10" aria-label="Temperatura"></div>
+<div class="ix-row"><label for="m05-tp-p">top_p: <strong id="m05-tp-pv"></strong></label><input type="range" id="m05-tp-p" min="10" max="100" value="100" step="5" aria-label="top_p"></div>
+<div id="m05-tp-o"></div>
+<div class="ix-row"><button class="ix-btn primary" id="m05-tp-b">Sortear 20×</button></div>
+<div class="ix-out" id="m05-tp-s" style="white-space:normal"></div>
+</div>
+<script>
+Course.ready(function (C) {
+
+var TK=[[" Paris",5.0],[" a",3.4],[" uma",3.0],[" Lyon",2.4],[" Marselha",1.8],[" Berlim",1.2],[" banana",0.0],[" xyzq",-1.0]];
+var T=document.getElementById("m05-tp-t"),P=document.getElementById("m05-tp-p"),o=document.getElementById("m05-tp-o"),sb=document.getElementById("m05-tp-s"),cur=[];
+function calc(){
+  var t=T.value/10,p=P.value/100,pr;
+  if(t<0.05){pr=TK.map(function(x,i){return i===0?1:0;});}
+  else{var ex=TK.map(function(x){return Math.exp(x[1]/t);}),z=ex.reduce(function(a,b){return a+b;},0);pr=ex.map(function(e){return e/z;});}
+  var idx=pr.map(function(v,i){return i;}).sort(function(a,b){return pr[b]-pr[a];}),cum=0,keep={};
+  idx.forEach(function(i){if(cum<p-1e-9){keep[i]=true;cum+=pr[i];}});
+  var kz=0;idx.forEach(function(i){if(keep[i])kz+=pr[i];});
+  return TK.map(function(x,i){return {n:x[0],p:pr[i],k:!!keep[i],q:keep[i]?pr[i]/kz:0};});}
+function upd(){
+  document.getElementById("m05-tp-tv").textContent=(T.value/10).toFixed(1)+(T.value/10<0.05?" (greedy: sempre o mais provável)":"");
+  document.getElementById("m05-tp-pv").textContent=(P.value/100).toFixed(2);
+  cur=calc();
+  var h='<div class="table-wrap"><table><thead><tr><th>Token</th><th>Prob. após temperatura</th><th>Após top_p (renormalizada)</th></tr></thead><tbody>';
+  cur.forEach(function(r){h+='<tr style="'+(r.k?'':'opacity:.45')+'"><td><code>'+r.n+'</code></td><td>'+(r.p*100).toFixed(1)+'%</td><td><div style="height:12px;border-radius:6px;background:var(--line)"><div style="height:12px;border-radius:6px;background:var(--accent);width:'+(r.q*100).toFixed(1)+'%"></div></div>'+(r.k?(r.q*100).toFixed(1)+'%':'cortado pela cauda')+'</td></tr>';});
+  o.innerHTML=h+'</tbody></table></div>';sb.textContent="";}
+document.getElementById("m05-tp-b").addEventListener("click",function(){
+  var cnt={};for(var i=0;i<20;i++){var r=Math.random(),a=0,pick=cur[0].n;for(var j=0;j<cur.length;j++){a+=cur[j].q;if(r<a){pick=cur[j].n;break;}}cnt[pick]=(cnt[pick]||0)+1;}
+  sb.textContent="Resultado: "+Object.keys(cnt).map(function(k){return k.trim()+" ×"+cnt[k];}).join(", ")+". Com temperature=0 a resposta é quase repetível, mas o bloco lembra: alta reprodutibilidade não é determinismo garantido.";});
+[T,P].forEach(function(e){e.addEventListener("input",upd);});upd();
+
+});
+</script>
 <h3>Leitura aplicada · Sentir os números</h3>
 <p>Medir tokens por idioma, observar temperatura e provocar truncamento é o exercício deste bloco — o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: estimar tokens de três textos equivalentes (português, inglês, código) e comparar com a contagem exata do <code>usage</code>; repetir a mesma pergunta em <code>temperature=0</code> e <code>1</code> para ver repetição contra variedade; e pedir um resumo longo com <code>max_tokens</code> curto para ver o <code>stop_reason</code> virar <code>"max_tokens"</code> no meio da frase. Três reflexos saem daqui: relação entre idiomas (o mesmo conteúdo em português custa consistentemente mais tokens), extração roda em 0, e truncamento é erro explícito — nunca detalhe.</p>
 <p><strong>Trilha live opcional.</strong> Os trechos com SDK de provedor neste módulo (contagem de tokens, temperatura, truncamento) exigem chave de API e chamadas pagas: execute-os somente se tiver conta e orçamento, com os mesmos resultados esperados acima. O laboratório obrigatório prova os mesmos mecanismos com fakes locais.</p>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um agente faz 20 turnos reenviando um documento de 50 mil tokens, sem cache. A janela comporta, então “não é problema”. Qual a resposta mais completa?</p>
+<ol><li data-opt="a">Correto: se cabe na janela, o custo é irrelevante.</li><li data-opt="b">Só a latência piora; o custo é fixo por chamada.</li><li data-opt="c">Há três custos: dinheiro (cerca de 1 milhão de tokens de entrada por tarefa), latência (o TTFT cresce com a entrada) e atenção (context rot).</li><li data-opt="d">O único risco é estourar o limite de tokens de saída.</li></ol>
+<div class="explain">Janela grande é folga de engenharia, não licença. As três palavras do bloco são <strong>custo, latência, atenção</strong>. Quem escolhe A ignora que o input é pago em toda chamada.</div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Seu teste compara a saída exata de uma chamada com <code>temperature=0</code> e falha esporadicamente. Qual é o diagnóstico e a correção?</p>
+<ol><li data-opt="a">O modelo está quebrado; abra chamado e aumente a temperatura.</li><li data-opt="b">Temperatura 0 dá alta reprodutibilidade, não garantia de string idêntica; use graders adequados (M06) e pinne a versão completa do modelo.</li><li data-opt="c">Basta rodar duas vezes e pegar a maior.</li><li data-opt="d">Trocar para top_k resolve.</li></ol>
+<div class="explain">Ponto flutuante em GPU, batching, roteamento entre réplicas e atualizações silenciosas fazem a distribuição variar minimamente. Consequências: teste de LLM não compara string exata, e o modelo é uma dependência versionada (nunca um alias “latest”).</div>
+</div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">O que acontece se você ajusta ao mesmo tempo <code>temperature</code> e <code>top_p</code> para “refinar” a saída?</p>
+<ol><li data-opt="a">Os efeitos se somam de forma previsível.</li><li data-opt="b">O top_p anula a temperatura.</li><li data-opt="c">Nada; são o mesmo parâmetro.</li><li data-opt="d">A interação é imprevisível; a regra do bloco é mexer em um OU no outro.</li></ol>
+<div class="explain">Ambos moldam o sorteio de formas diferentes (reescala × corte da cauda). Experimente no simulador: combinar valores altos de um e baixos do outro dificulta saber qual deles produziu o resultado.</div>
+</div>
 <!-- ============================================ BLOCO 2 -->
 <h2 id="b02">Bloco 2 · Structured output: o fim do parsing com regex</h2>
 <h3>Por que isso importa</h3>
@@ -229,9 +303,23 @@ def analisar(codigo: str, caminho: str) -> AnaliseArquivo:
 <p>Cada provedor tem sua sintaxe: na Anthropic é <code>output_config={"format": {"type": "json_schema", "schema": ...}}</code>; na OpenAI, <code>response_format={"type": "json_schema", "json_schema": {...}}</code> com <code>strict: true</code>. <strong>O que é comum é o JSON Schema</strong> — e é por isso que o curso mantém o Pydantic como fonte única: o modelo de dados é seu, o adaptador é fino, e trocar de provedor não reescreve o contrato. Duas ressalvas práticas do JSON Schema em modo estrito, que valem para os dois: <code>additionalProperties: false</code> costuma ser exigido (o Pydantic gera isso quando você usa <code>extra="forbid"</code>), e recursos exóticos (<code>allOf</code> complexo, <code>$ref</code> profundo, <code>oneOf</code> aninhado) podem não ser suportados — schema chato e plano funciona em todo lugar.</p>
 </div>
 
+
+<div class="tabs"><section data-tab="Anthropic"><pre><code>output_config={"format": {"type": "json_schema", "schema": Risco.model_json_schema()}}</code></pre><p>Parâmetro estável (saiu de beta), sem header especial. O schema vem do Pydantic.</p></section><section data-tab="OpenAI"><pre><code>response_format={"type": "json_schema", "json_schema": {"name": "risco", "strict": True, "schema": ...}}</code></pre><p>Mesmo JSON Schema, outra moldura, com <code>strict: true</code>.</p></section><section data-tab="O que é comum"><p>O <strong>JSON Schema</strong>, por isso o Pydantic é a fonte única. Em modo estrito costuma ser exigido <code>additionalProperties: false</code> (use <code>extra="forbid"</code>) e recursos exóticos (<code>allOf</code> complexo, <code>$ref</code> profundo, <code>oneOf</code> aninhado) podem não ser suportados.</p></section></div>
 <h3>Leitura aplicada · Forma imposta, verdade verificada</h3>
 <p>Implementar o extrator com schema Pydantic, provar que o schema é imposto, forçar a abstenção e testar o contrato como código é o exercício deste bloco — o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: validar a saída contra um arquivo conhecido e julgar quantos achados são verdadeiros (a primeira medida de qualidade, semente do M06); mandar prosa onde se esperava código para ver JSON válido com conteúdo ruim ("forma ≠ verdade" na prática); forçar lista vazia num arquivo trivial para ver abstenção em vez de invenção; e testar o schema offline (campos, enum, rejeição) sem chamar nada. <strong>Trilha live opcional:</strong> os mesmos passos contra provedor real exigem chave e crédito.</p>
 
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Sua extração retorna 100% de saídas válidas contra o schema. Qual conclusão é correta?</p>
+<ol><li data-opt="a">Isso é só a linha de partida: o schema garante forma, não verdade, completude nem sentido dos valores.</li><li data-opt="b">A qualidade está garantida, então não precisa de evals.</li><li data-opt="c">Pode remover a validação Pydantic, pois o provedor já impôs o schema.</li><li data-opt="d">O modelo deixou de alucinar.</li></ol>
+<div class="explain"><code>linha_inicial: 42</code> pode ser invenção; o modelo pode listar 1 achado onde havia 7. Verdade é assunto do M06. E a validação Pydantic continua útil: a garantia do provedor é operacional, e trocar de provedor via gateway pode degradar o modo.</div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual desenho de schema reduz alucinação quando a informação pode não existir no documento?</p>
+<ol><li data-opt="a">Campo obrigatório de texto livre, com instrução “não invente”.</li><li data-opt="b">Um prompt mais longo pedindo cautela.</li><li data-opt="c">Dar uma saída válida para “não sei”: lista vazia, campo opcional (<code>str | None</code>) ou enum com <code>indeterminado</code>.</li><li data-opt="d">Aumentar <code>max_tokens</code>.</li></ol>
+<div class="explain">Modelo sem alternativa legítima inventa. A abstenção estrutural vence a instrução em linguagem natural. Do mesmo modo, limite tamanho no schema (<code>max_length</code>), não no prompt.</div>
+</div>
 <!-- ============================================ BLOCO 3 -->
 <h2 id="b03">Bloco 3 · Tool calling: o loop, e quem manda nele</h2>
 <h3>Por que isso importa</h3>
@@ -277,6 +365,14 @@ def analisar(codigo: str, caminho: str) -> AnaliseArquivo:
 <p>Pense no modelo como um <strong>cliente que envia um comando serializado</strong> para o seu handler. Você tem o pipeline inteiro no meio: validação, autorização, log de auditoria, rate limit, e a decisão de recusar. Ninguém aceitaria um sistema onde o request de um cliente externo executa direto no domínio sem passar pelo pipeline — e é exatamente isso que fazem os tutoriais que executam <code>eval()</code> no que o modelo devolveu. A definição da ferramenta é <strong>o contrato que você publica para esse cliente</strong>: nome, descrição, schema de entrada.</p>
 </div>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: o loop de tool calling</span>
+<div class="frame" data-caption="1. Seu código envia as mensagens e a definição das tools (nome, descrição e schema de entrada)."><svg viewBox="0 0 640 160" role="img" aria-label="Loop de tool calling: o modelo propõe, seu código dispõe" style="width:100%;height:auto;max-width:640px"><title>Loop de tool calling: o modelo propõe, seu código dispõe</title><rect x="10" y="20" width="220" height="80" rx="8" class="s-soft" stroke-width="2.5"/><text x="120.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">SEU CÓDIGO</text><text x="120.0" y="71.7" font-size="12" text-anchor="middle">possui o loop e a decisão de executar</text><rect x="410" y="20" width="220" height="80" rx="8" class="s-box" stroke-width="1.2"/><text x="520.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">MODELO</text><text x="520.0" y="71.7" font-size="12" text-anchor="middle">decide SE e QUAL tool; só emite JSON</text><line x1="230" y1="60" x2="402.0" y2="60.0" class="s-muted" stroke-width="1.8"/><polygon points="410,60 402.0,64.0 402.0,56.0" class="s-muted"/><text x="320" y="48" font-size="12" text-anchor="middle">messages + tools</text><text x="320" y="135" font-size="13" text-anchor="middle">a descrição é toda a documentação que o modelo tem</text></svg></div>
+<div class="frame" data-caption="2. O modelo decide se e qual tool usar e responde apenas com JSON: tool_use {name, input} e stop_reason=tool_use. Nada foi executado."><svg viewBox="0 0 640 160" role="img" aria-label="Loop de tool calling: o modelo propõe, seu código dispõe" style="width:100%;height:auto;max-width:640px"><title>Loop de tool calling: o modelo propõe, seu código dispõe</title><rect x="10" y="20" width="220" height="80" rx="8" class="s-box" stroke-width="1.2"/><text x="120.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">SEU CÓDIGO</text><text x="120.0" y="71.7" font-size="12" text-anchor="middle">possui o loop e a decisão de executar</text><rect x="410" y="20" width="220" height="80" rx="8" class="s-soft" stroke-width="2.5"/><text x="520.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">MODELO</text><text x="520.0" y="71.7" font-size="12" text-anchor="middle">decide SE e QUAL tool; só emite JSON</text><line x1="410" y1="60" x2="238.0" y2="60.0" class="s-muted" stroke-width="1.8"/><polygon points="230,60 238.0,56.0 238.0,64.0" class="s-muted"/><text x="320" y="48" font-size="12" text-anchor="middle">tool_use {name, input}</text><text x="320" y="135" font-size="13" text-anchor="middle">o modelo não executa nada</text></svg></div>
+<div class="frame" data-caption="3. Seu código valida o input (Pydantic), autoriza (por exemplo, caminho dentro da raiz) e executa ou recusa. Toda a segurança mora aqui."><svg viewBox="0 0 640 160" role="img" aria-label="Loop de tool calling: o modelo propõe, seu código dispõe" style="width:100%;height:auto;max-width:640px"><title>Loop de tool calling: o modelo propõe, seu código dispõe</title><rect x="10" y="20" width="220" height="80" rx="8" class="s-soft" stroke-width="2.5"/><text x="120.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">SEU CÓDIGO</text><text x="120.0" y="71.7" font-size="12" text-anchor="middle">possui o loop e a decisão de executar</text><rect x="410" y="20" width="220" height="80" rx="8" class="s-box" stroke-width="1.2"/><text x="520.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">MODELO</text><text x="520.0" y="71.7" font-size="12" text-anchor="middle">decide SE e QUAL tool; só emite JSON</text><text x="320" y="60" font-size="12" text-anchor="middle">valida · autoriza · executa/recusa</text><text x="320" y="135" font-size="13" text-anchor="middle">dado do modelo é dado não confiável</text></svg></div>
+<div class="frame" data-caption="4. O resultado volta como tool_result. Se recusou, vai com is_error e uma mensagem acionável."><svg viewBox="0 0 640 160" role="img" aria-label="Loop de tool calling: o modelo propõe, seu código dispõe" style="width:100%;height:auto;max-width:640px"><title>Loop de tool calling: o modelo propõe, seu código dispõe</title><rect x="10" y="20" width="220" height="80" rx="8" class="s-soft" stroke-width="2.5"/><text x="120.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">SEU CÓDIGO</text><text x="120.0" y="71.7" font-size="12" text-anchor="middle">possui o loop e a decisão de executar</text><rect x="410" y="20" width="220" height="80" rx="8" class="s-box" stroke-width="1.2"/><text x="520.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">MODELO</text><text x="520.0" y="71.7" font-size="12" text-anchor="middle">decide SE e QUAL tool; só emite JSON</text><line x1="230" y1="60" x2="402.0" y2="60.0" class="s-muted" stroke-width="1.8"/><polygon points="410,60 402.0,64.0 402.0,56.0" class="s-muted"/><text x="320" y="48" font-size="12" text-anchor="middle">tool_result (is_error?)</text><text x="320" y="135" font-size="13" text-anchor="middle">erro compacto e útil permite autocorreção</text></svg></div>
+<div class="frame" data-caption="5. O loop recomeça até o modelo parar com end_turn ou o orçamento de passos (max_passos) acabar."><svg viewBox="0 0 640 160" role="img" aria-label="Loop de tool calling: o modelo propõe, seu código dispõe" style="width:100%;height:auto;max-width:640px"><title>Loop de tool calling: o modelo propõe, seu código dispõe</title><rect x="10" y="20" width="220" height="80" rx="8" class="s-soft" stroke-width="2.5"/><text x="120.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">SEU CÓDIGO</text><text x="120.0" y="71.7" font-size="12" text-anchor="middle">possui o loop e a decisão de executar</text><rect x="410" y="20" width="220" height="80" rx="8" class="s-soft" stroke-width="2.5"/><text x="520.0" y="56.7" font-size="12" text-anchor="middle" font-weight="600">MODELO</text><text x="520.0" y="71.7" font-size="12" text-anchor="middle">decide SE e QUAL tool; só emite JSON</text><text x="320" y="60" font-size="12" text-anchor="middle">end_turn ou max_passos</text><text x="320" y="135" font-size="13" text-anchor="middle">loop sem teto é fatura aberta</text></svg></div>
+</div>
 <h3>O loop completo, em código</h3>
 <p><em>Exemplo de adapter — trilha live opcional (exige chave de API; o loop com teto executável vive no laboratório).</em></p>
 <pre><code># src/llm_lab/tools.py
@@ -433,6 +529,24 @@ def investigar(pergunta: str, max_passos: int = 8) -> str:
 <h3>Leitura aplicada · O loop sob seu comando</h3>
 <p>Rodar o loop contra um repositório real, sabotar uma descrição, testar o guardrail de caminho e medir o custo do loop é o exercício deste bloco — o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: ler a sequência de passos (é ali que se vê o modelo raciocinando e a descrição ruim); trocar uma descrição por texto vago e observar o modelo errar a ferramenta; pedir explicitamente um arquivo fora da raiz e ver a recusa mecânica seguida de autocorreção; somar input+output de todos os passos para sentir o custo do histórico reenviado. <strong>Trilha live opcional:</strong> contra provedor real, com chave e crédito.</p>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Em tool calling, quem executa a função <code>ler_arquivo</code>?</p>
+<ol><li data-opt="a">O modelo, dentro do provedor.</li><li data-opt="b">O seu código: o modelo só emite o JSON da chamada pretendida; você valida, autoriza e executa ou recusa.</li><li data-opt="c">O gateway, automaticamente.</li><li data-opt="d">O SDK do provedor, sem passar pelo seu código.</li></ol>
+<div class="explain">É o fator 4 do 12-Factor Agents: tools são saídas estruturadas. Tutoriais que executam <code>eval()</code> no que o modelo devolve eliminam o pipeline (validação, autorização, auditoria) e criam o incidente.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">O modelo pede o arquivo <code>../../etc/passwd</code>. Qual é a resposta de engenharia correta?</p>
+<ol><li data-opt="a">Fronteira mecânica no código (<code>is_relative_to(RAIZ)</code>) que recusa e devolve <code>tool_result</code> com <code>is_error</code> e instrução acionável.</li><li data-opt="b">Adicionar ao prompt “nunca peça arquivos fora do repositório”.</li><li data-opt="c">Deixar passar e filtrar a resposta depois.</li><li data-opt="d">Lançar exceção e encerrar o processo.</li></ol>
+<div class="explain">Instrução não é barreira (M00). O erro volta como resultado compacto e acionável: o modelo se corrige no próximo passo. Stack trace de 200 linhas só enche a janela.</div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Quando usar structured output e quando usar tool calling?</p>
+<ol><li data-opt="a">Sempre tool calling, porque é mais geral.</li><li data-opt="b">Sempre structured output, porque tools são legado.</li><li data-opt="c">Structured output controla o que o modelo DIZ (resposta final, uma chamada); tool calling controla o que ele PEDE (chamadas intermediárias, com loop). Podem se combinar.</li><li data-opt="d">São sinônimos em provedores modernos.</li></ol>
+<div class="explain">Extrair dados de um documento é structured output. Investigar um repositório é tool calling. A ferramenta falsa “responder” só para obter JSON é gambiarra da era pré-structured output.</div>
+</div>
 <!-- ============================================ BLOCO 4 -->
 <h2 id="b04">Bloco 4 · Streaming e latência percebida</h2>
 <h3>Por que isso importa</h3>
@@ -559,9 +673,41 @@ async def perguntar(p: Pergunta) -> StreamingResponse:
 </ul>
 </div>
 
+
+<div class="tabs"><section data-tab="Síncrono (&lt; 2 s)"><pre><code>POST /classificar
+200 OK
+{"categoria": "alto"}</code></pre><p>Resposta curta, sem humano esperando muito. O mais simples que funciona.</p></section><section data-tab="Streaming SSE (2–30 s)"><pre><code>200 OK
+Content-Type: text/event-stream
+X-Accel-Buffering: no
+
+data: {"texto": "Este trecho"}
+
+data: {"texto": " faz..."}
+
+</code></pre><p>Humano esperando: melhora a percepção (TTFT). Prever evento de erro no meio do stream.</p></section><section data-tab="Assíncrono (&gt; 30 s)"><pre><code>POST /analises   -&gt; 202 Accepted {"id": "a1"}
+GET  /analises/a1 -&gt; {"status": "processando"}
+GET  /analises/a1 -&gt; {"status": "pronto", ...}</code></pre><p>Job + status (ou webhook). Dá retomada, controle de concorrência e fila.</p></section></div>
 <h3>Leitura aplicada · Latência que se mede</h3>
 <p>Subir o endpoint SSE, provar que o input domina o TTFT, provar que a saída domina o total e simular o cliente que desiste é o exercício deste bloco — o roteiro executável com streams simulados fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: consumir com <code>curl -N</code> e ver texto em pedaços mais a linha de métricas; repetir com contexto grande e ver o TTFT subir com o TPOT estável; pedir resposta curta e ver o total cair proporcional; matar o cliente no meio e ver o gerador cancelado com registro. <strong>Trilha live opcional:</strong> contra provedor real, com chave e crédito.</p>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual mudança reduz mais o tempo total de uma resposta de 2.000 tokens (TTFT de 0,8 s e 50 tokens/s)?</p>
+<ol><li data-opt="a">Reduzir o prompt de sistema em 10%.</li><li data-opt="b">Trocar HTTP por WebSocket.</li><li data-opt="c">Aumentar o paralelismo de workers.</li><li data-opt="d">Limitar a saída a ~400 tokens (no schema): o total passa de ~40,8 s para ~8,8 s.</li></ol>
+<div class="explain">Total = TTFT + TPOT × tokens gerados. A saída domina: 2.000 ÷ 50 = 40 s contra 8 s para 400 tokens. Antes de otimizar infra, pergunte se precisa de todo aquele texto, e imponha a brevidade no schema.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma análise de repositório leva cerca de 60 s e roda sem humano na frente. Que padrão usar?</p>
+<ol><li data-opt="a">Assíncrono: <code>202 Accepted</code> com id, worker processa, cliente consulta status ou recebe webhook.</li><li data-opt="b">SSE, porque streaming sempre resolve latência.</li><li data-opt="c">Síncrono com timeout de 120 s.</li><li data-opt="d">WebSocket mantido aberto por 60 s.</li></ol>
+<div class="explain">Proxies matam conexões em 30–60 s e o cliente pode mudar de rede. Streaming melhora a percepção, não muda o fato de que o trabalho é longo. O assíncrono traz retomada, prioridade de fila e sobrevive à morte do processo.</div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que “streamar” uma saída que é um objeto JSON estruturado costuma ser má ideia?</p>
+<ol><li data-opt="a">Porque SSE não transporta JSON.</li><li data-opt="b">JSON parcial não é JSON: você só valida no fim, e o usuário vê chaves e aspas surgindo; prefira não streamar (ou streamar um campo de texto).</li><li data-opt="c">Porque o provedor cobra o dobro.</li><li data-opt="d">Porque o TTFT sobe.</li></ol>
+<div class="explain">Combinação ruim por natureza. Se precisa de streaming, deixe um campo de texto do schema para isso. Em produção também planeje o buffering de proxy e o erro no meio do stream (já se enviou 200 OK).</div>
+</div>
 <!-- ============================================ BLOCO 5 -->
 <h2 id="b05">Bloco 5 · Caching: o maior redutor de custo que existe</h2>
 <h3>Por que isso importa</h3>
@@ -653,6 +799,57 @@ def relatorio_cache(msg: anthropic.types.Message) -> str:
 
 <p>Repare no desenho: <strong>duas camadas de estabilidade</strong>. As instruções nunca mudam (poderiam ter seu próprio breakpoint num sistema maior); o arquivo em análise é estável durante a sessão de perguntas sobre ele; a pergunta varia. É esse escalonamento que faz a segunda pergunta sobre o mesmo arquivo custar uma fração da primeira.</p>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: write, read e miss no prompt caching</span>
+<div class="frame" data-caption="1. Primeira chamada: tools, system e documento formam o prefixo estável, marcado com cache_control. É escrito no cache a 1,25× (TTL de 5 min)."><svg viewBox="0 0 640 160" role="img" aria-label="Prefixo estável e conteúdo variável no prompt caching" style="width:100%;height:auto;max-width:640px"><title>Prefixo estável e conteúdo variável no prompt caching</title><rect x="10" y="25" width="140" height="50" rx="8" class="s-soft" stroke-width="2.5"/><text x="80.0" y="54.5" font-size="13" text-anchor="middle">tools</text><text x="80.0" y="100" font-size="12" text-anchor="middle">write 1,25×</text><rect x="170" y="25" width="140" height="50" rx="8" class="s-soft" stroke-width="2.5"/><text x="240.0" y="54.5" font-size="13" text-anchor="middle">system</text><text x="240.0" y="100" font-size="12" text-anchor="middle">write 1,25×</text><rect x="330" y="25" width="150" height="50" rx="8" class="s-soft" stroke-width="2.5"/><text x="405.0" y="54.5" font-size="13" text-anchor="middle">documento</text><text x="405.0" y="100" font-size="12" text-anchor="middle">write 1,25×</text><rect x="500" y="25" width="130" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="54.5" font-size="13" text-anchor="middle">pergunta</text><text x="565.0" y="100" font-size="12" text-anchor="middle">1× normal</text><line x1="480" y1="12" x2="480" y2="88" class="s-accent" stroke-width="2" stroke-dasharray="4 3"/><text x="480" y="8" font-size="11" text-anchor="middle">breakpoint ao fim do prefixo estável</text><text x="320" y="140" font-size="13" text-anchor="middle">a primeira pergunta paga a escrita</text></svg></div>
+<div class="frame" data-caption="2. Segunda pergunta sobre o mesmo documento, dentro do TTL: o prefixo é byte a byte idêntico e é lido a 0,1×."><svg viewBox="0 0 640 160" role="img" aria-label="Prefixo estável e conteúdo variável no prompt caching" style="width:100%;height:auto;max-width:640px"><title>Prefixo estável e conteúdo variável no prompt caching</title><rect x="10" y="25" width="140" height="50" rx="8" class="s-soft" stroke-width="2.5"/><text x="80.0" y="54.5" font-size="13" text-anchor="middle">tools</text><text x="80.0" y="100" font-size="12" text-anchor="middle">read 0,1×</text><rect x="170" y="25" width="140" height="50" rx="8" class="s-soft" stroke-width="2.5"/><text x="240.0" y="54.5" font-size="13" text-anchor="middle">system</text><text x="240.0" y="100" font-size="12" text-anchor="middle">read 0,1×</text><rect x="330" y="25" width="150" height="50" rx="8" class="s-soft" stroke-width="2.5"/><text x="405.0" y="54.5" font-size="13" text-anchor="middle">documento</text><text x="405.0" y="100" font-size="12" text-anchor="middle">read 0,1×</text><rect x="500" y="25" width="130" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="54.5" font-size="13" text-anchor="middle">pergunta</text><text x="565.0" y="100" font-size="12" text-anchor="middle">1× normal</text><line x1="480" y1="12" x2="480" y2="88" class="s-accent" stroke-width="2" stroke-dasharray="4 3"/><text x="480" y="8" font-size="11" text-anchor="middle">breakpoint ao fim do prefixo estável</text><text x="320" y="140" font-size="13" text-anchor="middle">cache_read_input_tokens > 0</text></svg></div>
+<div class="frame" data-caption="3. Sabotagem: um timestamp no início do system muda o prefixo. Sem prefixo idêntico, a leitura zera e há nova escrita (1,25×)."><svg viewBox="0 0 640 160" role="img" aria-label="Prefixo estável e conteúdo variável no prompt caching" style="width:100%;height:auto;max-width:640px"><title>Prefixo estável e conteúdo variável no prompt caching</title><rect x="10" y="25" width="140" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="80.0" y="54.5" font-size="13" text-anchor="middle">tools</text><text x="80.0" y="100" font-size="12" text-anchor="middle">miss</text><rect x="170" y="25" width="140" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="240.0" y="54.5" font-size="13" text-anchor="middle">system</text><text x="240.0" y="100" font-size="12" text-anchor="middle">miss</text><rect x="330" y="25" width="150" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="405.0" y="54.5" font-size="13" text-anchor="middle">documento</text><text x="405.0" y="100" font-size="12" text-anchor="middle">miss</text><rect x="500" y="25" width="130" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="54.5" font-size="13" text-anchor="middle">pergunta</text><text x="565.0" y="100" font-size="12" text-anchor="middle">1× normal</text><line x1="480" y1="12" x2="480" y2="88" class="s-accent" stroke-width="2" stroke-dasharray="4 3"/><text x="480" y="8" font-size="11" text-anchor="middle">breakpoint ao fim do prefixo estável</text><text x="320" y="140" font-size="13" text-anchor="middle">cache_creation alto, cache_read sempre zero</text></svg></div>
+<div class="frame" data-caption="4. Outra sabotagem: ficar mais de 5 minutos sem usar. O TTL expira e o prefixo é escrito de novo."><svg viewBox="0 0 640 160" role="img" aria-label="Prefixo estável e conteúdo variável no prompt caching" style="width:100%;height:auto;max-width:640px"><title>Prefixo estável e conteúdo variável no prompt caching</title><rect x="10" y="25" width="140" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="80.0" y="54.5" font-size="13" text-anchor="middle">tools</text><text x="80.0" y="100" font-size="12" text-anchor="middle">expirou</text><rect x="170" y="25" width="140" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="240.0" y="54.5" font-size="13" text-anchor="middle">system</text><text x="240.0" y="100" font-size="12" text-anchor="middle">expirou</text><rect x="330" y="25" width="150" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="405.0" y="54.5" font-size="13" text-anchor="middle">documento</text><text x="405.0" y="100" font-size="12" text-anchor="middle">expirou</text><rect x="500" y="25" width="130" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="54.5" font-size="13" text-anchor="middle">pergunta</text><text x="565.0" y="100" font-size="12" text-anchor="middle">1× normal</text><line x1="480" y1="12" x2="480" y2="88" class="s-accent" stroke-width="2" stroke-dasharray="4 3"/><text x="480" y="8" font-size="11" text-anchor="middle">breakpoint ao fim do prefixo estável</text><text x="320" y="140" font-size="13" text-anchor="middle">renovar o TTL exige novo uso dentro da janela</text></svg></div>
+</div>
+
+<div class="ix"><span class="ix-title">Ordene o prompt por estabilidade: estável primeiro, variável depois</span>
+<ol class="order" data-solution="a,b,c,d"><li data-id="c">Documento em análise (estável durante a sessão) — o breakpoint termina aqui</li><li data-id="d">Pergunta do usuário (varia a cada chamada)</li><li data-id="a">Definições de tools (raramente mudam)</li><li data-id="b">Instruções de system (estáveis)</li></ol></div>
+
+<div class="ix"><span class="ix-title">Simulador: custo por sessão com e sem prompt caching</span>
+<p>Preços de referência (retrato ago/2026, US$ por milhão de tokens): Opus 5 = 5/25, Sonnet 5 = 2/10, Haiku 4.5 = 1/5 (input/output). Escrita no cache: 1,25× (5 min) ou 2× (1 h); leitura: 0,1×. Revalide na tabela oficial antes de decidir.</p>
+<div class="ix-row"><label for="m05-cc-m">Modelo:</label><select id="m05-cc-m"><option value="son">Sonnet 5</option><option value="opu">Opus 5</option><option value="hai">Haiku 4.5</option></select>
+<label for="m05-cc-ttl">TTL:</label><select id="m05-cc-ttl"><option value="5">5 min (write 1,25×)</option><option value="60">1 h (write 2×)</option></select></div>
+<div class="ix-row"><label for="m05-cc-p">Prefixo estável: <strong id="m05-cc-pv"></strong> tokens</label><input type="range" id="m05-cc-p" min="500" max="60000" step="500" value="8000" aria-label="Tokens do prefixo estável"></div>
+<div class="ix-row"><label for="m05-cc-v">Parte variável: <strong id="m05-cc-vv"></strong> tokens</label><input type="range" id="m05-cc-v" min="50" max="5000" step="50" value="300" aria-label="Tokens variáveis por chamada"></div>
+<div class="ix-row"><label for="m05-cc-o">Saída: <strong id="m05-cc-ov"></strong> tokens</label><input type="range" id="m05-cc-o" min="50" max="4000" step="50" value="400" aria-label="Tokens de saída por chamada"></div>
+<div class="ix-row"><label for="m05-cc-n">Chamadas por sessão: <strong id="m05-cc-nv"></strong></label><input type="range" id="m05-cc-n" min="1" max="50" value="8" aria-label="Chamadas por sessão"></div>
+<div class="ix-row"><label><input type="checkbox" id="m05-cc-w" checked> Todas as chamadas chegam dentro do TTL</label></div>
+<div class="ix-row"><label for="m05-cc-h">Hit rate esperado: <strong id="m05-cc-hv"></strong></label><input type="range" id="m05-cc-h" min="0" max="100" value="20" aria-label="Hit rate esperado"></div>
+<div id="m05-cc-out"></div>
+</div>
+<script>
+Course.ready(function (C) {
+
+var PR={son:[2,10,1024,"Sonnet 5"],opu:[5,25,512,"Opus 5"],hai:[1,5,4096,"Haiku 4.5"]};
+var g=function(i){return document.getElementById(i);};
+var M=g("m05-cc-m"),TT=g("m05-cc-ttl"),P=g("m05-cc-p"),V=g("m05-cc-v"),O=g("m05-cc-o"),N=g("m05-cc-n"),W=g("m05-cc-w"),H=g("m05-cc-h"),out=g("m05-cc-out");
+function usd(x){return "US$ "+x.toLocaleString("pt-BR",{minimumFractionDigits:4,maximumFractionDigits:4});}
+function upd(){
+  var pr=PR[M.value],pin=pr[0]/1e6,pout=pr[1]/1e6,min=pr[2],p=+P.value,v=+V.value,o=+O.value,n=+N.value,w=TT.value==="60"?2:1.25,hit=H.value/100;
+  g("m05-cc-pv").textContent=p.toLocaleString("pt-BR");g("m05-cc-vv").textContent=v;g("m05-cc-ov").textContent=o;g("m05-cc-nv").textContent=n;g("m05-cc-hv").textContent=H.value+"%";
+  var per=v*pin+o*pout,sem=n*(p*pin+per),can=p>=min,com;
+  if(!can)com=sem;else{var first=p*pin*w+per,rest=W.checked?p*pin*0.1+per:p*pin*w+per;com=first+(n-1)*rest;}
+  var eco=sem-com,pct=sem>0?eco/sem*100:0;
+  var be="—";if(can){for(var k=1;k<=200;k++){var c=p*pin*w+(k-1)*p*pin*0.1,u=k*p*pin;if(c<u){be=k+" chamadas";break;}}}
+  var exp=hit*0.1+(1-hit)*w,beh=(w-1)/(w-0.1);
+  out.innerHTML='<div class="table-wrap"><table><thead><tr><th></th><th>Por sessão</th><th>Por 1.000 sessões</th></tr></thead><tbody>'+
+   '<tr><td>Sem cache</td><td>'+usd(sem)+'</td><td>'+usd(sem*1000)+'</td></tr>'+
+   '<tr><td>Com cache no prefixo</td><td>'+usd(com)+'</td><td>'+usd(com*1000)+'</td></tr>'+
+   '<tr><td><strong>Economia</strong></td><td><strong>'+usd(eco)+' ('+pct.toFixed(0)+'%)</strong></td><td>'+usd(eco*1000)+'</td></tr></tbody></table></div>'+
+   '<div class="ix-out" style="white-space:normal">'+
+   (can?'':'<strong>Atenção:</strong> o prefixo ('+p+' tokens) está abaixo do mínimo cacheável de '+pr[3]+' ('+min+'). Ele simplesmente não cacheia e não avisa.<br>')+
+   (W.checked?'':'Chamadas fora do TTL reescrevem o prefixo a cada vez: o cache só custa mais.<br>')+
+   'Ponto de equilíbrio do prefixo: '+be+' dentro do TTL.<br>'+
+   'Com hit rate de '+H.value+'%, o custo esperado do prefixo é <strong>'+(exp*100).toFixed(0)+'%</strong> do custo sem cache (equilíbrio em hit rate ≈ '+(beh*100).toFixed(1)+'%). '+(exp>1?'<strong style="color:var(--bad)">Mais caro que não cachear.</strong>':'<span style="color:var(--ok)">Compensa.</span>')+'</div>';}
+[M,TT,P,V,O,N,W,H].forEach(function(e){e.addEventListener("input",upd);e.addEventListener("change",upd);});upd();
+
+});
+</script>
 <h3>As outras três camadas de cache</h3>
 <p>Prompt caching é uma das quatro camadas que um sistema de IA maduro tem. As outras, em ordem de retorno:</p>
 
@@ -718,6 +915,24 @@ async def obter_embedding(session: AsyncSession, texto: str) -> list[float]:
 <li>Mínimo de tokens por modelo, TTL curto renovável ou longo mais caro. Prefixo é byte-a-byte.</li>
 <li>Quatro camadas: prompt, resposta (chave inclui modelo, parâmetros e tenant!), embeddings (sempre) e semântico (cuidado).</li>
 </ul>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Seu painel mostra <code>cache_creation_input_tokens</code> alto em toda chamada e <code>cache_read_input_tokens</code> sempre zero. Qual a causa mais provável?</p>
+<ol><li data-opt="a">Há conteúdo variável (timestamp, id de sessão, pergunta) antes ou dentro do prefixo marcado; o breakpoint deveria ficar no último bloco estável.</li><li data-opt="b">O provedor está com falha de cache.</li><li data-opt="c">O TTL é longo demais.</li><li data-opt="d">O modelo é grande demais.</li></ol>
+<div class="explain">Marcar um bloco que muda a cada request escreve cache novo toda vez (1,25×) e nunca lê. Regra: estável primeiro, variável depois. Outra causa: prefixo abaixo do mínimo do modelo, que não cacheia e não avisa.</div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um prefixo de 10.000 tokens no Sonnet 5 (US$ 2/M; write 1,25×; read 0,1×) é reutilizado em 5 chamadas dentro do TTL. Aproximadamente quanto custa a parte do prefixo com cache, contra US$ 0,10 sem cache?</p>
+<ol><li data-opt="a">US$ 0,10 (igual).</li><li data-opt="b">US$ 0,125.</li><li data-opt="c">Cerca de US$ 0,033: uma escrita de US$ 0,025 mais quatro leituras de US$ 0,002.</li><li data-opt="d">US$ 0,010.</li></ol>
+<div class="explain">Escrita: 10.000 × 2,5/M = 0,025. Cada leitura: 10.000 × 0,2/M = 0,002, ×4 = 0,008. Total ≈ 0,033, economia de cerca de 67% (retrato ago/2026). Mude os controles do simulador para ver o ponto de equilíbrio.</div>
+</div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual afirmação sobre a chave do cache de resposta (camada do seu código) está correta?</p>
+<ol><li data-opt="a">Basta o hash do texto da pergunta.</li><li data-opt="b">Basta o hash do prompt, pois o modelo é sempre o mesmo.</li><li data-opt="c">Pode ser compartilhada entre tenants para aumentar o hit rate.</li><li data-opt="d">Deve incluir versão do modelo, parâmetros de amostragem e, se há dado de cliente no prompt, o tenant.</li></ol>
+<div class="explain">Sem modelo e parâmetros na chave, você serve resposta do modelo antigo depois do upgrade. Sem tenant, vaza dado entre clientes (M12). E o cache semântico exige muita cautela: perguntas vizinhas podem ter respostas diferentes.</div>
 </div>
 <!-- ============================================ BLOCO 6 -->
 <h2 id="b06">Bloco 6 · AI Gateway: múltiplos provedores, governança e resiliência</h2>
@@ -806,6 +1021,14 @@ litellm_settings:
 </ul>
 </div>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: fallback e circuit breaker no gateway</span>
+<div class="frame" data-caption="1. O código de domínio pede um alias semântico (raciocinio), nunca o nome de um modelo."><svg viewBox="0 0 640 215" role="img" aria-label="Gateway com fallback e circuit breaker" style="width:100%;height:auto;max-width:640px"><title>Gateway com fallback e circuit breaker</title><rect x="10" y="60" width="130" height="60" rx="8" class="s-soft" stroke-width="2.5"/><text x="75.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Seu serviço</text><text x="75.0" y="101.7" font-size="12" text-anchor="middle">pede alias raciocinio</text><rect x="210" y="60" width="140" height="60" rx="8" class="s-box" stroke-width="1.2"/><text x="280.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Gateway</text><text x="280.0" y="101.7" font-size="12" text-anchor="middle">timeout · retry · breaker</text><rect x="430" y="15" width="200" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="530.0" y="39.7" font-size="12" text-anchor="middle" font-weight="600">Primário (raciocinio)</text><text x="530.0" y="54.7" font-size="12" text-anchor="middle">responde normalmente</text><rect x="430" y="105" width="200" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="530.0" y="129.7" font-size="12" text-anchor="middle" font-weight="600">Fallback (rapido)</text><text x="530.0" y="144.7" font-size="12" text-anchor="middle">degrada: pior, mas responde</text><line x1="140" y1="90" x2="202.0" y2="90.0" class="s-muted" stroke-width="1.8"/><polygon points="210,90 202.0,94.0 202.0,86.0" class="s-muted"/><line x1="350" y1="80" x2="422.7" y2="48.2" class="s-muted" stroke-width="1.8"/><polygon points="430,45 424.3,51.9 421.1,44.5" class="s-muted"/><text x="320" y="195" font-size="13" text-anchor="middle">trocar de modelo vira mudança de configuração</text></svg></div>
+<div class="frame" data-caption="2. O gateway tenta o primário e recebe erro transitório (429 ou 5xx). Erros 400 e 401 não recebem retry."><svg viewBox="0 0 640 215" role="img" aria-label="Gateway com fallback e circuit breaker" style="width:100%;height:auto;max-width:640px"><title>Gateway com fallback e circuit breaker</title><rect x="10" y="60" width="130" height="60" rx="8" class="s-box" stroke-width="1.2"/><text x="75.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Seu serviço</text><text x="75.0" y="101.7" font-size="12" text-anchor="middle">pede alias raciocinio</text><rect x="210" y="60" width="140" height="60" rx="8" class="s-soft" stroke-width="2.5"/><text x="280.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Gateway</text><text x="280.0" y="101.7" font-size="12" text-anchor="middle">timeout · retry · breaker</text><rect x="430" y="15" width="200" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="530.0" y="39.7" font-size="12" text-anchor="middle" font-weight="600">Primário (raciocinio)</text><text x="530.0" y="54.7" font-size="12" text-anchor="middle">falha: 429 / 5xx</text><rect x="430" y="105" width="200" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="530.0" y="129.7" font-size="12" text-anchor="middle" font-weight="600">Fallback (rapido)</text><text x="530.0" y="144.7" font-size="12" text-anchor="middle">degrada: pior, mas responde</text><line x1="140" y1="90" x2="202.0" y2="90.0" class="s-muted" stroke-width="1.8"/><polygon points="210,90 202.0,94.0 202.0,86.0" class="s-muted"/><line x1="350" y1="80" x2="422.7" y2="48.2" class="s-muted" stroke-width="1.8"/><polygon points="430,45 424.3,51.9 421.1,44.5" class="s-muted"/><text x="320" y="195" font-size="13" text-anchor="middle">retry cego em erro determinístico só gasta dinheiro mais rápido</text></svg></div>
+<div class="frame" data-caption="3. Retry limitado com backoff e jitter. Falhas repetidas (allowed_fails) tiram o deployment do pool durante o cooldown: circuit breaker."><svg viewBox="0 0 640 215" role="img" aria-label="Gateway com fallback e circuit breaker" style="width:100%;height:auto;max-width:640px"><title>Gateway com fallback e circuit breaker</title><rect x="10" y="60" width="130" height="60" rx="8" class="s-box" stroke-width="1.2"/><text x="75.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Seu serviço</text><text x="75.0" y="101.7" font-size="12" text-anchor="middle">pede alias raciocinio</text><rect x="210" y="60" width="140" height="60" rx="8" class="s-soft" stroke-width="2.5"/><text x="280.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Gateway</text><text x="280.0" y="101.7" font-size="12" text-anchor="middle">timeout · retry · breaker</text><rect x="430" y="15" width="200" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="530.0" y="39.7" font-size="12" text-anchor="middle" font-weight="600">Primário (raciocinio)</text><text x="530.0" y="54.7" font-size="12" text-anchor="middle">falha: 429 / 5xx</text><rect x="430" y="105" width="200" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="530.0" y="129.7" font-size="12" text-anchor="middle" font-weight="600">Fallback (rapido)</text><text x="530.0" y="144.7" font-size="12" text-anchor="middle">degrada: pior, mas responde</text><line x1="140" y1="90" x2="202.0" y2="90.0" class="s-muted" stroke-width="1.8"/><polygon points="210,90 202.0,94.0 202.0,86.0" class="s-muted"/><line x1="350" y1="80" x2="422.7" y2="48.2" class="s-muted" stroke-width="1.8"/><polygon points="430,45 424.3,51.9 421.1,44.5" class="s-muted"/><line x1="350" y1="100" x2="422.5" y2="127.2" class="s-muted" stroke-width="1.8"/><polygon points="430,130 421.1,130.9 423.9,123.4" class="s-muted"/><text x="320" y="195" font-size="13" text-anchor="middle">jitter evita o thundering herd</text><text x="530" y="92" font-size="12" text-anchor="middle" font-weight="700" class="s-accent">cooldown</text></svg></div>
+<div class="frame" data-caption="4. O fallback assume: cair de raciocinio para rapido é aceitar resposta pior em vez de nenhuma resposta (decisão de produto, registrada em ADR)."><svg viewBox="0 0 640 215" role="img" aria-label="Gateway com fallback e circuit breaker" style="width:100%;height:auto;max-width:640px"><title>Gateway com fallback e circuit breaker</title><rect x="10" y="60" width="130" height="60" rx="8" class="s-box" stroke-width="1.2"/><text x="75.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Seu serviço</text><text x="75.0" y="101.7" font-size="12" text-anchor="middle">pede alias raciocinio</text><rect x="210" y="60" width="140" height="60" rx="8" class="s-box" stroke-width="1.2"/><text x="280.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Gateway</text><text x="280.0" y="101.7" font-size="12" text-anchor="middle">timeout · retry · breaker</text><rect x="430" y="15" width="200" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="530.0" y="39.7" font-size="12" text-anchor="middle" font-weight="600">Primário (raciocinio)</text><text x="530.0" y="54.7" font-size="12" text-anchor="middle">responde normalmente</text><rect x="430" y="105" width="200" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="530.0" y="129.7" font-size="12" text-anchor="middle" font-weight="600">Fallback (rapido)</text><text x="530.0" y="144.7" font-size="12" text-anchor="middle">degrada: pior, mas responde</text><line x1="140" y1="90" x2="202.0" y2="90.0" class="s-muted" stroke-width="1.8"/><polygon points="210,90 202.0,94.0 202.0,86.0" class="s-muted"/><line x1="350" y1="80" x2="422.7" y2="48.2" class="s-muted" stroke-width="1.8"/><polygon points="430,45 424.3,51.9 421.1,44.5" class="s-muted"/><line x1="350" y1="100" x2="422.5" y2="127.2" class="s-muted" stroke-width="1.8"/><polygon points="430,130 421.1,130.9 423.9,123.4" class="s-muted"/><text x="320" y="195" font-size="13" text-anchor="middle">fallback degrada, não replica</text></svg></div>
+<div class="frame" data-caption="5. A resposta volta com modelo_usado e custo. Sem isso você depura qualidade sem saber que rodou o fallback, e o eval compara peras com maçãs."><svg viewBox="0 0 640 215" role="img" aria-label="Gateway com fallback e circuit breaker" style="width:100%;height:auto;max-width:640px"><title>Gateway com fallback e circuit breaker</title><rect x="10" y="60" width="130" height="60" rx="8" class="s-box" stroke-width="1.2"/><text x="75.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Seu serviço</text><text x="75.0" y="101.7" font-size="12" text-anchor="middle">pede alias raciocinio</text><rect x="210" y="60" width="140" height="60" rx="8" class="s-soft" stroke-width="2.5"/><text x="280.0" y="86.7" font-size="12" text-anchor="middle" font-weight="600">Gateway</text><text x="280.0" y="101.7" font-size="12" text-anchor="middle">timeout · retry · breaker</text><rect x="430" y="15" width="200" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="530.0" y="39.7" font-size="12" text-anchor="middle" font-weight="600">Primário (raciocinio)</text><text x="530.0" y="54.7" font-size="12" text-anchor="middle">responde normalmente</text><rect x="430" y="105" width="200" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="530.0" y="129.7" font-size="12" text-anchor="middle" font-weight="600">Fallback (rapido)</text><text x="530.0" y="144.7" font-size="12" text-anchor="middle">degrada: pior, mas responde</text><line x1="140" y1="90" x2="202.0" y2="90.0" class="s-muted" stroke-width="1.8"/><polygon points="210,90 202.0,94.0 202.0,86.0" class="s-muted"/><line x1="350" y1="80" x2="422.7" y2="48.2" class="s-muted" stroke-width="1.8"/><polygon points="430,45 424.3,51.9 421.1,44.5" class="s-muted"/><line x1="350" y1="100" x2="422.5" y2="127.2" class="s-muted" stroke-width="1.8"/><polygon points="430,130 421.1,130.9 423.9,123.4" class="s-muted"/><text x="320" y="195" font-size="13" text-anchor="middle">gateway é ponto único de falha: monitore</text><text x="530" y="92" font-size="12" text-anchor="middle" font-weight="700" class="s-accent">modelo_usado registrado</text></svg></div>
+</div>
 <h3>O adaptador no seu código</h3>
 <p>Mesmo usando gateway, mantenha uma fronteira fina no domínio — o gateway pode mudar, o contrato do seu serviço não:</p>
 <pre><code># src/llm_lab/gateway.py
@@ -874,6 +1097,18 @@ async def pedir[T: BaseModel](
 <h3>Leitura aplicada · Provedor cai, cliente não percebe</h3>
 <p>Configurar aliases com fallback, forçar a falha do primário, comparar qualidade entre aliases e registrar a decisão em ADR é o exercício deste bloco — o roteiro executável com fakes fica no <code>Laboratório guiado M05</code>, depois do bloco 7. O percurso: mesma chamada devolvendo o objeto do bloco 2 agora com telemetria (<code>modelo_usado</code> preenchido); chave inválida no primário e a chamada <em>sucedendo</em> pelo fallback, com o cooldown tirando o quebrado do pool; tabela rapido × raciocinio em custo, latência e qualidade manual (embrião do M06); e o ADR com a consequência incômoda declarada — o gateway é um ponto único de falha a monitorar. <strong>Trilha live opcional:</strong> com dois provedores (ou dois modelos do mesmo), chaves e crédito.</p>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Seu gateway recebe <code>400</code> por schema inválido de um provedor. Qual política de retry está correta?</p>
+<ol><li data-opt="a">Retry com backoff até 5 vezes.</li><li data-opt="b">Não fazer retry: é erro determinístico; retry só se repete e cobra mais. Retry é para erros transitórios (429, 5xx), com jitter e limite baixo.</li><li data-opt="c">Trocar imediatamente para o fallback e repetir.</li><li data-opt="d">Aumentar o timeout.</li></ol>
+<div class="explain">Retry custa dinheiro: uma requisição que falhou depois de gerar 3k tokens de saída já foi cobrada. Sem jitter, N workers voltam juntos e você se auto-DDoSa.</div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que o código de domínio deve pedir <code>rapido</code>/<code>raciocinio</code> e não <code>claude-sonnet-5</code>?</p>
+<ol><li data-opt="a">Por estética.</li><li data-opt="b">Porque aliases são mais baratos.</li><li data-opt="c">Alias semântico torna a troca de modelo uma mudança de configuração e facilita o A/B de modelos; se o nome do modelo aparece no domínio, o gateway não faz seu trabalho.</li><li data-opt="d">Porque o provedor exige.</li></ol>
+<div class="explain">O alias também separa decisões: o fallback por janela (contexto estourado) é diferente do fallback por falha, e as duas listas ficam na configuração. Registre qual modelo respondeu.</div>
+</div>
 <!-- ============================================ BLOCO 7 -->
 <h2 id="b07">Bloco 7 · FinOps de IA: medir, prever e otimizar custo</h2>
 <h3>Por que isso importa</h3>
@@ -931,6 +1166,24 @@ margem_bruta  = (preço_do_plano − custo_mensal_por_cliente) / preço_do_plano
 <p>A aplicação ao Capstone é trilha opcional com especificação própria; o laboratório entrega gateway, ledger e relatório sobre fakes.</p>
 
 <!-- ============================================ LABORATÓRIO GUIADO -->
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Para reduzir custo, qual destas alavancas costuma ser a mais subestimada?</p>
+<ol><li data-opt="a">Trocar para o modelo mais caro em tudo.</li><li data-opt="b">Aumentar o prompt de sistema com mais exemplos.</li><li data-opt="c">Pedir ao modelo para “ser mais barato”.</li><li data-opt="d">Não chamar o modelo: regra determinística, regex, cache de resposta. Detectar linguagem pela extensão custa zero e acerta mais.</li></ol>
+<div class="explain">A pergunta mais lucrativa do campo é “isto precisa mesmo de um LLM?”. O que é determinístico fica determinístico; o modelo entra para explicar, priorizar e conversar. Isso também elimina uma classe de alucinação.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que medir p50, p95 e máximo do custo por request, e não só o total mensal?</p>
+<ol><li data-opt="a">O custo varia com o conteúdo de cada request; a cauda (o request gigante) mata a margem e não aparece na média.</li><li data-opt="b">Porque o provedor cobra por percentil.</li><li data-opt="c">Porque a média mensal é sempre zero.</li><li data-opt="d">Porque p95 é exigido por lei.</li></ol>
+<div class="explain">Prompt de 2k tokens e prompt de 50k têm custos muito diferentes. Meça a distribuição e use circuit breaker de custo por tenant.</div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Com a tabela de preços de referência, qual é a relação input × output e a consequência prática?</p>
+<ol><li data-opt="a">Output custa o mesmo que input.</li><li data-opt="b">Output custa menos que input, então respostas longas são baratas.</li><li data-opt="c">Output custa 5× o input em toda a linha: resposta prolixa é o item mais caro; limite a saída no schema.</li><li data-opt="d">Output só custa mais no Haiku.</li></ol>
+<div class="explain">Sonnet 5: 2 vs 10; Opus 5: 5 vs 25; Haiku 4.5: 1 vs 5 (retrato ago/2026, revalide). Por isso encurtar a saída e rotear por alias são alavancas de primeira ordem. Use o simulador do bloco 5 para ver o peso da saída.</div>
+</div>
 <h2 id="lab-guiado">Laboratório guiado M05</h2>
 <p>A prática do módulo, reunida e executável com fakes locais — sem rede, conta ou crédito. Pode atravessar várias sessões: cada etapa termina retomável. Lint, tipos e testes são oráculos do programa; o checkpoint vem depois, separado. Trilha live opcional (provedor real, com chave e crédito) replica as etapas 1, 2, 4 e 6 com os mesmos resultados esperados.</p>
 
@@ -1012,6 +1265,10 @@ uv sync --frozen</code></pre>
 </tbody>
 </table>
 <p>Preços, versões de modelo, quotas e capacidades são informação de alto risco: revalidar em até 90 dias. O invariante do módulo (contrato, cache, retry, custo) não depende de nenhum fornecedor.</p>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique para virar. Tente responder antes de ver o verso.</p>
+<div class="flashcards"><div class="fc"><div class="front">Token e idioma</div><div class="back">Unidade de custo, limite e tempo. Inglês ≈ 4 caracteres/token; português ≈ 3–3,5 (~20% mais caro); código ≈ 3.</div></div><div class="fc"><div class="front">Custo, latência, atenção</div><div class="back">As três razões para não encher a janela só porque cabe.</div></div><div class="fc"><div class="front">temperature=0</div><div class="back">Alta reprodutibilidade, não determinismo. Pinne a versão completa do modelo e não compare string exata.</div></div><div class="fc"><div class="front">Schema garante…</div><div class="back">Forma (JSON válido, tipos, enum, campos obrigatórios). Não garante verdade, completude nem sentido.</div></div><div class="fc"><div class="front">Saída para “não sei”</div><div class="back">Lista vazia, campo opcional ou enum indeterminado: reduz invenção mais que qualquer instrução.</div></div><div class="fc"><div class="front">Quem executa a tool</div><div class="back">O seu código. O modelo só emite JSON; você valida, autoriza, executa ou recusa.</div></div><div class="fc"><div class="front">TTFT, TPOT, total</div><div class="back">Primeiro token; intervalo entre tokens; TTFT + TPOT × tokens gerados. A saída domina o total.</div></div><div class="fc"><div class="front">Streaming × assíncrono</div><div class="back">SSE para 2–30 s com humano esperando; 202 + job + status para mais de 30 s ou sem humano.</div></div><div class="fc"><div class="front">Prompt caching</div><div class="back">Prefixo byte a byte idêntico: tools → system → messages. Write 1,25× (5 min) ou 2× (1 h); read 0,1×.</div></div><div class="fc"><div class="front">Erro nº 1 do cache</div><div class="back">Breakpoint num bloco variável: escreve toda vez e nunca lê. Estável primeiro, variável depois.</div></div><div class="fc"><div class="front">Chave do cache de resposta</div><div class="back">Modelo + parâmetros + prompt inteiro (+ tenant se houver dado do cliente).</div></div><div class="fc"><div class="front">Gateway</div><div class="back">Interface única, fallback, roteamento por custo, governança e observabilidade. Alias semântico; registre modelo_usado.</div></div><div class="fc"><div class="front">Retry em LLM</div><div class="back">Só erro transitório (429, 5xx), com jitter e limite baixo; retry custa dinheiro.</div></div><div class="fc"><div class="front">FinOps</div><div class="back">Output ≈ 5× o input; meça p50/p95/máx; a melhor alavanca é não chamar o modelo.</div></div></div>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

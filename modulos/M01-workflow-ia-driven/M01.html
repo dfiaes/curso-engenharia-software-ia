@@ -78,6 +78,8 @@
 </ul>
 </div>
 
+
+<div class="tabs"><section data-tab="Chat-driven"><p><strong>Onde mora o requisito:</strong> espalhado em dezenas de mensagens. <strong>Retomada:</strong> depende de histórico, resumo ou checkpoint do harness. <strong>Erro:</strong> descoberto por tentativa; cada “não era isso” polui o contexto com versões erradas. <strong>Revisão:</strong> um diff enorme no fim.</p></section><section data-tab="SDD"><p><strong>Onde mora o requisito:</strong> em PRD, spec e plan versionados, com critérios verificáveis. <strong>Retomada:</strong> nova sessão lê os artefatos e o último estado confirmado. <strong>Erro:</strong> aparece na revisão de duas páginas ou em um gate, antes do código. <strong>Revisão:</strong> por documento e por etapa.</p></section></div>
 <h3 id="sec-1-2-os-tres-niveis-de-artefato">1.2 Os três níveis de artefato <a class="section-link" href="#sec-1-2-os-tres-niveis-de-artefato" aria-label="Link para esta seção">#</a></h3>
 <p>SDD maduro separa a especificação em três documentos encadeados, cada um respondendo uma pergunta diferente. A separação não é estética: cada documento muda por um motivo diferente, num ritmo diferente, e mistura-los é o que faz "a spec" virar um monólito que ninguém atualiza.</p>
 
@@ -140,6 +142,33 @@
 <p>Quando comportamento e documentação divergem, não escolha a spec nem o código por reflexo. Classifique: <code>consistent</code>, <code>spec_stale</code>, <code>code_incorrect</code> ou <code>decision_required</code>. Mitigue primeiro um incidente urgente; depois atualize contrato, implementação, testes e registro de decisão juntos. Se evidência operacional e intenção não bastarem, pare sem mutar e peça a decisão de produto.</p>
 </div>
 
+
+<div class="ix"><span class="ix-title">Simulador: classifique o drift</span>
+<p>Leia o cenário e escolha a classificação. Nenhuma fonte vence por reflexo: spec, código, testes e telemetria podem estar errados.</p>
+<div id="m01-dr-s" class="ix-out" style="white-space:normal"></div>
+<div class="ix-row" id="m01-dr-b">
+<button class="ix-btn" data-c="consistent">consistent</button><button class="ix-btn" data-c="spec_stale">spec_stale</button><button class="ix-btn" data-c="code_incorrect">code_incorrect</button><button class="ix-btn" data-c="decision_required">decision_required</button></div>
+<div id="m01-dr-f" class="ix-out" style="white-space:normal"></div>
+<div class="ix-row"><button class="ix-btn primary" id="m01-dr-n">Próximo cenário</button><span id="m01-dr-p"></span></div>
+</div>
+<script>
+Course.ready(function (C) {
+
+var S=[
+ {t:"O contrato exige que a semana vá de segunda a domingo. O teste de comportamento do agrupamento falha e ninguém pediu mudança de regra.",a:"code_incorrect",e:"O contrato vigente é claro e o teste de comportamento o contradiz. Corrija a implementação (e confira se o teste tem oráculo válido)."},
+ {t:"O produto decidiu e registrou que a semana começa no domingo. O código já agrupa a partir do domingo, mas a spec ainda diz segunda a domingo.",a:"spec_stale",e:"A decisão está registrada e o código a segue; o documento ficou para trás. Atualize contrato e registro de decisão no mesmo change set."},
+ {t:"Spec, requisitos, código e testes concordam, e a evidência da última execução está registrada.",a:"consistent",e:"Sem divergência entre as fontes. Isto também é um resultado válido: não invente correção."},
+ {t:"A spec diz segunda a domingo, o código usa domingo, e a telemetria mostra clientes dependendo do domingo. Não há decisão registrada.",a:"decision_required",e:"Intenção e comportamento aceitável não podem ser inferidos com segurança. Mitigue o que for urgente, pare sem mutar e peça decisão de produto."}];
+var si=0,sc=0,done=false,el=document.getElementById("m01-dr-s"),fb=document.getElementById("m01-dr-f"),bt=document.querySelectorAll("#m01-dr-b button"),pg=document.getElementById("m01-dr-p");
+function show(){el.textContent="Cenário "+(si+1)+" de "+S.length+": "+S[si].t;fb.textContent="";done=false;pg.textContent=" Acertos: "+sc;}
+Array.prototype.forEach.call(bt,function(b){b.addEventListener("click",function(){
+  if(done)return;done=true;var s=S[si],ok=b.dataset.c===s.a;if(ok)sc++;
+  fb.innerHTML=(ok?"Correto. ":"Não é essa; a resposta esperada é <strong>"+s.a+"</strong>. ")+s.e;pg.textContent=" Acertos: "+sc;});});
+document.getElementById("m01-dr-n").addEventListener("click",function(){si=(si+1)%S.length;if(si===0)sc=0;show();});
+show();
+
+});
+</script>
 <h3 id="sec-1-3-o-ciclo-pesquisar-planejar-implementar-verificar">1.3 O ciclo: pesquisar → planejar → implementar → verificar <a class="section-link" href="#sec-1-3-o-ciclo-pesquisar-planejar-implementar-verificar" aria-label="Link para esta seção">#</a></h3>
 <p>SDD não é só "escrever documentos antes". É um ciclo com quatro fases, e a primeira é a que quase todo mundo pula:</p>
 
@@ -150,6 +179,9 @@
 <li><strong>Verificar.</strong> Mecanicamente (testes, type check, lint — o harness do bloco 2) e semanticamente (o diff faz o que a spec pede? — revisão sua). Divergência encontrada volta para o passo 2, não para um remendo no chat.</li>
 </ol>
 
+
+<div class="ix"><span class="ix-title">Ordene o ciclo do SDD (use as setas)</span>
+<ol class="order" data-solution="a,b,c,d,e,f"><li data-id="d">Planejar o plan.md: etapas pequenas, read/write sets, gate e evidência esperada</li><li data-id="a">Pesquisar o terreno: código existente, padrões e restrições reais</li><li data-id="f">Verificar mecânica e semanticamente; divergência volta ao planejamento</li><li data-id="c">Planejar a spec técnica: schemas, contratos, restrições de camada, decisões</li><li data-id="b">Planejar o PRD: problema, requisitos, não-objetivos</li><li data-id="e">Implementar uma etapa por vez, com o gate rodando entre elas</li></ol></div>
 <h3 id="sec-1-4-ferramental-github-spec-kit-e-por-que-voce-vai-construir-o-seu">1.4 Ferramental: GitHub Spec Kit — e por que você vai construir o seu <a class="section-link" href="#sec-1-4-ferramental-github-spec-kit-e-por-que-voce-vai-construir-o-seu" aria-label="Link para esta seção">#</a></h3>
 
 <div class="box">
@@ -169,6 +201,8 @@
 </tbody></table>
 <p>Spec Kit é o adapter didático deste módulo. O aluno aprende o contrato primeiro para poder adotar, substituir ou remover a ferramenta sem reaprender a raciocinar sobre mudança.</p>
 
+
+<div class="tabs"><section data-tab="Spec Kit com /speckit.*"><p>Em alguns adapters os recursos do Spec Kit aparecem como comandos de barra <code>/speckit.*</code>. O fluxo apresentado é Spec → Plan → Tasks → Implement.</p></section><section data-tab="Spec Kit com $speckit-*"><p>Em outros adapters a invocação é por menção de skill, <code>$speckit-*</code>. Mesmas fases, outra superfície: por isso o curso não decora a sintaxe, descobre-a na versão instalada.</p></section><section data-tab="Kit do curso"><p>Contrato canônico, Agent Skills e adapters mínimos. A regra de domínio vive uma vez no núcleo; cada produto só traduz entrada e apresentação.</p></section></div>
 <h3 id="sec-1-5-anti-padroes-de-spec-os-quatro-jeitos-de-fazer-sdd-errado">1.5 Anti-padrões de spec — os quatro jeitos de fazer SDD errado <a class="section-link" href="#sec-1-5-anti-padroes-de-spec-os-quatro-jeitos-de-fazer-sdd-errado" aria-label="Link para esta seção">#</a></h3>
 <table>
 <thead><tr><th>Anti-padrão</th><th>Como se parece</th><th>Por que falha</th><th>Conserto</th></tr></thead>
@@ -194,7 +228,25 @@
 <li>Spec Kit é implementação de referência; o contrato portátil do lab preserva o conceito fora de qualquer produto.</li>
 </ul>
 </div>
- </section>
+ 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que o desenvolvimento chat-driven falha de forma previsível em tarefas de várias horas?</p>
+<ol><li data-opt="a">Porque o modelo se recusa a seguir instruções longas.</li><li data-opt="b">O requisito mora em um lugar volátil (a janela de contexto) e degrada quando o harness resume ou trunca o histórico; a descoberta por tentativa e erro ainda polui o que resta.</li><li data-opt="c">Porque chats não permitem arquivos.</li><li data-opt="d">Porque o modelo guarda estado entre chamadas e acaba confundindo versões.</li></ol>
+<div class="explain">O mecanismo é estrutural: janela finita, persistência não implícita e rodadas de “não era isso” que poluem o contexto. A opção D inverte o fato: o modelo-base não mantém estado entre chamadas; qualquer persistência é capacidade externa do harness e precisa de contrato.</div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">A semana passou a começar no domingo por decisão de produto registrada. O código já agrupa assim, mas a spec diz segunda a domingo. Qual a classificação e a ação?</p>
+<ol><li data-opt="a"><code>code_incorrect</code>: reverter o código para segunda.</li><li data-opt="b"><code>consistent</code>: a spec é só documentação.</li><li data-opt="c"><code>spec_stale</code>: atualizar contrato e registro de decisão no mesmo change set.</li><li data-opt="d"><code>decision_required</code>: apagar a spec e recomeçar.</li></ol>
+<div class="explain">Há decisão registrada e o código a segue; quem ficou velho foi o documento. Escolher A é dar soberania automática à spec; B ignora que spec mentirosa gera código que “conserta” o que estava certo (spec-fóssil).</div>
+</div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual requisito é um critério de aceitação verificável?</p>
+<ol><li data-opt="a">“O sistema deve tratar erros adequadamente.”</li><li data-opt="b">“Deve ser rápido.”</li><li data-opt="c">“A interface deve ser agradável.”</li><li data-opt="d">“p95 &lt; 100 ms medido com k6 em 100 VUs.”</li></ol>
+<div class="explain">Regra prática: se não dá para virar teste automatizado ou comando com saída esperada, é desejo. Os outros são spec-telepatia: o agente escolherá uma interpretação, estatisticamente, e não a sua.</div>
+</div>
+</section>
 <!-- ============================================ BLOCO 2 -->
 <section id="b2">
 <h2>Bloco 2 · Harness Engineering: guardrails mecânicos, não pedidos educados</h2>
@@ -235,6 +287,28 @@
 </ul>
 </div>
 
+
+<div class="ix"><span class="ix-title">Simulador: erro composto e o valor do gate</span>
+<p>Ilustração matemática, não taxa medida de agentes: com <em>n</em> passos independentes e probabilidade <em>p</em> de acerto em cada um, a chance de terminar tudo certo é <em>p<sup>n</sup></em>. Um gate que detecta uma fração <em>c</em> das falhas (e permite refazer o passo) eleva o acerto efetivo por passo para <em>p + (1 − p)·c</em>.</p>
+<div class="ix-row"><label for="m01-ec-p">Acerto por passo: <strong id="m01-ec-pv"></strong></label><input type="range" id="m01-ec-p" min="80" max="99" value="95" aria-label="Acerto por passo em porcentagem"></div>
+<div class="ix-row"><label for="m01-ec-n">Passos: <strong id="m01-ec-nv"></strong></label><input type="range" id="m01-ec-n" min="1" max="40" value="20" aria-label="Número de passos"></div>
+<div class="ix-row"><label for="m01-ec-c">Gate detecta: <strong id="m01-ec-cv"></strong></label><input type="range" id="m01-ec-c" min="0" max="95" step="5" value="70" aria-label="Fração de falhas detectada pelo gate"></div>
+<div id="m01-ec-o"></div>
+</div>
+<script>
+Course.ready(function (C) {
+
+var P=document.getElementById("m01-ec-p"),N=document.getElementById("m01-ec-n"),Cg=document.getElementById("m01-ec-c"),o=document.getElementById("m01-ec-o");
+function bar(v,c){return '<div style="height:14px;border-radius:7px;background:var(--line)"><div style="height:14px;border-radius:7px;background:var(--'+c+');width:'+(v*100).toFixed(1)+'%"></div></div>';}
+function upd(){
+  var p=P.value/100,n=+N.value,c=Cg.value/100;
+  document.getElementById("m01-ec-pv").textContent=P.value+"%";document.getElementById("m01-ec-nv").textContent=n;document.getElementById("m01-ec-cv").textContent=Cg.value+"% das falhas";
+  var a=Math.pow(p,n),pe=p+(1-p)*c,b=Math.pow(pe,n);
+  o.innerHTML='<div class="ix-out" style="white-space:normal"><p><strong>Sem gate entre passos:</strong> '+(a*100).toFixed(1)+'%'+bar(a,'bad')+'</p><p><strong>Com gate a cada passo</strong> (acerto efetivo '+(pe*100).toFixed(1)+'% por passo): '+(b*100).toFixed(1)+'%'+bar(b,'ok')+'</p><p class="meta">Na prática as falhas não são independentes e o gate não é perfeito: por isso o módulo manda medir, não presumir.</p></div>';}
+[P,N,Cg].forEach(function(e){e.addEventListener("input",upd);});upd();
+
+});
+</script>
 <h3 id="sec-2-3-os-cinco-guardrails-mecanicos">2.3 Os cinco guardrails mecânicos <a class="section-link" href="#sec-2-3-os-cinco-guardrails-mecanicos" aria-label="Link para esta seção">#</a></h3>
 <p>O harness completo tem cinco camadas. A regra que as une: <strong>se uma propriedade é inegociável, ela precisa de controle executável, caso negativo e evidência</strong>. Exit code é um sinal de protocolo; sozinho, não prova que o oráculo representa a necessidade real.</p>
 
@@ -292,6 +366,13 @@
 <p>Pegue qualquer instrução do <code>AGENTS.md</code> e pergunte: <em>"que evidência aparece se isto for ignorado?"</em> Se a resposta é "nenhuma", transforme-a em policy, schema, teste ou aprovação — ou registre conscientemente que continua sendo orientação probabilística.</p>
 </div>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: da proposta ao repositório</span>
+<div class="frame" data-caption="1. O agente, probabilístico, propõe uma edição. Nada foi aceito ainda."><svg viewBox="0 0 640 140" role="img" aria-label="Pipeline do harness entre a proposta do agente e o repositório" style="width:100%;height:auto;max-width:640px"><title>Pipeline do harness entre a proposta do agente e o repositório</title><rect x="10" y="25" width="130" height="62" rx="8" class="s-soft" stroke-width="2.5"/><text x="75.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Agente</text><text x="75.0" y="67.7" font-size="12" text-anchor="middle">propõe edição</text><rect x="170" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="235.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Gate</text><text x="235.0" y="67.7" font-size="12" text-anchor="middle">ruff · mypy · testes</text><rect x="340" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="405.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Estado</text><text x="405.0" y="67.7" font-size="12" text-anchor="middle">spec · diff · evidência</text><rect x="500" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Repo</text><text x="565.0" y="67.7" font-size="12" text-anchor="middle">commit atômico</text><line x1="140" y1="56" x2="162.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="170,56 162.0,60.0 162.0,52.0" class="s-muted"/><line x1="300" y1="56" x2="332.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="340,56 332.0,60.0 332.0,52.0" class="s-muted"/><line x1="470" y1="56" x2="492.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="500,56 492.0,60.0 492.0,52.0" class="s-muted"/><text x="320" y="120" font-size="13" text-anchor="middle">o modelo erra; o harness decide se o erro passa</text></svg></div>
+<div class="frame" data-caption="2. O gate roda a verificação (lint, tipos, teste focado) com timeout e exit code."><svg viewBox="0 0 640 140" role="img" aria-label="Pipeline do harness entre a proposta do agente e o repositório" style="width:100%;height:auto;max-width:640px"><title>Pipeline do harness entre a proposta do agente e o repositório</title><rect x="10" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="75.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Agente</text><text x="75.0" y="67.7" font-size="12" text-anchor="middle">propõe edição</text><rect x="170" y="25" width="130" height="62" rx="8" class="s-soft" stroke-width="2.5"/><text x="235.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Gate</text><text x="235.0" y="67.7" font-size="12" text-anchor="middle">ruff · mypy · testes</text><rect x="340" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="405.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Estado</text><text x="405.0" y="67.7" font-size="12" text-anchor="middle">spec · diff · evidência</text><rect x="500" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Repo</text><text x="565.0" y="67.7" font-size="12" text-anchor="middle">commit atômico</text><line x1="140" y1="56" x2="162.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="170,56 162.0,60.0 162.0,52.0" class="s-muted"/><line x1="300" y1="56" x2="332.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="340,56 332.0,60.0 332.0,52.0" class="s-muted"/><line x1="470" y1="56" x2="492.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="500,56 492.0,60.0 492.0,52.0" class="s-muted"/><text x="320" y="120" font-size="13" text-anchor="middle">exit code é sinal de protocolo, não prova semântica</text></svg></div>
+<div class="frame" data-caption="3. O resultado vira estado externalizado: diff, evidência persistida, checkpoint."><svg viewBox="0 0 640 140" role="img" aria-label="Pipeline do harness entre a proposta do agente e o repositório" style="width:100%;height:auto;max-width:640px"><title>Pipeline do harness entre a proposta do agente e o repositório</title><rect x="10" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="75.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Agente</text><text x="75.0" y="67.7" font-size="12" text-anchor="middle">propõe edição</text><rect x="170" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="235.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Gate</text><text x="235.0" y="67.7" font-size="12" text-anchor="middle">ruff · mypy · testes</text><rect x="340" y="25" width="130" height="62" rx="8" class="s-soft" stroke-width="2.5"/><text x="405.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Estado</text><text x="405.0" y="67.7" font-size="12" text-anchor="middle">spec · diff · evidência</text><rect x="500" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Repo</text><text x="565.0" y="67.7" font-size="12" text-anchor="middle">commit atômico</text><line x1="140" y1="56" x2="162.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="170,56 162.0,60.0 162.0,52.0" class="s-muted"/><line x1="300" y1="56" x2="332.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="340,56 332.0,60.0 332.0,52.0" class="s-muted"/><line x1="470" y1="56" x2="492.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="500,56 492.0,60.0 492.0,52.0" class="s-muted"/><text x="320" y="120" font-size="13" text-anchor="middle">uma sessão nova consegue retomar daqui</text></svg></div>
+<div class="frame" data-caption="4. Só então o commit atômico entra no repositório; se o gate falhar, volta ao passo 1."><svg viewBox="0 0 640 140" role="img" aria-label="Pipeline do harness entre a proposta do agente e o repositório" style="width:100%;height:auto;max-width:640px"><title>Pipeline do harness entre a proposta do agente e o repositório</title><rect x="10" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="75.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Agente</text><text x="75.0" y="67.7" font-size="12" text-anchor="middle">propõe edição</text><rect x="170" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="235.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Gate</text><text x="235.0" y="67.7" font-size="12" text-anchor="middle">ruff · mypy · testes</text><rect x="340" y="25" width="130" height="62" rx="8" class="s-box" stroke-width="1.2"/><text x="405.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Estado</text><text x="405.0" y="67.7" font-size="12" text-anchor="middle">spec · diff · evidência</text><rect x="500" y="25" width="130" height="62" rx="8" class="s-soft" stroke-width="2.5"/><text x="565.0" y="52.7" font-size="12" text-anchor="middle" font-weight="600">Repo</text><text x="565.0" y="67.7" font-size="12" text-anchor="middle">commit atômico</text><line x1="140" y1="56" x2="162.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="170,56 162.0,60.0 162.0,52.0" class="s-muted"/><line x1="300" y1="56" x2="332.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="340,56 332.0,60.0 332.0,52.0" class="s-muted"/><line x1="470" y1="56" x2="492.0" y2="56.0" class="s-muted" stroke-width="1.8"/><polygon points="500,56 492.0,60.0 492.0,52.0" class="s-muted"/><text x="320" y="120" font-size="13" text-anchor="middle">falhou? corrige a etapa, não remenda no chat</text></svg></div>
+</div>
 <h3 id="sec-2-4-leitura-aplicada-runner-caso-negativo-e-evidencia">2.4 Leitura aplicada · runner, caso negativo e evidência <a class="section-link" href="#sec-2-4-leitura-aplicada-runner-caso-negativo-e-evidencia" aria-label="Link para esta seção">#</a></h3>
 <p>O runner executável fica no laboratório final. Aqui fixe a sequência causal: a policy aceita apenas executáveis e diretórios permitidos; o runner usa lista de argumentos e <code>shell=False</code>; a evidência persiste argv, versão, duração, saída e exit code. O M02 aprofundará a linguagem; neste módulo, a questão é onde a autoridade de executar termina.</p>
 
@@ -311,6 +392,24 @@
 <li>Regra inegociável vira controle executável com caso negativo e evidência; exit code é sinal, não prova semântica completa.</li>
 <li>Teste ácido do estado: <code>/clear</code> a qualquer momento — dá para retomar só dos artefatos?</li>
 </ul>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Sua instrução de AGENTS.md diz “não reescreva o código”. Qual é a leitura de harness engineering?</p>
+<ol><li data-opt="a">É um pedido probabilístico; a regra inegociável precisa virar controle executável (policy, teste, gate) com caso negativo e evidência.</li><li data-opt="b">Basta torná-la mais enfática com maiúsculas.</li><li data-opt="c">Basta repetir a regra no início de cada mensagem.</li><li data-opt="d">Contexto bem escolhido garante o cumprimento.</li></ol>
+<div class="explain">Prompt e contexto são probabilísticos; só o harness é determinístico. O teste do prompt supérfluo: “que evidência aparece se isto for ignorado?” Se nenhuma, transforme a regra em policy, schema, teste ou aprovação.</div>
+</div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Num projeto com pytest, um passo do runner retorna exit code 5. Como o harness deve tratar?</p>
+<ol><li data-opt="a">Como sucesso, pois não houve falha de teste.</li><li data-opt="b">Como aviso a ignorar.</li><li data-opt="c">Como erro de sintaxe do Python.</li><li data-opt="d">Como bloqueio: o 5 significa que nenhum teste foi coletado, logo nada foi verificado.</li></ol>
+<div class="explain">Cada ferramenta define seus códigos. Zero é aprovado; cinco, nenhum teste coletado, e deve bloquear o curso. Tratar como aviso cria a ilusão de gate verde sem verificação.</div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Para verificar o código gerado por um agente, você pede ao mesmo modelo que revise o próprio texto. O que isso NÃO garante?</p>
+<ol><li data-opt="a">Que haverá algum comentário de revisão.</li><li data-opt="b">Independência: falhas correlacionadas fazem o revisor repetir o erro do gerador.</li><li data-opt="c">Que o código compile.</li><li data-opt="d">Que o contexto caiba na janela.</li></ol>
+<div class="explain">Verificador do mesmo modelo (ou semelhante) não é independente por definição. Priorize parser, type checker, teste com oráculo forte, controle negativo e revisão humana por risco; independência de um segundo agente precisa ser demonstrada.</div>
 </div>
 </section>
 <!-- ============================================ BLOCO 3 -->
@@ -361,6 +460,14 @@
 
 <div class="box"><span class="lbl">Referência do conceito</span><p>Os fatores orientam responsabilidades de um workflow: entradas estruturadas, prompts versionados, estado explícito, interrupção e retomada, aprovação de efeitos, controle de fluxo e erros acionáveis. Use a tabela para localizar qual responsabilidade falta no seu sistema.</p></div>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: retomada sem repetir efeito</span>
+<div class="frame" data-caption="1. A instância A chega ao passo 3. O ledger não contém o effect_id e-42."><svg viewBox="0 0 640 170" role="img" aria-label="Pause e resume com effect_id idempotente" style="width:100%;height:auto;max-width:640px"><title>Pause e resume com effect_id idempotente</title><rect x="10" y="25" width="150" height="64" rx="8" class="s-soft" stroke-width="2.5"/><text x="85.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Instância A</text><text x="85.0" y="68.7" font-size="12" text-anchor="middle">executa o workflow</text><rect x="245" y="25" width="170" height="64" rx="8" class="s-soft" stroke-width="2.5"/><text x="330.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Ledger durável</text><text x="330.0" y="68.7" font-size="12" text-anchor="middle">estado externo</text><rect x="500" y="25" width="130" height="64" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Efeito externo</text><text x="565.0" y="68.7" font-size="12" text-anchor="middle">aguardando</text><line x1="160" y1="57" x2="237.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="245,57 237.0,61.0 237.0,53.0" class="s-muted"/><line x1="415" y1="57" x2="492.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="500,57 492.0,61.0 492.0,53.0" class="s-muted"/><text x="330" y="125" font-size="13" text-anchor="middle" font-weight="600">ledger: { }</text><text x="330" y="150" font-size="12" text-anchor="middle">consulta antes de agir</text></svg></div>
+<div class="frame" data-caption="2. A executa o efeito uma vez e registra e-42 como aplicado."><svg viewBox="0 0 640 170" role="img" aria-label="Pause e resume com effect_id idempotente" style="width:100%;height:auto;max-width:640px"><title>Pause e resume com effect_id idempotente</title><rect x="10" y="25" width="150" height="64" rx="8" class="s-soft" stroke-width="2.5"/><text x="85.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Instância A</text><text x="85.0" y="68.7" font-size="12" text-anchor="middle">executa o workflow</text><rect x="245" y="25" width="170" height="64" rx="8" class="s-box" stroke-width="1.2"/><text x="330.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Ledger durável</text><text x="330.0" y="68.7" font-size="12" text-anchor="middle">estado externo</text><rect x="500" y="25" width="130" height="64" rx="8" class="s-soft" stroke-width="2.5"/><text x="565.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Efeito externo</text><text x="565.0" y="68.7" font-size="12" text-anchor="middle">aplicado 1x</text><line x1="160" y1="57" x2="237.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="245,57 237.0,61.0 237.0,53.0" class="s-muted"/><line x1="415" y1="57" x2="492.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="500,57 492.0,61.0 492.0,53.0" class="s-muted"/><text x="330" y="125" font-size="13" text-anchor="middle" font-weight="600">ledger: { e-42: aplicado }</text><text x="330" y="150" font-size="12" text-anchor="middle">efeito aplicado + registro</text></svg></div>
+<div class="frame" data-caption="3. O processo pausa ou cai (restart do pod, espera de aprovação). A conversa se perde; o ledger não."><svg viewBox="0 0 640 170" role="img" aria-label="Pause e resume com effect_id idempotente" style="width:100%;height:auto;max-width:640px"><title>Pause e resume com effect_id idempotente</title><rect x="10" y="25" width="150" height="64" rx="8" class="s-box" stroke-width="1.2"/><text x="85.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Instância A</text><text x="85.0" y="68.7" font-size="12" text-anchor="middle">executa o workflow</text><rect x="245" y="25" width="170" height="64" rx="8" class="s-soft" stroke-width="2.5"/><text x="330.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Ledger durável</text><text x="330.0" y="68.7" font-size="12" text-anchor="middle">estado externo</text><rect x="500" y="25" width="130" height="64" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Efeito externo</text><text x="565.0" y="68.7" font-size="12" text-anchor="middle">aguardando</text><line x1="160" y1="57" x2="237.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="245,57 237.0,61.0 237.0,53.0" class="s-muted"/><line x1="415" y1="57" x2="492.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="500,57 492.0,61.0 492.0,53.0" class="s-muted"/><text x="330" y="125" font-size="13" text-anchor="middle" font-weight="600">ledger: { e-42: aplicado }</text><text x="330" y="150" font-size="12" text-anchor="middle">a sessão é descartável, o estado não</text></svg><p class="meta">Cuidado: se a queda ocorrer entre o efeito e o registro, a repetição é possível. Por isso o efeito também precisa ser idempotente (por exemplo, chave de idempotência no destino) ou o registro deve ser atômico com ele.</p></div>
+<div class="frame" data-caption="4. Uma instância B nova lê o ledger, vê e-42 aplicado e pula o efeito."><svg viewBox="0 0 640 170" role="img" aria-label="Pause e resume com effect_id idempotente" style="width:100%;height:auto;max-width:640px"><title>Pause e resume com effect_id idempotente</title><rect x="10" y="25" width="150" height="64" rx="8" class="s-soft" stroke-width="2.5"/><text x="85.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Instância B</text><text x="85.0" y="68.7" font-size="12" text-anchor="middle">executa o workflow</text><rect x="245" y="25" width="170" height="64" rx="8" class="s-soft" stroke-width="2.5"/><text x="330.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Ledger durável</text><text x="330.0" y="68.7" font-size="12" text-anchor="middle">estado externo</text><rect x="500" y="25" width="130" height="64" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Efeito externo</text><text x="565.0" y="68.7" font-size="12" text-anchor="middle">aguardando</text><line x1="160" y1="57" x2="237.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="245,57 237.0,61.0 237.0,53.0" class="s-muted"/><line x1="415" y1="57" x2="492.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="500,57 492.0,61.0 492.0,53.0" class="s-muted"/><text x="330" y="125" font-size="13" text-anchor="middle" font-weight="600">ledger: { e-42: aplicado }</text><text x="330" y="150" font-size="12" text-anchor="middle">mesmo effect_id: nenhum efeito novo</text></svg></div>
+<div class="frame" data-caption="5. B segue para o passo 4 a partir do último estado confirmado."><svg viewBox="0 0 640 170" role="img" aria-label="Pause e resume com effect_id idempotente" style="width:100%;height:auto;max-width:640px"><title>Pause e resume com effect_id idempotente</title><rect x="10" y="25" width="150" height="64" rx="8" class="s-soft" stroke-width="2.5"/><text x="85.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Instância B</text><text x="85.0" y="68.7" font-size="12" text-anchor="middle">executa o workflow</text><rect x="245" y="25" width="170" height="64" rx="8" class="s-box" stroke-width="1.2"/><text x="330.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Ledger durável</text><text x="330.0" y="68.7" font-size="12" text-anchor="middle">estado externo</text><rect x="500" y="25" width="130" height="64" rx="8" class="s-box" stroke-width="1.2"/><text x="565.0" y="53.7" font-size="12" text-anchor="middle" font-weight="600">Efeito externo</text><text x="565.0" y="68.7" font-size="12" text-anchor="middle">aguardando</text><line x1="160" y1="57" x2="237.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="245,57 237.0,61.0 237.0,53.0" class="s-muted"/><line x1="415" y1="57" x2="492.0" y2="57.0" class="s-muted" stroke-width="1.8"/><polygon points="500,57 492.0,61.0 492.0,53.0" class="s-muted"/><text x="330" y="125" font-size="13" text-anchor="middle" font-weight="600">ledger: { e-42: aplicado }</text><text x="330" y="150" font-size="12" text-anchor="middle">retomada sem repetir efeito</text></svg></div>
+</div>
 <h3 id="sec-3-3-os-quatro-fatores-que-mais-importam-para-voce-agora">3.3 Os quatro fatores que mais importam para você agora <a class="section-link" href="#sec-3-3-os-quatro-fatores-que-mais-importam-para-voce-agora" aria-label="Link para esta seção">#</a></h3>
 <p>Doze é lista demais para reter de uma vez. Os quatro que vão trabalhar já nesta fase do curso:</p>
 <ul>
@@ -381,6 +488,24 @@
 <li>Fundamentos reciclados por trás: função pura, idempotência, event sourcing, SRP.</li>
 <li>Para você, agora: fatores 2, 3, 8 e 10.</li>
 </ul>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">No 12-Factor Agents, o que significa “stateless reducer” (fator 12)?</p>
+<ol><li data-opt="a">O agente não tem nenhum estado.</li><li data-opt="b">O agente guarda estado na janela de contexto para ser mais rápido.</li><li data-opt="c">O estado é explícito e externalizado: o agente é uma função (estado, evento) → novo estado, testável e retomável.</li><li data-opt="d">O agente nunca usa ferramentas.</li></ol>
+<div class="explain">“Stateless” aqui não é “sem estado”, é estado fora da execução. Uma janela de contexto não é event store confiável: pode truncar, resumir e conter texto não validado. Use ledger/checkpoint próprio.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Um agente repete uma transferência após um timeout. O que torna isso seguro?</p>
+<ol><li data-opt="a">Idempotência: a mesma operação executada duas vezes tem o efeito de uma, por exemplo via effect_id/chave de idempotência.</li><li data-opt="b">Pedir ao modelo para “não tentar de novo”.</li><li data-opt="c">Aumentar o timeout para nunca haver retry.</li><li data-opt="d">Salvar o histórico do chat.</li></ol>
+<div class="explain">Retry é rotina em agentes, então operações com efeito precisam ser idempotentes ou registradas num ledger. O teste do laboratório: pause → resume em instância nova sem reproduzir o efeito do mesmo effect_id.</div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual afirmação sobre o 12-Factor Agents está alinhada ao módulo?</p>
+<ol><li data-opt="a">É uma norma de certificação consensual.</li><li data-opt="b">É um guia de practitioner: cada fator só é aceito quando houver artefato, teste ou telemetria que o sustente, e contrapontos são registrados.</li><li data-opt="c">Prova que mais agentes pequenos é sempre melhor.</li><li data-opt="d">Obriga a usar o fator 13 em todo projeto.</li></ol>
+<div class="explain">O guia é lente útil, não norma. O fator 10 (agentes focados) pode reduzir contexto, mas aumenta coordenação: compare qualidade, retrabalho e tempo total. O fator 13 é honorable mention.</div>
 </div>
 </section>
 <!-- ============================================ BLOCO 4 -->
@@ -411,6 +536,30 @@
 <li><strong>O custo compensa.</strong> Paralelizar duas tarefas de 10 minutos é overhead puro. Paralelize blocos de ≥ 30–60 min de trabalho de agente.</li>
 </ul>
 
+
+<div class="ix"><span class="ix-title">Simulador: o paralelismo compensa? (Amdahl + coordenação)</span>
+<p>Modelo didático: <em>N</em> workers implementam em paralelo (tempo <em>T</em>), mas a revisão (<em>R</em> por tarefa) e a integração continuam sequenciais, e cada par de workers cria uma fronteira a coordenar (custo <em>C</em> por par, <em>N(N−1)/2</em> pares).</p>
+<div class="ix-row"><label for="m01-am-n">Workers: <strong id="m01-am-nv"></strong></label><input type="range" id="m01-am-n" min="1" max="8" value="3" aria-label="Número de workers"></div>
+<div class="ix-row"><label for="m01-am-t">Implementação por tarefa: <strong id="m01-am-tv"></strong> min</label><input type="range" id="m01-am-t" min="10" max="180" step="5" value="60" aria-label="Minutos de implementação por tarefa"></div>
+<div class="ix-row"><label for="m01-am-r">Revisão sua por tarefa: <strong id="m01-am-rv"></strong> min</label><input type="range" id="m01-am-r" min="2" max="60" value="20" aria-label="Minutos de revisão por tarefa"></div>
+<div class="ix-row"><label for="m01-am-c">Coordenação por par: <strong id="m01-am-cv"></strong> min</label><input type="range" id="m01-am-c" min="0" max="20" value="5" aria-label="Minutos de coordenação por par de workers"></div>
+<div id="m01-am-o"></div>
+</div>
+<script>
+Course.ready(function (C) {
+
+var G=function(i){return document.getElementById(i);},N=G("m01-am-n"),T=G("m01-am-t"),R=G("m01-am-r"),Cc=G("m01-am-c"),o=G("m01-am-o");
+function seg(v,max,c){return '<div style="height:14px;border-radius:7px;background:var(--line)"><div style="height:14px;border-radius:7px;background:var(--'+c+');width:'+Math.min(100,v/max*100).toFixed(1)+'%"></div></div>';}
+function upd(){
+  var n=+N.value,t=+T.value,r=+R.value,c=+Cc.value;
+  G("m01-am-nv").textContent=n;G("m01-am-tv").textContent=t;G("m01-am-rv").textContent=r;G("m01-am-cv").textContent=c;
+  var serial=n*(t+r),coord=c*n*(n-1)/2,par=t+n*r+coord,sp=serial/par,mx=Math.max(serial,par);
+  var gargalo=n*r>=t?"a sua revisão (parte sequencial)":"a implementação";
+  o.innerHTML='<div class="ix-out" style="white-space:normal"><p>Sequencial: <strong>'+serial.toFixed(0)+' min</strong>'+seg(serial,mx,'info')+'</p><p>Paralelo: <strong>'+par.toFixed(0)+' min</strong> = '+t+' (impl.) + '+(n*r)+' (revisão) + '+coord.toFixed(0)+' (coordenação)'+seg(par,mx,sp>=1?'ok':'bad')+'</p><p>Ganho: <strong>'+sp.toFixed(2)+'×</strong>'+(sp<1?' (paralelizar PIOROU o tempo total)':'')+'. Maior parcela do paralelo: '+gargalo+'.</p><p class="meta">Experimente N=5 e C=10: os pares crescem como N(N−1)/2. Comece com 2 workers e paralelize também a verificação.</p></div>';}
+[N,T,R,Cc].forEach(function(e){e.addEventListener("input",upd);});upd();
+
+});
+</script>
 <h3 id="sec-4-3-arquitetura-orquestrador-workers">4.3 Arquitetura orquestrador-workers <a class="section-link" href="#sec-4-3-arquitetura-orquestrador-workers" aria-label="Link para esta seção">#</a></h3>
 <p>Um padrão frequente de orquestração tem três papéis. Produtos podem automatizá-los de formas diferentes; o contrato não depende dessa automação:</p>
 
@@ -431,6 +580,14 @@
 
 <div class="box"><span class="lbl">Referência do conceito</span><p>Worktrees oferecem diretórios de trabalho distintos ligados ao mesmo repositório Git. Cada tarefa edita sua própria cópia; a integração ocorre por merge e testes. Banco, portas e outros recursos externos continuam compartilhados se o projeto não os isolar explicitamente.</p></div>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: merge limpo, integração quebrada</span>
+<div class="frame" data-caption="1. Duas worktrees saem da mesma base, cada uma com working tree, HEAD e índice próprios."><svg viewBox="0 0 640 290" role="img" aria-label="Duas worktrees, merges limpos e falha semântica no gate global" style="width:100%;height:auto;max-width:640px"><title>Duas worktrees, merges limpos e falha semântica no gate global</title><rect x="235" y="10" width="170" height="46" rx="8" class="s-soft" stroke-width="2.5"/><text x="320.0" y="29.7" font-size="12" text-anchor="middle" font-weight="600">Base compartilhada</text><text x="320.0" y="44.7" font-size="12" text-anchor="middle">mesma origem</text><rect x="30" y="95" width="230" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="145.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree A</text><text x="145.0" y="134.7" font-size="12" text-anchor="middle">produz amount=120</text><rect x="380" y="95" width="230" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="495.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree B</text><text x="495.0" y="134.7" font-size="12" text-anchor="middle">consome limit=110</text><line x1="290" y1="56" x2="177.6" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="170,95 176.4,88.7 178.8,96.3" class="s-muted"/><line x1="350" y1="56" x2="462.4" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="470,95 461.2,96.3 463.6,88.7" class="s-muted"/><rect x="235" y="195" width="170" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="320.0" y="216.7" font-size="12" text-anchor="middle" font-weight="600">Integração</text><text x="320.0" y="231.7" font-size="12" text-anchor="middle">merge de A e B</text><line x1="170" y1="151" x2="252.8" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="260,195 251.1,195.1 254.6,187.9" class="s-muted"/><line x1="470" y1="151" x2="387.2" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="380,195 385.4,187.9 388.9,195.1" class="s-muted"/><text x="320" y="275" font-size="13" text-anchor="middle">isolamento de diretório, não de semântica</text></svg></div>
+<div class="frame" data-caption="2. A escreve amount=120; B escreve limit=110. Write sets disjuntos: nenhum conflito de arquivo."><svg viewBox="0 0 640 290" role="img" aria-label="Duas worktrees, merges limpos e falha semântica no gate global" style="width:100%;height:auto;max-width:640px"><title>Duas worktrees, merges limpos e falha semântica no gate global</title><rect x="235" y="10" width="170" height="46" rx="8" class="s-box" stroke-width="1.2"/><text x="320.0" y="29.7" font-size="12" text-anchor="middle" font-weight="600">Base compartilhada</text><text x="320.0" y="44.7" font-size="12" text-anchor="middle">mesma origem</text><rect x="30" y="95" width="230" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="145.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree A</text><text x="145.0" y="134.7" font-size="12" text-anchor="middle">produz amount=120</text><rect x="380" y="95" width="230" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="495.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree B</text><text x="495.0" y="134.7" font-size="12" text-anchor="middle">consome limit=110</text><line x1="290" y1="56" x2="177.6" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="170,95 176.4,88.7 178.8,96.3" class="s-muted"/><line x1="350" y1="56" x2="462.4" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="470,95 461.2,96.3 463.6,88.7" class="s-muted"/><rect x="235" y="195" width="170" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="320.0" y="216.7" font-size="12" text-anchor="middle" font-weight="600">Integração</text><text x="320.0" y="231.7" font-size="12" text-anchor="middle">merge de A e B</text><line x1="170" y1="151" x2="252.8" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="260,195 251.1,195.1 254.6,187.9" class="s-muted"/><line x1="470" y1="151" x2="387.2" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="380,195 385.4,187.9 388.9,195.1" class="s-muted"/><text x="320" y="275" font-size="13" text-anchor="middle">cada worker passa no seu gate local</text></svg></div>
+<div class="frame" data-caption="3. Cada branch passa contra a base. “Terminou localmente” ainda não significa “integrou”."><svg viewBox="0 0 640 290" role="img" aria-label="Duas worktrees, merges limpos e falha semântica no gate global" style="width:100%;height:auto;max-width:640px"><title>Duas worktrees, merges limpos e falha semântica no gate global</title><rect x="235" y="10" width="170" height="46" rx="8" class="s-box" stroke-width="1.2"/><text x="320.0" y="29.7" font-size="12" text-anchor="middle" font-weight="600">Base compartilhada</text><text x="320.0" y="44.7" font-size="12" text-anchor="middle">mesma origem</text><rect x="30" y="95" width="230" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="145.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree A</text><text x="145.0" y="134.7" font-size="12" text-anchor="middle">produz amount=120</text><rect x="380" y="95" width="230" height="56" rx="8" class="s-soft" stroke-width="2.5"/><text x="495.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree B</text><text x="495.0" y="134.7" font-size="12" text-anchor="middle">consome limit=110</text><line x1="290" y1="56" x2="177.6" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="170,95 176.4,88.7 178.8,96.3" class="s-muted"/><line x1="350" y1="56" x2="462.4" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="470,95 461.2,96.3 463.6,88.7" class="s-muted"/><rect x="235" y="195" width="170" height="50" rx="8" class="s-box" stroke-width="1.2"/><text x="320.0" y="216.7" font-size="12" text-anchor="middle" font-weight="600">Integração</text><text x="320.0" y="231.7" font-size="12" text-anchor="middle">merge de A e B</text><line x1="170" y1="151" x2="252.8" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="260,195 251.1,195.1 254.6,187.9" class="s-muted"/><line x1="470" y1="151" x2="387.2" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="380,195 385.4,187.9 388.9,195.1" class="s-muted"/><text x="320" y="275" font-size="13" text-anchor="middle">gates por worker verdes</text></svg></div>
+<div class="frame" data-caption="4. Os merges são textualmente limpos: o Git não enxerga nenhum problema."><svg viewBox="0 0 640 290" role="img" aria-label="Duas worktrees, merges limpos e falha semântica no gate global" style="width:100%;height:auto;max-width:640px"><title>Duas worktrees, merges limpos e falha semântica no gate global</title><rect x="235" y="10" width="170" height="46" rx="8" class="s-box" stroke-width="1.2"/><text x="320.0" y="29.7" font-size="12" text-anchor="middle" font-weight="600">Base compartilhada</text><text x="320.0" y="44.7" font-size="12" text-anchor="middle">mesma origem</text><rect x="30" y="95" width="230" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="145.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree A</text><text x="145.0" y="134.7" font-size="12" text-anchor="middle">produz amount=120</text><rect x="380" y="95" width="230" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="495.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree B</text><text x="495.0" y="134.7" font-size="12" text-anchor="middle">consome limit=110</text><line x1="290" y1="56" x2="177.6" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="170,95 176.4,88.7 178.8,96.3" class="s-muted"/><line x1="350" y1="56" x2="462.4" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="470,95 461.2,96.3 463.6,88.7" class="s-muted"/><rect x="235" y="195" width="170" height="50" rx="8" class="s-soft" stroke-width="2.5"/><text x="320.0" y="216.7" font-size="12" text-anchor="middle" font-weight="600">Integração</text><text x="320.0" y="231.7" font-size="12" text-anchor="middle">merge de A e B</text><line x1="170" y1="151" x2="252.8" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="260,195 251.1,195.1 254.6,187.9" class="s-muted"/><line x1="470" y1="151" x2="387.2" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="380,195 385.4,187.9 388.9,195.1" class="s-muted"/><text x="320" y="275" font-size="13" text-anchor="middle">merge limpo é diferente de comportamento compatível</text></svg></div>
+<div class="frame" data-caption="5. O gate global lê os dois valores e falha: o contrato compartilhado é incompatível."><svg viewBox="0 0 640 290" role="img" aria-label="Duas worktrees, merges limpos e falha semântica no gate global" style="width:100%;height:auto;max-width:640px"><title>Duas worktrees, merges limpos e falha semântica no gate global</title><rect x="235" y="10" width="170" height="46" rx="8" class="s-box" stroke-width="1.2"/><text x="320.0" y="29.7" font-size="12" text-anchor="middle" font-weight="600">Base compartilhada</text><text x="320.0" y="44.7" font-size="12" text-anchor="middle">mesma origem</text><rect x="30" y="95" width="230" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="145.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree A</text><text x="145.0" y="134.7" font-size="12" text-anchor="middle">produz amount=120</text><rect x="380" y="95" width="230" height="56" rx="8" class="s-box" stroke-width="1.2"/><text x="495.0" y="119.7" font-size="12" text-anchor="middle" font-weight="600">Worktree B</text><text x="495.0" y="134.7" font-size="12" text-anchor="middle">consome limit=110</text><line x1="290" y1="56" x2="177.6" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="170,95 176.4,88.7 178.8,96.3" class="s-muted"/><line x1="350" y1="56" x2="462.4" y2="92.5" class="s-muted" stroke-width="1.8"/><polygon points="470,95 461.2,96.3 463.6,88.7" class="s-muted"/><rect x="235" y="195" width="170" height="50" rx="8" class="s-soft" stroke-width="2.5"/><text x="320.0" y="216.7" font-size="12" text-anchor="middle" font-weight="600">Integração</text><text x="320.0" y="231.7" font-size="12" text-anchor="middle">merge de A e B</text><line x1="170" y1="151" x2="252.8" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="260,195 251.1,195.1 254.6,187.9" class="s-muted"/><line x1="470" y1="151" x2="387.2" y2="191.5" class="s-muted" stroke-width="1.8"/><polygon points="380,195 385.4,187.9 388.9,195.1" class="s-muted"/><text x="320" y="275" font-size="13" text-anchor="middle" font-weight="600">só o gate global detecta este conflito</text><text x="520" y="225" font-size="13" text-anchor="middle" font-weight="700" class="s-accent">✕ gate global falha</text></svg></div>
+</div>
 <h3 id="sec-4-5-o-cenario-que-o-laboratorio-executara">4.5 O cenário que o laboratório executará <a class="section-link" href="#sec-4-5-o-cenario-que-o-laboratorio-executara" aria-label="Link para esta seção">#</a></h3>
 <p>O laboratório cria um repositório Git real somente dentro de um diretório temporário marcado como próprio. Duas worktrees alteram arquivos diferentes: uma produz <code>amount=120</code>; outra consome <code>limit=110</code>. Os merges são textualmente limpos. O gate global lê os dois valores e falha porque o contrato compartilhado é incompatível. O cleanup também recusa uma worktree suja. Assim você observa as três distinções relevantes: isolamento de diretório, integração textual e compatibilidade semântica.</p>
 <div class="expected"><strong>Limite.</strong> Worktree não isola banco, porta, cache, lockfile ou contrato. O experimento prova a segurança do sandbox Git do laboratório; não prova que qualquer paralelismo de produção é seguro.</div>
@@ -457,6 +614,24 @@
 <li>Gate roda por worker E na integração — conflito semântico não aparece no git.</li>
 <li>Lei de Amdahl com agentes: o sequencial que limita tudo é a SUA revisão. Waves: fundação → paralelo → integração.</li>
 </ul>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Duas branches mexem em arquivos diferentes, os merges são limpos e cada gate local passa. Isso garante integração correta?</p>
+<ol><li data-opt="a">Sim: write sets disjuntos eliminam qualquer conflito.</li><li data-opt="b">Sim, desde que o Git não reporte conflito.</li><li data-opt="c">Não: contratos, schema, banco, cache ou portas compartilhados podem tornar o resultado incompatível; só o gate global na integração verifica isso.</li><li data-opt="d">Não, mas só se houver mais de três worktrees.</li></ol>
+<div class="explain">Write sets disjuntos são necessários em muitos casos, mas não bastam. Worktree isola diretório, não banco, porta, lockfile nem comportamento. O cenário do laboratório (120 × 110) é exatamente esse caso.</div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Você coordena 5 agentes, mas é a única pessoa que revisa os diffs. Qual a leitura correta?</p>
+<ol><li data-opt="a">O tempo total cai quase 5 vezes.</li><li data-opt="b">A fração sequencial (sua revisão e consolidação) limita o ganho; paralelize também a verificação e comece com poucos workers.</li><li data-opt="c">Mais workers sempre reduz o custo de coordenação.</li><li data-opt="d">Basta usar tmux.</li></ol>
+<div class="explain">Lei de Amdahl com agentes: o gargalo é a revisão. Coordenação cresce com o número de pares (5 workers = 10 fronteiras). tmux só ajuda a observar; não muda o gargalo.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Duas features precisam alterar o mesmo router. Qual a estratégia preferida, em ordem?</p>
+<ol><li data-opt="a">Re-decompor: extrair a fundação compartilhada para uma wave anterior e manter o restante independente.</li><li data-opt="b">Deixar os dois workers editarem e confiar no merge textual.</li><li data-opt="c">Pedir ao agente que “resolva os conflitos com cuidado”.</li><li data-opt="d">Rodar tudo em paralelo e descobrir depois.</li></ol>
+<div class="explain">A ordem é re-decompor, contrato primeiro, integrar sequencialmente. Em qualquer uma, o gate global continua obrigatório, e o orquestrador não assume que o merge textual preservou a semântica.</div>
 </div>
 </section>
 <!-- ============================================ BLOCO 5 -->
@@ -615,6 +790,18 @@ uv run python -m sdd_lab adapters-demo examples/feature.valid.json</code></pre>
 <h3 id="sec-5-3-peca-do-produto">5.3 Peça do produto <a class="section-link" href="#sec-5-3-peca-do-produto" aria-label="Link para esta seção">#</a></h3>
 <p><strong>Entrega para o Capstone:</strong> <code>docs/spec/</code> completo (contract, kit funcionando, PRD do produto, spec+plan da fatia 1) — é a fundação de tudo que os módulos M03+ constroem. Sem esta peça, o Capstone vira exatamente o chat-driven development que este módulo aposentou.</p>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Um workflow de terceiro (template/extensão) será executado no seu fluxo. Qual postura está de acordo com o módulo?</p>
+<ol><li data-opt="a">Confiar, pois vem de um repositório popular.</li><li data-opt="b">Confiar se o campo <code>requires</code> declarar as precondições.</li><li data-opt="c">Executar primeiro e revisar depois.</li><li data-opt="d">Tratar como supply chain: revisar o conteúdo, calcular o SHA-256, liberar só comandos em allowlist e exigir nova revisão a cada byte alterado.</li></ol>
+<div class="explain"><code>requires</code> é precondição declarativa, não contenção; não há capability sandbox no workflow. Hash e allowlist ajudam, mas ainda não substituem sandbox de SO, identidade ou proveniência de build.</div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">O <code>contract.md</code> do kit mistura itens verificáveis por máquina e por revisão rápida. Por quê?</p>
+<ol><li data-opt="a">Por descuido: tudo deveria ser automático.</li><li data-opt="b">É a rubrica de “pronto” do harness: o que for mecanizável é gate; o resto exige revisão humana orientada por risco, e ambos ficam declarados fora da opinião do executor.</li><li data-opt="c">Porque revisão humana substitui testes.</li><li data-opt="d">Porque a máquina não consegue ler Markdown.</li></ol>
+<div class="explain">A definição de pronto não pode ficar na opinião de quem executa. Mecanize o possível, mas deixe explícito o que depende de revisão. O validador mínimo conferir títulos também não prova clareza, trace nem segurança de path.</div>
+</div>
 <section id="lab">
 <h2>Laboratório guiado M01 · contrato, drift, runner e integração segura</h2>
 
@@ -741,6 +928,10 @@ uv run mypy --strict src tests</code></pre>
 <li>Três skills e dois adapters compartilham o mesmo contrato; Capstone possui trace e handoff reproduzível.</li>
 </ol>
 </div>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique para virar. Tente responder antes de ver o verso.</p>
+<div class="flashcards"><div class="fc"><div class="front">Chat-driven</div><div class="back">Requisito espalhado no chat; degrada com truncamento/resumo e polui o contexto com tentativas erradas.</div></div><div class="fc"><div class="front">SDD</div><div class="back">Externaliza intenção, requisitos, decisões, tarefas e evidências em artefatos versionados e confrontáveis.</div></div><div class="fc"><div class="front">PRD × spec × plan</div><div class="back">PRD: o quê e por quê. Spec: como, arquiteturalmente. Plan: em que ordem, com verificação por etapa.</div></div><div class="fc"><div class="front">Ciclo do SDD</div><div class="back">Pesquisar, planejar (PRD, spec, plan), implementar uma etapa por vez, verificar; divergência volta ao planejamento.</div></div><div class="fc"><div class="front">Estados de drift</div><div class="back">consistent, spec_stale, code_incorrect, decision_required. Nenhuma fonte vence por reflexo.</div></div><div class="fc"><div class="front">Prompt × contexto × harness</div><div class="back">Dizer, mostrar, permitir. Só o harness é determinístico.</div></div><div class="fc"><div class="front">Guardrails mecânicos</div><div class="back">Gates por passo, unidades pequenas, estado externalizado, fronteiras de permissão, verificação independente.</div></div><div class="fc"><div class="front">Exit code 5 no pytest</div><div class="back">Nenhum teste coletado: deve bloquear, não virar aviso.</div></div><div class="fc"><div class="front">Fator 8: own your control flow</div><div class="back">Seu código decide o que roda a seguir; o LLM decide dentro dos pontos que você abriu.</div></div><div class="fc"><div class="front">Idempotência / effect_id</div><div class="back">Repetir a operação não repete o efeito; o ledger registra o que já foi aplicado.</div></div><div class="fc"><div class="front">Worktree</div><div class="back">Isola diretório de trabalho, HEAD e índice. Não isola banco, porta, cache, lockfile nem contrato.</div></div><div class="fc"><div class="front">Merge limpo ≠ integração correta</div><div class="back">Só o gate global detecta incompatibilidade semântica (ex.: amount=120 × limit=110).</div></div></div>
 
 <div class="box">
 <span class="lbl">Conclusão — o essencial em 8 linhas</span>

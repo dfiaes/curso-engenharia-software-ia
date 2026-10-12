@@ -73,6 +73,12 @@
 
 <p><strong>Digest</strong> (<code>sha256:…</code>) identifica o conteúdo do artefato; <strong>tag</strong> é apelido mutável que pode apontar para outro conteúdo amanhã. Promover por tag é promover por boato: o oráculo só aceita o par versão válida mais digest bem formado, e recusa <code>latest</code> nos dois lados. Assinatura e registry reais pertencem à trilha externa — BLOCKED com registro onde ausentes; aqui o contrato prova o vínculo, não a criptografia.</p>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: por que a tag não é identidade</span>
+<div class="frame" data-caption="1. Dia 1: a tag v2.1 aponta para o conteúdo A"><svg viewBox="0 0 640 150" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Dia 1: a tag aponta para o conteúdo A</title><defs><marker id="mk1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="30" y="50" width="170" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="115.0" y="68.7" text-anchor="middle" font-size="12">app:v2.1</text><text x="115.0" y="83.7" text-anchor="middle" font-size="12">tag (apelido)</text><line class="s-line" x1="200" y1="72" x2="330" y2="72" stroke-width="1.6" marker-end="url(#mk1)"/><rect x="330" y="50" width="280" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="470.0" y="68.7" text-anchor="middle" font-size="12">sha256:aaaa…  (conteúdo A)</text><text x="470.0" y="83.7" text-anchor="middle" font-size="12">testado, aprovado</text><text x="320" y="130" text-anchor="middle" font-size="12">Dia 1: tag e conteúdo coincidem, tudo parece identidade.</text></svg></div>
+<div class="frame" data-caption="2. Dia 3: a mesma tag é reempurrada e passa a apontar para B"><svg viewBox="0 0 640 150" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Dia 3: alguém reempurra a mesma tag para o conteúdo B</title><defs><marker id="mk2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="30" y="50" width="170" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="115.0" y="68.7" text-anchor="middle" font-size="12">app:v2.1</text><text x="115.0" y="83.7" text-anchor="middle" font-size="12">tag (apelido)</text><line class="s-line" x1="200" y1="72" x2="330" y2="72" stroke-width="1.6" marker-end="url(#mk2)"/><rect x="330" y="22" width="280" height="40" rx="6" class="s-box" stroke-width="1.5"/><text x="470.0" y="38.7" text-anchor="middle" font-size="12">sha256:bbbb…  (conteúdo B)</text><text x="470.0" y="53.7" text-anchor="middle" font-size="12">empurrado depois, sem ninguém notar</text><rect x="330" y="92" width="280" height="40" rx="6" class="s-box" stroke-width="1.5"/><text x="470.0" y="108.7" text-anchor="middle" font-size="12">sha256:aaaa…  (conteúdo A)</text><text x="470.0" y="123.7" text-anchor="middle" font-size="12">já não é apontado pela tag</text><text x="320" y="146" text-anchor="middle" font-size="12">A tag é mutável: o nome é o mesmo, o conteúdo mudou.</text></svg></div>
+<div class="frame" data-caption="3. Rollback por tag cai em B; por digest, em A"><svg viewBox="0 0 640 170" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Rollback por tag pega o conteúdo errado; por digest, o certo</title><defs><marker id="mk3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20" y="20" width="170" height="40" rx="6" class="s-box" stroke-width="1.5"/><text x="105.0" y="36.7" text-anchor="middle" font-size="12">rollback por tag</text><text x="105.0" y="51.7" text-anchor="middle" font-size="12">"volta para v2.1"</text><line class="s-line" x1="190" y1="40" x2="330" y2="40" stroke-width="1.6" marker-end="url(#mk3)"/><rect x="330" y="20" width="290" height="40" rx="6" class="s-box" stroke-width="1.5"/><text x="475.0" y="36.7" text-anchor="middle" font-size="12">sha256:bbbb…  (B: nunca testado aqui)</text><text x="475.0" y="51.7" text-anchor="middle" font-size="12">destino errado</text><rect x="20" y="100" width="170" height="40" rx="6" class="s-box" stroke-width="1.5"/><text x="105.0" y="116.7" text-anchor="middle" font-size="12">rollback por digest</text><text x="105.0" y="131.7" text-anchor="middle" font-size="12">par versão + sha256</text><line class="s-line" x1="190" y1="120" x2="330" y2="120" stroke-width="1.6" marker-end="url(#mk3)"/><rect x="330" y="100" width="290" height="40" rx="6" class="s-soft" stroke-width="1.5"/><text x="475.0" y="116.7" text-anchor="middle" font-size="12">sha256:aaaa…  (A: o que rodava)</text><text x="475.0" y="131.7" text-anchor="middle" font-size="12">destino provado</text><text x="320" y="162" text-anchor="middle" font-size="12">Identidade é o digest; a tag é só o rótulo.</text></svg></div>
+</div>
 <h3>N4 · Falha e diagnóstico: o catálogo da versão</h3>
 
 <p>Cada falha abaixo tem oráculo nomeado na folha B01-L: dado que reproduz, veredito calculado e conserto que fecha o vínculo. Tag mutável como identidade é o defeito raiz: tudo que deriva dela — rollback, auditoria, reprodução — herda a mentira.</p>
@@ -178,6 +184,18 @@ def vincular_digest(versao: str, digest: str) -&gt; dict[str, str]:
 </ol>
 </div>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um script ordena em ordem decrescente as versões <code>1.9.9</code>, <code>1.2.0</code> e <code>1.10.0</code> como <em>strings</em>. Qual lista é a ordem decrescente correta de release, e por que a de strings engana?</p>
+<ol><li data-opt="a"><code>1.9.9, 1.2.0, 1.10.0</code>: é a ordem que o script de strings devolve, logo é a ordem do release</li><li data-opt="b"><code>1.10.0, 1.2.0, 1.9.9</code>: o campo MINOR manda, depois o PATCH</li><li data-opt="c"><code>1.10.0, 1.9.9, 1.2.0</code>: a comparação é numérica por campo, e a de strings põe o <code>1.10.0</code> por último porque <code>"1"</code> vem antes de <code>"9"</code></li><li data-opt="d">Tanto faz: SemVer só exige que a lista tenha versões válidas</li></ol>
+<div class="explain">SemVer compara MAJOR, MINOR e PATCH como números. Como string, <code>"1.9.9"</code> &gt; <code>"1.2.0"</code> &gt; <code>"1.10.0"</code> (compara caractere a caractere), o que inverte 1.10.0 e 1.9.9. Quem escolhe (a) confia no script em vez do contrato; quem escolhe (d) esquece que a ordem total é justamente o que decide qual release é o mais novo.</div>
+</div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">O time promove <code>registry/app:v2.1</code> e, na crise, planeja reverter para <code>registry/app:v2.0</code>. Qual é o defeito de identidade, e qual é o conserto?</p>
+<ol><li data-opt="a">Nenhum: tags com número de versão são imutáveis por definição do registry</li><li data-opt="b">Tag é apelido mutável: alguém pode reempurrar <code>v2.0</code> com outro conteúdo; promova e reverta pelo par versão mais <code>sha256:…</code></li><li data-opt="c">O defeito é o prefixo <code>v</code>: sem ele a tag seria imutável</li><li data-opt="d">O conserto é usar <code>latest</code>, que sempre aponta para o último release bom</li></ol>
+<div class="explain">Registries geralmente permitem sobrescrever uma tag; só o digest identifica o conteúdo. Reverter por tag pode restaurar um conteúdo que você nunca testou. <code>latest</code> (d) é a forma mais extrema do mesmo erro, e o prefixo <code>v</code> (c) é um problema de formato de versão, não de identidade.</div>
+</div>
 <h3 id="fontes-b01">Fontes do Bloco 1</h3>
 <ul>
 <li>Semantic Versioning 2.0.0 — normativa — precedência e formato X.Y.Z. URL: https://semver.org/. Versão: 2.0.0. Risco: baixo; revalidar em até 90 dias.</li>
@@ -215,6 +233,35 @@ def vincular_digest(versao: str, digest: str) -&gt; dict[str, str]:
 
 <p><strong>CONDITIONAL GO</strong> só existe com gate verde mais item condicional completo: dono nomeado, condição verificável e expiração datada. Falta um dos três e o veredito volta a NO-GO — condicional sem dono é dívida com nome bonito, sem prazo é aceitação permanente disfarçada. O oráculo testa cada ausência isoladamente: sem dono, sem condição e sem expiração vetam em três casos distintos. GO puro exige gate verde e lista vazia de pendências.</p>
 
+
+<div class="ix"><span class="ix-title">Mapa da decisão de release (lab/gates_release.py)</span>
+<svg viewBox="0 0 640 316" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Fluxo de decisão: NO-GO, GO ou CONDITIONAL GO</title><defs><marker id="mk4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20" y="10" width="300" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="170.0" y="28.7" text-anchor="middle" font-size="12">Toda claim tem evidência</text><text x="170.0" y="43.7" text-anchor="middle" font-size="12">e todo gate está aprovado?</text><line class="s-line" x1="320" y1="32" x2="430" y2="32" stroke-width="1.6" marker-end="url(#mk4)"/><text x="375" y="24" text-anchor="middle" font-size="11">não</text><rect x="430" y="10" width="190" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="525.0" y="28.7" text-anchor="middle" font-size="12" font-weight="700">NO-GO</text><text x="525.0" y="43.7" text-anchor="middle" font-size="12">motivo: crítico ou bloqueador</text><line class="s-line" x1="170" y1="54" x2="170" y2="100" stroke-width="1.6" marker-end="url(#mk4)"/><text x="184" y="82" text-anchor="start" font-size="11">sim</text><rect x="20" y="100" width="300" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="170.0" y="126.2" text-anchor="middle" font-size="12">Existe item condicional?</text><line class="s-line" x1="320" y1="122" x2="430" y2="122" stroke-width="1.6" marker-end="url(#mk4)"/><text x="375" y="114" text-anchor="middle" font-size="11">não</text><rect x="430" y="100" width="190" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="525.0" y="118.7" text-anchor="middle" font-size="12" font-weight="700">GO</text><text x="525.0" y="133.7" text-anchor="middle" font-size="12">zero pendências</text><line class="s-line" x1="170" y1="144" x2="170" y2="190" stroke-width="1.6" marker-end="url(#mk4)"/><text x="184" y="172" text-anchor="start" font-size="11">sim</text><rect x="20" y="190" width="300" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="170.0" y="208.7" text-anchor="middle" font-size="12">Cada item tem dono, condição</text><text x="170.0" y="223.7" text-anchor="middle" font-size="12">verificável e expiração?</text><line class="s-line" x1="320" y1="212" x2="430" y2="212" stroke-width="1.6" marker-end="url(#mk4)"/><text x="375" y="204" text-anchor="middle" font-size="11">sim</text><rect x="430" y="190" width="190" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="525.0" y="208.7" text-anchor="middle" font-size="12" font-weight="700">CONDITIONAL GO</text><text x="525.0" y="223.7" text-anchor="middle" font-size="12">com motivo = itens</text><line class="s-line" x1="170" y1="234" x2="170" y2="270" stroke-width="1.6" marker-end="url(#mk4)"/><text x="184" y="258" text-anchor="start" font-size="11">não</text><rect x="20" y="270" width="300" height="36" rx="6" class="s-box" stroke-width="1.5"/><text x="170.0" y="292.2" text-anchor="middle" font-size="12" font-weight="700">NO-GO: o primeiro item inválido é o motivo</text></svg>
+<p class="meta">Leia de cima para baixo: o primeiro "não" decide. Falha é sempre fechada.</p></div>
+
+<div class="ix"><span class="ix-title">Simulador: decida o release</span>
+<div class="ix-row"><label><input type="checkbox" id="lt04-g-sem"> existe claim sem evidência</label>
+<label>severidade dela <select id="lt04-g-sev"><option value="P2">P2</option><option value="P1">P1</option><option value="P0">P0</option></select></label>
+<label><input type="checkbox" id="lt04-g-rep"> outro gate reprovado</label></div>
+<div class="ix-row"><label>item condicional <select id="lt04-g-cond"><option value="none">nenhum</option><option value="ok">completo (dono, condição, expiração)</option><option value="dono">sem dono</option><option value="cond">sem condição</option><option value="exp">sem expiração</option></select></label></div>
+<div class="ix-out" id="lt04-g-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+var $=function(i){return document.getElementById(i)};
+function run(){
+  var sem=$("lt04-g-sem").checked,sev=$("lt04-g-sev").value,rep=$("lt04-g-rep").checked,cond=$("lt04-g-cond").value;
+  $("lt04-g-sev").disabled=!sem;
+  var out;
+  if(sem&&(sev==="P0"||sev==="P1")){out="NO-GO\nmotivo: crítico "+sev+" sem evidência (veto por severidade)";}
+  else if(sem){out="NO-GO\nmotivo: claim sem evidência (falha fechada, mesmo em "+sev+")";}
+  else if(rep){out="NO-GO\nmotivo: gate reprovado";}
+  else if(cond==="none"){out="GO\nmotivo: gate verde e zero pendências";}
+  else if(cond==="ok"){out="CONDITIONAL GO\nmotivo: item condicional completo (dono, condição, expiração)";}
+  else{var f={dono:"dono",cond:"condição verificável",exp:"expiração"}[cond];out="NO-GO\nmotivo: condicional sem "+f+" (cada ausência veta isoladamente)";}
+  $("lt04-g-out").textContent=out;
+}
+["lt04-g-sem","lt04-g-sev","lt04-g-rep","lt04-g-cond"].forEach(function(i){$(i).addEventListener("input",run);$(i).addEventListener("change",run)});
+run();
+});</script>
 <h3>N4 · Falha e diagnóstico: o catálogo da barreira</h3>
 
 <p>Cada falha abaixo tem oráculo nomeado na folha B02-L: dado que reproduz, veredito calculado e conserto que fecha o vínculo. Gate que aprova sem evidência é o defeito raiz: toda decisão posterior — rollback, comunicação, pós-mortem — herda a aprovação vazia.</p>
@@ -316,6 +363,18 @@ def decidir(
 </ol>
 </div>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Um gate tem 7 claims: 6 com evidência e 1 sem evidência (severidade P2). Qual o veredito do gate e da decisão?</p>
+<ol><li data-opt="a">Aprovado: 6 de 7 é quórum e P2 não é bloqueante</li><li data-opt="b">CONDITIONAL GO, com a claim sem evidência virando item condicional</li><li data-opt="c">GO, registrando a claim faltante como dívida técnica</li><li data-opt="d">Gate reprovado e decisão NO-GO, com a claim sem evidência listada como bloqueadora</li></ol>
+<div class="explain">O gate é uma conjunção: ausência de evidência reprova fechado, qualquer que seja a severidade. CONDITIONAL GO só existe com gate verde. Quem escolhe (a) ou (c) trata ausência como abstenção; a severidade P0/P1 só muda o <em>motivo</em> nomeado, não a existência do veto.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Gate verde, zero P0/P1, e um item condicional com dono e condição verificável, mas <em>sem expiração</em>. Qual a decisão?</p>
+<ol><li data-opt="a">NO-GO: sem expiração o condicional é aceitação permanente disfarçada, e cada ausência veta isoladamente</li><li data-opt="b">CONDITIONAL GO: dono e condição bastam, a expiração é detalhe</li><li data-opt="c">GO: o gate está verde e o item é só informativo</li><li data-opt="d">CONDITIONAL GO, desde que alguém prometa preencher a expiração depois</li></ol>
+<div class="explain">Dono, condição verificável e expiração datada são exigidos juntos. Sem prazo, a exceção nunca morre e vira regra sem gate. Promessa de preencher depois (d) é exatamente a dívida com nome bonito que o contrato proíbe.</div>
+</div>
 <h3 id="fontes-b02">Fontes do Bloco 2</h3>
 <ul>
 <li>SRC-LT04-19 — NIST AI RMF — normativa — govern/map/measure/manage e decisão por risco. URLs na especificação §8. Versão: 1.0. Risco: alto; revalidar em até 90 dias.</li>
@@ -352,6 +411,40 @@ def decidir(
 
 <p><strong>Restauração</strong> só existe provada em três eixos: mesmo digest do alvo, dado compatível com o esquema do alvo e serviço saudável. Digest certo com dado incompatível é corrupção restaurada; tudo certo sem saúde é promessa. O oráculo testa cada eixo isolado: digest trocado, dado de outro esquema e saúde falsa reprovam em três casos distintos. Evidência de restore entra no dossiê como as demais: digest, verificação e quem atestou.</p>
 
+
+<div class="stepper"><span class="ix-title">Passo a passo: stop condition, rollback por digest e restore</span>
+<div class="frame" data-caption="1. Os limites do stop são declarados antes do rollout"><svg viewBox="0 0 640 150" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Antes do rollout: os limites estão escritos</title><defs><marker id="mk5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="30" y="20" width="580" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="320.0" y="46.2" text-anchor="middle" font-size="12" font-weight="700">stop condition (declarada ANTES): erro &gt; 5%  ou  p99 &gt; 800 ms</text><rect x="30" y="86" width="270" height="40" rx="6" class="s-box" stroke-width="1.5"/><text x="165.0" y="102.7" text-anchor="middle" font-size="12">release atual</text><text x="165.0" y="117.7" text-anchor="middle" font-size="12">v2.1 · sha256:bbbb…</text><rect x="340" y="86" width="270" height="40" rx="6" class="s-box" stroke-width="1.5"/><text x="475.0" y="102.7" text-anchor="middle" font-size="12">anterior conhecido</text><text x="475.0" y="117.7" text-anchor="middle" font-size="12">v2.0 · sha256:aaaa… (histórico)</text><text x="320" y="144" text-anchor="middle" font-size="11">Sem anterior registrado não há para onde voltar.</text></svg></div>
+<div class="frame" data-caption="2. O canário viola o p99: o stop dispara"><svg viewBox="0 0 640 150" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Durante o canário: leitura contra os limites</title><defs><marker id="mk6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="30" y="20" width="270" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="165.0" y="38.7" text-anchor="middle" font-size="12">canário lê</text><text x="165.0" y="53.7" text-anchor="middle" font-size="12">erro 3%  ·  p99 950 ms</text><line class="s-line" x1="300" y1="42" x2="360" y2="42" stroke-width="1.6" marker-end="url(#mk6)"/><rect x="360" y="20" width="250" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="485.0" y="38.7" text-anchor="middle" font-size="12" font-weight="700">violações: [p99]</text><text x="485.0" y="53.7" text-anchor="middle" font-size="12">erro está dentro, p99 não</text><text x="320" y="110" text-anchor="middle" font-size="12">Um verde não absolve o outro; lista vazia seria "seguir".</text><text x="320" y="132" text-anchor="middle" font-size="12">O stop dispara sem reunião: o número foi escrito antes.</text></svg></div>
+<div class="frame" data-caption="3. Rollback mira o digest do release anterior"><svg viewBox="0 0 640 150" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Rollback para o digest anterior</title><defs><marker id="mk7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="30" y="40" width="200" height="50" rx="6" class="s-box" stroke-width="1.5"/><text x="130.0" y="61.7" text-anchor="middle" font-size="12">v2.1</text><text x="130.0" y="76.7" text-anchor="middle" font-size="12">sha256:bbbb…</text><line class="s-line" x1="230" y1="65" x2="410" y2="65" stroke-width="1.6" marker-end="url(#mk7)"/><text x="320" y="56" text-anchor="middle" font-size="11">rollback por digest</text><rect x="410" y="40" width="200" height="50" rx="6" class="s-soft" stroke-width="1.5"/><text x="510.0" y="61.7" text-anchor="middle" font-size="12">v2.0</text><text x="510.0" y="76.7" text-anchor="middle" font-size="12">sha256:aaaa…</text><text x="320" y="125" text-anchor="middle" font-size="12">Destino = par versão + digest do histórico, nunca "a que funcionava".</text></svg></div>
+<div class="frame" data-caption="4. Restore só vale com digest, dado e saúde provados"><svg viewBox="0 0 640 170" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Restore provado em três eixos</title><defs><marker id="mk8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20" y="30" width="190" height="56" rx="6" class="s-soft" stroke-width="1.5"/><text x="115.0" y="54.7" text-anchor="middle" font-size="12">1. digest igual</text><text x="115.0" y="69.7" text-anchor="middle" font-size="12">ao do alvo</text><rect x="225" y="30" width="190" height="56" rx="6" class="s-soft" stroke-width="1.5"/><text x="320.0" y="54.7" text-anchor="middle" font-size="12">2. dado compatível</text><text x="320.0" y="69.7" text-anchor="middle" font-size="12">com o esquema do alvo</text><rect x="430" y="30" width="190" height="56" rx="6" class="s-soft" stroke-width="1.5"/><text x="525.0" y="54.7" text-anchor="middle" font-size="12">3. serviço saudável</text><text x="525.0" y="69.7" text-anchor="middle" font-size="12">health check verde</text><text x="320" y="120" text-anchor="middle" font-size="12">Cada eixo reprova sozinho: só os três juntos provam a volta.</text><text x="320" y="142" text-anchor="middle" font-size="12">Depois disso, roll-forward é decisão nova, com gate novo.</text></svg></div>
+</div>
+
+<div class="ix"><span class="ix-title">Simulador: o sinal manda reverter?</span>
+<div class="ix-row"><label>erro (%) <input type="range" id="lt04-r-err" min="0" max="20" step="0.5" value="3"> <strong id="lt04-r-errv"></strong></label></div>
+<div class="ix-row"><label>p99 (ms) <input type="range" id="lt04-r-p99" min="100" max="2000" step="50" value="950"> <strong id="lt04-r-p99v"></strong></label></div>
+<div class="ix-row"><label><input type="checkbox" id="lt04-r-prev" checked> existe release anterior no histórico</label></div>
+<div class="ix-row">Restauração: <label><input type="checkbox" id="lt04-r-dig" checked> digest igual</label> <label><input type="checkbox" id="lt04-r-dat" checked> dado compatível</label> <label><input type="checkbox" id="lt04-r-sau" checked> serviço saudável</label></div>
+<div class="ix-out" id="lt04-r-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+var $=function(i){return document.getElementById(i)};
+function run(){
+  var e=parseFloat($("lt04-r-err").value),p=parseInt($("lt04-r-p99").value,10);
+  $("lt04-r-errv").textContent=e+"%";$("lt04-r-p99v").textContent=p+" ms";
+  var v=[];if(e>5)v.push("erro "+e+"% > 5%");if(p>800)v.push("p99 "+p+" ms > 800 ms");
+  var o="Limites: erro > 5% ou p99 > 800 ms\nViolações: "+(v.length?v.join("; "):"[] (lista vazia: seguir)")+"\n";
+  if(!v.length){o+="Ação: manter o release atual.";}
+  else if(!$("lt04-r-prev").checked){o+="Ação: ValueError, sem release anterior não há volta. Decidir roll-forward com gate novo.";}
+  else{
+    o+="Ação: rollback ao anterior por digest.\n";
+    var f=[];if(!$("lt04-r-dig").checked)f.push("digest");if(!$("lt04-r-dat").checked)f.push("dado");if(!$("lt04-r-sau").checked)f.push("saúde");
+    o+=f.length?"Restore: REPROVADO (falta prova de "+f.join(", ")+"). Não declare 'voltou'.":"Restore: aprovado nos três eixos.";
+  }
+  $("lt04-r-out").textContent=o;
+}
+["lt04-r-err","lt04-r-p99","lt04-r-prev","lt04-r-dig","lt04-r-dat","lt04-r-sau"].forEach(function(i){$(i).addEventListener("input",run);$(i).addEventListener("change",run)});
+run();
+});</script>
 <h3>N4 · Falha e diagnóstico: o catálogo da reversão</h3>
 
 <p>Cada falha abaixo tem oráculo nomeado na folha B03-L: dado que reproduz, veredito calculado e conserto que fecha o vínculo. Rollback por tag mutável é o defeito raiz: a volta mira um apelido que pode ter mudado de dono durante a crise.</p>
@@ -443,6 +536,18 @@ def restauracao_ok(alvo: dict[str, str], estado: dict[str, object]) -&gt; bool:
 </ol>
 </div>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Stops declarados: erro &gt; 5% e p99 &gt; 800 ms. O canário mostra erro de 3% e p99 de 950 ms. O que o oráculo devolve e o que o time faz?</p>
+<ol><li data-opt="a">Lista vazia: a taxa de erro está dentro do limite, então segue</li><li data-opt="b">Uma violação (p99): o stop dispara e o time reverte ao release anterior por digest, sem reunião</li><li data-opt="c">Duas violações, porque qualquer métrica perto do limite conta</li><li data-opt="d">Nada, até alguém decidir em reunião se 950 ms é grave</li></ol>
+<div class="explain">Cada limite é avaliado de forma independente; um verde não absolve o outro. O stop foi escrito antes do rollout justamente para ser obedecido sem negociação. Em (a) o erro dentro do limite mascara a violação de cauda; em (d) o stop vira opinião na hora.</div>
+</div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Rollback feito: o digest é o do alvo, o dado é compatível com o esquema do alvo, mas o health check do serviço ainda falha. Declaramos "restaurado"?</p>
+<ol><li data-opt="a">Sim: digest correto prova que o artefato é o certo</li><li data-opt="b">Sim, e o health check é investigado depois</li><li data-opt="c">Não: restore exige digest igual, dado compatível e serviço saudável; faltando um eixo, é promessa e não prova</li><li data-opt="d">Não, mas só se o dado também fosse incompatível</li></ol>
+<div class="explain">Os três eixos são independentes e cada um reprova sozinho. Digest certo com dado de outro esquema é corrupção restaurada; tudo certo sem saúde é promessa. Declarar a volta antes da prova adia a segunda queda.</div>
+</div>
 <h3 id="fontes-b03">Fontes do Bloco 3</h3>
 <ul>
 <li>SRC-LT04-06 — Principles of Chaos Engineering — normativa — hipótese, blast radius e abort. URL: https://principlesofchaos.org/. Versão: princípios canônicos. Risco: baixo.</li>
@@ -479,6 +584,36 @@ def restauracao_ok(alvo: dict[str, str], estado: dict[str, object]) -&gt; bool:
 
 <p><strong>Slice</strong> é o recorte que importa para alguém: checkout, busca, login — ou plano, região, dispositivo. Regressão que só aparece num slice some na média global: o agregado verde absolve o segmento vermelho se ninguém olhar por recorte. O oráculo lista os slices com p99 acima do teto, em ordem: vazio é saúde segmentada, não sorte. Slice sem amostras cai — ausente, nunca zero.</p>
 
+
+<div class="ix"><span class="ix-title">Simulador: a média esconde a cauda</span>
+<div class="ix-row"><label>requisições lentas em 100 <input type="range" id="lt04-p-k" min="0" max="20" step="1" value="5"> <strong id="lt04-p-kv"></strong></label></div>
+<div class="ix-row"><label>latência rápida (ms) <input type="number" id="lt04-p-f" min="1" max="500" value="10"></label> <label>latência lenta (ms) <input type="number" id="lt04-p-s" min="100" max="5000" value="900"></label></div>
+<div class="ix-out" id="lt04-p-out" aria-live="polite"></div>
+<div id="lt04-p-bars" aria-hidden="true"></div>
+</div>
+<script>Course.ready(function (C) {
+var $=function(i){return document.getElementById(i)};
+function nr(a,p){var n=a.length,r=Math.ceil(p/100*n);return a[Math.max(1,r)-1];}
+function bar(label,val,max){
+  var w=Math.max(1,Math.round(val/max*100));
+  return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="width:70px;font-size:.85rem">'+label+'</span><span style="display:inline-block;height:14px;border-radius:4px;background:var(--accent);width:'+w+'%"></span><span style="font-size:.85rem">'+(Math.round(val*10)/10)+' ms</span></div>';
+}
+function run(){
+  var k=parseInt($("lt04-p-k").value,10),f=parseFloat($("lt04-p-f").value)||10,sl=parseFloat($("lt04-p-s").value)||900;
+  $("lt04-p-kv").textContent=k+"%";
+  var a=[],i;for(i=0;i<100-k;i++)a.push(f);for(i=0;i<k;i++)a.push(sl);
+  a.sort(function(x,y){return x-y});
+  var mean=a.reduce(function(s,x){return s+x},0)/a.length;
+  var p50=nr(a,50),p95=nr(a,95),p99=nr(a,99);
+  var teto=800,txt="n = 100 amostras brutas, nearest-rank\nmédia = "+(Math.round(mean*10)/10)+" ms\np50 = "+p50+" ms · p95 = "+p95+" ms · p99 = "+p99+" ms\n";
+  txt+=p99>teto?"p99 acima do teto de "+teto+" ms: o stop dispara, mesmo com média que parece boa.":"p99 dentro do teto de "+teto+" ms.";
+  $("lt04-p-out").textContent=txt;
+  var mx=Math.max(mean,p50,p95,p99,1);
+  $("lt04-p-bars").innerHTML=bar("média",mean,mx)+bar("p50",p50,mx)+bar("p95",p95,mx)+bar("p99",p99,mx);
+}
+["lt04-p-k","lt04-p-f","lt04-p-s"].forEach(function(i){$(i).addEventListener("input",run)});
+run();
+});</script>
 <h3>N4 · Falha e diagnóstico: o catálogo do sinal</h3>
 
 <p>Cada falha abaixo tem oráculo nomeado na folha B04-L: dado que reproduz, veredito calculado e conserto que fecha o vínculo. Média como único sinal é o defeito raiz: o stop dispara tarde, o gate aprova cedo, e o incidente do Bloco 6 chega sem aviso que já existia no raw.</p>
@@ -576,6 +711,18 @@ def slices_piores(p99_por_slice: dict[str, float], teto: float) -&gt; list[str]:
 </ol>
 </div>
 
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Em 100 requisições, 95 levaram 10 ms e 5 levaram 900 ms. Com nearest-rank sobre as amostras brutas, o que dizem p95 e p99?</p>
+<ol><li data-opt="a">p95 = 900 ms e p99 = 900 ms: a cauda aparece já no p95</li><li data-opt="b">p95 = 54,5 ms e p99 = 54,5 ms: percentis são a média</li><li data-opt="c">p95 = 10 ms e p99 = 10 ms: 95% estão rápidos</li><li data-opt="d">p95 = 10 ms (posição 95) e p99 = 900 ms (posição 99): a média de 54,5 ms esconde 5% quebrado, que só o p99 revela</li></ol>
+<div class="explain">Nearest-rank toma a posição ⌈p% de n⌉: p95 cai na posição 95 (ainda 10 ms) e p99 na 99 (900 ms). A média (54,5 ms) não é nenhuma das duas coisas. Moral: escolher um único percentil sem n e sem método também é meia evidência; publique média, p50/p95/p99, n e método do mesmo raw.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">O p99 global do release é 300 ms (teto 800 ms), mas o slice <code>checkout</code> (2% do tráfego) está em 1.200 ms. Qual é a leitura correta?</p>
+<ol><li data-opt="a">O oráculo acusa <code>checkout</code>: agregado verde não absolve segmento vermelho</li><li data-opt="b">Aprovado: 98% do tráfego está saudável</li><li data-opt="c">Aprovado, mas com a nota de que o checkout é pequeno</li><li data-opt="d">Reprovado todos os slices, porque um deles falhou</li></ol>
+<div class="explain">A regressão que só existe num slice some na média global. O oráculo lista exatamente os slices acima do teto; os demais continuam saudáveis. Peso de tráfego não é justificativa: checkout costuma ser o segmento que paga a conta.</div>
+</div>
 <h3 id="fontes-b04">Fontes do Bloco 4</h3>
 <ul>
 <li>SRC-LT04-07 — NIST AI Resource Center TEVV — normativa — teste e avaliação com incerteza. URLs na especificação §8. Versão: consultado na data-base. Risco: alto; revalidar em até 90 dias.</li>
@@ -612,6 +759,10 @@ def slices_piores(p99_por_slice: dict[str, float], teto: float) -&gt; list[str]:
 
 <p><strong>Reprodução independente</strong> é o teste da comunicação: um revisor que não estava na sala refaz a decisão do mesmo digest, com cada claim ligada à evidência bruta. Digest trocado não reproduz — é outro release. Claim sem bruto não reproduz — é alegação sem lastro. Registro sem claims não reproduz — é veredito sem conta. O oráculo cobra os quatro casos: igual reproduz, os três demais não. Dossiê que só a sala original entende é segredo, não comunicação.</p>
 
+
+<div class="ix"><span class="ix-title">Matriz de aprovadores por tier (lab/comunicar_release.py)</span>
+<svg viewBox="0 0 640 214" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>Aprovadores exigidos por tier de risco</title><defs><marker id="mk9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="20" y="14" width="110" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="75.0" y="40.2" text-anchor="middle" font-size="12" font-weight="700">tier médio</text><rect x="160" y="14" width="140" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="230.0" y="40.2" text-anchor="middle" font-size="12">Engenharia</text><rect x="20" y="74" width="110" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="75.0" y="100.2" text-anchor="middle" font-size="12" font-weight="700">tier alto</text><rect x="160" y="74" width="140" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="230.0" y="100.2" text-anchor="middle" font-size="12">Engenharia</text><rect x="320" y="74" width="140" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="390.0" y="100.2" text-anchor="middle" font-size="12">Segurança</text><rect x="20" y="134" width="110" height="44" rx="6" class="s-box" stroke-width="1.5"/><text x="75.0" y="160.2" text-anchor="middle" font-size="12" font-weight="700">tier crítico</text><rect x="160" y="134" width="140" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="230.0" y="160.2" text-anchor="middle" font-size="12">Engenharia</text><rect x="320" y="134" width="140" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="390.0" y="160.2" text-anchor="middle" font-size="12">Segurança</text><rect x="480" y="134" width="140" height="44" rx="6" class="s-soft" stroke-width="1.5"/><text x="550.0" y="160.2" text-anchor="middle" font-size="12">Negócio</text><text x="320" y="200" text-anchor="middle" font-size="12">Ausente não é abstenção: é veto por falta, registrado com o nome de quem faltou.</text></svg>
+</div>
 <h3>N4 · Falha e diagnóstico: o catálogo do comunicado</h3>
 
 <p>Cada falha abaixo tem oráculo nomeado na folha B05-L: dado que reproduz, veredito calculado e conserto que fecha o vínculo. Comunicado sem aprovador vinculado é o defeito raiz: quando o incidente chega, ninguém sabe quem aceitou qual risco — e o Bloco 6 começa sem dono.</p>
@@ -702,6 +853,18 @@ def reproducao_ok(registro: dict[str, object], digest: str, brutos: dict[str, ob
 </ol>
 </div>
 
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Risco de tier <em>alto</em> (matriz: engenharia + segurança). Estão presentes engenharia e negócio; segurança faltou. Publica?</p>
+<ol><li data-opt="a">Sim: negócio presente cobre a ausência de segurança</li><li data-opt="b">Não: a ausência de segurança é veto por falta, registrada nominalmente; um papel não substitui outro</li><li data-opt="c">Sim, com a nota de que segurança revisa depois</li><li data-opt="d">Depende do humor da sala</li></ol>
+<div class="explain">A matriz é pré-declarada: alto soma segurança à engenharia, e o sim só vale completo. Ausente não é abstenção. Negócio é obrigatório apenas no tier crítico, e não compensa falta de segurança.</div>
+</div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Um revisor fora da sala tenta reproduzir a decisão. O digest é o mesmo, mas uma claim aponta para "evidência: verbal". O que ele conclui?</p>
+<ol><li data-opt="a">Não reproduz: claim sem evidência bruta é alegação sem lastro, mesmo com o digest certo</li><li data-opt="b">Reproduz: o digest igual é o que importa</li><li data-opt="c">Reproduz parcialmente, e isso basta para publicar</li><li data-opt="d">Reproduz se o autor confirmar por mensagem</li></ol>
+<div class="explain">Reprodução exige mesmo digest <em>e</em> cada claim ligada ao bruto. Digest trocado é outro release; claim sem bruto é conta sem lastro; registro sem claims é veredito sem conta.</div>
+</div>
 <h3 id="fontes-b05">Fontes do Bloco 5</h3>
 <ul>
 <li>SRC-LT04-19 — NIST AI RMF — normativa — governança, oversight e comunicação de risco. URLs na especificação §8. Versão: 1.0. Risco: alto; revalidar em até 90 dias.</li>
@@ -738,6 +901,9 @@ def reproducao_ok(registro: dict[str, object], digest: str, brutos: dict[str, ob
 
 <p><strong>Waiver</strong> é a exceção assinada: motivo escrito, dono nomeado e <strong>expiração</strong> datada. Exceção sem expiração é regra nova sem gate; vencida, <strong>bloqueia o release automaticamente</strong> — não pede prorrogação sozinha, exige nova decisão. O oráculo cobra os três casos: válida com os três campos, vencida que veta, sem dono que veta. Waiver no dossiê aparece com validade consultável, nunca como "exceção permanente".</p>
 
+
+<div class="ix"><span class="ix-title">Ordene: do incidente ao aprendizado</span>
+<ol class="order" data-solution="b,a,d,c,e"><li data-id="a">Listar a timeline com fatos ordenados no tempo</li><li data-id="b">Dar um título que nomeia o que doeu e registrar o incidente</li><li data-id="c">Converter cada causa em ação com descrição, dono e prazo futuro</li><li data-id="d">Separar as causas do sistema, sem apontar pessoas</li><li data-id="e">Levar a ação ainda aberta ao próximo gate como item condicional com dono e expiração</li></ol></div>
 <h3>N4 · Falha e diagnóstico: o catálogo do aprendizado</h3>
 
 <p>Cada falha abaixo tem oráculo nomeado na folha B06-L: dado que reproduz, veredito calculado e conserto que fecha o vínculo. Pós-mortem sem ação com dono é o defeito raiz: o documento existe, a cerimônia aconteceu, e o próximo incidente cita o mesmo parágrafo.</p>
@@ -834,6 +1000,18 @@ def waiver_valida(waiver: dict[str, object], hoje: str) -&gt; bool:
 </ol>
 </div>
 
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma waiver tem motivo e dono, com expiração ontem. O release de hoje depende dela. O que acontece?</p>
+<ol><li data-opt="a">Ela é prorrogada automaticamente por mais 7 dias</li><li data-opt="b">Ela segue valendo, pois o motivo continua verdadeiro</li><li data-opt="c">Bloqueia o release até haver nova decisão com nova expiração</li><li data-opt="d">Vale só para releases de baixa severidade</li></ol>
+<div class="explain">Exceção vencida bloqueia; prorrogar é decisão nova, não efeito colateral. Prorrogação automática (a) transforma exceção em regra sem gate, que é o defeito que o bloco chama de waiver sem expiração.</div>
+</div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Ação de pós-mortem: "melhorar o monitoramento", prazo em 30 dias, sem responsável. Qual o veredito?</p>
+<ol><li data-opt="a">Válida: tem prazo futuro</li><li data-opt="b">Válida: toda a equipe é dona</li><li data-opt="c">Válida se a descrição for detalhada</li><li data-opt="d">Inválida: falta dono; ação "de todos" não sai do lugar. Precisa de descrição, dono nomeado e prazo futuro</li></ol>
+<div class="explain">Cada ausência invalida isoladamente: sem dono, todos acham que é com outro. A ação válida ainda aberta vira item condicional (com dono e expiração) no gate do próximo release.</div>
+</div>
 <h3 id="fontes-b06">Fontes do Bloco 6</h3>
 <ul>
 <li>SRC-LT04-15 — NIST SSDF SP 800-218 — normativa — resposta a vulnerabilidade e melhoria contínua. URLs na especificação §8. Versão: final 1.1. Risco: médio.</li>
@@ -863,6 +1041,11 @@ uv sync</code></pre>
 <li><strong>Gates:</strong> <code>uv run ruff check .</code>, <code>uv run ruff format --check .</code>, <code>uv run mypy</code>, <code>uv run pytest -q</code> — os quatro verdes.</li>
 </ol>
 <p><strong>Limpeza segura.</strong> Apague só o diretório temporário da cópia. Nunca apague <code>lab/</code> nem paths fora dele.</p>
+
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Vire cada cartão só depois de tentar responder em voz alta; o que errar, releia no bloco indicado.</p>
+<div class="flashcards"><div class="fc"><div class="front">Por que 1.10.0 vem depois de 1.9.9?</div><div class="back">SemVer compara MAJOR.MINOR.PATCH numericamente, campo a campo (ordem total). Como string, a ordem inverte.</div></div><div class="fc"><div class="front">Por que tag nunca é identidade?</div><div class="back">Tag é apelido mutável. Identidade é o par versão + digest <code>sha256:…</code>.</div></div><div class="fc"><div class="front">O que o changelog válido exige?</div><div class="back">Por entrada: versão válida, data e resumo, em ordem decrescente; falhas acusadas por posição.</div></div><div class="fc"><div class="front">Como um gate decide?</div><div class="back">Conjunção: toda claim com evidência. Sem evidência, reprova fechado listando bloqueadores.</div></div><div class="fc"><div class="front">Quando P0/P1 aberto vira GO?</div><div class="back">Nunca: força NO-GO com o id do crítico no motivo.</div></div><div class="fc"><div class="front">O que exige um CONDITIONAL GO?</div><div class="back">Gate verde mais item com dono, condição verificável e expiração. Falta um e volta a NO-GO.</div></div><div class="fc"><div class="front">O que é stop condition e quando se escreve?</div><div class="back">Limite numérico pré-declarado (ex.: erro &gt; 5%, p99 &gt; 800 ms), escrito antes do rollout e obedecido sem reunião.</div></div><div class="fc"><div class="front">Que três eixos provam um restore?</div><div class="back">Digest igual ao do alvo, dado compatível com o esquema, serviço saudável. Cada um reprova sozinho.</div></div><div class="fc"><div class="front">Por que média não é evidência?</div><div class="back">Esconde a cauda: média 54,5 ms com p99 900 ms = 5% quebrado. Publique p50/p95/p99, n e método sobre o raw.</div></div><div class="fc"><div class="front">Sinal sem amostra vale quanto?</div><div class="back">Nada: erro explícito, nunca zero. Total zero na taxa de erro também é recusado.</div></div><div class="fc"><div class="front">Por que olhar slices?</div><div class="back">Agregado verde não absolve segmento vermelho: regressão em checkout pode sumir no global.</div></div><div class="fc"><div class="front">O que a matriz de aprovadores diz?</div><div class="back">Médio: engenharia. Alto: + segurança. Crítico: + negócio. Ausência é veto por falta; tier desconhecido é erro.</div></div><div class="fc"><div class="front">O que faz uma waiver vencida?</div><div class="back">Bloqueia o release até nova decisão; nunca se prorroga sozinha.</div></div><div class="fc"><div class="front">O que torna uma ação de pós-mortem válida?</div><div class="back">Descrição, dono nomeado e prazo futuro em data ISO. Cada ausência invalida.</div></div></div>
 
 </div>
 

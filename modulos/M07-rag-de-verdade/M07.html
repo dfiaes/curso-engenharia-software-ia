@@ -108,6 +108,16 @@
 <h3>Leitura aplicada · Limites que se medem</h3>
 <p>Medir similaridades, provar a falha na negação e no identificador exato, e estimar custo de indexação é o exercício deste bloco — o roteiro executável com embeddings falsos fica no <code>Laboratório guiado M07</code>, depois do bloco 8. O percurso: pares próximo/distante para sentir ordenação relativa (o que importa, não o valor absoluto); pergunta com e sem negação com ordenação quase idêntica; identificador literal empatando ou perdendo para paráfrase genérica (a justificativa do híbrido); e segunda indexação em custo zero pelo cache. <strong>Trilha com modelo real opcional:</strong> mesmas sondas contra provedor de embeddings, com conta e crédito.</p>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Um usuário busca "métodos que <strong>não</strong> validam entrada" e o RAG devolve justamente os que validam. Qual limitação do embedding explica o erro?</p>
+<ol><li data-opt="a">A dimensão do vetor é pequena demais; com 3.072 dimensões o problema some</li><li data-opt="b">Negação: "com" e "sem" ficam próximos no espaço vetorial, então o vetor quase não distingue as duas perguntas</li><li data-opt="c">A métrica está errada: trocar cosseno por distância euclidiana resolve</li><li data-opt="d">O índice HNSW é aproximado e perdeu o vizinho correto</li></ol>
+<div class="explain">O embedding mede proximidade de assunto, não lógica. A negação precisa ser tratada fora do vetor: filtro estruturado, reescrita de query ou grafo. Quem escolhe "dimensão" ou "métrica" confunde um limite do <em>modelo</em> com um parâmetro de <em>configuração</em>; nenhum dos dois ensina negação ao vetor.</div></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Você vai trocar o modelo de embedding (a nova versão tem outra dimensão). Qual plano evita mistura silenciosa de vetores?</p>
+<ol><li data-opt="a">Coluna/tabela nova, reindexação em background com cache, validação com o eval de recall e só então trocar o caminho de leitura (blue-green)</li><li data-opt="b">Trocar o nome do modelo na configuração e reembedar só os documentos novos</li><li data-opt="c">Preencher com zeros ou truncar os vetores antigos para casar com a nova dimensão</li><li data-opt="d">Guardar os dois tipos na mesma coluna e deixar o índice decidir</li></ol>
+<div class="explain">Vetores de modelos (ou versões, ou dimensões) diferentes não são comparáveis; misturar gera ruído com aparência de busca. Por isso grava-se <code>embedding_model</code> em cada linha e a migração é blue-green. Truncar/preencher vetores antigos produz coordenadas sem significado.</div></div>
+
 <!-- ============================================ BLOCO 2 -->
 <h2 id="b02">Bloco 2 · Chunking é 60% do resultado</h2>
 <h3>Por que isso importa</h3>
@@ -130,6 +140,55 @@
 </tbody>
 </table>
 <p>A saída desse dilema não é achar o tamanho mágico — é <strong>desacoplar a unidade de busca da unidade de resposta</strong>: indexe pequeno (bom para casar) e entregue ao modelo o contexto ampliado ao redor do que casou (bom para responder). Esse padrão tem vários nomes (<em>small-to-big</em>, <em>parent document retrieval</em>, <em>sentence-window</em>) e é o que a prática do bloco implementa. Como referência: a pesquisa da Anthropic sobre <em>contextual retrieval</em> trabalhou com chunks de ~800 tokens sobre documentos de ~8k, recuperando 20 chunks — mas para código a unidade natural é outra, como você vai ver.</p>
+
+<div class="ix"><span class="ix-title">Simulador: chunking com tamanho e overlap</span>
+<p>Mexa no tamanho e no overlap e veja onde a <strong>frase-alvo</strong> (a que contém a resposta) é cortada. Unidade: palavras, como aproximação de tokens.</p>
+<div class="ix-row"><label>Tamanho do chunk: <strong id="f07-ck-sz-v">60</strong> palavras</label></div>
+<input type="range" id="f07-ck-sz" min="8" max="120" step="2" value="60" aria-label="Tamanho do chunk em palavras">
+<div class="ix-row"><label>Overlap: <strong id="f07-ck-ov-v">0</strong> palavras</label></div>
+<input type="range" id="f07-ck-ov" min="0" max="60" step="1" value="0" aria-label="Overlap em palavras">
+<div id="f07-ck-view" style="position:relative;margin-top:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);overflow:hidden" role="img" aria-label="Chunks sobre o texto"></div>
+<div class="ix-out" id="f07-ck-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+
+var pre = "O módulo de configuração carrega os parâmetros do serviço na inicialização. Cada ambiente tem seu arquivo e as chaves seguem o padrão de nomes da equipe. Valores sensíveis vêm de variáveis de ambiente e nunca ficam no repositório. O carregador valida os tipos e falha cedo quando falta uma chave obrigatória. ";
+var target = "O timeout de conexão é configurado em Settings.TimeoutSegundos, com valor padrão de 30 segundos.";
+var post = " Depois da leitura, o objeto fica imutável durante toda a vida do processo. Para testes existe uma fábrica que sobrescreve apenas os campos informados. Mudanças de esquema exigem uma migração documentada e uma nova versão do arquivo de exemplo. O serviço registra no log quais chaves foram lidas, sem imprimir os valores.";
+var words = (pre + target + post).split(/\s+/);
+var tw = target.split(/\s+/), ts = 0;
+for (var i = 0; i < words.length; i++) { if (words.slice(i, i + tw.length).join(" ") === tw.join(" ")) { ts = i; break; } }
+var te = ts + tw.length, n = words.length;
+var sz = document.getElementById("f07-ck-sz"), ov = document.getElementById("f07-ck-ov");
+var view = document.getElementById("f07-ck-view"), out = document.getElementById("f07-ck-out");
+function render() {
+  var size = +sz.value, over = Math.min(+ov.value, size - 1);
+  ov.max = Math.max(0, size - 1);
+  if (+ov.value > size - 1) ov.value = size - 1;
+  document.getElementById("f07-ck-sz-v").textContent = size;
+  document.getElementById("f07-ck-ov-v").textContent = over;
+  var step = size - over, chunks = [];
+  for (var s = 0; ; s += step) { var en = Math.min(n, s + size); chunks.push([s, en]); if (en >= n) break; }
+  var rowH = 16, gap = 3, h = chunks.length * (rowH + gap) + gap;
+  var html = '<div style="position:absolute;top:0;bottom:0;left:' + (ts / n * 100) + '%;width:' + ((te - ts) / n * 100) + '%;background:var(--accent-soft);border-left:2px solid var(--accent);border-right:2px solid var(--accent)"></div>';
+  var whole = 0, hit = [];
+  chunks.forEach(function (c, k) {
+    var inside = c[0] <= ts && c[1] >= te, touches = c[0] < te && c[1] > ts;
+    if (inside) whole++;
+    if (touches) hit.push(k + 1);
+    html += '<div title="chunk ' + (k + 1) + ': palavras ' + c[0] + '–' + c[1] + '" style="position:absolute;top:' + (gap + k * (rowH + gap)) + 'px;height:' + rowH + 'px;left:' + (c[0] / n * 100) + '%;width:' + ((c[1] - c[0]) / n * 100) + '%;border-radius:4px;border:1px solid ' + (inside ? 'var(--ok)' : 'var(--line)') + ';background:' + (inside ? 'var(--ok-soft)' : 'var(--surface-2)') + ';font-size:10px;line-height:14px;padding-left:3px;overflow:hidden;white-space:nowrap">' + (k + 1) + '</div>';
+  });
+  view.style.height = h + "px"; view.innerHTML = html;
+  var stored = chunks.reduce(function (a, c) { return a + (c[1] - c[0]); }, 0);
+  var dup = Math.round((stored / n - 1) * 100);
+  var msg = whole > 0
+    ? "Frase-alvo INTEIRA em " + whole + " chunk(s): a resposta pode ser recuperada de uma vez."
+    : "Frase-alvo CORTADA entre os chunks " + hit.join(" e ") + ": nenhum chunk contém a resposta completa, e cada metade tem vetor fraco.";
+  out.textContent = chunks.length + " chunks · " + stored + " palavras indexadas para " + n + " do original (duplicação " + dup + "%)\n" + msg;
+}
+sz.addEventListener("input", render); ov.addEventListener("input", render); render();
+
+});</script>
 
 <h3>As cinco estratégias</h3>
 
@@ -185,6 +244,16 @@ com o objetivo de melhorar a recuperação em busca. Responda só com o contexto
 
 <h3>Leitura aplicada · Estrutural contra fixo</h3>
 <p>Comparar chunker fixo com estrutural, adicionar contexto e medir recall@5 à mão é o exercício deste bloco — o roteiro executável sobre o corpus Python fica no <code>Laboratório guiado M07</code>, depois do bloco 8. O percurso: baseline fixo com chunks lidos um a um (assinatura separada do corpo é o sintoma); estrutural por AST com símbolo e linhas corretas mais <code>id_estavel</code> para ingestão incremental; contexto prepensado por chunk; e tabela fixo × estrutural × estrutural+contexto em 10 perguntas reais — o primeiro recall@5 manual, que no bloco 7 vira automático.</p>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">No chunking de tamanho fixo, para que serve o overlap e qual é o custo?</p>
+<ol><li data-opt="a">Para que uma frase cortada na fronteira apareça inteira em pelo menos um chunk; custa cerca de 10–15% a mais de armazenamento e de embeddings</li><li data-opt="b">Para acelerar a busca; o custo é uma queda de recall</li><li data-opt="c">Para aumentar o tamanho médio do chunk sem reindexar; não tem custo</li><li data-opt="d">Para satisfazer o limite de tokens do modelo de embedding; custa latência na consulta</li></ol>
+<div class="explain">Sem overlap você perde exatamente a informação que estava na emenda. O custo é duplicação: o mesmo trecho é guardado e embedado duas vezes. Overlap não acelera nada nem altera o limite do modelo.</div></div>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Chunk pequeno casa bem mas não se explica sozinho; chunk grande dilui o vetor. Qual é a saída descrita no bloco?</p>
+<ol><li data-opt="a">Achar o tamanho "mágico" (por exemplo, 512 tokens) e usar para tudo</li><li data-opt="b">Indexar o documento inteiro e confiar no reranker</li><li data-opt="c">Indexar pequeno (bom para casar) e entregar ao modelo o contexto ampliado ao redor do que casou (small-to-big / parent document)</li><li data-opt="d">Usar sempre chunks grandes e subir o k</li></ol>
+<div class="explain">A saída é <strong>desacoplar a unidade de busca da unidade de resposta</strong>. Não existe tamanho mágico; documento inteiro tem vetor médio que não se aproxima de nenhuma pergunta; subir o k só traz mais ruído.</div></div>
 
 <!-- ============================================ BLOCO 3 -->
 <h2 id="b03">Bloco 3 · pgvector: tipos, operadores, HNSW × IVFFlat e tuning</h2>
@@ -279,6 +348,62 @@ CREATE INDEX ix_chunks_embedding   ON chunks
 <p><strong>Por que isto é o coração do bloco 6:</strong> a resposta ingênua para "como garanto que não vaza dado entre clientes?" é "coloco <code>WHERE tenant_id</code>". Isso está certo em segurança e <em>quebra em recall</em> — o sistema fica seguro e inútil. Saber que existe over-filtering, e resolvê-lo com iterative scan ou índice parcial, é o que faz o filtro de segurança ser viável.</p>
 </div>
 
+<div class="tabs">
+<section data-tab="HNSW (padrão do curso)">
+<p>Grafo navegável em camadas. Botões: <code>m</code> (conexões por nó, 16 por padrão), <code>ef_construction</code> (64) no <em>build</em>, e <code>hnsw.ef_search</code> (40) em <em>cada consulta</em>.</p><pre>CREATE INDEX ix_chunks_embedding ON chunks
+  USING hnsw (embedding vector_cosine_ops)
+  WITH (m = 16, ef_construction = 64);
+
+-- por sessão/consulta, sem reconstruir nada:
+SET hnsw.ef_search = 100;
+SET hnsw.iterative_scan = relaxed_order;</pre><p>Incorpora bem dados novos; o preço é build lento e muita memória.</p>
+</section>
+<section data-tab="IVFFlat">
+<p>Divide o espaço em <code>lists</code> clusters e busca só nos mais próximos (<code>probes</code>). Precisa de dados para treinar os clusters: crie o índice <strong>depois</strong> de carregar a tabela.</p><pre>-- ~1M de linhas: lists = linhas / 1000
+CREATE INDEX ix_chunks_ivf ON chunks
+  USING ivfflat (embedding vector_cosine_ops)
+  WITH (lists = 1000);
+
+-- probes inicial = raiz de lists (~32)
+SET ivfflat.probes = 32;</pre><p>Build rápido, mas os clusters envelhecem com dados novos e pedem REINDEX periódico. Só ganha do HNSW quando você reindexa tudo o tempo todo.</p>
+</section>
+</div>
+
+<div class="ix"><span class="ix-title">Simulador: over-filtering com filtro seletivo</span>
+<p>Modelo simplificado (valor esperado): o índice visita <code>ef_search</code> candidatos e o <code>WHERE</code> descarta os que não são do tenant. É uma estimativa para dar intuição, não uma medição de pgvector.</p>
+<div class="ix-row"><label for="f07-of-share">Fatia do tenant no corpus:</label>
+<select id="f07-of-share"><option value="0.5">50% (poucos tenants)</option><option value="0.1" selected>10%</option><option value="0.01">1%</option><option value="0.001">0,1% (SaaS com milhares de tenants)</option></select></div>
+<div class="ix-row"><label>ef_search = <strong id="f07-of-ef-v">40</strong></label><input type="range" id="f07-of-ef" min="10" max="400" step="10" value="40" style="max-width:240px" aria-label="ef_search">
+<label>LIMIT = <strong id="f07-of-lim-v">10</strong></label><input type="range" id="f07-of-lim" min="1" max="100" value="10" style="max-width:200px" aria-label="LIMIT"></div>
+<div class="ix-row"><label><input type="checkbox" id="f07-of-it"> <code>hnsw.iterative_scan = relaxed_order</code> (limite ~20.000 tuplas)</label></div>
+<div class="ix-out" id="f07-of-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+
+var sh = document.getElementById("f07-of-share"), ef = document.getElementById("f07-of-ef"), lim = document.getElementById("f07-of-lim"), it = document.getElementById("f07-of-it"), out = document.getElementById("f07-of-out");
+function calc() {
+  var p = +sh.value, e = +ef.value, l = +lim.value;
+  document.getElementById("f07-of-ef-v").textContent = e;
+  document.getElementById("f07-of-lim-v").textContent = l;
+  var txt;
+  if (!it.checked) {
+    var got = Math.min(l, Math.floor(e * p + 0.5));
+    txt = "Sem iterative scan: visita " + e + " candidatos, cerca de " + (e * p).toFixed(1) + " são do tenant.\nDevolve ~" + got + " de " + l + " linhas pedidas.";
+    if (e < l) txt += "\nAtenção: ef_search < LIMIT, o recall cai mesmo sem filtro (regra prática: ef_search ≈ 2–4 × k).";
+    if (got < l) txt += "\n=> over-filtering: o sistema é seguro e inútil. Ative iterative scan, use índice parcial ou pré-filtro em CTE.";
+    else txt += "\n=> aqui o filtro não machuca porque o tenant é grande; com tenants pequenos o resultado desaba.";
+  } else {
+    var visit = Math.min(20000, Math.ceil(l / p)), got2 = Math.min(l, Math.floor(visit * p + 0.5));
+    txt = "Com iterative scan: o índice continua buscando até juntar " + l + " resultados ou bater o teto (20.000 tuplas).\nVisita ~" + visit + " candidatos e devolve ~" + got2 + " de " + l + ".";
+    if (got2 < l) txt += "\nO teto de max_scan_tuples foi atingido: tenant pequeno demais para este índice; considere índice parcial/partição.";
+    else txt += "\nCusto: latência maior (" + Math.round(visit / Math.max(e, 1) * 10) / 10 + "x mais candidatos que o ef_search).";
+  }
+  out.textContent = txt;
+}
+[sh, ef, lim, it].forEach(function (x) { x.addEventListener("input", calc); x.addEventListener("change", calc); }); calc();
+
+});</script>
+
 <h3>Tuning: o que ajustar, em ordem</h3>
 <ol>
 <li><strong>Carregue os dados antes de criar o índice.</strong> Build sobre tabela cheia é muito mais rápido que inserção incremental em índice existente.</li>
@@ -290,6 +415,16 @@ CREATE INDEX ix_chunks_embedding   ON chunks
 
 <h3>Leitura aplicada · Aproximação quantificada</h3>
 <p>Medir recall do índice contra a busca exata, reproduzir o over-filtering e comparar com índice parcial é o exercício deste bloco — com execução real contra PostgreSQL exigindo Docker (etapa externa ao lab, marcada como bloqueada sem ele). O percurso: tabela ef_search × recall@10 × latência (quantificar a "aproximação" em vez de aceitar o default); filtro seletivo devolvendo menos que o LIMIT sem iterative scan, e as 10 voltando com ele; e índice parcial devolvendo recall ~1,0 — com a conclusão de arquitetura registrada em ADR (poucos tenants grandes vs. milhares pequenos). O laboratório local prova a mecânica equivalente em memória; o SQL de referência vive em <code>lab/sql/reference.sql</code>.</p>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q"><code>WHERE tenant_id = 42 ORDER BY embedding &lt;=&gt; $1 LIMIT 10</code> devolve só 2 linhas, apesar de haver milhares do tenant 42. Qual a causa?</p>
+<ol><li data-opt="a">O índice ANN percorre candidatos primeiro (ef_search = 40) e aplica o WHERE depois; quase todos eram de outros tenants (over-filtering)</li><li data-opt="b">Bug do pgvector: o LIMIT é ignorado quando há WHERE</li><li data-opt="c">Falta VACUUM na tabela</li><li data-opt="d">O embedding da consulta está em outra dimensão</li></ol>
+<div class="explain">Índice aproximado não é B-tree: ele não "procura só no tenant 42". Soluções: <code>hnsw.iterative_scan</code>, índice parcial por tenant, ou pré-filtro em CTE com busca exata quando o filtro é muito seletivo. Medir recall <em>sem</em> o filtro e servir com ele é o erro clássico (0,97 no teste, 0,4 em produção).</div></div>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Você configurou <code>hnsw.ef_search = 40</code> e a consulta pede <code>LIMIT 50</code>. O que esperar?</p>
+<ol><li data-opt="a">Nada muda: o LIMIT é aplicado depois e o índice já contém tudo</li><li data-opt="b">O recall despenca: ef_search precisa ser pelo menos o LIMIT (regra prática: 2 a 4 vezes o k)</li><li data-opt="c">O Postgres devolve erro de sintaxe</li><li data-opt="d">O recall sobe, pois o índice visita mais nós</li></ol>
+<div class="explain">ef_search é o número de candidatos que o índice considera; ele não consegue devolver 50 vizinhos de uma lista de 40. É o botão de recall em tempo de execução: ajustável por sessão, sem reconstruir o índice.</div></div>
 
 <!-- ============================================ BLOCO 4 -->
 <h2 id="b04">Bloco 4 · Busca híbrida: léxico + vetorial + fusão de ranking</h2>
@@ -351,6 +486,59 @@ k = 60 (constante padrão da literatura)</code></pre>
 </ul>
 </div>
 
+<div class="ix"><span class="ix-title">Simulador: fusão RRF</span>
+<p>Cada documento tem uma posição em cada lista (0 = não apareceu). Edite as posições, o <em>k</em> e o peso do léxico e compare com a regra "só o campeão de uma lista".</p>
+<div class="ix-row"><label for="f07-rrf-pre">Cenário:</label>
+<select id="f07-rrf-pre"><option value="0">Consenso vence campeão único</option><option value="1">Identificador literal (só o léxico acha)</option><option value="2">Pergunta conceitual (só o vetor acha)</option></select></div>
+<table style="width:100%;border-collapse:collapse" id="f07-rrf-tab"><thead><tr><th style="text-align:left">Doc</th><th>Posição léxica</th><th>Posição vetorial</th></tr></thead><tbody></tbody></table>
+<div class="ix-row"><label>k = <strong id="f07-rrf-k-v">60</strong></label><input type="range" id="f07-rrf-k" min="1" max="120" value="60" style="max-width:240px" aria-label="Constante k do RRF">
+<label>peso do léxico = <strong id="f07-rrf-w-v">1,0</strong></label><input type="range" id="f07-rrf-w" min="0" max="20" value="10" style="max-width:200px" aria-label="Peso do léxico"></div>
+<div id="f07-rrf-bars" style="margin-top:8px"></div>
+<div class="ix-out" id="f07-rrf-out" aria-live="polite"></div>
+</div>
+<script>Course.ready(function (C) {
+
+var names = ["A","B","C","D","E","F"];
+var presets = [
+  [[1,0],[4,4],[0,1],[2,7],[6,2],[3,0]],
+  [[1,0],[2,9],[3,0],[0,1],[0,2],[5,3]],
+  [[0,1],[8,2],[0,3],[1,0],[4,4],[0,5]]
+];
+var tb = document.querySelector("#f07-rrf-tab tbody");
+var inputs = names.map(function (nm, i) {
+  var tr = document.createElement("tr");
+  tr.innerHTML = '<td><strong>' + nm + '</strong></td><td style="text-align:center"><input type="number" min="0" max="50" value="0" aria-label="Posição léxica de ' + nm + '" style="width:70px"></td><td style="text-align:center"><input type="number" min="0" max="50" value="0" aria-label="Posição vetorial de ' + nm + '" style="width:70px"></td>';
+  tb.appendChild(tr);
+  return tr.querySelectorAll("input");
+});
+var pre = document.getElementById("f07-rrf-pre"), kk = document.getElementById("f07-rrf-k"), ww = document.getElementById("f07-rrf-w");
+var bars = document.getElementById("f07-rrf-bars"), out = document.getElementById("f07-rrf-out");
+function load() { var p = presets[+pre.value]; p.forEach(function (v, i) { inputs[i][0].value = v[0]; inputs[i][1].value = v[1]; }); calc(); }
+function calc() {
+  var k = +kk.value, w = +ww.value / 10;
+  document.getElementById("f07-rrf-k-v").textContent = k;
+  document.getElementById("f07-rrf-w-v").textContent = w.toFixed(1).replace(".", ",");
+  var rows = names.map(function (nm, i) {
+    var l = Math.max(0, +inputs[i][0].value | 0), v = Math.max(0, +inputs[i][1].value | 0);
+    var s = (l ? w / (k + l) : 0) + (v ? 1 / (k + v) : 0);
+    return { nm: nm, l: l, v: v, s: s, both: l > 0 && v > 0 };
+  }).filter(function (r) { return r.s > 0; }).sort(function (a, b) { return b.s - a.s; });
+  var mx = rows.length ? rows[0].s : 1, html = "";
+  rows.forEach(function (r, i) {
+    html += '<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="width:56px"><strong>' + (i + 1) + 'º ' + r.nm + '</strong></span><span style="flex:1;background:var(--surface-2);border-radius:4px;height:16px"><span style="display:block;height:16px;border-radius:4px;width:' + (r.s / mx * 100) + '%;background:' + (r.both ? 'var(--ok)' : 'var(--accent)') + '"></span></span><span style="width:210px;font-family:var(--mono);font-size:.8rem">' + r.s.toFixed(4) + (r.both ? " · consenso" : r.l ? " · só léxico" : " · só vetor") + '</span></div>';
+  });
+  bars.innerHTML = html || "Nenhum documento recuperado.";
+  if (rows.length) {
+    var top = rows[0];
+    out.textContent = "Topo do RRF: " + top.nm + (top.both ? " (aparece nas duas listas)" : " (aparece em uma lista só)") + "\nscore = peso/(k+pos_lex) + 1/(k+pos_vet); só a POSIÇÃO entra, nunca o score original. Barras verdes = documentos em consenso.";
+  } else out.textContent = "";
+}
+pre.addEventListener("change", load); kk.addEventListener("input", calc); ww.addEventListener("input", calc);
+inputs.forEach(function (p) { p[0].addEventListener("input", calc); p[1].addEventListener("input", calc); });
+load();
+
+});</script>
+
 <h3>A query híbrida completa</h3>
 <pre><code>-- busca_hibrida.sql — dois recalls independentes, fundidos por RRF
 WITH
@@ -406,6 +594,16 @@ LIMIT 20;                              -- entra no reranker (bloco 5)</code></pr
 <h3>Leitura aplicada · União, não média</h3>
 <p>Implementar as três buscas, montar 20 consultas com ground truth, medir recall@5 por tipo e experimentar k e pesos do RRF é o exercício deste bloco — o roteiro executável sobre o corpus Python fica no <code>Laboratório guiado M07</code>, depois do bloco 8. O percurso: três funções com a mesma assinatura para comparação permanente; JSONL com literais e conceituais; a tabela que mostra léxico e vetorial empatados no geral e complementares por tipo (o híbrido como união); e k/pesos com variação pequena — RRF robusto não se calibra com precisão, registra-se e segue.</p>
 
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que <code>0.5 × score_vetorial + 0.5 × score_lexico</code> é uma má fusão?</p>
+<ol><li data-opt="a">As escalas são incomparáveis e mudam por consulta (cosseno vive em [0,1]; ts_rank não tem teto), e a normalização min-max faz o melhor de uma lista ruim virar 1,0</li><li data-opt="b">Porque somar é mais lento que ordenar</li><li data-opt="c">Porque BM25 não produz score</li><li data-opt="d">Porque o vetorial sempre domina o léxico</li></ol>
+<div class="explain">O RRF descarta os scores e usa só a posição, que é comparável entre listas de qualquer escala. O erro de quem escolhe "somar" é supor que um 0,8 vetorial e um 0,8 léxico significam a mesma coisa.</div></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Com k = 60: o documento X é 1º só na lista léxica; o documento Y é 4º na léxica <em>e</em> 4º na vetorial. Quem fica à frente no RRF?</p>
+<ol><li data-opt="a">Y: 2 × 1/64 ≈ 0,031 contra 1/61 ≈ 0,016 de X; o consenso supera a excelência em uma lista só</li><li data-opt="b">X, porque o 1º lugar vale mais que qualquer combinação</li><li data-opt="c">Empatam, pois os dois somam 4 posições</li><li data-opt="d">Depende da escala dos scores originais</li></ol>
+<div class="explain">É o comportamento desejado: consenso entre métodos independentes é sinal mais forte do que ser o melhor em um só. Note que a última opção está errada por construção: RRF não olha scores.</div></div>
+
 <!-- ============================================ BLOCO 5 -->
 <h2 id="b05">Bloco 5 · Reranking e transformação de query</h2>
 <h3>Por que isso importa</h3>
@@ -456,6 +654,15 @@ LIMIT 20;                              -- entra no reranker (bloco 5)</code></pr
 </svg>
 <figcaption>Cada etapa reduz a quantidade e aumenta o custo unitário. Recall se ganha embaixo; precisão, em cima.</figcaption>
 </figure>
+
+<div class="stepper"><span class="ix-title">Passo a passo: o funil de consulta do corpus ao prompt</span>
+<div class="frame" data-caption="1. Corpus: tudo o que foi indexado"><svg viewBox="0 0 640 156" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>1. Corpus: tudo o que foi indexado</title><defs><marker id="ixm7001" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="12" y="30" width="92" height="54" rx="8" class="s-soft" stroke-width="1.3"/><text x="58.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Corpus</text><text x="58.0" y="69.0" font-size="12" text-anchor="middle">50k+ chunks</text><line x1="105" y1="57" x2="116" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7001)"/><rect x="118" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="164.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">ACL</text><text x="164.0" y="69.0" font-size="12" text-anchor="middle">tenant/escopo</text><line x1="211" y1="57" x2="222" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7001)"/><rect x="224" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="270.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Híbrido</text><text x="270.0" y="69.0" font-size="12" text-anchor="middle">50 por método</text><line x1="317" y1="57" x2="328" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7001)"/><rect x="330" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="376.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">RRF</text><text x="376.0" y="69.0" font-size="12" text-anchor="middle">20 fundidos</text><line x1="423" y1="57" x2="434" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7001)"/><rect x="436" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="482.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Rerank</text><text x="482.0" y="69.0" font-size="12" text-anchor="middle">top 5</text><line x1="529" y1="57" x2="540" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7001)"/><rect x="542" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="588.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Limiar</text><text x="588.0" y="69.0" font-size="12" text-anchor="middle">abstém?</text><text x="320" y="118" font-size="13" text-anchor="middle" font-weight="700">Ponto de partida: dezenas de milhares de chunks</text><text x="320" y="140" font-size="12" text-anchor="middle" style="opacity:.85;">Nada disso pode ir ao prompt: custo, latência e context rot</text></svg></div>
+<div class="frame" data-caption="2. Filtro de ACL: antes de qualquer ordenação"><svg viewBox="0 0 640 156" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>2. Filtro de ACL: antes de qualquer ordenação</title><defs><marker id="ixm7002" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="12" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="58.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Corpus</text><text x="58.0" y="69.0" font-size="12" text-anchor="middle">50k+ chunks</text><line x1="105" y1="57" x2="116" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7002)"/><rect x="118" y="30" width="92" height="54" rx="8" class="s-soft" stroke-width="1.3"/><text x="164.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">ACL</text><text x="164.0" y="69.0" font-size="12" text-anchor="middle">tenant/escopo</text><line x1="211" y1="57" x2="222" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7002)"/><rect x="224" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="270.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Híbrido</text><text x="270.0" y="69.0" font-size="12" text-anchor="middle">50 por método</text><line x1="317" y1="57" x2="328" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7002)"/><rect x="330" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="376.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">RRF</text><text x="376.0" y="69.0" font-size="12" text-anchor="middle">20 fundidos</text><line x1="423" y1="57" x2="434" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7002)"/><rect x="436" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="482.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Rerank</text><text x="482.0" y="69.0" font-size="12" text-anchor="middle">top 5</text><line x1="529" y1="57" x2="540" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7002)"/><rect x="542" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="588.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Limiar</text><text x="588.0" y="69.0" font-size="12" text-anchor="middle">abstém?</text><text x="320" y="118" font-size="13" text-anchor="middle" font-weight="700">O que o requisitante não pode ver sai aqui</text><text x="320" y="140" font-size="12" text-anchor="middle" style="opacity:.85;">Depois deste ponto, nada proibido existe no pipeline</text></svg></div>
+<div class="frame" data-caption="3. Busca híbrida: recall alto e barato"><svg viewBox="0 0 640 156" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>3. Busca híbrida: recall alto e barato</title><defs><marker id="ixm7003" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="12" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="58.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Corpus</text><text x="58.0" y="69.0" font-size="12" text-anchor="middle">50k+ chunks</text><line x1="105" y1="57" x2="116" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7003)"/><rect x="118" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="164.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">ACL</text><text x="164.0" y="69.0" font-size="12" text-anchor="middle">tenant/escopo</text><line x1="211" y1="57" x2="222" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7003)"/><rect x="224" y="30" width="92" height="54" rx="8" class="s-soft" stroke-width="1.3"/><text x="270.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Híbrido</text><text x="270.0" y="69.0" font-size="12" text-anchor="middle">50 por método</text><line x1="317" y1="57" x2="328" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7003)"/><rect x="330" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="376.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">RRF</text><text x="376.0" y="69.0" font-size="12" text-anchor="middle">20 fundidos</text><line x1="423" y1="57" x2="434" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7003)"/><rect x="436" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="482.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Rerank</text><text x="482.0" y="69.0" font-size="12" text-anchor="middle">top 5</text><line x1="529" y1="57" x2="540" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7003)"/><rect x="542" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="588.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Limiar</text><text x="588.0" y="69.0" font-size="12" text-anchor="middle">abstém?</text><text x="320" y="118" font-size="13" text-anchor="middle" font-weight="700">Léxico + vetorial, 50 candidatos de cada</text><text x="320" y="140" font-size="12" text-anchor="middle" style="opacity:.85;">O identificador exato vem do léxico; o conceito, do vetor</text></svg></div>
+<div class="frame" data-caption="4. Fusão por RRF: só posições"><svg viewBox="0 0 640 156" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>4. Fusão por RRF: só posições</title><defs><marker id="ixm7004" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="12" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="58.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Corpus</text><text x="58.0" y="69.0" font-size="12" text-anchor="middle">50k+ chunks</text><line x1="105" y1="57" x2="116" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7004)"/><rect x="118" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="164.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">ACL</text><text x="164.0" y="69.0" font-size="12" text-anchor="middle">tenant/escopo</text><line x1="211" y1="57" x2="222" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7004)"/><rect x="224" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="270.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Híbrido</text><text x="270.0" y="69.0" font-size="12" text-anchor="middle">50 por método</text><line x1="317" y1="57" x2="328" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7004)"/><rect x="330" y="30" width="92" height="54" rx="8" class="s-soft" stroke-width="1.3"/><text x="376.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">RRF</text><text x="376.0" y="69.0" font-size="12" text-anchor="middle">20 fundidos</text><line x1="423" y1="57" x2="434" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7004)"/><rect x="436" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="482.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Rerank</text><text x="482.0" y="69.0" font-size="12" text-anchor="middle">top 5</text><line x1="529" y1="57" x2="540" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7004)"/><rect x="542" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="588.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Limiar</text><text x="588.0" y="69.0" font-size="12" text-anchor="middle">abstém?</text><text x="320" y="118" font-size="13" text-anchor="middle" font-weight="700">Consenso entre métodos sobe; sai uma lista de 20</text><text x="320" y="140" font-size="12" text-anchor="middle" style="opacity:.85;">Escalas incomparáveis dispensadas</text></svg></div>
+<div class="frame" data-caption="5. Rerank: o cross-encoder lê pergunta + trecho"><svg viewBox="0 0 640 156" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>5. Rerank: o cross-encoder lê pergunta + trecho</title><defs><marker id="ixm7005" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="12" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="58.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Corpus</text><text x="58.0" y="69.0" font-size="12" text-anchor="middle">50k+ chunks</text><line x1="105" y1="57" x2="116" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7005)"/><rect x="118" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="164.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">ACL</text><text x="164.0" y="69.0" font-size="12" text-anchor="middle">tenant/escopo</text><line x1="211" y1="57" x2="222" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7005)"/><rect x="224" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="270.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Híbrido</text><text x="270.0" y="69.0" font-size="12" text-anchor="middle">50 por método</text><line x1="317" y1="57" x2="328" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7005)"/><rect x="330" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="376.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">RRF</text><text x="376.0" y="69.0" font-size="12" text-anchor="middle">20 fundidos</text><line x1="423" y1="57" x2="434" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7005)"/><rect x="436" y="30" width="92" height="54" rx="8" class="s-soft" stroke-width="1.3"/><text x="482.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Rerank</text><text x="482.0" y="69.0" font-size="12" text-anchor="middle">top 5</text><line x1="529" y1="57" x2="540" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7005)"/><rect x="542" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="588.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Limiar</text><text x="588.0" y="69.0" font-size="12" text-anchor="middle">abstém?</text><text x="320" y="118" font-size="13" text-anchor="middle" font-weight="700">Caro, mas só em 20 pares: precisão no topo (5 chunks)</text><text x="320" y="140" font-size="12" text-anchor="middle" style="opacity:.85;">Cuidado com janela de 512 tokens e com a latência do lote</text></svg></div>
+<div class="frame" data-caption="6. Limiar e abstenção: pode não haver resposta"><svg viewBox="0 0 640 156" role="img" style="width:100%;height:auto;max-width:640px;color:var(--fg)" xmlns="http://www.w3.org/2000/svg"><title>6. Limiar e abstenção: pode não haver resposta</title><defs><marker id="ixm7006" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><rect x="12" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="58.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Corpus</text><text x="58.0" y="69.0" font-size="12" text-anchor="middle">50k+ chunks</text><line x1="105" y1="57" x2="116" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7006)"/><rect x="118" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="164.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">ACL</text><text x="164.0" y="69.0" font-size="12" text-anchor="middle">tenant/escopo</text><line x1="211" y1="57" x2="222" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7006)"/><rect x="224" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="270.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Híbrido</text><text x="270.0" y="69.0" font-size="12" text-anchor="middle">50 por método</text><line x1="317" y1="57" x2="328" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7006)"/><rect x="330" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="376.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">RRF</text><text x="376.0" y="69.0" font-size="12" text-anchor="middle">20 fundidos</text><line x1="423" y1="57" x2="434" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7006)"/><rect x="436" y="30" width="92" height="54" rx="8" class="s-box" stroke-width="1.3"/><text x="482.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Rerank</text><text x="482.0" y="69.0" font-size="12" text-anchor="middle">top 5</text><line x1="529" y1="57" x2="540" y2="57" class="s-line" stroke-width="1.5" marker-end="url(#ixm7006)"/><rect x="542" y="30" width="92" height="54" rx="8" class="s-soft" stroke-width="1.3"/><text x="588.0" y="53.0" font-size="12" text-anchor="middle" font-weight="700">Limiar</text><text x="588.0" y="69.0" font-size="12" text-anchor="middle">abstém?</text><text x="320" y="118" font-size="13" text-anchor="middle" font-weight="700">Abaixo do limiar: "não encontrei", com motivo</text><text x="320" y="140" font-size="12" text-anchor="middle" style="opacity:.85;">Resposta plausível a partir de contexto ruim é a única inaceitável</text></svg></div>
+</div>
 
 <h3>Três formas de rerankear, em ordem de custo</h3>
 <table>
@@ -532,6 +739,16 @@ def rerankear(
 
 <h3>Leitura aplicada · Ganho que se prova</h3>
 <p>Integrar o rerank, medir o ganho no dataset, calibrar o limiar e implementar o roteamento determinístico é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M07</code>, depois do bloco 8. O percurso: latência de rerankear 50 candidatos anotada no orçamento; recall@5 sem vs. com rerank (o salto típico de 8–20 pontos, e o diagnóstico quando dá zero); limiar calibrado na distribuição do corpus com o método de obtenção anotado; e 60–70% das consultas roteáveis por regra, com as de estrutura marcadas como candidatas ao grafo. <strong>Trilha com modelo real opcional:</strong> cross-encoder local ou API de rerank, com máquina ou crédito próprios.</p>
+
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que o cross-encoder só é aplicado aos candidatos do funil, e não ao corpus inteiro?</p>
+<ol><li data-opt="a">Porque ele não entende português</li><li data-opt="b">Porque só funciona com BM25</li><li data-opt="c">Ele processa o par (pergunta, documento) junto, então nada pode ser pré-computado: é uma inferência por candidato, na hora da consulta</li><li data-opt="d">Porque a janela dele é infinita e ficaria lento</li></ol>
+<div class="explain">Bi-encoder (embedding) codifica pergunta e documento separadamente, por isso os vetores do corpus são pré-computados. O cross-encoder enxerga a <em>relação</em> entre os dois, ao custo de rodar o modelo para cada par. Daí o funil: barato embaixo, caro em cima.</div></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">O reranker não melhorou o recall@5 nos seus chunks de ~1.500 tokens. Qual a hipótese mais provável?</p>
+<ol><li data-opt="a">Truncamento silencioso: o cross-encoder tem janela de ~512 tokens e pontua só o pedaço do chunk que sobrou</li><li data-opt="b">O k do RRF está baixo demais</li><li data-opt="c">O score do reranker é uma probabilidade e deveria ser maior que 0,5</li><li data-opt="d">A busca léxica está desligada</li></ol>
+<div class="explain">Sintoma clássico: rerank "não faz nada" em chunks longos. Soluções: reranker de janela maior ou pontuar um resumo/cabeça do chunk. E "score não é probabilidade": o limiar se calibra no corpus, nunca se copia de um blog.</div></div>
 
 <!-- ============================================ BLOCO 6 -->
 <h2 id="b06">Bloco 6 · ACL antes da relevância, e abstenção</h2>
@@ -663,6 +880,16 @@ Toda afirmação deve citar arquivo e linhas dos trechos.
 <h3>Leitura aplicada · Ataque que se assiste</h3>
 <p>Montar dois tenants, atacar a camada 1, provar a camada 2 com o filtro removido e calibrar a abstenção é o exercício deste bloco — o roteiro executável com tenants locais fica no <code>Laboratório guiado M07</code>, depois do bloco 8 (RLS em PostgreSQL real exige Docker e fica como etapa externa marcada). O percurso: mesmo banco e índice para dois tenants reconhecíveis; ataque com e sem filtro (o vazamento com cara de normal é a demonstração); RLS segurando com a aplicação sabotada; e 10+10 de abstenção com os dois erros contados e as 20 virando casos de dataset. RLS completo é trilha do M12.</p>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Em que ponto do pipeline o filtro de permissão (ACL/tenant) deve ser aplicado?</p>
+<ol><li data-opt="a">Depois do rerank, antes de montar o prompt</li><li data-opt="b">Dentro da consulta, antes de ordenar e rerankear: o que não passou pelo filtro nunca chega ao contexto</li><li data-opt="c">No prompt de sistema, instruindo o modelo a ignorar documentos de outros clientes</li><li data-opt="d">Só na verificação de saída, comparando os tenants dos chunks citados</li></ol>
+<div class="explain">Segurança, custo e qualidade apontam para a mesma ordem. Instrução no prompt é pedido, não mecanismo. Verificação de saída é a 4ª camada de defesa (o que vira alerta), não substitui a 1ª. E "filtrar depois" é pior que SELECT * com filtro na aplicação: o dado já entrou no contexto e não dá para "desler".</div></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Seu RAG quase nunca diz "não encontrei" e cita fontes pouco relevantes. Qual é o problema e por que é o pior dos mundos?</p>
+<ol><li data-opt="a">Limiar de relevância baixo demais: responde com contexto ruim e a resposta parece fundamentada (tem citação) mas está errada</li><li data-opt="b">Limiar alto demais: o sistema abstém sempre</li><li data-opt="c">k pequeno demais</li><li data-opt="d">Faltou embedding_model na tabela</li></ol>
+<div class="explain">Os dois erros de calibração são opostos: limiar baixo gera resposta confiante e errada; limiar alto gera "não sei" onde ele saberia. Não há número universal: calibre no seu dataset medindo as duas taxas, e monitore a taxa de abstenção em produção (queda brusca = parou de dizer "não sei").</div></div>
+
 <!-- ============================================ BLOCO 7 -->
 <h2 id="b07">Bloco 7 · O pipeline de 18 etapas e a avaliação de RAG</h2>
 <h3>Por que isso importa</h3>
@@ -781,6 +1008,16 @@ def citacao_valida(citacao: dict[str, object], raiz: Path) -> tuple[bool, str]:
 <h3>Leitura aplicada · Evidência por ablação</h3>
 <p>Expandir o dataset, integrar ao runner, fazer a ablação e isolar recuperação de geração é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M07</code>, abaixo. O percurso: 40 consultas com categorias e estruturais marcadas <code>esperado_falhar</code>; baseline salva e gate do M06 reutilizado; tabela de ablação mostrando o preço de cada omissão (o argumento contra "embedar e buscar"); e 5 falhas classificadas injetando contexto perfeito — tipicamente 70–80% recuperação, dizendo onde investir.</p>
 
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma resposta saiu errada. Como decidir em cinco minutos se a culpa é da recuperação ou da geração?</p>
+<ol><li data-opt="a">Injetar à mão o contexto perfeito: se ainda erra, é geração; se acerta, o problema está na recuperação (confira o recall@k)</li><li data-opt="b">Trocar de modelo e ver se melhora</li><li data-opt="c">Reescrever o prompt até acertar</li><li data-opt="d">Aumentar o k e observar</li></ol>
+<div class="explain">Sem separar as metades você ajusta prompt para consertar chunking, e isso não converge. Tipicamente 70–80% das falhas são de recuperação, o que diz onde investir.</div></div>
+
+<div class="quiz" data-answer="d"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual métrica de RAG você consegue medir <strong>sem</strong> juiz LLM no domínio do Cartógrafo?</p>
+<ol><li data-opt="a">Faithfulness da resposta</li><li data-opt="b">Relevância da resposta à pergunta</li><li data-opt="c">Nenhuma; tudo exige juiz LLM</li><li data-opt="d">Citação válida: a linha citada existe no arquivo e contém o termo afirmado (grader determinístico)</li></ol>
+<div class="explain">Código tem verdade verificável (a linha 412 existe ou não existe). Faithfulness e relevância de texto livre exigem juiz. Graders determinísticos são mais baratos, rápidos e confiáveis, e rodam em todo PR.</div></div>
+
 <!-- ============================================ BLOCO 8 -->
 <h2 id="b08">Bloco 8 · Mini-projeto: RAG sobre o sistema legado</h2>
 <h3>O que você vai construir</h3>
@@ -801,6 +1038,16 @@ def citacao_valida(citacao: dict[str, object], raiz: Path) -> tuple[bool, str]:
 <h3>Leitura aplicada · As três perguntas para o grafo</h3>
 <p>Provar o ganho do rerank com números e encontrar três perguntas que o RAG erra sistematicamente é o exercício deste bloco — o roteiro executável fica no <code>Laboratório guiado M07</code>, abaixo, e o gabarito vive em <code>queries.jsonl</code> (marcadas <code>esperado_falhar</code> com o diagnóstico). O percurso: tabela do bloco 5 sobre o corpus, com as consultas; três perguntas respondíveis a partir do código que a busca por trecho não alcança — mesma forma em todas: exigem <strong>percorrer relações</strong>, e relação está <em>entre</em> chunks, não <em>dentro</em> de nenhum. Nenhum k resolve, nenhum reranker resolve. <strong>Guarde-as:</strong> o M10 responde as três com travessia de grafo.</p>
 <p>A aplicação ao Capstone (<code>services/retrieval/</code>) é trilha opcional com especificação própria.</p>
+
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Na ingestão do mini-projeto, como deve se comportar a <strong>segunda</strong> execução sobre o mesmo corpus?</p>
+<ol><li data-opt="a">Igual à primeira, para garantir consistência</li><li data-opt="b">Quase instantânea e quase de graça: dedup por hash, cache de embeddings e ingestão incremental</li><li data-opt="c">Mais cara, pois o índice precisa ser reconstruído</li><li data-opt="d">Impossível, pois o id do chunk muda a cada execução</li></ol>
+<div class="explain">Se a segunda rodada não for barata, algo do bloco 2 (id estável, hash) ou do M05 (cache) não está ligado. Id estável é justamente o que torna a reindexação incremental possível.</div></div>
+
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Por que mais <code>k</code> ou um reranker melhor <strong>não</strong> resolvem as três perguntas que o RAG erra sistematicamente?</p>
+<ol><li data-opt="a">Porque as respostas exigem percorrer relações, e relação está entre chunks, não dentro de nenhum: o problema é de representação, não de recuperação</li><li data-opt="b">Porque o corpus é pequeno demais</li><li data-opt="c">Porque o modelo de embedding é ruim para código</li><li data-opt="d">Porque o limiar de abstenção está alto</li></ol>
+<div class="explain">Nenhum chunk contém "este método é chamado indiretamente por 7 telas". Esse fato emerge de travessia de arestas, que é o M10. Aumentar k traz mais texto, não mais relações.</div></div>
 
 <!-- ============================================ LABORATÓRIO GUIADO -->
 <h2 id="lab-guiado">Laboratório guiado M07</h2>
@@ -849,6 +1096,22 @@ uv sync --frozen</code></pre>
 </tbody>
 </table>
 
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique no cartão (ou use Enter) para virar. Tente responder em voz alta antes de ver o verso.</p>
+<div class="flashcards">
+<div class="fc"><div class="front">O que um embedding NÃO captura? (5)</div><div class="back">Negação, números e datas, identificadores exatos, estrutura/relação e recência/versão. Cada um tem antídoto em outra etapa do pipeline.</div></div>
+<div class="fc"><div class="front">Similaridade é igual a relevância?</div><div class="back">Não. Similaridade é geometria entre dois vetores; relevância é relação entre documento e necessidade. Similaridade é candidato barato, não veredito.</div></div>
+<div class="fc"><div class="front">Por que gravar <code>embedding_model</code> em cada linha?</div><div class="back">Vetores de modelos/versões/dimensões diferentes não são comparáveis. Sem a coluna você nem detecta a mistura; a migração é blue-green.</div></div>
+<div class="fc"><div class="front">Para que serve o overlap no chunking fixo?</div><div class="back">Para que a frase cortada na fronteira apareça inteira em um dos chunks. Custo: ~10–15% a mais de armazenamento e embeddings.</div></div>
+<div class="fc"><div class="front">O que é small-to-big?</div><div class="back">Indexar pequeno (casa bem) e entregar o contexto ampliado ao redor do trecho que casou. Desacopla unidade de busca e unidade de resposta.</div></div>
+<div class="fc"><div class="front">Contextual retrieval em uma frase</div><div class="back">Um LLM barato escreve 1–2 frases situando o chunk no documento e isso é prependido antes do embedding e do índice léxico; o custo cai com prompt caching.</div></div>
+<div class="fc"><div class="front">O que é over-filtering?</div><div class="back">O índice ANN aplica o WHERE depois de visitar candidatos; com filtro seletivo devolve menos que o LIMIT. Soluções: iterative scan, índice parcial, CTE + busca exata.</div></div>
+<div class="fc"><div class="front">Regra para <code>ef_search</code></div><div class="back">Precisa ser ≥ LIMIT; na prática 2 a 4 vezes o k. É o botão de recall em tempo de execução, por consulta.</div></div>
+<div class="fc"><div class="front">Fórmula do RRF e por que funciona</div><div class="back">score(d) = Σ 1/(k + posição) com k ≈ 60. Usa só posições, comparáveis entre escalas; favorece consenso entre métodos.</div></div>
+<div class="fc"><div class="front">Bi-encoder × cross-encoder</div><div class="back">Bi-encoder codifica separado e pré-computa (barato, geométrico). Cross-encoder lê o par junto (caro, enxerga a relação), por isso só roda nos candidatos.</div></div>
+<div class="fc"><div class="front">Ordem correta: ACL e relevância</div><div class="back">ACL primeiro, dentro da consulta. Defesa em profundidade: app, RLS, isolamento de índice, verificação de saída.</div></div>
+<div class="fc"><div class="front">Como separar falha de recuperação de falha de geração?</div><div class="back">Injetar à mão o contexto perfeito. Se ainda erra, é geração; se acerta, é recuperação (recall@k). Terceira causa: abstenção que não aconteceu.</div></div>
+</div>
 <!-- ============================================ CHECKPOINT -->
 <h2 id="checkpoint-m07">Checkpoint M07</h2>
 <div class="box ok">

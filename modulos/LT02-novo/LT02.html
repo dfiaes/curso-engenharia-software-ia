@@ -378,6 +378,45 @@ class RegistroVersoes:
 </ul>
 </div>
 
+<div class="stepper"><span class="ix-title">Passo a passo: timeout não é falha: é estado desconhecido</span>
+<div class="frame" data-caption="1. O cliente envia cobrar(id=42) e começa a esperar"><svg viewBox="0 0 640 160" role="img" aria-label="Timeout e estado desconhecido"><title>Timeout e estado desconhecido</title><rect x="10" y="20" width="150" height="50" rx="7" class="s-soft" stroke-width="1.5"/><text x="85.0" y="49.5" text-anchor="middle" font-size="13">Cliente</text><rect x="480" y="20" width="150" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="555.0" y="49.5" text-anchor="middle" font-size="13">Serviço de cobrança</text><line x1="160" y1="45" x2="471.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="480.0,45.0 471.0,40.5 471.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="38" text-anchor="middle" font-size="12">cobrar(id=42)</text><text x="320" y="135" text-anchor="middle" font-size="13">Prazo de espera: 2 s.</text></svg></div>
+<div class="frame" data-caption="2. O serviço processa, mas a resposta demora ou se perde"><svg viewBox="0 0 640 160" role="img" aria-label="Timeout e estado desconhecido"><title>Timeout e estado desconhecido</title><rect x="10" y="20" width="150" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="85.0" y="49.5" text-anchor="middle" font-size="13">Cliente</text><rect x="480" y="20" width="150" height="50" rx="7" class="s-soft" stroke-width="1.5"/><text x="555.0" y="49.5" text-anchor="middle" font-size="13">Serviço de cobrança</text><line x1="480" y1="62" x2="169.0" y2="62.0" class="s-muted" fill="none" stroke-width="1.6" stroke-dasharray="5 4"/><polygon points="160.0,62.0 169.0,66.5 169.0,57.5" style="fill:var(--muted);stroke:none"/><text x="320" y="80" text-anchor="middle" font-size="12">resposta perdida/atrasada</text><text x="320" y="135" text-anchor="middle" font-size="13">A cobrança PODE já ter sido efetuada.</text></svg></div>
+<div class="frame" data-caption="3. O cliente vê timeout: não sabe se houve efeito"><svg viewBox="0 0 640 160" role="img" aria-label="Timeout e estado desconhecido"><title>Timeout e estado desconhecido</title><rect x="10" y="20" width="150" height="50" rx="7" class="s-soft" stroke-width="1.5"/><text x="85.0" y="49.5" text-anchor="middle" font-size="13">Cliente</text><rect x="480" y="20" width="150" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="555.0" y="49.5" text-anchor="middle" font-size="13">Serviço de cobrança</text><text x="320" y="135" text-anchor="middle" font-size="13">Timeout declara resposta ausente no prazo, não o destino da operação.</text></svg></div>
+<div class="frame" data-caption="4. Certo: reconciliar pela identidade (consultar id=42) ou reenviar com a mesma chave"><svg viewBox="0 0 640 160" role="img" aria-label="Timeout e estado desconhecido"><title>Timeout e estado desconhecido</title><rect x="10" y="20" width="150" height="50" rx="7" class="s-soft" stroke-width="1.5"/><text x="85.0" y="49.5" text-anchor="middle" font-size="13">Cliente</text><rect x="480" y="20" width="150" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="555.0" y="49.5" text-anchor="middle" font-size="13">Serviço de cobrança</text><line x1="160" y1="45" x2="471.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="480.0,45.0 471.0,40.5 471.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="38" text-anchor="middle" font-size="12">cobrar(id=42) mesma chave</text><text x="320" y="135" text-anchor="middle" font-size="13">Reenvio cego sem chave pode cobrar duas vezes.</text></svg></div>
+</div>
+<div class="ix"><span class="ix-title">Simulador: quórum de leitura e escrita</span>
+
+<div class="ix-row"><label>Réplicas N <input type="number" id="lt2-n" value="5" min="1" max="9"></label>
+<label>Quórum de escrita W <input type="number" id="lt2-w" value="3" min="1" max="9"></label>
+<label>Quórum de leitura R <input type="number" id="lt2-r" value="3" min="1" max="9"></label>
+<label>Réplicas indisponíveis <input type="number" id="lt2-d" value="0" min="0" max="9"></label></div>
+<div class="ix-out" id="lt2-qout" aria-live="polite"></div></div>
+<script>Course.ready(function (C) {
+
+function g(i){return Math.max(0,parseInt(document.getElementById(i).value,10)||0);}
+function run(){
+  var n=Math.max(1,g('lt2-n')),w=g('lt2-w'),r=g('lt2-r'),d=Math.min(g('lt2-d'),n),up=n-d,i,viz='';
+  for(i=0;i<n;i++)viz+=(i<up?'[ON]':'[OFF]')+' ';
+  var s=viz+'\nDisponíveis: '+up+' de '+n+'\n\n';
+  s+='Escrita (precisa de W='+w+'): '+(w<=n&&up>=w?'possível':'INDISPONÍVEL')+'\n';
+  s+='Leitura (precisa de R='+r+'): '+(r<=n&&up>=r?'possível':'INDISPONÍVEL')+'\n\n';
+  if(w>n||r>n)s+='Configuração inválida: quórum maior que N.\n';
+  if(r+w>n)s+='R + W = '+(r+w)+' > N = '+n+': todo quórum de leitura intersecta o último quórum de escrita, então a leitura enxerga a escrita confirmada (com versão/timestamp para escolher o mais novo).';
+  else s+='R + W = '+(r+w)+' <= N = '+n+': NÃO há interseção garantida. A leitura pode devolver valor velho (consistência eventual).';
+  s+='\nTolerância: a escrita aguenta '+Math.max(0,n-w)+' falhas e a leitura '+Math.max(0,n-r)+'.';
+  document.getElementById('lt2-qout').textContent=s;
+}
+['n','w','r','d'].forEach(function(k){document.getElementById('lt2-'+k).addEventListener('input',run);});run();
+});</script>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Um cliente recebe timeout ao chamar cobrar(). O que o timeout permite concluir?</p>
+<ol><li data-opt="a">Que a cobrança falhou e pode ser reenviada com segurança</li><li data-opt="b">Que o serviço está fora do ar</li><li data-opt="c">Nada sobre o destino da operação: o estado é desconhecido e deve ser reconciliado pela identidade</li><li data-opt="d">Que a rede é a culpada</li></ol>
+<div class="explain">C. Timeout só diz que a resposta não veio no prazo. A operação pode ter sido executada, parcialmente ou não. Reenviar sem chave de idempotência pode cobrar duas vezes (A). Consulte pela identidade ou reenvie com a mesma chave.</div></div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Com N=5 réplicas, W=2 e R=2, uma leitura pode devolver valor antigo mesmo após a escrita ser confirmada?</p>
+<ol><li data-opt="a">Não, W e R maiores que 1 garantem consistência</li><li data-opt="b">Sim: R + W = 4 não supera N = 5, então os quóruns podem não se intersectar</li><li data-opt="c">Não, se as réplicas estiverem na mesma zona</li><li data-opt="d">Sim, mas apenas com réplicas em regiões diferentes</li></ol>
+<div class="explain">B. A interseção garantida exige R + W > N (por exemplo, 3 e 3 com N=5). Com 2 e 2 a escrita pode ir para duas réplicas e a leitura para outras duas. Use o simulador acima para testar combinações.</div></div>
+
 <h3 id="diagnostico-b01">Tabela de Diagnóstico B01</h3>
 
 <p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
@@ -799,6 +838,15 @@ class QuarentenaPoison:
 </ul>
 </div>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">O broker devolveu publisher confirm para a mensagem. O que isso prova?</p>
+<ol><li data-opt="a">Que o consumidor processou a mensagem</li><li data-opt="b">Que a mensagem chegou ao broker (conforme a durabilidade configurada), sem dizer nada sobre o processamento</li><li data-opt="c">Que a mensagem não será duplicada</li><li data-opt="d">Que a ordem está garantida</li></ol>
+<div class="explain">B. Confirm é prova de chegada ao broker; ack do consumidor é prova de processamento. Confundir os dois marca como executado o que só foi enfileirado.</div></div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Você precisa processar os eventos de cada pedido em ordem, com 8 partições. Qual chave de partição?</p>
+<ol><li data-opt="a">Aleatória, para balancear a carga</li><li data-opt="b">O timestamp</li><li data-opt="c">O identificador do pedido, para que todos os eventos dele caiam na mesma partição</li><li data-opt="d">Nenhuma chave</li></ol>
+<div class="explain">C. Ordem só existe dentro de uma partição, com um dono por vez. Chave por pedido preserva a ordem por pedido e ainda distribui pedidos diferentes. Chave aleatória embaralha a sequência do mesmo pedido.</div></div>
+
 <h3 id="diagnostico-b02">Tabela de Diagnóstico B02</h3>
 
 <p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
@@ -1212,6 +1260,59 @@ class Reconciliador:
 </ul>
 </div>
 
+<div class="stepper"><span class="ix-title">Passo a passo: outbox: o commit guarda estado e intenção juntos</span>
+<div class="frame" data-caption="1. Uma única transação grava o pedido e a linha da outbox"><svg viewBox="0 0 640 150" role="img" aria-label="Transactional outbox"><title>Transactional outbox</title><rect x="10" y="15" width="170" height="60" rx="7" class="s-soft" stroke-width="1.5"/><text x="95.0" y="41.5" text-anchor="middle" font-size="13">Serviço</text><text x="95.0" y="57.5" text-anchor="middle" font-size="13">TX: estado + outbox</text><rect x="235" y="15" width="150" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="310.0" y="49.5" text-anchor="middle" font-size="13">Relay</text><rect x="440" y="15" width="190" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="535.0" y="41.5" text-anchor="middle" font-size="13">Broker → consumer</text><text x="535.0" y="57.5" text-anchor="middle" font-size="13">(inbox/dedup)</text><line x1="180" y1="45" x2="226.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="235.0,45.0 226.0,40.5 226.0,49.5" style="fill:var(--accent);stroke:none"/><line x1="385" y1="45" x2="431.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="440.0,45.0 431.0,40.5 431.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="125" text-anchor="middle" font-size="13">Ou os dois existem ou nenhum: sem dual write.</text></svg></div>
+<div class="frame" data-caption="2. O relay lê as linhas pendentes da outbox"><svg viewBox="0 0 640 150" role="img" aria-label="Transactional outbox"><title>Transactional outbox</title><rect x="10" y="15" width="170" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="95.0" y="41.5" text-anchor="middle" font-size="13">Serviço</text><text x="95.0" y="57.5" text-anchor="middle" font-size="13">TX: estado + outbox</text><rect x="235" y="15" width="150" height="60" rx="7" class="s-soft" stroke-width="1.5"/><text x="310.0" y="49.5" text-anchor="middle" font-size="13">Relay</text><rect x="440" y="15" width="190" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="535.0" y="41.5" text-anchor="middle" font-size="13">Broker → consumer</text><text x="535.0" y="57.5" text-anchor="middle" font-size="13">(inbox/dedup)</text><line x1="180" y1="45" x2="226.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="235.0,45.0 226.0,40.5 226.0,49.5" style="fill:var(--accent);stroke:none"/><line x1="385" y1="45" x2="431.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="440.0,45.0 431.0,40.5 431.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="125" text-anchor="middle" font-size="13">Se o serviço cair aqui, a linha segue pendente: nada se perde.</text></svg></div>
+<div class="frame" data-caption="3. O relay publica e espera o confirm do broker"><svg viewBox="0 0 640 150" role="img" aria-label="Transactional outbox"><title>Transactional outbox</title><rect x="10" y="15" width="170" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="95.0" y="41.5" text-anchor="middle" font-size="13">Serviço</text><text x="95.0" y="57.5" text-anchor="middle" font-size="13">TX: estado + outbox</text><rect x="235" y="15" width="150" height="60" rx="7" class="s-soft" stroke-width="1.5"/><text x="310.0" y="49.5" text-anchor="middle" font-size="13">Relay</text><rect x="440" y="15" width="190" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="535.0" y="41.5" text-anchor="middle" font-size="13">Broker → consumer</text><text x="535.0" y="57.5" text-anchor="middle" font-size="13">(inbox/dedup)</text><line x1="180" y1="45" x2="226.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="235.0,45.0 226.0,40.5 226.0,49.5" style="fill:var(--accent);stroke:none"/><line x1="385" y1="45" x2="431.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="440.0,45.0 431.0,40.5 431.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="125" text-anchor="middle" font-size="13">Só depois do confirm a linha é marcada como enviada.</text></svg></div>
+<div class="frame" data-caption="4. Queda entre publicar e marcar: a mensagem é republicada"><svg viewBox="0 0 640 150" role="img" aria-label="Transactional outbox"><title>Transactional outbox</title><rect x="10" y="15" width="170" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="95.0" y="41.5" text-anchor="middle" font-size="13">Serviço</text><text x="95.0" y="57.5" text-anchor="middle" font-size="13">TX: estado + outbox</text><rect x="235" y="15" width="150" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="310.0" y="49.5" text-anchor="middle" font-size="13">Relay</text><rect x="440" y="15" width="190" height="60" rx="7" class="s-soft" stroke-width="1.5"/><text x="535.0" y="41.5" text-anchor="middle" font-size="13">Broker → consumer</text><text x="535.0" y="57.5" text-anchor="middle" font-size="13">(inbox/dedup)</text><line x1="180" y1="45" x2="226.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="235.0,45.0 226.0,40.5 226.0,49.5" style="fill:var(--accent);stroke:none"/><line x1="385" y1="45" x2="431.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="440.0,45.0 431.0,40.5 431.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="125" text-anchor="middle" font-size="13">Duplicata é o preço do at-least-once: o consumidor deduplica.</text></svg></div>
+<div class="frame" data-caption="5. O consumidor consulta o inbox pelo message_id antes de executar"><svg viewBox="0 0 640 150" role="img" aria-label="Transactional outbox"><title>Transactional outbox</title><rect x="10" y="15" width="170" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="95.0" y="41.5" text-anchor="middle" font-size="13">Serviço</text><text x="95.0" y="57.5" text-anchor="middle" font-size="13">TX: estado + outbox</text><rect x="235" y="15" width="150" height="60" rx="7" class="s-box" stroke-width="1.5"/><text x="310.0" y="49.5" text-anchor="middle" font-size="13">Relay</text><rect x="440" y="15" width="190" height="60" rx="7" class="s-soft" stroke-width="1.5"/><text x="535.0" y="41.5" text-anchor="middle" font-size="13">Broker → consumer</text><text x="535.0" y="57.5" text-anchor="middle" font-size="13">(inbox/dedup)</text><line x1="180" y1="45" x2="226.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="235.0,45.0 226.0,40.5 226.0,49.5" style="fill:var(--accent);stroke:none"/><line x1="385" y1="45" x2="431.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="440.0,45.0 431.0,40.5 431.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="125" text-anchor="middle" font-size="13">Já visto: ignora e dá ack. Novo: executa e registra, tudo atômico.</text></svg></div>
+</div>
+<div class="ix"><span class="ix-title">Simulador: at-least-once, outbox e duplicatas</span>
+
+<div class="ix-row"><label>Mensagens <input type="number" id="lt2-m" value="200" min="10" max="5000"></label>
+<label>Queda do relay após publicar (%) <input type="number" id="lt2-pr" value="10" min="0" max="90"></label>
+<label>Queda do consumidor antes do ack (%) <input type="number" id="lt2-pc" value="15" min="0" max="90"></label></div>
+<div class="ix-row"><label>Publicação <select id="lt2-mode"><option value="outbox">Transactional outbox</option><option value="dual">Dual write (commit, depois publica)</option></select></label>
+<label><input type="checkbox" id="lt2-dd"> Consumidor deduplica por message_id (inbox)</label>
+<button type="button" class="ix-btn primary" id="lt2-go">Simular</button></div>
+<div class="ix-out" id="lt2-oout" aria-live="polite">Clique em Simular.</div></div>
+<script>Course.ready(function (C) {
+
+function g(i){return parseFloat(document.getElementById(i).value)||0;}
+document.getElementById('lt2-go').addEventListener('click',function(){
+  var m=g('lt2-m'),pr=g('lt2-pr')/100,pc=g('lt2-pc')/100,dual=document.getElementById('lt2-mode').value==='dual',dd=document.getElementById('lt2-dd').checked;
+  var lost=0,deliveries=0,effects=0,seen={},i,k;
+  for(i=0;i<m;i++){
+    var pubs=0;
+    if(dual){ if(Math.random()<pr){lost++;continue;} pubs=1; }
+    else { pubs=1; while(Math.random()<pr&&pubs<20)pubs++; }
+    for(k=0;k<pubs;k++){
+      var acked=false;
+      while(!acked){
+        deliveries++;
+        if(!(dd&&seen[i])){effects++;seen[i]=true;}
+        if(Math.random()<pc)continue;
+        acked=true;
+      }
+    }
+  }
+  var ok=m-lost,dups=effects-ok;
+  var s='Mensagens de negócio: '+m+'\nEntregas ao consumidor: '+deliveries+'\nEfeitos aplicados: '+effects+'\n\n';
+  s+='PERDIDAS (nunca chegaram): '+lost+(dual&&lost?'   <- dual write: crash entre commit e publicação some com a mensagem':'')+'\n';
+  s+='EFEITOS DUPLICADOS: '+dups+(dups&&!dd?'   <- sem dedup, duplicata de transporte vira duplicata de negócio':'')+'\n\n';
+  s+=(dual?'Dual write perde mensagens.':'Outbox: zero perdas, às custas de duplicatas.')+(dd?' Inbox: efeito único por message_id.':' Ative a deduplicação e repita.');
+  document.getElementById('lt2-oout').textContent=s;
+});
+});</script>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Chega uma requisição com a mesma Idempotency-Key de antes, mas com payload diferente (hash distinto). O que fazer?</p>
+<ol><li data-opt="a">Reutilizar a resposta anterior</li><li data-opt="b">Executar normalmente como nova operação</li><li data-opt="c">Tratar como conflito auditado e recusar, sem executar nem devolver a resposta antiga</li><li data-opt="d">Apagar a chave antiga</li></ol>
+<div class="explain">C. Mesma chave com mesmo hash devolve a resposta guardada; com hash diferente é uso indevido da chave, um conflito a recusar e registrar. Executar em silêncio quebraria a intenção do cliente.</div></div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">O relay da outbox publicou a mensagem e caiu antes de marcá-la como enviada. O que acontece ao reiniciar e o que protege o negócio?</p>
+<ol><li data-opt="a">A mensagem some; nada protege</li><li data-opt="b">A mensagem é republicada (duplicata); o consumidor deduplica por message_id (inbox)</li><li data-opt="c">A mensagem é entregue exatamente uma vez pelo broker</li><li data-opt="d">O banco desfaz a transação original</li></ol>
+<div class="explain">B. A outbox troca perda por duplicata: at-least-once. O transporte duplica, o negócio deduplica. Marcar só após o confirm garante que um crash vire pendente, não perda.</div></div>
+
 <h3 id="diagnostico-b03">Tabela de Diagnóstico B03</h3>
 
 <p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
@@ -1542,6 +1643,45 @@ class DlqSegura:
 <li>Compensação é nova ação idempotente em ordem inversa; ambiguidade irreconciliável abre caso humano, nunca retry cego.</li>
 </ul>
 </div>
+
+<div class="stepper"><span class="ix-title">Passo a passo: saga: sem transação distribuída, desfaz-se com compensações</span>
+<div class="frame" data-caption="1. Os passos locais são confirmados um a um"><svg viewBox="0 0 640 140" role="img" aria-label="Saga com compensação"><title>Saga com compensação</title><rect x="10" y="20" width="185" height="52" rx="7" class="s-soft" stroke-width="1.5"/><text x="102.5" y="42.5" text-anchor="middle" font-size="13">Reservar estoque</text><text x="102.5" y="58.5" text-anchor="middle" font-size="13">feito</text><line x1="195" y1="46" x2="216.0" y2="46.0" class="s-muted" fill="none" stroke-width="1.6"/><polygon points="225.0,46.0 216.0,41.5 216.0,50.5" style="fill:var(--muted);stroke:none"/><rect x="225" y="20" width="185" height="52" rx="7" class="s-soft" stroke-width="1.5"/><text x="317.5" y="42.5" text-anchor="middle" font-size="13">Cobrar cartão</text><text x="317.5" y="58.5" text-anchor="middle" font-size="13">feito</text><line x1="410" y1="46" x2="431.0" y2="46.0" class="s-muted" fill="none" stroke-width="1.6"/><polygon points="440.0,46.0 431.0,41.5 431.0,50.5" style="fill:var(--muted);stroke:none"/><rect x="440" y="20" width="185" height="52" rx="7" class="s-box" stroke-width="1.5"/><text x="532.5" y="42.5" text-anchor="middle" font-size="13">Emitir nota</text><text x="532.5" y="58.5" text-anchor="middle" font-size="13">pendente</text><text x="320" y="115" text-anchor="middle" font-size="13">Estoque reservado e cartão cobrado, cada um em seu commit local.</text></svg></div>
+<div class="frame" data-caption="2. O terceiro passo falha de forma permanente"><svg viewBox="0 0 640 140" role="img" aria-label="Saga com compensação"><title>Saga com compensação</title><rect x="10" y="20" width="185" height="52" rx="7" class="s-soft" stroke-width="1.5"/><text x="102.5" y="42.5" text-anchor="middle" font-size="13">Reservar estoque</text><text x="102.5" y="58.5" text-anchor="middle" font-size="13">feito</text><line x1="195" y1="46" x2="216.0" y2="46.0" class="s-muted" fill="none" stroke-width="1.6"/><polygon points="225.0,46.0 216.0,41.5 216.0,50.5" style="fill:var(--muted);stroke:none"/><rect x="225" y="20" width="185" height="52" rx="7" class="s-soft" stroke-width="1.5"/><text x="317.5" y="42.5" text-anchor="middle" font-size="13">Cobrar cartão</text><text x="317.5" y="58.5" text-anchor="middle" font-size="13">feito</text><line x1="410" y1="46" x2="431.0" y2="46.0" class="s-muted" fill="none" stroke-width="1.6"/><polygon points="440.0,46.0 431.0,41.5 431.0,50.5" style="fill:var(--muted);stroke:none"/><rect x="440" y="20" width="185" height="52" rx="7" class="s-box" stroke-width="1.5"/><text x="532.5" y="42.5" text-anchor="middle" font-size="13">Emitir nota</text><text x="532.5" y="58.5" text-anchor="middle" font-size="13">FALHOU</text><text x="320" y="115" text-anchor="middle" font-size="13">Não existe rollback global: os dois primeiros já são fatos.</text></svg></div>
+<div class="frame" data-caption="3. Compensações em ordem inversa, cada uma idempotente"><svg viewBox="0 0 640 140" role="img" aria-label="Saga com compensação"><title>Saga com compensação</title><rect x="10" y="20" width="185" height="52" rx="7" class="s-soft" stroke-width="1.5"/><text x="102.5" y="42.5" text-anchor="middle" font-size="13">Reservar estoque</text><text x="102.5" y="58.5" text-anchor="middle" font-size="13">compensado</text><line x1="195" y1="46" x2="216.0" y2="46.0" class="s-muted" fill="none" stroke-width="1.6"/><polygon points="225.0,46.0 216.0,41.5 216.0,50.5" style="fill:var(--muted);stroke:none"/><rect x="225" y="20" width="185" height="52" rx="7" class="s-soft" stroke-width="1.5"/><text x="317.5" y="42.5" text-anchor="middle" font-size="13">Cobrar cartão</text><text x="317.5" y="58.5" text-anchor="middle" font-size="13">compensado</text><line x1="410" y1="46" x2="431.0" y2="46.0" class="s-muted" fill="none" stroke-width="1.6"/><polygon points="440.0,46.0 431.0,41.5 431.0,50.5" style="fill:var(--muted);stroke:none"/><rect x="440" y="20" width="185" height="52" rx="7" class="s-box" stroke-width="1.5"/><text x="532.5" y="42.5" text-anchor="middle" font-size="13">Emitir nota</text><text x="532.5" y="58.5" text-anchor="middle" font-size="13">FALHOU</text><text x="320" y="115" text-anchor="middle" font-size="13">Estornar a cobrança, depois liberar o estoque. Se a compensação falhar, retenta/quarentena.</text></svg></div>
+</div>
+<div class="ix"><span class="ix-title">Simulador: backoff com e sem jitter</span>
+
+<div class="ix-row"><label>Clientes <input type="number" id="lt2-cl" value="300" min="10" max="5000"></label>
+<label>Base (ms) <input type="number" id="lt2-bs" value="100" min="10"></label>
+<label>Retentativa nº <input type="number" id="lt2-rt" value="3" min="1" max="6"></label>
+<label>Estratégia <select id="lt2-js"><option value="none">Backoff exponencial sem jitter</option><option value="full">Full jitter</option></select></label>
+<button type="button" class="ix-btn primary" id="lt2-bg">Simular</button></div>
+<div class="ix-out" id="lt2-bout" aria-live="polite">Todos os clientes falham juntos em t=0. Quando retentam?</div></div>
+<script>Course.ready(function (C) {
+
+function g(i){return parseFloat(document.getElementById(i).value)||0;}
+document.getElementById('lt2-bg').addEventListener('click',function(){
+  var n=g('lt2-cl'),base=g('lt2-bs'),r=g('lt2-rt'),full=document.getElementById('lt2-js').value==='full',i,k,bins={},peak=0;
+  for(i=0;i<n;i++){
+    var t=0;
+    for(k=0;k<r;k++){var d=base*Math.pow(2,k); t+= full?Math.random()*d:d;}
+    var b=Math.floor(t/50)*50; bins[b]=(bins[b]||0)+1; if(bins[b]>peak)peak=bins[b];
+  }
+  var keys=Object.keys(bins).map(Number).sort(function(a,b){return a-b;});
+  var s='Retentativa '+r+' ('+(full?'full jitter':'sem jitter')+'): pico de '+peak+' requisições em uma janela de 50 ms\n\n';
+  keys.slice(0,16).forEach(function(b){var w=Math.round(40*bins[b]/peak);s+=String(b).padStart(6)+' ms | '+new Array(w+1).join('#')+' '+bins[b]+'\n';});
+  s+=full?'\nA carga se espalha: o serviço em recuperação respira.':'\nTodos voltam no mesmo instante: tempestade de retentativas (thundering herd).';
+  document.getElementById('lt2-bout').textContent=s;
+});
+});</script>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Mil clientes falham ao mesmo tempo e usam backoff exponencial sem jitter. O que acontece?</p>
+<ol><li data-opt="a">As retentativas se espalham naturalmente</li><li data-opt="b">Todos retentam nos mesmos instantes (1x, 2x, 4x), recriando picos que atrapalham a recuperação</li><li data-opt="c">O serviço escala sozinho</li><li data-opt="d">Nada: backoff elimina a carga</li></ol>
+<div class="explain">B. Backoff espaça no tempo, mas clientes sincronizados continuam sincronizados. Jitter aleatório espalha a onda. Combine com tetos por mensagem, global e de concorrência.</div></div>
+<div class="quiz" data-answer="a"><span class="ix-title">Teste rápido</span>
+<p class="q">Uma saga reservou estoque e cobrou o cartão, mas a emissão da nota falhou de forma permanente. O que fazer?</p>
+<ol><li data-opt="a">Executar as compensações em ordem inversa (estornar, depois liberar), cada uma idempotente</li><li data-opt="b">Reexecutar tudo desde o início</li><li data-opt="c">Ignorar: a nota é opcional</li><li data-opt="d">Dar rollback numa transação distribuída</li></ol>
+<div class="explain">A. Saga não tem rollback global; os passos locais já são fatos. Compensações desfazem semanticamente, em ordem inversa, e precisam ser idempotentes, porque também podem ser retentadas.</div></div>
 
 <h3 id="diagnostico-b04">Tabela de Diagnóstico B04</h3>
 
@@ -2029,6 +2169,21 @@ class BackupVerificado:
 </ul>
 </div>
 
+<div class="stepper"><span class="ix-title">Passo a passo: commit só é confirmado depois que o log chegou ao disco</span>
+<div class="frame" data-caption="1. O cliente pede COMMIT"><svg viewBox="0 0 640 140" role="img" aria-label="WAL e durabilidade"><title>WAL e durabilidade</title><rect x="10" y="20" width="140" height="50" rx="7" class="s-soft" stroke-width="1.5"/><text x="80.0" y="49.5" text-anchor="middle" font-size="13">Cliente</text><rect x="250" y="20" width="160" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="330.0" y="49.5" text-anchor="middle" font-size="13">Memória / buffer</text><rect x="500" y="20" width="130" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="565.0" y="49.5" text-anchor="middle" font-size="13">WAL em disco</text><line x1="150" y1="45" x2="241.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="250.0,45.0 241.0,40.5 241.0,49.5" style="fill:var(--accent);stroke:none"/><line x1="410" y1="45" x2="491.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="500.0,45.0 491.0,40.5 491.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="115" text-anchor="middle" font-size="13">A mudança ainda está só em memória.</text></svg></div>
+<div class="frame" data-caption="2. A mudança vai ao buffer e vira registro no log"><svg viewBox="0 0 640 140" role="img" aria-label="WAL e durabilidade"><title>WAL e durabilidade</title><rect x="10" y="20" width="140" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="80.0" y="49.5" text-anchor="middle" font-size="13">Cliente</text><rect x="250" y="20" width="160" height="50" rx="7" class="s-soft" stroke-width="1.5"/><text x="330.0" y="49.5" text-anchor="middle" font-size="13">Memória / buffer</text><rect x="500" y="20" width="130" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="565.0" y="49.5" text-anchor="middle" font-size="13">WAL em disco</text><line x1="150" y1="45" x2="241.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="250.0,45.0 241.0,40.5 241.0,49.5" style="fill:var(--accent);stroke:none"/><line x1="410" y1="45" x2="491.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="500.0,45.0 491.0,40.5 491.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="115" text-anchor="middle" font-size="13">Registro de log: o que mudar, antes de mudar as páginas de dados.</text></svg></div>
+<div class="frame" data-caption="3. O WAL é gravado e sincronizado (fsync)"><svg viewBox="0 0 640 140" role="img" aria-label="WAL e durabilidade"><title>WAL e durabilidade</title><rect x="10" y="20" width="140" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="80.0" y="49.5" text-anchor="middle" font-size="13">Cliente</text><rect x="250" y="20" width="160" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="330.0" y="49.5" text-anchor="middle" font-size="13">Memória / buffer</text><rect x="500" y="20" width="130" height="50" rx="7" class="s-soft" stroke-width="1.5"/><text x="565.0" y="49.5" text-anchor="middle" font-size="13">WAL em disco</text><line x1="150" y1="45" x2="241.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="250.0,45.0 241.0,40.5 241.0,49.5" style="fill:var(--accent);stroke:none"/><line x1="410" y1="45" x2="491.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="500.0,45.0 491.0,40.5 491.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="115" text-anchor="middle" font-size="13">Só agora a durabilidade existe: um crash pode ser refeito a partir do log.</text></svg></div>
+<div class="frame" data-caption="4. Só depois a confirmação volta ao cliente"><svg viewBox="0 0 640 140" role="img" aria-label="WAL e durabilidade"><title>WAL e durabilidade</title><rect x="10" y="20" width="140" height="50" rx="7" class="s-soft" stroke-width="1.5"/><text x="80.0" y="49.5" text-anchor="middle" font-size="13">Cliente</text><rect x="250" y="20" width="160" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="330.0" y="49.5" text-anchor="middle" font-size="13">Memória / buffer</text><rect x="500" y="20" width="130" height="50" rx="7" class="s-box" stroke-width="1.5"/><text x="565.0" y="49.5" text-anchor="middle" font-size="13">WAL em disco</text><line x1="150" y1="45" x2="241.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="250.0,45.0 241.0,40.5 241.0,49.5" style="fill:var(--accent);stroke:none"/><line x1="410" y1="45" x2="491.0" y2="45.0" class="s-accent" fill="none" stroke-width="1.6"/><polygon points="500.0,45.0 491.0,40.5 491.0,49.5" style="fill:var(--accent);stroke:none"/><text x="320" y="115" text-anchor="middle" font-size="13">Confirmar antes do fsync é promessa sem lastro: um crash perde um commit "confirmado".</text></svg></div>
+</div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">O banco respondeu "commit ok" ao cliente, mas o servidor caiu e a linha sumiu. Qual a falha provável?</p>
+<ol><li data-opt="a">A réplica estava atrasada</li><li data-opt="b">O isolamento era muito forte</li><li data-opt="c">A confirmação foi dada antes de o WAL ser sincronizado em disco</li><li data-opt="d">O backup estava desatualizado</li></ol>
+<div class="explain">C. Durabilidade mora no log confirmado, não na resposta entregue. Confirmar antes do fsync é promessa sem lastro. Réplica atrasada afeta leituras, não a perda de um commit no primário.</div></div>
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Depois de gravar no primário, o usuário recarrega a página e não vê a alteração, pois a leitura foi para uma réplica assíncrona. Como corrigir?</p>
+<ol><li data-opt="a">Aumentar o timeout</li><li data-opt="b">Ler do primário (ou exigir versão mínima/LSN) quando o requisito for ler o que acabou de escrever</li><li data-opt="c">Desligar a replicação</li><li data-opt="d">Trocar para réplica de outra região</li></ol>
+<div class="explain">B. Réplica assíncrona serve dado velho pelo lag. O requisito decide: read-your-writes pede primário ou versão mínima; tolerar atraso pode ser aceitável em relatórios.</div></div>
+
 <h3 id="diagnostico-b05">Tabela de Diagnóstico B05</h3>
 
 <p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
@@ -2432,6 +2587,15 @@ class ProvaRestauracao:
 </ul>
 </div>
 
+<div class="quiz" data-answer="b"><span class="ix-title">Teste rápido</span>
+<p class="q">Duas execuções duplicadas apareceram em produção. Qual a primeira ação do diagnóstico?</p>
+<ol><li data-opt="a">Reiniciar todos os workers</li><li data-opt="b">Formular uma hipótese com dois sinais (por exemplo, ledger e redelivery) antes de qualquer comando que altere o sistema</li><li data-opt="c">Limpar a fila</li><li data-opt="d">Aumentar o número de workers</li></ol>
+<div class="explain">B. Tocar sem pergunta destrói evidência. Diagnostique por assinatura, do barato ao destrutivo: confirm por identidade, morte por voo, ambíguo por ledger.</div></div>
+<div class="quiz" data-answer="c"><span class="ix-title">Teste rápido</span>
+<p class="q">Qual afirmação sobre uma garantia só se sustenta com evidência?</p>
+<ol><li data-opt="a">"Projetada": o desenho diz que funciona</li><li data-opt="b">"Assumida": acreditamos que funcione</li><li data-opt="c">"Verificada": passou por um experimento que poderia ter falhado</li><li data-opt="d">Todas valem igualmente</li></ol>
+<div class="explain">C. Projetada promete, verificada passou pelo experimento, assumida nunca passou. Só a segunda sustenta claim no postmortem e no checkpoint.</div></div>
+
 <h3 id="diagnostico-b06">Tabela de Diagnóstico B06</h3>
 
 <p>Erros reais deste bloco, na ordem em que costumam aparecer.</p>
@@ -2477,6 +2641,24 @@ class ProvaRestauracao:
 </ul>
 
 <hr>
+
+<h2 id="revisao">Revisão com cartões</h2>
+<p>Clique (ou Enter) para virar o cartão. Tente responder em voz alta antes de virar.</p>
+<div class="flashcards">
+<div class="fc"><div class="front">Timeout</div><div class="back">Resposta ausente no prazo; não diz o destino da operação. Estado desconhecido: reconciliar.</div></div>
+<div class="fc"><div class="front">Condição de quórum forte</div><div class="back">R + W > N, para que leitura e escrita se intersectem.</div></div>
+<div class="fc"><div class="front">Confirm vs ack</div><div class="back">Confirm: chegou ao broker. Ack: o consumidor processou.</div></div>
+<div class="fc"><div class="front">Ordem em streams</div><div class="back">Existe por partição, com um consumidor por vez; escolha a chave por entidade.</div></div>
+<div class="fc"><div class="front">At-least-once</div><div class="back">Entrega pelo menos uma vez: admite duplicata e exige dedup por identidade.</div></div>
+<div class="fc"><div class="front">Mesma chave, hash diferente</div><div class="back">Conflito auditado; nunca execução silenciosa nem resposta reaproveitada.</div></div>
+<div class="fc"><div class="front">Transactional outbox</div><div class="back">Estado e mensagem no mesmo commit; o relay publica depois e marca após o confirm.</div></div>
+<div class="fc"><div class="front">Inbox</div><div class="back">Consulta o message_id antes de executar; registra o veredito (tombstone) até o TTL.</div></div>
+<div class="fc"><div class="front">Backoff + jitter</div><div class="back">Backoff espaça, jitter dessincroniza; mais tetos por mensagem, global e concorrência.</div></div>
+<div class="fc"><div class="front">DLQ</div><div class="back">Quarentena observável com causa; replay preserva IDs e exige corrigir o motivo.</div></div>
+<div class="fc"><div class="front">Saga</div><div class="back">Passos locais com compensações idempotentes em ordem inversa.</div></div>
+<div class="fc"><div class="front">WAL e durabilidade</div><div class="back">Commit só é confirmado após o log sincronizado em disco (fsync).</div></div>
+<div class="fc"><div class="front">Projetada, verificada, assumida</div><div class="back">Só a garantia verificada por experimento sustenta claim.</div></div>
+</div>
 
 <h2 id="lab-guiado">Laboratório guiado LT02</h2>
 <p><strong>Resultado observável.</strong> Barramento fake com partição controlada executado em cópia de trabalho descartável, com oráculos verdes e semente registrada. <strong>Limite.</strong> Só stdlib, arquivos planos em <code>lab/</code>, sem rede e sem adapter de produto no caminho obrigatório; demonstração externa documentada à parte.</p>
