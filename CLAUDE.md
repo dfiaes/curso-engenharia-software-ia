@@ -43,7 +43,7 @@ Arquivo único `modulos/<CÓDIGO>-<slug>/<CÓDIGO>.html`, com o mesmo CSS e comp
 
 ## Fontes
 
-Especificação, RFC/PEP, documentação oficial e paper original primeiro; texto de praticante como complemento rotulado. Nenhum fornecedor define sozinho o padrão. Separar invariante, padrão aberto e adapter atual. Versões, preços e recursos de produto são de alto risco: registrar a data de verificação. Detalhes em [`docs/POLITICA-FONTES-E-AGNOSTICISMO.md`](docs/POLITICA-FONTES-E-AGNOSTICISMO.md) e [`docs/PADRAO-QUALIDADE-TECNICA-DIDATICA.md`](docs/PADRAO-QUALIDADE-TECNICA-DIDATICA.md).
+Especificação, RFC/PEP, documentação oficial e paper original primeiro; texto de praticante como complemento rotulado. Nenhum fornecedor define sozinho o padrão. Separar invariante, padrão aberto e adapter atual. Versões, preços e recursos de produto são de alto risco: registrar a data de verificação e o prazo de revalidação (registro e processo mensal em [`docs/ATUALIZACAO.md`](docs/ATUALIZACAO.md)). Detalhes em [`docs/POLITICA-FONTES-E-AGNOSTICISMO.md`](docs/POLITICA-FONTES-E-AGNOSTICISMO.md) e [`docs/PADRAO-QUALIDADE-TECNICA-DIDATICA.md`](docs/PADRAO-QUALIDADE-TECNICA-DIDATICA.md).
 
 ## Estado editorial
 
