@@ -75,12 +75,13 @@
           '<h3>2. Descreva as variantes</h3>' +
           '<p>Para o seu agente real, descreva cada <strong>variante</strong> em <code>variantes.toml</code>: o comando que executa a tarefa a partir de <code>{prompt_file}</code> e <code>{workdir}</code>, o modelo, os preços por milhão de tokens e uma <code>regex_tokens</code> para medir o custo. Segredos só por variável de ambiente. Os exemplos vêm do arquivo do kit; <strong>as flags mudam entre versões, confira na ajuda da sua ferramenta</strong>.</p>' },
         { tipo: 'abas', rotulo: 'Ferramenta', itens: [
-          { rotulo: 'Cursor CLI', blocos: [{ tipo: 'codigo', linguagem: 'toml', texto: variantes.cursor }] },
+          { rotulo: 'Cursor', blocos: [{ tipo: 'codigo', linguagem: 'toml', texto: variantes.cursor }] },
           { rotulo: 'Codex', blocos: [{ tipo: 'codigo', linguagem: 'toml', texto: variantes.codex }] },
           { rotulo: 'OpenCode', blocos: [{ tipo: 'codigo', linguagem: 'toml', texto: variantes.opencode }] },
-          { rotulo: 'Claude Code', blocos: [{ tipo: 'codigo', linguagem: 'toml', texto: variantes.claude }] },
-          { rotulo: 'Script próprio', blocos: [{ tipo: 'codigo', linguagem: 'toml', texto: variantes.proprio }] }
+          { rotulo: 'Claude Code', blocos: [{ tipo: 'codigo', linguagem: 'toml', texto: variantes.claude }] }
         ] },
+        { tipo: 'texto', html: '<p><strong>Script próprio</strong> (sua API, qualquer provedor):</p>' },
+        { tipo: 'codigo', linguagem: 'toml', texto: variantes.proprio },
         { tipo: 'texto', html:
           '<p>Para a Cursor CLI e as demais, sem uma saída de uso de tokens o custo aparece como <code>n/d</code>: procure o modo JSON ou verbose da ferramenta e capture os tokens com <code>regex_tokens</code>. No modo skill, cada variante declara <code>[variante.com_skill]</code> e <code>[variante.sem_skill]</code> (uma pasta de skills diferente, uma variável ou um comando alternativo).</p>' +
           '<p class="ta-nota">Fundamento estatístico e avaliação de agentes em profundidade: módulo M06, Bloco 7.</p>' },

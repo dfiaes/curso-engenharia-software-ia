@@ -46,7 +46,7 @@
     return { tipo: 'texto', largo: largo !== false, html: '<table><thead><tr><th>' + cab.join('</th><th>') + '</th></tr></thead><tbody>' +
       linhas.map(function (r) { return '<tr><td>' + r.join('</td><td>') + '</td></tr>'; }).join('') + '</tbody></table>' };
   }
-  var notaPastas = '<p class="ta-nota">Pastas verificadas em 12/10/2026 nas páginas oficiais. Skills mudam rápido: confira na versão em uso.</p>';
+
 
   TrilhaAula.registrar({
     id: 'skills',
@@ -132,12 +132,13 @@
           callout: 'Carga sob demanda: a skill gastou contexto só nesta tarefa.' },
         { tipo: 'texto', html: '<h3>Onde cada ferramenta procura skills</h3><p>O corpo da skill é o mesmo; muda a pasta e a chamada explícita.</p>' },
         { tipo: 'abas', rotulo: 'Ferramenta', itens: [
-          { rotulo: 'Cursor', blocos: [tab(['Pastas de projeto', 'Chamada explícita'], [['<code>.agents/skills/</code> e <code>.cursor/skills/</code>; também lê <code>.claude/skills/</code> e <code>.codex/skills/</code>', '<code>/nome</code>']]), { tipo: 'texto', html: notaPastas }] },
-          { rotulo: 'Codex', blocos: [tab(['Pastas de projeto', 'Chamada explícita'], [['<code>.agents/skills</code> do diretório atual até a raiz do repositório; usuário em <code>$HOME/.agents/skills</code>', '<code>$nome</code> ou <code>/skills</code>']]), { tipo: 'texto', html: notaPastas }] },
-          { rotulo: 'OpenCode', blocos: [tab(['Pastas de projeto', 'Chamada explícita'], [['<code>.opencode/skills/</code>, <code>.claude/skills/</code> e <code>.agents/skills/</code> (e equivalentes globais)', 'Pela ferramenta de skills do agente']]), { tipo: 'texto', html: notaPastas }] },
-          { rotulo: 'Claude Code', blocos: [tab(['Pastas de projeto', 'Chamada explícita'], [['<code>.claude/skills/&lt;nome&gt;/SKILL.md</code> (e <code>~/.claude/skills</code>); procura também em pastas pai até a raiz', '<code>/nome</code>']]), { tipo: 'texto', html: notaPastas }] },
-          { rotulo: 'Agente próprio', blocos: [tab(['Pastas de projeto', 'Chamada explícita'], [['Qualquer das anteriores: leia <code>.agents/skills/*/SKILL.md</code>, injete só nome e descrição, carregue o corpo quando o modelo pedir', 'Sua função de carga']]), { tipo: 'texto', html: notaPastas }] }
+          { rotulo: 'Cursor', blocos: [tab(['Pastas de projeto', 'Chamada explícita'], [['<code>.agents/skills/</code> e <code>.cursor/skills/</code>; também lê <code>.claude/skills/</code> e <code>.codex/skills/</code>', '<code>/nome</code>']]), ] },
+          { rotulo: 'Codex', blocos: [tab(['Pastas de projeto', 'Chamada explícita'], [['<code>.agents/skills</code> do diretório atual até a raiz do repositório; usuário em <code>$HOME/.agents/skills</code>', '<code>$nome</code> ou <code>/skills</code>']]), ] },
+          { rotulo: 'OpenCode', blocos: [tab(['Pastas de projeto', 'Chamada explícita'], [['<code>.opencode/skills/</code>, <code>.claude/skills/</code> e <code>.agents/skills/</code> (e equivalentes globais)', 'Pela ferramenta de skills do agente']]), ] },
+          { rotulo: 'Claude Code', blocos: [tab(['Pastas de projeto', 'Chamada explícita'], [['<code>.claude/skills/&lt;nome&gt;/SKILL.md</code> (e <code>~/.claude/skills</code>); procura também em pastas pai até a raiz', '<code>/nome</code>']]), ] }
         ] },
+        { tipo: 'texto', html: '<p class="ta-nota">Pastas verificadas em 12/10/2026 nas páginas oficiais. Skills mudam rápido: confira na versão em uso.</p>' },
+        { tipo: 'texto', html: '<p><strong>Agente próprio:</strong> use qualquer das pastas acima. Leia <code>.agents/skills/*/SKILL.md</code>, injete só nome e descrição no contexto e carregue o corpo quando o modelo pedir (sua função de carga).</p>' },
         { tipo: 'texto', html:
           '<p><strong>Fallback com <code>AGENTS.md</code>.</strong> Se a ferramenta não tem skills (ou a versão do time é antiga), acrescente ao <code>AGENTS.md</code> uma linha por skill: <em>"Para gerar teste E2E, leia .agents/skills/gerar-teste-playwright/SKILL.md e siga-o."</em> O arquivo continua sendo a fonte única; o agente o abre sob demanda.</p>' +
           '<p>Como o <code>.agents/skills/</code> é lido nativamente por Cursor, Codex e OpenCode, só o Claude Code precisa de cópia: <code>bootstrap.py --tools claude</code> a cria em <code>.claude/skills/</code>.</p>' },

@@ -7,7 +7,7 @@
   function tabela(cab, linhas) {
     return '<table><thead><tr><th>' + cab.join('</th><th>') + '</th></tr></thead><tbody>' + linhas.map(linha).join('') + '</tbody></table>';
   }
-  function onde(linhas) { return { tipo: 'texto', largo: true, html: tabela(['Pasta no repositório', 'Como chamar', 'Observações'], [linhas]) + nota }; }
+  function onde(linhas) { return { tipo: 'texto', largo: true, html: tabela(['Pasta no repositório', 'Como chamar', 'Observações'], [linhas]) }; }
 
   var cmdCorrigir = [
     '---',
@@ -108,12 +108,12 @@
           '</ul>' },
         { tipo: 'texto', html: '<h3>Onde cada ferramenta procura</h3><p>O conceito é o mesmo; a pasta muda. Escolha a ferramenta do seu time.</p>' },
         { tipo: 'abas', rotulo: 'Ferramenta', itens: [
-          { rotulo: 'Claude Code', blocos: [onde(['<code>.claude/commands/nome.md</code>', '<code>/nome args</code>', 'Comandos foram unificados com skills: <code>.claude/commands/x.md</code> e <code>.claude/skills/x/SKILL.md</code> criam o mesmo <code>/x</code>. Aceita <code>$ARGUMENTS</code>, <code>$1</code>.'])] },
           { rotulo: 'Cursor', blocos: [onde(['<code>.cursor/commands/nome.md</code>', '<code>/nome</code> no chat', 'Markdown simples, sem frontmatter documentado.'])] },
-          { rotulo: 'OpenCode', blocos: [onde(['<code>.opencode/commands/nome.md</code>', '<code>/nome args</code>', 'Frontmatter: <code>description</code>, <code>agent</code>, <code>model</code>, <code>subtask</code>. Aceita <code>$ARGUMENTS</code>, <code>$1</code>. Também pode ser definido na chave <code>command</code> do <code>opencode.json</code>.'])] },
           { rotulo: 'Codex', blocos: [onde(['Sem pasta de repositório para comandos: "prompts personalizados" ficam em <code>~/.codex/prompts/</code> (do usuário) e estão <em>obsoletos</em>', '<code>/prompts:nome</code>; ou, como skill, <code>$nome</code>', 'A recomendação oficial é usar skills. O kit converte cada comando em uma skill para o Codex.'])] },
-          { rotulo: 'Agente próprio', blocos: [onde(['A mesma pasta <code>.agents/commands/</code>', 'Uma função <code>carregar_comando(nome, args)</code>', 'Ler o arquivo, substituir <code>$ARGUMENTS</code>, enviar como mensagem do usuário.'])] }
+          { rotulo: 'OpenCode', blocos: [onde(['<code>.opencode/commands/nome.md</code>', '<code>/nome args</code>', 'Frontmatter: <code>description</code>, <code>agent</code>, <code>model</code>, <code>subtask</code>. Aceita <code>$ARGUMENTS</code>, <code>$1</code>. Também pode ser definido na chave <code>command</code> do <code>opencode.json</code>.'])] },
+          { rotulo: 'Claude Code', blocos: [onde(['<code>.claude/commands/nome.md</code>', '<code>/nome args</code>', 'Comandos foram unificados com skills: <code>.claude/commands/x.md</code> e <code>.claude/skills/x/SKILL.md</code> criam o mesmo <code>/x</code>. Aceita <code>$ARGUMENTS</code>, <code>$1</code>.'])] }
         ] },
+        { tipo: 'texto', html: '<p><strong>Agente próprio:</strong> a mesma pasta <code>.agents/commands/</code>, lida por uma função <code>carregar_comando(nome, args)</code>: leia o arquivo, substitua <code>$ARGUMENTS</code> e envie como mensagem do usuário.</p>' + nota },
         { tipo: 'texto', html:
           '<h3>Fonte única e cópia por ferramenta</h3>' +
           '<p>Não mantenha quatro cópias à mão: na primeira edição elas divergem. O kit guarda os comandos em <code>.agents/commands/</code> e o <code>bootstrap.py</code> distribui:</p>' },
