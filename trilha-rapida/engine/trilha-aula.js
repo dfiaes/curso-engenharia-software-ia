@@ -25,6 +25,10 @@
   };
   function tituloDe(id) { return registry[id] ? registry[id].titulo : (TITULOS[id] || id); }
   var EX = { rode: 1, quebre: 1, escolha: 1, ordene: 1, chat: 1, esteira: 1 };
+  /* Tipos de exercício registrados por engine/trilha-aprender.js (complete, escreva, cenario, transcript, python). */
+  var EXT = {};
+  var CFG = { confianca: true };   // TrilhaAula.config({confianca:false}) desliga a pergunta de confiança em todas as escolhas
+  function AP() { return window.TrilhaAula && window.TrilhaAula._aprender || null; }
 
   /* ---------- utilidades ---------- */
   function reduzido() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
@@ -68,6 +72,7 @@
   function lerHash() {
     var x = (location.hash || '').replace(/^#/, '');
     if (!x) return null;
+    if (x === 'revisao') return { revisao: true };
     if (ALIAS[x]) return { aula: ALIAS[x], aba: 0 };
     var p = {};
     x.split('&').forEach(function (kv) {
@@ -83,7 +88,7 @@
   function coletar(blocos, out) {
     (blocos || []).forEach(function (b) {
       if (!b) return;
-      if (EX[b.tipo]) out.push(b);
+      if (EX[b.tipo] || EXT[b.tipo]) out.push(b);
       else if (b.tipo === 'abas') (b.itens || []).forEach(function (it) { coletar(it.blocos, out); });
     });
     return out;
@@ -101,12 +106,52 @@
       registry[a.id] = normalizar(a);
     },
     ordem: function (ids) { order = ids.slice(); },
+    config: function (c) { Object.assign(CFG, c || {}); },
+    _estender: function (tipo, comp) { EXT[tipo] = comp; },
+    _aprender: null,
     montar: function (sel) {
       var el = typeof sel === 'string' ? document.querySelector(sel) : sel;
       ReactDOM.createRoot(el).render(h(App));
     }
   };
   window.TrilhaAula = TrilhaAula;
+  TrilhaAula._i = {
+    h: h, T: T, Html: Html, Painel: Painel, TutorLive: TutorLive, semAinda: semAinda, cap: cap, clamp: clamp, copiar: copiarTexto,
+    useStore: useStore, useTimers: useTimers, reduzido: reduzido, tituloDe: tituloDe, promptTutor: promptTutor, lembrarTrabalho: lembrarTrabalho,
+    aula: function (id) { return registry[id] || null; }, aulas: function () { return registry; }, ordemIds: function () { return order.slice(); }
+  };
+
+  /* ---------- tutor por prompt ----------
+     futuro: tutor embutido no curso. Hoje o botão só monta um prompt socrático e copia para a área de transferência;
+     o aluno cola no agente que já usa (Claude, Cursor, Codex...). */
+  var trabalho = null; // último texto/código escrito pelo aluno: {aula, aba, titulo, texto, linguagem}
+  function lembrarTrabalho(t) { trabalho = t; }
+  function textoPuro(x) { return String(x || '').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim(); }
+  function promptTutor(o) {
+    // o: {aula, aba, objetivo, aluno:{titulo, texto, linguagem}, extra}
+    var L = [];
+    L.push('Você é um tutor socrático. Responda em português do Brasil, com frases curtas.');
+    L.push('');
+    L.push('Contexto: aula "' + o.aula + '", aba "' + o.aba + '" da Trilha rápida (desenvolvimento com agentes).');
+    if (o.objetivo) L.push('Objetivo da aula: ' + textoPuro(o.objetivo));
+    if (o.extra) { L.push(''); L.push(o.extra); }
+    if (o.aluno && o.aluno.texto) {
+      L.push('');
+      L.push('O que o aluno escreveu' + (o.aluno.titulo ? ' (' + textoPuro(o.aluno.titulo) + ')' : '') + ':');
+      L.push('```' + (o.aluno.linguagem || ''));
+      L.push(o.aluno.texto);
+      L.push('```');
+    }
+    L.push('');
+    L.push('Regras:');
+    L.push('- Não entregue a resposta.');
+    L.push('- Faça uma pergunta por vez.');
+    L.push('- Dê pistas graduais: comece pela mais vaga e só fique mais específico se o aluno continuar travado.');
+    L.push('- Peça para o aluno explicar com as palavras dele antes de você corrigir.');
+    L.push('');
+    L.push(o.aluno && o.aluno.texto ? 'Comece apontando uma pergunta sobre o ponto mais frágil do que o aluno escreveu.' : 'Comece perguntando o que o aluno já entende sobre o objetivo.');
+    return L.join('\n');
+  }
 
   /* ---------- blocos de conteúdo ---------- */
   function TakeawayBloco(p) {
@@ -117,21 +162,21 @@
     });
     return h('div', { className: 'ta-takeaway' }, h(T.Takeaway, null, filhos));
   }
+  function copiarTexto(texto, ok) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(texto).then(ok, fallback); return; }
+    } catch (e) {}
+    fallback();
+    function fallback() {
+      try {
+        var t = document.createElement('textarea'); t.value = texto; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+        document.body.appendChild(t); t.select(); var r = document.execCommand('copy'); document.body.removeChild(t); if (r !== false) ok();
+      } catch (e) {}
+    }
+  }
   function Codigo(p) {
     var c = useState(false);
-    function copiar() {
-      var ok = function () { c[1](true); setTimeout(function () { c[1](false); }, 1800); };
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(p.texto).then(ok, fallback); return; }
-      } catch (e) {}
-      fallback();
-      function fallback() {
-        try {
-          var t = document.createElement('textarea'); t.value = p.texto; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
-          document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); ok();
-        } catch (e) {}
-      }
-    }
+    function copiar() { copiarTexto(p.texto, function () { c[1](true); setTimeout(function () { c[1](false); }, 1800); }); }
     return h('div', { className: 'ta-codigo' },
       h('div', { className: 'ta-codigo-head' }, h('span', null, p.linguagem || 'texto'),
         h(Button, { variant: 'plain', size: 'sm', onClick: copiar, 'aria-label': 'Copiar código' }, c[0] ? 'Copiado' : 'Copiar')),
@@ -158,11 +203,12 @@
       case 'codigo': return h(Codigo, { linguagem: b.linguagem, texto: b.texto });
       case 'abas': return h(Abas, { itens: b.itens, rotulo: b.rotulo, ctx: ctx, k: p.k });
       case 'rode': case 'quebre': return h(RodePainel, { ex: b, feito: ctx.feitos[b.id], onDone: ctx.concluir });
-      case 'escolha': return h(Escolha, { ex: b, feito: ctx.feitos[b.id], onDone: ctx.concluir });
+      case 'escolha': return h(Escolha, { ex: b, feito: ctx.feitos[b.id], onDone: ctx.concluir, aulaId: ctx.aulaId });
       case 'ordene': return h(Ordene, { ex: b, feito: ctx.feitos[b.id], onDone: ctx.concluir });
       case 'chat': return h(Chat, { ex: b, feito: ctx.feitos[b.id], onDone: ctx.concluir });
       case 'esteira': return h(Esteira, { ex: b, feito: ctx.feitos[b.id], onDone: ctx.concluir });
     }
+    if (EXT[b.tipo]) return h(EXT[b.tipo], { ex: b, feito: ctx.feitos[b.id], onDone: ctx.concluir, aulaId: ctx.aulaId, abaIdx: ctx.aba });
     console.warn('Bloco desconhecido:', b.tipo);
     return null;
   }
@@ -198,12 +244,28 @@
   function dur(e) { return e.duracao != null ? e.duracao : (e.ms || 0); }
   var TONS = ['dns', 'tcp', 'tls', 'request', 'response'];
 
+  /* ---------- prever antes de rodar ---------- */
+  function Prever(p) {
+    var cfg = p.cfg;
+    return h('div', { className: 'ta-prever', role: 'group', 'aria-label': 'Sua previsão' },
+      h('span', { className: 'ta-field-label' }, 'Antes de rodar, preveja'),
+      h('p', { className: 'ta-pergunta' }, h(Html, { tag: 'span', html: cfg.pergunta })),
+      h('ul', { className: 'ta-opts' }, (cfg.opcoes || []).map(function (o, i) {
+        var sel = p.valor === o.id;
+        var estado = p.revelar ? (o.correta ? 'certa' : (sel ? 'errada' : undefined)) : (sel ? 'sel' : undefined);
+        return h('li', { key: o.id }, h('button', { type: 'button', className: 'ta-opt', disabled: p.travado, 'aria-pressed': sel, 'data-estado': estado, onClick: function () { p.onChange(o.id); } },
+          h('span', { className: 'ta-opt-letra', 'aria-hidden': true }, String.fromCharCode(65 + i)),
+          h('span', { className: 'ta-opt-corpo' }, h(Html, { tag: 'span', html: o.texto })),
+          p.revelar && (o.correta || sel) && h(Badge, { tone: o.correta ? 'brand' : 'highlight' }, o.correta ? 'Real' : 'Sua previsão')));
+      })));
+  }
+
   /* ---------- rode e quebre ---------- */
   function RodePainel(p) {
     var ex = p.ex, quebre = ex.tipo === 'quebre';
     var etapas = ex.etapas || [], falhas = ex.falhas || [];
     var prefixo = ex.prefixo || '$';
-    var st = useStore({ fase: 'idle', n: 0, falhaIdx: -1, lines: [], sel: null, tutor: null, viuFalha: false, rodouOk: false });
+    var st = useStore({ fase: 'idle', n: 0, falhaIdx: -1, lines: [], sel: null, tutor: null, viuFalha: false, rodouOk: false, prev: null, prevUsada: null });
     var S = st[0](), set = st[1];
     var T0 = useTimers();
     var val = useState(ex.entrada || ''), rodando = S.fase === 'rodando';
@@ -218,15 +280,29 @@
       var t = (val[0] || ex.entrada || '').trim() || ex.entrada || '';
       return prefixo === '$' ? { kind: 'cmd', text: t } : { kind: 'cmd', prefix: false, text: prefixo + ': ' + t };
     }
+    var pv = ex.prever || null;
+    function comparar() {
+      var id = st[0]().prevUsada;
+      if (!pv || !id) return '';
+      var op = (pv.opcoes || []).filter(function (o) { return o.id === id; })[0];
+      var real = (pv.opcoes || []).filter(function (o) { return o.correta; })[0];
+      if (!op || !real) return '';
+      var por = real.porque ? ' ' + (op.correta ? cap(semAinda(real.porque)) : 'Porque ' + semAinda(real.porque).replace(/^./, function (c) { return c.toLowerCase(); })) : '';
+      var fim = function (t) { return String(t).replace(/[.\s]+$/, ''); };
+      return op.correta
+        ? 'Você previu <strong>' + fim(op.texto) + '</strong> e acertou.' + por + '<br>'
+        : 'Você previu <strong>' + fim(op.texto) + '</strong>; o real foi <strong>' + fim(real.texto) + '</strong>.' + por + '<br>';
+    }
     function play() {
       if (rodando) return;
+      if (pv && !S.prev) return;
       var falha = null;
       if (quebre && seg[0] !== 'nenhuma') falha = falhas.filter(function (f) { return f.id === seg[0]; })[0] || null;
       var idxF = -1;
       if (falha) etapas.forEach(function (e, i) { if (e.id === falha.efeito.etapaFalha) idxF = i; });
       var limite = idxF >= 0 ? idxF : etapas.length - 1;
       T0.clear();
-      set({ fase: 'rodando', n: 0, falhaIdx: -1, lines: [cmdLine()], sel: null, tutor: null });
+      set({ fase: 'rodando', n: 0, falhaIdx: -1, lines: [cmdLine()], sel: null, tutor: null, prevUsada: st[0]().prev });
       var t = 0;
       etapas.slice(0, limite + 1).forEach(function (e, i) {
         var d = clamp(dur(e) * 5, 450, 1100);
@@ -247,12 +323,13 @@
       T0.sched(t + 60, function () {
         if (falha) {
           var ok = st[0]().rodouOk;
-          set({ fase: 'fim', viuFalha: true, tutor: { tom: 'danger', lead: 'Ainda não:', html: semAinda(falha.efeito.tutor) } });
+          var cmp = comparar();
+          set({ fase: 'fim', viuFalha: true, tutor: { tom: 'danger', lead: cmp ? 'Previsão e resultado.' : 'Ainda não:', html: cmp + semAinda(falha.efeito.tutor) } });
           if (ok) p.onDone(ex.id, 'ok');
         } else if (quebre && !st[0]().viuFalha) {
-          set({ fase: 'fim', rodouOk: true, tutor: { tom: 'neutral', html: 'Rodou sem falha. Agora escolha uma falha e rode de novo para ver onde ela quebra.' } });
+          set({ fase: 'fim', rodouOk: true, tutor: { tom: 'neutral', html: comparar() + 'Rodou sem falha. Agora escolha uma falha e rode de novo para ver onde ela quebra.' } });
         } else {
-          set({ fase: 'fim', rodouOk: true, tutor: { tom: 'success', html: ex.tutorDepois || 'Pronto. Você viu o caminho completo.' } });
+          set({ fase: 'fim', rodouOk: true, tutor: { tom: 'success', html: comparar() + (ex.tutorDepois || 'Pronto. Você viu o caminho completo.') } });
           p.onDone(ex.id, 'ok');
         }
       });
@@ -269,17 +346,19 @@
       }
       return { id: e.id, name: e.nome, description: e.descricao };
     });
-    var tutor = S.tutor || { tom: 'neutral', html: ex.tutorAntes || 'Aperte Enter para rodar e observe as etapas acenderem.' };
+    var semPrev = !!pv && !S.prev;
+    var tutor = S.tutor || { tom: 'neutral', html: semPrev ? 'Antes do Enter, escolha o que você acha que vai acontecer. Errar a previsão ensina mais do que só ver o resultado.' : (ex.tutorAntes || 'Aperte Enter para rodar e observe as etapas acenderem.') };
     var opcoes = falhas.map(function (f) { return { value: f.id, label: f.rotulo }; }).concat([{ value: 'nenhuma', label: 'Sem falha' }]);
     return h(Painel, { ex: ex, feito: p.feito, onDone: p.onDone },
       quebre && h('div', null, h('span', { className: 'ta-field-label', id: ex.id + '-lbl' }, 'Falha a provocar'),
-        h('div', { className: 'ta-segwrap' }, h(T.SegmentedControl, { options: opcoes, value: seg[0], onChange: seg[1], 'aria-label': 'Falha a provocar' }))),
+        h('div', { className: 'ta-segwrap' }, h(T.SegmentedControl, { options: opcoes, value: seg[0], onChange: function (v) { seg[1](v); if (pv) set({ prev: null }); }, 'aria-label': 'Falha a provocar' }))),
+      pv && h(Prever, { cfg: pv, valor: S.prev, travado: rodando, revelar: S.fase === 'fim' && S.prevUsada === S.prev, onChange: function (id) { set({ prev: id }); } }),
       h('div', { className: 'ta-run' },
         h(T.TextField, {
-          prefix: prefixo, mono: true, value: val[0], disabled: rodando, hint: ex.dica,
+          prefix: prefixo, mono: true, value: val[0], disabled: rodando, hint: semPrev ? 'Faça a previsão acima para liberar o Enter.' : ex.dica,
           onChange: function (e) { val[1](e.target.value); },
           onKeyDown: function (e) { if (e.key === 'Enter') { e.preventDefault(); play(); } },
-          trailing: h(Button, { size: 'sm', disabled: rodando, onClick: play, 'aria-label': 'Rodar (Enter)' }, 'Enter ↵')
+          trailing: h(Button, { size: 'sm', disabled: rodando || semPrev, onClick: play, 'aria-label': 'Rodar (Enter)' }, 'Enter ↵')
         })),
       h('div', { className: 'ta-cols' },
         h('div', { className: 'ta-steps', ref: tlRef }, h(T.StepTimeline, {
@@ -289,27 +368,45 @@
       h(TutorLive, { tutor: tutor }));
   }
 
-  /* ---------- escolha ---------- */
+  /* ---------- escolha (com confiança opcional) ---------- */
   function Escolha(p) {
     var ex = p.ex, ops = ex.opcoes || [];
-    var s = useState({ erradas: [], certa: null, tutor: null }), S = s[0];
-    function pick(o) {
+    var A = AP();
+    var usaConf = !!(A && CFG.confianca && ex.confianca !== false);
+    var s = useState({ erradas: [], certa: null, tutor: null, sel: null, conf: null, tentou: false }), S = s[0];
+    function pick(o, conf) {
       if (S.certa) return;
-      if (o.correta) { s[1]({ erradas: S.erradas, certa: o.id, tutor: { tom: 'success', lead: 'Certo.', html: o.porque } }); p.onDone(ex.id, 'ok'); }
-      else s[1]({ erradas: S.erradas.concat([o.id]), certa: null, tutor: { tom: 'danger', lead: 'Ainda não:', html: semAinda(o.porque) } });
+      var primeira = !S.tentou;
+      if (primeira && A && conf && !p.feito) A.registrarCalibracao({ aula: p.aulaId || '', exercicio: ex.id, confianca: conf, acertou: !!o.correta });
+      if (o.correta) { s[1](Object.assign({}, S, { certa: o.id, tutor: { tom: 'success', lead: 'Certo.', html: o.porque }, tentou: true })); p.onDone(ex.id, 'ok'); }
+      else s[1](Object.assign({}, S, { erradas: S.erradas.concat([o.id]), certa: null, sel: null, tutor: { tom: 'danger', lead: 'Ainda não:', html: semAinda(o.porque) }, tentou: true }));
     }
-    var tutor = S.tutor || { tom: 'neutral', html: ex.tutorAntes || 'Escolha a resposta que você acha certa.' };
+    function clicar(o) {
+      if (S.certa) return;
+      if (usaConf && !S.tentou) s[1](Object.assign({}, S, { sel: o.id })); else pick(o, null);
+    }
+    function conferir() {
+      var o = ops.filter(function (x) { return x.id === S.sel; })[0];
+      if (o && S.conf) pick(o, S.conf);
+    }
+    var pedeConf = usaConf && !S.tentou && !S.certa;
+    var tutor = S.tutor || { tom: 'neutral', html: ex.tutorAntes || (usaConf ? 'Escolha uma resposta, diga o quanto você confia nela e aperte Conferir.' : 'Escolha a resposta que você acha certa.') };
     return h(Painel, { ex: ex, feito: p.feito, onDone: p.onDone },
       h('p', { className: 'ta-pergunta' }, h(Html, { tag: 'span', html: ex.pergunta })),
       h('ul', { className: 'ta-opts' }, ops.map(function (o, i) {
-        var errada = S.erradas.indexOf(o.id) >= 0, certa = S.certa === o.id;
+        var errada = S.erradas.indexOf(o.id) >= 0, certa = S.certa === o.id, sel = S.sel === o.id;
         return h('li', { key: o.id }, h('button', {
-          type: 'button', className: 'ta-opt', disabled: !!S.certa || errada, 'data-estado': certa ? 'certa' : errada ? 'errada' : undefined, onClick: function () { pick(o); }
+          type: 'button', className: 'ta-opt', disabled: !!S.certa || errada, 'aria-pressed': pedeConf ? sel : undefined, 'data-estado': certa ? 'certa' : errada ? 'errada' : sel ? 'sel' : undefined, onClick: function () { clicar(o); }
         }, h('span', { className: 'ta-opt-letra', 'aria-hidden': true }, String.fromCharCode(65 + i)),
           h('span', { className: 'ta-opt-corpo' }, h(Html, { tag: 'span', html: o.texto }),
             (S.certa || errada) && o.porque && h(Html, { tag: 'span', className: 'ta-opt-porque', html: (certa ? 'Correta. ' + cap(semAinda(o.porque)) : 'Ainda não: ' + semAinda(o.porque)) })),
           (certa || errada) && h(Badge, { tone: certa ? 'brand' : 'highlight' }, certa ? 'Correta' : 'Ainda não')));
       })),
+      pedeConf && h('div', { className: 'ta-conf' },
+        h('span', { className: 'ta-field-label' }, 'Quanto você confia nessa resposta?'),
+        h('div', { className: 'ta-segwrap' }, h(A.Confianca, { value: S.conf, onChange: function (v) { s[1](Object.assign({}, S, { conf: v })); } })),
+        h('div', { className: 'ta-acoes' }, h(Button, { disabled: !S.sel || !S.conf, onClick: conferir }, 'Conferir'),
+          (!S.sel || !S.conf) && h('span', { className: 'ta-nota-inline' }, !S.sel ? 'Escolha uma resposta.' : 'Escolha o nível de confiança.'))),
       h(TutorLive, { tutor: tutor }));
   }
 
@@ -508,6 +605,11 @@
     var ss = useState(lerStore), store = ss[0];
     var ds = useState(false), drawer = ds[0];
     var cs = useState(false), confirma = cs[0];
+    var tk = useState(0), copiado = useState(null);
+    useEffect(function () {
+      function f() { tk[1](function (n) { return n + 1; }); }
+      window.addEventListener('curso:srs', f); return function () { window.removeEventListener('curso:srs', f); };
+    }, []);
     var ts = useState(function () { return document.documentElement.getAttribute('data-theme') || ''; });
     useEffect(function () {
       function f() { rs[1](lerHash()); }
@@ -516,7 +618,9 @@
     function mut(fn) { ss[1](function (s) { var n = JSON.parse(JSON.stringify(s)); fn(n); gravarStore(n); return n; }); }
     var ids = order.length ? order : Object.keys(registry);
     var pri = store.atual && ids.indexOf(store.atual.aula) >= 0 ? store.atual : { aula: ids[0], aba: 0 };
-    var cur = route && ids.indexOf(route.aula) >= 0 ? route : pri;
+    var emRevisao = !!(route && route.revisao && AP());
+    var oculta = !!(route && route.aula && ids.indexOf(route.aula) < 0 && registry[route.aula] && registry[route.aula].escondida);
+    var cur = route && route.aula && (ids.indexOf(route.aula) >= 0 || oculta) ? route : pri;
     var aula = registry[cur.aula], idx = ids.indexOf(cur.aula);
     var abas = aula ? aula.abas || [] : [];
     var aba = clamp(cur.aba || 0, 0, Math.max(0, abas.length - 1));
@@ -524,9 +628,15 @@
 
     useEffect(function () {
       mut(function (n) { n.atual = { aula: cur.aula, aba: aba }; n.aulas[cur.aula] = Object.assign({ aba: 0, feitos: {}, concluida: false }, n.aulas[cur.aula], { aba: aba }); });
-      window.scrollTo(0, 0); ds[1](false);
+      window.scrollTo(0, 0); ds[1](false); copiado[1](null);
       document.title = (aula ? aula.titulo : 'Em preparo') + ' · Trilha rápida';
     }, [cur.aula, aba]);
+    useEffect(function () { if (emRevisao) { window.scrollTo(0, 0); ds[1](false); document.title = 'Revisão do dia · Trilha rápida'; } }, [emRevisao]);
+    // Aulas já concluídas entram na revisão espaçada (idempotente).
+    useEffect(function () {
+      var A = AP(); if (!A) return;
+      ids.forEach(function (id) { if (aulaSt(store, id).concluida) A.matricular(id); });
+    }, [store]);
 
     function ir(id, a) { var nh = hashDe(id, a || 0); if (location.hash === nh) rs[1](lerHash()); else location.hash = nh; }
     function concluir(exId, status) { mut(function (n) { var a = n.aulas[cur.aula] || (n.aulas[cur.aula] = { aba: aba, feitos: {}, concluida: false }); a.feitos = a.feitos || {}; if (!a.feitos[exId]) a.feitos[exId] = status; }); }
@@ -535,27 +645,35 @@
       var feitos = exs.filter(function (e) { return sa.feitos && sa.feitos[e.id]; });
       return { exs: exs, feitos: feitos, pend: exs.filter(function (e) { return !(sa.feitos && sa.feitos[e.id]); }) };
     }
-    var ctx = { feitos: sa.feitos || {}, concluir: concluir };
+    var ctx = { feitos: sa.feitos || {}, concluir: concluir, aulaId: cur.aula, aba: aba };
     var stats = aula ? abaStats(aba) : { exs: [], feitos: [], pend: [] };
     var pode = !aula || stats.pend.length === 0;
-    var ultimaAba = aba >= abas.length - 1, ultimaAula = idx >= ids.length - 1;
-    var DICAS = { rode: 'Aperte Enter para rodar', quebre: 'Escolha uma falha, rode, depois rode sem falha', escolha: 'Escolha uma resposta', ordene: 'Ordene os itens e aperte Conferir', chat: 'Escolha a melhor resposta ao agente', esteira: 'Promova o artefato até produção' };
+    var ultimaAba = aba >= abas.length - 1, ultimaAula = oculta || idx >= ids.length - 1;
+    var DICAS = { rode: 'Aperte Enter para rodar', quebre: 'Escolha uma falha, rode, depois rode sem falha', escolha: 'Escolha uma resposta', ordene: 'Ordene os itens e aperte Conferir', chat: 'Escolha a melhor resposta ao agente', esteira: 'Promova o artefato até produção', complete: 'Preencha as lacunas e aperte Conferir', escreva: 'Escreva, envie e marque a rubrica', cenario: 'Chegue a um final bom', transcript: 'Marque a linha onde a sessão errou e aperte Conferir', python: 'Faça todos os testes passarem' };
     var dica = aula && stats.pend[0] ? (stats.pend[0].dica || DICAS[stats.pend[0].tipo]) : null;
+    if (dica) dica = String(dica).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().replace(/[.\s]+$/, '');
     function continuar() {
       if (!pode) return;
       if (!aula) { if (!ultimaAula) ir(ids[idx + 1], 0); return; }
       if (!ultimaAba) { ir(cur.aula, aba + 1); return; }
       mut(function (n) { n.aulas[cur.aula].concluida = true; });
-      if (!ultimaAula) ir(ids[idx + 1], 0);
+      if (AP()) AP().matricular(cur.aula);
+      if (!oculta && !ultimaAula) ir(ids[idx + 1], 0);
     }
-    function voltar() { if (aba > 0) ir(cur.aula, aba - 1); else if (idx > 0) ir(ids[idx - 1], 0); }
+    function voltar() { if (aba > 0) ir(cur.aula, aba - 1); else if (!oculta && idx > 0) ir(ids[idx - 1], 0); }
     function irAba(i) {
       for (var k = 0; k < i; k++) if (abaStats(k).pend.length) return;
       ir(cur.aula, i);
     }
     var feitasN = ids.filter(function (id) { return aulaSt(store, id).concluida; }).length;
-    var rotulo = !aula ? 'Próxima aula' : ultimaAba ? (ultimaAula ? 'Concluir trilha' : 'Próxima aula') : 'Continuar';
+    var rotulo = !aula ? 'Próxima aula' : ultimaAba ? (oculta ? 'Concluir aula' : ultimaAula ? 'Concluir trilha' : 'Próxima aula') : 'Continuar';
     var podeFinal = !aula ? !ultimaAula : pode;
+    var A_ = AP(), nRev = A_ ? A_.pendentesResolvidos(10).length : 0;
+    function perguntarTutor() {
+      var t = trabalho && trabalho.aula === cur.aula && trabalho.aba === aba ? trabalho : null;
+      var txt = promptTutor({ aula: aula ? aula.titulo : tituloDe(cur.aula), aba: aula && abas[aba] ? abas[aba].rotulo : '', objetivo: aula ? (aula.objetivo || aula.resumo) : '', aluno: t });
+      copiarTexto(txt, function () { copiado[1](Date.now()); });
+    }
 
     function tema() {
       var atual = document.documentElement.getAttribute('data-theme');
@@ -570,10 +688,14 @@
     var lateral = h('aside', { className: 'ta-side', 'data-aberta': drawer ? 'true' : 'false', 'aria-label': 'Aulas da trilha' },
       h('h2', { className: 'ta-brand' }, 'Trilha rápida', h('small', null, 'Desenvolvimento com agentes')),
       h(T.ProgressBar, { value: ids.length ? feitasN / ids.length : 0, tone: 'brand', label: feitasN + ' de ' + ids.length + ' aulas', showValue: true }),
+      A_ && h('nav', { 'aria-label': 'Revisão' }, h(T.List, null, h(T.ListRow, {
+        title: 'Revisão do dia (' + nRev + ')', subtitle: nRev ? 'Itens vencidos, de várias aulas' : 'Nada vencido hoje', chevron: false, current: emRevisao,
+        leading: h('span', { className: 'ta-num', 'aria-hidden': true }, '↻'), onClick: function () { location.hash = '#revisao'; }
+      }))),
       h('nav', { 'aria-label': 'Lista de aulas' }, h(T.List, null, ids.map(function (id, i) {
         var r = registry[id], s = aulaSt(store, id);
         return h(T.ListRow, {
-          key: id, title: tituloDe(id), subtitle: r ? r.minutos + ' min' : 'em preparo', chevron: false, current: id === cur.aula, done: !!s.concluida,
+          key: id, title: tituloDe(id), subtitle: r ? r.minutos + ' min' : 'em preparo', chevron: false, current: !emRevisao && id === cur.aula, done: !!s.concluida,
           leading: h('span', { className: 'ta-num' }, s.concluida ? '✓' : String(i + 1)), onClick: function () { ir(id, r ? (s.aba || 0) : 0); }
         });
       }))),
@@ -586,7 +708,9 @@
           : h(Button, { variant: 'plain', onClick: function () { cs[1](true); } }, 'Recomeçar trilha')));
 
     var corpo;
-    if (!aula) {
+    if (emRevisao) {
+      corpo = h(A_.RevisaoDia, { onSair: function () { ir(pri.aula, pri.aba); } });
+    } else if (!aula) {
       var passo = PASSO[cur.aula];
       corpo = h(Card, { variant: 'panel', title: 'Esta aula está em preparo' },
         h('div', { className: 'ta-preparo' }, h('p', { style: { margin: 0 } }, 'A versão interativa ainda não foi escrita. O conteúdo desta aula já existe em texto.'),
@@ -595,11 +719,15 @@
       corpo = h(Blocos, { blocos: abas[aba] ? abas[aba].blocos : [], ctx: ctx, k: cur.aula + '-' + aba });
     }
     var passoAtual = PASSO[cur.aula];
-    return h('div', { className: 'ta-app' }, lateral,
-      h('button', { type: 'button', className: 'ta-scrim', 'data-aberta': drawer ? 'true' : 'false', 'aria-label': 'Fechar lista de aulas', onClick: function () { ds[1](false); }, tabIndex: drawer ? 0 : -1 }),
+    var mbar = h('div', { className: 'ta-mbar' }, h(Button, { variant: 'gray', size: 'sm', onClick: function () { ds[1](!drawer); }, 'aria-expanded': drawer }, 'Aulas'), h('strong', null, emRevisao ? 'Revisão do dia' : tituloDe(cur.aula)));
+    var scrim = h('button', { type: 'button', className: 'ta-scrim', 'data-aberta': drawer ? 'true' : 'false', 'aria-label': 'Fechar lista de aulas', onClick: function () { ds[1](false); }, tabIndex: drawer ? 0 : -1 });
+    if (emRevisao) {
+      return h('div', { className: 'ta-app' }, lateral, scrim,
+        h('div', { className: 'ta-main' }, h('div', { className: 'ta-top' }, mbar), h('main', { className: 'ta-aula', id: 'conteudo' }, corpo)));
+    }
+    return h('div', { className: 'ta-app' }, lateral, scrim,
       h('div', { className: 'ta-main' },
-        h('div', { className: 'ta-top' },
-          h('div', { className: 'ta-mbar' }, h(Button, { variant: 'gray', size: 'sm', onClick: function () { ds[1](!drawer); }, 'aria-expanded': drawer }, 'Aulas'), h('strong', null, tituloDe(cur.aula))),
+        h('div', { className: 'ta-top' }, mbar,
           h(T.LessonToolbar, {
             steps: aula ? abas.map(function (a, i) { var s = abaStats(i); return { label: a.rotulo, progress: s.exs.length ? s.feitos.length / s.exs.length : (i <= aba ? 1 : 0) }; }) : [{ label: 'Em preparo', progress: 0 }],
             current: aula ? aba : 0, onStep: aula ? irAba : undefined, onBack: (aba > 0 || idx > 0) ? voltar : undefined,
@@ -607,13 +735,16 @@
           })),
         h('main', { className: 'ta-aula', id: 'conteudo' },
           h('header', { className: 'ta-head' },
-            h('div', { className: 'ta-meta' }, h(Badge, { tone: 'brand' }, 'Aula ' + (idx + 1) + ' de ' + ids.length), aula && h(Badge, null, aula.minutos + ' min'),
+            h('div', { className: 'ta-meta' }, h(Badge, { tone: 'brand' }, oculta ? 'Aula escondida' : 'Aula ' + (idx + 1) + ' de ' + ids.length), aula && h(Badge, null, aula.minutos + ' min'),
               passoAtual && h('a', { href: TEXTO + '#' + passoAtual, style: { fontSize: 13 } }, 'Ler em texto')),
             h('h1', null, tituloDe(cur.aula)),
             aula && aula.resumo && h('p', null, aula.resumo)),
           corpo,
           h('div', { className: 'ta-foot' },
-            h('span', null, pode ? '' : (dica ? 'Falta: ' + dica.toLowerCase() + '. Ou use Pular exercício.' : 'Conclua os exercícios para continuar.')),
-            h(Button, { disabled: !podeFinal, trailing: '→', onClick: continuar }, rotulo)))));
+            h('div', { className: 'ta-foot-l' },
+              aula && h(Button, { variant: 'tinted', onClick: perguntarTutor }, 'Perguntar ao tutor'),
+              h('span', null, pode ? '' : (dica ? 'Falta: ' + dica.replace(/^./, function (c) { return c.toLowerCase(); }) + '. Ou use Pular exercício.' : 'Conclua os exercícios para continuar.'))),
+            h(Button, { disabled: !podeFinal, trailing: '→', onClick: continuar }, rotulo)),
+          copiado[0] && h('div', { 'aria-live': 'polite' }, h(Callout, { tone: 'success', title: 'Prompt copiado — cole no seu agente (Claude, Cursor, Codex…)' }, 'O tutor vai conduzir você por perguntas, sem entregar a resposta.')))));
   }
 })();

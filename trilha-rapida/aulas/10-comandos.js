@@ -94,6 +94,104 @@
     titulo: 'Comandos reutilizáveis',
     minutos: 15,
     resumo: 'Um prompt versionado no repositório e chamado pelo nome, com argumentos: o jeito mais barato de transformar o método do time em hábito.',
+    revisao: [
+      {
+        "id": "onde-escrever-comando",
+        "pergunta": "Como manter o <code>/corrigir-bug</code> para Cursor, Claude Code e Codex?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Escrever uma vez em <code>.agents/commands/</code> e gerar a cópia de cada ferramenta com o bootstrap",
+            "correta": true,
+            "porque": "uma fonte, várias cópias geradas."
+          },
+          {
+            "id": "b",
+            "texto": "Manter um arquivo por ferramenta, editados à mão",
+            "correta": false,
+            "porque": "em semanas os três divergem."
+          },
+          {
+            "id": "c",
+            "texto": "Colar o texto no chat de cada sessão",
+            "correta": false,
+            "porque": "não é versionado nem revisável."
+          }
+        ]
+      },
+      {
+        "id": "comando-falhou",
+        "pergunta": "O agente rodou <code>/nova-feature PROJ-123</code> e pulou a aprovação da spec. Onde corrigir?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "No arquivo do comando, que é código do time",
+            "correta": true,
+            "porque": "se o fluxo falha, corrija o arquivo, não o chat."
+          },
+          {
+            "id": "b",
+            "texto": "Na conversa, pedindo desculpas ao agente",
+            "correta": false,
+            "porque": "a correção some com a sessão."
+          },
+          {
+            "id": "c",
+            "texto": "No Jira, mudando o estado do ticket",
+            "correta": false,
+            "porque": "o estado do ticket não controla o que o agente faz."
+          }
+        ]
+      },
+      {
+        "id": "teste-primeiro",
+        "pergunta": "No <code>/corrigir-bug</code>, o que vem primeiro?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "O teste vermelho, que falha pelo motivo do ticket",
+            "correta": true,
+            "porque": "sem ele a correção é palpite."
+          },
+          {
+            "id": "b",
+            "texto": "A correção mínima",
+            "correta": false,
+            "porque": "corrigir antes de reproduzir esconde se o diagnóstico estava certo."
+          },
+          {
+            "id": "c",
+            "texto": "A atualização da documentação",
+            "correta": false,
+            "porque": "doc fecha o ciclo; não é o começo."
+          }
+        ]
+      },
+      {
+        "id": "virar-hook",
+        "pergunta": "O que \"não pode acontecer\" deve virar o quê?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Um hook",
+            "correta": true,
+            "porque": "comando pede; hook impede."
+          },
+          {
+            "id": "b",
+            "texto": "Uma linha em negrito no comando",
+            "correta": false,
+            "porque": "texto no comando ainda pode ser ignorado."
+          },
+          {
+            "id": "c",
+            "texto": "Um item no checklist do PR",
+            "correta": false,
+            "porque": "checklist avisa depois do fato; o hook barra antes."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Entender', blocos: [
         { tipo: 'texto', html:

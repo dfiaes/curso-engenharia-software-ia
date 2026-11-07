@@ -14,6 +14,128 @@
     titulo: 'Conceitos e vocabulário',
     minutos: 15,
     resumo: 'Nove palavras que aparecem em toda ferramenta de agente, com o mesmo significado em todas. Primeiro a ideia, depois o endereço.',
+    revisao: [
+      {
+        "id": "quem-le-arquivo",
+        "pergunta": "O agente pede para ler um arquivo. Quem executa a leitura?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "O harness executa a ferramenta; o modelo só pede e lê o resultado",
+            "correta": true,
+            "porque": "o modelo só produz texto; ferramentas, permissões e instruções vêm do harness."
+          },
+          {
+            "id": "b",
+            "texto": "O modelo, que lê o disco diretamente",
+            "correta": false,
+            "porque": "o modelo não tem acesso ao disco sem uma ferramenta entregue pelo harness."
+          },
+          {
+            "id": "c",
+            "texto": "O subagente, sempre",
+            "correta": false,
+            "porque": "subagente é outro agente com contexto isolado; não é quem executa ferramentas."
+          }
+        ]
+      },
+      {
+        "id": "subagente-ganho",
+        "pergunta": "Qual o ganho principal de delegar a um subagente?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Contexto isolado: a conversa principal fica limpa e a revisão é mais independente",
+            "correta": true,
+            "porque": "ele volta com um resumo, sem carregar a pesquisa inteira."
+          },
+          {
+            "id": "b",
+            "texto": "Ele usa um modelo mais inteligente",
+            "correta": false,
+            "porque": "o ganho vem do isolamento, não do modelo."
+          },
+          {
+            "id": "c",
+            "texto": "Ele dispensa o AGENTS.md",
+            "correta": false,
+            "porque": "as instruções persistentes continuam valendo em toda sessão."
+          }
+        ]
+      },
+      {
+        "id": "garantir-regra",
+        "pergunta": "Você quer garantir que o agente nunca apague a pasta <code>bin/</code>. Qual mecanismo serve?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Um hook, porque ele impede a ação em vez de pedir",
+            "correta": true,
+            "porque": "regra e skill orientam; o hook garante."
+          },
+          {
+            "id": "b",
+            "texto": "Uma skill que explica por que a pasta importa",
+            "correta": false,
+            "porque": "skill ensina, mas o agente ainda pode ignorá-la."
+          },
+          {
+            "id": "c",
+            "texto": "Um comando que você chama quando lembrar",
+            "correta": false,
+            "porque": "comando só roda quando você o inicia."
+          }
+        ]
+      },
+      {
+        "id": "comando-skill",
+        "pergunta": "Qual a diferença entre comando e skill?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Comando você inicia pelo nome; a skill o agente carrega quando a tarefa casa com a descrição",
+            "correta": true,
+            "porque": "a skill fica na lombada (nome e descrição) até ser necessária."
+          },
+          {
+            "id": "b",
+            "texto": "Comando é carregado em toda sessão; skill só quando você chama",
+            "correta": false,
+            "porque": "é o contrário: quem entra em toda sessão são as instruções persistentes."
+          },
+          {
+            "id": "c",
+            "texto": "São o mesmo recurso com nomes diferentes por ferramenta",
+            "correta": false,
+            "porque": "são recursos distintos, com gatilhos distintos."
+          }
+        ]
+      },
+      {
+        "id": "bot-definicao",
+        "pergunta": "O que distingue um bot de um assistente de chat?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "O gatilho é um evento ou um horário, sem você abrir uma conversa",
+            "correta": true,
+            "porque": "é o funcionário de plantão, em contraste com o assistente ao seu lado."
+          },
+          {
+            "id": "b",
+            "texto": "O bot usa um modelo menor",
+            "correta": false,
+            "porque": "o tamanho do modelo não define o que é um bot."
+          },
+          {
+            "id": "c",
+            "texto": "O bot é um subagente com mais ferramentas",
+            "correta": false,
+            "porque": "subagente é delegação dentro de uma sessão; bot roda sem sessão sua."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Vocabulário', blocos: [
         { tipo: 'texto', html:
@@ -139,6 +261,27 @@
             { id: 'b', texto: 'Um plugin.', correta: true, porque: 'plugin é o pacote que distribui comandos, skills, hooks e MCP de uma vez, com um passo de instalação.' },
             { id: 'c', texto: 'Uma skill grande com tudo dentro.', correta: false, porque: 'skill é conhecimento carregado sob demanda. Ela não instala hook nem configura conexão.' }
           ], tutorDepois: 'Plugin é o que distribui o conjunto; cada peça continua sendo o que é.' },
+        { tipo: 'complete', id: 'conc-complete-skill', titulo: 'Monte um SKILL.md', obrigatorio: false, linguagem: 'markdown',
+          enunciado: 'Complete o cabeçalho e o corpo de uma skill. Escolha, em cada lacuna, o trecho que faz o agente carregar a skill na hora certa e achar o script.',
+          partes: [
+            '---\nname: ', { lacuna: 'nome', opcoes: ['gerar-teste-e2e', 'Gerar Teste E2E', 'gerar_teste_e2e.md'], correta: 'gerar-teste-e2e' },
+            '\ndescription: ', { lacuna: 'desc', opcoes: ['Skill muito útil para tudo que envolve qualidade.', 'Gera testes E2E com Playwright. Use ao cobrir login, cadastro ou checkout.', 'Testes.'], correta: 'Gera testes E2E com Playwright. Use ao cobrir login, cadastro ou checkout.' },
+            '\n---\n\n# Gerar teste E2E\n\nRode `', { lacuna: 'script', opcoes: ['/home/ana/projetos/scripts/novo_teste.py', 'scripts/novo_teste.py', 'o script que usei ontem'], correta: 'scripts/novo_teste.py' },
+            '` para criar o esqueleto e depois preencha os passos do fluxo.\n'
+          ],
+          explicacao: 'O <code>name</code> casa com o nome da pasta, em minúsculas e com hífen. A <code>description</code> é o que fica na lombada: diz o que a skill faz e quando usá-la, e é por ela que o agente decide abrir o livro. O script vai por caminho relativo à pasta da skill, para funcionar em qualquer máquina.',
+          callout: 'SKILL.md montado: nome da pasta, descrição com "o quê" e "quando", caminho relativo.' },
+        { tipo: 'escreva', id: 'conc-escreva-skill-hook', titulo: 'Skill ou hook, com as suas palavras', obrigatorio: false,
+          enunciado: 'Explique com suas palavras a diferença entre <strong>skill</strong> e <strong>hook</strong>. Dê um exemplo do que cada um resolve.',
+          placeholder: 'Uma skill é… Um hook é… Por exemplo…',
+          rubrica: [
+            'Diz que a skill <strong>ensina</strong>: conhecimento que o agente carrega quando a tarefa casa e que ele pode seguir ou deixar de seguir.',
+            'Diz que o hook é <strong>determinístico</strong>: roda num evento e bloqueia, valida ou registra, não importa o que o modelo lembrou.',
+            'Dá um exemplo de skill (um procedimento, como gerar um teste E2E).',
+            'Dá um exemplo de hook (caminho protegido, segredo no diff, comando perigoso).',
+            'Conclui que o que não pode acontecer não mora em texto: mora no hook.'
+          ],
+          modelo: '<p>Uma skill é um manual na estante: o agente lê a descrição e, quando a tarefa casa, abre o procedimento e tenta segui-lo. Serve para ensinar, por exemplo, como gerar um teste E2E com o nosso script. Mas ele pode se desviar.</p><p>Um hook é a catraca: roda sempre que um evento acontece, como "antes de editar um arquivo", e bloqueia ou valida sem depender do que o modelo lembrou. Serve para impedir, por exemplo, que alguém edite <code>deploy.yml</code> ou que um segredo vá no diff. O que não pode acontecer vira hook.</p>' },
         { tipo: 'takeaway', html: '<mark>Skill ensina</mark>, <mark>hook impede</mark>, comando você chama, subagente isola.' }
       ] }
     ]

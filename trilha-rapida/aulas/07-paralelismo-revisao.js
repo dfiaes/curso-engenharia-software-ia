@@ -14,6 +14,104 @@
     titulo: 'Paralelismo e revisão',
     minutos: 20,
     resumo: 'O ganho real aparece quando você supervisiona mais de uma sessão. O gargalo deixa de ser digitar e passa a ser revisar bem.',
+    revisao: [
+      {
+        "id": "gargalo",
+        "pergunta": "Qual o gargalo de quem supervisiona várias sessões de agente?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Revisar bem: o limite é a sua capacidade de revisar",
+            "correta": true,
+            "porque": "digitar deixou de ser o problema."
+          },
+          {
+            "id": "b",
+            "texto": "Escrever os prompts",
+            "correta": false,
+            "porque": "o gargalo deslocou-se para a leitura do que volta."
+          },
+          {
+            "id": "c",
+            "texto": "A velocidade do modelo",
+            "correta": false,
+            "porque": "mais sessões sem revisão só acumulam PRs parados."
+          }
+        ]
+      },
+      {
+        "id": "isolar-sessoes",
+        "pergunta": "Como isolar duas sessões que trabalham no mesmo repositório?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Com um worktree por sessão",
+            "correta": true,
+            "porque": "cada sessão tem a própria pasta e branch, sem pisar nos arquivos da outra."
+          },
+          {
+            "id": "b",
+            "texto": "As duas na mesma pasta, em branches diferentes, trocando entre elas",
+            "correta": false,
+            "porque": "trocar de branch com trabalho aberto mistura mudanças."
+          },
+          {
+            "id": "c",
+            "texto": "Um clone completo por sessão, sem relação entre eles",
+            "correta": false,
+            "porque": "funciona, mas worktrees compartilham o histórico e são mais leves."
+          }
+        ]
+      },
+      {
+        "id": "revisor-novo",
+        "pergunta": "Por que o revisor deve ser uma sessão nova, sem o histórico da implementação?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Sem o contexto herdado ele acha o que o texto não diz, em vez de confirmar o que o autor quis",
+            "correta": true,
+            "porque": "quem leu a conversa já \"sabe\" o que ficou de fora."
+          },
+          {
+            "id": "b",
+            "texto": "Porque sessões novas custam menos",
+            "correta": false,
+            "porque": "o motivo é independência, não custo."
+          },
+          {
+            "id": "c",
+            "texto": "Porque o histórico atrapalha o modelo a escrever",
+            "correta": false,
+            "porque": "o ponto é a revisão, não a escrita."
+          }
+        ]
+      },
+      {
+        "id": "quem-aprova-pr-2",
+        "pergunta": "Quem pode aprovar um PR?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Um humano que não o escreveu e que leu o diff",
+            "correta": true,
+            "porque": "se você não leu o diff, não revisou."
+          },
+          {
+            "id": "b",
+            "texto": "O agente revisor, se o parecer for positivo",
+            "correta": false,
+            "porque": "o parecer amplia a sua leitura, não a substitui."
+          },
+          {
+            "id": "c",
+            "texto": "O autor, depois de rodar o agente revisor",
+            "correta": false,
+            "porque": "quem escreveu não aprova."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Entender', blocos: [
         { tipo: 'texto', html:

@@ -52,6 +52,104 @@
     titulo: 'O mapa do ciclo',
     minutos: 12,
     resumo: 'Uma sessão com agente é uma etapa de um ciclo. Cada etapa deixa um arquivo, e um humano decide em pontos precisos.',
+    revisao: [
+      {
+        "id": "spec-artefato",
+        "pergunta": "Qual artefato a etapa de spec deixa no repositório?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Um arquivo em <code>docs/specs/</code> com critérios de aceite e o que fica fora do escopo",
+            "correta": true,
+            "porque": "a spec é um arquivo versionado; é o que o agente lê na sessão seguinte."
+          },
+          {
+            "id": "b",
+            "texto": "Uma combinação feita na conversa com o agente",
+            "correta": false,
+            "porque": "a conversa some quando a sessão fecha; o que não está num arquivo deixa de existir."
+          },
+          {
+            "id": "c",
+            "texto": "O código com os testes já passando",
+            "correta": false,
+            "porque": "o código vem depois do plano; a spec existe para ser aprovada antes dele."
+          }
+        ]
+      },
+      {
+        "id": "relato-evidencia",
+        "pergunta": "Por que o relato \"pronto, tudo passando\" não conta como evidência?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "É a descrição que o agente faz do próprio trabalho; evidência é uma saída que você lê sem depender dele",
+            "correta": true,
+            "porque": "você precisa de um artefato, como a saída do <code>make check</code> ou a execução do CI."
+          },
+          {
+            "id": "b",
+            "texto": "Porque o agente costuma mentir de propósito",
+            "correta": false,
+            "porque": "o problema não é má-fé: ele pode ter rodado menos do que diz ou rodado outra coisa."
+          },
+          {
+            "id": "c",
+            "texto": "Porque o modelo não consegue rodar testes",
+            "correta": false,
+            "porque": "quem roda é o harness, a pedido do modelo; o ponto é conferir a saída."
+          }
+        ]
+      },
+      {
+        "id": "pular-spec",
+        "pergunta": "O que acontece quando a spec é pulada?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "O agente decide sozinho o que \"corrigir\" significa, e os testes passam sem cobrir a regra certa",
+            "correta": true,
+            "porque": "sem critério escrito, o critério vive só na cabeça do agente."
+          },
+          {
+            "id": "b",
+            "texto": "O CI barra o PR automaticamente",
+            "correta": false,
+            "porque": "o CI só barra o que alguém escreveu como teste; sem spec, ninguém escreveu o teste certo."
+          },
+          {
+            "id": "c",
+            "texto": "Só a revisão fica um pouco mais lenta",
+            "correta": false,
+            "porque": "o erro é de conteúdo: o PR resolve outro problema."
+          }
+        ]
+      },
+      {
+        "id": "quem-aprova-pr",
+        "pergunta": "Quem aprova o pull request?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Um humano que não escreveu o código",
+            "correta": true,
+            "porque": "quem não escreveu enxerga o que o autor não vê."
+          },
+          {
+            "id": "b",
+            "texto": "O mesmo agente que implementou, porque conhece o contexto",
+            "correta": false,
+            "porque": "o contexto herdado confirma o que o autor quis, não o que ficou de fora."
+          },
+          {
+            "id": "c",
+            "texto": "Ninguém: com o CI verde basta",
+            "correta": false,
+            "porque": "CI verde mostra que as regras escritas passaram, não que a decisão está certa."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'O ciclo', blocos: [
         { tipo: 'texto', html:
@@ -60,6 +158,11 @@
           '<p>Digite uma intenção e aperte Enter. Veja as seis primeiras etapas do ciclo acenderem e leia, no terminal, o que o agente faz em cada uma. As linhas apagadas por <code>decisão humana</code> são os pontos em que ele para e espera você.</p>' },
         { tipo: 'rode', id: 'ciclo-rode', titulo: 'Rode o ciclo', enunciado: 'Envie uma intenção ao agente. Clique numa etapa depois de rodar para ver só as linhas dela.',
           prefixo: 'Prompt', entrada: entrada, unidade: 'min', etapas: etapas(), terminalTitulo: 'agente',
+          prever: { pergunta: 'Nas seis etapas que vão rodar, quantas vezes o agente vai parar e esperar uma decisão sua?', opcoes: [
+            { id: 'nenhuma', texto: 'Nenhuma: ele roda do começo ao fim sozinho.', correta: false, porque: 'o ciclo existe para que você decida em pontos precisos.' },
+            { id: 'quatro', texto: 'Quatro: intenção, spec, plano e review.', correta: true, porque: 'cada uma dessas etapas termina numa linha de decisão humana; implementação e verificação rodam sem parar.' },
+            { id: 'seis', texto: 'Seis: uma parada por etapa.', correta: false, porque: 'implementação e verificação não pedem decisão: o teste e o make check respondem por elas.' }
+          ] },
           tutorAntes: 'Aperte Enter na caixa de prompt. Depois clique em uma etapa para destacar o que ela fez.',
           tutorDepois: 'Seis etapas, um arquivo por etapa. Em quatro delas o agente parou e esperou uma decisão sua: intenção, spec, plano e review.',
           callout: 'Ciclo completo: da intenção ao pull request, com um artefato por etapa.' },
@@ -130,6 +233,42 @@
           ], solucao: ['intent', 'spec', 'plan', 'commits', 'verif', 'pr'],
           dica: 'Pense em quando o código passa a existir.',
           tutorDepois: 'Três arquivos antes do código: dá para revisar a decisão enquanto ela ainda é barata.' },
+        { tipo: 'transcript', id: 'ciclo-transcript', titulo: 'Ache o erro na sessão', obrigatorio: false, terminalTitulo: 'sessão PROJ-482',
+          enunciado: 'Leia a sessão abaixo. Em uma das linhas, o agente afirma algo que a própria sessão não sustenta. Clique nela e aperte Conferir.',
+          linhas: [
+            { quem: 'voce', texto: 'Corrija o cálculo de frete para pedidos acima de R$ 500 (PROJ-482).' },
+            { quem: 'agente', texto: 'Li docs/specs/PROJ-482-frete.md. Vou começar pelo teste que falha.' },
+            { quem: 'ferramenta', texto: '$ make test\n1 failed: test_frete_acima_de_500' },
+            { quem: 'agente', texto: 'Corrigi src/frete/calculo.py e rodei de novo.' },
+            { quem: 'ferramenta', texto: '$ make test\n12 passed' },
+            { quem: 'agente', texto: 'Rodei o make check: ruff, mypy e docs estão verdes. Abrindo o PR.' },
+            { quem: 'ferramenta', texto: '$ gh pr create --title "PROJ-482: corrige frete acima de R$ 500"\npull request #231 aberto' }
+          ],
+          erradas: [5],
+          explicacao: { 5: 'nenhuma ferramenta rodou <code>make check</code> nesta sessão: a única execução é o <code>make test</code> da linha 5. O agente relatou uma verificação que não aconteceu, e relato não é evidência.' },
+          tutorDepois: 'Para cada afirmação do agente, procure a linha de ferramenta que a sustenta. Se não existe, é relato.' },
+        { tipo: 'cenario', id: 'ciclo-cenario', titulo: 'Sexta, 18h: a cert quebrou', obrigatorio: false,
+          enunciado: 'O PR #231 foi para cert e o smoke test falhou. Escolha o que fazer e veja o custo de cada decisão.',
+          inicio: 'inicio',
+          nos: {
+            inicio: { texto: 'Sexta, 18h. O deploy do PR #231 em cert quebrou o smoke test: o cadastro devolve erro 500. A QA testa em cert na segunda cedo. O que você faz primeiro?', opcoes: [
+              { texto: 'Corrigir rápido direto na main e subir de novo.', vai: 'f-palpite', tom: 'ruim', consequencia: 'sem teste que reproduza o erro, a correção é um palpite, e ela fura a esteira.' },
+              { texto: 'Reimplantar em cert o SHA anterior estável.', vai: 'depois', tom: 'ok', consequencia: 'cert volta a funcionar em minutos, sem recompilar nada.' },
+              { texto: 'Deixar quebrado e ver na segunda.', vai: 'f-parado', tom: 'ruim', consequencia: 'a QA perde a manhã de segunda sem ambiente.' }
+            ] },
+            depois: { texto: 'Cert está estável no SHA anterior e o smoke test passa. Agora, como tratar o erro do PR #231?', opcoes: [
+              { texto: 'Abrir um bug com o log do smoke test e reproduzir com um teste que falha antes de corrigir.', vai: 'f-bom', tom: 'ok', consequencia: 'a causa vira fato, e a correção sai em um PR novo.' },
+              { texto: 'Pedir ao agente: "corrija o que quebrou", sem reproduzir.', vai: 'f-palpite', tom: 'ruim', consequencia: 'o agente trata o sintoma que viu primeiro.' },
+              { texto: 'Descartar o PR inteiro e recomeçar.', vai: 'f-descarte', tom: 'ruim', consequencia: 'perde-se trabalho que provavelmente estava quase certo.' }
+            ] }
+          },
+          finais: {
+            'f-bom': { bom: true, texto: 'Cert estável, bug reproduzido por teste e correção em novo PR, pelo mesmo caminho da esteira.' },
+            'f-palpite': { bom: false, texto: 'A correção por palpite quebrou outra tela e cert caiu de novo.' },
+            'f-parado': { bom: false, texto: 'Cert ficou fora até segunda e a QA começou a semana atrasada.' },
+            'f-descarte': { bom: false, texto: 'O trabalho foi jogado fora e o mesmo erro reapareceu no refazer.' }
+          },
+          callout: 'Você restaurou cert primeiro e só depois diagnosticou, com um teste que falha.' },
         { tipo: 'texto', html: '<p>Fundamentos e variações do ciclo: <a href="../modulos/A01-sdlc-nativo-ia/A01.html">A01 · SDLC nativo em IA</a> e <a href="../modulos/M01-workflow-ia-driven/M01.html">M01 · Workflow IA-driven</a>.</p>' },
         { tipo: 'takeaway', html: 'Se o relato do agente e a <mark>evidência</mark> discordam, vale a <mark>evidência</mark>.' }
       ] }

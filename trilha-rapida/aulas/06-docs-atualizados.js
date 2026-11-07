@@ -44,6 +44,104 @@
     titulo: 'Documentação sempre atualizada',
     minutos: 18,
     resumo: 'Com agentes, doc velha deixa de ser incômodo e vira defeito operacional: o agente lê, confia e escreve código coerente com a doc errada. Aqui você a trata como parte do Done.',
+    revisao: [
+      {
+        "id": "drift-passou",
+        "pergunta": "O check de drift passou. O que isso mostra?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Que arquivos de documentação mudaram junto com o código; se dizem a verdade, a revisão confere",
+            "correta": true,
+            "porque": "o check é mecânico; quem confirma o conteúdo é uma pessoa."
+          },
+          {
+            "id": "b",
+            "texto": "Que a documentação está correta",
+            "correta": false,
+            "porque": "tocar no arquivo não prova que o texto ficou verdadeiro."
+          },
+          {
+            "id": "c",
+            "texto": "Que o PR pode dispensar revisão de docs",
+            "correta": false,
+            "porque": "o check reduz o esquecimento; ele não faz a leitura."
+          }
+        ]
+      },
+      {
+        "id": "regra-um-docs",
+        "pergunta": "Qual a regra 1 da documentação viva?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "O mesmo PR que muda o comportamento atualiza a documentação",
+            "correta": true,
+            "porque": "código e doc entram juntos ou não entram."
+          },
+          {
+            "id": "b",
+            "texto": "Atualizar a doc num PR de limpeza no fim da sprint",
+            "correta": false,
+            "porque": "no intervalo, o agente lê e segue a doc errada."
+          },
+          {
+            "id": "c",
+            "texto": "Atualizar só quando alguém reclamar",
+            "correta": false,
+            "porque": "doc errada vira instrução para o próximo agente."
+          }
+        ]
+      },
+      {
+        "id": "erro-repetido",
+        "pergunta": "O agente apagou a pasta <code>bin/</code> versionada duas vezes. Qual a correção mais forte?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Uma regra executável, como um hook ou um check",
+            "correta": true,
+            "porque": "erro repetido vira regra, de preferência uma que impeça."
+          },
+          {
+            "id": "b",
+            "texto": "Repetir o aviso no início de toda sessão",
+            "correta": false,
+            "porque": "texto pode ser ignorado e incha o AGENTS.md."
+          },
+          {
+            "id": "c",
+            "texto": "Trocar de modelo",
+            "correta": false,
+            "porque": "o erro é de ambiente e de regra, não necessariamente do modelo."
+          }
+        ]
+      },
+      {
+        "id": "atualizar-docs-limite",
+        "pergunta": "Por que o fechamento <code>/atualizar-docs</code> não basta sozinho?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Ele propõe a lista de afirmações que ficaram falsas; a revisão confirma que a nova versão é verdadeira",
+            "correta": true,
+            "porque": "o agente propõe, a revisão decide."
+          },
+          {
+            "id": "b",
+            "texto": "Porque ele nunca encontra nada",
+            "correta": false,
+            "porque": "ele costuma achar o óbvio; erra o conhecimento tácito."
+          },
+          {
+            "id": "c",
+            "texto": "Porque só funciona no Cursor",
+            "correta": false,
+            "porque": "o conteúdo mora uma vez no repositório e cada ferramenta ganha um ponteiro."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Entender', blocos: [
         { tipo: 'texto', html:

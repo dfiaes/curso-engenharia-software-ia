@@ -62,6 +62,104 @@
     titulo: 'Esteira dev, cert e prod',
     minutos: 20,
     resumo: 'A pipeline decide o que é "pronto" por regra, não por opinião. Você promove um artefato por três ambientes, vê um gate falhar e ensaia o rollback.',
+    revisao: [
+      {
+        "id": "artefato-imutavel",
+        "pergunta": "O que percorre dev, cert e prod?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "O mesmo artefato imutável, identificado pelo SHA",
+            "correta": true,
+            "porque": "o que foi testado em cert é o que roda em prod."
+          },
+          {
+            "id": "b",
+            "texto": "Um build novo por ambiente",
+            "correta": false,
+            "porque": "recompilar quebra a promessa de que o testado é o implantado."
+          },
+          {
+            "id": "c",
+            "texto": "A branch, recompilada no ambiente",
+            "correta": false,
+            "porque": "a branch muda; o SHA, não."
+          }
+        ]
+      },
+      {
+        "id": "rollback",
+        "pergunta": "Depois de um deploy ruim em prod, como voltar?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Reimplantar o SHA anterior estável, sem recompilar",
+            "correta": true,
+            "porque": "rollback é um deploy do artefato anterior, com o comando no runbook."
+          },
+          {
+            "id": "b",
+            "texto": "Reverter o código e rodar a pipeline inteira de novo",
+            "correta": false,
+            "porque": "é lento e gera um artefato novo, não o que já foi validado."
+          },
+          {
+            "id": "c",
+            "texto": "Corrigir em produção e seguir em frente",
+            "correta": false,
+            "porque": "sem ensaio, correção direta é esperança; o rollback é o caminho previsível."
+          }
+        ]
+      },
+      {
+        "id": "quem-aprova-prod",
+        "pergunta": "Quem aprova o deploy em prod?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Um humano autorizado, diferente do autor",
+            "correta": true,
+            "porque": "a autonomia do agente cresce com a distância da produção, não o contrário."
+          },
+          {
+            "id": "b",
+            "texto": "O agente, se o CI estiver verde",
+            "correta": false,
+            "porque": "CI verde é gate de regra; a aprovação em prod é decisão humana."
+          },
+          {
+            "id": "c",
+            "texto": "O autor da mudança, para ganhar tempo",
+            "correta": false,
+            "porque": "o environment bloqueia a autoaprovação por isso."
+          }
+        ]
+      },
+      {
+        "id": "azure-federado",
+        "pergunta": "Como autenticar o workflow no Azure sem guardar senha?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Credencial federada (workload identity): um token efêmero por execução, aceito só se repositório e environment casarem",
+            "correta": true,
+            "porque": "sem segredo de longa duração para vazar."
+          },
+          {
+            "id": "b",
+            "texto": "Guardar o service principal como segredo do GitHub",
+            "correta": false,
+            "porque": "a senha de longa duração é justamente o que a federação elimina."
+          },
+          {
+            "id": "c",
+            "texto": "Usar a conta pessoal de quem configurou",
+            "correta": false,
+            "porque": "credencial pessoal não tem escopo por ambiente e some com a pessoa."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Entender', blocos: [
         { tipo: 'texto', html:

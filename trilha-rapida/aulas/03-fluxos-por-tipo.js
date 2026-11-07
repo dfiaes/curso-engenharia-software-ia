@@ -60,6 +60,104 @@
     titulo: 'Fluxos por tipo de trabalho',
     minutos: 22,
     resumo: 'O ciclo é o mesmo, a proporção entre as etapas muda. Feature, bug, módulo grande e upgrade pedem prompts diferentes.',
+    revisao: [
+      {
+        "id": "bug-sem-spec",
+        "pergunta": "Num bug, o que ocupa o lugar da spec?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Um teste que falha pelo motivo do ticket",
+            "correta": true,
+            "porque": "sem teste que falha primeiro, não existe correção, existe palpite."
+          },
+          {
+            "id": "b",
+            "texto": "Uma descrição longa da causa provável",
+            "correta": false,
+            "porque": "a causa provável é hipótese; o teste que falha a transforma em fato."
+          },
+          {
+            "id": "c",
+            "texto": "Nada: bug é pequeno demais para etapas",
+            "correta": false,
+            "porque": "o ciclo encurta, mas o teste vermelho continua sendo a prova."
+          }
+        ]
+      },
+      {
+        "id": "esqueleto-andante",
+        "pergunta": "O que é o esqueleto andante num módulo grande?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "A primeira fatia, que atravessa todas as camadas com o mínimo e valida a premissa mais perigosa",
+            "correta": true,
+            "porque": "ela atrás de uma flag mostra cedo se o desenho se sustenta."
+          },
+          {
+            "id": "b",
+            "texto": "Um protótipo descartável, sem testes",
+            "correta": false,
+            "porque": "a fatia fica; ela é o começo do módulo, não um rascunho."
+          },
+          {
+            "id": "c",
+            "texto": "A documentação completa antes de qualquer código",
+            "correta": false,
+            "porque": "o esqueleto existe para validar com código o que a doc só supõe."
+          }
+        ]
+      },
+      {
+        "id": "upgrade-seguro",
+        "pergunta": "Qual abordagem é a mais segura para atualizar a versão de um framework?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Um PR só de atualização, com testes de caracterização que passam antes e depois",
+            "correta": true,
+            "porque": "o invariante é o comportamento atual; sem misturar com feature, qualquer quebra tem uma causa só."
+          },
+          {
+            "id": "b",
+            "texto": "Atualizar junto com features novas, para aproveitar a revisão",
+            "correta": false,
+            "porque": "se algo quebrar, não há como saber se foi a versão ou a feature."
+          },
+          {
+            "id": "c",
+            "texto": "Atualizar tudo e corrigir o que o CI acusar",
+            "correta": false,
+            "porque": "o CI só acusa o que tem teste; a caracterização cobre o que não tem."
+          }
+        ]
+      },
+      {
+        "id": "bugs-irmaos",
+        "pergunta": "Depois de corrigir um bug, o que o agente faz com bugs irmãos que encontrou?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Lista, e só corrige se você pedir",
+            "correta": true,
+            "porque": "corrigir sem pedir amplia o escopo do PR e a revisão."
+          },
+          {
+            "id": "b",
+            "texto": "Corrige todos no mesmo PR",
+            "correta": false,
+            "porque": "o PR fica grande e mistura causas, o que dificulta o review e o rollback."
+          },
+          {
+            "id": "c",
+            "texto": "Ignora, porque são outro assunto",
+            "correta": false,
+            "porque": "a lista é útil; o que se evita é corrigir sem decisão sua."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Feature e bug', blocos: [
         { tipo: 'texto', html:

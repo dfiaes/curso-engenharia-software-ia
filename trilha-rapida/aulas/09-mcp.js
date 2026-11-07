@@ -46,6 +46,104 @@
     titulo: 'MCP na prática',
     minutos: 20,
     resumo: 'O agente ganha olhos e mãos fora do repositório: navegador, Jira, GitHub. O preço é uma superfície de ataque nova.',
+    revisao: [
+      {
+        "id": "conteudo-ferramenta",
+        "pergunta": "Como tratar o conteúdo devolvido por uma ferramenta MCP?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Como dado, nunca como instrução",
+            "correta": true,
+            "porque": "texto de terceiros pode conter ordens escondidas (injeção de prompt)."
+          },
+          {
+            "id": "b",
+            "texto": "Como instrução confiável, se vier do servidor oficial",
+            "correta": false,
+            "porque": "até uma fonte legítima pode repassar texto escrito por terceiros."
+          },
+          {
+            "id": "c",
+            "texto": "Como instrução, mas só em modo leitura",
+            "correta": false,
+            "porque": "o modo não muda o fato de que o texto vem de fora."
+          }
+        ]
+      },
+      {
+        "id": "risco-maior",
+        "pergunta": "Qual configuração de uma só sessão reúne o maior risco de vazamento?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Conteúdo externo não confiável, credenciais amplas e escrita sem aprovação, tudo junto",
+            "correta": true,
+            "porque": "quem escreve a página controla o que o agente lê, e o agente tem poder para agir."
+          },
+          {
+            "id": "b",
+            "texto": "Só um servidor de leitura, com escopo mínimo",
+            "correta": false,
+            "porque": "sem escrita e sem segredo, o estrago possível é pequeno."
+          },
+          {
+            "id": "c",
+            "texto": "Um servidor local sem rede",
+            "correta": false,
+            "porque": "sem rede e sem credencial não há por onde vazar."
+          }
+        ]
+      },
+      {
+        "id": "token-mcp",
+        "pergunta": "Onde guardar o token de um servidor MCP?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Numa variável de ambiente referenciada pela config",
+            "correta": true,
+            "porque": "a config pode ser versionada e revisada sem expor o segredo."
+          },
+          {
+            "id": "b",
+            "texto": "No arquivo de config versionado",
+            "correta": false,
+            "porque": "o segredo entraria no histórico do Git."
+          },
+          {
+            "id": "c",
+            "texto": "No AGENTS.md, para o agente achar",
+            "correta": false,
+            "porque": "o agente não precisa ver o valor, só usar a variável."
+          }
+        ]
+      },
+      {
+        "id": "transporte",
+        "pergunta": "Um navegador na sua máquina e um Jira da empresa: qual transporte para cada um?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Processo local (stdio) para o navegador; HTTP remoto com credencial mínima para o Jira",
+            "correta": true,
+            "porque": "o servidor local roda ao lado do agente; o Jira é um serviço remoto."
+          },
+          {
+            "id": "b",
+            "texto": "HTTP remoto para o navegador e stdio para o Jira",
+            "correta": false,
+            "porque": "o navegador precisa estar na sua máquina; o Jira é remoto por natureza."
+          },
+          {
+            "id": "c",
+            "texto": "Stdio para os dois",
+            "correta": false,
+            "porque": "um serviço remoto não roda como processo local seu."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Arquitetura e riscos', blocos: [
         T('<p>Até aqui o agente só enxerga o repositório e o terminal. Com <strong>MCP</strong> (Model Context Protocol) ele ganha olhos e mãos em outros sistemas: abre a sua aplicação num navegador, lê a história no Jira, consulta o GitHub. Dois ganhos para o ciclo: <strong>fecha o laço de verificação</strong> (o agente confere a UI em vez de supor) e <strong>elimina o copia-e-cola</strong> de tickets.</p>' +

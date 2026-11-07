@@ -56,6 +56,104 @@
     titulo: 'Avaliar skills e escolher modelo',
     minutos: 25,
     resumo: 'Duas decisões caras, "essa skill ainda ajuda?" e "o modelo barato dá conta?", respondidas do mesmo jeito: tarefas reais, várias repetições e números.',
+    revisao: [
+      {
+        "id": "caso-bom",
+        "pergunta": "O que faz um bom caso de avaliação?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Tarefa real com critério verificável por máquina, incluindo bordas e casos negativos",
+            "correta": true,
+            "porque": "sem critério automático, a avaliação vira opinião."
+          },
+          {
+            "id": "b",
+            "texto": "Uma tarefa de brinquedo que o modelo sempre resolve",
+            "correta": false,
+            "porque": "não separa os modelos nem as skills."
+          },
+          {
+            "id": "c",
+            "texto": "Uma tarefa avaliada por impressão do revisor",
+            "correta": false,
+            "porque": "impressão varia de dia para dia."
+          }
+        ]
+      },
+      {
+        "id": "pass-k",
+        "pergunta": "O que o pass^k mede, diferente do pass@1?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "A chance de passar em todas as k repetições, ou seja, a consistência",
+            "correta": true,
+            "porque": "para uso repetido, uma falha ocasional já custa."
+          },
+          {
+            "id": "b",
+            "texto": "A chance de passar em pelo menos uma das k tentativas",
+            "correta": false,
+            "porque": "isso é o pass@k."
+          },
+          {
+            "id": "c",
+            "texto": "A média de tokens por tentativa",
+            "correta": false,
+            "porque": "custo é outra métrica."
+          }
+        ]
+      },
+      {
+        "id": "mcnemar",
+        "pergunta": "McNemar com p = 0,25 em 8 casos. O que concluir?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Que não há evidência suficiente de diferença, o que não prova equivalência",
+            "correta": true,
+            "porque": "com poucos casos o teste quase não detecta diferença."
+          },
+          {
+            "id": "b",
+            "texto": "Que os modelos são equivalentes",
+            "correta": false,
+            "porque": "falta de evidência não é evidência de igualdade."
+          },
+          {
+            "id": "c",
+            "texto": "Que o modelo grande é melhor, porque ganhou 3 a 0",
+            "correta": false,
+            "porque": "p = 0,25 não sustenta a afirmação."
+          }
+        ]
+      },
+      {
+        "id": "regra-antes",
+        "pergunta": "Quando escrever a regra de decisão da avaliação?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Antes de ver o resultado",
+            "correta": true,
+            "porque": "depois do resultado, a regra tende a se ajustar ao que se queria."
+          },
+          {
+            "id": "b",
+            "texto": "Depois, olhando os números",
+            "correta": false,
+            "porque": "fica fácil escolher o corte que favorece a opinião prévia."
+          },
+          {
+            "id": "c",
+            "texto": "Não escrever: decidir caso a caso",
+            "correta": false,
+            "porque": "sem regra, ninguém discorda de ninguém com base em fatos."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Montar a avaliação', blocos: [
         { tipo: 'texto', html:

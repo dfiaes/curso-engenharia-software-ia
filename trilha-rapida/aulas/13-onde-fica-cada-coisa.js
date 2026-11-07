@@ -15,6 +15,80 @@
     titulo: 'Onde fica cada coisa',
     minutos: 10,
     resumo: 'Os conceitos são os mesmos em todas as ferramentas. Só o endereço muda: instruções, comandos, skills, hooks, MCP e subagentes em cada uma.',
+    revisao: [
+      {
+        "id": "regra-todas",
+        "pergunta": "Cursor e Claude Code no mesmo time. Onde escrever a regra \"não alterar <code>deploy.yml</code>\"?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Uma vez no repositório; cada ferramenta só ganha um ponteiro",
+            "correta": true,
+            "porque": "escreva uma vez, aponte várias."
+          },
+          {
+            "id": "b",
+            "texto": "Uma cópia em cada ferramenta, editadas à mão",
+            "correta": false,
+            "porque": "as cópias divergem."
+          },
+          {
+            "id": "c",
+            "texto": "Só na ferramenta que você mais usa",
+            "correta": false,
+            "porque": "o resto do time fica sem a regra."
+          }
+        ]
+      },
+      {
+        "id": "claude-le",
+        "pergunta": "Qual arquivo de instruções o Claude Code lê?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "O <code>CLAUDE.md</code>, que apenas importa o <code>AGENTS.md</code>",
+            "correta": true,
+            "porque": "o conteúdo fica num lugar só."
+          },
+          {
+            "id": "b",
+            "texto": "Só o AGENTS.md, diretamente",
+            "correta": false,
+            "porque": "Codex e OpenCode leem o AGENTS.md direto; o Claude Code lê o CLAUDE.md."
+          },
+          {
+            "id": "c",
+            "texto": "Só o .cursor/rules",
+            "correta": false,
+            "porque": "é a pasta de regras do Cursor."
+          }
+        ]
+      },
+      {
+        "id": "muda-fica",
+        "pergunta": "Ao trocar de ferramenta, o que muda e o que fica?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Os conceitos ficam; muda o endereço, ou seja, pastas e nomes de arquivo",
+            "correta": true,
+            "porque": "instruções, comandos, skills, hooks, MCP e subagentes existem em todas."
+          },
+          {
+            "id": "b",
+            "texto": "Os conceitos mudam; os endereços são os mesmos",
+            "correta": false,
+            "porque": "é o contrário."
+          },
+          {
+            "id": "c",
+            "texto": "Tudo muda, é preciso reaprender",
+            "correta": false,
+            "porque": "os conceitos se transferem."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Mapa por ferramenta', blocos: [
         { tipo: 'texto', html:

@@ -56,6 +56,104 @@
     titulo: 'Elephant e goldfish: revisar o design antes do código',
     minutos: 15,
     resumo: 'A IA acelera o código e também os erros. O método elephant-goldfish revisa o design com agentes sem memória, antes de qualquer linha escrita.',
+    revisao: [
+      {
+        "id": "quem-e-elephant",
+        "pergunta": "No método, quem é o elephant?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "A sessão que lembra e decide o design com você",
+            "correta": true,
+            "porque": "ele guarda o contexto; os goldfish o revisam sem ele."
+          },
+          {
+            "id": "b",
+            "texto": "O revisor sem memória que lê só o documento",
+            "correta": false,
+            "porque": "esse é o goldfish."
+          },
+          {
+            "id": "c",
+            "texto": "O agente que implementa o código",
+            "correta": false,
+            "porque": "o método revisa o design antes de qualquer implementação."
+          }
+        ]
+      },
+      {
+        "id": "goldfish-esquece",
+        "pergunta": "Por que o goldfish esquece de propósito?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Sem contexto herdado ele expõe o que o documento não diz",
+            "correta": true,
+            "porque": "o que está só na sua cabeça aparece como pergunta ou erro."
+          },
+          {
+            "id": "b",
+            "texto": "Para gastar menos tokens",
+            "correta": false,
+            "porque": "o motivo é achar lacunas, não economizar."
+          },
+          {
+            "id": "c",
+            "texto": "Porque é um modelo menor",
+            "correta": false,
+            "porque": "o que importa é a ausência de contexto, não o tamanho."
+          }
+        ]
+      },
+      {
+        "id": "resumo-errado",
+        "pergunta": "No comprehension check, o goldfish devolve um resumo errado do plano. O que isso indica?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Que o documento está ambíguo ou incompleto, e o texto precisa mudar",
+            "correta": true,
+            "porque": "se um leitor sem contexto entende errado, outro leitor também pode."
+          },
+          {
+            "id": "b",
+            "texto": "Que o goldfish é fraco e deve ser trocado",
+            "correta": false,
+            "porque": "o erro dele é o dado que você queria."
+          },
+          {
+            "id": "c",
+            "texto": "Que o plano está certo e o goldfish não sabe ler",
+            "correta": false,
+            "porque": "o plano só é claro se alguém sem contexto o entende."
+          }
+        ]
+      },
+      {
+        "id": "quando-revisar",
+        "pergunta": "Quando fazer a revisão elephant-goldfish?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Antes de qualquer linha de código, sobre o design e a spec",
+            "correta": true,
+            "porque": "corrigir uma premissa no papel custa pouco; no código, custa um PR."
+          },
+          {
+            "id": "b",
+            "texto": "Depois do merge, como auditoria",
+            "correta": false,
+            "porque": "a revisão serve para evitar o erro, não para descobri-lo em produção."
+          },
+          {
+            "id": "c",
+            "texto": "Só quando o PR for grande",
+            "correta": false,
+            "porque": "o método vale para o design que dá origem ao PR."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Entender', blocos: [
         { tipo: 'texto', html:

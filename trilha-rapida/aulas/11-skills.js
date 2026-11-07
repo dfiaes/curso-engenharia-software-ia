@@ -53,6 +53,104 @@
     titulo: 'Skills na prática',
     minutos: 25,
     resumo: 'Uma pasta com SKILL.md que o agente carrega quando a tarefa casa com a descrição: conhecimento longo e scripts sem inchar toda sessão. E como adotar skills da comunidade sem rodar código às cegas.',
+    revisao: [
+      {
+        "id": "lombada",
+        "pergunta": "O que fica carregado em toda sessão de uma skill?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Só o nome e a descrição; o corpo entra quando a tarefa casa",
+            "correta": true,
+            "porque": "é por isso que skill não incha o contexto."
+          },
+          {
+            "id": "b",
+            "texto": "O SKILL.md inteiro, com os scripts",
+            "correta": false,
+            "porque": "isso é o que as instruções persistentes fazem; skill adia o carregamento."
+          },
+          {
+            "id": "c",
+            "texto": "Nada: a skill só roda se você chamar",
+            "correta": false,
+            "porque": "é comando que você inicia; a skill é escolhida pelo agente."
+          }
+        ]
+      },
+      {
+        "id": "regra-sempre",
+        "pergunta": "Uma regra deve valer sempre, para qualquer agente. Onde ela mora?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Num hook, porque skill ensina e hook impede",
+            "correta": true,
+            "porque": "o que não pode acontecer não mora em texto."
+          },
+          {
+            "id": "b",
+            "texto": "Numa skill bem descrita",
+            "correta": false,
+            "porque": "o agente decide se a carrega e se a segue."
+          },
+          {
+            "id": "c",
+            "texto": "No README, para o time ler",
+            "correta": false,
+            "porque": "o agente não é obrigado por um README."
+          }
+        ]
+      },
+      {
+        "id": "medir-skill",
+        "pergunta": "Por que medir uma skill popular antes de adotar?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Estrelas não dizem se ela ajuda no seu repositório, e ela é código de terceiros com as suas permissões",
+            "correta": true,
+            "porque": "leia, fixe a versão e meça antes de confiar."
+          },
+          {
+            "id": "b",
+            "texto": "Porque skills populares costumam ser pagas",
+            "correta": false,
+            "porque": "popularidade não implica custo."
+          },
+          {
+            "id": "c",
+            "texto": "Para ter certeza de que ela é open source",
+            "correta": false,
+            "porque": "a licença é só uma parte; o risco é o que ela executa."
+          }
+        ]
+      },
+      {
+        "id": "fonte-skills",
+        "pergunta": "Onde fica a fonte única das skills do time?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Em <code>.agents/skills/</code>; só o Claude Code precisa de cópia em <code>.claude/skills/</code>",
+            "correta": true,
+            "porque": "uma fonte, uma cópia onde a ferramenta exige."
+          },
+          {
+            "id": "b",
+            "texto": "Em uma pasta por ferramenta, mantidas à mão",
+            "correta": false,
+            "porque": "as pastas divergem com o tempo."
+          },
+          {
+            "id": "c",
+            "texto": "No diretório do usuário, fora do repositório",
+            "correta": false,
+            "porque": "o time não vê nem revisa; a skill deixa de ser do projeto."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Entender', blocos: [
         { tipo: 'texto', html:

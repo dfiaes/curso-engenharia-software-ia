@@ -9,6 +9,80 @@
     titulo: 'Cartão de bolso',
     minutos: 6,
     resumo: 'O ciclo inteiro em blocos curtos para colar ao lado do monitor: antes, durante, PR, deploy e troca de modelo.',
+    revisao: [
+      {
+        "id": "proxima-sessao",
+        "pergunta": "A sessão acabou e o agente \"esqueceu\" tudo. O que garante a continuidade?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Artefatos no repositório: intenção, spec, plano e notas",
+            "correta": true,
+            "porque": "o agente não lembra entre sessões; o repositório lembra por ele."
+          },
+          {
+            "id": "b",
+            "texto": "A memória da conversa anterior, ainda aberta",
+            "correta": false,
+            "porque": "a conversa fechou com a sessão."
+          },
+          {
+            "id": "c",
+            "texto": "Pedir que ele tente lembrar",
+            "correta": false,
+            "porque": "ele não tem como; só lê o que está escrito."
+          }
+        ]
+      },
+      {
+        "id": "antes-codar",
+        "pergunta": "O que deve existir antes de começar a codar?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Ticket, spec e plano",
+            "correta": true,
+            "porque": "as decisões baratas ficam antes do código caro."
+          },
+          {
+            "id": "b",
+            "texto": "Só o ticket aberto",
+            "correta": false,
+            "porque": "o ticket diz o que, a spec diz como saber que está pronto."
+          },
+          {
+            "id": "c",
+            "texto": "O código de um protótipo",
+            "correta": false,
+            "porque": "o protótipo antecipa o que a spec deveria decidir."
+          }
+        ]
+      },
+      {
+        "id": "antes-merge",
+        "pergunta": "O que deve existir antes do merge?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Evidência e revisão",
+            "correta": true,
+            "porque": "evidência é saída que você lê; revisão é de quem não escreveu."
+          },
+          {
+            "id": "b",
+            "texto": "O relato de que está tudo passando",
+            "correta": false,
+            "porque": "relato não é evidência."
+          },
+          {
+            "id": "c",
+            "texto": "A aprovação do próprio agente",
+            "correta": false,
+            "porque": "nenhum agente aprova."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Do ticket ao PR', blocos: [
         { tipo: 'texto', html:

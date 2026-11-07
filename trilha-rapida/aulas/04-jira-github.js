@@ -7,6 +7,104 @@
     titulo: 'Jira e GitHub juntos',
     minutos: 16,
     resumo: 'Dois sistemas guardam verdades diferentes. A chave do ticket os liga, o repositório guarda o que muda com o código.',
+    revisao: [
+      {
+        "id": "onde-criterios",
+        "pergunta": "Onde moram os critérios de aceite?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "No repositório, em <code>docs/specs</code>, com resumo e link no Jira",
+            "correta": true,
+            "porque": "o que muda junto com o código mora no repositório."
+          },
+          {
+            "id": "b",
+            "texto": "Só no Jira, onde o time já olha",
+            "correta": false,
+            "porque": "o agente lê o repositório; o Jira vira uma segunda versão que se afasta."
+          },
+          {
+            "id": "c",
+            "texto": "Copiados nos dois lugares",
+            "correta": false,
+            "porque": "dois textos iguais hoje viram dois textos diferentes em semanas."
+          }
+        ]
+      },
+      {
+        "id": "quem-transiciona",
+        "pergunta": "Quem move o ticket para \"Em revisão\" e \"Aguardando cert\"?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "As automações do Jira e da esteira",
+            "correta": true,
+            "porque": "o agente comenta e abre o PR; o estado do fluxo é da automação."
+          },
+          {
+            "id": "b",
+            "texto": "O agente, ao terminar o trabalho",
+            "correta": false,
+            "porque": "o agente nunca fecha o próprio trabalho."
+          },
+          {
+            "id": "c",
+            "texto": "Quem escreveu o código, manualmente",
+            "correta": false,
+            "porque": "a automação evita esquecimento e deixa o estado confiável."
+          }
+        ]
+      },
+      {
+        "id": "credencial-jira",
+        "pergunta": "Que credencial dar ao agente para o Jira?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Uma conta de serviço de menor privilégio: lê e comenta, sem transicionar para Done",
+            "correta": true,
+            "porque": "escopo mínimo limita o estrago se algo der errado."
+          },
+          {
+            "id": "b",
+            "texto": "Um token de administrador, para ele mover tudo",
+            "correta": false,
+            "porque": "poder demais amplia o dano de um erro ou de uma injeção de prompt."
+          },
+          {
+            "id": "c",
+            "texto": "Nenhuma: o agente nunca toca no Jira",
+            "correta": false,
+            "porque": "colar o texto do ticket é válido, mas há o caminho com MCP de escopo mínimo."
+          }
+        ]
+      },
+      {
+        "id": "vinculo-minimo",
+        "pergunta": "Qual o vínculo mínimo entre Jira e repositório?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "A chave do ticket em branch, commit e título do PR",
+            "correta": true,
+            "porque": "com ela, o Jira mostra branches, commits, PRs e deploys na história."
+          },
+          {
+            "id": "b",
+            "texto": "Um link manual colado no ticket ao fim",
+            "correta": false,
+            "porque": "manual se esquece; a chave obrigatória por check não."
+          },
+          {
+            "id": "c",
+            "texto": "Cópia dos critérios nos dois sistemas",
+            "correta": false,
+            "porque": "a cópia diverge; o vínculo é a chave, não o conteúdo."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Quem guarda o quê', blocos: [
         { tipo: 'texto', html:

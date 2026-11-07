@@ -54,6 +54,104 @@
     titulo: 'Preparar o repositório',
     minutos: 18,
     resumo: 'O agente rende o que o ambiente deixa. Uma preparação feita uma vez, que serve a todas as ferramentas, num projeto novo ou herdado.',
+    revisao: [
+      {
+        "id": "make-check",
+        "pergunta": "Qual o papel do <code>make check</code> num repositório preparado?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Ser o mesmo alvo chamado por humano, agente, pre-commit e CI, para \"passou aqui\" e \"passou no CI\" significarem o mesmo",
+            "correta": true,
+            "porque": "um comando só elimina a diferença entre máquinas e ferramentas."
+          },
+          {
+            "id": "b",
+            "texto": "Rodar só os testes rápidos da sua máquina",
+            "correta": false,
+            "porque": "se o alvo local difere do CI, as duas frases voltam a significar coisas diferentes."
+          },
+          {
+            "id": "c",
+            "texto": "Substituir a revisão do PR",
+            "correta": false,
+            "porque": "ele verifica regras escritas; a decisão continua sendo de uma pessoa."
+          }
+        ]
+      },
+      {
+        "id": "legado-primeiro",
+        "pergunta": "Num sistema legado sem testes, qual o primeiro pedido ao agente?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Uma sessão em modo leitura que documenta o sistema, antes de qualquer alteração",
+            "correta": true,
+            "porque": "entender e cercar antes de mudar; ele só grava depois do seu \"aprovado\"."
+          },
+          {
+            "id": "b",
+            "texto": "Corrigir o bug mais urgente",
+            "correta": false,
+            "porque": "sem rede de testes e sem entender o sistema, a correção é um palpite."
+          },
+          {
+            "id": "c",
+            "texto": "Refatorar para facilitar os testes",
+            "correta": false,
+            "porque": "mudar a estrutura sem proteção é o erro caro dos sistemas herdados."
+          }
+        ]
+      },
+      {
+        "id": "main-servidor",
+        "pergunta": "Por que proteger a main no servidor, se já existe hook local?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Hook local pode ser pulado com <code>--no-verify</code>; só a checagem obrigatória no servidor é garantia",
+            "correta": true,
+            "porque": "regra que o servidor não exige é sugestão."
+          },
+          {
+            "id": "b",
+            "texto": "Porque hooks não funcionam com agentes",
+            "correta": false,
+            "porque": "funcionam, mas dependem de quem os roda; o servidor não depende."
+          },
+          {
+            "id": "c",
+            "texto": "Para deixar o CI mais rápido",
+            "correta": false,
+            "porque": "o objetivo é garantia, não velocidade."
+          }
+        ]
+      },
+      {
+        "id": "fonte-unica",
+        "pergunta": "Onde ficam as instruções que valem para todas as ferramentas?",
+        "opcoes": [
+          {
+            "id": "a",
+            "texto": "Em um <code>AGENTS.md</code> na raiz; <code>CLAUDE.md</code> e regras do Cursor apontam para ele",
+            "correta": true,
+            "porque": "uma edição, todas as ferramentas."
+          },
+          {
+            "id": "b",
+            "texto": "Um arquivo por ferramenta, mantidos em paralelo",
+            "correta": false,
+            "porque": "em semanas os arquivos divergem e o agente lê o que está velho."
+          },
+          {
+            "id": "c",
+            "texto": "No prompt inicial de cada sessão",
+            "correta": false,
+            "porque": "o que depende de colar o texto toda vez não é persistente."
+          }
+        ]
+      }
+    ],
     abas: [
       { rotulo: 'Projeto novo', blocos: [
         { tipo: 'texto', html:
