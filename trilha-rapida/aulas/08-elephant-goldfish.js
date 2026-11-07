@@ -137,9 +137,6 @@
             { tipo: 'codigo', linguagem: 'bash', texto: 'codex plugin marketplace add google/elephant-goldfish-model\ncodex plugin add egm@egm' }] },
           { rotulo: 'Antigravity', blocos: [
             { tipo: 'codigo', linguagem: 'bash', texto: 'agy plugin install https://github.com/google/elephant-goldfish-model' }] },
-          { rotulo: 'Cursor †', blocos: [{ tipo: 'texto', html: '<p>O repositório traz manifests e adaptadores, mas o suporte e a instalação estão descritos em <code>docs/harnesses.md</code> †. Confira lá antes de contar com ele.</p>' }] },
-          { rotulo: 'OpenCode †', blocos: [{ tipo: 'texto', html: '<p>O repositório traz manifests e adaptadores, mas o suporte e a instalação estão descritos em <code>docs/harnesses.md</code> †. Confira lá antes de contar com ele.</p>' }] },
-          { rotulo: 'Gemini e Copilot †', blocos: [{ tipo: 'texto', html: '<p>O repositório traz manifests e adaptadores, mas o suporte e a instalação estão descritos em <code>docs/harnesses.md</code> †. Confira lá antes de contar com ele.</p>' }] },
           { rotulo: 'Sem plugin', blocos: [
             { tipo: 'texto', html:
               '<p>O método é uma ideia, não uma dependência. Dá para fazer o mesmo com qualquer agente que abra uma sessão nova ou um subagente. Duas peças.</p>' +
@@ -149,6 +146,7 @@
             { tipo: 'codigo', linguagem: 'markdown', texto: 'Você é um revisor sem contexto. Leia SOMENTE docs/designs/<ticket>-<slug>.md.\n1. Resuma o plano em cinco linhas. Se não conseguir, diga o que está ambíguo.\n2. Liste premissas não declaradas, casos de borda e dependências ocultas.\n3. Confira se os caminhos, estruturas e assinaturas citados existem no repositório.\n4. Termine com GO ou NO-GO e a lista de achados. Não proponha código.' },
             { tipo: 'texto', html: '<p class="ta-nota">Regra de ouro do goldfish: nunca reaproveite a sessão do elephant como revisora. Se não for possível criar um contexto novo, a revisão não vale.</p>' }] }
         ] },
+        { tipo: 'texto', html: '<p><strong>Cursor, Gemini, Copilot e OpenCode †:</strong> o repositório traz manifests e adaptadores, mas o suporte e a instalação de cada um estão descritos em <code>docs/harnesses.md</code> †. Confira lá antes de contar com eles.</p>' },
         { tipo: 'texto', html:
           '<h3>Onde isso entra no nosso ciclo</h3>' +
           '<p>O EGM cobre as etapas do começo do ciclo e a revisão no fim, as mesmas que a aula <strong>O mapa do ciclo</strong> mostra:</p>' +

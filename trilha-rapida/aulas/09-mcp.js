@@ -214,7 +214,7 @@
               '  }',
               '}')),
             T('<p class="ta-nota">Expansão <code>${VAR}</code> e <code>${VAR:-padrão}</code> funciona em <code>command</code>, <code>args</code>, <code>env</code>, <code>url</code> e <code>headers</code>. Servidores de projeto pedem aprovação antes do primeiro uso.</p>')] },
-          { rotulo: 'Agente próprio', blocos: [
+          { rotulo: 'Seu agente', blocos: [
             T('<p>Com o SDK Python do MCP (<code>pip install mcp</code>) o seu loop vira um cliente: inicia o servidor por stdio, lista as tools e repassa a chamada do modelo. Cliente mínimo:</p>'),
             C('python', cod(
               'import asyncio',
