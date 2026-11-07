@@ -100,9 +100,9 @@
           { rotulo: 'Cursor', blocos: [{ tipo: 'texto', html: 'Copie para <code>.cursor/commands/atualizar-docs.md</code> e chame <code>/atualizar-docs</code> no chat.' }] },
           { rotulo: 'Codex', blocos: [{ tipo: 'texto', html: 'Sem pasta de comandos de projeto: use uma skill (<code>.agents/skills</code>, chamada por <code>$atualizar-docs</code>) ou cole o conteúdo de <code>prompts/atualizar-docs.md</code> na sessão. Os prompts personalizados em <code>~/.codex/prompts/</code> estão obsoletos.' }] },
           { rotulo: 'OpenCode', blocos: [{ tipo: 'texto', html: 'Copie para <code>.opencode/commands/atualizar-docs.md</code> e chame <code>/atualizar-docs</code>.' }] },
-          { rotulo: 'Claude Code', blocos: [{ tipo: 'texto', html: 'Copie para <code>.claude/commands/atualizar-docs.md</code> (ou crie a skill equivalente) e chame <code>/atualizar-docs</code>.' }] },
-          { rotulo: 'Agente próprio', blocos: [{ tipo: 'texto', html: 'Carregue <code>prompts/atualizar-docs.md</code> como mensagem de sistema ou de usuário no passo final do seu loop, com o diff e a lista de arquivos de doc como entrada.' }] }
+          { rotulo: 'Claude Code', blocos: [{ tipo: 'texto', html: 'Copie para <code>.claude/commands/atualizar-docs.md</code> (ou crie a skill equivalente) e chame <code>/atualizar-docs</code>.' }] }
         ] },
+        { tipo: 'texto', html: '<p><strong>Agente próprio:</strong> carregue <code>prompts/atualizar-docs.md</code> como mensagem no passo final do seu loop, com o diff e a lista de arquivos de doc como entrada.</p>' },
         { tipo: 'texto', html:
           '<h3>Regra 2: ADR para decisões caras de reverter</h3>' +
           '<p>Crie <strong>ADR</strong> (registro de decisão de arquitetura) quando a decisão (a) é estrutural (banco, fila, fronteira de serviço, biblioteca central), (b) tem alternativas reais, ou (c) alguém perguntará "por que fizemos assim?" daqui a um ano. Formato curto: contexto, opções com prós e contras, decisão, consequências. O agente rascunha; o humano decide e assina. ADR aceito nunca é editado: ele é <em>substituído</em> por outro que o referencia (<code>Status: substituída por ADR-014</code>). Aprofunde no <a href="../modulos/M04-design-docs-com-ia/M04.html">M04</a>.</p>' +

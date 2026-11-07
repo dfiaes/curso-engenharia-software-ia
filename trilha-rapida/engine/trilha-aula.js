@@ -30,6 +30,7 @@
   function reduzido() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
   function Html(p) { return h(p.tag || 'div', { className: p.className, dangerouslySetInnerHTML: { __html: p.html || '' } }); }
   function semAinda(t) { return String(t || '').replace(/^\s*Ainda não:\s*/i, ''); }
+  function cap(t) { t = String(t || ''); return t.replace(/^(\s*(?:<[^>]+>\s*)*)([a-zà-ú])/, function (m, a, b) { return a + b.toUpperCase(); }); }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function useStore(init) {
     var s = useState(0), ref = useRef(init);
@@ -306,7 +307,7 @@
           type: 'button', className: 'ta-opt', disabled: !!S.certa || errada, 'data-estado': certa ? 'certa' : errada ? 'errada' : undefined, onClick: function () { pick(o); }
         }, h('span', { className: 'ta-opt-letra', 'aria-hidden': true }, String.fromCharCode(65 + i)),
           h('span', { className: 'ta-opt-corpo' }, h(Html, { tag: 'span', html: o.texto }),
-            (S.certa || errada) && o.porque && h(Html, { tag: 'span', className: 'ta-opt-porque', html: (certa ? 'Correta. ' : 'Ainda não: ') + semAinda(o.porque) })),
+            (S.certa || errada) && o.porque && h(Html, { tag: 'span', className: 'ta-opt-porque', html: (certa ? 'Correta. ' + cap(semAinda(o.porque)) : 'Ainda não: ' + semAinda(o.porque)) })),
           (certa || errada) && h(Badge, { tone: certa ? 'brand' : 'highlight' }, certa ? 'Correta' : 'Ainda não')));
       })),
       h(TutorLive, { tutor: tutor }));
