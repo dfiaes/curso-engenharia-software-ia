@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diário de IA e engenharia</title>
+<meta name="description" content="Edições diárias sobre IA e engenharia de software, em calendário, com busca, filtro por tag e módulos do curso sinalizados.">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="stylesheet" href="../assets/trilha/tokens.css">
+<link rel="stylesheet" href="../assets/trilha/bundle.css">
+<link rel="stylesheet" href="diario.css">
+</head>
+<body class="tr-root">
+<div id="raiz"></div>
+<noscript><p class="dr-wrap">O calendário precisa de JavaScript. As edições estão em <code>diario/edicoes/</code>.</p></noscript>
+<script src="../assets/trilha/vendor/react.production.min.js"></script>
+<script src="../assets/trilha/vendor/react-dom.production.min.js"></script>
+<script src="../assets/trilha/bundle.js"></script>
+<script src="indice.js"></script>
+<script>
+(function () {
+  var h = React.createElement, useState = React.useState, useMemo = React.useMemo;
+  var T = window.Trilha, D = window.DIARIO || { edicoes: [], semanas: [], tags: [] };
+  var LABEL = { "mercado": "Mercado", "modelos": "Modelos", "ferramentas-dev": "Ferramentas dev", "llm-local": "LLM local",
+    "engenharia": "Engenharia", "seguranca": "Segurança", "regulacao": "Regulação", "pesquisa": "Pesquisa", "open-source": "Open source", "cloud": "Cloud" };
+  var MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  var DOW = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"];
+  function lab(t) { return LABEL[t] || t; }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function iso(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
+  function longDate(s) { var p = s.split("-"); return Number(p[2]) + " de " + MESES[Number(p[1]) - 1] + " de " + p[0]; }
+  function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+  var now = new Date(), TODAY = iso(now.getFullYear(), now.getMonth(), now.getDate());
+
+  function Dot(p) { return h("span", { className: "dr-dot dr-dot-" + p.tag, "aria-hidden": "true" }); }
+  function TagBadge(p) { return h("span", { className: "tr-badge dr-tag dr-tag-" + p.tag }, h("span", { className: "dr-dot", "aria-hidden": "true" }), lab(p.tag)); }
+
+  function Item(p) {
+    var e = p.e;
+    return h("li", { className: "dr-item" }, h("a", { href: "../" + e.url },
+      h("span", { className: "dr-it-date" }, longDate(e.data)),
+      h("span", { className: "dr-it-title" }, e.titulo),
+      h("span", { className: "dr-it-sum" }, e.resumo),
+      h("span", { className: "dr-it-tags" }, e.tags.map(function (t) { return h(TagBadge, { key: t, tag: t }); }))));
+  }
+
+  function Calendar(p) {
+    var y = p.view.y, m = p.view.m;
+    var first = new Date(y, m, 1), lead = (first.getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+    var cells = [];
+    for (var i = 0; i < lead; i++) cells.push(h("span", { key: "e" + i, className: "dr-day is-empty", "aria-hidden": "true" }));
+    for (var d = 1; d <= days; d++) {
+      (function (d) {
+        var k = iso(y, m, d), e = p.byDate[k], cls = "dr-day" + (e ? " has-ed" : "") + (k === TODAY ? " is-today" : "");
+        var inner = [h("span", { key: "n", className: "dr-num" }, d)];
+        if (e) inner.push(h("span", { key: "d", className: "dr-dots" }, e.tags.map(function (t) { return h(Dot, { key: t, tag: t }); })));
+        var label = d + " de " + MESES[m] + (k === TODAY ? ", hoje" : "") + (e ? ": " + e.titulo + " (" + e.tags.map(lab).join(", ") + ")" : ": sem edição");
+        cells.push(e
+          ? h("button", { key: k, type: "button", className: cls, "aria-label": label, "aria-pressed": p.selected === k, onClick: function () { p.onPick(k); } }, inner)
+          : h("span", { key: k, className: cls, "aria-label": label }, inner));
+      })(d);
+    }
+    return h("div", null,
+      h("div", { className: "dr-cal", role: "group", "aria-label": "Calendário de " + MESES[m] + " de " + y },
+        DOW.map(function (w) { return h("span", { key: w, className: "dr-wd" }, w); }), cells));
+  }
+
+  function App() {
+    var latest = D.edicoes[0];
+    var startKey = latest && TODAY.slice(0, 7) !== latest.data.slice(0, 7) && !D.edicoes.some(function (e) { return e.data.slice(0, 7) === TODAY.slice(0, 7); }) ? latest.data : TODAY;
+    var sv = startKey.split("-");
+    var st = useState({ y: Number(sv[0]), m: Number(sv[1]) - 1 }), view = st[0], setView = st[1];
+    var sel = useState(latest ? latest.data : null), selected = sel[0], setSelected = sel[1];
+    var q = useState(""), query = q[0], setQuery = q[1];
+    var tg = useState(null), tag = tg[0], setTag = tg[1];
+
+    var filtered = useMemo(function () {
+      var nq = norm(query).trim();
+      return D.edicoes.filter(function (e) {
+        if (tag && e.tags.indexOf(tag) < 0) return false;
+        if (!nq) return true;
+        return norm([e.titulo, e.resumo, e.tags.map(lab).join(" "), e.modulos_afetados.map(function (m) { return m.modulo + " " + m.motivo; }).join(" ")].join(" ")).indexOf(nq) >= 0;
+      });
+    }, [query, tag]);
+    var byDate = {}; filtered.forEach(function (e) { byDate[e.data] = e; });
+    var usedTags = D.tags.filter(function (t) { return D.edicoes.some(function (e) { return e.tags.indexOf(t) >= 0; }); });
+    var sels = byDate[selected];
+    var mods = {}; D.edicoes.forEach(function (e) { e.modulos_afetados.forEach(function (m) { (mods[m.modulo] = mods[m.modulo] || []).push(e.data); }); });
+    var modKeys = Object.keys(mods).sort();
+
+    function move(delta) { var d = new Date(view.y, view.m + delta, 1); setView({ y: d.getFullYear(), m: d.getMonth() }); }
+    function pick(k) { setSelected(k); }
+    var filtering = query.trim() || tag;
+
+    return h("div", null,
+      h("header", { className: "dr-top" }, h("div", { className: "dr-wrap dr-top-in" },
+        h("a", { className: "dr-link", href: "../index.html" }, "← Portal do curso"),
+        h("span", { className: "dr-top-title" }, "Diário de IA e engenharia"),
+        h("button", { type: "button", className: "dr-theme", onClick: toggleTheme, "aria-label": "Alternar tema claro e escuro" }, "Tema"))),
+      h("main", { className: "dr-wrap" },
+        h("div", { className: "dr-hero" },
+          h("h1", null, "Diário de IA e engenharia"),
+          h("p", { className: "dr-muted" }, "Uma edição por dia, escrita por um agente às 7h (Bahia) a partir de fontes listadas. Confira antes de agir.")),
+        h("div", { className: "dr-grid" },
+          h("div", { className: "dr-col" },
+            h(T.Card, { className: "dr-card", variant: "raised" },
+              h("div", { className: "dr-cal-head" },
+                h(T.Button, { variant: "gray", size: "sm", onClick: function () { move(-1); }, "aria-label": "Mês anterior" }, "←"),
+                h("h2", { "aria-live": "polite" }, MESES[view.m] + " de " + view.y),
+                h(T.Button, { variant: "gray", size: "sm", onClick: function () { move(1); }, "aria-label": "Próximo mês" }, "→")),
+              h(Calendar, { view: view, byDate: byDate, selected: selected, onPick: pick }),
+              h("ul", { className: "dr-legend", "aria-label": "Legenda das tags" },
+                usedTags.map(function (t) { return h("li", { key: t }, h(Dot, { tag: t }), lab(t)); })),
+              sels && h("div", { className: "dr-selected" },
+                h("p", { className: "dr-it-date" }, longDate(sels.data)),
+                h("p", { style: { margin: "0 0 4px" } }, h("a", { className: "dr-it-title", href: "../" + sels.url }, sels.titulo)),
+                h("p", { className: "dr-it-sum", style: { margin: "0 0 8px" } }, sels.resumo),
+                h("div", { className: "dr-it-tags" }, sels.tags.map(function (t) { return h(TagBadge, { key: t, tag: t }); })),
+                h("p", { style: { margin: "8px 0 0" } }, h("a", { className: "dr-link", href: "../" + sels.url }, "Ler a edição →")))),
+            h(T.Card, { className: "dr-card", variant: "raised" },
+              h("h2", null, "Últimas edições"),
+              h("div", { className: "dr-tools" },
+                h("input", { className: "dr-search", type: "search", placeholder: "Buscar por texto, módulo ou tag", value: query, "aria-label": "Buscar nas edições", onChange: function (e) { setQuery(e.target.value); } }),
+                h("div", { className: "dr-chips", role: "group", "aria-label": "Filtrar por tag" },
+                  usedTags.map(function (t) {
+                    return h("button", { key: t, type: "button", className: "dr-chip", "aria-pressed": tag === t, onClick: function () { setTag(tag === t ? null : t); } }, h(Dot, { tag: t }), lab(t));
+                  }))),
+              filtered.length
+                ? h("ul", { className: "dr-list" }, filtered.slice(0, filtering ? 50 : 10).map(function (e) { return h(Item, { key: e.data, e: e }); }))
+                : h("p", { className: "dr-empty" }, D.edicoes.length ? "Nenhuma edição com esse filtro." : "Ainda não há edições."))),
+          h("div", { className: "dr-col" },
+            h(T.Card, { className: "dr-card", variant: "raised" },
+              h("h2", null, "Módulos do curso sinalizados"),
+              modKeys.length
+                ? h("div", null, modKeys.map(function (k) {
+                    return h("p", { key: k, className: "dr-mod", style: { margin: "0 0 6px" } }, h("b", null, k), h("span", null, mods[k].length + (mods[k].length === 1 ? " edição" : " edições")));
+                  }))
+                : h("p", { className: "dr-empty" }, "Nenhum módulo sinalizado."),
+              h("p", { className: "dr-muted" }, "O diário só sinaliza; a revisão mensal decide o que editar."),
+              h("a", { className: "dr-link", href: "fila-revisao-mensal.html" }, "Abrir a fila de revisão mensal →")),
+            h(T.Card, { className: "dr-card", variant: "raised" },
+              h("h2", null, "Resumos semanais"),
+              D.semanas.length
+                ? h("ul", { className: "dr-list" }, D.semanas.slice(0, 8).map(function (w) {
+                    return h("li", { key: w.semana, className: "dr-item" }, h("a", { href: "../" + w.url },
+                      h("span", { className: "dr-it-date" }, w.semana + (w.periodo ? " · " + w.periodo : "")),
+                      h("span", { className: "dr-it-title" }, w.titulo),
+                      h("span", { className: "dr-it-sum" }, w.resumo)));
+                  }))
+                : h("p", { className: "dr-empty" }, "O primeiro resumo sai no próximo domingo.")),
+            h(T.Card, { className: "dr-card", variant: "raised" },
+              h("h2", null, "Sobre"),
+              h("p", { className: "dr-muted", style: { margin: 0 } }, "Compilação gerada por IA, com fonte em cada item; material de comunidade (HN, Reddit, X) vem rotulado. Instruções do agente em ",
+                h("a", { href: "https://github.com/dfiaes/curso-engenharia-software-ia/blob/main/diario/README.md" }, "diario/README.md"), ".")))))
+    );
+  }
+
+  function toggleTheme() {
+    var cur = document.documentElement.dataset.theme;
+    if (!cur) cur = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    var next = cur === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("curso.theme", next); } catch (e) { /* sem storage */ }
+  }
+
+  ReactDOM.createRoot(document.getElementById("raiz")).render(h(App));
+})();
+</script>
+</body>
+</html>

@@ -34,6 +34,7 @@
     $("featured").innerHTML = cont
       + card("trilha-rapida/TR.html", "Trilha rápida", "Trilha rápida: desenvolvimento com agentes", "Caminho curto para trabalhar com agentes de código antes de percorrer o currículo completo.")
       + card(docHref("docs/nivelamento.md"), "Nivelamento", "Nivelamento", "Descubra por onde começar de acordo com a sua experiência.")
+      + card("diario/index.html", "Diário", "Diário de IA e engenharia", "Uma edição por dia sobre o que mudou em IA e engenharia, em calendário, com os módulos do curso sinalizados.")
       + card(docHref("kit/README.md"), "Kit", "Kit de arranque", "Modelos agnósticos para copiar no seu projeto: AGENTS.md, intent/spec/plan, hooks e esteira dev → cert → prod.");
   }
 
