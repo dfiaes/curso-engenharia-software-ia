@@ -213,9 +213,10 @@
               '    "atlassian":  { "type": "http", "url": "https://mcp.atlassian.com/v2/mcp" }',
               '  }',
               '}')),
-            T('<p class="ta-nota">Expansão <code>${VAR}</code> e <code>${VAR:-padrão}</code> funciona em <code>command</code>, <code>args</code>, <code>env</code>, <code>url</code> e <code>headers</code>. Servidores de projeto pedem aprovação antes do primeiro uso.</p>')] },
-          { rotulo: 'Seu agente', blocos: [
-            T('<p>Com o SDK Python do MCP (<code>pip install mcp</code>) o seu loop vira um cliente: inicia o servidor por stdio, lista as tools e repassa a chamada do modelo. Cliente mínimo:</p>'),
+            T('<p class="ta-nota">Expansão <code>${VAR}</code> e <code>${VAR:-padrão}</code> funciona em <code>command</code>, <code>args</code>, <code>env</code>, <code>url</code> e <code>headers</code>. Servidores de projeto pedem aprovação antes do primeiro uso.</p>')] }
+        ] },
+        T('<h3>Agente próprio</h3>'),
+T('<p>Com o SDK Python do MCP (<code>pip install mcp</code>) o seu loop vira um cliente: inicia o servidor por stdio, lista as tools e repassa a chamada do modelo. Cliente mínimo:</p>'),
             C('python', cod(
               'import asyncio',
               'from mcp import ClientSession, StdioServerParameters',
@@ -234,8 +235,7 @@
               '            print(resultado.content)',
               '',
               'asyncio.run(main())')),
-            T('<p class="ta-nota">A API do SDK evoluiu com as versões do protocolo; confira as assinaturas na documentação do SDK instalado †. No seu loop, a camada de política decide <em>antes</em> de cada <code>call_tool</code> (allowlist de nomes, aprovação humana nas escritas) e a saída da tool entra no contexto como dado.</p>')] }
-        ] },
+            T('<p class="ta-nota">A API do SDK evoluiu com as versões do protocolo; confira as assinaturas na documentação do SDK instalado †. No seu loop, a camada de política decide <em>antes</em> de cada <code>call_tool</code> (allowlist de nomes, aprovação humana nas escritas) e a saída da tool entra no contexto como dado.</p>'),
         { tipo: 'escolha', id: 'mcp-escolha-sobe', titulo: 'Confira: o servidor não sobe',
           pergunta: 'A tool <code>browser_navigate</code> do Playwright MCP existe no seu agente, mas o servidor não sobe quando o time clona o projeto. Qual a primeira investigação?',
           opcoes: [
