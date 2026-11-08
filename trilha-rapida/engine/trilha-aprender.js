@@ -90,9 +90,37 @@
     return o;
   }
   function gravarSrs(o) { gravarJson(SRS_KEY, o); avisar(); }
+  /* Pseudo-aula "diario": itens vêm de window.DIARIO_REVISAO (gerado por tools/build_diario.py; opcional). */
+  var DIARIO_MAX_DIA = 3, DIARIO_JANELA = 30;
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function diarioLista() { var d = window.DIARIO_REVISAO; return Array.isArray(d) ? d : []; }
+  function dataBr(iso) { var a = String(iso || '').split('-'); return a.length === 3 ? a[2] + '/' + a[1] : ''; }
+  function diarioItem(id) {
+    var d = diarioLista().filter(function (x) { return x && x.id === id && Array.isArray(x.opcoes) && x.opcoes.length; })[0];
+    if (!d) return null;
+    return {
+      id: d.id, pergunta: esc(d.pergunta), diario: { data: d.data, url: d.url },
+      opcoes: d.opcoes.map(function (o, i) { return { id: String.fromCharCode(97 + i), texto: esc(o.texto), correta: !!o.correta, porque: o.correta ? esc(d.porque) : '' }; })
+    };
+  }
   function itemDe(aulaId, id) {
+    if (aulaId === 'diario') return diarioItem(id);
     var a = I.aula(aulaId); if (!a || !a.revisao) return null;
     return a.revisao.filter(function (x) { return x.id === id; })[0] || null;
+  }
+  // Matrícula automática: últimos 30 dias, só itens novos, no máximo 3 por dia (contador em diarioMatriculaEm/diarioMatriculaN).
+  function diarioMatricular() {
+    var lista = diarioLista(); if (!lista.length) return;
+    var srs = lerSrs(), hj = hoje(), corte = somarDias(hj, -DIARIO_JANELA);
+    var n = srs.diarioMatriculaEm === hj ? (+srs.diarioMatriculaN || 0) : 0, mudou = false;
+    lista.filter(function (d) { return d && d.id && d.data >= corte && d.data <= hj && !srs.itens['diario:' + d.id] && diarioItem(d.id); })
+      .sort(function (a, b) { return a.data < b.data ? 1 : a.data > b.data ? -1 : (a.id < b.id ? -1 : 1); })
+      .forEach(function (d) {
+        if (n >= DIARIO_MAX_DIA) return;
+        srs.itens['diario:' + d.id] = { aula: 'diario', id: d.id, caixa: 1, prox: hj, ultima: null };
+        n++; mudou = true;
+      });
+    if (mudou) { srs.diarioMatriculaEm = hj; srs.diarioMatriculaN = n; gravarSrs(srs); }
   }
   function matricular(aulaId) {
     var a = I.aula(aulaId); if (!a || !a.revisao || !a.revisao.length) return;
@@ -117,6 +145,7 @@
     var arr = Object.keys(srs.itens).map(function (k) { return srs.itens[k]; }).filter(function (it) {
       if (it.prox > hj) return false;
       if (estrito) return !!itemDe(it.aula, it.id);
+      if (it.aula === 'diario') return !!itemDe(it.aula, it.id);
       return !I.aula(it.aula) || !!itemDe(it.aula, it.id);
     });
     arr.sort(function (a, b) { return a.prox < b.prox ? -1 : a.prox > b.prox ? 1 : 0; });
@@ -148,9 +177,10 @@
   function total() { return Object.keys(lerSrs().itens).length; }
   // API pequena para o portal mostrar o card "Revisão do dia" depois (não depende das aulas carregadas).
   window.CursoRevisao = {
-    pendentes: pendentes, registrar: registrar, total: total, sequencia: sequencia, calibracao: resumoCalibracao,
+    diarioMatricular: diarioMatricular, pendentes: pendentes, registrar: registrar, total: total, sequencia: sequencia, calibracao: resumoCalibracao,
     intervalos: INTERVALOS.slice()
   };
+  diarioMatricular();
   TA._aprender = {
     Confianca: Confianca, CalibracaoPainel: CalibracaoPainel, registrarCalibracao: registrarCalibracao, matricular: matricular,
     pendentesResolvidos: pendentesResolvidos, RevisaoDia: RevisaoDia
@@ -170,11 +200,12 @@
   function montarFila(refs) {
     return refs.map(function (r) {
       var it = itemDe(r.aula, r.id);
-      return { aula: r.aula, id: r.id, caixa: r.caixa, pergunta: it.pergunta, opcoes: embaralhar(it.opcoes || []) };
+      return { aula: r.aula, id: r.id, caixa: r.caixa, pergunta: it.pergunta, diario: it.diario, opcoes: embaralhar(it.opcoes || []) };
     });
   }
   function RevisaoDia(p) {
     var s = useState(function () {
+      diarioMatricular();
       var refs = pendentesResolvidos(10);
       return refs.length ? { fase: 'perguntando', fila: montarFila(refs), i: 0, sel: null, conf: null, res: null, resultados: [], treino: false } : { fase: 'vazio', fila: [], i: 0, resultados: [], treino: false };
     }), S = s[0];
@@ -211,7 +242,7 @@
     if (S.fase === 'fim') {
       var ok = S.resultados.filter(function (r) { return r.acertou; }).length;
       var erradas = S.resultados.filter(function (r) { return !r.acertou; }), aulasErr = [];
-      erradas.forEach(function (r) { if (aulasErr.indexOf(r.aula) < 0) aulasErr.push(r.aula); });
+      erradas.forEach(function (r) { if (r.aula !== 'diario' && aulasErr.indexOf(r.aula) < 0) aulasErr.push(r.aula); });
       return h('div', { className: 'ta-blocos' },
         h(Card, { variant: 'panel', title: S.treino ? 'Treino concluído' : 'Revisão concluída' },
           h('div', { className: 'ta-preparo' },
@@ -224,11 +255,17 @@
         h(CalibracaoPainel));
     }
     var q = S.fila[S.i], r = S.res;
-    var tutor = r ? { tom: r.acertou ? 'success' : 'danger', lead: r.acertou ? 'Certo.' : 'Ainda não:', html: (r.acertou ? r.opcao.porque : semAinda(r.opcao.porque) + ' <br>Correta: ' + q.opcoes.filter(function (x) { return x.correta; }).map(function (x) { return x.texto; }).join(' ') +
-      ' ' + (q.opcoes.filter(function (x) { return x.correta; })[0] || {}).porque) } : { tom: 'neutral', html: 'Escolha uma resposta, diga o quanto confia nela e aperte Conferir.' };
+    var tutor = r ? { tom: r.acertou ? 'success' : 'danger', lead: r.acertou ? 'Certo.' : 'Ainda não:', html: (function () {
+      var c = q.opcoes.filter(function (x) { return x.correta; })[0] || {};
+      if (r.acertou) return r.opcao.porque || '';
+      var pq = semAinda(r.opcao.porque || '');
+      var fim = function (t) { t = String(t || '').trim(); return t && !/[.!?]$/.test(t.replace(/<[^>]+>/g, '')) ? t + '.' : t; };
+      return (pq ? fim(pq) + ' <br>' : '') + 'A correta é: ' + fim(c.texto) + (c.porque ? ' ' + fim(c.porque) : '');
+    })() } : { tom: 'neutral', html: 'Escolha uma resposta, diga o quanto confia nela e aperte Conferir.' };
+    if (r && q.diario && q.diario.url) tutor.html += ' <br><a href="../' + esc(q.diario.url) + '">Ler a edição de ' + dataBr(q.diario.data) + '</a>';
     var proxTxt = r ? (r.reg.treino ? 'Treino: a caixa não muda.' : (r.acertou ? 'Sobe para a caixa ' + r.reg.caixa : 'Volta para a caixa 1') + ' · revisão de novo em ' + r.reg.intervalo + ' ' + plural(r.reg.intervalo, 'dia', 'dias') + '.') : '';
     return h('div', { className: 'ta-blocos' },
-      h(Card, { variant: 'panel', className: 'ta-panel', title: h('span', { className: 'ta-ptitle' }, S.treino ? 'Treino livre' : 'Revisão do dia', h(Badge, { tone: 'brand' }, 'Pergunta ' + (S.i + 1) + ' de ' + S.fila.length), h(Badge, null, I.tituloDe(q.aula))) },
+      h(Card, { variant: 'panel', className: 'ta-panel', title: h('span', { className: 'ta-ptitle' }, S.treino ? 'Treino livre' : 'Revisão do dia', h(Badge, { tone: 'brand' }, 'Pergunta ' + (S.i + 1) + ' de ' + S.fila.length), h(Badge, null, q.diario ? 'Diário · ' + dataBr(q.diario.data) : I.tituloDe(q.aula))) },
         h('p', { className: 'ta-pergunta' }, h(Html, { tag: 'span', html: q.pergunta })),
         h('ul', { className: 'ta-opts' }, q.opcoes.map(function (o, i) {
           var sel = S.sel === o.id, estado = r ? (o.correta ? 'certa' : (sel ? 'errada' : undefined)) : (sel ? 'sel' : undefined);

@@ -24,6 +24,14 @@
     return `<li><a class="p-card${hl ? " p-hl" : ""}" href="${esc(href)}"><span class="p-code">${esc(code)}</span><h3>${esc(title)}</h3><p>${esc(desc)}</p>${extra || ""}</a></li>`;
   }
 
+  function revisaoCard() {
+    let r = { n: 0, seq: 0 };
+    try { if (window.RevisaoCard) r = window.RevisaoCard.resumo(); } catch (e) { /* sem dados */ }
+    const desc = r.n > 0 ? `${r.n} ${r.n === 1 ? "item" : "itens"} para hoje` : "Nada vencido hoje. Novas perguntas entram quando você conclui uma aula da Trilha rápida.";
+    const extra = `<span class="p-small">Sequência: ${r.seq} ${r.seq === 1 ? "dia" : "dias"}</span>`;
+    return card("trilha-rapida/TR.html#revisao", "Revisão", "Revisão do dia", desc, extra, r.n > 0);
+  }
+
   function featured() {
     const next = P.nextBlock(M, state);
     const started = Object.keys(state.blocks).length > 0 || state.lastVisited;
@@ -34,6 +42,7 @@
     $("featured").innerHTML = cont
       + card("trilha-rapida/TR.html", "Trilha rápida", "Trilha rápida: desenvolvimento com agentes", "Caminho curto para trabalhar com agentes de código antes de percorrer o currículo completo.")
       + card(docHref("docs/nivelamento.md"), "Nivelamento", "Nivelamento", "Descubra por onde começar de acordo com a sua experiência.")
+      + revisaoCard()
       + card("diario/index.html", "Diário", "Diário de IA e engenharia", "Uma edição por dia sobre o que mudou em IA e engenharia, em calendário, com os módulos do curso sinalizados.")
       + card(docHref("kit/README.md"), "Kit", "Kit de arranque", "Modelos agnósticos para copiar no seu projeto: AGENTS.md, intent/spec/plan, hooks e esteira dev → cert → prod.");
   }
