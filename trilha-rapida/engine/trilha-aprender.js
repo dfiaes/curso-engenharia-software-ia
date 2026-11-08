@@ -50,7 +50,7 @@
     if (c.n >= 3 && c.taxa < 0.8) {
       var cont = {};
       cal.forEach(function (x) { if (x.confianca === 'certeza' && !x.acertou && x.aula) cont[x.aula] = (cont[x.aula] || 0) + 1; });
-      var top = Object.keys(cont).sort(function (a, b) { return cont[b] - cont[a]; }).slice(0, 2).map(function (id) { return '“' + I.tituloDe(id) + '”'; });
+      var top = Object.keys(cont).sort(function (a, b) { return cont[b] - cont[a]; }).slice(0, 2).map(function (id) { return '“' + tituloAula(id) + '”'; });
       return 'Quando você tem certeza, acerta ' + pct(c.taxa) + (top.length ? ': revise ' + top.join(' e ') + '.' : ': desconfie das respostas em que você sentiu certeza e errou.');
     }
     if (ch.n >= 3 && ch.taxa >= 0.6) return 'Seus chutes acertam ' + pct(ch.taxa) + ': você sabe mais do que imagina.';
@@ -105,8 +105,17 @@
   }
   function itemDe(aulaId, id) {
     if (aulaId === 'diario') return diarioItem(id);
-    var a = I.aula(aulaId); if (!a || !a.revisao) return null;
-    return a.revisao.filter(function (x) { return x.id === id; })[0] || null;
+    var a = I.aula(aulaId);
+    var vivo = a && a.revisao ? a.revisao.filter(function (x) { return x.id === id; })[0] : null;
+    if (vivo) return vivo;
+    // Aula de outro módulo (não carregada nesta página): usa a cópia gravada na matrícula.
+    var sv = (lerSrs().itens[aulaId + ':' + id] || {}).q;
+    return sv && sv.pergunta && Array.isArray(sv.opcoes) ? sv : null;
+  }
+  function tituloAula(aulaId) {
+    if (I.aula(aulaId)) return I.tituloDe(aulaId);
+    var its = lerSrs().itens, k = Object.keys(its).filter(function (x) { return its[x].aula === aulaId && its[x].t; })[0];
+    return k ? its[k].t : I.tituloDe(aulaId);
   }
   // Matrícula automática: últimos 30 dias, só itens novos, no máximo 3 por dia (contador em diarioMatriculaEm/diarioMatriculaN).
   function diarioMatricular() {
@@ -127,7 +136,9 @@
     var srs = lerSrs(), mudou = false;
     a.revisao.forEach(function (it) {
       var k = aulaId + ':' + it.id;
-      if (!srs.itens[k]) { srs.itens[k] = { aula: aulaId, id: it.id, caixa: 1, prox: somarDias(hoje(), INTERVALOS[0]), ultima: null }; mudou = true; }
+      var q = { pergunta: it.pergunta, opcoes: it.opcoes };
+      if (!srs.itens[k]) { srs.itens[k] = { aula: aulaId, id: it.id, caixa: 1, prox: somarDias(hoje(), INTERVALOS[0]), ultima: null, t: a.titulo, q: q }; mudou = true; }
+      else if (JSON.stringify(srs.itens[k].q) !== JSON.stringify(q) || srs.itens[k].t !== a.titulo) { srs.itens[k].q = q; srs.itens[k].t = a.titulo; mudou = true; }
     });
     if (mudou) gravarSrs(srs);
   }
@@ -249,7 +260,7 @@
             h('p', { style: { margin: 0 } }, 'Você acertou ', h('strong', null, ok + ' de ' + S.resultados.length), '.',
               S.treino ? ' Treino livre: as caixas não mudaram.' : ''),
             aulasErr.length > 0 && h('div', null, h('span', { className: 'ta-field-label' }, 'Para rever'),
-              h('ul', { className: 'ta-rever' }, aulasErr.map(function (id) { return h('li', { key: id }, h('a', { href: '#aula=' + encodeURIComponent(id) + '&aba=1' }, I.tituloDe(id))); }))),
+              h('ul', { className: 'ta-rever' }, aulasErr.map(function (id) { return h('li', { key: id }, I.aula(id) ? h('a', { href: '#aula=' + encodeURIComponent(id) + '&aba=1' }, tituloAula(id)) : tituloAula(id)); }))),
             blocoSeq,
             h('div', { className: 'ta-acoes' }, h(Button, { variant: 'gray', onClick: p.onSair }, 'Voltar às aulas')))),
         h(CalibracaoPainel));
@@ -262,10 +273,10 @@
       var fim = function (t) { t = String(t || '').trim(); return t && !/[.!?]$/.test(t.replace(/<[^>]+>/g, '')) ? t + '.' : t; };
       return (pq ? fim(pq) + ' <br>' : '') + 'A correta é: ' + fim(c.texto) + (c.porque ? ' ' + fim(c.porque) : '');
     })() } : { tom: 'neutral', html: 'Escolha uma resposta, diga o quanto confia nela e aperte Conferir.' };
-    if (r && q.diario && q.diario.url) tutor.html += ' <br><a href="../' + esc(q.diario.url) + '">Ler a edição de ' + dataBr(q.diario.data) + '</a>';
+    if (r && q.diario && q.diario.url) tutor.html += ' <br><a href="' + I.raiz() + esc(q.diario.url) + '">Ler a edição de ' + dataBr(q.diario.data) + '</a>';
     var proxTxt = r ? (r.reg.treino ? 'Treino: a caixa não muda.' : (r.acertou ? 'Sobe para a caixa ' + r.reg.caixa : 'Volta para a caixa 1') + ' · revisão de novo em ' + r.reg.intervalo + ' ' + plural(r.reg.intervalo, 'dia', 'dias') + '.') : '';
     return h('div', { className: 'ta-blocos' },
-      h(Card, { variant: 'panel', className: 'ta-panel', title: h('span', { className: 'ta-ptitle' }, S.treino ? 'Treino livre' : 'Revisão do dia', h(Badge, { tone: 'brand' }, 'Pergunta ' + (S.i + 1) + ' de ' + S.fila.length), h(Badge, null, q.diario ? 'Diário · ' + dataBr(q.diario.data) : I.tituloDe(q.aula))) },
+      h(Card, { variant: 'panel', className: 'ta-panel', title: h('span', { className: 'ta-ptitle' }, S.treino ? 'Treino livre' : 'Revisão do dia', h(Badge, { tone: 'brand' }, 'Pergunta ' + (S.i + 1) + ' de ' + S.fila.length), h(Badge, null, q.diario ? 'Diário · ' + dataBr(q.diario.data) : tituloAula(q.aula))) },
         h('p', { className: 'ta-pergunta' }, h(Html, { tag: 'span', html: q.pergunta })),
         h('ul', { className: 'ta-opts' }, q.opcoes.map(function (o, i) {
           var sel = S.sel === o.id, estado = r ? (o.correta ? 'certa' : (sel ? 'errada' : undefined)) : (sel ? 'sel' : undefined);

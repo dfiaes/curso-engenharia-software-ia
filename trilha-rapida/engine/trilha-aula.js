@@ -5,8 +5,8 @@
   var useState = React.useState, useRef = React.useRef, useEffect = React.useEffect;
   var Button = T.Button, Badge = T.Badge, Card = T.Card, Callout = T.Callout, Tutor = T.TutorBubble;
 
-  var KEY = 'trilha.tr.v1';
-  var TEXTO = 'TR-texto.html';
+  /* Configuração do curso/módulo. Padrão = Trilha rápida; outro módulo chama TrilhaAula.curso({...}) antes de registrar as aulas. */
+  var C = { chave: 'trilha.tr.v1', nome: 'Trilha rápida', subtitulo: 'Desenvolvimento com agentes', texto: 'TR-texto.html', portal: '../index.html', contexto: 'da Trilha rápida (desenvolvimento com agentes)', unidade: 'trilha', raiz: '../' };
   var registry = {}, order = [];
   var ALIAS = {
     'passo-0': 'mapa-do-ciclo', 'passo-1': 'preparar-repositorio', 'passo-2': 'fluxos-por-tipo', 'passo-3': 'jira-github',
@@ -62,10 +62,10 @@
 
   /* ---------- armazenamento (sempre em try/catch) ---------- */
   function lerStore() {
-    try { var o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && typeof o === 'object' && o.aulas) return o; } catch (e) {}
+    try { var o = JSON.parse(localStorage.getItem(C.chave) || 'null'); if (o && typeof o === 'object' && o.aulas) return o; } catch (e) {}
     return { v: 1, atual: null, aulas: {} };
   }
-  function gravarStore(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  function gravarStore(s) { try { localStorage.setItem(C.chave, JSON.stringify(s)); } catch (e) {} }
   function aulaSt(s, id) { return (s.aulas && s.aulas[id]) || { aba: 0, feitos: {}, concluida: false }; }
 
   /* ---------- rotas ---------- */
@@ -107,6 +107,13 @@
     },
     ordem: function (ids) { order = ids.slice(); },
     config: function (c) { Object.assign(CFG, c || {}); },
+    curso: function (c) {
+      c = c || {};
+      ['chave', 'nome', 'subtitulo', 'texto', 'portal', 'contexto', 'unidade', 'raiz'].forEach(function (k) { if (c[k] !== undefined) C[k] = c[k]; });
+      if (c.contexto === undefined && c.nome) C.contexto = 'do módulo ' + c.nome + (c.subtitulo ? ' (' + c.subtitulo + ')' : '');
+      if (c.alias || c.passo) { ALIAS = c.alias || {}; PASSO = Object.assign({}, c.passo || {}); Object.keys(ALIAS).forEach(function (k) { if (!PASSO[ALIAS[k]]) PASSO[ALIAS[k]] = k; }); }
+      if (c.titulos) TITULOS = c.titulos;
+    },
     _estender: function (tipo, comp) { EXT[tipo] = comp; },
     _aprender: null,
     montar: function (sel) {
@@ -116,6 +123,7 @@
   };
   window.TrilhaAula = TrilhaAula;
   TrilhaAula._i = {
+    raiz: function () { return C.raiz; },
     h: h, T: T, Html: Html, Painel: Painel, TutorLive: TutorLive, semAinda: semAinda, cap: cap, clamp: clamp, copiar: copiarTexto,
     useStore: useStore, useTimers: useTimers, reduzido: reduzido, tituloDe: tituloDe, promptTutor: promptTutor, lembrarTrabalho: lembrarTrabalho,
     aula: function (id) { return registry[id] || null; }, aulas: function () { return registry; }, ordemIds: function () { return order.slice(); }
@@ -132,7 +140,7 @@
     var L = [];
     L.push('Você é um tutor socrático. Responda em português do Brasil, com frases curtas.');
     L.push('');
-    L.push('Contexto: aula "' + o.aula + '", aba "' + o.aba + '" da Trilha rápida (desenvolvimento com agentes).');
+    L.push('Contexto: aula "' + o.aula + '", aba "' + o.aba + '" ' + C.contexto + '.');
     if (o.objetivo) L.push('Objetivo da aula: ' + textoPuro(o.objetivo));
     if (o.extra) { L.push(''); L.push(o.extra); }
     if (o.aluno && o.aluno.texto) {
@@ -629,9 +637,9 @@
     useEffect(function () {
       mut(function (n) { n.atual = { aula: cur.aula, aba: aba }; n.aulas[cur.aula] = Object.assign({ aba: 0, feitos: {}, concluida: false }, n.aulas[cur.aula], { aba: aba }); });
       window.scrollTo(0, 0); ds[1](false); copiado[1](null);
-      document.title = (aula ? aula.titulo : 'Em preparo') + ' · Trilha rápida';
+      document.title = (aula ? aula.titulo : 'Em preparo') + ' · ' + C.nome;
     }, [cur.aula, aba]);
-    useEffect(function () { if (emRevisao) { window.scrollTo(0, 0); ds[1](false); document.title = 'Revisão do dia · Trilha rápida'; } }, [emRevisao]);
+    useEffect(function () { if (emRevisao) { window.scrollTo(0, 0); ds[1](false); document.title = 'Revisão do dia · ' + C.nome; } }, [emRevisao]);
     // Aulas já concluídas entram na revisão espaçada (idempotente).
     useEffect(function () {
       var A = AP(); if (!A) return;
@@ -666,7 +674,7 @@
       ir(cur.aula, i);
     }
     var feitasN = ids.filter(function (id) { return aulaSt(store, id).concluida; }).length;
-    var rotulo = !aula ? 'Próxima aula' : ultimaAba ? (oculta ? 'Concluir aula' : ultimaAula ? 'Concluir trilha' : 'Próxima aula') : 'Continuar';
+    var rotulo = !aula ? 'Próxima aula' : ultimaAba ? (oculta ? 'Concluir aula' : ultimaAula ? 'Concluir ' + C.unidade : 'Próxima aula') : 'Continuar';
     var podeFinal = !aula ? !ultimaAula : pode;
     var A_ = AP(), nRev = A_ ? A_.pendentesResolvidos(10).length : 0;
     function perguntarTutor() {
@@ -686,7 +694,7 @@
     var escuro = (document.documentElement.getAttribute('data-theme') || (function () { try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch (e) { return 'light'; } })()) === 'dark';
 
     var lateral = h('aside', { className: 'ta-side', 'data-aberta': drawer ? 'true' : 'false', 'aria-label': 'Aulas da trilha' },
-      h('h2', { className: 'ta-brand' }, 'Trilha rápida', h('small', null, 'Desenvolvimento com agentes')),
+      h('h2', { className: 'ta-brand' }, C.nome, h('small', null, C.subtitulo)),
       h(T.ProgressBar, { value: ids.length ? feitasN / ids.length : 0, tone: 'brand', label: feitasN + ' de ' + ids.length + ' aulas', showValue: true }),
       A_ && h('nav', { 'aria-label': 'Revisão' }, h(T.List, null, h(T.ListRow, {
         title: 'Revisão do dia (' + nRev + ')', subtitle: nRev ? 'Itens vencidos, de várias aulas' : 'Nada vencido hoje', chevron: false, current: emRevisao,
@@ -700,12 +708,12 @@
         });
       }))),
       h('div', { className: 'ta-side-links' },
-        h('a', { href: '../index.html' }, '← Portal do curso'),
-        h('a', { href: TEXTO }, 'Versão em texto'),
+        h('a', { href: C.portal }, '← Portal do curso'),
+        C.texto && h('a', { href: C.texto }, 'Versão em texto'),
         h(Button, { variant: 'plain', onClick: tema }, escuro ? 'Tema claro' : 'Tema escuro'),
         confirma
           ? h(Button, { variant: 'tinted', onClick: function () { mut(function (n) { n.aulas = {}; n.atual = null; }); cs[1](false); ir(ids[0], 0); } }, 'Confirmar: apagar progresso')
-          : h(Button, { variant: 'plain', onClick: function () { cs[1](true); } }, 'Recomeçar trilha')));
+          : h(Button, { variant: 'plain', onClick: function () { cs[1](true); } }, 'Recomeçar ' + C.unidade)));
 
     var corpo;
     if (emRevisao) {
@@ -714,7 +722,7 @@
       var passo = PASSO[cur.aula];
       corpo = h(Card, { variant: 'panel', title: 'Esta aula está em preparo' },
         h('div', { className: 'ta-preparo' }, h('p', { style: { margin: 0 } }, 'A versão interativa ainda não foi escrita. O conteúdo desta aula já existe em texto.'),
-          h('a', { href: TEXTO + (passo ? '#' + passo : '') }, 'Ler a seção em TR-texto.html')));
+          C.texto && h('a', { href: C.texto + (passo ? '#' + passo : '') }, 'Ler a versão em texto')));
     } else {
       corpo = h(Blocos, { blocos: abas[aba] ? abas[aba].blocos : [], ctx: ctx, k: cur.aula + '-' + aba });
     }
@@ -736,7 +744,7 @@
         h('main', { className: 'ta-aula', id: 'conteudo' },
           h('header', { className: 'ta-head' },
             h('div', { className: 'ta-meta' }, h(Badge, { tone: 'brand' }, oculta ? 'Aula escondida' : 'Aula ' + (idx + 1) + ' de ' + ids.length), aula && h(Badge, null, aula.minutos + ' min'),
-              passoAtual && h('a', { href: TEXTO + '#' + passoAtual, style: { fontSize: 13 } }, 'Ler em texto')),
+              C.texto && passoAtual && h('a', { href: C.texto + '#' + passoAtual, style: { fontSize: 13 } }, 'Ler em texto')),
             h('h1', null, tituloDe(cur.aula)),
             aula && aula.resumo && h('p', null, aula.resumo)),
           corpo,

@@ -47,3 +47,20 @@ Tudo é declarativo e opcional; aula sem esses campos funciona como antes. O aut
 
 ## Itens do diário na revisão
 `../diario/revisao.js` (gerado por `tools/build_diario.py`; carregado em `TR.html` antes do motor, opcional) define `window.DIARIO_REVISAO`. O motor trata `diario` como pseudo-aula: `itemDe('diario', id)` resolve nesse array (ids de opção `a`, `b`, `c`…, o `porque` vale para todas as opções) e o feedback ganha o link "Ler a edição de DD/MM" (`../` + `url`). Ao abrir o TR e a tela `#revisao`, itens dos últimos 30 dias ainda não matriculados entram na caixa 1 com `prox` = hoje, no máximo 3 por dia (`diarioMatriculaEm` e `diarioMatriculaN` em `curso.srs.v1`; o formato `v:1` não muda). Entram na fila pelo mesmo `intercalar`, com o rótulo "Diário · DD/MM". Item que sumiu do arquivo é ignorado. O portal lê o mesmo estado em `assets/revisao-card.js` (card "Revisão do dia"), que repete as regras de janela e limite: mude os dois juntos.
+
+## Usar o motor em outro módulo
+
+O motor serve qualquer módulo. Antes de registrar as aulas, a página chama `TrilhaAula.curso({...})`:
+
+```js
+TrilhaAula.curso({
+  chave: 'curso.a01.v1',            // localStorage do progresso deste módulo
+  nome: 'A01 · SDLC nativo em IA', subtitulo: 'Versão interativa', unidade: 'módulo',
+  texto: 'A01.html',                // versão em texto ("Ler em texto")
+  portal: '../../index.html', raiz: '../../',   // caminhos relativos à página
+  alias: {}, titulos: {},
+  passo: { 'a01-b1': 'b01' }        // aula → âncora em `texto`
+});
+```
+
+Referência: `modulos/A01-sdlc-nativo-ia/A01-interativo.html`, com as aulas em `interativo/aulas/`. A revisão espaçada (`curso.srs.v1`) é única para o curso todo: na matrícula, cada item grava uma cópia da pergunta e o título da aula, então a Revisão do dia mostra itens de qualquer módulo em qualquer página que use o motor.
