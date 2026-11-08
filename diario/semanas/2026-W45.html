@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cascata de LLMs medida, terminal embutível estável e o agente do GitHub no chat · Diário 2026-W45</title>
+<meta name="description" content="Semana de uma edição só (07/11): o caso Hightouch dá números para rotear entre modelo barato e Opus; libghostty 1.0, GitHub em Slack/Teams e runtimes locais completam o quadro.">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="stylesheet" href="../../assets/trilha/tokens.css">
+<link rel="stylesheet" href="../../assets/trilha/bundle.css">
+<link rel="stylesheet" href="../../diario/diario.css">
+</head>
+<body class="tr-root">
+<header class="dr-top"><div class="dr-wrap dr-top-in">
+<a class="dr-link" href="../../index.html">← Portal do curso</a>
+<span class="dr-top-title">Diário de IA e engenharia</span>
+<a class="dr-link" href="../index.html">Voltar ao calendário</a>
+</div></header>
+<main class="dr-wrap dr-article">
+<p class="dr-date">Resumo semanal · 2026-W45 · 02 a 08/11/2026</p>
+<h1 class="dr-title">Cascata de LLMs medida, terminal embutível estável e o agente do GitHub no chat</h1>
+<p class="dr-lead">Semana de uma edição só (07/11): o caso Hightouch dá números para rotear entre modelo barato e Opus; libghostty 1.0, GitHub em Slack/Teams e runtimes locais completam o quadro.</p>
+<article class="dr-body">
+<p>Esta semana teve uma única edição publicada (<a href="../edicoes/2026/2026-11-07.html">07/11</a>). Os cinco itens abaixo saem dela; nenhum fato novo foi acrescentado.</p>
+<h2>As 5 coisas mais importantes da semana</h2>
+<h3>1. Cascata de LLMs: modelo barato decide, Opus só na faixa incerta</h3>
+<p><strong>O que mudou.</strong> A Hightouch publicou um teste com 1.000 identidades sintéticas: no cenário difícil, Opus 5.5 sozinho acertou 95,1% a US$ 5,39 por 1.000; o híbrido (Opus só na faixa de confiança de 30% a 90%) acertou 95,3% a US$ 2,94. A variante com GPT-6 Luna piorou (91,6%) por superconfiança. <strong>Por que importa.</strong> É um número concreto para a decisão de custo de toda feature com LLM, e mostra que a cascata só funciona com confiança calibrada. <strong>O que fazer.</strong> Meça a calibração do modelo barato em ~200 casos rotulados do seu domínio antes de escolher os cortes; mantenha os cortes em configuração. Benchmark do próprio fornecedor, dataset sintético.</p>
+<p>Edição: <a href="../edicoes/2026/2026-11-07.html">07/11, Destaque 1</a> · Fonte: <a href="https://hightouch.com/blog/llm-judges-identity-resolution" rel="noopener noreferrer">Hightouch</a></p>
+<h3>2. GitHub leva o agente para Slack e Teams (GA)</h3>
+<p><strong>O que mudou.</strong> O @GitHub em Slack e Teams ficou disponível geral: investigar bugs, criar issues, implementar mudanças e abrir PRs pelo chat; a nova visão geral de PR entrou em prévia pública. Preço e planos elegíveis não foram divulgados no changelog. <strong>Por que importa.</strong> O ponto de entrada do agente sai do IDE e vai para o chat da equipe, o que muda permissões e auditoria. <strong>O que fazer.</strong> Antes de habilitar, defina quem pode invocar o agente e o repositório padrão, e confirme que as proteções de branch exigem revisão humana.</p>
+<p>Edição: <a href="../edicoes/2026/2026-11-07.html">07/11, Destaque 3</a> · Fonte: <a href="https://github.blog/changelog/2026-11-06-github-copilot-in-slack-and-teams-is-generally-available" rel="noopener noreferrer">GitHub changelog</a></p>
+<h3>3. libghostty 1.0: terminal embutível com ABI em C estável</h3>
+<p><strong>O que mudou.</strong> Mitchell Hashimoto lançou a libghostty 1.0 (<code>libghostty-vt</code>), com biblioteca e ABI em C declaradas estáveis, versionamento semântico, checagem de ABI em CI e licença MIT; há bindings da comunidade, inclusive .NET e Python. <strong>Por que importa.</strong> Ferramentas de agente dependem de terminal embutido; uma ABI estável evita escrever parser de ANSI na mão. <strong>O que fazer.</strong> Se você tem ferramenta interna que mostra saída de agente, faça um spike de 1 hora com o binding da sua stack; adote só se o binding tiver mantenedor ativo, porque a estabilidade declarada é da biblioteca em C.</p>
+<p>Edição: <a href="../edicoes/2026/2026-11-07.html">07/11, Destaque 2</a> · Fonte: <a href="https://mitchellh.com/writing/libghostty-1-0" rel="noopener noreferrer">mitchellh.com</a></p>
+<h3>4. Runtimes locais: Ollama 0.40.14/15 e llama.cpp b12008</h3>
+<p><strong>O que mudou.</strong> O Ollama (03/11) trouxe top-k mais rápido no MLX, YaRN para contexto longo em Qwen3/Qwen3.5 e <code>ollama launch</code> para Kimi Code CLI, Claude e Codex; o llama.cpp b12008 (30/10) reduziu em cerca de 216 MiB o buffer de CPU do <code>gemma-4-E2B-it</code> Q4_K_M. Sem benchmark novo para o M3 Max 48 GB. <strong>Por que importa.</strong> Atualizações de runtime mudam memória e velocidade do mesmo modelo sem você trocar nada. <strong>O que fazer.</strong> <code>brew upgrade ollama</code> e meça tokens/s e memória (<code>ollama ps</code>) com o mesmo prompt antes e depois; sem essa medição, trate o ganho como não confirmado.</p>
+<p>Edição: <a href="../edicoes/2026/2026-11-07.html">07/11, LLM local no Mac</a> · Fontes: <a href="https://github.com/ollama/ollama/releases" rel="noopener noreferrer">Ollama releases</a>; <a href="https://github.com/ggml-org/llama.cpp/releases" rel="noopener noreferrer">llama.cpp releases</a></p>
+<h3>5. Métricas de adoção de agentes no GitHub</h3>
+<p><strong>O que mudou.</strong> O painel de impacto do Copilot passou a incluir uso de chat e de agente no VS Code, e a API de métricas ganhou detalhes de code review e taxa de sugestões endereçadas (detalhes não lidos além dos títulos). <strong>Por que importa.</strong> Quem lidera um time precisa medir se o agente está sendo usado e se as sugestões dele são aceitas, não só se a licença foi paga. <strong>O que fazer.</strong> Leia os changelogs e veja se a API cobre o que você precisa para um painel de adoção antes de construir telemetria própria.</p>
+<p>Edição: <a href="../edicoes/2026/2026-11-07.html">07/11, Digest e Radar</a> · Fontes: <a href="https://github.blog/changelog/2026-11-06-copilot-impact-dashboard-adds-chat-and-vs-code-agent-usage" rel="noopener noreferrer">painel de impacto</a>; <a href="https://github.blog/changelog/2026-11-05-usage-metrics-api-adds-code-review-details-and-addressed-rate" rel="noopener noreferrer">API de métricas</a></p>
+<h2>Tendência e módulos</h2>
+<p><strong>Tendência da semana:</strong> o custo do agente vira decisão de arquitetura (cascata por confiança) e o agente sai do IDE para o chat da equipe, puxando junto a pergunta de governança e medição. Com uma edição só, nenhum tema novo se repetiu o bastante para virar recorrente.</p>
+<p><strong>Módulos mais sinalizados:</strong> M05 (roteamento e custo), M06 (eval com juiz LLM e calibração), M11 (modelos locais no Apple Silicon) e M00 (comparação de harnesses e fluxos), uma vez cada.</p>
+<hr>
+<p><em>Compilação gerada por IA em 08/11/2026 (America/Bahia), a partir da edição de 07/11 e das fontes listadas nela. Confira antes de agir.</em></p>
+</article>
+</main>
+</body>
+</html>

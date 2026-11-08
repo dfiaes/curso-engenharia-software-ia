@@ -34,7 +34,15 @@ window.DIARIO = {
    "url": "diario/edicoes/2026/2026-11-07.html"
   }
  ],
- "semanas": [],
+ "semanas": [
+  {
+   "semana": "2026-W45",
+   "titulo": "Cascata de LLMs medida, terminal embutível estável e o agente do GitHub no chat",
+   "resumo": "Semana de uma edição só (07/11): o caso Hightouch dá números para rotear entre modelo barato e Opus; libghostty 1.0, GitHub em Slack/Teams e runtimes locais completam o quadro.",
+   "periodo": "02 a 08/11/2026",
+   "url": "diario/semanas/2026-W45.html"
+  }
+ ],
  "tags": [
   "mercado",
   "modelos",
