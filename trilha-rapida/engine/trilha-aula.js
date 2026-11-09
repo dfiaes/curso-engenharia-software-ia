@@ -740,7 +740,8 @@
           h(T.LessonToolbar, {
             steps: aula ? abas.map(function (a, i) { var s = abaStats(i); return { label: a.rotulo, progress: s.exs.length ? s.feitos.length / s.exs.length : (i <= aba ? 1 : 0) }; }) : [{ label: 'Em preparo', progress: 0 }],
             current: aula ? aba : 0, onStep: aula ? irAba : undefined, onBack: (aba > 0 || idx > 0) ? voltar : undefined,
-            hint: pode ? undefined : dica, canContinue: podeFinal, onContinue: continuar, continueLabel: rotulo
+            hint: pode ? undefined : dica, canContinue: podeFinal, onContinue: continuar, continueLabel: rotulo,
+            floating: false
           })),
         h('main', { className: 'ta-aula', id: 'conteudo' },
           h('header', { className: 'ta-head' },
