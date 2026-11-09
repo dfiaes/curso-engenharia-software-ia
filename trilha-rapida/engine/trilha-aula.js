@@ -659,7 +659,8 @@
     var ultimaAba = aba >= abas.length - 1, ultimaAula = oculta || idx >= ids.length - 1;
     var DICAS = { rode: 'Aperte Enter para rodar', quebre: 'Escolha uma falha, rode, depois rode sem falha', escolha: 'Escolha uma resposta', ordene: 'Ordene os itens e aperte Conferir', chat: 'Escolha a melhor resposta ao agente', esteira: 'Promova o artefato até produção', complete: 'Preencha as lacunas e aperte Conferir', escreva: 'Escreva, envie e marque a rubrica', cenario: 'Chegue a um final bom', transcript: 'Marque a linha onde a sessão errou e aperte Conferir', python: 'Faça todos os testes passarem' };
     var dica = aula && stats.pend[0] ? (stats.pend[0].dica || DICAS[stats.pend[0].tipo]) : null;
-    if (dica) dica = String(dica).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().replace(/[.\s]+$/, '');
+    if (dica) { var _t = document.createElement('textarea'); _t.innerHTML = String(dica).replace(/<[^>]+>/g, ''); dica = _t.value; }
+    if (dica) dica = String(dica).replace(/\s+/g, ' ').trim().replace(/[.\s]+$/, '');
     function continuar() {
       if (!pode) return;
       if (!aula) { if (!ultimaAula) ir(ids[idx + 1], 0); return; }
