@@ -116,7 +116,7 @@
             { id: 'b', texto: 'O agente lê os logs e decide; o script só arquiva.', correta: false, porque: 'inverte a ordem que não pode ser invertida.' },
             { id: 'c', texto: 'Com 3σ, o agente escreve código novo direto em produção.', correta: false, porque: 'em 3σ, propor via runbook pré-aprovado é mais seguro, e o humano autoriza.' }
           ] },
-        { tipo: 'texto', html: '<p class="ta-nota">Estado verificado em 12/10/2026; recursos de produto têm alto risco de obsolescência (revalidar em até 60 dias). Células "não verificado" nos blocos indicam recursos que a documentação consultada não confirmou.</p>' },
+        { tipo: 'texto', html: '<p class="ta-nota">Estado verificado em 12/10/2026 (OpenCode V2 revalidado em 09/11/2026); recursos de produto têm alto risco de obsolescência (revalidar em até 60 dias). Células "não verificado" nos blocos indicam recursos que a documentação consultada não confirmou.</p>' },
         { tipo: 'takeaway', html: 'Em cada resposta: o <mark>invariante</mark> primeiro e, depois, <mark>pelo menos duas ferramentas</mark>.' }
       ] }
     ]

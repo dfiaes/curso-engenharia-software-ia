@@ -1,4 +1,4 @@
-/* A01 · Bloco 3: Build. Fonte: A01.html#b03. Fatos de ferramenta verificados em 12/10/2026 (Cursor, OpenAI Codex, OpenCode); Claude Code conforme o próprio playbook. */
+/* A01 · Bloco 3: Build. Fonte: A01.html#b03. Fatos de ferramenta verificados em 12/10/2026 (Cursor, OpenAI Codex; OpenCode V2 e a herança de sandbox dos subagentes do Codex revalidados em 09/11/2026); Claude Code conforme o próprio playbook. */
 (function () {
   var L = function (kind, text) { return { kind: kind, text: text }; };
   function opc(id, texto, correta, porque) { return { id: id, texto: texto, correta: correta, porque: porque }; }
@@ -24,20 +24,20 @@
     ['Hooks de bloqueio', '<code>hooks.json</code> ou <code>[hooks]</code> em <code>config.toml</code> (usuário ou <code>.codex/</code> do repositório); <code>PreToolUse</code> com <code>permissionDecision: "deny"</code> ou exit 2', 'Hooks não gerenciados precisam ser confiados em <code>/hooks</code>; cobrem shell, <code>apply_patch</code> e MCP; a doc diz que é guardrail, não fronteira completa'],
     ['Modo de plano / leitura', '<code>/plan</code> propõe um plano antes da execução; <code>/permissions</code> alterna para somente leitura', 'Em CI: <code>--sandbox read-only --ask-for-approval never</code>'],
     ['Autonomia reduzida', '<code>approval_policy</code> (<code>on-request</code>, <code>never</code>, <code>granular</code>) e <code>sandbox_mode</code> (<code>read-only</code>, <code>workspace-write</code>, <code>danger-full-access</code>)', 'Preset "Auto" = <code>workspace-write</code> + <code>on-request</code>; rede desligada por padrão; <code>approvals_reviewer = "auto_review"</code> envia pedidos a um agente revisor'],
-    ['Subagentes', '<code>.codex/agents/*.toml</code> (<code>name</code>, <code>description</code>, <code>developer_instructions</code>, opcionalmente <code>sandbox_mode</code>, <code>model</code>); built-ins <code>default</code>, <code>worker</code>, <code>explorer</code>', 'Herdam o sandbox do pai; <code>max_concurrent_threads_per_session</code> limita o paralelismo'],
+    ['Subagentes', '<code>.codex/agents/*.toml</code> (<code>name</code>, <code>description</code>, <code>developer_instructions</code>, opcionalmente <code>model</code>; <code>sandbox_mode</code> no arquivo do agente é ignorado); built-ins <code>default</code>, <code>worker</code>, <code>explorer</code>', 'Herdam o sandbox do pai; <code>max_concurrent_threads_per_session</code> limita o paralelismo'],
     ['Sessões isoladas', 'Não verificado como recurso nativo: use <code>git worktree add</code> e uma sessão por pasta', 'Substituto simples e universal'],
     ['MCP', 'Servidores em <code>config.toml</code>; <code>/mcp</code> lista as ferramentas', 'Política corporativa pode restringir por allowlist (bloco 5)'],
     ['Modo não interativo', '<code>codex exec</code>; no GitHub, <code>openai/codex-action@v1</code>', '<code>--output-schema</code> para saída estruturada']];
   var opencode = [
-    ['Instruções do projeto', '<code>AGENTS.md</code> (global em <code>~/.config/opencode/</code>); <code>/init</code> gera; campo <code>instructions</code> do <code>opencode.json</code> aceita caminhos, globs e URLs (ex.: <code>.cursor/rules/*.md</code>)', '<code>CLAUDE.md</code> só é usado se não houver <code>AGENTS.md</code> no mesmo local; <code>@</code> dentro do arquivo não é expandido automaticamente'],
-    ['Skills / políticas', '<code>.opencode/skills/</code>, <code>.claude/skills/</code> ou <code>.agents/skills/</code>; ferramenta <code>skill</code> carrega sob demanda', '<code>permission.skill</code> com <code>allow</code> / <code>ask</code> / <code>deny</code> por padrão de nome'],
+    ['Instruções do projeto', '<code>AGENTS.md</code> (global em <code>~/.config/opencode/</code>); escrito à mão (<code>/init</code> não aparece na documentação da V2); campo <code>instructions</code> do <code>opencode.jsonc</code> aceita caminhos, globs e URLs (ex.: <code>.cursor/rules/*.md</code>)', 'a V2 reconhece só <code>AGENTS.md</code>, sem fallback para <code>CLAUDE.md</code> (migre o conteúdo); <code>@</code> dentro do arquivo não é expandido automaticamente'],
+    ['Skills / políticas', '<code>.opencode/skills/</code>, <code>.claude/skills/</code> ou <code>.agents/skills/</code>; ferramenta <code>skill</code> carrega sob demanda', 'ação <code>skill</code> em <code>permissions</code> (<code>allow</code> / <code>ask</code> / <code>deny</code> por padrão de nome); o ID vem do caminho'],
     ['Hooks de bloqueio', 'Plugin JS/TS em <code>.opencode/plugins/</code> com <code>tool.execute.before</code>: lançar erro bloqueia a chamada; além disso, <code>permission</code> declarativo com padrões', 'Mais código que nas outras; em compensação a regra pode ser tão sofisticada quanto um programa'],
-    ['Modo de plano / leitura', 'Agente primário <code>plan</code> (edição e bash em <code>ask</code> por padrão); alterna com <kbd>Tab</kbd>', 'Agente <code>build</code> é o padrão'],
-    ['Autonomia reduzida', 'Chaves <code>allow</code> / <code>ask</code> / <code>deny</code> por ferramenta com padrões (a última regra que casa vence); <code>--auto</code> aprova os <code>ask</code>', '<code>deny</code> explícito continua valendo; leitura de <code>.env</code> é negada por padrão'],
-    ['Subagentes', '<code>.opencode/agents/*.md</code> ou chave <code>agent</code>; built-ins <code>general</code>, <code>explore</code>, <code>scout</code>; <code>@nome</code> invoca', '<code>permission.task</code> controla quais subagentes um agente pode chamar'],
+    ['Modo de plano / leitura', 'Agente primário <code>plan</code> (nega edição, exceto arquivos de plano; o shell segue as permissões); alterna com <kbd>Shift</kbd> + <kbd>Tab</kbd> (<code>agent.cycle</code>)', 'Agente <code>build</code> é o padrão e a V2 é permissiva por padrão'],
+    ['Autonomia reduzida', 'Lista ordenada <code>permissions</code> de <code>{ action, resource, effect }</code> (a última regra que casa vence); a base é <code>* * allow</code>, então nada pergunta até você escrever <code>ask</code> (inclusive para <code>external_directory</code>); <code>--auto</code> aprova o que não está negado explicitamente', '<code>deny</code> explícito continua valendo; leitura de <code>.env</code> pede confirmação (<code>ask</code>) por padrão'],
+    ['Subagentes', '<code>.opencode/agents/*.md</code> ou chave <code>agents</code>; built-ins <code>general</code> e <code>explore</code> (a V2 não tem <code>scout</code>); invocação por <code>@nome</code> não confirmada na V2', 'A ação <code>subagent</code> em <code>permissions</code> controla quais subagentes um agente pode chamar'],
     ['Sessões isoladas', 'Não verificado como recurso nativo: <code>git worktree add</code> e uma sessão por pasta', 'Substituto universal'],
-    ['MCP', 'Chave <code>mcp</code> do <code>opencode.json</code>', 'Organização pode distribuir servidores desabilitados por config remota'],
-    ['Modo não interativo', '<code>opencode run</code>; <code>opencode github install</code> para o GitHub', 'Comentário <code>/opencode</code> ou <code>/oc</code> aciona o agente num PR']];
+    ['MCP', 'Chave <code>mcp.servers</code> do <code>opencode.jsonc</code> (<code>disabled</code> no lugar de <code>enabled</code>)', 'Organização pode distribuir servidores desabilitados por config remota'],
+    ['Modo não interativo', '<code>opencode run --standalone</code> (a página da V2 traz um job do GitHub Actions de exemplo)', 'A ação GitHub da V1 (<code>opencode github install</code>, comentário <code>/opencode</code>) não foi confirmada na V2']];
   var claude = [
     ['Instruções do projeto', '<code>CLAUDE.md</code>, gerado por <code>/init</code>; ponteiro <code>@AGENTS.md</code> para a fonte única', 'Manter abaixo de uma página; corrigir no segundo erro repetido'],
     ['Skills / políticas', '<code>.claude/skills/&lt;nome&gt;/SKILL.md</code>', 'Consultivas; política obrigatória precisa de hook ou check de PR'],
@@ -111,7 +111,7 @@
           '<p>O problema prático das equipes com mais de uma ferramenta é a duplicação e a divergência dos arquivos. A solução do curso: <strong><code>AGENTS.md</code> é a fonte única</strong> e cada ferramenta que prefere outro nome recebe um ponteiro. Verificado em 12/10/2026:</p>' +
           '<ul><li><strong>Cursor</strong> lê <code>AGENTS.md</code> na raiz e em subpastas (o mais específico prevalece).</li>' +
           '<li><strong>Codex</strong> concatena <code>AGENTS.md</code> da raiz até o diretório atual (limite padrão de 32 KiB combinados).</li>' +
-          '<li><strong>OpenCode</strong> lê <code>AGENTS.md</code> e só recorre ao <code>CLAUDE.md</code> se não houver <code>AGENTS.md</code> no mesmo local.</li>' +
+          '<li><strong>OpenCode</strong> V2 lê só <code>AGENTS.md</code> (a V1 recorria ao <code>CLAUDE.md</code>; verificado em 09/11/2026), então um repositório que só tem <code>CLAUDE.md</code> precisa de um <code>AGENTS.md</code>.</li>' +
           '<li><strong>Claude Code</strong> lê <code>CLAUDE.md</code>; o ponteiro é um arquivo de uma linha que importa o outro (<code>@AGENTS.md</code>, sintaxe de importação do Claude Code; confira na sua versão).</li></ul>' },
         { tipo: 'codigo', linguagem: 'markdown', texto: [
           'AGENTS.md          # fonte única, escrita para qualquer agente', 'CLAUDE.md          # ponteiro: @AGENTS.md',
@@ -171,7 +171,7 @@
 
       { rotulo: 'Mapa por ferramenta', blocos: [
         { tipo: 'texto', html:
-          '<p>Estado verificado em <strong>12/10/2026</strong> nas documentações oficiais (Cursor, OpenAI Codex, OpenCode) e, para o Claude Code, no próprio playbook. Células "não verificado" significam que a documentação consultada não confirmou o recurso: use o substituto indicado. Escolha a ferramenta que você usa.</p>' },
+          '<p>Estado verificado em <strong>12/10/2026</strong> nas documentações oficiais (Cursor, OpenAI Codex; OpenCode V2 e a herança de sandbox dos subagentes do Codex revalidados em 09/11/2026) e, para o Claude Code, no próprio playbook. Células "não verificado" significam que a documentação consultada não confirmou o recurso: use o substituto indicado. Escolha a ferramenta que você usa.</p>' },
         { tipo: 'abas', rotulo: 'Ferramenta', itens: [
           { rotulo: 'Cursor', blocos: [tab(CAB, cursor)] },
           { rotulo: 'Codex', blocos: [tab(CAB, codex)] },

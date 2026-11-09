@@ -8,7 +8,7 @@
       '</tbody></table>';
   }
 
-  var nota = '<p class="ta-nota">Verificado em 12/10/2026 contra a documentação oficial de cada ferramenta. † marca o que não foi lido em página oficial nessa verificação: confirme na versão em uso. Produtos mudam rápido; trate a tabela como mapa e a documentação como território.</p>';
+  var nota = '<p class="ta-nota">Verificado em 12/10/2026 contra a documentação oficial de cada ferramenta; a coluna OpenCode foi revalidada na V2 em 09/11/2026. † marca o que não foi lido em página oficial nessa verificação: confirme na versão em uso. Produtos mudam rápido; trate a tabela como mapa e a documentação como território.</p>';
 
   TrilhaAula.registrar({
     id: 'onde-fica-cada-coisa',
@@ -54,7 +54,7 @@
             "id": "b",
             "texto": "Só o AGENTS.md, diretamente",
             "correta": false,
-            "porque": "Codex e OpenCode leem o AGENTS.md direto; o Claude Code lê o CLAUDE.md."
+            "porque": "Codex e OpenCode leem o AGENTS.md direto (o OpenCode V2 não cai mais para o CLAUDE.md); o Claude Code lê o CLAUDE.md."
           },
           {
             "id": "c",
@@ -120,11 +120,11 @@
             ['Rodar em CI ou sem tela', 'Execução não interativa †']
           ]) }] },
           { rotulo: 'OpenCode', blocos: [{ tipo: 'texto', largo: true, html: tabela([
-            ['Instruções do projeto', '<code>AGENTS.md</code> na raiz (criado por <code>/init</code>)'],
+            ['Instruções do projeto', '<code>AGENTS.md</code> na raiz, escrito à mão (na V2 só esse nome vale, sem fallback para <code>CLAUDE.md</code>; <code>/init</code> não aparece na documentação da V2 †)'],
             ['Regras por área e skills', 'Skills (documentação "skills")'],
             ['Comandos reutilizáveis', 'Commands (documentação "commands")'],
             ['Hooks', 'Plugins (documentação "plugins")'],
-            ['Modo plano e só-leitura', 'Modo Plan: alterna com a tecla Tab; desabilita edições e sugere uma abordagem'],
+            ['Modo plano e só-leitura', 'Agente <code>plan</code> (nega edição, salvo arquivos de plano): alterna com Shift+Tab. A V2 é permissiva por padrão, então confira as <code>permissions</code>'],
             ['Subagentes', 'Agents e subagents (documentação "agents")'],
             ['MCP', 'Sim (documentação "mcp-servers")'],
             ['Permissões', 'Documentação "permissions"'],
@@ -195,7 +195,7 @@
         { tipo: 'escolha', id: 'onde-escolha-plano', titulo: 'Confira: modo de planejamento',
           pergunta: 'No OpenCode, como você põe o agente em modo de planejamento, sem edições de arquivo?',
           opcoes: [
-            { id: 'a', texto: 'Alternando o modo Plan com a tecla Tab.', correta: true, porque: 'o modo Plan desabilita edições e sugere uma abordagem. Você alterna com Tab e volta ao modo normal quando aprovar o plano.' },
+            { id: 'a', texto: 'Alternando para o agente <code>plan</code> com Shift+Tab.', correta: true, porque: 'na V2 o agente <code>plan</code> nega edições (exceto arquivos de plano) e <code>agent.cycle</code> vem ligado a Shift+Tab. Você volta ao <code>build</code> quando aprovar o plano. Verificado em 09/11/2026 na documentação da V2.' },
             { id: 'b', texto: 'Removendo o MCP do <code>opencode.json</code>.', correta: false, porque: 'MCP conecta sistemas externos. Tirá-lo não impede o agente de editar arquivos locais.' },
             { id: 'c', texto: 'Criando um hook que bloqueia qualquer escrita.', correta: false, porque: 'hook é um controle da ferramenta e pode ser montado, mas não é o recurso de modo plano do OpenCode. Confirme a configuração na documentação.' }
           ], tutorDepois: 'Plano primeiro, edição depois. A ferramenta tem um modo para isso.' },

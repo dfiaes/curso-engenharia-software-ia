@@ -28,7 +28,7 @@
     'Sem findings acima de MÉDIO: diga "sem findings bloqueantes" e liste o que foi verificado.'
   ].join('\n');
 
-  var nota = '<p class="ta-nota">Estado verificado em 12/10/2026 nas documentações oficiais (Cursor, OpenAI Codex, OpenCode) e, para o Claude Code, no próprio playbook. "Não verificado" significa que a documentação consultada não confirmou o recurso: confirme na versão em uso. Produtos mudam rápido; revalide em até 60 dias.</p>';
+  var nota = '<p class="ta-nota">Estado verificado em 12/10/2026 nas documentações oficiais (Cursor, OpenAI Codex; OpenCode V2 e a herança de sandbox dos subagentes do Codex revalidados em 09/11/2026) e, para o Claude Code, no próprio playbook. "Não verificado" significa que a documentação consultada não confirmou o recurso: confirme na versão em uso. Produtos mudam rápido; revalide em até 60 dias.</p>';
 
   TrilhaAula.registrar({
     id: 'a01-b5',
@@ -129,12 +129,12 @@
             ['Allowlist de MCP', '<code>[mcp_servers]</code> aprovado por <code>command</code> ou <code>url</code>; tabela vazia desabilita todos', ''],
             ['Sandbox / rede', 'Rede desligada em <code>workspace-write</code>; <code>network_proxy</code> com lista de domínios (<code>deny</code> vence <code>allow</code>); destinos locais bloqueados por padrão', 'Em CI, <code>read-only</code> + <code>never</code>']]),
           porFerramenta('OpenCode', [
-            ['Revisão de PR por IA', 'Workflow com evento <code>pull_request</code> (sem prompt, o padrão é revisar); comentário <code>/opencode</code> ou <code>/oc</code>; <code>opencode github install</code>', 'Segredos do provedor em Actions secrets; <code>use_github_token</code> evita OIDC'],
-            ['Agente em CI', '<code>opencode run</code>; <code>--auto</code> aprova os <code>ask</code>', '<code>deny</code> explícito continua valendo'],
-            ['Política imposta', '<code>opencode.json</code> em <code>/etc/opencode/</code> (Linux), <code>/Library/Application Support/opencode/</code> (macOS), <code>%ProgramData%\\opencode</code> (Windows); MDM macOS <code>ai.opencode.managed</code>', 'Camada de maior precedência; confira com <code>opencode debug config</code>'],
-            ['Config de organização', 'Config remota em <code>.well-known/opencode</code> (padrões, de baixa precedência)', 'Não impõe: pode ser sobreposta'],
-            ['Hooks gerenciados', 'Plugins no diretório de plugins e <code>permission</code> declarativo; ambos podem vir da política gerenciada', 'Allowlist de plugins: não verificada'],
-            ['Allowlist de MCP', 'Chave <code>mcp</code>; servidores distribuídos <code>enabled: false</code> pela config remota', 'Allowlist formal: não verificada; combine com <code>permission</code>'],
+            ['Revisão de PR por IA', 'Job do GitHub Actions que roda <code>opencode run --standalone</code> no repositório baixado (exemplo da página da V2); a ação <code>opencode github install</code> e o comentário <code>/opencode</code> são da V1 e não foram confirmados na V2', 'Chave do provedor em Actions secrets, passada ao <code>run</code>'],
+            ['Agente em CI', '<code>opencode run --standalone</code>; <code>--auto</code> aprova o que não está negado explicitamente', '<code>deny</code> explícito continua valendo'],
+            ['Política imposta', 'chave <code>policies</code> (<code>{ action, resource, effect }</code>; ações como <code>tool.use</code>, <code>mcp.use</code>, <code>plugin.use</code>) no <code>opencode.json(c)</code> em <code>/etc/opencode/</code> (Linux), <code>/Library/Application Support/opencode/</code> (macOS), <code>%ProgramData%\\opencode</code> (Windows); MDM macOS <code>ai.opencode.managed</code>', 'Camada de maior precedência; só restringe e nunca pergunta; um <code>allow</code> do repositório não levanta um <code>deny</code> de nível superior (mensagem "Blocked by configuration policy")'],
+            ['Config de organização', 'Config remota em <code>.well-known/opencode</code> (comportamento da V1, não confirmado na V2) e políticas do Console do workspace (abaixo do arquivo de sistema)', 'A config remota não impõe: pode ser sobreposta'],
+            ['Hooks gerenciados', 'Plugins no diretório de plugins e <code>permissions</code> declarativo; <code>plugin.use</code> em <code>policies</code> restringe quais plugins rodam', 'Plugins da V1 não rodam na V2'],
+            ['Allowlist de MCP', 'Chave <code>mcp.servers</code>; <code>mcp.use</code> em <code>policies</code> (<code>deny</code> geral e <code>allow</code> por servidor) restringe quais servidores sobem', 'Allowlist formal via <code>policies</code> (verificado em 09/11/2026); combine com <code>permissions</code>'],
             ['Sandbox / rede', 'Não verificado como sandbox de SO; use <code>permission</code> (<code>bash</code>, <code>external_directory</code>) e isolamento do runner/contêiner', '<code>external_directory</code> pergunta por padrão']]),
           porFerramenta('Claude Code', [
             ['Revisão de PR por IA', 'Code Review gerenciado ou claude-code-action no seu CI; atende comentários <code>@claude</code>', 'Política em <code>REVIEW.md</code>; findings não aprovam'],

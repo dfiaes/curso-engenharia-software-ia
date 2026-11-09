@@ -1,7 +1,7 @@
 /* Aula 10 · Comandos reutilizáveis. Fonte: TR-texto.html, Passo 8 (caminhos verificados em 12/10/2026). */
 (function () {
   var L = function (kind, text) { return { kind: kind, text: text }; };
-  var nota = '<p class="ta-nota">Verificado em 12/10/2026 nas páginas oficiais de comandos e prompts do Claude Code, Cursor, OpenCode e Codex. † Não confirmado: se o Codex passou a aceitar comandos de projeto fora de <code>~/.codex/prompts</code> numa versão mais nova. Confira na versão em uso.</p>';
+  var nota = '<p class="ta-nota">Verificado em 12/10/2026 nas páginas oficiais de comandos e prompts do Claude Code, Cursor e Codex; OpenCode revalidado na V2 em 09/11/2026. † Não confirmado: se o Codex passou a aceitar comandos de projeto fora de <code>~/.codex/prompts</code> numa versão mais nova. Confira na versão em uso.</p>';
 
   function linha(r) { return '<tr><td>' + r.join('</td><td>') + '</td></tr>'; }
   function tabela(cab, linhas) {
@@ -208,7 +208,7 @@
         { tipo: 'abas', rotulo: 'Ferramenta', itens: [
           { rotulo: 'Cursor', blocos: [onde(['<code>.cursor/commands/nome.md</code>', '<code>/nome</code> no chat', 'Markdown simples, sem frontmatter documentado.'])] },
           { rotulo: 'Codex', blocos: [onde(['Sem pasta de repositório para comandos: "prompts personalizados" ficam em <code>~/.codex/prompts/</code> (do usuário) e estão <em>obsoletos</em>', '<code>/prompts:nome</code>; ou, como skill, <code>$nome</code>', 'A recomendação oficial é usar skills. O kit converte cada comando em uma skill para o Codex.'])] },
-          { rotulo: 'OpenCode', blocos: [onde(['<code>.opencode/commands/nome.md</code>', '<code>/nome args</code>', 'Frontmatter: <code>description</code>, <code>agent</code>, <code>model</code>, <code>subtask</code>. Aceita <code>$ARGUMENTS</code>, <code>$1</code>. Também pode ser definido na chave <code>command</code> do <code>opencode.json</code>.'])] },
+          { rotulo: 'OpenCode', blocos: [onde(['<code>.opencode/commands/nome.md</code>', '<code>/nome args</code>', 'Frontmatter: <code>description</code>, <code>agent</code>, <code>model</code>, <code>subagent</code> (<code>subtask</code> é alias obsoleto). Aceita <code>$ARGUMENTS</code>, <code>$1</code>. Também pode ser definido na chave <code>commands</code> do <code>opencode.jsonc</code> (V2; na V1 era <code>command</code>).'])] },
           { rotulo: 'Claude Code', blocos: [onde(['<code>.claude/commands/nome.md</code>', '<code>/nome args</code>', 'Comandos foram unificados com skills: <code>.claude/commands/x.md</code> e <code>.claude/skills/x/SKILL.md</code> criam o mesmo <code>/x</code>. Aceita <code>$ARGUMENTS</code>, <code>$1</code>.'])] }
         ] },
         { tipo: 'texto', html: '<p><strong>Agente próprio:</strong> a mesma pasta <code>.agents/commands/</code>, lida por uma função <code>carregar_comando(nome, args)</code>: leia o arquivo, substitua <code>$ARGUMENTS</code> e envie como mensagem do usuário.</p>' + nota },

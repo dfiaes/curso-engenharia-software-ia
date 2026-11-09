@@ -29,9 +29,10 @@ Depois dos passos 4 e 5, rodar `uv run --with markdown python tools/build_course
 ## Fontes a acompanhar
 
 - Claude Code: documentação e changelog oficiais.
-- OpenAI Codex: documentação oficial (developers.openai.com, que redireciona para learn.chatgpt.com) e changelog.
+- OpenAI Codex: documentação oficial (learn.chatgpt.com/docs; developers.openai.com/codex redireciona para lá) e changelog.
 - Cursor: documentação oficial, incluindo Bugbot e hooks.
-- OpenCode: documentação oficial e changelog.
+- OpenCode: documentação oficial (V2 em opencode.ai/docs; V1 em opencode.ai/v1/docs) e changelog.
+- Gemini CLI e Antigravity CLI: blog do Google Developers e documentação oficial.
 - Model Context Protocol: especificação oficial (modelcontextprotocol.io).
 - A2A: especificação oficial.
 - OWASP: GenAI / Top 10 for LLM Applications; ASVS; Password Storage Cheat Sheet.
@@ -54,6 +55,13 @@ Ordenadas por módulo. "Vencido" significa que o prazo passou em 07/11/2026.
 | A01 | Caminhos de instrução e precedência (AGENTS.md, .cursor/rules, CLAUDE.md) | 12/10/2026 | 11/11/2026 | Docs oficiais |
 | A01 | Políticas gerenciadas e allowlist de MCP (MDM, requirements.toml, managed config) | 12/10/2026 | 11/11/2026 | Docs oficiais |
 | A01 | Cursor Bugbot (BUGBOT.md, bugbot.yaml, neutral por padrão) | 12/10/2026 | 11/11/2026 | Docs do Cursor |
+| A01, Trilha rápida | OpenCode V2: só `AGENTS.md` (sem fallback para `CLAUDE.md`); `/init` não confirmado na V2 | 09/11/2026 | 09/12/2026 | opencode.ai/docs/instructions e /migrate-v1; recurso de ferramenta (30 dias) |
+| A01, Trilha rápida | OpenCode V2: `permissions` como lista, base permissiva (`* * allow`), `plan` nega edição e alterna com Shift+Tab, sem agente `scout` | 09/11/2026 | 09/12/2026 | opencode.ai/docs/permissions, /agents, /cli/keybinds |
+| A01 | OpenCode V2: plugins (`ctx.permission.hook("evaluate")`; `tool.execute.before` só na V1), `policies` (inclui `mcp.use` e `plugin.use`), ação GitHub não confirmada na V2 | 09/11/2026 | 09/12/2026 | opencode.ai/docs/plugins, /build/plugins/server, /policies, /cli/commands |
+| Trilha rápida | OpenCode V2: `mcp.servers` com `disabled` e `mcp.timeout.startup` (30 s); `commands` e `subagent` (alias `subtask`); kit/template/opencode.json atualizado | 09/11/2026 | 09/12/2026 | opencode.ai/docs/mcp-servers, /commands, /migrate-v1 |
+| A01 | Codex: `sandbox_mode` no arquivo do subagente é ignorado (herda o do agente pai) | 09/11/2026 | 09/12/2026 | learn.chatgpt.com/docs/agent-configuration/subagents |
+| Trilha rápida, A01, M00 | URLs de docs migradas: `developers.openai.com/codex/*` para `learn.chatgpt.com/docs/*`; Claude Code já em `code.claude.com` (nenhuma URL antiga de `docs.anthropic.com`/`docs.claude.com` restava) | 09/11/2026 | 09/02/2027 | Redirecionamentos conferidos; URL de documentação (90 dias) |
+| Núcleo (nenhuma menção) | Gemini CLI: desde 18/06/2026 contas pessoais (gratuitas, Google AI Pro/Ultra) migram para o Antigravity CLI (`agy`); Gemini CLI segue em licenças pagas/empresariais. O texto do núcleo só cita "Gemini" como adaptador de terceiros (Trilha rápida, aula 8) | 09/11/2026 | 09/12/2026 | developers.googleblog.com, "An important update: transitioning Gemini CLI to Antigravity CLI" |
 | M00 | Claude Code: CLAUDE.md não lê AGENTS.md; skills e .claude/commands | 15/08/2026 | 14/09/2026 (vencido) | Docs do Claude Code; texto cita 14/08 e 15/08 |
 | M00 | Codex: slash commands e custom prompts (deprecated); Copilot | 15/08/2026 | 14/09/2026 (vencido) | Docs do Codex e do Copilot |
 | M01 | Panorama industrial de ferramentas | 14/08/2026 | 18/11/2026 | Data já declarada no módulo |
@@ -104,3 +112,4 @@ Ordenadas por módulo. "Vencido" significa que o prazo passou em 07/11/2026.
 ## Histórico
 
 - 07/11/2026: registro criado a partir da varredura dos módulos. Nenhuma afirmação foi revalidada nesta rodada; as datas são as que os módulos declaram.
+- 09/11/2026: OpenCode V2, subagentes do Codex, URLs de docs e transição Gemini CLI para Antigravity revalidados contra as páginas oficiais; texto de A01 e da Trilha rápida corrigido (linhas acima). Registro de M00 inalterado: nenhuma afirmação dessas ferramentas no módulo.

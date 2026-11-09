@@ -7,7 +7,7 @@
       linhas.map(function (r) { return '<tr><td><strong>' + r[0] + '</strong></td><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>'; }).join('') +
       '</tbody></table>';
   }
-  var nota = '<p class="ta-nota">Verificado em 12/10/2026 contra a documentação oficial de cada ferramenta. † marca o que não foi lido em página oficial nessa verificação: confirme na versão em uso. Produtos mudam rápido; trate a tabela como mapa e a documentação como território.</p>';
+  var nota = '<p class="ta-nota">Verificado em 12/10/2026 contra a documentação oficial de cada ferramenta; a coluna OpenCode foi revalidada na V2 em 09/11/2026. † marca o que não foi lido em página oficial nessa verificação: confirme na versão em uso. Produtos mudam rápido; trate a tabela como mapa e a documentação como território.</p>';
 
   TrilhaAula.registrar({
     id: 'conceitos',
@@ -207,12 +207,12 @@
             ['MCP', '<code>~/.codex/config.toml</code> (ou <code>.codex/config.toml</code> em projeto confiável)', 'Uma tabela <code>[mcp_servers.nome]</code> por servidor']
           ]) + nota }] },
           { rotulo: 'OpenCode', blocos: [{ tipo: 'texto', largo: true, html: tabela([
-            ['Instruções do projeto', '<code>AGENTS.md</code> na raiz (criado por <code>/init</code>)', ''],
-            ['Comando', '<code>.opencode/commands/nome.md</code>', '<code>/nome args</code>; também na chave <code>command</code> do <code>opencode.json</code>'],
+            ['Instruções do projeto', '<code>AGENTS.md</code> na raiz, escrito à mão (na V2 só esse nome vale, sem fallback para <code>CLAUDE.md</code>; <code>/init</code> não aparece na documentação da V2 †)', ''],
+            ['Comando', '<code>.opencode/commands/nome.md</code>', '<code>/nome args</code>; também na chave <code>commands</code> do <code>opencode.jsonc</code> (V2)'],
             ['Skill', '<code>.opencode/skills/</code>, <code>.claude/skills/</code> e <code>.agents/skills/</code>', 'Pela ferramenta de skills do agente'],
             ['Hook', 'Plugins (documentação "plugins")', ''],
             ['Subagente', 'Agents e subagents (documentação "agents")', ''],
-            ['MCP', '<code>opencode.json</code>, chave <code>mcp</code>', '<code>type</code> <code>"local"</code> ou <code>"remote"</code>']
+            ['MCP', '<code>opencode.jsonc</code>, chave <code>mcp.servers</code>', '<code>type</code> <code>"local"</code> ou <code>"remote"</code>']
           ]) + nota }] },
           { rotulo: 'Claude Code', blocos: [{ tipo: 'texto', largo: true, html: tabela([
             ['Instruções do projeto', '<code>CLAUDE.md</code>', 'Pode importar o <code>AGENTS.md</code> com <code>@AGENTS.md</code>'],

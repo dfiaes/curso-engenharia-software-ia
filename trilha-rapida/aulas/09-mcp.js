@@ -209,7 +209,7 @@
         T('<p><strong>Resultado esperado.</strong> (1) o agente lista as tools usadas; (2) um relato por critério de aceite apoiado no snapshot ou screenshot; (3) o arquivo <code>tests/e2e/criar-pedido.spec.ts</code> no diff; (4) a saída de <code>npx playwright test</code> passando. Se um critério falhar, o agente deve relatar a falha e <em>não</em> "ajustar" o teste para passar. O kit traz o modelo <code>tests/e2e/exemplo.spec.ts</code> e a skill de teste do Playwright.</p>' +
           '<p><strong>Diagnóstico</strong></p>'),
         { tipo: 'texto', largo: true, html: tabelaDiag([
-          ['Servidor não sobe (status de falha na lista de MCP, "connection closed")', '<code>npx</code> ou Node fora do PATH da ferramenta, Node antigo, proxy bloqueando o npm, navegador não instalado.', 'Rode <code>npx @playwright/mcp@latest --isolated</code> à mão e leia o erro; confira <code>node -v</code>; <code>npx playwright install chromium</code>. Em Windows nativo pode ser preciso <code>cmd /c npx</code> †. Aumente o tempo de partida (Codex <code>startup_timeout_sec</code>, padrão 10 s; OpenCode <code>timeout</code>, padrão 5 s).'],
+          ['Servidor não sobe (status de falha na lista de MCP, "connection closed")', '<code>npx</code> ou Node fora do PATH da ferramenta, Node antigo, proxy bloqueando o npm, navegador não instalado.', 'Rode <code>npx @playwright/mcp@latest --isolated</code> à mão e leia o erro; confira <code>node -v</code>; <code>npx playwright install chromium</code>. Em Windows nativo pode ser preciso <code>cmd /c npx</code> †. Aumente o tempo de partida (Codex <code>startup_timeout_sec</code>, padrão 10 s; OpenCode V2 <code>mcp.timeout.startup</code>, padrão 30 s).'],
           ['Tool não aparece', 'Config no arquivo ou escopo errado; servidor de projeto ainda não aprovado; sessão iniciada antes da config; tool filtrada por <code>enabled_tools</code>.', 'Reinicie a sessão; rode o comando de listagem (<code>claude mcp list</code> ou <code>/mcp</code>, painel de MCP do Cursor, <code>codex mcp</code>); confirme o nome do servidor na config e a aprovação.'],
           ['Permissão negada', 'A ferramenta exige aprovação por tool, ou a política nega (Codex <code>default_tools_approval_mode</code>, regras de permissão do Claude Code e do OpenCode).', 'Aprove explicitamente as tools de navegação e leitura; mantenha sob aprovação as perigosas (<code>browser_evaluate</code>, upload de arquivo). Não libere "tudo" para destravar.'],
           ['O navegador abre, mas a página não carrega', 'A app não está no ar, porta diferente, ou o servidor MCP roda em contêiner ou VM onde <code>localhost</code> é outro.', 'Suba a app antes (<code>make run</code>) e confira a URL no navegador comum; ajuste host e porta.']
@@ -229,7 +229,7 @@
         T('<p><strong>Resultado esperado.</strong> Primeiro prompt: uma tabela "critério do ticket x critério da spec" com lacunas apontadas, sem escrita. Segundo: um comentário e uma mudança de status visíveis no ticket, e o agente informando exatamente o que chamou. A aprovação humana da escrita é desejável: é aí que mora o risco de injeção.</p>' +
           '<p><strong>Diagnóstico</strong></p>'),
         { tipo: 'texto', largo: true, html: tabelaDiag([
-          ['Servidor não conecta ou não autentica', 'OAuth não concluído; administrador da organização não liberou o uso de MCP; no kit, o servidor vem desligado em <code>opencode.json</code> e no TOML do Codex.', 'Conclua o login (Claude Code: <code>/mcp</code>; Codex: <code>codex mcp login atlassian</code>); ligue o servidor (<code>enabled</code>); peça liberação ao administrador.'],
+          ['Servidor não conecta ou não autentica', 'OAuth não concluído; administrador da organização não liberou o uso de MCP; no kit, o servidor vem desligado em <code>opencode.json</code> e no TOML do Codex.', 'Conclua o login (Claude Code: <code>/mcp</code>; Codex: <code>codex mcp login atlassian</code>); ligue o servidor (<code>enabled</code>; no OpenCode V2, <code>disabled: false</code>); peça liberação ao administrador.'],
           ['Tool não aparece ou lista incompleta', 'Servidor não aprovado na sessão; tool fora de <code>enabled_tools</code>; produto ou site sem acesso para a sua conta.', 'Reinicie a sessão, liste os servidores, reveja o filtro e abra o Jira no navegador com a mesma conta.'],
           ['Permissão negada ao transicionar', 'O workflow do Jira não permite aquela transição para o seu usuário ou a partir do status atual; ou a tool está sob aprovação e foi negada.', 'Veja as transições válidas do ticket no Jira; ajuste o prompt para o nome exato do status; aprove a escrita conscientemente.']
         ]) },
@@ -277,25 +277,26 @@
               '# enabled_tools = ["..."]   # allowlist de tools')),
             T('<p class="ta-nota">Autenticação OAuth: <code>codex mcp login atlassian</code>. Também existem <code>default_tools_approval_mode</code>, <code>tools.&lt;tool&gt;.approval_mode</code>, <code>enabled</code> e <code>required</code>.</p>')] },
           { rotulo: 'OpenCode', blocos: [
-            T('<p>Arquivo <code>opencode.json</code>, chave <code>mcp</code>. <code>type</code> é <code>"local"</code> (com <code>command</code> como <em>array</em>) ou <code>"remote"</code> (com <code>url</code>).</p>'),
+            T('<p>Arquivo <code>opencode.jsonc</code> (V2), chave <code>mcp.servers</code> (na V1 os servidores ficavam direto em <code>mcp</code>). <code>type</code> é <code>"local"</code> (com <code>command</code> como <em>array</em>) ou <code>"remote"</code> (com <code>url</code>).</p>'),
             C('json', cod(
               '{',
               '  "$schema": "https://opencode.ai/config.json",',
               '  "mcp": {',
-              '    "playwright": {',
-              '      "type": "local",',
-              '      "command": ["npx", "@playwright/mcp@latest", "--isolated"],',
-              '      "enabled": true',
-              '    },',
-              '    "atlassian": {',
-              '      "type": "remote",',
-              '      "url": "https://mcp.atlassian.com/v2/mcp",',
-              '      "oauth": {},',
-              '      "enabled": false',
+              '    "servers": {',
+              '      "playwright": {',
+              '        "type": "local",',
+              '        "command": ["npx", "@playwright/mcp@latest", "--isolated"],',
+              '        "disabled": false',
+              '      },',
+              '      "atlassian": {',
+              '        "type": "remote",',
+              '        "url": "https://mcp.atlassian.com/v2/mcp",',
+              '        "disabled": true',
+              '      }',
               '    }',
               '  }',
               '}')),
-            T('<p class="ta-nota">Variáveis do processo local em <code>environment</code>; <code>oauth: {}</code> ativa a detecção automática; <code>headers</code> para chave de API.</p>')] },
+            T('<p class="ta-nota">Variáveis do processo local em <code>environment</code>; <code>headers</code> para chave de API; <code>disabled: true</code> mantém o servidor configurado sem conectar (a V2 não tem <code>enabled</code>).</p>')] },
           { rotulo: 'Claude Code', blocos: [
             T('<p>Pela linha de comando (escopo <code>local</code> por padrão; <code>project</code> grava <code>.mcp.json</code> na raiz para o time; <code>user</code> vale para todos os seus projetos):</p>'),
             C('bash', cod(
@@ -355,7 +356,7 @@ T('<p>Com o SDK Python do MCP (<code>pip install mcp</code>) o seu loop vira um 
           '<li>O navegador do Playwright só acessa localhost ou o ambiente de teste, com usuário de teste.</li>' +
           '<li>Conteúdo de issue, PR e página web é tratado como dado não confiável (regra no <code>AGENTS.md</code>).</li>' +
           '<li>Arquivos de config de MCP estão sob CODEOWNERS e passam por PR.</li>' +
-          '<li>Sei desligar o servidor (<code>enabled = false</code>, <code>claude mcp remove</code>) e revogar o token.</li></ul>'),
+          '<li>Sei desligar o servidor (<code>enabled = false</code>; <code>disabled: true</code> no OpenCode V2; <code>claude mcp remove</code>) e revogar o token.</li></ul>'),
         { tipo: 'escolha', id: 'mcp-escolha-transporte', titulo: 'Confira: stdio ou HTTP',
           pergunta: 'Você quer que o agente controle um navegador na sua máquina e também leia tickets do Jira da empresa. Qual transporte para cada um?',
           opcoes: [
@@ -371,7 +372,7 @@ T('<p>Com o SDK Python do MCP (<code>pip install mcp</code>) o seu loop vira um 
             { id: 'c', texto: 'Jira em modo somente leitura e navegador limitado a <code>localhost</code>.', correta: false, porque: 'escopo mínimo e navegador restrito, exatamente as defesas recomendadas.' }
           ], tutorDepois: 'Conteúdo não confiável, dado privado e saída para a rede: nunca os três juntos.' },
         { tipo: 'callout', tom: 'neutral', titulo: 'O que foi e o que não foi confirmado', html:
-          '<strong>Confirmado em 12/10/2026</strong> nas páginas oficiais: pacote e flags do <code>@playwright/mcp</code> e nomes das tools; chaves <code>mcpServers</code> (Cursor e Claude Code), <code>[mcp_servers.nome]</code> (Codex), <code>mcp</code> com <code>type</code> local ou remote (OpenCode); <code>claude mcp add</code> e escopos; transportes e primitivas do MCP; URLs do GitHub MCP e opções <code>--read-only</code> e <code>--toolsets</code>.<br><strong>Não confirmado (†), confira na documentação oficial</strong>: guia de instalação e escopos do servidor Atlassian (só o endereço aparece na página de produto); interpolação de variáveis e cabeçalhos no Cursor; <code>cmd /c npx</code> no Windows; assinaturas atuais do SDK Python; modo local do Figma.<br>Fontes: <a href="https://modelcontextprotocol.io/">modelcontextprotocol.io</a>, <a href="https://github.com/microsoft/playwright-mcp">playwright-mcp</a>, <a href="https://code.claude.com/docs/en/mcp">Claude Code MCP</a>, <a href="https://developers.openai.com/codex/mcp">Codex MCP</a>, <a href="https://opencode.ai/docs/mcp-servers/">OpenCode MCP</a>, <a href="https://docs.cursor.com/context/mcp">Cursor MCP</a>.' },
+          '<strong>Confirmado em 12/10/2026</strong> nas páginas oficiais: pacote e flags do <code>@playwright/mcp</code> e nomes das tools; chaves <code>mcpServers</code> (Cursor e Claude Code), <code>[mcp_servers.nome]</code> (Codex), <code>mcp.servers</code> com <code>type</code> local ou remote (OpenCode V2, revalidado em 09/11/2026); <code>claude mcp add</code> e escopos; transportes e primitivas do MCP; URLs do GitHub MCP e opções <code>--read-only</code> e <code>--toolsets</code>.<br><strong>Não confirmado (†), confira na documentação oficial</strong>: guia de instalação e escopos do servidor Atlassian (só o endereço aparece na página de produto); interpolação de variáveis e cabeçalhos no Cursor; <code>cmd /c npx</code> no Windows; assinaturas atuais do SDK Python; modo local do Figma.<br>Fontes: <a href="https://modelcontextprotocol.io/">modelcontextprotocol.io</a>, <a href="https://github.com/microsoft/playwright-mcp">playwright-mcp</a>, <a href="https://code.claude.com/docs/en/mcp">Claude Code MCP</a>, <a href="https://learn.chatgpt.com/docs/extend/mcp">Codex MCP</a>, <a href="https://opencode.ai/docs/mcp-servers/">OpenCode MCP</a>, <a href="https://docs.cursor.com/context/mcp">Cursor MCP</a>.' },
         { tipo: 'takeaway', html: 'MCP dá ao agente <mark>mãos e olhos fora do repositório</mark>; a segurança vem de <mark>escopo mínimo</mark>, <mark>segredos em variável</mark> e <mark>config sob revisão</mark>.' }
       ] }
     ]
