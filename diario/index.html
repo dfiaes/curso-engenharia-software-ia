@@ -97,7 +97,7 @@
       h("header", { className: "dr-top" }, h("div", { className: "dr-wrap dr-top-in" },
         h("a", { className: "dr-link", href: "../index.html" }, "← Portal do curso"),
         h("span", { className: "dr-top-title" }, "Diário de IA e engenharia"),
-        h("button", { type: "button", className: "dr-theme", onClick: toggleTheme, "aria-label": "Alternar tema claro e escuro" }, "Tema"))),
+        h(ThemeBtn))),
       h("main", { className: "dr-wrap" },
         h("div", { className: "dr-hero" },
           h("h1", null, "Diário de IA e engenharia"),
@@ -156,12 +156,19 @@
     );
   }
 
-  function toggleTheme() {
-    var cur = document.documentElement.dataset.theme;
-    if (!cur) cur = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    var next = cur === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem("curso.theme", next); } catch (e) { /* sem storage */ }
+  // Tema: Sistema (sem atributo) -> Claro -> Escuro, na mesma chave "curso.theme" das demais páginas.
+  var TEMAS = [["system", "Sistema"], ["light", "Claro"], ["dark", "Escuro"]];
+  function temaSalvo() { try { var t = localStorage.getItem("curso.theme"); return t === "light" || t === "dark" ? t : "system"; } catch (e) { return "system"; } }
+  function ThemeBtn() {
+    var st = useState(temaSalvo), tema = st[0], setTema = st[1];
+    function next() {
+      var i = TEMAS.map(function (t) { return t[0]; }).indexOf(tema), n = TEMAS[(i + 1) % TEMAS.length][0];
+      if (n === "system") { document.documentElement.removeAttribute("data-theme"); try { localStorage.removeItem("curso.theme"); } catch (e) { /* sem storage */ } }
+      else { document.documentElement.dataset.theme = n; try { localStorage.setItem("curso.theme", n); } catch (e) { /* sem storage */ } }
+      setTema(n);
+    }
+    var nome = TEMAS.filter(function (t) { return t[0] === tema; })[0][1];
+    return h("button", { type: "button", className: "dr-theme", onClick: next, "aria-label": "Tema: " + nome + ". Trocar para o próximo (Sistema, Claro, Escuro)" }, "Tema: " + nome);
   }
 
   ReactDOM.createRoot(document.getElementById("raiz")).render(h(App));

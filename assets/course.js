@@ -61,23 +61,74 @@
     menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
     sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
     moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+    system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
     up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>'
   };
 
   /* ---------- Tema ---------- */
-  function currentTheme() {
-    var t = document.documentElement.dataset.theme;
-    if (t) return t;
-    return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  /* Preferência: "light", "dark" ou ausente (= sistema). Mesma chave das páginas interativas.
+     O <script> do <head> de cada página já aplica o valor antes da primeira pintura; aqui só se garante o mesmo. */
+  var THEMES = [
+    { id: "system", label: "Sistema", icon: "system" },
+    { id: "light", label: "Claro", icon: "sun" },
+    { id: "dark", label: "Escuro", icon: "moon" }
+  ];
+  function themePref() {
+    var t = store(true, THEME_KEY);
+    return t === "light" || t === "dark" ? t : "system";
   }
   function applyTheme(t) {
-    document.documentElement.dataset.theme = t;
-    store(false, THEME_KEY, t);
-    var b = document.querySelector(".c-theme");
-    if (b) { b.innerHTML = t === "dark" ? ICON.sun : ICON.moon; b.setAttribute("aria-label", t === "dark" ? "Usar tema claro" : "Usar tema escuro"); }
+    if (t !== "light" && t !== "dark") t = "system";
+    if (t === "system") {
+      document.documentElement.removeAttribute("data-theme");
+      try { localStorage.removeItem(THEME_KEY); } catch (e) { /* sem armazenamento */ }
+    } else {
+      document.documentElement.dataset.theme = t;
+      store(false, THEME_KEY, t);
+    }
+    syncThemeControls(t);
   }
-  var saved = store(true, THEME_KEY);
-  if (saved === "dark" || saved === "light") document.documentElement.dataset.theme = saved;
+  function syncThemeControls(t, root) {
+    (root || document).querySelectorAll(".c-themeseg button").forEach(function (b) {
+      var on = b.dataset.pref === t;
+      b.setAttribute("aria-checked", on ? "true" : "false");
+      b.tabIndex = on ? 0 : -1;
+    });
+  }
+  function themeControl() {
+    var g = el("div", { "class": "c-themeseg c-theme", role: "radiogroup", "aria-label": "Tema" });
+    THEMES.forEach(function (th) {
+      var b = el("button", { type: "button", role: "radio", "data-pref": th.id, "aria-label": th.label, title: "Tema: " + th.label.toLowerCase() }, ICON[th.icon]);
+      g.appendChild(b);
+    });
+    g.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-pref]"); if (b) applyTheme(b.dataset.pref);
+    });
+    g.addEventListener("keydown", function (e) {
+      var d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var ids = THEMES.map(function (x) { return x.id; });
+      var next = ids[(ids.indexOf(themePref()) + d + ids.length) % ids.length];
+      applyTheme(next);
+      var nb = g.querySelector('button[data-pref="' + next + '"]'); if (nb) nb.focus();
+    });
+    syncThemeControls(themePref(), g);
+    return g;
+  }
+  // mantém o atributo igual à preferência salva (o <head> já fez isso; cobre páginas sem o script)
+  (function () {
+    var p = themePref();
+    if (p === "system") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = p;
+  })();
+  // outra aba mudou o tema
+  window.addEventListener("storage", function (e) {
+    if (e.key === THEME_KEY || e.key === null) {
+      var p = themePref();
+      if (p === "system") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = p;
+      syncThemeControls(p);
+    }
+  });
 
   /* ---------- Progresso (mesmo formato do portal) ---------- */
   function loadState() {
@@ -105,7 +156,7 @@
       '<button class="c-iconbtn c-menu" type="button" aria-label="Abrir sumário" aria-expanded="false">' + ICON.menu + '</button>' +
       '<a class="c-home" href="' + href("index.html") + '">Curso</a>' +
       '<span class="c-crumb">' + (unit ? unit.phase + ' · <b>' + unit.code + '</b> · ' + unit.title : (document.title || "")) + '</span>' +
-      '<button class="c-iconbtn c-theme" type="button"></button>' +
+      '<span class="c-theme-slot"></span>' +
       '<div class="c-progress" aria-hidden="true"></div>';
     var layout = el("div", { "class": "c-layout" });
     var side = el("nav", { "class": "c-side", "aria-label": "Sumário do módulo" });
@@ -127,9 +178,7 @@
     body.querySelector(".c-scrim").addEventListener("click", function () { toggle(false); });
     side.addEventListener("click", function (e) { if (e.target.closest("a")) toggle(false); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") toggle(false); });
-    var tb = top.querySelector(".c-theme");
-    applyTheme(currentTheme());
-    tb.addEventListener("click", function () { applyTheme(currentTheme() === "dark" ? "light" : "dark"); });
+    top.querySelector(".c-theme-slot").replaceWith(themeControl());
   }
 
   function slug(s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60); }
@@ -379,6 +428,7 @@
       // embaralha de forma determinística (inverte) para não começar resolvido
       items.reverse().forEach(function (li) { o.appendChild(li); });
       o.querySelectorAll("li").forEach(function (li) {
+        var txt = el("span", { "class": "ord-t" }); while (li.firstChild) txt.appendChild(li.firstChild); li.appendChild(txt);
         var mv = el("span", { "class": "mv" });
         var up = el("button", { type: "button", "aria-label": "Mover para cima" }, "▲");
         var dn = el("button", { type: "button", "aria-label": "Mover para baixo" }, "▼");
@@ -420,12 +470,9 @@
   function start() {
     if (document.body.dataset.layout !== "none") { buildLayout(); trackProgress(); }
     else {
-      /* Páginas sem o layout dos módulos (portal): ligar o botão de tema da própria página. */
-      var pb = document.querySelector(".c-theme");
-      if (pb) {
-        applyTheme(currentTheme());
-        pb.addEventListener("click", function () { applyTheme(currentTheme() === "dark" ? "light" : "dark"); });
-      }
+      /* Páginas sem o layout dos módulos (portal): trocar o marcador de tema da própria página pelo seletor. */
+      var pb = document.querySelector(".c-theme-slot, .c-theme");
+      if (pb) pb.replaceWith(themeControl());
     }
     rewriteDocLinks(document);
     enhanceReading();
@@ -436,7 +483,7 @@
   }
 
   window.Course = {
-    unit: UNIT, manifest: M, root: ROOT.href, el: el, init: initAll, applyTheme: applyTheme, docHref: docHref, rewriteDocLinks: rewriteDocLinks,
+    unit: UNIT, manifest: M, root: ROOT.href, el: el, init: initAll, applyTheme: applyTheme, themePref: themePref, docHref: docHref, rewriteDocLinks: rewriteDocLinks,
     ready: function (fn) { if (ready) ready.push(fn); else fn(window.Course); }
   };
   function boot() { withDocs(start); }
