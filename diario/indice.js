@@ -2,6 +2,26 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-09",
+   "titulo": "\"Yes, and don't ask again\": 2.539 segredos vazados por arquivos de permissão do Claude Code",
+   "resumo": "Pesquisa da Apiiro encontra credenciais salvas em .claude/settings.local.json em repositórios públicos; Codex CLI 0.167.0 ganha central de agentes; dia fraco nos demais changelogs.",
+   "tags": [
+    "seguranca",
+    "ferramentas-dev"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M00",
+     "motivo": "Ao ensinar permissões do Claude Code, mostrar que regras de allow salvas guardam o comando inteiro, inclusive segredos, e que settings.local.json precisa estar no .gitignore do projeto."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "Caso real e medido de vazamento de credenciais por arquivo de configuração de agente; reforça rotação antes de limpeza e varredura de pastas de agente (.claude/) no secret scanning."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-09.html"
+  },
+  {
    "data": "2026-11-07",
    "titulo": "Modelo barato decide, Opus só desempata: um caso medido de cascata de LLMs",
    "resumo": "Hightouch publica números de uma cascata modelo-de-decisão + Opus; libghostty 1.0 estabiliza a ABI em C; GitHub leva o agente para Slack e Teams.",

@@ -41,5 +41,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "O post afirma que a biblioteca e a ABI em C são estáveis, sob licença MIT e sem código copyleft na árvore de dependências.",
   "url": "diario/edicoes/2026/2026-11-07.html"
+ },
+ {
+  "id": "2026-11-09#1",
+  "data": "2026-11-09",
+  "pergunta": "Segundo o relato da pesquisa da Apiiro, qual é a primeira resposta ao descobrir um segredo commitado em .claude/settings.local.json?",
+  "opcoes": [
+   {
+    "texto": "Revogar e rotacionar a credencial antes de apagar o arquivo ou reescrever o histórico",
+    "correta": true
+   },
+   {
+    "texto": "Rodar git rm e forçar push para limpar o histórico",
+    "correta": false
+   },
+   {
+    "texto": "Tornar o repositório privado",
+    "correta": false
+   }
+  ],
+  "porque": "O segredo já pode ter sido copiado; apagar o arquivo não invalida a credencial. Rotação primeiro, limpeza depois.",
+  "url": "diario/edicoes/2026/2026-11-09.html"
+ },
+ {
+  "id": "2026-11-09#2",
+  "data": "2026-11-09",
+  "pergunta": "Por que a exclusão que o Claude Code adiciona ao gitignore global não basta?",
+  "opcoes": [
+   {
+    "texto": "Ela não viaja com o projeto e não cobre arquivos que já estavam rastreados",
+    "correta": true
+   },
+   {
+    "texto": "Ela só funciona no Windows",
+    "correta": false
+   },
+   {
+    "texto": "Ela ignora apenas .env",
+    "correta": false
+   }
+  ],
+  "porque": "O gitignore global vale só na máquina de quem o tem; um clone em outra máquina ou um arquivo já rastreado continua sendo commitado.",
+  "url": "diario/edicoes/2026/2026-11-09.html"
  }
 ];
