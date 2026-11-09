@@ -24,6 +24,8 @@ Exemplos com preço hipotético (E01, E02, M05 quando dizem "hipotético") não 
 4. Atualizar o módulo e a data de verificação no próprio HTML.
 5. Registrar aqui: nova data em "Verificado em", novo "Revalidar até", e uma linha em "Histórico".
 
+A trilha Ferramentas tem registro próprio, por ferramenta, em `ferramentas/fontes/*.md` (mesma regra de prazos: 30 dias para preço, plano, modelo e prévia; 90 para comando e arquivo de configuração), e o catálogo marca a data de verificação de cada item em `ferramentas/catalogo.js`. A revisão mensal percorre esses arquivos junto com a tabela abaixo.
+
 Depois dos passos 4 e 5, rodar `uv run --with markdown python tools/build_course_portal.py` e `python3 tools/check_course.py`.
 
 ## Fontes a acompanhar

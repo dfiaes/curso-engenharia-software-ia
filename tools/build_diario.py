@@ -3,7 +3,7 @@
 
 Reads `diario/edicoes/AAAA/AAAA-MM-DD.md` and `diario/semanas/AAAA-Www.md` and writes,
 next to them, the static HTML pages (Trilha layout, no React), plus
-`diario/indice.js`, `diario/revisao.js` and `diario/fila-revisao-mensal.{md,html}`.
+`diario/indice.js`, `diario/revisao.js`, `diario/radar.js` and `diario/fila-revisao-mensal.{md,html}`.
 
 Run: `python3 tools/build_diario.py` (needs the `markdown` package;
 `uv run --with markdown python tools/build_diario.py`). Only stdlib + markdown.
@@ -382,6 +382,33 @@ def build_review(eds: list[dict[str, Any]]) -> str:
     return "/* Gerado por tools/build_diario.py — não edite. */\nwindow.DIARIO_REVISAO = " + json.dumps(items, ensure_ascii=False, indent=1) + ";\n"
 
 
+def radar_bullets(body: str) -> list[str]:
+    """Bullets of the "## Radar de ferramentas" section, as Markdown text (one string per bullet)."""
+    m = re.search(r"^##[ \t]+Radar de ferramentas[ \t]*\n(.*?)(?=^##[ \t]|^---[ \t]*$|\Z)", body, re.S | re.M)
+    if not m:
+        return []
+    items: list[str] = []
+    for line in m.group(1).splitlines():
+        if re.match(r"\s*[-*]\s+", line):
+            items.append(re.sub(r"^\s*[-*]\s+", "", line).strip())
+        elif items and line.strip():
+            items[-1] += " " + line.strip()
+    return items
+
+
+def build_radar(eds: list[dict[str, Any]]) -> str:
+    import markdown  # lazy, like md_to_html
+
+    items = []
+    for e in sorted(eds, key=lambda e: e["data"], reverse=True):
+        for b in radar_bullets(e["body"]):
+            texto = markdown.markdown(b, extensions=["extra"], output_format="html")
+            texto = re.sub(r"^<p>(.*)</p>$", r"\1", texto, flags=re.S)
+            texto = re.sub(r'<a href="(https?://[^"]+)"', r'<a href="\1" rel="noopener noreferrer"', texto)
+            items.append({"data": e["data"], "texto_html": texto, "url_edicao": e["url"]})
+    return "/* Gerado por tools/build_diario.py — não edite. */\nwindow.DIARIO_RADAR = " + json.dumps(items, ensure_ascii=False, indent=1) + ";\n"
+
+
 def read_treated(root: Path) -> set[str]:
     """Edition dates already handled by the monthly review, one per line in diario/revisao-tratadas.txt."""
     p = root / DIARIO / "revisao-tratadas.txt"
@@ -437,6 +464,7 @@ def build(root: Path = ROOT) -> dict[str, int]:
         write_if_changed(w["path"].with_suffix(".html"), week_html(w))
     write_if_changed(base / "indice.js", build_index(eds, weeks))
     write_if_changed(base / "revisao.js", build_review(eds))
+    write_if_changed(base / "radar.js", build_radar(eds))
     queue = build_queue(eds, read_treated(root))
     write_if_changed(base / "fila-revisao-mensal.md", queue)
     write_if_changed(base / "fila-revisao-mensal.html", queue_html(queue))

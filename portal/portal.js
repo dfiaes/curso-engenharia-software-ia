@@ -44,6 +44,7 @@
       + card(docHref("docs/nivelamento.md"), "Nivelamento", "Nivelamento", "Descubra por onde começar de acordo com a sua experiência.")
       + revisaoCard()
       + card("diario/index.html", "Diário", "Diário de IA e engenharia", "Uma edição por dia sobre o que mudou em IA e engenharia, em calendário, com os módulos do curso sinalizados.")
+      + card("ferramentas/FER.html", "Ferramentas", "Agentes de código, do zero ao avançado", "Claude Code, Codex, Cursor, Copilot, OpenCode e Gemini/Antigravity na prática, com fatos datados, mais o catálogo de MCPs, plugins e skills.")
       + card(docHref("kit/README.md"), "Kit", "Kit de arranque", "Modelos agnósticos para copiar no seu projeto: AGENTS.md, intent/spec/plan, hooks e esteira dev → cert → prod.");
   }
 

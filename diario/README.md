@@ -88,3 +88,4 @@ periodo: "02 a 08/11/2026"
 
 Corpo: as **5 coisas mais importantes da semana**, cada uma com 2 a 3 linhas (o que mudou, por que importa, o que fazer) e o link para a edição de origem (`../edicoes/AAAA/AAAA-MM-DD.html`). Depois, uma linha com temas novos recorrentes e módulos mais sinalizados. Mesmas regras de fonte e rodapé.
 - As perguntas do campo `revisao` entram na Revisão do dia da Trilha rápida (`trilha-rapida/TR.html#revisao`), até 3 novas por dia, nos últimos 30 dias.
+- `radar.js` (`window.DIARIO_RADAR`) reúne os bullets de "Radar de ferramentas" de cada edição; o catálogo em `ferramentas/catalogo.html` o lê.

@@ -35,6 +35,16 @@ fontes_count: 2
 
 Texto com [link](https://example.com/a).
 
+## Radar de ferramentas
+
+- **Ferramenta X** ([repo](https://example.com/x)): candidata, não avaliada.
+- **`y`:** segunda linha
+  continuada.
+
+## Fontes
+
+1. [A](https://example.com/a)
+
 *Compilação gerada por IA em 10/01/2026, a partir das fontes listadas. Confira antes de agir.*
 """
 ED2 = """---
@@ -144,6 +154,18 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0]["id"], "2026-01-10#1")
         self.assertTrue(items[0]["opcoes"][0]["correta"])
+
+    def test_radar_js(self) -> None:
+        text = (self.root / "diario/radar.js").read_text(encoding="utf-8")
+        items = json.loads(text.split("window.DIARIO_RADAR = ", 1)[1].rstrip().rstrip(";"))
+        self.assertEqual(len(items), 2)  # ED2 has no radar section: negative control
+        self.assertEqual({i["data"] for i in items}, {"2026-01-10"})
+        self.assertEqual(items[0]["url_edicao"], "diario/edicoes/2026/2026-01-10.html")
+        self.assertIn("<strong>Ferramenta X</strong>", items[0]["texto_html"])
+        self.assertIn('rel="noopener noreferrer"', items[0]["texto_html"])
+        self.assertNotIn("<p>", items[0]["texto_html"])
+        self.assertIn("segunda linha continuada", items[1]["texto_html"])
+        self.assertNotIn("example.com/a", items[1]["texto_html"])  # section stops at the next heading
 
     def test_queue_and_treated(self) -> None:
         queue = (self.root / "diario/fila-revisao-mensal.md").read_text(encoding="utf-8")

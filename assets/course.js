@@ -169,7 +169,7 @@
       '<li><a href="' + href("trilha-rapida/TR.html") + '">Trilha rápida: dev com agentes</a></li></ul>';
     html += '<h2>Documentos</h2><ul>' + [
       ["CURRICULO.md", "Currículo"], ["docs/nivelamento.md", "Nivelamento"], ["docs/como-estudar.md", "Como estudar"],
-      ["docs/leituras-complementares.md", "Leituras complementares"], ["kit/README.md", "Kit de arranque"], ["STATUS.md", "Status"], ["diario/index.html", "Diário"]
+      ["docs/leituras-complementares.md", "Leituras complementares"], ["kit/README.md", "Kit de arranque"], ["STATUS.md", "Status"], ["diario/index.html", "Diário"], ["ferramentas/FER.html", "Ferramentas"], ["ferramentas/catalogo.html", "Catálogo"]
     ].map(function (d) { return '<li><a href="' + docHref(d[0]) + '">' + d[1] + "</a></li>"; }).join("") + "</ul>";
     if (unit) html += '<h2>Progresso</h2><div class="c-reset"><button type="button" class="c-reset-btn">Recomeçar este módulo</button></div>';
     side.innerHTML = html;
