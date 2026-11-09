@@ -24,7 +24,8 @@
   --bad:var(--danger); --bad-soft:color-mix(in srgb,var(--danger) 9%,var(--surface-raised));
   --net:var(--info); --net-soft:var(--info-soft); --red:var(--bad); --red-soft:var(--bad-soft);
   /* layout */
-  --top-h:56px; --side-w:290px; --content-w:780px;
+  --top-h:64px; --side-w:290px; --content-w:780px;
+  --reader-size:19px; --reader-lh:31px;
 }
 *{box-sizing:border-box}
 html{scroll-padding-top:calc(var(--top-h) + 16px);-webkit-text-size-adjust:100%}
@@ -35,29 +36,41 @@ a{color:var(--primary);text-underline-offset:2px}
 .skip-link:focus{left:8px}
 strong,b{color:var(--ink)}
 
-/* ---------- Barra superior ---------- */
-.c-top{position:sticky;top:0;z-index:100;height:var(--top-h);display:flex;align-items:center;gap:var(--space-3);
-  padding:0 var(--space-4);background:var(--material-bar);backdrop-filter:saturate(180%) blur(20px);
-  -webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+/* ---------- Barra superior: vidro flutuante (Liquid Glass) ---------- */
+/* Pílula 12px abaixo do topo; encolhe ao rolar para baixo e volta ao rolar para cima (assets/glass-bar.js).
+   O fundo leva o véu glass-scrim por baixo do vidro para o texto da barra manter contraste sobre qualquer conteúdo. */
+.c-top,.p-top{position:sticky;top:var(--space-3);z-index:100;display:flex;align-items:center;gap:var(--space-3);
+  width:min(calc(100% - 24px),1190px);height:52px;margin:var(--space-3) auto 0;padding:0 var(--space-2) 0 var(--space-4);
+  border-radius:var(--radius-pill);isolation:isolate;
+  background:linear-gradient(var(--glass-scrim),var(--glass-scrim)),var(--glass-regular);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow:var(--shadow-glass-rim),var(--shadow-glass-float);
+  transition:width .36s cubic-bezier(.2,.8,.2,1)}
+.c-top::after,.p-top::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(90px circle at var(--lg-x,30%) var(--lg-y,0%),var(--glass-specular),transparent 70%)}
+.c-top.is-collapsed,.p-top.is-collapsed{width:min(calc(100% - 24px),440px)}
+.c-top.is-collapsed .c-themeseg,.p-top.is-collapsed .c-themeseg{display:none}
 .c-top .c-home{font-weight:700;text-decoration:none;color:var(--ink);white-space:nowrap}
 .c-top .c-crumb{color:var(--ink-muted);font-size:13px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
 .c-top .c-crumb b{color:var(--ink)}
 .c-iconbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:40px;height:40px;padding:0 10px;
-  border:0;background:var(--fill-subtle);color:var(--ink);border-radius:var(--radius-md);cursor:pointer;font:inherit;font-size:14px;font-weight:600}
+  border:0;background:var(--fill-subtle);color:var(--ink);border-radius:var(--radius-pill);cursor:pointer;font:inherit;font-size:14px;font-weight:600}
 .c-iconbtn:hover{background:var(--fill-pressed)}
 .c-iconbtn:active{transform:scale(.97)}
 .c-iconbtn svg{width:18px;height:18px}
-.c-progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);width:0;transition:width .1s linear}
+.c-progress{position:absolute;left:var(--space-5);bottom:4px;height:2px;border-radius:2px;background:var(--primary);
+  width:calc((100% - 2 * var(--space-5)) * var(--p,0))}
 @media (min-width:1100px){.c-menu{display:none}}
+@media (prefers-reduced-motion:reduce){.c-top,.p-top{transition:none}.c-top::after,.p-top::after{display:none}}
 
-/* Seletor de tema (Sistema / Claro / Escuro): segmento discreto, mesmo vocabulário do SegmentedControl */
-.c-themeseg{display:inline-flex;flex:none;padding:2px;border-radius:var(--radius-md);background:var(--fill-subtle)}
-.c-themeseg button{display:grid;place-items:center;width:32px;height:30px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--ink-muted);cursor:pointer}
+/* Seletor de tema (Sistema / Claro / Papel / Escuro): segmento discreto, mesmo vocabulário do SegmentedControl */
+.c-themeseg{display:inline-flex;flex:none;padding:2px;border-radius:var(--radius-pill);background:var(--fill-subtle)}
+.c-themeseg button{display:grid;place-items:center;width:32px;height:30px;padding:0;border:0;border-radius:var(--radius-pill);background:transparent;color:var(--ink-muted);cursor:pointer}
 .c-themeseg button:hover{color:var(--ink)}
 .c-themeseg button[aria-checked="true"]{background:var(--surface-raised);color:var(--ink);box-shadow:var(--shadow-control)}
 .c-themeseg svg{width:16px;height:16px}
 @media (pointer:coarse){.c-themeseg button{width:40px;height:36px}}
-@media (max-width:420px){.c-top{gap:var(--space-2);padding:0 var(--space-3)}.c-themeseg button{width:30px}}
+@media (max-width:420px){.c-top,.p-top{gap:var(--space-2);padding:0 var(--space-2) 0 var(--space-3)}.c-themeseg button{width:30px}.c-top .c-home{display:none}}
 
 /* ---------- Layout: barra lateral + conteúdo ---------- */
 .c-layout{display:flex;align-items:flex-start;max-width:calc(var(--side-w) + var(--content-w) + 120px);margin:0 auto}
@@ -76,14 +89,45 @@ strong,b{color:var(--ink)}
 .c-side .c-unit-meta{padding:0 var(--space-2);color:var(--ink-muted);font-size:13px}
 .c-main{flex:1;min-width:0;padding:var(--space-8) clamp(16px,4vw,48px) 120px}
 .c-main>.wrap,.c-main .wrap{max-width:var(--content-w);margin:0 auto;padding:0}
+.c-sheet-head{display:none}
+/* Celular e tablet: o sumário abre como folha de vidro (mesmo visual do Sheet do Trilha) */
 @media (max-width:1099px){
-  .c-side{position:fixed;left:0;top:var(--top-h);z-index:90;background:var(--surface-100);transform:translateX(-105%);
-    transition:transform .2s ease;box-shadow:var(--shadow-popover);border-right:1px solid var(--line)}
-  body.side-open .c-side{transform:none}
+  .c-side{position:fixed;z-index:150;left:50%;top:50%;width:min(calc(100% - 32px),480px);flex:none;height:auto;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);
+    padding:var(--space-5);border:0;border-radius:var(--radius-2xl);overscroll-behavior:contain;
+    background:linear-gradient(var(--glass-scrim),var(--glass-scrim)),var(--glass-regular);
+    -webkit-backdrop-filter:blur(28px) saturate(var(--glass-saturate));backdrop-filter:blur(28px) saturate(var(--glass-saturate));
+    box-shadow:var(--shadow-glass-rim),var(--shadow-popover);
+    visibility:hidden;opacity:0;transform:translate(-50%,-47%) scale(.97);
+    transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .2s ease,visibility 0s linear .26s}
+  body.side-open .c-side{visibility:visible;opacity:1;transform:translate(-50%,-50%);transition-delay:0s}
   body.side-open .c-scrim{display:block}
+  html:has(body.side-open){overflow:hidden}
+  .c-side:focus{outline:none}
+  .c-sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-2)}
+  .c-side .c-sheet-head .c-sheet-title{margin:0;padding:0;border:0;font:600 24px/28px var(--font-display);letter-spacing:.009em;text-transform:none;color:var(--ink)}
+  .c-sheet-close{flex:none;width:32px;height:32px;border:0;border-radius:var(--radius-pill);background:var(--glass-regular);box-shadow:var(--shadow-glass-rim);color:var(--ink);cursor:pointer;font-size:18px;line-height:1}
+  .c-side a{min-height:44px;align-items:center}
 }
 @media (prefers-reduced-motion:reduce){.c-side,.c-progress,.c-iconbtn{transition:none}}
-.c-scrim{display:none;position:fixed;inset:var(--top-h) 0 0 0;background:rgba(0,0,0,.35);z-index:80}
+.c-scrim{display:none;position:fixed;inset:0;background:rgba(20,22,19,.36);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:140}
+
+/* Acessibilidade do vidro: sem transparência vira superfície sólida; mais contraste põe borda forte */
+@media (prefers-reduced-transparency:reduce){
+  .c-top,.p-top{background:var(--glass-solid)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  .c-top::after,.p-top::after{display:none}
+  .c-scrim{-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+@media (prefers-reduced-transparency:reduce) and (max-width:1099px){
+  .c-side{background:var(--glass-solid)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  .c-sheet-close{background:var(--fill-subtle)}
+}
+@media (prefers-contrast:more){
+  .c-top,.p-top{background:var(--glass-solid)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:0 0 0 1.5px var(--line-strong),var(--shadow-glass-float)!important}
+  .c-top::after,.p-top::after{display:none}
+}
+@media (prefers-contrast:more) and (max-width:1099px){
+  .c-side{background:var(--glass-solid)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:0 0 0 1.5px var(--line-strong),var(--shadow-popover)!important}
+}
 
 /* ---------- Tipografia do conteúdo ---------- */
 h1{font-size:clamp(1.75rem,4vw,2.25rem);line-height:1.2;font-weight:700;margin:0 0 var(--space-3);letter-spacing:-.02em;color:var(--ink)}
@@ -92,6 +136,17 @@ h3{font-size:1.125rem;line-height:1.4;font-weight:700;margin:var(--space-8) 0 va
 h4{font-size:12px;line-height:16px;font-weight:600;margin:var(--space-6) 0 var(--space-2);color:var(--ink-muted);text-transform:uppercase;letter-spacing:.04em}
 p,li{margin:0 0 14px;overflow-wrap:break-word}
 ul,ol{padding-left:22px}
+/* Leitura: o texto corrido dos módulos e documentos usa a serifa do Trilha (New York), corpo reader-body 19/31,
+   coluna de size-measure (68ch) e hifenização pt-BR. Títulos, tabelas, código, rótulos de caixa, navegação,
+   quizzes e simuladores continuam em SF Pro. O portal e as aulas interativas não usam .c-main. */
+.c-main :is(h1,h2,h3,h4){text-wrap:balance;hyphens:manual;-webkit-hyphens:manual}
+.c-main :is(p,li):where(:not(:is(table,.ix,.quiz,.flashcards,.stepper,.tabs,.c-pager,.c-mark,.toc,.checklist,.order,.cards,.card,.primer,dialog,details>summary) *,.meta,.small,.q,.explain)){
+  font-family:var(--font-serif);font-size:var(--reader-size);line-height:var(--reader-lh);max-width:var(--size-measure);
+  hyphens:auto;-webkit-hyphens:auto;text-wrap:pretty;font-kerning:normal;font-variant-ligatures:common-ligatures}
+.c-main :is(p,li):where(:not(:is(table,.ix,.quiz,.flashcards,.stepper,.tabs,.c-pager,.c-mark,.toc,.checklist,.order,.cards,.card,.primer,dialog,details>summary) *,.meta,.small,.q,.explain)) :is(code,.kbd){hyphens:none;-webkit-hyphens:none}
+.c-main p.lead{font-size:21px;line-height:33px}
+.c-main li>:is(ul,ol){max-width:none}
+.c-main :is(p,li)>strong{font-weight:600}
 img,svg,video{max-width:100%;height:auto}
 hr{border:none;border-top:1px solid var(--line);margin:40px 0}
 blockquote{margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid var(--primary);color:var(--ink-muted)}
@@ -242,8 +297,6 @@ svg [fill="#faf9f7"]{fill:var(--surface-100)} svg [fill="#f4f2ee"]{fill:var(--su
 /* ---------- Portal ---------- */
 .portal-hero{padding:24px 0 8px}
 .portal-hero p{color:var(--ink-muted);max-width:60ch}
-.p-top{position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px;height:var(--top-h);padding:0 clamp(16px,4vw,40px);
-  background:var(--material-bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
 .p-top strong{flex:1;font-size:15px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .p-wrap{max-width:1120px;margin:0 auto;padding:24px clamp(16px,4vw,40px) 80px}
 .p-hero h1{margin:.3em 0}

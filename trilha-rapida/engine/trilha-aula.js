@@ -196,6 +196,7 @@
     var i = parseInt(s[0], 10) || 0;
     return h('div', { className: 'ta-abas' },
       h('div', { className: 'ta-segwrap' }, h(T.SegmentedControl, {
+        glass: true,
         options: itens.map(function (it, k) { return { value: String(k), label: it.rotulo }; }),
         value: s[0], onChange: s[1], 'aria-label': p.rotulo || 'Escolha uma opção'
       })),
@@ -243,7 +244,7 @@
       p.children,
       !feito && h('div', { className: 'ta-panel-foot' },
         h('span', null, obrig ? 'Conta para liberar o Continuar.' : 'Exercício opcional.'),
-        h(Button, { variant: 'plain', size: 'sm', onClick: function () { p.onDone(ex.id, 'pulado'); } }, 'Pular exercício')));
+        h(Button, { variant: 'glass', size: 'sm', onClick: function () { p.onDone(ex.id, 'pulado'); } }, 'Pular exercício')));
   }
   function TutorLive(p) {
     return h('div', { className: 'ta-tutor', 'aria-live': 'polite' }, p.tutor && h(Tutor, { tone: p.tutor.tom || 'neutral', lead: p.tutor.lead },
@@ -612,6 +613,13 @@
     var rs = useState(lerHash), route = rs[0];
     var ss = useState(lerStore), store = ss[0];
     var ds = useState(false), drawer = ds[0];
+    var ms = useState(function () { try { return window.matchMedia('(max-width: 900px)').matches; } catch (e) { return false; } }), mobile = ms[0];
+    useEffect(function () {
+      var q; try { q = window.matchMedia('(max-width: 900px)'); } catch (e) { return; }
+      function f() { ms[1](q.matches); if (!q.matches) ds[1](false); }
+      if (q.addEventListener) q.addEventListener('change', f); else q.addListener(f);
+      return function () { if (q.removeEventListener) q.removeEventListener('change', f); else q.removeListener(f); };
+    }, []);
     var cs = useState(false), confirma = cs[0];
     var tk = useState(0), copiado = useState(null);
     useEffect(function () {
@@ -684,37 +692,50 @@
       copiarTexto(txt, function () { copiado[1](Date.now()); });
     }
 
-    function tema() {
-      var atual = document.documentElement.getAttribute('data-theme');
-      if (!atual) { try { atual = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch (e) { atual = 'light'; } }
-      var novo = atual === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', novo);
-      try { localStorage.setItem('curso.theme', novo); } catch (e) {}
-      ts[1](novo);
+    var TEMAS = [{ value: 'system', label: 'Sistema' }, { value: 'light', label: 'Claro' }, { value: 'paper', label: 'Papel' }, { value: 'dark', label: 'Escuro' }];
+    function tema(v) {
+      var root = document.documentElement;
+      if (v === 'light' || v === 'dark' || v === 'paper') {
+        root.setAttribute('data-theme', v);
+        try { localStorage.setItem('curso.theme', v); } catch (e) {}
+      } else {
+        v = 'system'; root.removeAttribute('data-theme');
+        try { localStorage.removeItem('curso.theme'); } catch (e) {}
+      }
+      ts[1](v === 'system' ? '' : v);
     }
-    var escuro = (document.documentElement.getAttribute('data-theme') || (function () { try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch (e) { return 'light'; } })()) === 'dark';
+    var temaAtual = ts[0] === 'light' || ts[0] === 'dark' || ts[0] === 'paper' ? ts[0] : 'system';
 
-    var lateral = h('aside', { className: 'ta-side', 'data-aberta': drawer ? 'true' : 'false', 'aria-label': 'Aulas da trilha' },
-      h('h2', { className: 'ta-brand' }, C.nome, h('small', null, C.subtitulo)),
-      h(T.ProgressBar, { value: ids.length ? feitasN / ids.length : 0, tone: 'brand', label: feitasN + ' de ' + ids.length + ' aulas', showValue: true }),
-      A_ && h('nav', { 'aria-label': 'Revisão' }, h(T.List, null, h(T.ListRow, {
-        title: 'Revisão do dia (' + nRev + ')', subtitle: nRev ? 'Itens vencidos, de várias aulas' : 'Nada vencido hoje', chevron: false, current: emRevisao,
-        leading: h('span', { className: 'ta-num', 'aria-hidden': true }, '↻'), onClick: function () { location.hash = '#revisao'; }
-      }))),
-      h('nav', { 'aria-label': 'Lista de aulas' }, h(T.List, null, ids.map(function (id, i) {
-        var r = registry[id], s = aulaSt(store, id);
-        return h(T.ListRow, {
-          key: id, title: tituloDe(id), subtitle: r ? r.minutos + ' min' : 'em preparo', chevron: false, current: !emRevisao && id === cur.aula, done: !!s.concluida,
-          leading: h('span', { className: 'ta-num' }, s.concluida ? '✓' : String(i + 1)), onClick: function () { ir(id, r ? (s.aba || 0) : 0); }
-        });
-      }))),
-      h('div', { className: 'ta-side-links' },
-        h('a', { href: C.portal }, '← Portal do curso'),
-        C.texto && h('a', { href: C.texto }, 'Versão em texto'),
-        h(Button, { variant: 'plain', onClick: tema }, escuro ? 'Tema claro' : 'Tema escuro'),
-        confirma
-          ? h(Button, { variant: 'tinted', onClick: function () { mut(function (n) { n.aulas = {}; n.atual = null; }); cs[1](false); ir(ids[0], 0); } }, 'Confirmar: apagar progresso')
-          : h(Button, { variant: 'plain', onClick: function () { cs[1](true); } }, 'Recomeçar ' + C.unidade)));
+    function conteudoLateral(naFolha) {
+      return [
+        !naFolha && h('h2', { key: 'brand', className: 'ta-brand' }, C.nome, h('small', null, C.subtitulo)),
+        h(T.ProgressBar, { key: 'prog', value: ids.length ? feitasN / ids.length : 0, tone: 'brand', label: feitasN + ' de ' + ids.length + ' aulas', showValue: true }),
+        A_ && h('nav', { key: 'rev', 'aria-label': 'Revisão' }, h(T.List, null, h(T.ListRow, {
+          title: 'Revisão do dia (' + nRev + ')', subtitle: nRev ? 'Itens vencidos, de várias aulas' : 'Nada vencido hoje', chevron: false, current: emRevisao,
+          leading: h('span', { className: 'ta-num', 'aria-hidden': true }, '↻'), onClick: function () { location.hash = '#revisao'; }
+        }))),
+        h('nav', { key: 'aulas', 'aria-label': 'Lista de aulas' }, h(T.List, null, ids.map(function (id, i) {
+          var r = registry[id], s = aulaSt(store, id);
+          return h(T.ListRow, {
+            key: id, title: tituloDe(id), subtitle: r ? r.minutos + ' min' : 'em preparo', chevron: false, current: !emRevisao && id === cur.aula, done: !!s.concluida,
+            leading: h('span', { className: 'ta-num' }, s.concluida ? '✓' : String(i + 1)), onClick: function () { ir(id, r ? (s.aba || 0) : 0); }
+          });
+        }))),
+        h('div', { key: 'links', className: 'ta-side-links' },
+          h('a', { href: C.portal }, '← Portal do curso'),
+          C.texto && h('a', { href: C.texto }, 'Versão em texto'),
+          h('div', { className: 'ta-temaseg' },
+            h('span', { className: 'ta-field-label' }, 'Tema'),
+            h(T.SegmentedControl, { options: TEMAS, value: temaAtual, onChange: tema, fullWidth: true, 'aria-label': 'Tema' })),
+          confirma
+            ? h(Button, { variant: 'tinted', onClick: function () { mut(function (n) { n.aulas = {}; n.atual = null; }); cs[1](false); ir(ids[0], 0); } }, 'Confirmar: apagar progresso')
+            : h(Button, { variant: 'plain', onClick: function () { cs[1](true); } }, 'Recomeçar ' + C.unidade))
+      ];
+    }
+    // Desktop: barra lateral fixa. Celular e tablet: o mesmo conteúdo abre numa folha de vidro (Sheet).
+    var lateral = h('aside', { className: 'ta-side', 'aria-label': 'Aulas da trilha' }, conteudoLateral(false));
+    var folha = mobile && h(T.Sheet, { open: drawer, onClose: function () { ds[1](false); }, title: C.nome, material: 'glass', className: 'ta-sheet' }, conteudoLateral(true));
+    var fab = mobile && !drawer && h(Button, { variant: 'glass', className: 'ta-fab', onClick: function () { ds[1](true); }, 'aria-haspopup': 'dialog', 'aria-expanded': false }, 'Aulas');
 
     var corpo;
     if (emRevisao) {
@@ -728,21 +749,19 @@
       corpo = h(Blocos, { blocos: abas[aba] ? abas[aba].blocos : [], ctx: ctx, k: cur.aula + '-' + aba });
     }
     var passoAtual = PASSO[cur.aula];
-    var mbar = h('div', { className: 'ta-mbar' }, h(Button, { variant: 'gray', size: 'sm', onClick: function () { ds[1](!drawer); }, 'aria-expanded': drawer }, 'Aulas'), h('strong', null, emRevisao ? 'Revisão do dia' : tituloDe(cur.aula)));
-    var scrim = h('button', { type: 'button', className: 'ta-scrim', 'data-aberta': drawer ? 'true' : 'false', 'aria-label': 'Fechar lista de aulas', onClick: function () { ds[1](false); }, tabIndex: drawer ? 0 : -1 });
     if (emRevisao) {
-      return h('div', { className: 'ta-app' }, lateral, scrim,
-        h('div', { className: 'ta-main' }, h('div', { className: 'ta-top' }, mbar), h('main', { className: 'ta-aula', id: 'conteudo' }, corpo)));
+      return h('div', { className: 'ta-app' }, !mobile && lateral, folha, fab,
+        h('div', { className: 'ta-main' }, h('main', { className: 'ta-aula ta-aula-solta', id: 'conteudo' }, corpo)));
     }
-    return h('div', { className: 'ta-app' }, lateral, scrim,
+    return h('div', { className: 'ta-app' }, !mobile && lateral, folha, fab,
       h('div', { className: 'ta-main' },
-        h('div', { className: 'ta-top' }, mbar,
-          h(T.LessonToolbar, {
+        h(T.LessonToolbar, {
             steps: aula ? abas.map(function (a, i) { var s = abaStats(i); return { label: a.rotulo, progress: s.exs.length ? s.feitos.length / s.exs.length : (i <= aba ? 1 : 0) }; }) : [{ label: 'Em preparo', progress: 0 }],
             current: aula ? aba : 0, onStep: aula ? irAba : undefined, onBack: (aba > 0 || idx > 0) ? voltar : undefined,
-            hint: pode ? undefined : dica, canContinue: podeFinal, onContinue: continuar, continueLabel: rotulo,
-            floating: false
-          })),
+            hint: pode ? undefined : dica,
+            action: h(Button, { size: 'sm', trailing: '→', disabled: !podeFinal, onClick: continuar }, rotulo),
+            floating: true, collapseOnScroll: true
+          }),
         h('main', { className: 'ta-aula', id: 'conteudo' },
           h('header', { className: 'ta-head' },
             h('div', { className: 'ta-meta' }, h(Badge, { tone: 'brand' }, oculta ? 'Aula escondida' : 'Aula ' + (idx + 1) + ' de ' + ids.length), aula && h(Badge, null, aula.minutos + ' min'),
@@ -752,7 +771,7 @@
           corpo,
           h('div', { className: 'ta-foot' },
             h('div', { className: 'ta-foot-l' },
-              aula && h(Button, { variant: 'tinted', onClick: perguntarTutor }, 'Perguntar ao tutor'),
+              aula && h(Button, { variant: 'glass', onClick: perguntarTutor }, 'Perguntar ao tutor'),
               h('span', null, pode ? '' : (dica ? 'Falta: ' + dica.replace(/^./, function (c) { return c.toLowerCase(); }) + '. Ou use Pular exercício.' : 'Conclua os exercícios para continuar.'))),
             h(Button, { disabled: !podeFinal, trailing: '→', onClick: continuar }, rotulo)),
           copiado[0] && h('div', { 'aria-live': 'polite' }, h(Callout, { tone: 'success', title: 'Prompt copiado — cole no seu agente (Claude, Cursor, Codex…)' }, 'O tutor vai conduzir você por perguntas, sem entregar a resposta.')))));

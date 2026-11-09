@@ -62,23 +62,25 @@
     sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
     moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
     system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+    paper: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>',
     up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>'
   };
 
   /* ---------- Tema ---------- */
-  /* Preferência: "light", "dark" ou ausente (= sistema). Mesma chave das páginas interativas.
+  /* Preferência: "light", "paper", "dark" ou ausente (= sistema). Mesma chave das páginas interativas.
      O <script> do <head> de cada página já aplica o valor antes da primeira pintura; aqui só se garante o mesmo. */
   var THEMES = [
     { id: "system", label: "Sistema", icon: "system" },
     { id: "light", label: "Claro", icon: "sun" },
+    { id: "paper", label: "Papel", icon: "paper" },
     { id: "dark", label: "Escuro", icon: "moon" }
   ];
   function themePref() {
     var t = store(true, THEME_KEY);
-    return t === "light" || t === "dark" ? t : "system";
+    return t === "light" || t === "dark" || t === "paper" ? t : "system";
   }
   function applyTheme(t) {
-    if (t !== "light" && t !== "dark") t = "system";
+    if (t !== "light" && t !== "dark" && t !== "paper") t = "system";
     if (t === "system") {
       document.documentElement.removeAttribute("data-theme");
       try { localStorage.removeItem(THEME_KEY); } catch (e) { /* sem armazenamento */ }
@@ -145,6 +147,16 @@
     return { unit: null, index: -1 };
   }
 
+  /* Barra de vidro: encolher ao rolar e reflexo (assets/glass-bar.js, o mesmo das páginas do diário e do catálogo). */
+  function glassBar() {
+    if (window.__glassBar || document.querySelector('script[data-glass-bar]')) return;
+    try {
+      var sc = document.createElement("script");
+      sc.src = new URL("assets/glass-bar.js", ROOT).href; sc.defer = true; sc.setAttribute("data-glass-bar", "");
+      document.head.appendChild(sc);
+    } catch (e) { /* sem barra animada */ }
+  }
+
   /* ---------- Estrutura da página ---------- */
   function buildLayout() {
     var info = unitInfo(), unit = info.unit;
@@ -159,6 +171,7 @@
       '<span class="c-theme-slot"></span>' +
       '<div class="c-progress" aria-hidden="true"></div>';
     var layout = el("div", { "class": "c-layout" });
+    glassBar();
     var side = el("nav", { "class": "c-side", "aria-label": "Sumário do módulo" });
     var main = el("main", { "class": "c-main", id: "conteudo", tabindex: "-1" });
     kids.forEach(function (n) { main.appendChild(n); });
@@ -172,12 +185,31 @@
     totop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
     body.appendChild(totop);
 
+    /* Celular e tablet: o sumário é uma folha de vidro modal (role=dialog só enquanto aberta; no desktop segue sendo <nav>). */
     var menu = top.querySelector(".c-menu");
-    function toggle(open) { body.classList.toggle("side-open", open); menu.setAttribute("aria-expanded", open ? "true" : "false"); }
+    var sheetMQ = window.matchMedia ? window.matchMedia("(max-width:1099px)") : { matches: false };
+    function toggle(open) {
+      open = !!open && sheetMQ.matches;
+      var was = body.classList.contains("side-open");
+      body.classList.toggle("side-open", open);
+      menu.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) { side.setAttribute("role", "dialog"); side.setAttribute("aria-modal", "true"); side.setAttribute("aria-labelledby", "c-sheet-t"); side.tabIndex = -1; side.scrollTop = 0; side.focus(); }
+      else { side.removeAttribute("role"); side.removeAttribute("aria-modal"); side.removeAttribute("aria-labelledby"); side.removeAttribute("tabindex"); if (was) menu.focus(); }
+    }
     menu.addEventListener("click", function () { toggle(!body.classList.contains("side-open")); });
     body.querySelector(".c-scrim").addEventListener("click", function () { toggle(false); });
-    side.addEventListener("click", function (e) { if (e.target.closest("a")) toggle(false); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape") toggle(false); });
+    side.addEventListener("click", function (e) { if (e.target.closest("a, .c-sheet-close")) toggle(false); });
+    document.addEventListener("keydown", function (e) {
+      if (!body.classList.contains("side-open")) return;
+      if (e.key === "Escape") { toggle(false); return; }
+      if (e.key !== "Tab") return;
+      var f = Array.prototype.filter.call(side.querySelectorAll("a[href],button:not([disabled])"), function (n) { return n.offsetParent !== null; });
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === side)) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    if (sheetMQ.addEventListener) sheetMQ.addEventListener("change", function () { if (!sheetMQ.matches) toggle(false); });
     top.querySelector(".c-theme-slot").replaceWith(themeControl());
   }
 
@@ -201,7 +233,7 @@
 
   function buildSidebar(side, unit) {
     var state = loadState();
-    var html = "";
+    var html = '<div class="c-sheet-head"><div class="c-sheet-title" id="c-sheet-t">Sumário</div><button type="button" class="c-sheet-close" aria-label="Fechar sumário">×</button></div>';
     if (unit) {
       html += '<h2>Este módulo</h2><div class="c-unit-title">' + unit.code + " · " + unit.title + '</div>';
       html += '<div class="c-unit-meta">' + (unit.hours ? "≈ " + unit.hours + " h · " : "") + (unit.blocks ? unit.blocks.length : 0) + " blocos</div>";
@@ -324,7 +356,7 @@
       requestAnimationFrame(function () {
         ticking = false;
         var doc = document.documentElement, max = doc.scrollHeight - doc.clientHeight;
-        if (bar) bar.style.width = (max > 0 ? (doc.scrollTop / max) * 100 : 0) + "%";
+        if (bar) bar.style.setProperty("--p", (max > 0 ? Math.min(1, doc.scrollTop / max) : 0).toFixed(4));
         if (totop) totop.classList.toggle("show", doc.scrollTop > 900);
         var cur = null;
         for (var i = 0; i < heads.length; i++) { if (heads[i].getBoundingClientRect().top < 120) cur = heads[i]; else break; }
@@ -473,6 +505,7 @@
       /* Páginas sem o layout dos módulos (portal): trocar o marcador de tema da própria página pelo seletor. */
       var pb = document.querySelector(".c-theme-slot, .c-theme");
       if (pb) pb.replaceWith(themeControl());
+      glassBar();
     }
     rewriteDocLinks(document);
     enhanceReading();

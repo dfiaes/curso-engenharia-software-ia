@@ -277,13 +277,14 @@ def page(title: str, rel: str, inner: str, description: str = "") -> str:
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(description)}">
 <meta name="color-scheme" content="light dark">
-<script>try{{var t=localStorage.getItem("curso.theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}}catch(e){{}}</script>
+<script>try{{var t=localStorage.getItem("curso.theme");if(t==="light"||t==="dark"||t==="paper")document.documentElement.dataset.theme=t}}catch(e){{}}</script>
 <link rel="stylesheet" href="{rel}assets/trilha/tokens.css">
 <link rel="stylesheet" href="{rel}assets/trilha/bundle.css">
 <link rel="stylesheet" href="{rel}diario/diario.css">
 </head>
 <body class="tr-root">
 {inner}
+<script src="{rel}assets/glass-bar.js" defer></script>
 </body>
 </html>
 """

@@ -5,7 +5,7 @@
   --tag-open-source: #6a7f1c; --tag-cloud: #1f7aa6; --tag-outro: #6f6e67;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"]):not([data-theme="paper"]) {
     --tag-mercado: #e0b65c; --tag-modelos: #bc9ce4; --tag-ferramentas-dev: #8fb2ee; --tag-llm-local: #82c39a;
     --tag-engenharia: #b9b8b0; --tag-seguranca: #f0957a; --tag-regulacao: #e49bc6; --tag-pesquisa: #7fd0d6;
     --tag-open-source: #b5cc6a; --tag-cloud: #7ec4e8; --tag-outro: #a3a39b;
@@ -19,7 +19,19 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--surface-100); color: var(--ink-body); font: 15px/24px var(--font-sans); }
 .dr-wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
-.dr-top { position: sticky; top: 0; z-index: 5; background: var(--material-bar); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }
+/* Barra de vidro flutuante: encolhe ao rolar (assets/glass-bar.js) */
+.dr-top {
+  position: sticky; top: var(--space-3); z-index: 5; width: min(calc(100% - 24px), 1080px); margin: var(--space-3) auto 0; border-radius: var(--radius-pill); isolation: isolate;
+  background: linear-gradient(var(--glass-scrim), var(--glass-scrim)), var(--glass-regular); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)); backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--shadow-glass-rim), var(--shadow-glass-float); transition: width .36s cubic-bezier(.2,.8,.2,1);
+}
+.dr-top::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; background: radial-gradient(90px circle at var(--lg-x, 30%) var(--lg-y, 0%), var(--glass-specular), transparent 70%); }
+.dr-top.is-collapsed { width: min(calc(100% - 24px), 420px); }
+.dr-top.is-collapsed .dr-top-title { display: none; }
+.dr-top .dr-top-in { padding: 0 var(--space-3); max-width: none; }
+@media (prefers-reduced-motion: reduce) { .dr-top { transition: none; } .dr-top::after { display: none; } }
+@media (prefers-reduced-transparency: reduce) { .dr-top { background: var(--glass-solid) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } .dr-top::after { display: none; } }
+@media (prefers-contrast: more) { .dr-top { background: var(--glass-solid) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-glass-float) !important; } .dr-top::after { display: none; } }
 .dr-top-in { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
 .dr-top-title { font-weight: 700; color: var(--ink); font-size: 14px; text-align: center; }
 .dr-link { color: var(--primary); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; }

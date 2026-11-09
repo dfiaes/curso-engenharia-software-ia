@@ -583,7 +583,7 @@
           h('textarea', { id: ex.id + '-ed', className: 'ta-ed-ta', rows: Math.min(Math.max(n + 1, 8), 22), wrap: 'off', spellCheck: false, autoCapitalize: 'off', autoCorrect: 'off', value: S.codigo,
             onChange: function (e) { mudar(e.target.value); }, onKeyDown: onKey, onScroll: function (e) { if (gut.current) gut.current.scrollTop = e.target.scrollTop; } }))),
       h('div', { className: 'ta-acoes' },
-        h(Button, { variant: 'gray', disabled: ocupado, onClick: function () { executar(false); } }, 'Rodar'),
+        h(Button, { variant: 'glass', disabled: ocupado, onClick: function () { executar(false); } }, 'Rodar'),
         h(Button, { disabled: ocupado || !ex.testes, onClick: function () { executar(true); } }, 'Testar'),
         ex.dica && h(Button, { variant: 'plain', onClick: function () { set({ dica: !S.dica }); } }, S.dica ? 'Esconder dica' : 'Ver dica'),
         ex.solucao && h(Button, { variant: 'plain', disabled: !S.tentou, onClick: function () { set({ solucao: !S.solucao }); } }, S.solucao ? 'Esconder solução' : 'Ver solução'),

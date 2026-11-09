@@ -1,5 +1,5 @@
 /* Trilha rápida · motor de aulas. Só layout; cores, tipografia e espaços vêm dos tokens do Trilha. */
-html { background: var(--surface-100); }
+html { background: var(--surface-100); scroll-padding-top: 96px; }
 body { margin: 0; background: var(--surface-100); color: var(--ink-body); font-family: var(--font-sans); font-size: 15px; line-height: 24px; -webkit-font-smoothing: antialiased; }
 *, *::before, *::after { box-sizing: border-box; }
 a { color: var(--primary); }
@@ -20,23 +20,25 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .ta-num { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: var(--radius-pill); background: var(--surface-300); color: var(--ink); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .tr-row-item[aria-current="true"] .ta-num { background: var(--primary); color: var(--on-primary); }
 .tr-row-done .ta-num { background: var(--primary-tint); color: var(--primary); }
-.ta-scrim { display: none; }
 
 /* coluna principal */
 .ta-main { min-width: 0; }
-.ta-top { position: sticky; top: 0; z-index: 20; }
-.ta-mbar { display: none; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-4); background: var(--material-bar); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }
-.ta-mbar strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); font-size: 14px; }
-.ta-top .tr-toolbar { position: static; }
-.ta-top .tr-toolbar .tr-btn { min-height: 44px; }
-.ta-top .tr-toolbar-step { min-height: 44px; justify-content: center; }
+/* Barra de etapas: LessonToolbar flutuante de vidro (12px abaixo do topo), encolhe ao rolar para baixo.
+   Fica direto em .ta-main para o sticky valer na coluna toda; ocupa lugar no fluxo, então nada nasce escondido sob ela. */
+.ta-main .tr-toolbar-float { top: var(--space-3); margin-top: var(--space-3); }
+.ta-main .tr-toolbar-float > .tr-toolbar { background: linear-gradient(var(--glass-scrim), var(--glass-scrim)), var(--glass-regular); }
+.ta-main .tr-toolbar .tr-btn { min-height: 44px; }
+.ta-main .tr-toolbar .tr-btn-icon { width: 44px; }
+.ta-main .tr-toolbar-step { min-height: 44px; justify-content: center; }
+.ta-main .tr-toolbar-hint { max-width: 32ch; }
+.ta-aula-solta { padding-top: var(--space-12); }
 .ta-aula { max-width: 980px; margin: 0 auto; padding: var(--space-8) var(--space-6) var(--space-12); display: flex; flex-direction: column; gap: var(--space-6); }
 .ta-head { display: flex; flex-direction: column; gap: var(--space-2); }
 .ta-head h1 { margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); text-wrap: balance; }
 .ta-head p { margin: 0; max-width: 68ch; color: var(--ink-muted); }
 .ta-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .ta-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--line); }
-.ta-foot span { font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+.ta-foot > span, .ta-foot-l > span { font-size: 13px; line-height: 18px; color: var(--ink-muted); }
 .ta-foot .tr-btn { min-height: 44px; }
 
 /* blocos de conteúdo */
@@ -63,8 +65,9 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .ta-codigo pre { margin: 0; padding: var(--space-3) var(--space-4); overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 20px; color: var(--ink); }
 .ta-abas { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .ta-segwrap { max-width: 100%; }
-.ta-segwrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; padding-bottom: 2px; }
+.ta-segwrap { max-width: calc(100% + 8px); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 4px 4px 16px; margin: -4px -4px -16px; }
 .ta-segwrap .tr-seg { max-width: none; }
+.ta-segwrap .tr-seg-glass { margin: 0 auto 0 0; }
 .ta-segwrap .tr-seg-item { min-height: 40px; white-space: nowrap; }
 
 /* painéis de exercício */
@@ -132,20 +135,27 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 /* estados vazios */
 .ta-preparo { display: flex; flex-direction: column; gap: var(--space-3); align-items: flex-start; }
 
-/* mobile e tablet */
+/* mobile e tablet: a lista de aulas abre numa folha de vidro (Sheet) e o botão "Aulas" flutua no canto */
+.ta-fab { position: fixed; z-index: 30; left: var(--space-4); bottom: max(var(--space-4), env(safe-area-inset-bottom)); min-height: 44px; background: linear-gradient(var(--glass-scrim), var(--glass-scrim)), var(--glass-regular); }
+.ta-temaseg { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) var(--space-3) var(--space-1); }
+.ta-temaseg .tr-seg-item { padding-left: 2px; padding-right: 2px; font-size: 12px; min-height: 36px; }
+/* O véu do Sheet vira camada de fundo: o ::before do bundle rola junto com o conteúdo e deixa o fim da lista sem véu. */
+.ta-sheet { width: min(100%, 440px); }
+.ta-sheet.tr-sheet-glass { background: linear-gradient(var(--glass-scrim), var(--glass-scrim)), var(--glass-regular); }
+.ta-sheet.tr-sheet-glass::before { display: none; }
+.ta-sheet > .tr-sheet-head + * { margin-top: 0; }
+.ta-sheet > * + * { margin-top: var(--space-4); }
+.ta-sheet .ta-side-links { margin-top: var(--space-2); }
+.ta-sheet .tr-row-item { min-height: 48px; }
 @media (max-width: 900px) {
   .ta-app { display: block; }
-  .ta-mbar { display: flex; }
-  .ta-side { position: fixed; z-index: 40; top: 0; bottom: 0; left: 0; width: min(320px, 86vw); height: auto; transform: translateX(-100%); visibility: hidden; transition: transform .24s ease, visibility 0s linear .24s; box-shadow: var(--shadow-popover); }
-  .ta-side[data-aberta="true"] { transform: none; visibility: visible; transition: transform .24s ease; }
-  .ta-scrim { position: fixed; z-index: 30; inset: 0; background: var(--fill-pressed); border: 0; }
-  .ta-scrim[data-aberta="true"] { display: block; }
   .ta-aula { padding: var(--space-5) var(--space-4) var(--space-10); gap: var(--space-5); }
   .ta-head h1 { font-size: 24px; line-height: 30px; }
   .ta-cols { grid-template-columns: minmax(0, 1fr); }
-  .ta-top .tr-toolbar { padding: var(--space-2) var(--space-3); gap: var(--space-2); grid-template-columns: auto minmax(0, 1fr) auto; }
-  .ta-top .tr-toolbar-steps { overflow-x: auto; justify-content: flex-start; gap: var(--space-2); scrollbar-width: none; }
-  .ta-top .tr-toolbar-step { min-width: 64px; flex: none; }
+  .ta-main .tr-toolbar { gap: var(--space-2); grid-template-columns: auto minmax(0, 1fr) auto; }
+  .ta-main .tr-toolbar-steps { overflow-x: auto; justify-content: flex-start; gap: var(--space-2); scrollbar-width: none; }
+  .ta-main .tr-toolbar-step { min-width: 56px; flex: none; }
+  .ta-aula-solta, .ta-aula { padding-top: var(--space-6); padding-bottom: 96px; }
   .ta-panel.tr-card-panel { padding: var(--space-4); }
   .ta-msg-voce, .ta-chat .tr-tutor-bubble { max-width: 92%; }
   .ta-term .tr-term-body { height: 260px; }
