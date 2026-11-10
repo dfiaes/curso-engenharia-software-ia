@@ -12,6 +12,7 @@ fonte = (d / f'{cod}.html').read_text()
 aulas = sorted(p.name for p in (d / 'interativo' / 'aulas').glob('b*.js'))
 ids = [f"{low}-b{int(a[1:3])}" for a in aulas]
 anc = {int(n): i for i, n in re.findall(r'<h2 id="([^"]+)">\s*Bloco (\d+)', fonte)}
+anc.update({int(n): i for i, n in re.findall(r'<section id="([^"]+)">\s*<h2[^>]*>\s*Bloco (\d+)', fonte) if int(n) not in anc})
 ordem_blocos = sorted(anc)
 passo = {}
 for i, a in zip(ids, aulas):
@@ -20,7 +21,7 @@ for i, a in zip(ids, aulas):
 files = aulas[:]
 if (d / 'interativo' / 'aulas' / 'checkpoint.js').exists():
     ids.append(f"{low}-checkpoint"); files.append('checkpoint.js')
-    ck = re.search(r'<h2 id="([^"]+)">\s*Checkpoint', fonte)
+    ck = re.search(r'<h2 id="([^"]+)">\s*Checkpoint', fonte) or re.search(r'<section id="([^"]+)">\s*<h2[^>]*>\s*Checkpoint', fonte)
     passo[f"{low}-checkpoint"] = ck.group(1) if ck else ''
 scripts = "\n".join(f'<script src="interativo/aulas/{f}"></script>' for f in files)
 html = f'''<!DOCTYPE html>
