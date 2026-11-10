@@ -544,6 +544,10 @@
       if (S.fase === 'carregando' || S.fase === 'rodando') return;
       set({ fase: 'carregando', tutor: null, linhas: [{ kind: 'info', text: 'Carregando Python (~10 MB, só na primeira vez)…', prefix: false }] });
       carregarPython().then(function (py) {
+        // pacotes fora do núcleo do Pyodide (ex.: sqlite3) são baixados conforme os imports
+        var src = S.codigo + '\n' + (comTestes && ex.testes ? ex.testes : '');
+        return Promise.resolve(py.loadPackagesFromImports ? py.loadPackagesFromImports(src).catch(function () {}) : null).then(function () { return py; });
+      }).then(function (py) {
         set({ fase: 'rodando' });
         setTimeout(function () {
           var r;
