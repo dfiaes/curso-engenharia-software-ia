@@ -1,0 +1,508 @@
+/* M04 · Bloco 4: manutenção automatizada, doc drift, linter e agente revisor. Fonte: M04.html#b04. O comando do agente no workflow depende do harness (claude/codex/opencode); o que importa é o contrato do prompt. A saída do "rode" vem da solução do exercício desta aula. */
+(function () {
+  var L = function (kind, text) { return { kind: kind, text: text }; };
+  function opc(id, texto, correta, porque) { return { id: id, texto: texto, correta: correta, porque: porque }; }
+
+  var etapasDrift = function () {
+    return [
+      { id: 'doc', nome: 'O texto da doc', descricao: 'Três caminhos citados', tom: 'dns', ms: 3, linhas: [
+        L('cmd', 'python drift.py docs/arquitetura.md --commits 17'),
+        L('info', 'cita src/app/parser.py, src/app/service.py, docs/adr/0001-pgvector.md e tools/old_check.py'),
+        L('info', 'existem no repositório: service.py e o ADR 0001')] },
+      { id: 'refs', nome: 'Referências', descricao: 'Classe 1: referência quebrada', tom: 'tcp', ms: 2, linhas: [
+        L('in', "referencias_quebradas -> ['src/app/parser.py', 'tools/old_check.py']"),
+        L('hint', 'o parser foi renomeado e o script antigo foi removido; a doc continua citando os dois')] },
+      { id: 'idade', nome: 'Obsolescência', descricao: 'Classe 3: código andou, doc parada', tom: 'tls', ms: 17, linhas: [
+        L('out', 'commits no código desde a última mudança da doc: 17 (limite: 15)'),
+        L('in', 'obsoleta(17) -> True'),
+        L('out', 'com 9 commits: obsoleta(9) -> False')] },
+      { id: 'saida', nome: 'Resultado', descricao: 'Exit code do CI', tom: 'ink', ms: 1, linhas: [
+        L('in', 'DOC LINT FALHOU: 3 violações (2 ref-quebrada, 1 obsoleta)'),
+        L('hint', 'exit=1. Nenhum modelo foi chamado: tudo isso custou microssegundos')] }
+    ];
+  };
+
+  var parteChat = function (agente, certo, errado, resCerto, resErrado, pCerto, pErrado) {
+    return { agente: agente, opcoes: [
+      { texto: certo, boa: true, resposta: resCerto, porque: pCerto },
+      { texto: errado, boa: false, resposta: resErrado, porque: pErrado }
+    ] };
+  };
+
+  TrilhaAula.registrar({
+    id: 'm04-b4',
+    titulo: 'Manutenção automatizada: doc drift, linter e o agente que cobra no PR',
+    minutos: 45,
+    resumo: 'Gerar doc ficou trivial; o difícil é o segundo mês, quando o código andou e a doc mente. Doc drift se combate com exit code: linter para o mecânico, agente revisor só para a contradição semântica.',
+    objetivo: 'Classificar um doc drift pelas quatro classes, implementar as regras mecânicas do linter, e desenhar o agente revisor de PR com restrições que o impedem de virar ruído.',
+    revisao: [
+      { id: 'm04b4-classes', pergunta: 'Quais são as quatro classes de doc drift e quem detecta cada uma?',
+        opcoes: [
+          opc('a', 'Referência quebrada, estrutura violada e obsolescência por idade (linter); contradição semântica (agente)', true, 'as três primeiras são 80% dos casos e custam microssegundos; só a quarta justifica gastar tokens.'),
+          opc('b', 'As quatro, pelo agente, porque ele lê tudo', false, 'modelo para contar seções é caro, lento e não determinístico.'),
+          opc('c', 'As quatro, pelo linter, com expressões regulares', false, 'o linter não sabe que "lote de 100" virou 500.')] },
+      { id: 'm04b4-ordem', pergunta: 'Por que o linter roda antes do agente revisor, e não o contrário?',
+        opcoes: [
+          opc('a', 'O mecânico é barato e determinístico; o agente só é chamado quando o linter está verde, para cobrar o semântico', true, 'o agente só entra se o linter passou, e não escreve a doc: acusa a divergência.'),
+          opc('b', 'O agente é mais rápido, então roda por último só para confirmar', false, 'o agente é o caro e lento.'),
+          opc('c', 'A ordem não importa', false, 'importa para custo, determinismo e ruído.')] },
+      { id: 'm04b4-prompt', pergunta: 'Por que o prompt do revisor exige "apenas contradições factuais", "máximo de 5 achados" e a resposta exata "Sem divergências."?',
+        opcoes: [
+          opc('a', 'Evita ruído e permite verificar mecanicamente a saída; bot de PR que opina em tudo treina as pessoas a clicar em "resolve" sem ler', true, 'cada linha existe por um modo de falha observado.'),
+          opc('b', 'Para economizar espaço no repositório', false, 'o motivo é ruído e verificabilidade.'),
+          opc('c', 'Porque modelos não escrevem mais que 5 frases', false, 'não é limitação do modelo.')] },
+      { id: 'm04b4-edita', pergunta: 'Por que o agente revisor não edita a documentação?',
+        opcoes: [
+          opc('a', 'Escrever mudança de doc sem revisão humana é como deixar o agente commitar direto na main', true, 'ele acusa a divergência; o humano decide.'),
+          opc('b', 'Porque não tem acesso de leitura ao docs/', false, 'ele lê docs/ e o diff.'),
+          opc('c', 'Porque edição de markdown é proibida em CI', false, 'não é uma proibição técnica; é de desenho.')] },
+      { id: 'm04b4-fetch', pergunta: 'A regra de obsolescência dispara em toda doc no CI. Qual é a causa provável?',
+        opcoes: [
+          opc('a', 'Falta fetch-depth: 0 no checkout (git sem histórico) ou o documenta: aponta para um diretório grande demais', true, 'a regra conta commits desde a última mudança da doc, e isso precisa do histórico completo.'),
+          opc('b', 'O Mermaid está com a cerca errada', false, 'isso afeta a regra de Mermaid, não a de obsolescência.'),
+          opc('c', 'O ADR está sem "porque"', false, 'essa é a regra de estrutura de ADR.')] }
+    ],
+    abas: [
+      { rotulo: 'Entender', blocos: [
+        { tipo: 'texto', html:
+          '<h3>O segundo mês</h3>' +
+          '<p>Gerar documentação nunca foi o problema, e com IA ficou trivial. O problema é o segundo mês: o código andou, a doc não, e agora ela mente com a autoridade de um documento oficial. Isso tem nome, <strong>doc drift</strong>, e é o mecanismo pelo qual toda iniciativa de documentação morre. A solução é a do M01, bloco 2, transposta: se a regra é inegociável, ela vira mecanismo com <strong>exit code</strong>. Você não vai pedir educadamente que o time (ou o agente) atualize a doc; vai fazer o CI reprovar.</p>' },
+        { tipo: 'callout', tom: 'success', titulo: 'Mecânico primeiro, semântico depois', html:
+          '<p>O linter determinístico cobra o que é verificável mecanicamente; o agente cobra o que exige semântica, e nunca o contrário, porque modelo de linguagem para contar seções é caro, lento e não determinístico.</p>' +
+          '<p>A versão fraca que precede isso em muitos times é o aviso de compilador que só cobra existência de comentário ("todo membro público precisa de doc"): funciona por ser mecânico e falha porque todo mundo escreve prosa vazia para calar o aviso. O que muda agora é existir ferramenta capaz de julgar <em>veracidade</em>: o agente lendo diff e doc lado a lado.</p>' },
+        { tipo: 'texto', html: '<h3>As quatro classes de doc drift</h3>' },
+        { tipo: 'texto', largo: true, html:
+          '<table><thead><tr><th>Classe</th><th>Exemplo</th><th>Quem detecta</th></tr></thead><tbody>' +
+          '<tr><td>Referência quebrada</td><td>doc cita <code>services/parser.py</code>, que foi renomeado</td><td>linter (determinístico, barato)</td></tr>' +
+          '<tr><td>Estrutura violada</td><td>ADR sem seção "Decisão"; diagrama Mermaid com sintaxe inválida</td><td>linter</td></tr>' +
+          '<tr><td>Obsolescência por idade</td><td>doc do módulo X não muda há 6 meses, mas o código de X mudou 40 vezes</td><td>linter (heurística via git)</td></tr>' +
+          '<tr><td>Contradição semântica</td><td>doc diz "o worker processa em lote de 100"; o código agora usa 500</td><td>agente (só ele lê os dois e compara)</td></tr>' +
+          '</tbody></table>' },
+        { tipo: 'texto', html: '<p>As três primeiras são 80% dos casos e custam microssegundos. A quarta é a mais perigosa e a única que justifica gastar tokens.</p>' },
+        { tipo: 'chat', id: 'm04b4-chat', titulo: 'Quem cobra este doc drift?',
+          enunciado: 'O agente descreve situações de doc drift e pergunta quem deve detectá-las. Só avança com o responsável certo: o linter (mecânico, barato) ou o agente revisor (semântico, caro).',
+          rodadas: [
+            parteChat('A doc de operação cita <code>tools/migrar.py</code>, que foi apagado há duas semanas. Quem detecta?',
+              'O linter: é uma referência quebrada, verificável com <code>Path.exists()</code>.',
+              'O agente revisor: ele entende o contexto da doc.',
+              'Registrei a violação ref-quebrada com exit 1, sem gastar um token.',
+              'Chamei o modelo para checar se um arquivo existe. Funcionou, mas custou tokens e tempo para uma pergunta que o sistema de arquivos responde.',
+              'existência de arquivo é determinístico; a classe 1 é do linter.',
+              'usar LLM para checar o que um comando responde é caro e não determinístico.'),
+            parteChat('A doc diz "retenção de 30 dias" e o código agora usa 90. Quem detecta?',
+              'O agente revisor: é contradição semântica, que exige ler diff e doc juntos.',
+              'O linter, contando seções da doc.',
+              'Li o diff e a doc: a frase sobre retenção ficou falsa. Acuso a divergência e não edito nada.',
+              'Contei as seções e estão todas lá; a divergência passou.',
+              'só o agente lê o código e a prosa e compara; é a única classe que justifica gastar tokens.',
+              'o linter confere forma, não veracidade.'),
+            parteChat('Um ADR novo não tem a seção "## Decisão". Quem detecta?',
+              'O linter: estrutura violada é verificável com uma busca de texto.',
+              'O agente revisor, lendo o ADR inteiro.',
+              'Regra adr-estrutura acionada, exit 1.',
+              'Li o ADR inteiro por 40 segundos para encontrar o que um <code>in</code> acharia em microssegundos.',
+              'a estrutura obrigatória é verificável mecanicamente.',
+              'é caro, lento e não determinístico para uma checagem mecânica.')
+          ] },
+        { tipo: 'takeaway', html: 'Três classes são do <mark>linter</mark>; só a <mark>contradição semântica</mark> justifica gastar tokens do agente.' }
+      ] },
+
+      { rotulo: 'O linter de docs', blocos: [
+        { tipo: 'texto', html:
+          '<h3>Código completo, tipado, só stdlib</h3>' +
+          '<p>A cópia executável e testada vive no laboratório (<code>lab/src/design_guard/</code>). Abaixo, a mesma lógica como exemplo trabalhado de leitura: quatro regras (referência, estrutura de ADR, Mermaid e obsolescência), um <code>exit 1</code> quando há violação. Repare que mudar a configuração do topo é mudar a política, e isso passa por PR.</p>' },
+        { tipo: 'codigo', linguagem: 'python', texto: [
+      '# tools/doc_lint.py',
+      '"""Linter determinístico de documentação.',
+      '',
+      'Verifica, sem LLM:',
+      '  1. referências a arquivos do repositório que não existem mais;',
+      '  2. estrutura obrigatória dos ADRs;',
+      '  3. blocos mermaid com cerca fechada e tipo de diagrama conhecido;',
+      '  4. obsolescência: doc parada enquanto o código que ela descreve andou.',
+      '',
+      'Uso:  uv run python tools/doc_lint.py [--raiz .]',
+      'Exit: 0 = limpo | 1 = violações encontradas',
+      '"""',
+      '',
+      'from __future__ import annotations',
+      '',
+      'import argparse',
+      'import re',
+      'import subprocess',
+      'from dataclasses import dataclass',
+      'from pathlib import Path',
+      '',
+      '# --- configuração do processo (mudar isto É mudar a política; faça via PR) ---',
+      '',
+      'ADR_SECOES_OBRIGATORIAS: tuple[str, ...] = (',
+      '    "## Contexto",',
+      '    "## Opções consideradas",',
+      '    "## Decisão",',
+      '    "## Consequências",',
+      ')',
+      'ADR_STATUS_VALIDOS: tuple[str, ...] = ("proposta", "aceita", "substituída por")',
+      '',
+      'MERMAID_TIPOS_CONHECIDOS: tuple[str, ...] = (',
+      '    "flowchart", "graph", "sequenceDiagram", "classDiagram", "erDiagram",',
+      '    "stateDiagram-v2", "C4Context", "C4Container", "C4Component",',
+      '    "C4Dynamic", "C4Deployment", "gantt", "journey", "mindmap",',
+      ')',
+      '',
+      '# doc que descreve código: se o código andou N+ commits e a doc zero, alerta',
+      'LIMITE_COMMITS_SEM_DOC = 15',
+      '',
+      '# regex de caminho de arquivo citado em prosa ou crase: src/app/x.py, docs/y.md',
+      'RE_CAMINHO = re.compile(r"[`(\\s](((?:src|app|tools|capstone|docs|tests)/[\\w./-]+\\.\\w{1,5}))[`)\\s,.]")',
+      'RE_MERMAID = re.compile(r"^```mermaid\\s*$(.*?)^```\\s*$", re.MULTILINE | re.DOTALL)',
+      '',
+      '',
+      '@dataclass(frozen=True, slots=True)',
+      'class Violacao:',
+      '    arquivo: Path',
+      '    regra: str',
+      '    detalhe: str',
+      '',
+      '    def __str__(self) -> str:',
+      '        return f"{self.arquivo}: [{self.regra}] {self.detalhe}"',
+      '',
+      '',
+      'def _git(*args: str, cwd: Path) -> str:',
+      '    """Roda git e devolve stdout (string vazia se o comando falhar)."""',
+      '    resultado = subprocess.run(',
+      '        ["git", *args], cwd=cwd, capture_output=True, text=True, check=False',
+      '    )',
+      '    return resultado.stdout.strip() if resultado.returncode == 0 else ""',
+      '',
+      '',
+      'def checar_referencias(doc: Path, raiz: Path) -> list[Violacao]:',
+      '    """Regra 1: todo caminho de arquivo citado na doc precisa existir."""',
+      '    texto = doc.read_text(encoding="utf-8")',
+      '    problemas: list[Violacao] = []',
+      '    for match in RE_CAMINHO.finditer(texto):',
+      '        caminho = match.group(1)',
+      '        if not (raiz / caminho).exists():',
+      '            problemas.append(',
+      '                Violacao(doc, "ref-quebrada", f"cita \'{caminho}\', que não existe")',
+      '            )',
+      '    return problemas',
+      '',
+      '',
+      'def checar_adr(doc: Path) -> list[Violacao]:',
+      '    """Regra 2: ADR precisa das seções obrigatórias e de status válido."""',
+      '    if doc.parent.name != "adr" or doc.name.startswith("0000-"):',
+      '        return []',
+      '    texto = doc.read_text(encoding="utf-8")',
+      '    problemas = [',
+      '        Violacao(doc, "adr-estrutura", f"seção obrigatória ausente: \'{secao}\'")',
+      '        for secao in ADR_SECOES_OBRIGATORIAS',
+      '        if secao not in texto',
+      '    ]',
+      '    if not any(status in texto.lower() for status in ADR_STATUS_VALIDOS):',
+      '        problemas.append(',
+      '            Violacao(doc, "adr-status", f"status ausente ou inválido (use {ADR_STATUS_VALIDOS})")',
+      '        )',
+      '    # a linha que importa: decisão sem justificativa é anotação',
+      '    if "## Decisão" in texto:',
+      '        corpo = texto.split("## Decisão", 1)[1].split("##", 1)[0]',
+      '        if "porque" not in corpo.lower() and "por que" not in corpo.lower():',
+      '            problemas.append(',
+      '                Violacao(doc, "adr-sem-porque", "seção Decisão não contém um \'porque\'")',
+      '            )',
+      '    return problemas',
+      '',
+      '',
+      'def checar_mermaid(doc: Path) -> list[Violacao]:',
+      '    """Regra 3: bloco mermaid precisa declarar um tipo de diagrama conhecido."""',
+      '    texto = doc.read_text(encoding="utf-8")',
+      '    problemas: list[Violacao] = []',
+      '    if texto.count("```mermaid") != len(RE_MERMAID.findall(texto)):',
+      '        problemas.append(Violacao(doc, "mermaid-cerca", "bloco ```mermaid sem fechamento"))',
+      '    for i, bloco in enumerate(RE_MERMAID.findall(texto), start=1):',
+      '        primeira = next((l.strip() for l in bloco.splitlines() if l.strip()), "")',
+      '        if not primeira.startswith(MERMAID_TIPOS_CONHECIDOS):',
+      '            problemas.append(',
+      '                Violacao(doc, "mermaid-tipo", f"bloco {i}: tipo desconhecido em \'{primeira[:40]}\'")',
+      '            )',
+      '    return problemas',
+      '',
+      '',
+      'def checar_obsolescencia(doc: Path, raiz: Path, codigo: str) -> list[Violacao]:',
+      '    """Regra 4: doc parada enquanto o código que ela descreve andou muito.',
+      '',
+      '    \'codigo\' é o diretório que a doc documenta (convenção: front matter',
+      '    `documenta: src/app/services` ou o diretório irmão da doc).',
+      '    """',
+      '    ultimo_doc = _git("log", "-1", "--format=%H", "--", str(doc), cwd=raiz)',
+      '    if not ultimo_doc:',
+      '        return []',
+      '    commits_depois = _git(',
+      '        "rev-list", "--count", f"{ultimo_doc}..HEAD", "--", codigo, cwd=raiz',
+      '    )',
+      '    if commits_depois.isdigit() and int(commits_depois) >= LIMITE_COMMITS_SEM_DOC:',
+      '        return [',
+      '            Violacao(',
+      '                doc,',
+      '                "obsoleta",',
+      '                f"\'{codigo}\' mudou em {commits_depois} commits desde a última "',
+      '                f"atualização desta doc (limite: {LIMITE_COMMITS_SEM_DOC})",',
+      '            )',
+      '        ]',
+      '    return []',
+      '',
+      '',
+      'def _documenta(doc: Path) -> str | None:',
+      '    """Lê o front matter YAML procurando a chave \'documenta:\'."""',
+      '    texto = doc.read_text(encoding="utf-8")',
+      '    if not texto.startswith("---"):',
+      '        return None',
+      '    frente = texto.split("---", 2)[1]',
+      '    for linha in frente.splitlines():',
+      '        if linha.strip().startswith("documenta:"):',
+      '            return linha.split(":", 1)[1].strip()',
+      '    return None',
+      '',
+      '',
+      'def main() -> None:',
+      '    parser = argparse.ArgumentParser(description="Linter de documentação")',
+      '    parser.add_argument("--raiz", type=Path, default=Path("."))',
+      '    args = parser.parse_args()',
+      '    raiz: Path = args.raiz.resolve()',
+      '',
+      '    docs = sorted(p for p in raiz.rglob("*.md") if ".venv" not in p.parts)',
+      '    violacoes: list[Violacao] = []',
+      '    for doc in docs:',
+      '        violacoes += checar_referencias(doc, raiz)',
+      '        violacoes += checar_adr(doc)',
+      '        violacoes += checar_mermaid(doc)',
+      '        if (alvo := _documenta(doc)) is not None:',
+      '            violacoes += checar_obsolescencia(doc, raiz, alvo)',
+      '',
+      '    print(f"doc_lint: {len(docs)} documentos analisados")',
+      '    for v in violacoes:',
+      '        print(f"  {v}")',
+      '    if violacoes:',
+      '        print(f"DOC LINT FALHOU — {len(violacoes)} violação(ões)")',
+      '        raise SystemExit(1)',
+      '    print("DOC LINT OK")',
+      '',
+      '',
+      'if __name__ == "__main__":',
+      '    main()'
+    ].join('\n') },
+        { tipo: 'abas', rotulo: 'Python usado neste código', itens: [
+          { rotulo: 'Anotações', blocos: [{ tipo: 'texto', html: '<ul><li><code>from __future__ import annotations</code>: adia a avaliação das anotações de tipo para o uso, evitando erro com sintaxes novas; idioma padrão em ferramentas.</li><li><code>tuple[str, ...]</code>: tupla imutável de tamanho variável. Para constante de configuração, melhor que lista: ninguém acrescenta item por engano.</li></ul>' }] },
+          { rotulo: 'Processos e arquivos', blocos: [{ tipo: 'texto', html: '<ul><li><code>subprocess.run([...], capture_output=True, text=True, check=False)</code>: executa um processo externo capturando a saída como texto. <code>check=False</code> não levanta exceção com exit code diferente de zero; o chamador trata o resultado.</li><li><code>Path.rglob("*.md")</code>: busca recursiva de arquivos a partir de um diretório.</li></ul>' }] },
+          { rotulo: 'Idiomas', blocos: [{ tipo: 'texto', html: '<ul><li><code>str.startswith(tupla)</code>: aceita várias opções de uma vez, sem laço explícito.</li><li><code>if (alvo := _documenta(doc)) is not None:</code>: o operador walrus <code>:=</code> atribui dentro da condição, economizando uma linha e uma variável temporária.</li></ul>' }] }
+        ] },
+        { tipo: 'rode', id: 'm04b4-rode', titulo: 'Doc com referências quebradas e parada', enunciado: 'A saída vem da solução do exercício desta aula, aplicada ao texto descrito. Preveja antes de rodar.',
+          prefixo: '$', entrada: 'python drift.py docs/arquitetura.md --commits 17', unidade: 'commits', terminalTitulo: 'doc drift mecânico', etapas: etapasDrift(),
+          prever: { pergunta: 'A doc cita quatro caminhos e só dois existem no repositório. Quantas referências quebradas o linter acusa?', opcoes: [
+            { id: 'a', texto: 'Duas: o parser renomeado e o script removido.', correta: true, porque: 'a regra compara cada caminho citado com os arquivos que existem.' },
+            { id: 'b', texto: 'Quatro: tudo que a doc cita está suspeito.', correta: false, porque: 'só o que não existe é acusado.' },
+            { id: 'c', texto: 'Nenhuma: o linter só confere estrutura.', correta: false, porque: 'referência quebrada é a classe 1, a mais barata de detectar.' }
+          ] },
+          tutorAntes: 'Aperte Enter e clique em "Obsolescência" para ver a regra dos commits.',
+          tutorDepois: 'Duas referências quebradas e uma obsolescência, sem nenhuma chamada a modelo. O limite de 15 commits é política do processo: mudá-lo é mudar a regra, via PR.',
+          callout: 'Você viu duas classes de drift acusadas por regras mecânicas.' },
+        { tipo: 'python', id: 'm04b4-python', titulo: 'Escreva as regras de referência e de idade', obrigatorio: false,
+          enunciado: 'Implemente <code>referencias_quebradas(texto, existentes)</code>: os caminhos citados (pela regex <code>RE_CAMINHO</code>) que não estão no conjunto <code>existentes</code>, na ordem em que aparecem e sem repetição. Implemente também <code>obsoleta(commits_depois, limite=15)</code>: verdadeiro quando o código andou <code>limite</code> commits ou mais.',
+          codigo: [
+      'import re',
+      '',
+      'RE_CAMINHO = re.compile(r"[`(\\s]((?:src|app|tools|capstone|docs|tests)/[\\w./-]+\\.\\w{1,5})[`)\\s,.]")',
+      '',
+      '',
+      'def referencias_quebradas(texto, existentes):',
+      '    """Caminhos citados no texto que não estão em `existentes` (um set),',
+      '    na ordem em que aparecem e sem repetição."""',
+      '    quebradas = []',
+      '    # finditer + group(1); não repita um caminho já anotado',
+      '    return quebradas',
+      '',
+      '',
+      'def obsoleta(commits_depois, limite=15):',
+      '    """True quando o código andou `limite` commits ou mais desde a última',
+      '    mudança da doc."""',
+      '    return False'
+    ].join('\n'), testes: [
+      'EXISTE = {"src/app/service.py", "docs/adr/0001-pgvector.md"}',
+      '',
+      '',
+      'def test_detecta_arquivo_renomeado():',
+      '    texto = "O parser fica em `src/app/parser.py` e o service em `src/app/service.py`."',
+      '    assert referencias_quebradas(texto, EXISTE) == ["src/app/parser.py"]',
+      '',
+      '',
+      'def test_tudo_existe():',
+      '    assert referencias_quebradas("Veja (docs/adr/0001-pgvector.md).", EXISTE) == []',
+      '',
+      '',
+      'def test_sem_repeticao_e_na_ordem():',
+      '    texto = "Ver `tools/a.py`, depois `tests/b.py` e de novo `tools/a.py`."',
+      '    assert referencias_quebradas(texto, set()) == ["tools/a.py", "tests/b.py"]',
+      '',
+      '',
+      'def test_texto_sem_caminho():',
+      '    assert referencias_quebradas("nada a verificar", EXISTE) == []',
+      '',
+      '',
+      'def test_obsolescencia_no_limite():',
+      '    assert obsoleta(15) is True',
+      '    assert obsoleta(14) is False',
+      '',
+      '',
+      'def test_obsolescencia_com_limite_proprio():',
+      '    assert obsoleta(3, limite=3) is True',
+      '    assert obsoleta(0) is False'
+    ].join('\n'),
+          dica: 'Use <code>for m in RE_CAMINHO.finditer(texto)</code> e <code>m.group(1)</code> para o caminho. Só anote se <code>caminho not in existentes and caminho not in quebradas</code>. A obsolescência é uma comparação <code>&gt;=</code>.',
+          solucao: [
+      'import re',
+      '',
+      'RE_CAMINHO = re.compile(r"[`(\\s]((?:src|app|tools|capstone|docs|tests)/[\\w./-]+\\.\\w{1,5})[`)\\s,.]")',
+      '',
+      '',
+      'def referencias_quebradas(texto, existentes):',
+      '    quebradas = []',
+      '    for m in RE_CAMINHO.finditer(texto):',
+      '        caminho = m.group(1)',
+      '        if caminho not in existentes and caminho not in quebradas:',
+      '            quebradas.append(caminho)',
+      '    return quebradas',
+      '',
+      '',
+      'def obsoleta(commits_depois, limite=15):',
+      '    return commits_depois >= limite'
+    ].join('\n'),
+          tutorDepois: 'A regex exige um delimitador antes do caminho (crase, parêntese ou espaço): é por isso que caminhos hipotéticos devem ir em bloco de código dedicado ou sem extensão real, como diz a tabela de diagnóstico.',
+          callout: 'As regras de referência e de idade passaram, com repetição e limite tratados.' },
+        { tipo: 'takeaway', html: 'O linter cobra <mark>referência</mark>, <mark>estrutura</mark>, <mark>Mermaid</mark> e <mark>idade</mark>; precisa de <mark>fetch-depth: 0</mark> no CI para a última.' }
+      ] },
+
+      { rotulo: 'O agente no PR', blocos: [
+        { tipo: 'texto', html:
+          '<h3>Do PR ao merge com a doc verificada</h3>' +
+          '<p>O pipeline tem uma ordem fixa e o humano decide no fim.</p>' },
+        { tipo: 'abas', rotulo: 'Cinco etapas do pipeline', itens: [
+          { rotulo: '1 · PR aberto', blocos: [{ tipo: 'texto', html: '<p>O PR traz o diff de código e as docs. O gatilho é <code>on: pull_request</code>.</p>' }] },
+          { rotulo: '2 · Mecânico primeiro', blocos: [{ tipo: 'texto', html: '<p>O linter roda e devolve exit code. É o job <code>lint-deterministico</code>, com <code>fetch-depth: 0</code> para a regra de obsolescência.</p>' }] },
+          { rotulo: '3 · Semântico depois', blocos: [{ tipo: 'texto', html: '<p>O agente revisor só entra se o linter ficou verde. Recebe o diff e acesso a <code>docs/</code>; ele <strong>acusa</strong> a divergência, não escreve a doc.</p>' }] },
+          { rotulo: '4 · Saída previsível', blocos: [{ tipo: 'texto', html: '<p>Comentário no PR com até 5 achados, ou exatamente "Sem divergências.", o que permite detectar mecanicamente o caso limpo.</p>' }] },
+          { rotulo: '5 · Decisão humana', blocos: [{ tipo: 'texto', html: '<p>O humano decide: corrige a doc, o código ou descarta o achado. Escrever mudança de doc sem revisão humana seria deixar o agente commitar direto na main.</p>' }] }
+        ] },
+        { tipo: 'texto', html:
+          '<h3>A camada semântica</h3>' +
+          '<p>O linter não sabe que "lote de 100" virou 500; isso exige ler o diff e a doc juntos. A implementação é uma skill (M00, bloco 2) mais um job de CI (M03, bloco 7). O ponto de design: <strong>o agente não escreve a doc, ele acusa a divergência</strong>.</p>' },
+        { tipo: 'codigo', linguagem: 'yaml', texto: [
+      '# .github/workflows/doc-drift.yml',
+      'name: doc-drift',
+      'on: pull_request',
+      '',
+      'jobs:',
+      '  lint-deterministico:',
+      '    runs-on: ubuntu-latest',
+      '    steps:',
+      '      - uses: actions/checkout@v4',
+      '        with: { fetch-depth: 0 }        # precisa do histórico para a regra de obsolescência',
+      '      - uses: astral-sh/setup-uv@v4',
+      '      - run: uv run python tools/doc_lint.py',
+      '',
+      '  revisao-semantica:',
+      '    runs-on: ubuntu-latest',
+      '    permissions:',
+      '      pull-requests: write              # para comentar no PR',
+      '    steps:',
+      '      - uses: actions/checkout@v4',
+      '        with: { fetch-depth: 0 }',
+      '      - name: Gerar diff da PR',
+      '        run: git diff origin/${{ github.base_ref }}...HEAD -- \'*.py\' > /tmp/diff.patch',
+      '      - name: Perguntar ao agente',
+      '        run: |',
+      '          # o comando exato depende do harness (claude/codex/opencode);',
+      '          # o que importa é o CONTRATO do prompt, abaixo.',
+      '          cat prompts/doc-drift.md /tmp/diff.patch | seu-agente-cli --output /tmp/parecer.md',
+      '      - name: Comentar no PR',
+      '        run: gh pr comment ${{ github.event.number }} --body-file /tmp/parecer.md',
+      '        env:',
+      '          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}'
+    ].join('\n') },
+        { tipo: 'texto', html: '<p>O prompt é o artefato de verdade, versionado como manda o fator 2 do M01 (<code>prompts/doc-drift.md</code>):</p>' },
+        { tipo: 'codigo', linguagem: 'markdown', texto: [
+      'Você é um revisor de documentação. Recebe um diff de código e tem',
+      'acesso ao diretório docs/.',
+      '',
+      'Tarefa: encontrar afirmações em docs/ que o diff torna FALSAS.',
+      '',
+      'Regras:',
+      '- Reporte apenas contradições factuais verificáveis (número, nome de',
+      '  arquivo, endpoint, comportamento descrito). NÃO reporte estilo,',
+      '  oportunidades de melhoria, nem doc ausente.',
+      '- Para cada achado: arquivo:linha da doc, a frase que ficou falsa, e',
+      '  a linha do diff que a contradiz.',
+      '- Se nada ficou falso, responda exatamente: "Sem divergências."',
+      '- Máximo de 5 achados, ordenados por gravidade.',
+      '- NÃO edite nenhum arquivo.'
+    ].join('\n') },
+        { tipo: 'callout', tom: 'danger', titulo: 'Por que essas restrições no prompt', html:
+          '<p>Cada linha existe por um modo de falha:</p>' +
+          '<ul><li>Sem "apenas contradições factuais", o agente vira gerador de sugestões e o time aprende a ignorar o comentário (a morte de todo bot de PR).</li>' +
+          '<li>Sem "máximo de 5", ele lista 30 achados e vira ruído.</li>' +
+          '<li>Sem "responda exatamente: Sem divergências.", você não detecta mecanicamente o caso limpo.</li>' +
+          '<li>Sem "não edite", ele começa a mexer nos seus arquivos.</li></ul>' +
+          '<p>Um bot de PR barulhento é pior que nenhum: treina as pessoas a clicar em "resolve" sem ler, e quando o achado é real ninguém vê.</p>' },
+        { tipo: 'takeaway', html: 'O agente <mark>acusa</mark>, não edita; saída <mark>previsível</mark> (até 5 achados ou "Sem divergências.") é o que torna o gate possível.' }
+      ] },
+
+      { rotulo: 'Praticar e conferir', blocos: [
+        { tipo: 'complete', id: 'm04b4-complete', titulo: 'Monte o prompt do revisor', linguagem: 'markdown',
+          enunciado: 'Escolha, em cada lacuna, o trecho que mantém o revisor útil e silencioso quando não há problema.',
+          partes: [
+            'Você é um revisor de documentação. Recebe um diff de código e tem acesso ao diretório docs/.\n\nTarefa: encontrar afirmações em docs/ que o diff torna FALSAS.\n\nRegras:\n- Reporte ', { lacuna: 'escopo', opcoes: ['apenas contradições factuais verificáveis (número, nome de arquivo, endpoint, comportamento)', 'qualquer oportunidade de melhoria e doc ausente', 'sugestões de estilo e de reescrita'], correta: 'apenas contradições factuais verificáveis (número, nome de arquivo, endpoint, comportamento)' },
+            '.\n- Se nada ficou falso, responda exatamente: ', { lacuna: 'limpo', opcoes: ['"Sem divergências."', 'uma frase livre dizendo que está tudo bem', 'um resumo do diff'], correta: '"Sem divergências."' },
+            '\n- Máximo de ', { lacuna: 'maximo', opcoes: ['5 achados, ordenados por gravidade', '30 achados, para não perder nada', 'um achado por arquivo, sem limite total'], correta: '5 achados, ordenados por gravidade' },
+            '.\n- ', { lacuna: 'edicao', opcoes: ['NÃO edite nenhum arquivo', 'Corrija a doc diretamente quando tiver certeza', 'Abra um commit com a correção'], correta: 'NÃO edite nenhum arquivo' },
+            '.\n'
+          ],
+          explicacao: 'Escopo estreito evita o bot sugestivo; a frase exata permite detectar o caso limpo por comparação de texto; o limite de 5 evita o ruído; e "não edite" mantém o humano no fim do pipeline.',
+          callout: 'Prompt de revisor com escopo, saída previsível, limite e sem permissão de edição.' },
+        { tipo: 'transcript', id: 'm04b4-transcript', titulo: 'Ache o parecer que quebra o contrato', obrigatorio: false, terminalTitulo: 'comentário do revisor no PR',
+          enunciado: 'O revisor rodou sobre um diff que troca o lote do worker de 100 para 500. Uma das afirmações dele quebra o contrato do prompt. Clique na linha e aperte Conferir.',
+          linhas: [
+            { quem: 'ferramenta', texto: '$ git diff origin/main...HEAD -- "*.py" | grep BATCH\n-BATCH = 100\n+BATCH = 500' },
+            { quem: 'agente', texto: 'docs/arquitetura.md:42 — "o worker processa em lote de 100" ficou falso; o diff define BATCH = 500.' },
+            { quem: 'agente', texto: 'Sugestão: reescrever a seção de ingestão para ficar mais didática e acrescentar um diagrama.' },
+            { quem: 'agente', texto: 'Já atualizei docs/arquitetura.md para "lote de 500" e fiz o commit.' },
+            { quem: 'agente', texto: 'Achados: 1 de 5 possíveis.' }
+          ],
+          erradas: [2, 3],
+          explicacao: {
+            2: 'sugestão de estilo e de melhoria está fora do escopo ("apenas contradições factuais verificáveis"); é o caminho do bot barulhento.',
+            3: 'o contrato diz "NÃO edite nenhum arquivo": o agente acusa, o humano decide. Commit direto é como deixar o agente escrever na main.'
+          },
+          tutorDepois: 'O achado da linha 1 é o modelo certo: arquivo:linha, a frase que ficou falsa e a linha do diff que a contradiz.' },
+        { tipo: 'callout', tom: 'info', titulo: 'Leitura aplicada: a suíte de docs como entrega', html:
+          '<p>As quatro partes convergem numa entrega: gabarito de documentos (PRD, arquitetura com C4, ADRs, runbook, output-spec) mais verificador com exit code mais prompt de revisor versionado. No laboratório você monta a estrutura com front matter, instala o verificador e prova que ele morde, liga no CI e define o gabarito de saída.</p>' +
+          '<p>O formato do <strong>runbook</strong> merece destaque: "sintoma, então o que fazer", com comandos executáveis em cada passo, nunca prosa para pensar. De madrugada ninguém pensa bem. E o que decide o valor do produto que gera docs: gerar C4 e grafo de dependências (deriváveis do código) é legítimo; <strong>inventar ADR retroativo como se fosse fato, não</strong>. O gerador pode propor "decisões aparentes" para o humano confirmar. Sem essa linha, o produto vira gerador de mentiras convincentes.</p>' +
+          '<p>Como exercício de transferência, estenda a fitness function de cobertura de decisão do laboratório: além de mencionar a área, exija que a menção inclua o custo de reversão, com allowlist explícita, porque nem toda pasta merece ADR (critério do bloco 3).</p>' },
+        { tipo: 'escolha', id: 'm04b4-escolha-1', titulo: 'Confira: quem detecta',
+          pergunta: 'O doc diz "retenção de 30 dias" e o código agora usa 90. Quem deve detectar essa divergência?',
+          opcoes: [
+            { id: 'a', texto: 'O linter determinístico, contando seções.', correta: false, porque: 'o linter confere forma, não veracidade.' },
+            { id: 'b', texto: 'O agente revisor de PR, lendo diff e doc juntos.', correta: true, porque: 'é contradição semântica, a única classe que justifica gastar tokens; o agente só acusa a divergência.' },
+            { id: 'c', texto: 'O autor do código, de memória.', correta: false, porque: 'sem gatilho no PR, ninguém lembra.' },
+            { id: 'd', texto: 'Ninguém: é impossível detectar.', correta: false, porque: 'é exatamente o que o agente revisor faz.' }
+          ], tutorDepois: 'Mecânico primeiro, semântico depois.' },
+        { tipo: 'escolha', id: 'm04b4-escolha-2', titulo: 'Confira: o bot barulhento',
+          pergunta: 'O bot de doc drift comenta 20 coisas por PR e todo mundo o ignora. Qual é a causa e o conserto?',
+          opcoes: [
+            { id: 'a', texto: 'O prompt não restringe escopo nem quantidade; limitar a contradições factuais, no máximo 5, com resposta exata quando limpo.', correta: true, porque: 'bot barulhento é pior que nenhum: treina as pessoas a resolver sem ler.' },
+            { id: 'b', texto: 'O modelo é pequeno demais; trocar por um maior resolve.', correta: false, porque: 'o defeito é de contrato, não de capacidade.' },
+            { id: 'c', texto: 'Deixar o bot editar as docs para não precisar comentar.', correta: false, porque: 'escrever doc sem revisão humana é commitar direto na main.' },
+            { id: 'd', texto: 'Desligar o linter, para o bot não duplicar os achados.', correta: false, porque: 'o linter é a camada barata e determinística que vem antes.' }
+          ], tutorDepois: 'Cada linha do prompt existe por um modo de falha.' },
+        { tipo: 'takeaway', html: 'Doc drift é combatido por <mark>mecanismo com exit code</mark>; o agente entra só onde <mark>semântica</mark> é inevitável.' }
+      ] }
+    ]
+  });
+})();
