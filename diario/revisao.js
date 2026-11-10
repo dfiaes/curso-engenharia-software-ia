@@ -83,5 +83,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "O gitignore global vale só na máquina de quem o tem; um clone em outra máquina ou um arquivo já rastreado continua sendo commitado.",
   "url": "diario/edicoes/2026/2026-11-09.html"
+ },
+ {
+  "id": "2026-11-10#1",
+  "data": "2026-11-10",
+  "pergunta": "Segundo a documentação da Anthropic, o que diferencia o Claude Mythos 5.2 do Claude Fable 5.2?",
+  "opcoes": [
+   {
+    "texto": "Mesmas especificações e preço; o acesso é restrito a organizações verificadas",
+    "correta": true
+   },
+   {
+    "texto": "O Mythos tem janela de contexto maior",
+    "correta": false
+   },
+   {
+    "texto": "O Mythos é a versão barata do Fable",
+    "correta": false
+   }
+  ],
+  "porque": "A página do Mythos 5.2 diz que ele tem as mesmas especificações e preço do Fable 5.2 e só está disponível para organizações verificadas, como no Cyber Verification Program.",
+  "url": "diario/edicoes/2026/2026-11-10.html"
+ },
+ {
+  "id": "2026-11-10#2",
+  "data": "2026-11-10",
+  "pergunta": "Ao migrar um workload do Fable 5.1 para o Fable 5.2, qual é o primeiro passo responsável antes de trocar o model ID em produção?",
+  "opcoes": [
+   {
+    "texto": "Rodar a suíte de evals do seu caso de uso com os dois modelos e comparar qualidade, latência e custo",
+    "correta": true
+   },
+   {
+    "texto": "Trocar direto, já que a versão nova é sempre melhor",
+    "correta": false
+   },
+   {
+    "texto": "Ativar o fast mode para compensar qualquer regressão",
+    "correta": false
+   }
+  ],
+  "porque": "Benchmarks do fornecedor não medem o seu caso; a eval própria mostra regressões, e o fast mode dobra o preço.",
+  "url": "diario/edicoes/2026/2026-11-10.html"
  }
 ];
