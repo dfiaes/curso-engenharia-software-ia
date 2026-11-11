@@ -135,6 +135,9 @@ def build_manifest(allow_missing: bool = False) -> dict[str, Any]:
             "checkpointAnchor": optional_anchor(main_headings, "Checkpoint"),
         }
         unit["status"] = AVAILABLE if ordered else WRITING
+        interactive = Path(unit["file"]).with_name(Path(unit["file"]).stem + "-interativo.html")
+        if (ROOT / interactive).is_file():
+            unit["fileInterativo"] = interactive.as_posix()
         units.append(unit)
 
     position = {unit["code"]: index for index, unit in enumerate(units)}

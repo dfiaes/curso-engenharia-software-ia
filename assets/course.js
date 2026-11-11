@@ -97,6 +97,64 @@
       b.tabIndex = on ? 0 : -1;
     });
   }
+  /* Modo de leitura: só nas páginas em texto que têm versão interativa (<html data-interativo="COD-interativo.html">). */
+  function modoControl() {
+    var alvo = document.documentElement.dataset.interativo;
+    if (!alvo) return null;
+    var g = el("div", { "class": "c-modeseg", role: "group", "aria-label": "Modo de leitura" });
+    g.appendChild(el("a", { href: alvo, "class": "c-modo-alt", title: "Modo interativo" }, "Interativo"));
+    g.appendChild(el("span", { "class": "c-modo-on", "aria-current": "page" }, "Texto"));
+    g.querySelector("a").addEventListener("click", function (e) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+      e.preventDefault();
+      var u = new URL(alvo, location.href), h = location.hash || "";
+      var m = /^#(b\d{2})$/.exec(h);
+      /* o bloco "bNN" do texto vira a aula de mesmo número no interativo */
+      if (m) h = "#aula=" + encodeURIComponent(alvo.split("-interativo")[0].toLowerCase() + "-" + m[1]) + "&aba=1";
+      u.hash = h;
+      location.href = u.href;
+    });
+    return g;
+  }
+  /* Em telas estreitas, Modo e Tema saem do cabeçalho e vão para uma folha aberta pelo botão "⋯". */
+  function buildMoreSheet(top, body) {
+    var btn = top.querySelector(".c-more");
+    var veil = el("div", { "class": "c-moreveil", hidden: "" });
+    var sh = el("div", { "class": "c-moresheet", role: "dialog", "aria-modal": "true", "aria-label": "Menu do módulo", hidden: "" });
+    sh.innerHTML = '<div class="c-moresheet-head"><span class="c-sheet-title">Modo e tema</span>' +
+      '<button class="c-sheet-close" type="button" aria-label="Fechar menu">×</button></div>';
+    var modo = modoControl();
+    if (modo) {
+      var r1 = el("div", { "class": "c-moresheet-row" }, '<span class="c-moresheet-label">Modo</span>');
+      r1.appendChild(modo); sh.appendChild(r1);
+    }
+    var r2 = el("div", { "class": "c-moresheet-row" }, '<span class="c-moresheet-label">Tema</span>');
+    r2.appendChild(themeControl()); sh.appendChild(r2);
+    body.appendChild(veil); body.appendChild(sh);
+    function focusables() {
+      return Array.prototype.filter.call(sh.querySelectorAll("a[href],button:not([disabled])"), function (n) { return n.offsetParent !== null; });
+    }
+    function open() {
+      sh.hidden = false; veil.hidden = false; btn.setAttribute("aria-expanded", "true");
+      var f = focusables(); if (f.length) f[0].focus();
+    }
+    function close() {
+      if (sh.hidden) return;
+      sh.hidden = true; veil.hidden = true; btn.setAttribute("aria-expanded", "false"); btn.focus();
+    }
+    btn.addEventListener("click", function () { sh.hidden ? open() : close(); });
+    veil.addEventListener("click", close);
+    sh.querySelector(".c-sheet-close").addEventListener("click", close);
+    document.addEventListener("keydown", function (e) {
+      if (sh.hidden) return;
+      if (e.key === "Escape") { e.preventDefault(); close(); return; }
+      if (e.key !== "Tab") return;
+      var f = focusables(); if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !sh.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (document.activeElement === last || !sh.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+    });
+  }
   function themeControl() {
     var g = el("div", { "class": "c-themeseg c-theme", role: "radiogroup", "aria-label": "Tema" });
     THEMES.forEach(function (th) {
@@ -167,7 +225,9 @@
       '<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>' +
       '<button class="c-iconbtn c-menu" type="button" aria-label="Abrir sumário" aria-expanded="false">' + ICON.menu + '</button>' +
       '<a class="c-home" href="' + href("index.html") + '">Curso</a>' +
-      '<span class="c-crumb">' + (unit ? unit.phase + ' · <b>' + unit.code + '</b> · ' + unit.title : (document.title || "")) + '</span>' +
+      '<span class="c-crumb">' + (unit ? '<span class="c-crumb-fase">' + unit.phase + ' · </span><b>' + unit.code + '</b> · ' + unit.title : (document.title || "")) + '</span>' +
+      '<button class="c-iconbtn c-more" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Menu do módulo">' +
+        '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>' +
       '<span class="c-theme-slot"></span>' +
       '<div class="c-progress" aria-hidden="true"></div>';
     var layout = el("div", { "class": "c-layout" });
@@ -210,7 +270,11 @@
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
     if (sheetMQ.addEventListener) sheetMQ.addEventListener("change", function () { if (!sheetMQ.matches) toggle(false); });
-    top.querySelector(".c-theme-slot").replaceWith(themeControl());
+    var slot = top.querySelector(".c-theme-slot"), wrap = el("span", { "class": "c-top-ctrls" });
+    var modo = modoControl(); if (modo) wrap.appendChild(modo);
+    wrap.appendChild(themeControl());
+    slot.replaceWith(wrap);
+    buildMoreSheet(top, body);
   }
 
   function slug(s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60); }
@@ -297,8 +361,8 @@
   function buildPager(main, i) {
     var prev = M.units[i - 1], next = M.units[i + 1];
     var nav = el("nav", { "class": "c-pager", "aria-label": "Módulo anterior e próximo" });
-    if (prev) nav.appendChild(el("a", { href: href(prev.file), "class": "prev" }, "<small>← Anterior</small>" + prev.code + " · " + prev.title));
-    if (next) nav.appendChild(el("a", { href: href(next.file), "class": "next" }, "<small>Próximo →</small>" + next.code + " · " + next.title));
+    if (prev) nav.appendChild(el("a", { href: href(prev.fileInterativo || prev.file), "class": "prev" }, "<small>← Anterior</small>" + prev.code + " · " + prev.title));
+    if (next) nav.appendChild(el("a", { href: href(next.fileInterativo || next.file), "class": "next" }, "<small>Próximo →</small>" + next.code + " · " + next.title));
     main.appendChild(nav);
   }
 

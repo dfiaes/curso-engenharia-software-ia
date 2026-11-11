@@ -613,10 +613,11 @@
     var rs = useState(lerHash), route = rs[0];
     var ss = useState(lerStore), store = ss[0];
     var ds = useState(false), drawer = ds[0];
+    var mm = useState(false), menuAberto = mm[0];
     var ms = useState(function () { try { return window.matchMedia('(max-width: 900px)').matches; } catch (e) { return false; } }), mobile = ms[0];
     useEffect(function () {
       var q; try { q = window.matchMedia('(max-width: 900px)'); } catch (e) { return; }
-      function f() { ms[1](q.matches); if (!q.matches) ds[1](false); }
+      function f() { ms[1](q.matches); if (!q.matches) ds[1](false); else mm[1](false); }
       if (q.addEventListener) q.addEventListener('change', f); else q.addListener(f);
       return function () { if (q.removeEventListener) q.removeEventListener('change', f); else q.removeListener(f); };
     }, []);
@@ -706,6 +707,22 @@
     }
     var temaAtual = ts[0] === 'light' || ts[0] === 'dark' || ts[0] === 'paper' ? ts[0] : 'system';
 
+    // Menu do módulo: mesmo conteúdo na Sheet de vidro (desktop) e no fim da folha (celular).
+    function menuModulo() {
+      return h('div', { key: 'menu', className: 'ta-menu' },
+        h('a', { href: C.portal }, '← Portal do curso'),
+        C.texto && h('div', { className: 'ta-temaseg' },
+          h('span', { className: 'ta-field-label' }, 'Modo'),
+          h(T.SegmentedControl, { options: [{ value: 'interativo', label: 'Interativo' }, { value: 'texto', label: 'Texto completo' }], value: 'interativo', glass: true, fullWidth: true, 'aria-label': 'Modo',
+            onChange: function (v) { if (v === 'texto') location.href = C.texto + (PASSO[cur.aula] ? '#' + PASSO[cur.aula] : ''); } })),
+        h('div', { className: 'ta-temaseg' },
+          h('span', { className: 'ta-field-label' }, 'Tema'),
+          h(T.SegmentedControl, { options: TEMAS, value: temaAtual, onChange: tema, fullWidth: true, glass: true, 'aria-label': 'Tema' })),
+        confirma
+          ? h(Button, { variant: 'tinted', onClick: function () { mut(function (n) { n.aulas = {}; n.atual = null; }); cs[1](false); ir(ids[0], 0); } }, 'Confirmar: apagar progresso')
+          : h(Button, { variant: 'plain', onClick: function () { cs[1](true); } }, 'Recomeçar ' + C.unidade));
+    }
+
     function conteudoLateral(naFolha) {
       return [
         !naFolha && h('h2', { key: 'brand', className: 'ta-brand' }, C.nome, h('small', null, C.subtitulo)),
@@ -721,21 +738,16 @@
             leading: h('span', { className: 'ta-num' }, s.concluida ? '✓' : String(i + 1)), onClick: function () { ir(id, r ? (s.aba || 0) : 0); }
           });
         }))),
-        h('div', { key: 'links', className: 'ta-side-links' },
-          h('a', { href: C.portal }, '← Portal do curso'),
-          C.texto && h('a', { href: C.texto }, 'Versão em texto'),
-          h('div', { className: 'ta-temaseg' },
-            h('span', { className: 'ta-field-label' }, 'Tema'),
-            h(T.SegmentedControl, { options: TEMAS, value: temaAtual, onChange: tema, fullWidth: true, 'aria-label': 'Tema' })),
-          confirma
-            ? h(Button, { variant: 'tinted', onClick: function () { mut(function (n) { n.aulas = {}; n.atual = null; }); cs[1](false); ir(ids[0], 0); } }, 'Confirmar: apagar progresso')
-            : h(Button, { variant: 'plain', onClick: function () { cs[1](true); } }, 'Recomeçar ' + C.unidade))
+        naFolha && menuModulo()
       ];
     }
     // Desktop: barra lateral fixa. Celular e tablet: o mesmo conteúdo abre numa folha de vidro (Sheet).
     var lateral = h('aside', { className: 'ta-side', 'aria-label': 'Aulas da trilha' }, conteudoLateral(false));
     var folha = mobile && h(T.Sheet, { open: drawer, onClose: function () { ds[1](false); }, title: C.nome, material: 'glass', className: 'ta-sheet' }, conteudoLateral(true));
     var fab = mobile && !drawer && h(Button, { variant: 'glass', className: 'ta-fab', onClick: function () { ds[1](true); }, 'aria-haspopup': 'dialog', 'aria-expanded': false }, 'Aulas');
+
+    var menuBtn = !mobile && h(Button, { variant: 'glass', icon: true, className: 'ta-menu-btn', onClick: function () { mm[1](true); }, 'aria-haspopup': 'dialog', 'aria-expanded': menuAberto, 'aria-label': 'Menu do módulo', title: 'Menu do módulo' }, '⋯');
+    var menuSheet = !mobile && h(T.Sheet, { open: menuAberto, onClose: function () { mm[1](false); }, title: C.nome, material: 'glass', className: 'ta-sheet' }, menuModulo());
 
     var corpo;
     if (emRevisao) {
@@ -750,10 +762,10 @@
     }
     var passoAtual = PASSO[cur.aula];
     if (emRevisao) {
-      return h('div', { className: 'ta-app' }, !mobile && lateral, folha, fab,
+      return h('div', { className: 'ta-app' }, !mobile && lateral, folha, fab, menuBtn, menuSheet,
         h('div', { className: 'ta-main' }, h('main', { className: 'ta-aula ta-aula-solta', id: 'conteudo' }, corpo)));
     }
-    return h('div', { className: 'ta-app' }, !mobile && lateral, folha, fab,
+    return h('div', { className: 'ta-app' }, !mobile && lateral, folha, fab, menuBtn, menuSheet,
       h('div', { className: 'ta-main' },
         h(T.LessonToolbar, {
             steps: aula ? abas.map(function (a, i) { var s = abaStats(i); return { label: a.rotulo, progress: s.exs.length ? s.feitos.length / s.exs.length : (i <= aba ? 1 : 0) }; }) : [{ label: 'Em preparo', progress: 0 }],

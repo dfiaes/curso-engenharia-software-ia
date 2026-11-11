@@ -48,6 +48,9 @@ Tudo é declarativo e opcional; aula sem esses campos funciona como antes. O aut
 ## Itens do diário na revisão
 `../diario/revisao.js` (gerado por `tools/build_diario.py`; carregado em `TR.html` antes do motor, opcional) define `window.DIARIO_REVISAO`. O motor trata `diario` como pseudo-aula: `itemDe('diario', id)` resolve nesse array (ids de opção `a`, `b`, `c`…, o `porque` vale para todas as opções) e o feedback ganha o link "Ler a edição de DD/MM" (`../` + `url`). Ao abrir o TR e a tela `#revisao`, itens dos últimos 30 dias ainda não matriculados entram na caixa 1 com `prox` = hoje, no máximo 3 por dia (`diarioMatriculaEm` e `diarioMatriculaN` em `curso.srs.v1`; o formato `v:1` não muda). Entram na fila pelo mesmo `intercalar`, com o rótulo "Diário · DD/MM". Item que sumiu do arquivo é ignorado. O portal lê o mesmo estado em `assets/revisao-card.js` (card "Revisão do dia"), que repete as regras de janela e limite: mude os dois juntos.
 
+## Barra lateral e menu
+A lateral (desktop) mostra marca, progresso, "Revisão do dia" e a lista de aulas. O menu do módulo (Portal do curso, Modo Interativo/Texto completo, Tema e Recomeçar) abre por um botão `⋯` fixo no canto superior direito, numa Sheet de vidro; no celular o mesmo menu fica no fim da folha "Aulas". O modo "Texto completo" some quando `C.texto` está vazio e leva para a âncora da aula atual.
+
 ## Usar o motor em outro módulo
 
 O motor serve qualquer módulo. Antes de registrar as aulas, a página chama `TrilhaAula.curso({...})`:

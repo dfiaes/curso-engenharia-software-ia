@@ -21,6 +21,8 @@ O aluno principal é um dev sênior que usa o curso também para **revisar funda
 
 Arquivo único `modulos/<CÓDIGO>-<slug>/<CÓDIGO>.html`, com o mesmo CSS e componentes do M04 (`.box`, `.box.warn`, `.box.ok`, `.box.fund`, `.box.net`, `.toc`, `.step`, `.check`). Ordem:
 
+O modo **interativo é o padrão**: quando existe, `modulos/<pasta>/<CÓDIGO>-interativo.html` (aulas em `interativo/`) é o link principal do portal. O texto `<CÓDIGO>.html` é a referência completa e traz o alternador Interativo/Texto, ligado por `data-interativo` em `<html>`. Ordem:
+
 1. `<h1>` com código e título; linha `.meta` com fase, carga estimada e pré-requisitos.
 2. Caixa "O que muda ao final deste módulo" e **Diagnóstico rápido** (5–8 perguntas; quem acerta tudo pode pular para o checkpoint).
 3. Roteiro (`.toc`) com âncoras reais.
