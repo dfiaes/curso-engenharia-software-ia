@@ -36,7 +36,7 @@
     const next = P.nextBlock(M, state);
     const started = Object.keys(state.blocks).length > 0 || state.lastVisited;
     const cont = next
-      ? card(`${next.block.file || next.unit.file}#${next.block.anchor}`, started ? "Continuar" : "Começar", started ? "Continuar de onde parei" : "Começar o curso",
+      ? card(continueHref(next), started ? "Continuar" : "Começar", started ? "Continuar de onde parei" : "Começar o curso",
           `${next.unit.code} · ${next.block.title}`, "", true)
       : card("#phases", "Em breve", "Continuar de onde parei", "Os módulos estão em escrita.", "", true);
     $("featured").innerHTML = cont
@@ -48,16 +48,28 @@
       + card(docHref("kit/README.md"), "Kit", "Kit de arranque", "Modelos agnósticos para copiar no seu projeto: AGENTS.md, intent/spec/plan, hooks e esteira dev → cert → prod.");
   }
 
+  // Bloco de um módulo: no interativo, a aula do bloco (aula=<cod>-bNN); senão, a âncora do texto.
+  function continueHref(next) {
+    const u = next.unit, b = next.block;
+    if ((b.file || u.file) === u.file && u.fileInterativo) {
+      const aula = `${u.code.toLowerCase()}-b${String(b.number).padStart(2, "0")}`;
+      return `${u.fileInterativo}#aula=${encodeURIComponent(aula)}&aba=1`;
+    }
+    return `${b.file || u.file}#${b.anchor}`;
+  }
+
   function unitCard(u) {
     const c = P.unitCounts(u, state);
     const st = P.unitStatus(u, state);
     const label = st === "writing" ? "Em escrita" : `${c.done} de ${c.total} blocos`;
     const pre = u.prerequisites.length ? u.prerequisites.join(", ") : "nenhum";
+    const main = u.fileInterativo || u.file;
+    const alt = u.fileInterativo ? `<a class="p-small p-alt" href="${esc(u.file)}">ler em texto</a>` : "";
     return `<li data-search="${esc([u.code, u.title, u.description, u.phase, ...(u.keywords || [])].join(" ").toLowerCase())}">
-      <a class="p-card" href="${esc(u.file)}"><span class="p-code">${esc(u.code)}</span><h3>${esc(u.title)}</h3><p>${esc(u.description)}</p>
+      <a class="p-card" href="${esc(main)}"><span class="p-code">${esc(u.code)}</span><h3>${esc(u.title)}</h3><p>${esc(u.description)}</p>
       <span class="p-small">≈ ${u.hours} h · pré-requisitos: ${esc(pre)}</span>
       <span class="p-bar" role="progressbar" aria-label="Progresso de ${esc(u.code)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${c.percent}"><span style="width:${c.percent}%"></span></span>
-      <span class="p-small">${label}</span></a></li>`;
+      <span class="p-small">${label}</span></a>${alt}</li>`;
   }
 
   function phases() {

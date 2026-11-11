@@ -1,8 +1,8 @@
-"""Gera modulos/<pasta>/<COD>-interativo.html e o aviso no <COD>.html.
+"""Gera modulos/<pasta>/<COD>-interativo.html e marca o <COD>.html para o alternador de modo.
 
 Uso: python3 tools/interativo/gerar_pagina.py modulos/<pasta> <COD> "<nome curto>"
 Lê as aulas em <pasta>/interativo/aulas/b*.js (+ checkpoint.js) e liga cada aula
-à âncora real do "Bloco N" no texto. Não insere o aviso dentro de <script>.
+à âncora real do "Bloco N" no texto. Não escreve nada dentro de <script> (ver marcar_modo.py).
 """
 import json, pathlib, re, sys
 
@@ -64,15 +64,8 @@ TrilhaAula.montar('#raiz');
 </html>
 '''
 (d / f'{cod}-interativo.html').write_text(html)
-if f'{cod}-interativo.html' not in fonte:
-    scr = [(a.start(), a.end()) for a in re.finditer(r'<script(?![^>]*src)[^>]*>.*?</script>', fonte, re.S)]
-    m = [x for x in re.finditer(r'<p class="meta">.*?</p>', fonte, re.S) if not any(a <= x.start() < b for a, b in scr)]
-    assert m, 'sem .meta fora de script'
-    tem_ck = 'checkpoint.js' in files
-    box = (f'\n<div class="box ok"><strong>Versão interativa:</strong> os {len(aulas)} blocos'
-           f'{" e o checkpoint" if tem_ck else ""} também existem como aulas com exercícios, previsão antes de rodar, '
-           f'Python no navegador e revisão espaçada: <a href="{cod}-interativo.html">abrir {cod} interativo</a>. '
-           'Este texto continua sendo a referência completa.</div>')
-    e = m[0].end(); fonte = fonte[:e] + box + fonte[e:]
-    (d / f'{cod}.html').write_text(fonte)
+# o interativo é o padrão: a página em texto ganha o alternador (sem caixa, sem script)
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from marcar_modo import marcar
+marcar(d / f'{cod}.html', cod)
 print(json.dumps(passo, ensure_ascii=False))
