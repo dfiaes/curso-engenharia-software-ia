@@ -2,6 +2,33 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-11",
+   "titulo": "Chave de IA roubada vira dinheiro: brecha na Railway gera US$ 740 mil em uso fraudulento",
+   "resumo": "Incidente da Railway mostra o custo de chave de API de IA vazada; GPUStack entra no catálogo KEV da CISA e vLLM pede atualização para 0.32.0; Google lança Gemini 4 Carbon; Anthropic define faixa do IPO.",
+   "tags": [
+    "seguranca",
+    "modelos",
+    "mercado",
+    "ferramentas-dev",
+    "llm-local"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M12",
+     "motivo": "Caso Railway (variáveis de ambiente decriptadas, tokens OAuth do GitHub e chaves de agentes de IA expostas, cerca de US$ 740 mil em uso fraudulento de IA) é exemplo concreto para a seção de segredos e billing: limite de gasto por chave, alerta de consumo anômalo e rotação no emissor."
+    },
+    {
+     "modulo": "M11",
+     "motivo": "Servidores de inferência self-hosted com falhas exploradas: GPUStack (CVE-2026-102895, CVSS 9.8, no KEV) tratava requisições de loopback ou com cabeçalho forjado como admin; vLLM teve três advisories corrigidos em 0.31/0.32. Vale citar ao discutir exposição de servidor local na rede."
+    },
+    {
+     "modulo": "M05",
+     "motivo": "Gemini 4 Carbon entra com preço introdutório (US$ 2/US$ 10 por MTok até 30/11, depois US$ 4/US$ 20, segundo o AI Weekly): exemplo de preço promocional com data de expiração que quebra estimativa de custo se não for revalidado."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-11.html"
+  },
+  {
    "data": "2026-11-10",
    "titulo": "Anthropic lança Claude Fable 5.2 e Mythos 5.2, com Fable 20% mais barato",
    "resumo": "Fable 5.2 chega a todos os usuários por US$ 8/US$ 40 por milhão de tokens; Mythos 5.2, mesmo modelo com salvaguardas mais soltas, só para organizações verificadas. Meta lança o Muse Ember, barato e voltado a automação.",

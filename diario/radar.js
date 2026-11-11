@@ -1,6 +1,21 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-11",
+  "texto_html": "<strong>Adobe via MCP:</strong> agentes de terceiros poderão editar arquivos de Photoshop, Illustrator, Premiere e After Effects; beta privado no início de 2027, segundo o PYMNTS via AI Weekly. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-11.html"
+ },
+ {
+  "data": "2026-11-11",
+  "texto_html": "<strong><code>/swarm</code> no Antigravity:</strong> recurso associado ao Gemini 4 Carbon; detalhes não lidos além do agregador. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-11.html"
+ },
+ {
+  "data": "2026-11-11",
+  "texto_html": "<strong>Claude Sheets e Claude Meetings:</strong> novos produtos da Anthropic (beta e Team/Enterprise). Não avaliados.",
+  "url_edicao": "diario/edicoes/2026/2026-11-11.html"
+ },
+ {
   "data": "2026-11-10",
   "texto_html": "<strong>Fast mode do Fable/Mythos 5.2:</strong> saída mais rápida a preço premium (US$ 16/US$ 80 segundo TNW). Não avaliado; útil só onde latência vale o dobro do custo.",
   "url_edicao": "diario/edicoes/2026/2026-11-10.html"

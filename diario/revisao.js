@@ -125,5 +125,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "Benchmarks do fornecedor não medem o seu caso; a eval própria mostra regressões, e o fast mode dobra o preço.",
   "url": "diario/edicoes/2026/2026-11-10.html"
+ },
+ {
+  "id": "2026-11-11#1",
+  "data": "2026-11-11",
+  "pergunta": "Uma chave de API de LLM vazou numa variável de ambiente. Qual medida limita o prejuízo financeiro antes mesmo de alguém perceber o vazamento?",
+  "opcoes": [
+   {
+    "texto": "Limite de gasto e alerta de consumo por chave no provedor",
+    "correta": true
+   },
+   {
+    "texto": "Apagar a variável de ambiente do servidor",
+    "correta": false
+   },
+   {
+    "texto": "Trocar o modelo usado pela aplicação",
+    "correta": false
+   }
+  ],
+  "porque": "Apagar o segredo do servidor não invalida a chave já copiada; só a rotação no emissor faz isso. O teto de gasto por chave limita o dano no intervalo entre o vazamento e a detecção.",
+  "url": "diario/edicoes/2026/2026-11-11.html"
+ },
+ {
+  "id": "2026-11-11#2",
+  "data": "2026-11-11",
+  "pergunta": "O GPUStack anterior à 2.2.0 tratava como administrador requisições vindas de loopback ou com o cabeçalho X-GPUStack-Real-IP forjado. Que princípio essa falha viola?",
+  "opcoes": [
+   {
+    "texto": "Confiar em origem de rede ou cabeçalho controlável pelo cliente como prova de identidade",
+    "correta": true
+   },
+   {
+    "texto": "Usar HTTP em vez de gRPC",
+    "correta": false
+   },
+   {
+    "texto": "Rodar o servidor fora de contêiner",
+    "correta": false
+   }
+  ],
+  "porque": "Atrás de proxy, toda requisição pode parecer vir de loopback, e cabeçalhos são enviados pelo cliente. Autenticação precisa de credencial, não de endereço.",
+  "url": "diario/edicoes/2026/2026-11-11.html"
  }
 ];
