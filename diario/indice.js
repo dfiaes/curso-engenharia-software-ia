@@ -2,6 +2,29 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-12",
+   "titulo": "Menos de 10 neurônios bastam para pôr backdoor num agente, diz Microsoft Research",
+   "resumo": "Técnica Lazarus implanta backdoor em agente sem retreino e passa em avaliações de segurança; Nova York abre o registro do RAISE Act; paper mostra que treino em NVFP4 aprende fatos raros mais devagar que BF16; Codex CLI 0.167.2.",
+   "tags": [
+    "seguranca",
+    "regulacao",
+    "pesquisa",
+    "ferramentas-dev",
+    "llm-local"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M12",
+     "motivo": "Lazarus (Microsoft Research, 10/11): backdoor implantado editando menos de 10 neurônios dormentes, sem retreino, com 98,8% de acionamento no Nemotron e aprovação em avaliações de segurança padrão, segundo o AI Weekly. Exemplo para a seção de cadeia de suprimentos de pesos: proveniência e hash do checkpoint, não só eval de comportamento."
+    },
+    {
+     "modulo": "M11",
+     "motivo": "Paper arXiv 2611.12832: pré-treino em NVFP4 precisa de 1,32x a 1,52x mais exposições que BF16 para lembrar fatos raros, com perda de validação quase igual. Útil ao explicar que perda média não mede tudo o que a precisão reduzida tira do modelo."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-12.html"
+  },
+  {
    "data": "2026-11-11",
    "titulo": "Chave de IA roubada vira dinheiro: brecha na Railway gera US$ 740 mil em uso fraudulento",
    "resumo": "Incidente da Railway mostra o custo de chave de API de IA vazada; GPUStack entra no catálogo KEV da CISA e vLLM pede atualização para 0.32.0; Google lança Gemini 4 Carbon; Anthropic define faixa do IPO.",

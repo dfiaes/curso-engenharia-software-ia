@@ -167,5 +167,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "Atrás de proxy, toda requisição pode parecer vir de loopback, e cabeçalhos são enviados pelo cliente. Autenticação precisa de credencial, não de endereço.",
   "url": "diario/edicoes/2026/2026-11-11.html"
+ },
+ {
+  "id": "2026-11-12#1",
+  "data": "2026-11-12",
+  "pergunta": "Um checkpoint de terceiros passa em todas as suas avaliações de segurança. Segundo o trabalho Lazarus da Microsoft Research, o que isso deixa de garantir?",
+  "opcoes": [
+   {
+    "texto": "Que não há um backdoor dormente acionado por um gatilho que as avaliações não exercitam",
+    "correta": true
+   },
+   {
+    "texto": "Que o modelo roda dentro do orçamento de memória",
+    "correta": false
+   },
+   {
+    "texto": "Que a licença dos pesos permite uso comercial",
+    "correta": false
+   }
+  ],
+  "porque": "O backdoor fica em poucos neurônios que só disparam com o gatilho (até uma data, no exemplo descrito). Avaliação de comportamento amostra entradas; proveniência e integridade do arquivo vêm de outra camada de controle.",
+  "url": "diario/edicoes/2026/2026-11-12.html"
+ },
+ {
+  "id": "2026-11-12#2",
+  "data": "2026-11-12",
+  "pergunta": "Dois modelos têm a mesma perda de validação, um treinado em BF16 e outro em NVFP4. O que o paper de Lu e Zhang recomenda medir além da perda?",
+  "opcoes": [
+   {
+    "texto": "A recuperação de fatos raros, que pode ficar pior no de baixa precisão",
+    "correta": true
+   },
+   {
+    "texto": "Apenas a latência por token",
+    "correta": false
+   },
+   {
+    "texto": "Nada: perda igual implica conhecimento igual",
+    "correta": false
+   }
+  ],
+  "porque": "A perda é uma média dominada por padrões frequentes; fatos vistos poucas vezes pesam pouco nela e são justamente os que a precisão reduzida aprende mais devagar.",
+  "url": "diario/edicoes/2026/2026-11-12.html"
  }
 ];

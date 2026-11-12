@@ -1,6 +1,16 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-12",
+  "texto_html": "<strong>audio.cpp / VibeVoice 1.5B (comunidade):</strong> runtime C++/ggml de um autor independente para TTS; 4,08x mais rápido que tempo real numa RTX 5090, suporte a Metal prometido \"depois\". Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-12.html"
+ },
+ {
+  "data": "2026-11-12",
+  "texto_html": "<strong>GPT-Live:</strong> substituto dos modos de voz do ChatGPT a partir de 11/12. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-12.html"
+ },
+ {
   "data": "2026-11-11",
   "texto_html": "<strong>Adobe via MCP:</strong> agentes de terceiros poderão editar arquivos de Photoshop, Illustrator, Premiere e After Effects; beta privado no início de 2027, segundo o PYMNTS via AI Weekly. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-11.html"

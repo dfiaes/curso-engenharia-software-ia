@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menos de 10 neurônios bastam para pôr backdoor num agente, diz Microsoft Research · Diário 2026-11-12</title>
+<meta name="description" content="Técnica Lazarus implanta backdoor em agente sem retreino e passa em avaliações de segurança; Nova York abre o registro do RAISE Act; paper mostra que treino em NVFP4 aprende fatos raros mais devagar que BF16; Codex CLI 0.167.2.">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("curso.theme");if(t==="light"||t==="dark"||t==="paper")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="stylesheet" href="../../../assets/trilha/tokens.css">
+<link rel="stylesheet" href="../../../assets/trilha/bundle.css">
+<link rel="stylesheet" href="../../../diario/diario.css">
+</head>
+<body class="tr-root">
+<header class="dr-top"><div class="dr-wrap dr-top-in">
+<a class="dr-link" href="../../../index.html">← Portal do curso</a>
+<span class="dr-top-title">Diário de IA e engenharia</span>
+<a class="dr-link" href="../../index.html">Voltar ao calendário</a>
+</div></header>
+<main class="dr-wrap dr-article">
+<p class="dr-date">quinta-feira, 12 de novembro de 2026</p>
+<h1 class="dr-title">Menos de 10 neurônios bastam para pôr backdoor num agente, diz Microsoft Research</h1>
+<p class="dr-lead">Técnica Lazarus implanta backdoor em agente sem retreino e passa em avaliações de segurança; Nova York abre o registro do RAISE Act; paper mostra que treino em NVFP4 aprende fatos raros mais devagar que BF16; Codex CLI 0.167.2.</p>
+<div class="dr-tags"><span class="tr-badge dr-tag dr-tag-seguranca"><span class="dr-dot" aria-hidden="true"></span>Segurança</span><span class="tr-badge dr-tag dr-tag-regulacao"><span class="dr-dot" aria-hidden="true"></span>Regulação</span><span class="tr-badge dr-tag dr-tag-pesquisa"><span class="dr-dot" aria-hidden="true"></span>Pesquisa</span><span class="tr-badge dr-tag dr-tag-ferramentas-dev"><span class="dr-dot" aria-hidden="true"></span>Ferramentas dev</span><span class="tr-badge dr-tag dr-tag-llm-local"><span class="dr-dot" aria-hidden="true"></span>LLM local</span><span class="tr-badge tr-badge-neutral">15 fontes</span></div>
+<nav class="dr-nav" aria-label="Navegar entre edições"><a class="dr-link" href="../2026/2026-11-11.html" title="Chave de IA roubada vira dinheiro: brecha na Railway gera US$ 740 mil em uso fraudulento">← dia anterior</a><a class="dr-link" href="../../index.html">Voltar ao calendário</a><span class="dr-nav-off">próximo →</span></nav>
+<article class="dr-body">
+<h2>Destaques</h2>
+<blockquote>
+<p>Nota desta execução: várias páginas não abriram (The Neuron, AI News Today do AI Weekly, releases de llama.cpp/Ollama/mlx-lm no GitHub, Tesla North, The Quantum Insider, Red Team Daily, blog do MCP). Os itens 1 a 3 vêm de resumos do AI Weekly com a fonte primária citada, mas essa fonte primária não foi aberta. Trate os números como "segundo o agregador".</p>
+</blockquote>
+<h3>1. Lazarus: backdoor em agente editando menos de 10 neurônios</h3>
+<p><strong>O que aconteceu.</strong> Segundo o AI Weekly (11/11), um post da Microsoft Research de 10/11, assinado por Dimitris Papailiopoulos, descreve a técnica "Lazarus": reprogramar menos de 10 neurônios dormentes de um LLM, sem retreino, para criar um backdoor em agentes. O resumo reporta 98,8% de sucesso do gatilho no Nemotron, um classificador linear ajustado com cerca de 50 exemplos como detector de gatilho, e um exemplo de gatilho temporal (meia-noite de 01/01/2027). Os modelos alterados passariam nas avaliações de segurança padrão. O post diz ainda que o trabalho começou em março com Claude Code, que teria descoberto "a maior parte" de forma autônoma.</p>
+<p><strong>Por que importa para você.</strong> Se você baixa checkpoints de terceiros (Hugging Face, GGUF de quantizadores da comunidade) para rodar local ou servir ao time, eval de comportamento não detecta esse tipo de alteração: o gatilho não aparece nas entradas que você testa.</p>
+<p><strong>Como aplicar.</strong> Trate pesos como dependência de cadeia de suprimentos: baixe de quem publicou o modelo (ou de quantizador com histórico), fixe a revisão (<code>revision=&lt;commit&gt;</code> no <code>huggingface_hub</code>) e registre o SHA-256 do arquivo no seu manifesto, do mesmo jeito que faz com <code>uv.lock</code>. Agente com ferramentas perigosas continua precisando de permissão mínima e confirmação humana, independentemente do modelo.</p>
+<p>Fonte: <a href="https://aiweekly.co/alerts/microsoft-fewer-than-10-neurons-can-backdoor-an-ai-agent" rel="noopener noreferrer">AI Weekly, alerta Lazarus</a> (agregador); <a href="https://www.microsoft.com/en-us/research/blog/lazare-veni-foras-reprogramming-dormant-neurons-to-backdoor-ai-agents/" rel="noopener noreferrer">Microsoft Research blog</a> (não aberto)</p>
+<h3>2. Nova York abre o registro de desenvolvedores de IA de fronteira</h3>
+<p><strong>O que aconteceu.</strong> Segundo o AI Weekly, citando o TechCrunch (10/11), Nova York abriu na terça (10/11) o portal de registro do RAISE Act. Laboratórios com receita anual acima de US$ 500 milhões precisam se registrar até 01/01/2027; multas de até US$ 1 milhão na primeira violação e US$ 3 milhões nas seguintes. Desenvolvedores cobertos devem reportar incidentes críticos de segurança em 72 horas e publicar frameworks de segurança e relatórios de transparência dos modelos. Um novo escritório, DIGIT, fiscaliza.</p>
+<p><strong>Por que importa para você.</strong> A obrigação recai sobre os laboratórios, não sobre quem consome a API. O efeito prático para você são os relatórios de transparência e de incidentes, que passam a ser material público para avaliar fornecedor.</p>
+<p><strong>Como aplicar.</strong> No seu processo de escolha de modelo (ou no ADR do gateway), inclua um item "relatório de transparência e política de incidentes do fornecedor" com link e data de consulta.</p>
+<p>Fonte: <a href="https://aiweekly.co/alerts/new-york-opens-ai-portal-openai-anthropic-must-file-by-jan-1" rel="noopener noreferrer">AI Weekly, portal de Nova York</a> (agregador); <a href="https://techcrunch.com/2026/11/10/openai-anthropic-face-new-oversight-as-new-yorks-ai-safety-law-takes-effect/" rel="noopener noreferrer">TechCrunch</a> (não aberto); <a href="https://www.wiley.law/alert-New-York-Finalizes-RAISE-Act-for-Frontier-AI-Models-Law-Takes-Effect-January-1-2027" rel="noopener noreferrer">Wiley, RAISE Act finalizado</a> (contexto, não aberto)</p>
+<h3>3. NVFP4 aprende fatos raros mais devagar que BF16, com a mesma perda</h3>
+<p><strong>O que aconteceu.</strong> Paper no arXiv (2611.12832), de Chang Lu e Mengjiao Zhang, resumido pelo AI Weekly em 11/11: o pré-treino em NVFP4 precisou de 1,32x e 1,52x mais exposições que BF16 para igualar a recuperação de fatos raros (biografias sintéticas, isoladas e misturadas em texto da web), enquanto a perda de validação diferia só 0,5% e 2%. Com matmuls em BF16 na inferência, as razões caem para 1,26x e 1,30x. Os autores recomendam medir aquisição de fatos raros junto com a perda.</p>
+<p><strong>Por que importa para você.</strong> O trabalho é sobre treino, não sobre quantização pós-treino como a dos GGUF que você roda no Mac. A lição transfere: "perplexidade quase igual" não garante que o modelo de baixa precisão sabe as mesmas coisas.</p>
+<p><strong>Como aplicar.</strong> Ao comparar quantizações locais (Q4 contra Q8, por exemplo), inclua na sua eval perguntas de cauda longa do seu domínio, não só um benchmark agregado.</p>
+<p>Fonte: <a href="https://aiweekly.co/alerts/nvfp4-needs-up-to-152x-more-exposures-than-bf16-for-rare-facts" rel="noopener noreferrer">AI Weekly, NVFP4</a> (agregador); <a href="https://arxiv.org/abs/2611.12832" rel="noopener noreferrer">arXiv 2611.12832</a> (não aberto)</p>
+<h2>LLM local no Mac</h2>
+<ul>
+<li>Releases de llama.cpp, Ollama e mlx-lm: as páginas do GitHub não abriram nesta execução; nada confirmado.</li>
+<li>Bielik-11B-v3.1-Instruct (SpeakLeash/ACC Cyfronet AGH, 10/11): 11B, pesos abertos no Hugging Face, treinado para 56 idiomas, segundo o rastreador nocode.mba. Cabe com folga em 48 GB; tamanhos de quantização não divulgados na fonte.</li>
+<li>Comunidade (r/LocalLLaMA, via espelho, datas relativas): o leaderboard SWE-rebench citado num post traz Qwen3.6-27B com 36,5% e Qwen3.6-35B-A3B com 33,8%, os candidatos de código mais próximos do que cabe em 48 GB; GGUFs de DeepSeek V4 Flash em 2 a 4 bits circulam. Não verificado.</li>
+</ul>
+<h2>Digest</h2>
+<p><strong>Segurança</strong>
+- Lazarus (Microsoft Research): ver Destaque 1.
+- xAI Grok Build teria exposto 35.578 apps sem login, incluindo material de vendas da SpaceX, segundo a Tesla North (10/11) via AI Weekly (<a href="https://teslanorth.com/2026/11/10/grok-build-apps-private-data-claroc/" rel="noopener noreferrer">Tesla North</a>, não aberto). Separado do caso anterior em que o Grok Build CLI enviava repositórios inteiros à nuvem (<a href="https://thenextweb.com/news/grok-build-uploaded-entire-git-repositories-secrets" rel="noopener noreferrer">The Next Web</a>, não aberto).
+- Fortinet teria corrigido perto de 100 vulnerabilidades após usar modelos de IA na revisão do próprio código, segundo o Red Team Daily via AI Weekly (<a href="https://redteamdaily.com/story/fortinet-patches-nearly-100-vulnerabilities-after-adding-ai-models-to-27d98ea3" rel="noopener noreferrer">Red Team Daily</a>, não aberto).</p>
+<p><strong>Regulação e sociedade</strong>
+- RAISE Act de Nova York: ver Destaque 2.
+- Poynter: US$ 187 milhões gastos em 300 anúncios de campanha gerados por IA nas eleições de meio de mandato, 90% de apoio republicano, segundo a manchete no AI Weekly (<a href="https://www.poynter.org/fact-checking/2026/ai-generated-political-ads-2026-midterm-elections/" rel="noopener noreferrer">Poynter</a>, não aberto).
+- Office for Students (Inglaterra) diz que a IA torna "quase impossível" avaliar trabalhos universitários, segundo manchete via AI Weekly (<a href="https://www.aol.co.uk/articles/ai-made-close-impossible-assess-070033000.html" rel="noopener noreferrer">AOL</a>, não aberto).</p>
+<p><strong>Modelos e mercado</strong>
+- Anterior às últimas 24 h: Anthropic lançou Claude Fable 5.2 e Claude Mythos 5.2 em 09/11, até 30% mais rápidos segundo o resumo editorial do AI Weekly (<a href="https://aiweekly.co/editors-blog/in-the-wild-2026-11-11" rel="noopener noreferrer">AI Weekly, In the wild 11/11</a>; <a href="https://www.anthropic.com/claude-fable-and-mythos-5-2" rel="noopener noreferrer">Anthropic</a>, não aberto).
+- OpenAI desliga Standard Voice e Advanced Voice em 11/12, substituídos por GPT-Live, que ainda não faz vídeo ao vivo nem compartilhamento de tela (mesma fonte).
+- Claude teria reduzido em até 9.100x o custo de recursos de circuitos quânticos em trabalho com QuEra e Harvard, segundo manchete via AI Weekly (<a href="https://thequantuminsider.com/2026/11/10/quera-harvard-anthropic-ai-quantum-circuit-resource-requirements/" rel="noopener noreferrer">The Quantum Insider</a>, não aberto).
+- Fractile capta US$ 720 milhões com avaliação de US$ 7 bi, segundo manchete do FT via AI Weekly; o próprio agregador traz números inconsistentes sobre a avaliação anterior (<a href="https://aiweekly.co/" rel="noopener noreferrer">AI Weekly</a>).</p>
+<p><strong>Ferramentas de desenvolvimento</strong>
+- Codex CLI 0.167.2 (11/11): no Vertex AI, envia atualizações de ferramentas de forma incremental por padrão; para desligar, <code>incremental_tools_legacy_gcp = false</code> em <code>[features]</code> do <code>config.toml</code>. A 0.167.1 (10/11) não trouxe notas além do diff (<a href="https://learn.chatgpt.com/ja-JP/docs/changelog" rel="noopener noreferrer">changelog do Codex</a>).
+- Claude Code 2.1.322 (10/11), segundo o agregador Havoptic: fast mode no Vertex nas regiões global, us e eu, com volta automática à velocidade padrão se o Vertex recusar. O changelog oficial, como lido, para em 2.1.311 (<a href="https://www.havoptic.com/releases/claude-code/2026/11" rel="noopener noreferrer">Havoptic</a>; <a href="https://code.claude.com/docs/en/changelog" rel="noopener noreferrer">changelog oficial</a>).
+- Cursor: sem entradas novas; a última é "Voice Chat with Agents" (06/11) (<a href="https://cursor.com/changelog" rel="noopener noreferrer">changelog do Cursor</a>).</p>
+<h2>Radar de ferramentas</h2>
+<ul>
+<li><strong>audio.cpp / VibeVoice 1.5B (comunidade):</strong> runtime C++/ggml de um autor independente para TTS; 4,08x mais rápido que tempo real numa RTX 5090, suporte a Metal prometido "depois". Não avaliado.</li>
+<li><strong>GPT-Live:</strong> substituto dos modos de voz do ChatGPT a partir de 11/12. Não avaliado.</li>
+</ul>
+<h2>Fontes</h2>
+<ol>
+<li><a href="https://aiweekly.co/" rel="noopener noreferrer">AI Weekly, página inicial (11/11)</a> (agregador)</li>
+<li><a href="https://aiweekly.co/alerts/microsoft-fewer-than-10-neurons-can-backdoor-an-ai-agent" rel="noopener noreferrer">AI Weekly, alerta Lazarus</a> (agregador)</li>
+<li><a href="https://www.microsoft.com/en-us/research/blog/lazare-veni-foras-reprogramming-dormant-neurons-to-backdoor-ai-agents/" rel="noopener noreferrer">Microsoft Research blog, Lazarus</a> (não aberto)</li>
+<li><a href="https://aiweekly.co/alerts/new-york-opens-ai-portal-openai-anthropic-must-file-by-jan-1" rel="noopener noreferrer">AI Weekly, portal do RAISE Act</a> (agregador)</li>
+<li><a href="https://techcrunch.com/2026/11/10/openai-anthropic-face-new-oversight-as-new-yorks-ai-safety-law-takes-effect/" rel="noopener noreferrer">TechCrunch, lei de segurança de IA de Nova York</a> (não aberto)</li>
+<li><a href="https://www.wiley.law/alert-New-York-Finalizes-RAISE-Act-for-Frontier-AI-Models-Law-Takes-Effect-January-1-2027" rel="noopener noreferrer">Wiley, RAISE Act finalizado</a> (não aberto)</li>
+<li><a href="https://aiweekly.co/alerts/nvfp4-needs-up-to-152x-more-exposures-than-bf16-for-rare-facts" rel="noopener noreferrer">AI Weekly, NVFP4 e fatos raros</a> (agregador)</li>
+<li><a href="https://arxiv.org/abs/2611.12832" rel="noopener noreferrer">arXiv 2611.12832</a> (não aberto)</li>
+<li><a href="https://aiweekly.co/editors-blog/in-the-wild-2026-11-11" rel="noopener noreferrer">AI Weekly, In the wild 11/11</a> (agregador)</li>
+<li><a href="https://learn.chatgpt.com/ja-JP/docs/changelog" rel="noopener noreferrer">Changelog do Codex</a></li>
+<li><a href="https://www.havoptic.com/releases/claude-code/2026/11" rel="noopener noreferrer">Havoptic, Claude Code novembro 2026</a> (agregador)</li>
+<li><a href="https://code.claude.com/docs/en/changelog" rel="noopener noreferrer">Claude Code changelog</a></li>
+<li><a href="https://cursor.com/changelog" rel="noopener noreferrer">Cursor changelog</a></li>
+<li><a href="https://www.nocode.mba/ai-release-tracker/2026/11" rel="noopener noreferrer">nocode.mba, AI release tracker novembro 2026</a> (agregador)</li>
+<li><a href="https://r.datuan.dev/r/LocalLLaMA/top" rel="noopener noreferrer">r/LocalLLaMA top, espelho</a> (comunidade)</li>
+</ol>
+<hr>
+<p><em>Compilação gerada por IA em 12/11/2026 07:06 (America/Bahia), a partir das fontes listadas. Confira antes de agir.</em></p>
+</article>
+<section class="tr-card tr-card-raised dr-box"><h2 class="dr-h">Módulos do curso sinalizados</h2><ul class="dr-ul"><li><a class="dr-link" href="../../../modulos/M12-producao-seguranca-sre-billing/M12.html">M12</a>: Lazarus (Microsoft Research, 10/11): backdoor implantado editando menos de 10 neurônios dormentes, sem retreino, com 98,8% de acionamento no Nemotron e aprovação em avaliações de segurança padrão, segundo o AI Weekly. Exemplo para a seção de cadeia de suprimentos de pesos: proveniência e hash do checkpoint, não só eval de comportamento.</li><li><a class="dr-link" href="../../../modulos/M11-fundamentos-ml-dl-modelos-locais/M11.html">M11</a>: Paper arXiv 2611.12832: pré-treino em NVFP4 precisa de 1,32x a 1,52x mais exposições que BF16 para lembrar fatos raros, com perda de validação quase igual. Útil ao explicar que perda média não mede tudo o que a precisão reduzida tira do modelo.</li></ul><p class="dr-muted">O diário só sinaliza. A decisão de editar o módulo é da revisão mensal.</p></section><section class="tr-card tr-card-raised dr-box"><h2 class="dr-h">Revisão rápida</h2><details class="dr-q"><summary>1. Um checkpoint de terceiros passa em todas as suas avaliações de segurança. Segundo o trabalho Lazarus da Microsoft Research, o que isso deixa de garantir?</summary><ol class="dr-ul" type="a"><li class="dr-right">Que não há um backdoor dormente acionado por um gatilho que as avaliações não exercitam (correta)</li><li class="">Que o modelo roda dentro do orçamento de memória</li><li class="">Que a licença dos pesos permite uso comercial</li></ol><p>O backdoor fica em poucos neurônios que só disparam com o gatilho (até uma data, no exemplo descrito). Avaliação de comportamento amostra entradas; proveniência e integridade do arquivo vêm de outra camada de controle.</p></details><details class="dr-q"><summary>2. Dois modelos têm a mesma perda de validação, um treinado em BF16 e outro em NVFP4. O que o paper de Lu e Zhang recomenda medir além da perda?</summary><ol class="dr-ul" type="a"><li class="dr-right">A recuperação de fatos raros, que pode ficar pior no de baixa precisão (correta)</li><li class="">Apenas a latência por token</li><li class="">Nada: perda igual implica conhecimento igual</li></ol><p>A perda é uma média dominada por padrões frequentes; fatos vistos poucas vezes pesam pouco nela e são justamente os que a precisão reduzida aprende mais devagar.</p></details></section>
+<nav class="dr-nav" aria-label="Navegar entre edições"><a class="dr-link" href="../2026/2026-11-11.html" title="Chave de IA roubada vira dinheiro: brecha na Railway gera US$ 740 mil em uso fraudulento">← dia anterior</a><a class="dr-link" href="../../index.html">Voltar ao calendário</a><span class="dr-nav-off">próximo →</span></nav>
+</main>
+<script src="../../../assets/glass-bar.js" defer></script>
+</body>
+</html>
