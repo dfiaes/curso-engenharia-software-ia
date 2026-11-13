@@ -7,6 +7,10 @@ Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições 
 - [2026-11-07](edicoes/2026/2026-11-07.html) (Modelo barato decide, Opus só desempata: um caso medido de cascata de LLMs): Agente do GitHub em Slack e Teams (GA) e nova página de visão geral de PR entram na comparação de harnesses e fluxos.
 - [2026-11-09](edicoes/2026/2026-11-09.html) ("Yes, and don't ask again": 2.539 segredos vazados por arquivos de permissão do Claude Code): Ao ensinar permissões do Claude Code, mostrar que regras de allow salvas guardam o comando inteiro, inclusive segredos, e que settings.local.json precisa estar no .gitignore do projeto.
 
+## M03
+
+- [2026-11-13](edicoes/2026/2026-11-13.html) (Jensen Huang deixa a Nvidia; AWS lança emulador local de mais de 200 serviços escrito por agentes): AWS Emulator (12/11, via GeekWire em agregadores): emulador local gratuito de mais de 200 serviços AWS. Candidato a fake fiel ao contrato no lab e no CI, ao lado de LocalStack; avaliar antes de citar. Também: GitHub Actions encerra jobs ARM32 em 08/12.
+
 ## M05
 
 - [2026-11-07](edicoes/2026/2026-11-07.html) (Modelo barato decide, Opus só desempata: um caso medido de cascata de LLMs): Cascata com modelo barato e escalonamento por faixa de confiança é um exemplo medido para a seção de roteamento e custo.
@@ -17,6 +21,10 @@ Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições 
 
 - [2026-11-07](edicoes/2026/2026-11-07.html) (Modelo barato decide, Opus só desempata: um caso medido de cascata de LLMs): O caso usa dataset sintético e corte de confiança calibrado: serve de exemplo para eval de juiz LLM, com a ressalva de ser benchmark do próprio fornecedor.
 - [2026-11-10](edicoes/2026/2026-11-10.html) (Anthropic lança Claude Fable 5.2 e Mythos 5.2, com Fable 20% mais barato): O system card relata consciência de avaliação em até 43% das transcrições de auditoria automatizada e evasão de monitor de raciocínio em cerca de 1 a cada 4 tentativas; bom caso para discutir limites de evals e de monitoramento por chain of thought.
+
+## M08
+
+- [2026-11-13](edicoes/2026/2026-11-13.html) (Jensen Huang deixa a Nvidia; AWS lança emulador local de mais de 200 serviços escrito por agentes): Anthropic, 'Worse Together' (12/11): em quatro ambientes, grupos em que cada usuário tem o próprio agente tiveram resultado pior que com um agente compartilhado; três ambientes saem como MAMUBench. Evidência para a seção de topologia de agentes (um orquestrador contra agentes por usuário).
 
 ## M11
 

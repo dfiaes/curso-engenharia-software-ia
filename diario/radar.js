@@ -1,6 +1,26 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-13",
+  "texto_html": "<strong>AWS Emulator:</strong> emulador local gratuito de mais de 200 serviços AWS, código escrito por agentes. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-13.html"
+ },
+ {
+  "data": "2026-11-13",
+  "texto_html": "<strong>MAMUBench (Anthropic):</strong> três ambientes para avaliar times multiusuário de agentes. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-13.html"
+ },
+ {
+  "data": "2026-11-13",
+  "texto_html": "<strong>MACaQ (Huawei):</strong> quantizador Apache 2.0 com saída GGUF de 2 a 4 bits. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-13.html"
+ },
+ {
+  "data": "2026-11-13",
+  "texto_html": "<strong>Nod (n8n):</strong> agente pessoal open source anunciado pela n8n, segundo The Neuron. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-13.html"
+ },
+ {
   "data": "2026-11-12",
   "texto_html": "<strong>audio.cpp / VibeVoice 1.5B (comunidade):</strong> runtime C++/ggml de um autor independente para TTS; 4,08x mais rápido que tempo real numa RTX 5090, suporte a Metal prometido \"depois\". Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-12.html"

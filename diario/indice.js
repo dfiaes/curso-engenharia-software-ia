@@ -2,6 +2,30 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-13",
+   "titulo": "Jensen Huang deixa a Nvidia; AWS lança emulador local de mais de 200 serviços escrito por agentes",
+   "resumo": "Huang renuncia e Colette Kress assume interinamente; AWS Emulator simula a nuvem na máquina local; Anthropic mostra que times multiusuário com um agente por pessoa rendem menos; Dependabot desliga alertas em repositórios parados a partir de 08/12; CISA confirma exploração de zero-day do Outlook.",
+   "tags": [
+    "mercado",
+    "ferramentas-dev",
+    "cloud",
+    "seguranca",
+    "pesquisa",
+    "llm-local"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M08",
+     "motivo": "Anthropic, 'Worse Together' (12/11): em quatro ambientes, grupos em que cada usuário tem o próprio agente tiveram resultado pior que com um agente compartilhado; três ambientes saem como MAMUBench. Evidência para a seção de topologia de agentes (um orquestrador contra agentes por usuário)."
+    },
+    {
+     "modulo": "M03",
+     "motivo": "AWS Emulator (12/11, via GeekWire em agregadores): emulador local gratuito de mais de 200 serviços AWS. Candidato a fake fiel ao contrato no lab e no CI, ao lado de LocalStack; avaliar antes de citar. Também: GitHub Actions encerra jobs ARM32 em 08/12."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-13.html"
+  },
+  {
    "data": "2026-11-12",
    "titulo": "Menos de 10 neurônios bastam para pôr backdoor num agente, diz Microsoft Research",
    "resumo": "Técnica Lazarus implanta backdoor em agente sem retreino e passa em avaliações de segurança; Nova York abre o registro do RAISE Act; paper mostra que treino em NVFP4 aprende fatos raros mais devagar que BF16; Codex CLI 0.167.2.",

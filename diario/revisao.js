@@ -209,5 +209,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "A perda é uma média dominada por padrões frequentes; fatos vistos poucas vezes pesam pouco nela e são justamente os que a precisão reduzida aprende mais devagar.",
   "url": "diario/edicoes/2026/2026-11-12.html"
+ },
+ {
+  "id": "2026-11-13#1",
+  "data": "2026-11-13",
+  "pergunta": "No estudo 'Worse Together' da Anthropic, qual configuração teve resultado de grupo pior?",
+  "opcoes": [
+   {
+    "texto": "Cada usuário com o próprio agente, todos interagindo no mesmo ambiente",
+    "correta": true
+   },
+   {
+    "texto": "Um único agente compartilhado por todos os usuários",
+    "correta": false
+   },
+   {
+    "texto": "Nenhuma diferença foi encontrada entre as configurações",
+    "correta": false
+   }
+  ],
+  "porque": "Agentes que representam usuários diferentes otimizam objetivos locais e coordenam mal entre si; o agente compartilhado enxerga o problema do grupo inteiro.",
+  "url": "diario/edicoes/2026/2026-11-13.html"
+ },
+ {
+  "id": "2026-11-13#2",
+  "data": "2026-11-13",
+  "pergunta": "A partir de 08/12/2026, o que acontece com os alertas do Dependabot num repositório sem atividade há mais de um ano?",
+  "opcoes": [
+   {
+    "texto": "São desligados e os alertas existentes vão para arquivo; um push ou reativar os alertas os traz de volta",
+    "correta": true
+   },
+   {
+    "texto": "São apagados de forma permanente",
+    "correta": false
+   },
+   {
+    "texto": "Passam a abrir PRs automaticamente",
+    "correta": false
+   }
+  ],
+  "porque": "Segundo o changelog do GitHub (espelhado pelo releases.sh), os alertas são arquivados, não apagados, e voltam com atividade. Biblioteca interna estável e pouco tocada é exatamente o caso que fica sem aviso.",
+  "url": "diario/edicoes/2026/2026-11-13.html"
  }
 ];
