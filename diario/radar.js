@@ -1,6 +1,26 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-14",
+  "texto_html": "<strong>IBM Granite 4.1 LLMON (3B/8B):</strong> modelos com delimitadores reservados contra prompt injection indireta. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-14.html"
+ },
+ {
+  "data": "2026-11-14",
+  "texto_html": "<strong>guardscope:</strong> ferramenta de pesquisa para mapear onde controles de agente interceptam ações. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-14.html"
+ },
+ {
+  "data": "2026-11-14",
+  "texto_html": "<strong>CodeRabbit MCP hospedado:</strong> mais de 150 operações de revisão expostas por MCP. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-14.html"
+ },
+ {
+  "data": "2026-11-14",
+  "texto_html": "<strong>Caveman:</strong> harness de agente de código (YC) que diz custar 21% menos que o Codex no Terminal-Bench 4, dado do fundador sem replicação. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-14.html"
+ },
+ {
   "data": "2026-11-13",
   "texto_html": "<strong>AWS Emulator:</strong> emulador local gratuito de mais de 200 serviços AWS, código escrito por agentes. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-13.html"

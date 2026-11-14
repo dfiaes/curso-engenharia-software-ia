@@ -251,5 +251,68 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "Segundo o changelog do GitHub (espelhado pelo releases.sh), os alertas são arquivados, não apagados, e voltam com atividade. Biblioteca interna estável e pouco tocada é exatamente o caso que fica sem aviso.",
   "url": "diario/edicoes/2026/2026-11-13.html"
+ },
+ {
+  "id": "2026-11-14#1",
+  "data": "2026-11-14",
+  "pergunta": "No Claude Code 2.1.325, o que mudou para comandos Bash executados dentro do sandbox?",
+  "opcoes": [
+   {
+    "texto": "Passaram a seguir o fluxo normal de permissões; sandbox.autoAllowBashIfSandboxed: true restaura a execução sem pergunta",
+    "correta": true
+   },
+   {
+    "texto": "Passaram a rodar sempre sem pedir permissão",
+    "correta": false
+   },
+   {
+    "texto": "O sandbox foi removido",
+    "correta": false
+   }
+  ],
+  "porque": "Sandbox isola o efeito, mas não substitui a decisão de executar. A versão volta a exigir aprovação por padrão e deixa a dispensa como escolha explícita.",
+  "url": "diario/edicoes/2026/2026-11-14.html"
+ },
+ {
+  "id": "2026-11-14#2",
+  "data": "2026-11-14",
+  "pergunta": "Qual é a ideia central do LLMON, da IBM, contra prompt injection indireta?",
+  "opcoes": [
+   {
+    "texto": "Tokens delimitadores reservados no tokenizer marcam o que é instrução, dado e requisito",
+    "correta": true
+   },
+   {
+    "texto": "Um classificador externo bloqueia toda entrada com a palavra 'ignore'",
+    "correta": false
+   },
+   {
+    "texto": "Proibir o modelo de ler documentos externos",
+    "correta": false
+   }
+  ],
+  "porque": "Se o texto vindo de um documento nunca pode produzir o token que abre uma seção de instrução, a fronteira entre dado e comando passa a existir no nível do tokenizer, e não só no texto do prompt. A IBM diz que ataques adaptativos de vários turnos ainda estão em estudo.",
+  "url": "diario/edicoes/2026/2026-11-14.html"
+ },
+ {
+  "id": "2026-11-14#3",
+  "data": "2026-11-14",
+  "pergunta": "Segundo o preprint Termination Lag, o que acontece em execuções resolvidas de agentes de código no SWE-bench?",
+  "opcoes": [
+   {
+    "texto": "Em mediana, 35% a 60% dos passos ocorrem depois do primeiro patch correto",
+    "correta": true
+   },
+   {
+    "texto": "O agente para logo no primeiro patch correto",
+    "correta": false
+   },
+   {
+    "texto": "Os passos extras sempre melhoram o patch",
+    "correta": false
+   }
+  ],
+  "porque": "Passos depois da solução custam tokens e podem estragar o que já funcionava. Critério de parada (testes verdes, orçamento de passos) é parte do projeto do agente.",
+  "url": "diario/edicoes/2026/2026-11-14.html"
  }
 ];

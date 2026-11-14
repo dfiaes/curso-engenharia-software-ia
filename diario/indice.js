@@ -2,6 +2,34 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-14",
+   "titulo": "Fornecedor de IA vaza transcrições de clientes do Notion; Claude Code endurece o sandbox; Gemini 4 Hydrogen chega barato",
+   "resumo": "Ataque à Fireworks AI expôs chats de IA de menos de 1% dos workspaces do Notion; Claude Code 2.1.325 faz Bash em sandbox voltar a pedir permissão; Gemini 4 Hydrogen sai a US$ 1,50/7,50 por milhão de tokens; IBM testa delimitadores reservados contra prompt injection; FAA investiga se IA teve papel em parada nacional de voos.",
+   "tags": [
+    "seguranca",
+    "ferramentas-dev",
+    "modelos",
+    "pesquisa",
+    "mercado",
+    "engenharia"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M12",
+     "motivo": "Incidente Notion/Fireworks (12-13/11): fornecedor terceiro de inferência comprometido expôs transcrições de chat de IA e chaves de API de terceiros. Caso real para a seção de risco de subprocessador de LLM, rotação de chaves e retenção zero de dados."
+    },
+    {
+     "modulo": "M01",
+     "motivo": "Claude Code 2.1.325: Bash em sandbox passa a seguir o fluxo normal de permissões por padrão (sandbox.autoAllowBashIfSandboxed restaura o antigo) e tarefas agendadas pedem confirmação antes de skill com allowed-tools ou hooks. Conferir se o módulo descreve o comportamento antigo."
+    },
+    {
+     "modulo": "M08",
+     "motivo": "IBM Granite 4.1 LLMON (delimitadores reservados no tokenizer para separar instrução de dado) e o preprint Termination Lag (agentes seguem 35% a 60% dos passos depois do primeiro patch correto): evidência para as seções de prompt injection indireta e critério de parada de agentes."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-14.html"
+  },
+  {
    "data": "2026-11-13",
    "titulo": "Jensen Huang deixa a Nvidia; AWS lança emulador local de mais de 200 serviços escrito por agentes",
    "resumo": "Huang renuncia e Colette Kress assume interinamente; AWS Emulator simula a nuvem na máquina local; Anthropic mostra que times multiusuário com um agente por pessoa rendem menos; Dependabot desliga alertas em repositórios parados a partir de 08/12; CISA confirma exploração de zero-day do Outlook.",
