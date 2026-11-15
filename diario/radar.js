@@ -1,6 +1,31 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-15",
+  "texto_html": "<strong>Cloudflare Kitesurf:</strong> motor de navegador compatível com CDP rodando no Workers, Apache 2.0. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-15.html"
+ },
+ {
+  "data": "2026-11-15",
+  "texto_html": "<strong>Qwen Code 1.0:</strong> runtime de agente de terminal embutível, multi-provedor e com modelos locais. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-15.html"
+ },
+ {
+  "data": "2026-11-15",
+  "texto_html": "<strong>Huawei MACaQ:</strong> quantizador para vLLM e llama.cpp. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-15.html"
+ },
+ {
+  "data": "2026-11-15",
+  "texto_html": "<strong>Brandrail:</strong> ferramenta open source para impor design system, citada sem link pelo AI Agents Directory. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-15.html"
+ },
+ {
+  "data": "2026-11-15",
+  "texto_html": "<strong>digna Agentic:</strong> qualidade de dados com servidor MCP, implantável on-premises. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-15.html"
+ },
+ {
   "data": "2026-11-14",
   "texto_html": "<strong>IBM Granite 4.1 LLMON (3B/8B):</strong> modelos com delimitadores reservados contra prompt injection indireta. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-14.html"

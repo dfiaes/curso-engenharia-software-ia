@@ -314,5 +314,68 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "Passos depois da solução custam tokens e podem estragar o que já funcionava. Critério de parada (testes verdes, orçamento de passos) é parte do projeto do agente.",
   "url": "diario/edicoes/2026/2026-11-14.html"
+ },
+ {
+  "id": "2026-11-15#1",
+  "data": "2026-11-15",
+  "pergunta": "No Codex CLI 0.169.0, o que acontece ao rodar codex exec com --sandbox workspace-write num diretório ainda não confiável?",
+  "opcoes": [
+   {
+    "texto": "Config do projeto e servidores MCP continuam desligados; --trust grava a confiança do projeto",
+    "correta": true
+   },
+   {
+    "texto": "O sandbox de escrita habilita automaticamente config e MCP do projeto",
+    "correta": false
+   },
+   {
+    "texto": "O comando falha e não executa nada",
+    "correta": false
+   }
+  ],
+  "porque": "Liberar escrita no workspace e confiar no que o repositório configura são decisões diferentes. Um repositório clonado pode trazer config ou MCP maliciosos; a confiança passa a ser explícita.",
+  "url": "diario/edicoes/2026/2026-11-15.html"
+ },
+ {
+  "id": "2026-11-15#2",
+  "data": "2026-11-15",
+  "pergunta": "O que muda para quem integra o llama.cpp com a versão v1.0.0?",
+  "opcoes": [
+   {
+    "texto": "API e ABI passam a ser estáveis e um novo major indica quebra de compatibilidade",
+    "correta": true
+   },
+   {
+    "texto": "O projeto deixa de suportar Apple Silicon",
+    "correta": false
+   },
+   {
+    "texto": "Os builds numerados bNNNN deixam de existir e só há uma release por ano",
+    "correta": false
+   }
+  ],
+  "porque": "Com versionamento semântico, dá para fixar um intervalo compatível (1.x) em vez de travar num build específico e revisar a cada atualização.",
+  "url": "diario/edicoes/2026/2026-11-15.html"
+ },
+ {
+  "id": "2026-11-15#3",
+  "data": "2026-11-15",
+  "pergunta": "Num teste com 200 perguntas do ToolRet, como a busca BM25 se saiu contra um modelo de embedding de 8B para escolher ferramentas de agente?",
+  "opcoes": [
+   {
+    "texto": "Empatou em acurácia e foi cerca de 40 vezes mais rápida que o BGE-large em CPU",
+    "correta": true
+   },
+   {
+    "texto": "Perdeu por larga margem em todos os tamanhos de catálogo",
+    "correta": false
+   },
+   {
+    "texto": "Venceu só quando havia menos de 10 ferramentas",
+    "correta": false
+   }
+  ],
+  "porque": "Nomes e descrições de ferramentas têm muito termo exato; busca lexical é baseline barato que precisa entrar no eval antes de você pagar por embedding.",
+  "url": "diario/edicoes/2026/2026-11-15.html"
  }
 ];

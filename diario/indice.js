@@ -2,6 +2,34 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-15",
+   "titulo": "Codex CLI fecha config de projeto em diretório não confiável; llama.cpp chega à 1.0 com API estável; ChatGPT passa a pagar por você",
+   "resumo": "Codex CLI 0.169.0 mantém config e MCP do projeto desligados em diretórios não confiáveis mesmo com --sandbox workspace-write; llama.cpp v1.0.0 promete API e ABI estáveis; ChatGPT Wallet deixa agentes pagarem com token de cartão; Cloudflare abre o Kitesurf, navegador para agentes dentro do Workers; LangChain capta US$ 300 mi.",
+   "tags": [
+    "ferramentas-dev",
+    "llm-local",
+    "seguranca",
+    "mercado",
+    "open-source",
+    "pesquisa"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M00",
+     "motivo": "Codex CLI 0.169.0 (13/11): codex exec mantém config de projeto e servidores MCP desligados em diretório não confiável mesmo com --sandbox workspace-write; --trust grava a confiança. Exemplo concreto de confiança por diretório para a seção de permissões de harness e uso em CI."
+    },
+    {
+     "modulo": "M11",
+     "motivo": "llama.cpp v1.0.0 declara API e ABI estáveis, com major bump só em quebra (segundo o RIO Rundown, citando o blog do Hugging Face). Conferir se o módulo ainda trata o llama.cpp como build sem garantia de compatibilidade e se recomenda fixar versão por número."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "ChatGPT Wallet (13/11): agente paga com token no lugar do número do cartão e cada compra pede aprovação biométrica; United restringe agentes pessoais de terceiros por risco de credencial compartilhada. Caso real para identidade delegada de agente e aprovação humana por ação."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-15.html"
+  },
+  {
    "data": "2026-11-14",
    "titulo": "Fornecedor de IA vaza transcrições de clientes do Notion; Claude Code endurece o sandbox; Gemini 4 Hydrogen chega barato",
    "resumo": "Ataque à Fireworks AI expôs chats de IA de menos de 1% dos workspaces do Notion; Claude Code 2.1.325 faz Bash em sandbox voltar a pedir permissão; Gemini 4 Hydrogen sai a US$ 1,50/7,50 por milhão de tokens; IBM testa delimitadores reservados contra prompt injection; FAA investiga se IA teve papel em parada nacional de voos.",
@@ -178,6 +206,13 @@ window.DIARIO = {
   }
  ],
  "semanas": [
+  {
+   "semana": "2026-W46",
+   "titulo": "Semana dos segredos vazados: permissões de agente, chaves de IA e fornecedores terceiros",
+   "resumo": "Arquivos de permissão do Claude Code expuseram 2.539 segredos, a Railway viu chaves de IA virarem US$ 740 mil e um fornecedor do Notion vazou chats; no meio disso, Fable 5.2 e Gemini 4 baratearam o modelo e a pesquisa mostrou backdoor com menos de 10 neurônios.",
+   "periodo": "09 a 15/11/2026",
+   "url": "diario/semanas/2026-W46.html"
+  },
   {
    "semana": "2026-W45",
    "titulo": "Cascata de LLMs medida, terminal embutível estável e o agente do GitHub no chat",
