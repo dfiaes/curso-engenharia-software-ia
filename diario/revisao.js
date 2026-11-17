@@ -377,5 +377,68 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "Nomes e descrições de ferramentas têm muito termo exato; busca lexical é baseline barato que precisa entrar no eval antes de você pagar por embedding.",
   "url": "diario/edicoes/2026/2026-11-15.html"
+ },
+ {
+  "id": "2026-11-17#1",
+  "data": "2026-11-17",
+  "pergunta": "No beta de Managed Agents auto-hospedados da Anthropic, o que continua saindo do ambiente do cliente?",
+  "opcoes": [
+   {
+    "texto": "Só as chamadas ao modelo, para o provedor que o cliente escolher",
+    "correta": true
+   },
+   {
+    "texto": "O histórico de sessões, que fica sempre na Anthropic",
+    "correta": false
+   },
+   {
+    "texto": "A execução das ferramentas de shell e arquivos",
+    "correta": false
+   }
+  ],
+  "porque": "Servidor, banco, workers, sandboxes e credenciais ficam no ambiente do cliente; o pedido de inferência vai para Anthropic, Bedrock, Google, Foundry ou um gateway próprio.",
+  "url": "diario/edicoes/2026/2026-11-17.html"
+ },
+ {
+  "id": "2026-11-17#2",
+  "data": "2026-11-17",
+  "pergunta": "No desenho do Uber Secure AI, qual componente decide se uma ação proposta pelo agente pode seguir?",
+  "opcoes": [
+   {
+    "texto": "O AI Guard, ponto de decisão consultado pelos hooks antes da ação",
+    "correta": true
+   },
+   {
+    "texto": "O próprio LLM do agente, por autoavaliação",
+    "correta": false
+   },
+   {
+    "texto": "O registry, que executa a ação em nome do agente",
+    "correta": false
+   }
+  ],
+  "porque": "O registry guarda a política (intenções permitidas, risco); o AI Guard decide; os hooks de runtime aplicam. Separar política, decisão e aplicação evita que o agente seja juiz de si mesmo.",
+  "url": "diario/edicoes/2026/2026-11-17.html"
+ },
+ {
+  "id": "2026-11-17#3",
+  "data": "2026-11-17",
+  "pergunta": "Segundo o README do Edge0, o Edge0-145B roda oficialmente num MacBook com Apple Silicon?",
+  "opcoes": [
+   {
+    "texto": "Não: macOS aparece como não suportado para o 145B; o alvo é NVIDIA com CUDA 13",
+    "correta": true
+   },
+   {
+    "texto": "Sim, via MLX, com 29 GB de memória",
+    "correta": false
+   },
+   {
+    "texto": "Sim, mas só no Ollama",
+    "correta": false
+   }
+  ],
+  "porque": "O post de lançamento cita 29 GB num MacBook Pro, mas a matriz de suporte do repositório (segundo o eesel) só cobre Linux e Windows com NVIDIA. Manchete não é matriz de suporte.",
+  "url": "diario/edicoes/2026/2026-11-17.html"
  }
 ];

@@ -2,6 +2,33 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-17",
+   "titulo": "Claude Managed Agents rodam dentro do seu perímetro; Poppy 1.0 diz ao agente o que a loja permite; Edge0-145B ainda não roda no Mac",
+   "resumo": "Anthropic abre beta privado de Managed Agents auto-hospedados (servidor, sandboxes e histórico no seu ambiente); Sierra lança o Poppy 1.0 com Shopify e Muse; Uber detalha o Uber Secure AI; Edge0-145B promete 145B em 29 GB, mas o README lista macOS como não suportado; Nvidia divulga resultado hoje e a Anthropic precifica o IPO amanhã.",
+   "tags": [
+    "ferramentas-dev",
+    "seguranca",
+    "llm-local",
+    "mercado",
+    "engenharia"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M08",
+     "motivo": "Managed Agents auto-hospedados (12/11): harness, sandbox, credenciais via proxy fora do sandbox, lista de hosts permitidos e histórico em banco próprio, com OpenTelemetry. Exemplo concreto de separação harness/sandbox/modelo para a parte de arquitetura de agentes."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "Uber Secure AI (blog de 06/11, repercutido pelo InfoQ em 16/11): registry de intenções permitidas, ponto de decisão (AI Guard) consultado antes de cada ação e cadeia de evidência até o pedido do usuário. Caso real de PAP/PDP/PEP aplicado a agentes para a seção de segurança."
+    },
+    {
+     "modulo": "M09",
+     "motivo": "Poppy 1.0 (13/11): protocolo de descoberta e permissão entre agentes pessoais e empresas, construído sobre MCP, OpenAPI e UCP, com OAuth; Shopify publica o arquivo em todas as lojas. Avaliar menção como camada acima do MCP no panorama de protocolos."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-17.html"
+  },
+  {
    "data": "2026-11-15",
    "titulo": "Codex CLI fecha config de projeto em diretório não confiável; llama.cpp chega à 1.0 com API estável; ChatGPT passa a pagar por você",
    "resumo": "Codex CLI 0.169.0 mantém config e MCP do projeto desligados em diretórios não confiáveis mesmo com --sandbox workspace-write; llama.cpp v1.0.0 promete API e ABI estáveis; ChatGPT Wallet deixa agentes pagarem com token de cartão; Cloudflare abre o Kitesurf, navegador para agentes dentro do Workers; LangChain capta US$ 300 mi.",

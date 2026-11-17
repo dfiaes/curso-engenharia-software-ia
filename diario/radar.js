@@ -1,6 +1,26 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-17",
+  "texto_html": "<strong>Poppy 1.0 (Personal Agent Protocol):</strong> descoberta e permissão de agentes pessoais em empresas, com validador no kit de implementação. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-17.html"
+ },
+ {
+  "data": "2026-11-17",
+  "texto_html": "<strong>Edge0 / edge0-infer:</strong> runtime Apache-2.0 que serve endpoints compatíveis com OpenAI e Anthropic em 127.0.0.1:8000, com experts em mmap; macOS só para o 35B. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-17.html"
+ },
+ {
+  "data": "2026-11-17",
+  "texto_html": "<strong>Rakazo:</strong> alternativa open source a agentes hospedados, roda no seu computador com seus modelos e chaves e tem regras de aprovação (<a href=\"https://www.theneuron.ai/digest/everything-that-happened-in-ai-today-monday-november-16-2026/\" rel=\"noopener noreferrer\">The Neuron</a>, via Product Hunt). Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-17.html"
+ },
+ {
+  "data": "2026-11-17",
+  "texto_html": "<strong>Cloudflare Spend Management:</strong> teto rígido de gasto para Workers e Durable Objects. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-17.html"
+ },
+ {
   "data": "2026-11-15",
   "texto_html": "<strong>Cloudflare Kitesurf:</strong> motor de navegador compatível com CDP rodando no Workers, Apache 2.0. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-15.html"
