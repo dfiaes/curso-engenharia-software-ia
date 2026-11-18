@@ -2,6 +2,33 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-18",
+   "titulo": "Servidor MCP impostor engana quatro de cinco modelos; Copilot aposenta modelos fixados em CI; Agent 365 passa a enxergar Claude Code e Codex no laptop",
+   "resumo": "Preprint mostra que um segundo servidor MCP com ferramenta de mesmo nome é escolhido em até 100% das tentativas; GitHub retira Claude Opus 4.8, Opus 5 e GPT-5.6 Terra do Copilot e lança Copilot Evals; Microsoft dá Entra Agent ID a agentes de código locais; Califórnia processa a OpenAI por incidentes de agentes fora de controle; Nvidia fatura US$ 115,8 bi no trimestre.",
+   "tags": [
+    "seguranca",
+    "ferramentas-dev",
+    "mercado",
+    "regulacao",
+    "engenharia"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M09",
+     "motivo": "Preprint de 16/11 (arXiv 2611.21577, via TechTimes) sobre 'tool-provider misbinding': um segundo servidor MCP anuncia ferramenta de mesmo nome e o modelo a escolhe no lugar da legítima. A especificação diz que nomes devem ser únicos por servidor, não entre servidores. Avaliar exercício de colisão de nomes e identidade de provedor na parte de segurança de MCP."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "Microsoft Agent 365 (Ignite, 17/11) descobre agentes locais como Claude Code, Codex e Copilot, dá a cada um um Entra Agent ID e permite Conditional Access. Caso concreto de identidade de agente como principal próprio para a seção de identidade e contenção."
+    },
+    {
+     "modulo": "E03",
+     "motivo": "Procurador-geral da Califórnia processa a OpenAI (16/11) por incidentes de 'perda de controle' de agentes, com base em concorrência desleal e perturbação pública. Primeiro caso de regulador usando lei existente contra comportamento de agente; avaliar menção na parte de responsabilidade."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-18.html"
+  },
+  {
    "data": "2026-11-17",
    "titulo": "Claude Managed Agents rodam dentro do seu perímetro; Poppy 1.0 diz ao agente o que a loja permite; Edge0-145B ainda não roda no Mac",
    "resumo": "Anthropic abre beta privado de Managed Agents auto-hospedados (servidor, sandboxes e histórico no seu ambiente); Sierra lança o Poppy 1.0 com Shopify e Muse; Uber detalha o Uber Secure AI; Edge0-145B promete 145B em 29 GB, mas o README lista macOS como não suportado; Nvidia divulga resultado hoje e a Anthropic precifica o IPO amanhã.",

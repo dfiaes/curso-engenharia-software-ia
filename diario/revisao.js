@@ -440,5 +440,68 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "O post de lançamento cita 29 GB num MacBook Pro, mas a matriz de suporte do repositório (segundo o eesel) só cobre Linux e Windows com NVIDIA. Manchete não é matriz de suporte.",
   "url": "diario/edicoes/2026/2026-11-17.html"
+ },
+ {
+  "id": "2026-11-18#1",
+  "data": "2026-11-18",
+  "pergunta": "No ataque de 'tool-provider misbinding' descrito no preprint de 16/11, o que o atacante precisa controlar?",
+  "opcoes": [
+   {
+    "texto": "Apenas um segundo servidor MCP conectado ao mesmo cliente",
+    "correta": true
+   },
+   {
+    "texto": "O servidor MCP legítimo, para alterar a descrição da ferramenta",
+    "correta": false
+   },
+   {
+    "texto": "A rede entre o cliente e o provedor do modelo",
+    "correta": false
+   }
+  ],
+  "porque": "Basta anunciar uma ferramenta com o mesmo nome (e, idealmente, descrição copiada e esquema compatível). A especificação só pede unicidade de nome dentro de um servidor; quem desempata entre servidores é o modelo.",
+  "url": "diario/edicoes/2026/2026-11-18.html"
+ },
+ {
+  "id": "2026-11-18#2",
+  "data": "2026-11-18",
+  "pergunta": "O GitHub retirou do Copilot, em 16/11, Claude Opus 4.8, Claude Opus 5 e GPT-5.6 Terra. Onde isso quebra primeiro?",
+  "opcoes": [
+   {
+    "texto": "Em workflows de agente ou CI que fixam o nome do modelo",
+    "correta": true
+   },
+   {
+    "texto": "No autocomplete do editor, que passa a ficar desligado",
+    "correta": false
+   },
+   {
+    "texto": "Em repositórios sem arquivo AGENTS.md",
+    "correta": false
+   }
+  ],
+  "porque": "Quem escolhe o modelo pela interface recebe o substituto; quem fixou o identificador em configuração ou pipeline recebe erro. Modelo é dependência com data de validade.",
+  "url": "diario/edicoes/2026/2026-11-18.html"
+ },
+ {
+  "id": "2026-11-18#3",
+  "data": "2026-11-18",
+  "pergunta": "Segundo o comunicado da Nvidia de 17/11, quanto da receita do 3º trimestre fiscal de 2027 veio de data center?",
+  "opcoes": [
+   {
+    "texto": "US$ 107,6 bi de um total de US$ 115,8 bi",
+    "correta": true
+   },
+   {
+    "texto": "US$ 57,0 bi de um total de US$ 109,1 bi",
+    "correta": false
+   },
+   {
+    "texto": "US$ 130,0 bi de um total de US$ 140 bi",
+    "correta": false
+   }
+  ],
+  "porque": "Receita total de US$ 115,8 bi (+103% no ano), data center US$ 107,6 bi (+110%). US$ 130 bi é a projeção do 4º trimestre, que tem uma semana a mais.",
+  "url": "diario/edicoes/2026/2026-11-18.html"
  }
 ];

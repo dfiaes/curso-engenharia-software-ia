@@ -1,6 +1,36 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-18",
+  "texto_html": "<strong>Copilot Evals (preview público):</strong> avaliação de modelos e harnesses dentro do GitHub Copilot. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-18.html"
+ },
+ {
+  "data": "2026-11-18",
+  "texto_html": "<strong>Secret scanning sob demanda para agentes (GitHub):</strong> varredura de segredos acionável por desenvolvedor ou agente. Detalhes não lidos além do título. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-18.html"
+ },
+ {
+  "data": "2026-11-18",
+  "texto_html": "<strong>Microsoft Perception:</strong> orquestração de agentes de segurança por playbooks, acessível por MCP e API (preview). Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-18.html"
+ },
+ {
+  "data": "2026-11-18",
+  "texto_html": "<strong>Proton Lumo Desktop:</strong> assistente com conectores MCP e permissão por ação. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-18.html"
+ },
+ {
+  "data": "2026-11-18",
+  "texto_html": "<strong>FrontierHarness Eval v1.1 (Runta/Baseten):</strong> comparação de harnesses de agente de código por modelo. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-18.html"
+ },
+ {
+  "data": "2026-11-18",
+  "texto_html": "<strong>CopilotKit:</strong> plataforma auto-hospedável de interface para agentes (via Product Hunt, segundo The Neuron). Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-18.html"
+ },
+ {
   "data": "2026-11-17",
   "texto_html": "<strong>Poppy 1.0 (Personal Agent Protocol):</strong> descoberta e permissão de agentes pessoais em empresas, com validador no kit de implementação. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-17.html"

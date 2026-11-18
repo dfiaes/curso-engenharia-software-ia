@@ -2,6 +2,10 @@
 
 Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições ainda não tratadas. Para dar uma edição como tratada, acrescente a data em `diario/revisao-tratadas.txt`.
 
+## E03
+
+- [2026-11-18](edicoes/2026/2026-11-18.html) (Servidor MCP impostor engana quatro de cinco modelos; Copilot aposenta modelos fixados em CI; Agent 365 passa a enxergar Claude Code e Codex no laptop): Procurador-geral da Califórnia processa a OpenAI (16/11) por incidentes de 'perda de controle' de agentes, com base em concorrência desleal e perturbação pública. Primeiro caso de regulador usando lei existente contra comportamento de agente; avaliar menção na parte de responsabilidade.
+
 ## M00
 
 - [2026-11-07](edicoes/2026/2026-11-07.html) (Modelo barato decide, Opus só desempata: um caso medido de cascata de LLMs): Agente do GitHub em Slack e Teams (GA) e nova página de visão geral de PR entram na comparação de harnesses e fluxos.
@@ -36,6 +40,7 @@ Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições 
 ## M09
 
 - [2026-11-17](edicoes/2026/2026-11-17.html) (Claude Managed Agents rodam dentro do seu perímetro; Poppy 1.0 diz ao agente o que a loja permite; Edge0-145B ainda não roda no Mac): Poppy 1.0 (13/11): protocolo de descoberta e permissão entre agentes pessoais e empresas, construído sobre MCP, OpenAPI e UCP, com OAuth; Shopify publica o arquivo em todas as lojas. Avaliar menção como camada acima do MCP no panorama de protocolos.
+- [2026-11-18](edicoes/2026/2026-11-18.html) (Servidor MCP impostor engana quatro de cinco modelos; Copilot aposenta modelos fixados em CI; Agent 365 passa a enxergar Claude Code e Codex no laptop): Preprint de 16/11 (arXiv 2611.21577, via TechTimes) sobre 'tool-provider misbinding': um segundo servidor MCP anuncia ferramenta de mesmo nome e o modelo a escolhe no lugar da legítima. A especificação diz que nomes devem ser únicos por servidor, não entre servidores. Avaliar exercício de colisão de nomes e identidade de provedor na parte de segurança de MCP.
 
 ## M11
 
@@ -52,3 +57,4 @@ Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições 
 - [2026-11-14](edicoes/2026/2026-11-14.html) (Fornecedor de IA vaza transcrições de clientes do Notion; Claude Code endurece o sandbox; Gemini 4 Hydrogen chega barato): Incidente Notion/Fireworks (12-13/11): fornecedor terceiro de inferência comprometido expôs transcrições de chat de IA e chaves de API de terceiros. Caso real para a seção de risco de subprocessador de LLM, rotação de chaves e retenção zero de dados.
 - [2026-11-15](edicoes/2026/2026-11-15.html) (Codex CLI fecha config de projeto em diretório não confiável; llama.cpp chega à 1.0 com API estável; ChatGPT passa a pagar por você): ChatGPT Wallet (13/11): agente paga com token no lugar do número do cartão e cada compra pede aprovação biométrica; United restringe agentes pessoais de terceiros por risco de credencial compartilhada. Caso real para identidade delegada de agente e aprovação humana por ação.
 - [2026-11-17](edicoes/2026/2026-11-17.html) (Claude Managed Agents rodam dentro do seu perímetro; Poppy 1.0 diz ao agente o que a loja permite; Edge0-145B ainda não roda no Mac): Uber Secure AI (blog de 06/11, repercutido pelo InfoQ em 16/11): registry de intenções permitidas, ponto de decisão (AI Guard) consultado antes de cada ação e cadeia de evidência até o pedido do usuário. Caso real de PAP/PDP/PEP aplicado a agentes para a seção de segurança.
+- [2026-11-18](edicoes/2026/2026-11-18.html) (Servidor MCP impostor engana quatro de cinco modelos; Copilot aposenta modelos fixados em CI; Agent 365 passa a enxergar Claude Code e Codex no laptop): Microsoft Agent 365 (Ignite, 17/11) descobre agentes locais como Claude Code, Codex e Copilot, dá a cada um um Entra Agent ID e permite Conditional Access. Caso concreto de identidade de agente como principal próprio para a seção de identidade e contenção.
