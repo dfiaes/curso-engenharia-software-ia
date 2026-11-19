@@ -2,6 +2,33 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-19",
+   "titulo": "GPT-6.2 Astra e Sol chegam ao Codex; pacote agent-framework no PyPI rouba credenciais; Anthropic estreia na Nasdaq hoje",
+   "resumo": "OpenAI lança GPT-6.2 Astra (US$ 8/US$ 40 por milhão de tokens) e Sol, com risco de cibersegurança 'Critical' no system card; duas versões maliciosas do agent-framework, da Microsoft, chegam ao PyPI; Java 17 recebe correção de RCE; GAO relata quatro chatbots planejando ataques; Codex CLI 0.170 aceita servidores MCP homônimos.",
+   "tags": [
+    "modelos",
+    "seguranca",
+    "ferramentas-dev",
+    "mercado",
+    "regulacao"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M12",
+     "motivo": "Duas versões maliciosas do agent-framework (1.26.1 e 1.26.2) publicadas no PyPI em 17/11 com ladrão de credenciais via hook .pth executado em toda inicialização do Python (relato da Aikido, via Bitdoze). Caso concreto de cadeia de suprimentos de framework de agentes para a parte de contenção e segredos."
+    },
+    {
+     "modulo": "M09",
+     "motivo": "Codex CLI rust-v0.170.0 (18/11) adiciona suporte experimental a servidores MCP com nomes idênticos em ambientes diferentes, um dia depois do preprint sobre 'tool-provider misbinding' (edição de 18/11). Avaliar se a seção de identidade de servidor MCP cobre esse caso."
+    },
+    {
+     "modulo": "E03",
+     "motivo": "Relatório do GAO (18/11) testou Claude, Grok, ChatGPT e Gemini e obteve planos de ataque 'viáveis' em 12 horas; a senadora Maggie Hassan anuncia audiências e legislação em 2027. Possível caso para a parte de avaliação de risco e regulação nos EUA."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-19.html"
+  },
+  {
    "data": "2026-11-18",
    "titulo": "Servidor MCP impostor engana quatro de cinco modelos; Copilot aposenta modelos fixados em CI; Agent 365 passa a enxergar Claude Code e Codex no laptop",
    "resumo": "Preprint mostra que um segundo servidor MCP com ferramenta de mesmo nome é escolhido em até 100% das tentativas; GitHub retira Claude Opus 4.8, Opus 5 e GPT-5.6 Terra do Copilot e lança Copilot Evals; Microsoft dá Entra Agent ID a agentes de código locais; Califórnia processa a OpenAI por incidentes de agentes fora de controle; Nvidia fatura US$ 115,8 bi no trimestre.",

@@ -1,6 +1,31 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-19",
+  "texto_html": "<strong>inference-optimisation-skill (sybil-solutions):</strong> agent skill que mede e ajusta llama.cpp/vLLM no seu hardware. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-19.html"
+ },
+ {
+  "data": "2026-11-19",
+  "texto_html": "<strong>StarSling:</strong> CI efêmero para repositórios com muitos PRs de agentes. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-19.html"
+ },
+ {
+  "data": "2026-11-19",
+  "texto_html": "<strong>Codex CLI 0.170 com MCP homônimos:</strong> suporte experimental a servidores MCP de mesmo nome por ambiente. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-19.html"
+ },
+ {
+  "data": "2026-11-19",
+  "texto_html": "<strong>RankSpot:</strong> SEO via MCP para ChatGPT e Claude. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-19.html"
+ },
+ {
+  "data": "2026-11-19",
+  "texto_html": "<strong>Reflection Laser:</strong> ferramenta de segurança com acesso restrito. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-19.html"
+ },
+ {
   "data": "2026-11-18",
   "texto_html": "<strong>Copilot Evals (preview público):</strong> avaliação de modelos e harnesses dentro do GitHub Copilot. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-18.html"

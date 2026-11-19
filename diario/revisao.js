@@ -503,5 +503,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "Receita total de US$ 115,8 bi (+103% no ano), data center US$ 107,6 bi (+110%). US$ 130 bi é a projeção do 4º trimestre, que tem uma semana a mais.",
   "url": "diario/edicoes/2026/2026-11-18.html"
+ },
+ {
+  "id": "2026-11-19#1",
+  "data": "2026-11-19",
+  "pergunta": "Como o pacote malicioso agent-framework 1.26.1/1.26.2 executava o código de roubo de credenciais, segundo o relato de 17/11?",
+  "opcoes": [
+   {
+    "texto": "Por um hook .pth, executado a cada inicialização do interpretador Python",
+    "correta": true
+   },
+   {
+    "texto": "Só quando o código importava o módulo agent_framework",
+    "correta": false
+   },
+   {
+    "texto": "Por um script de pós-instalação do pip, uma única vez",
+    "correta": false
+   }
+  ],
+  "porque": "Arquivos .pth em site-packages podem conter linhas 'import ...' que o Python executa ao iniciar. Basta o pacote estar instalado no ambiente; não é preciso importá-lo.",
+  "url": "diario/edicoes/2026/2026-11-19.html"
+ },
+ {
+  "id": "2026-11-19#2",
+  "data": "2026-11-19",
+  "pergunta": "Qual o preço de API do GPT-6.2 Astra divulgado no lançamento de 17/11?",
+  "opcoes": [
+   {
+    "texto": "US$ 8 por milhão de tokens de entrada e US$ 40 por milhão de saída",
+    "correta": true
+   },
+   {
+    "texto": "US$ 2 por milhão de entrada e US$ 10 por milhão de saída",
+    "correta": false
+   },
+   {
+    "texto": "US$ 0,40 por milhão de entrada e US$ 8 por milhão de saída",
+    "correta": false
+   }
+  ],
+  "porque": "US$ 8/US$ 40 é o Astra (US$ 0,40 é o preço de entrada em cache). US$ 2/US$ 10 é o Sol, que mantém os preços do GPT-6.1 Sol.",
+  "url": "diario/edicoes/2026/2026-11-19.html"
  }
 ];
