@@ -545,5 +545,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "US$ 8/US$ 40 é o Astra (US$ 0,40 é o preço de entrada em cache). US$ 2/US$ 10 é o Sol, que mantém os preços do GPT-6.1 Sol.",
   "url": "diario/edicoes/2026/2026-11-19.html"
+ },
+ {
+  "id": "2026-11-20#1",
+  "data": "2026-11-20",
+  "pergunta": "Segundo a OpenAI (18/11), qual mecanismo o Codex usa para isolar comandos no Linux?",
+  "opcoes": [
+   {
+    "texto": "bubblewrap (namespaces de montagem) com filtro seccomp-bpf e no_new_privs",
+    "correta": true
+   },
+   {
+    "texto": "Um container Docker por comando",
+    "correta": false
+   },
+   {
+    "texto": "Uma VM Firecracker por sessão",
+    "correta": false
+   }
+  ],
+  "porque": "O Codex usa o sandbox nativo de cada sistema na máquina do usuário: Seatbelt no macOS, bubblewrap + seccomp no Linux e MXC no Windows. A justificativa é que toolchains como a do iOS precisam do host.",
+  "url": "diario/edicoes/2026/2026-11-20.html"
+ },
+ {
+  "id": "2026-11-20#2",
+  "data": "2026-11-20",
+  "pergunta": "Qual risco a própria OpenAI aponta como residual mesmo com o sandbox do Codex ativo?",
+  "opcoes": [
+   {
+    "texto": "Um comando pode alterar um pacote local (ex.: em node_modules) que o editor executa depois, fora do sandbox",
+    "correta": true
+   },
+   {
+    "texto": "Comandos conseguem escrever em qualquer pasta fora do workspace",
+    "correta": false
+   },
+   {
+    "texto": "A rede fica liberada por padrão no perfil :workspace",
+    "correta": false
+   }
+  ],
+  "porque": "O perfil :workspace limita escrita ao workspace e desliga a rede, mas o código escrito ali pode ser executado depois por outro processo sem sandbox. Leitura ampla, DNS e MCP stdio também ficam como riscos.",
+  "url": "diario/edicoes/2026/2026-11-20.html"
  }
 ];

@@ -1,6 +1,26 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-20",
+  "texto_html": "<strong>Antigravity Orchestrator (Neon + Hydrogen):</strong> planejador e executor em modelos diferentes na mesma sessão. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-20.html"
+ },
+ {
+  "data": "2026-11-20",
+  "texto_html": "<strong>Gemini CLI <code>/stats</code> heatmap:</strong> uso diário de tokens no terminal. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-20.html"
+ },
+ {
+  "data": "2026-11-20",
+  "texto_html": "<strong>Google Stitch Loop:</strong> agente de produto ligado a código e métricas, em lista de espera. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-20.html"
+ },
+ {
+  "data": "2026-11-20",
+  "texto_html": "<strong>codex-network-proxy:</strong> proxy HTTP/SOCKS5 com allowlist por domínio usado pelo sandbox do Codex. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-20.html"
+ },
+ {
   "data": "2026-11-19",
   "texto_html": "<strong>inference-optimisation-skill (sybil-solutions):</strong> agent skill que mede e ajusta llama.cpp/vLLM no seu hardware. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-19.html"

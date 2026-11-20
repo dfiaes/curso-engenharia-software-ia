@@ -2,6 +2,34 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-20",
+   "titulo": "OpenAI abre o sandbox do Codex; Gemini 4 Neon chega a US$ 3/US$ 15; Anthropic estreia na Nasdaq a US$ 83",
+   "resumo": "OpenAI detalha o sandbox do Codex por sistema operacional e lista os riscos que sobram; Google lança o Gemini 4 Neon com 1M de contexto e orquestrador planner/executor no Antigravity; Anthropic precifica o IPO a US$ 83 e começa a negociar como ANT; Citi, PNC e Citizens passam ao cliente o risco de agentes de IA com acesso à conta.",
+   "tags": [
+    "ferramentas-dev",
+    "seguranca",
+    "modelos",
+    "mercado",
+    "regulacao",
+    "llm-local"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M00",
+     "motivo": "OpenAI publicou em 18/11 como o sandbox do Codex funciona (Seatbelt no macOS, bubblewrap + seccomp no Linux, MXC no Windows, proxy de rede com allowlist por domínio) e quais riscos sobram. Referência primária para a parte de permissões e contenção de agentes de código."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "A mesma publicação lista riscos residuais concretos: leitura ampla de arquivos com segredos, injeção em pacote local executado depois fora do sandbox, exfiltração por DNS e servidores MCP stdio sem sandbox por padrão. Bom material para threat modeling agêntico."
+    },
+    {
+     "modulo": "E03",
+     "motivo": "Citi, PNC e Citizens (novembro) e JPMorgan e Bank of America (outubro) mudaram os termos: o cliente responde por operações feitas por agentes de IA de terceiros com acesso à conta, inclusive se o agente for invadido. Caso real de alocação de responsabilidade por agentes."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-20.html"
+  },
+  {
    "data": "2026-11-19",
    "titulo": "GPT-6.2 Astra e Sol chegam ao Codex; pacote agent-framework no PyPI rouba credenciais; Anthropic estreia na Nasdaq hoje",
    "resumo": "OpenAI lança GPT-6.2 Astra (US$ 8/US$ 40 por milhão de tokens) e Sol, com risco de cibersegurança 'Critical' no system card; duas versões maliciosas do agent-framework, da Microsoft, chegam ao PyPI; Java 17 recebe correção de RCE; GAO relata quatro chatbots planejando ataques; Codex CLI 0.170 aceita servidores MCP homônimos.",
