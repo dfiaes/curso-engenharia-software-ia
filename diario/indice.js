@@ -2,6 +2,34 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-21",
+   "titulo": "OpenAI mostra o Performance Factory; Gemini API carrega ferramentas sob demanda; Comissão Europeia confirma ataque com ferramenta de IA",
+   "resumo": "OpenAI detalha como agentes Codex investigam regressões de desempenho do ChatGPT, com revisão adversarial e humano no merge; Google lança em preview o Tool Retrieval na Gemini API (defer_loading, inclusive para servidores MCP); a Comissão Europeia confirma ataque de mais de 10 dias atribuído pela imprensa à plataforma ARTEX.",
+   "tags": [
+    "engenharia",
+    "ferramentas-dev",
+    "seguranca",
+    "modelos",
+    "llm-local",
+    "mercado"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M06",
+     "motivo": "OpenAI (19/11) descreve backtest de agentes investigadores contra incidentes passados, sem memória e sem acesso ao postmortem, e uma revisão manual de 100 diagnósticos com 70% corretos. Exemplo primário de avaliação de agente em tarefa real de SRE."
+    },
+    {
+     "modulo": "M08",
+     "motivo": "Gemini API Tool Retrieval (preview, 19/11): ferramentas com defer_loading expõem só nome e descrição e o schema é carregado quando o modelo pede, preservando o prefixo de cache. Mesmo padrão de tool search de outros fornecedores; bom caso para a parte de orçamento de contexto."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "A Comissão Europeia confirmou (19/11) ataque iniciado em 22/10 com mais de 10 dias de sistemas de pessoal fora do ar; a imprensa atribui à plataforma aberta ARTEX, que automatiza descoberta e exploração de vulnerabilidades. Reforça a discussão sobre janela de correção diante de ataque automatizado."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-21.html"
+  },
+  {
    "data": "2026-11-20",
    "titulo": "OpenAI abre o sandbox do Codex; Gemini 4 Neon chega a US$ 3/US$ 15; Anthropic estreia na Nasdaq a US$ 83",
    "resumo": "OpenAI detalha o sandbox do Codex por sistema operacional e lista os riscos que sobram; Google lança o Gemini 4 Neon com 1M de contexto e orquestrador planner/executor no Antigravity; Anthropic precifica o IPO a US$ 83 e começa a negociar como ANT; Citi, PNC e Citizens passam ao cliente o risco de agentes de IA com acesso à conta.",

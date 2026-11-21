@@ -587,5 +587,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "O perfil :workspace limita escrita ao workspace e desliga a rede, mas o código escrito ali pode ser executado depois por outro processo sem sandbox. Leitura ampla, DNS e MCP stdio também ficam como riscos.",
   "url": "diario/edicoes/2026/2026-11-20.html"
+ },
+ {
+  "id": "2026-11-21#1",
+  "data": "2026-11-21",
+  "pergunta": "No Tool Retrieval da Gemini API, o que o modelo vê de uma ferramenta marcada com defer_loading antes de pedi-la?",
+  "opcoes": [
+   {
+    "texto": "Nome e descrição; o schema de parâmetros só entra no contexto quando o modelo solicita a ferramenta",
+    "correta": true
+   },
+   {
+    "texto": "Nada; a ferramenta só aparece se o cliente a reenviar no turno seguinte",
+    "correta": false
+   },
+   {
+    "texto": "O schema completo, mas comprimido pelo servidor",
+    "correta": false
+   }
+  ],
+  "porque": "Segundo o Google, a ferramenta adiada fica com nome e descrição visíveis; o schema é carregado sob demanda via tool_search, e o prefixo do prompt continua igual entre turnos, o que preserva o cache.",
+  "url": "diario/edicoes/2026/2026-11-21.html"
+ },
+ {
+  "id": "2026-11-21#2",
+  "data": "2026-11-21",
+  "pergunta": "No Performance Factory da OpenAI, quem decide se a correção proposta pelo agente entra em produção?",
+  "opcoes": [
+   {
+    "texto": "Um engenheiro, que revisa e decide o merge do PR",
+    "correta": true
+   },
+   {
+    "texto": "Uma segunda sessão do Codex, que aprova automaticamente se não refutar o diagnóstico",
+    "correta": false
+   },
+   {
+    "texto": "O próprio agente, depois de verificar a recuperação em staging",
+    "correta": false
+   }
+  ],
+  "porque": "A sessão adversária tenta refutar diagnóstico e correção, mas a etapa Review & deploy é do engenheiro. A OpenAI cita o tempo de espera por essa revisão como o gargalo atual.",
+  "url": "diario/edicoes/2026/2026-11-21.html"
  }
 ];

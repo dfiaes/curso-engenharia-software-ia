@@ -1,6 +1,26 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-21",
+  "texto_html": "<strong>Gemini API Tool Retrieval:</strong> <code>tool_search</code> + <code>defer_loading</code>, inclusive em servidores MCP remotos. Preview, não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-21.html"
+ },
+ {
+  "data": "2026-11-21",
+  "texto_html": "<strong>perf-forensics (OpenAI):</strong> skill interna de investigação de desempenho testada com evals de regressões passadas; não publicada. Referência de desenho, não ferramenta disponível.",
+  "url_edicao": "diario/edicoes/2026/2026-11-21.html"
+ },
+ {
+  "data": "2026-11-21",
+  "texto_html": "<strong>Hy4 flash GGUF (AngelSlim):</strong> quantização para testes; grande demais para 48 GB. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-21.html"
+ },
+ {
+  "data": "2026-11-21",
+  "texto_html": "<strong>TestSprite 4.0:</strong> explora frontend e backend, gera testes e vigia regressões (<a href=\"https://www.theneuron.ai/digest/everything-that-happened-in-ai-today-friday-november-20-2026/\" rel=\"noopener noreferrer\">The Neuron</a>, agregador citando Product Hunt). Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-21.html"
+ },
+ {
   "data": "2026-11-20",
   "texto_html": "<strong>Antigravity Orchestrator (Neon + Hydrogen):</strong> planejador e executor em modelos diferentes na mesma sessão. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-20.html"
