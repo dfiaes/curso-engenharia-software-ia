@@ -629,5 +629,68 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "A sessão adversária tenta refutar diagnóstico e correção, mas a etapa Review & deploy é do engenheiro. A OpenAI cita o tempo de espera por essa revisão como o gargalo atual.",
   "url": "diario/edicoes/2026/2026-11-21.html"
+ },
+ {
+  "id": "2026-11-22#1",
+  "data": "2026-11-22",
+  "pergunta": "Segundo a Dragos, como revendedores de um marketplace de inferência conseguiam ver os prompts dos clientes?",
+  "opcoes": [
+   {
+    "texto": "Pelo log de requisição normal do revendedor, sem exploit nenhum",
+    "correta": true
+   },
+   {
+    "texto": "Por uma falha de autenticação no próprio marketplace, que expunha todos os vendedores",
+    "correta": false
+   },
+   {
+    "texto": "Só quando o cliente desativava a retenção zero de dados",
+    "correta": false
+   }
+  ],
+  "porque": "A Dragos diz que o vazamento acompanhava o vendedor individual, não o marketplace inteiro, e acontecia por request logging padrão. Por isso a recomendação é escolher o provedor upstream e testar com credenciais-isca.",
+  "url": "diario/edicoes/2026/2026-11-22.html"
+ },
+ {
+  "id": "2026-11-22#2",
+  "data": "2026-11-22",
+  "pergunta": "Nas Semantic Governance Policies do Google (preview), o que acontece com chamadas de ferramenta em respostas com streaming?",
+  "opcoes": [
+   {
+    "texto": "Streaming não é suportado e a chamada de ferramenta pode passar sem bloqueio",
+    "correta": true
+   },
+   {
+    "texto": "A política é avaliada no fim do stream e a resposta inteira é descartada se violar a regra",
+    "correta": false
+   },
+   {
+    "texto": "O Agent Gateway converte o stream em chamada síncrona automaticamente",
+    "correta": false
+   }
+  ],
+  "porque": "A documentação lista :streamGenerateContent, :streamRawPredict e o parâmetro stream ligado como não suportados e avisa que tool calls nesses casos podem não ser bloqueadas. Quem quer a checagem precisa manter as chamadas ao modelo sem streaming.",
+  "url": "diario/edicoes/2026/2026-11-22.html"
+ },
+ {
+  "id": "2026-11-22#3",
+  "data": "2026-11-22",
+  "pergunta": "Por que o Inkling 2 Mini (26,4B parâmetros) é viável num Mac de 48 GB?",
+  "opcoes": [
+   {
+    "texto": "O checkpoint oficial vem quantizado (NVFP4 e MXFP8) em cerca de 20 GB, e só cerca de 3,4B parâmetros ficam ativos por token",
+    "correta": true
+   },
+   {
+    "texto": "Porque é um modelo denso de 3,4B que o fornecedor descreve como 26,4B",
+    "correta": false
+   },
+   {
+    "texto": "Porque o Ollama carrega só os especialistas ativos e o resto fica no disco",
+    "correta": false
+   }
+  ],
+  "porque": "Todos os pesos precisam caber na memória; o tamanho de 20 GB vem da quantização. Os parâmetros ativos (MoE, 8 de 128 especialistas por camada) definem a velocidade, não a memória.",
+  "url": "diario/edicoes/2026/2026-11-22.html"
  }
 ];

@@ -2,6 +2,34 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-22",
+   "titulo": "Canários da Dragos acham prompts vazando em provedores de IA; Inkling 2 Mini cabe em 32 GB; Google checa ação de agente contra regra em linguagem natural",
+   "resumo": "A Dragos semeou quase dois milhões de prompts com credenciais-isca e relata ao menos três provedores de IA comprometidos e revendedores que guardam prompts por log; a Thinking Machines lança o Inkling 2 Mini (26,4B no total, 3,4B ativos), com checkpoint de cerca de 20 GB; o Google documenta em preview as Semantic Governance Policies no Agent Gateway; Codex CLI 0.171 e Claude Code 2.1.330 saem no fim da semana.",
+   "tags": [
+    "seguranca",
+    "llm-local",
+    "ferramentas-dev",
+    "modelos",
+    "pesquisa",
+    "mercado"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M05",
+     "motivo": "Dragos (19/11): em marketplace de inferência, o prompt fica visível ao revendedor individual por log de requisição comum, e configurações de privacidade de router nem sempre mudam a rota. O módulo de gateway pode tratar a escolha explícita do provedor upstream e o teste com credencial-isca como parte da configuração."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "Dragos relata ao menos três provedores de IA comprometidos, com chaves AWS-isca enviadas uma única vez a um provedor e depois usadas por atacantes. Caso concreto para a parte de segredos: nunca mandar credencial no prompt e semear canários para detectar vazamento."
+    },
+    {
+     "modulo": "M11",
+     "motivo": "Inkling 2 Mini (lançado em 20/11, segundo agregadores): MoE de 26,4B com 3,4B ativos e camadas em loop, checkpoint NVFP4/MXFP8 de cerca de 20 GB e piso de 32 GB de memória. Exemplo atual de modelo que cabe em 48 GB e de quantização mista por camada."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-22.html"
+  },
+  {
    "data": "2026-11-21",
    "titulo": "OpenAI mostra o Performance Factory; Gemini API carrega ferramentas sob demanda; Comissão Europeia confirma ataque com ferramenta de IA",
    "resumo": "OpenAI detalha como agentes Codex investigam regressões de desempenho do ChatGPT, com revisão adversarial e humano no merge; Google lança em preview o Tool Retrieval na Gemini API (defer_loading, inclusive para servidores MCP); a Comissão Europeia confirma ataque de mais de 10 dias atribuído pela imprensa à plataforma ARTEX.",
@@ -343,6 +371,13 @@ window.DIARIO = {
   }
  ],
  "semanas": [
+  {
+   "semana": "2026-W47",
+   "titulo": "Semana do ponto de decisão: política antes da ferramenta, sandbox explicado e cadeia de suprimentos de agentes sob ataque",
+   "resumo": "Uber, Anthropic e Google mostraram como checar cada ação de agente antes de executá-la; a OpenAI abriu o sandbox do Codex; servidor MCP impostor, pacote do PyPI malicioso e provedores de IA que vazam prompts mostraram a cadeia de suprimentos como alvo; GPT-6.2 e Gemini 4 Neon mexeram de novo na tabela de custo.",
+   "periodo": "16 a 22/11/2026",
+   "url": "diario/semanas/2026-W47.html"
+  },
   {
    "semana": "2026-W46",
    "titulo": "Semana dos segredos vazados: permissões de agente, chaves de IA e fornecedores terceiros",

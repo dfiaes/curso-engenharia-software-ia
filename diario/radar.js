@@ -1,6 +1,31 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-22",
+  "texto_html": "<strong>Inkling 2 Mini (Ollama 0.40.17+, GGUF da Unsloth e da ggml-org):</strong> modelo local de cerca de 20 GB para Apple Silicon. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-22.html"
+ },
+ {
+  "data": "2026-11-22",
+  "texto_html": "<strong>Thinkst Canarytokens:</strong> credenciais e URLs-isca para detectar vazamento de prompt em provedores de IA, como no estudo da Dragos. Gratuito; não avaliado neste curso.",
+  "url_edicao": "diario/edicoes/2026/2026-11-22.html"
+ },
+ {
+  "data": "2026-11-22",
+  "texto_html": "<strong>Google Semantic Governance Policies:</strong> checagem de ação de agente contra regra em linguagem natural no Agent Gateway. Preview, sem streaming. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-22.html"
+ },
+ {
+  "data": "2026-11-22",
+  "texto_html": "<strong>Codex <code>exec --remote</code>:</strong> sessões não interativas num app server existente. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-22.html"
+ },
+ {
+  "data": "2026-11-22",
+  "texto_html": "<strong>Qodo no Kiro:</strong> revisão de código antes do PR na conta AWS do cliente. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-22.html"
+ },
+ {
   "data": "2026-11-21",
   "texto_html": "<strong>Gemini API Tool Retrieval:</strong> <code>tool_search</code> + <code>defer_loading</code>, inclusive em servidores MCP remotos. Preview, não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-21.html"
