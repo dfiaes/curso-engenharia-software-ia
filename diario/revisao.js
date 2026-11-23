@@ -692,5 +692,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "Todos os pesos precisam caber na memória; o tamanho de 20 GB vem da quantização. Os parâmetros ativos (MoE, 8 de 128 especialistas por camada) definem a velocidade, não a memória.",
   "url": "diario/edicoes/2026/2026-11-22.html"
+ },
+ {
+  "id": "2026-11-23#1",
+  "data": "2026-11-23",
+  "pergunta": "No Tool Retrieval da Gemini API, o que o modelo vê de uma ferramenta marcada com defer_loading antes de buscá-la?",
+  "opcoes": [
+   {
+    "texto": "Só o nome e a descrição; o esquema de parâmetros vem quando o tool_search a seleciona",
+    "correta": true
+   },
+   {
+    "texto": "Nada; a ferramenta fica invisível até o usuário citá-la",
+    "correta": false
+   },
+   {
+    "texto": "O esquema completo, mas sem cobrança de tokens",
+    "correta": false
+   }
+  ],
+  "porque": "O post do Google diz que o modelo continua vendo nome e descrição de cada ferramenta adiada e carrega o esquema só quando a tarefa pede. Depois de carregado, o esquema é cobrado como entrada pelo resto da conversa.",
+  "url": "diario/edicoes/2026/2026-11-23.html"
+ },
+ {
+  "id": "2026-11-23#2",
+  "data": "2026-11-23",
+  "pergunta": "Qual é o custo escondido de ativar a busca de ferramentas no lado do servidor da Gemini API?",
+  "opcoes": [
+   {
+    "texto": "Cada busca faz uma passada extra do modelo, contada como tokens de entrada, e esquemas carregados não podem ser descarregados",
+    "correta": true
+   },
+   {
+    "texto": "Uma taxa fixa por ferramenta registrada, cobrada mesmo sem uso",
+    "correta": false
+   },
+   {
+    "texto": "Nenhum; o Google declara economia de 85% em todos os casos",
+    "correta": false
+   }
+  ],
+  "porque": "O Google diz que não há cobrança separada, mas ligar o tool_search soma um bloco fixo de tokens e, segundo a documentação citada pela PPC Land, cada busca no servidor é uma passada a mais (total_tool_use_tokens). O Google não publicou número de economia; os 85% são da Anthropic, em 2025.",
+  "url": "diario/edicoes/2026/2026-11-23.html"
  }
 ];

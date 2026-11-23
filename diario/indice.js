@@ -2,6 +2,33 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-23",
+   "titulo": "Gemini API carrega esquema de ferramenta sob demanda; Ollama 0.40.17 atende pedidos em paralelo no Apple Silicon; OpenRouter tira provedores da lista ZDR",
+   "resumo": "O Google pôs em preview o Tool Retrieval na Interactions API, com defer_loading e tool_search no mesmo desenho que Anthropic e OpenAI já usam; o Ollama 0.40.17 traz o Inkling 2 Mini, requisições concorrentes no Apple Silicon e carregamento adiado de ferramentas no ollama launch claude; segundo a imprensa, a OpenRouter desligou três provedores e tirou 125 endpoints da elegibilidade ZDR depois do estudo da Dragos.",
+   "tags": [
+    "ferramentas-dev",
+    "llm-local",
+    "seguranca",
+    "pesquisa",
+    "mercado"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M08",
+     "motivo": "Tool Retrieval na Gemini API (19/11): com defer_loading o modelo vê só nome e descrição da ferramenta (cerca de 26 tokens cada, segundo a documentação citada pela PPC Land) e busca o esquema com tool_search. Três fornecedores agora usam o mesmo parâmetro; o bloco de contexto pode tratar o carregamento adiado como padrão de mercado, com seus limites (esquema carregado não sai do contexto, busca extra por passo)."
+    },
+    {
+     "modulo": "M05",
+     "motivo": "Segundo a imprensa (não confirmado na OpenRouter), o router desligou três provedores e tirou 125 endpoints da elegibilidade ZDR em 22/11. Reforça que a flag de privacidade de um router muda com o tempo: o gateway precisa fixar e registrar o provedor upstream e revalidar a lista periodicamente."
+    },
+    {
+     "modulo": "M11",
+     "motivo": "Ollama 0.40.17 (21/11) passa a atender várias requisições ao mesmo tempo no Apple Silicon e não recarrega o modelo ao mudar context shift. Muda a recomendação prática de servir modelo local para vários clientes (editor e agente) na mesma máquina."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-23.html"
+  },
+  {
    "data": "2026-11-22",
    "titulo": "Canários da Dragos acham prompts vazando em provedores de IA; Inkling 2 Mini cabe em 32 GB; Google checa ação de agente contra regra em linguagem natural",
    "resumo": "A Dragos semeou quase dois milhões de prompts com credenciais-isca e relata ao menos três provedores de IA comprometidos e revendedores que guardam prompts por log; a Thinking Machines lança o Inkling 2 Mini (26,4B no total, 3,4B ativos), com checkpoint de cerca de 20 GB; o Google documenta em preview as Semantic Governance Policies no Agent Gateway; Codex CLI 0.171 e Claude Code 2.1.330 saem no fim da semana.",

@@ -1,6 +1,26 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-23",
+  "texto_html": "<strong>Gemini API Tool Retrieval (<code>tool_search</code> + <code>defer_loading</code>):</strong> carregamento de esquema sob demanda, também para servidores MCP. Preview. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-23.html"
+ },
+ {
+  "data": "2026-11-23",
+  "texto_html": "<strong>Perplexity Monitor API:</strong> buscas agendadas com aviso por webhook para agentes. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-23.html"
+ },
+ {
+  "data": "2026-11-23",
+  "texto_html": "<strong>TensorLean:</strong> verificação formal de kernels de GPU em Lean. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-23.html"
+ },
+ {
+  "data": "2026-11-23",
+  "texto_html": "<strong>Sarvam-105B-1711:</strong> MoE aberto (Apache 2.0) voltado a ferramentas e línguas indianas, BF16 e NVFP4. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-23.html"
+ },
+ {
   "data": "2026-11-22",
   "texto_html": "<strong>Inkling 2 Mini (Ollama 0.40.17+, GGUF da Unsloth e da ggml-org):</strong> modelo local de cerca de 20 GB para Apple Silicon. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-22.html"
