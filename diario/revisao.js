@@ -734,5 +734,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "O Google diz que não há cobrança separada, mas ligar o tool_search soma um bloco fixo de tokens e, segundo a documentação citada pela PPC Land, cada busca no servidor é uma passada a mais (total_tool_use_tokens). O Google não publicou número de economia; os 85% são da Anthropic, em 2025.",
   "url": "diario/edicoes/2026/2026-11-23.html"
+ },
+ {
+  "id": "2026-11-24#1",
+  "data": "2026-11-24",
+  "pergunta": "No Claude Ship, onde fica a regra que decide quais PRs o agente pode aprovar sozinho?",
+  "opcoes": [
+   {
+    "texto": "Num arquivo de política no próprio repositório, escrito em linguagem natural pela equipe",
+    "correta": true
+   },
+   {
+    "texto": "Numa lista fixa definida pela Anthropic, igual para todos os clientes",
+    "correta": false
+   },
+   {
+    "texto": "Nas regras de branch protection do GitHub, sem configuração extra",
+    "correta": false
+   }
+  ],
+  "porque": "Segundo TechCrunch e SiliconANGLE, o Claude Approvals aplica uma política de aprovação que a equipe escreve como arquivo no repositório, em linguagem natural; a recomendação é começar em modo só de observação.",
+  "url": "diario/edicoes/2026/2026-11-24.html"
+ },
+ {
+  "id": "2026-11-24#2",
+  "data": "2026-11-24",
+  "pergunta": "Que garantia o Shirudo usa para que só proteções aprovadas rodem no servidor alvo?",
+  "opcoes": [
+   {
+    "texto": "Pacotes de proteção assinados, distribuídos por registry OCI e verificados com TPM antes de carregar",
+    "correta": true
+   },
+   {
+    "texto": "Um daemon permanente que consulta a OpenAI a cada requisição",
+    "correta": false
+   },
+   {
+    "texto": "Nenhuma; o agente escreve direto no kernel",
+    "correta": false
+   }
+  ],
+  "porque": "Pela Isovalent e pela OpenAI, o lado operador gera pacotes .bee assinados, enviados por registry OCI; o alvo valida a assinatura com TPM e o verificador de eBPF antes de carregar. Não há daemon permanente: a CLI é de execução única.",
+  "url": "diario/edicoes/2026/2026-11-24.html"
  }
 ];

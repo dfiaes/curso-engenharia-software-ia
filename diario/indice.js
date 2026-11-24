@@ -2,6 +2,33 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-24",
+   "titulo": "Anthropic lança o Claude Ship para revisar, corrigir e aprovar PRs; OpenAI e Cisco abrem o Shirudo, escudo em eBPF escrito por agente; Huang volta à Nvidia",
+   "resumo": "O Claude Ship (beta, Team e Enterprise, só GitHub) junta Code Review, um agente que conserta CI e conflitos e outro que aprova PR segundo uma política escrita em linguagem natural no repositório; o Shirudo, open source em BSD-2, deixa um agente gerar e aplicar proteções assinadas em eBPF ou bytecode Java sem reiniciar o serviço; o conselho da Nvidia reconduziu Jensen Huang como CEO.",
+   "tags": [
+    "ferramentas-dev",
+    "seguranca",
+    "open-source",
+    "mercado",
+    "modelos"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "A01",
+     "motivo": "Claude Ship (23/11) põe aprovação automática de PR, sob política versionada no repositório, como produto de fornecedor. O bloco de SDLC com IA pode discutir onde fica a linha entre revisão assistida e aprovação delegada, e como começar em modo só de observação."
+    },
+    {
+     "modulo": "M01",
+     "motivo": "O PR Steward conserta CI quebrado e conflitos de merge e comenta como desfazer cada push. Muda o fluxo diário de PR com agente: o humano passa a revisar a política e as escalações, não cada correção."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "Shirudo (23/11): mitigação temporária em produção gerada por agente, em eBPF ou bytecode Java, assinada e verificada por TPM, aplicada sem reinício. É um padrão novo entre o patch publicado e o patch aplicado; o bloco de resposta a vulnerabilidades pode citá-lo como opção, com o limite de ter um único teste controlado publicado."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-24.html"
+  },
+  {
    "data": "2026-11-23",
    "titulo": "Gemini API carrega esquema de ferramenta sob demanda; Ollama 0.40.17 atende pedidos em paralelo no Apple Silicon; OpenRouter tira provedores da lista ZDR",
    "resumo": "O Google pôs em preview o Tool Retrieval na Interactions API, com defer_loading e tool_search no mesmo desenho que Anthropic e OpenAI já usam; o Ollama 0.40.17 traz o Inkling 2 Mini, requisições concorrentes no Apple Silicon e carregamento adiado de ferramentas no ollama launch claude; segundo a imprensa, a OpenRouter desligou três provedores e tirou 125 endpoints da elegibilidade ZDR depois do estudo da Dragos.",

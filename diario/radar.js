@@ -1,6 +1,26 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-24",
+  "texto_html": "<strong>Claude Ship (PR Steward, Claude Approvals):</strong> conserto de CI e aprovação de PR por política no repositório. Beta, Team e Enterprise. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-24.html"
+ },
+ {
+  "data": "2026-11-24",
+  "texto_html": "<strong>Shirudo:</strong> runtime open source (BSD-2) para escudos assinados em eBPF e bytecode Java, gerados por agente. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-24.html"
+ },
+ {
+  "data": "2026-11-24",
+  "texto_html": "<strong>Canva MCP:</strong> servidor MCP remoto com OAuth por usuário para criar, editar e exportar designs. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-24.html"
+ },
+ {
+  "data": "2026-11-24",
+  "texto_html": "<strong>HungerG (Qoder):</strong> modelo de código de origem não divulgada, grátis até 30/11. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-24.html"
+ },
+ {
   "data": "2026-11-23",
   "texto_html": "<strong>Gemini API Tool Retrieval (<code>tool_search</code> + <code>defer_loading</code>):</strong> carregamento de esquema sob demanda, também para servidores MCP. Preview. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-23.html"

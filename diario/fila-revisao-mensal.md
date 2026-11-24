@@ -2,6 +2,10 @@
 
 Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições ainda não tratadas. Para dar uma edição como tratada, acrescente a data em `diario/revisao-tratadas.txt`.
 
+## A01
+
+- [2026-11-24](edicoes/2026/2026-11-24.html) (Anthropic lança o Claude Ship para revisar, corrigir e aprovar PRs; OpenAI e Cisco abrem o Shirudo, escudo em eBPF escrito por agente; Huang volta à Nvidia): Claude Ship (23/11) põe aprovação automática de PR, sob política versionada no repositório, como produto de fornecedor. O bloco de SDLC com IA pode discutir onde fica a linha entre revisão assistida e aprovação delegada, e como começar em modo só de observação.
+
 ## E03
 
 - [2026-11-18](edicoes/2026/2026-11-18.html) (Servidor MCP impostor engana quatro de cinco modelos; Copilot aposenta modelos fixados em CI; Agent 365 passa a enxergar Claude Code e Codex no laptop): Procurador-geral da Califórnia processa a OpenAI (16/11) por incidentes de 'perda de controle' de agentes, com base em concorrência desleal e perturbação pública. Primeiro caso de regulador usando lei existente contra comportamento de agente; avaliar menção na parte de responsabilidade.
@@ -18,6 +22,7 @@ Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições 
 ## M01
 
 - [2026-11-14](edicoes/2026/2026-11-14.html) (Fornecedor de IA vaza transcrições de clientes do Notion; Claude Code endurece o sandbox; Gemini 4 Hydrogen chega barato): Claude Code 2.1.325: Bash em sandbox passa a seguir o fluxo normal de permissões por padrão (sandbox.autoAllowBashIfSandboxed restaura o antigo) e tarefas agendadas pedem confirmação antes de skill com allowed-tools ou hooks. Conferir se o módulo descreve o comportamento antigo.
+- [2026-11-24](edicoes/2026/2026-11-24.html) (Anthropic lança o Claude Ship para revisar, corrigir e aprovar PRs; OpenAI e Cisco abrem o Shirudo, escudo em eBPF escrito por agente; Huang volta à Nvidia): O PR Steward conserta CI quebrado e conflitos de merge e comenta como desfazer cada push. Muda o fluxo diário de PR com agente: o humano passa a revisar a política e as escalações, não cada correção.
 
 ## M03
 
@@ -73,3 +78,4 @@ Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições 
 - [2026-11-20](edicoes/2026/2026-11-20.html) (OpenAI abre o sandbox do Codex; Gemini 4 Neon chega a US$ 3/US$ 15; Anthropic estreia na Nasdaq a US$ 83): A mesma publicação lista riscos residuais concretos: leitura ampla de arquivos com segredos, injeção em pacote local executado depois fora do sandbox, exfiltração por DNS e servidores MCP stdio sem sandbox por padrão. Bom material para threat modeling agêntico.
 - [2026-11-21](edicoes/2026/2026-11-21.html) (OpenAI mostra o Performance Factory; Gemini API carrega ferramentas sob demanda; Comissão Europeia confirma ataque com ferramenta de IA): A Comissão Europeia confirmou (19/11) ataque iniciado em 22/10 com mais de 10 dias de sistemas de pessoal fora do ar; a imprensa atribui à plataforma aberta ARTEX, que automatiza descoberta e exploração de vulnerabilidades. Reforça a discussão sobre janela de correção diante de ataque automatizado.
 - [2026-11-22](edicoes/2026/2026-11-22.html) (Canários da Dragos acham prompts vazando em provedores de IA; Inkling 2 Mini cabe em 32 GB; Google checa ação de agente contra regra em linguagem natural): Dragos relata ao menos três provedores de IA comprometidos, com chaves AWS-isca enviadas uma única vez a um provedor e depois usadas por atacantes. Caso concreto para a parte de segredos: nunca mandar credencial no prompt e semear canários para detectar vazamento.
+- [2026-11-24](edicoes/2026/2026-11-24.html) (Anthropic lança o Claude Ship para revisar, corrigir e aprovar PRs; OpenAI e Cisco abrem o Shirudo, escudo em eBPF escrito por agente; Huang volta à Nvidia): Shirudo (23/11): mitigação temporária em produção gerada por agente, em eBPF ou bytecode Java, assinada e verificada por TPM, aplicada sem reinício. É um padrão novo entre o patch publicado e o patch aplicado; o bloco de resposta a vulnerabilidades pode citá-lo como opção, com o limite de ter um único teste controlado publicado.
