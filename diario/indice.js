@@ -2,6 +2,33 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-25",
+   "titulo": "Claude Code 2.1.332 traz skills vindas de servidores MCP e um hook para barrar shell de skill; Anthropic e OpenAI publicam provas de VP ≠ VNP em Lean sem revisão humana; chips despencam na Ásia",
+   "resumo": "O Claude Code passou a carregar skills expostas por servidores MCP (beta) e ganhou o hook PreSkillShellCommand, além de mudar o prefixo do token OAuth e ligar o modo auto por padrão em Bedrock Mantle, Agent Platform e Foundry; Anthropic e OpenAI publicaram, com horas de diferença, provas geradas por IA de VP ≠ VNP com formalização em Lean, ainda sem nenhum matemático ter conferido; Taiex e Kospi caíram mais de 6% na manhã de 25/11.",
+   "tags": [
+    "ferramentas-dev",
+    "seguranca",
+    "pesquisa",
+    "mercado",
+    "llm-local"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M09",
+     "motivo": "Claude Code 2.1.332 (24/11) carrega skills publicadas por servidores MCP, em beta, no menu / como servidor:skill. Um servidor MCP passa a distribuir instruções e comandos, não só ferramentas; o bloco de MCP pode tratar a skill remota como nova superfície de confiança."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "Na 2.1.332 o token CLAUDE_CODE_OAUTH_TOKEN pode vir com prefixo oat02- (regras de proxy e scrubbers de log precisam reconhecer) e sessões em Bedrock Mantle, Agent Platform e Foundry começam em modo auto se nenhum modo for definido. Na 2.1.331, marketplaces de plugins em managed settings passam a se atualizar sozinhos a partir de 30/11."
+    },
+    {
+     "modulo": "M11",
+     "motivo": "Ollama 0.40.18 (24/11) acelera o Inkling 2 Mini em Metal e sobe o llama.cpp para b12651; o llama.cpp 1.0 (13/11) removeu --defrag-thold e endureceu o llama-server. Scripts de modelo local do lab podem quebrar."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-25.html"
+  },
+  {
    "data": "2026-11-24",
    "titulo": "Anthropic lança o Claude Ship para revisar, corrigir e aprovar PRs; OpenAI e Cisco abrem o Shirudo, escudo em eBPF escrito por agente; Huang volta à Nvidia",
    "resumo": "O Claude Ship (beta, Team e Enterprise, só GitHub) junta Code Review, um agente que conserta CI e conflitos e outro que aprova PR segundo uma política escrita em linguagem natural no repositório; o Shirudo, open source em BSD-2, deixa um agente gerar e aplicar proteções assinadas em eBPF ou bytecode Java sem reiniciar o serviço; o conselho da Nvidia reconduziu Jensen Huang como CEO.",

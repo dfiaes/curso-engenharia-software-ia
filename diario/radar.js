@@ -1,6 +1,21 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-25",
+  "texto_html": "<strong>Skills via MCP (Claude Code, beta):</strong> servidores MCP distribuindo skills que aparecem como <code>servidor:skill</code>. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-25.html"
+ },
+ {
+  "data": "2026-11-25",
+  "texto_html": "<strong>Hook PreSkillShellCommand (Claude Code):</strong> ponto de controle para recusar shell embutido em skills ao carregar. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-25.html"
+ },
+ {
+  "data": "2026-11-25",
+  "texto_html": "<strong>anthropics/formal-math e openai/math:</strong> repositórios com provas geradas por IA e formalizações em Lean. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-25.html"
+ },
+ {
   "data": "2026-11-24",
   "texto_html": "<strong>Claude Ship (PR Steward, Claude Approvals):</strong> conserto de CI e aprovação de PR por política no repositório. Beta, Team e Enterprise. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-24.html"

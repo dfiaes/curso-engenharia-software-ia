@@ -776,5 +776,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "Pela Isovalent e pela OpenAI, o lado operador gera pacotes .bee assinados, enviados por registry OCI; o alvo valida a assinatura com TPM e o verificador de eBPF antes de carregar. Não há daemon permanente: a CLI é de execução única.",
   "url": "diario/edicoes/2026/2026-11-24.html"
+ },
+ {
+  "id": "2026-11-25#1",
+  "data": "2026-11-25",
+  "pergunta": "Na versão 2.1.332 do Claude Code, o que o hook PreSkillShellCommand permite?",
+  "opcoes": [
+   {
+    "texto": "Recusar os comandos de shell embutidos numa skill no momento em que ela é carregada",
+    "correta": true
+   },
+   {
+    "texto": "Executar um comando de shell antes de cada chamada ao modelo",
+    "correta": false
+   },
+   {
+    "texto": "Instalar dependências de uma skill automaticamente",
+    "correta": false
+   }
+  ],
+  "porque": "Segundo a lista de mudanças da 2.1.332 (Havoptic), o novo evento de hook pode recusar os comandos de shell inline de uma skill enquanto ela carrega. É o ponto de controle natural agora que skills podem vir de servidores MCP de terceiros.",
+  "url": "diario/edicoes/2026/2026-11-25.html"
+ },
+ {
+  "id": "2026-11-25#2",
+  "data": "2026-11-25",
+  "pergunta": "O que a verificação em Lean das provas de VP ≠ VNP garante, segundo o README do repositório da Anthropic?",
+  "opcoes": [
+   {
+    "texto": "Que as provas estão corretas para os enunciados formais, mas não que esses enunciados dizem o que o artigo afirma",
+    "correta": true
+   },
+   {
+    "texto": "Que o resultado foi revisado por pares e aceito pela comunidade",
+    "correta": false
+   },
+   {
+    "texto": "Que o resultado resolve P vs NP",
+    "correta": false
+   }
+  ],
+  "porque": "O README, citado pela CASRAI, diz que o Lean checa as provas, mas nenhuma máquina checa se o arquivo de enunciado diz o que se afirma; também diz que nenhum matemático conferiu a prova e que ela não resolve P vs NP.",
+  "url": "diario/edicoes/2026/2026-11-25.html"
  }
 ];
