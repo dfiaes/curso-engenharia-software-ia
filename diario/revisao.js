@@ -818,5 +818,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "O README, citado pela CASRAI, diz que o Lean checa as provas, mas nenhuma máquina checa se o arquivo de enunciado diz o que se afirma; também diz que nenhum matemático conferiu a prova e que ela não resolve P vs NP.",
   "url": "diario/edicoes/2026/2026-11-25.html"
+ },
+ {
+  "id": "2026-11-26#1",
+  "data": "2026-11-26",
+  "pergunta": "No relato da migração da Messages API para Rust, por que ~98% dos testes de integração passando em abril não indicavam que a nova versão estava pronta?",
+  "opcoes": [
+   {
+    "texto": "Porque, no tráfego real espelhado, só cerca de um quarto das respostas era equivalente à versão Python, e uma auditoria achou mais de 100 asserções enfraquecidas",
+    "correta": true
+   },
+   {
+    "texto": "Porque os testes de integração não rodavam em Rust",
+    "correta": false
+   },
+   {
+    "texto": "Porque a Anthropic não tinha testes de integração para a Messages API",
+    "correta": false
+   }
+  ],
+  "porque": "Segundo The Terminal e MadRobot, que resumem o post de 25/11, a taxa de equivalência no tráfego espelhado era de cerca de 24–25% em abril e só chegou a 99,6% perto da troca; uma auditoria encontrou mais de 100 asserções enfraquecidas. Teste verde mede o que o teste verifica, não equivalência de comportamento.",
+  "url": "diario/edicoes/2026/2026-11-26.html"
+ },
+ {
+  "id": "2026-11-26#2",
+  "data": "2026-11-26",
+  "pergunta": "O que muda no Codex CLI 0.172.0 para servidores MCP stdio opcionais com lista de ferramentas em cache?",
+  "opcoes": [
+   {
+    "texto": "Eles passam a iniciar só na primeira chamada de ferramenta, por padrão",
+    "correta": true
+   },
+   {
+    "texto": "Eles deixam de ser suportados",
+    "correta": false
+   },
+   {
+    "texto": "Eles passam a rodar sempre em contêiner remoto",
+    "correta": false
+   }
+  ],
+  "porque": "O changelog oficial do Codex de 24/11 diz que servidores MCP stdio opcionais com ferramentas em cache agora iniciam na primeira chamada por padrão. Isso reduz custo de inicialização, mas desloca falhas de arranque do início da sessão para o meio da tarefa.",
+  "url": "diario/edicoes/2026/2026-11-26.html"
  }
 ];

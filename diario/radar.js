@@ -1,6 +1,21 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-26",
+  "texto_html": "<strong>Codex CLI 0.172.0, revisor de aprovação por ferramenta:</strong> aprovação granular para ferramentas de apps conectados em <code>config.toml</code>. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-26.html"
+ },
+ {
+  "data": "2026-11-26",
+  "texto_html": "<strong>Cloudflare Search for Agents:</strong> endpoint <code>/.well-known/search</code> em Markdown para agentes consultarem um site. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-26.html"
+ },
+ {
+  "data": "2026-11-26",
+  "texto_html": "<strong>Cairn:</strong> framework open source de pentest com IA citado em incidentes recentes (Wiz, Dark Reading). Não avaliado; útil para red team interno, com cuidado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-26.html"
+ },
+ {
   "data": "2026-11-25",
   "texto_html": "<strong>Skills via MCP (Claude Code, beta):</strong> servidores MCP distribuindo skills que aparecem como <code>servidor:skill</code>. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-25.html"
