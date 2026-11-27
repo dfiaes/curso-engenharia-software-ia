@@ -9,6 +9,7 @@ EVAL_SKILL_MODO ("com"/"sem", só no modo --skill-ab) e EVAL_DEVE_ACIONAR_SKILL.
 Em caso de acerto copia a solução de exemplos/solucoes/<caso>/ para o workdir; em caso de erro
 deixa o código como estava (os testes continuam falhando).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,10 +21,24 @@ from pathlib import Path
 
 # Probabilidade de acerto por dificuldade e preço ilustrativo (US$ por milhão de tokens).
 MODELOS = {
-    "modelo-grande": {"facil": 0.97, "media": 0.92, "dificil": 0.80, "pre_ent": 3.00, "pre_sai": 15.00, "verbosidade": 1.0},
-    "modelo-pequeno": {"facil": 0.95, "media": 0.75, "dificil": 0.35, "pre_ent": 0.25, "pre_sai": 1.25, "verbosidade": 1.4},
+    "modelo-grande": {
+        "facil": 0.97,
+        "media": 0.92,
+        "dificil": 0.80,
+        "pre_ent": 3.00,
+        "pre_sai": 15.00,
+        "verbosidade": 1.0,
+    },
+    "modelo-pequeno": {
+        "facil": 0.95,
+        "media": 0.75,
+        "dificil": 0.35,
+        "pre_ent": 0.25,
+        "pre_sai": 1.25,
+        "verbosidade": 1.4,
+    },
 }
-GANHO_SKILL = 0.20       # a skill ajuda nos casos em que deve ser acionada
+GANHO_SKILL = 0.20  # a skill ajuda nos casos em que deve ser acionada
 PERDA_FALSO_POSITIVO = 0.10
 PROB_FALSO_POSITIVO = 0.35  # a skill "dispara à toa" em casos que não são dela
 PROB_FALSO_NEGATIVO = 0.10

@@ -4,26 +4,52 @@ Uso: python3 tools/interativo/gerar_pagina.py modulos/<pasta> <COD> "<nome curto
 Lê as aulas em <pasta>/interativo/aulas/b*.js (+ checkpoint.js) e liga cada aula
 à âncora real do "Bloco N" no texto. Não escreve nada dentro de <script> (ver marcar_modo.py).
 """
-import json, pathlib, re, sys
+
+import json
+import pathlib
+import re
+import sys
 
 pasta, cod, nome = sys.argv[1:4]
-d = pathlib.Path(pasta); low = cod.lower()
-fonte = (d / f'{cod}.html').read_text()
-aulas = sorted(p.name for p in (d / 'interativo' / 'aulas').glob('b*.js'))
+d = pathlib.Path(pasta)
+low = cod.lower()
+fonte = (d / f"{cod}.html").read_text()
+aulas = sorted(p.name for p in (d / "interativo" / "aulas").glob("b*.js"))
 ids = [f"{low}-b{int(a[1:3])}" for a in aulas]
 anc = {int(n): i for i, n in re.findall(r'<h2 id="([^"]+)">\s*Bloco (\d+)', fonte)}
-anc.update({int(n): i for i, n in re.findall(r'<section id="([^"]+)">\s*<h2[^>]*>\s*Bloco (\d+)', fonte) if int(n) not in anc})
-anc.update({int(n): i for i, n in re.findall(r'<h2 id="([^"]+)">\s*B(\d+)\s*[·:]', fonte) if int(n) not in anc})
+anc.update(
+    {
+        int(n): i
+        for i, n in re.findall(
+            r'<section id="([^"]+)">\s*<h2[^>]*>\s*Bloco (\d+)', fonte
+        )
+        if int(n) not in anc
+    }
+)
+anc.update(
+    {
+        int(n): i
+        for i, n in re.findall(r'<h2 id="([^"]+)">\s*B(\d+)\s*[·:]', fonte)
+        if int(n) not in anc
+    }
+)
 ordem_blocos = sorted(anc)
 passo = {}
 for i, a in zip(ids, aulas):
     n = int(a[1:3])
-    passo[i] = anc.get(n) or (anc[ordem_blocos[n - 1]] if n - 1 < len(ordem_blocos) else '')
+    passo[i] = anc.get(n) or (
+        anc[ordem_blocos[n - 1]] if n - 1 < len(ordem_blocos) else ""
+    )
 files = aulas[:]
-if (d / 'interativo' / 'aulas' / 'checkpoint.js').exists():
-    ids.append(f"{low}-checkpoint"); files.append('checkpoint.js')
-    ck = re.search(r'<h2 id="([^"]+)">\s*Checkpoint', fonte) or re.search(r'<section id="([^"]+)">\s*<h2[^>]*>\s*Checkpoint', fonte) or re.search(r'<h2 id="([^"]+)">\s*(?:Fechamento|Defesa)', fonte)
-    passo[f"{low}-checkpoint"] = ck.group(1) if ck else ''
+if (d / "interativo" / "aulas" / "checkpoint.js").exists():
+    ids.append(f"{low}-checkpoint")
+    files.append("checkpoint.js")
+    ck = (
+        re.search(r'<h2 id="([^"]+)">\s*Checkpoint', fonte)
+        or re.search(r'<section id="([^"]+)">\s*<h2[^>]*>\s*Checkpoint', fonte)
+        or re.search(r'<h2 id="([^"]+)">\s*(?:Fechamento|Defesa)', fonte)
+    )
+    passo[f"{low}-checkpoint"] = ck.group(1) if ck else ""
 scripts = "\n".join(f'<script src="interativo/aulas/{f}"></script>' for f in files)
 html = f'''<!DOCTYPE html>
 <html lang="pt-BR">
@@ -63,9 +89,10 @@ TrilhaAula.montar('#raiz');
 </body>
 </html>
 '''
-(d / f'{cod}-interativo.html').write_text(html)
+(d / f"{cod}-interativo.html").write_text(html)
 # o interativo é o padrão: a página em texto ganha o alternador (sem caixa, sem script)
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from marcar_modo import marcar
-marcar(d / f'{cod}.html', cod)
+
+marcar(d / f"{cod}.html", cod)
 print(json.dumps(passo, ensure_ascii=False))

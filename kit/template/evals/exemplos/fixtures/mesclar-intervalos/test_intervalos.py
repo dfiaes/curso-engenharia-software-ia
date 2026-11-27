@@ -1,4 +1,5 @@
 import unittest
+
 from intervalos import mesclar
 
 

@@ -4,6 +4,7 @@
 Humanos liberam conscientemente com ALLOW_PROTECTED=1 (e o CODEOWNERS exige revisão).
 Padrões extras: arquivo .protected-paths na raiz (um glob por linha).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,9 +48,14 @@ def main() -> int:
     if os.environ.get("ALLOW_PROTECTED") == "1":
         print("aviso: ALLOW_PROTECTED=1, checagem de caminhos protegidos ignorada")
         return 0
-    bad = find_violations(changed_files(args.staged, args.base), load_patterns(Path(".")))
+    bad = find_violations(
+        changed_files(args.staged, args.base), load_patterns(Path("."))
+    )
     if bad:
-        return fail("caminhos protegidos alterados (peça a um humano ou use ALLOW_PROTECTED=1)", bad)
+        return fail(
+            "caminhos protegidos alterados (peça a um humano ou use ALLOW_PROTECTED=1)",
+            bad,
+        )
     return 0
 
 

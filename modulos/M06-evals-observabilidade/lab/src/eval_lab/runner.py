@@ -51,9 +51,7 @@ async def rodar_suite(pasta: Path, sut: SUT, concorrencia: int = 5) -> list[Resu
     return await asyncio.gather(*(com_limite(c) for c in casos))
 
 
-def agregar(
-    resultados: list[Resultado], *, dataset_id: str, sut_version: str
-) -> dict[str, Any]:
+def agregar(resultados: list[Resultado], *, dataset_id: str, sut_version: str) -> dict[str, Any]:
     """Agrega contagens e identidade; taxas são derivadas das contagens."""
     por_cat: dict[str, list[bool]] = {}
     for r in resultados:

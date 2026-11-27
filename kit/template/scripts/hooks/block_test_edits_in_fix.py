@@ -4,6 +4,7 @@
 Só é permitido ADICIONAR testes (o teste que reproduz o bug). Se um teste antigo estava
 errado, isso é decisão de humano: use ALLOW_TEST_EDIT=1 e explique no PR.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -12,7 +13,18 @@ import os
 
 from _common import add_range_args, current_branch, fail, name_status
 
-TEST_PATTERNS = ["tests/*", "test/*", "*/tests/*", "*Tests/*", "*.Tests/*", "*_test.*", "test_*.py", "*Tests.cs", "*.spec.*", "*.test.*"]
+TEST_PATTERNS = [
+    "tests/*",
+    "test/*",
+    "*/tests/*",
+    "*Tests/*",
+    "*.Tests/*",
+    "*_test.*",
+    "test_*.py",
+    "*Tests.cs",
+    "*.spec.*",
+    "*.test.*",
+]
 
 
 def is_test(path: str) -> bool:
@@ -43,7 +55,10 @@ def main() -> int:
     branch = current_branch(dict(os.environ))
     bad = find_violations(branch, name_status(args.staged, args.base))
     if bad:
-        return fail(f"branch {branch}: testes existentes alterados (em fix/ só se adiciona teste)", bad)
+        return fail(
+            f"branch {branch}: testes existentes alterados (em fix/ só se adiciona teste)",
+            bad,
+        )
     return 0
 
 

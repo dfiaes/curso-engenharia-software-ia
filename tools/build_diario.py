@@ -22,17 +22,52 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DIARIO = "diario"
 KNOWN_TAGS = [
-    "mercado", "modelos", "ferramentas-dev", "llm-local", "engenharia",
-    "seguranca", "regulacao", "pesquisa", "open-source", "cloud",
+    "mercado",
+    "modelos",
+    "ferramentas-dev",
+    "llm-local",
+    "engenharia",
+    "seguranca",
+    "regulacao",
+    "pesquisa",
+    "open-source",
+    "cloud",
 ]
 TAG_LABEL = {
-    "mercado": "Mercado", "modelos": "Modelos", "ferramentas-dev": "Ferramentas dev",
-    "llm-local": "LLM local", "engenharia": "Engenharia", "seguranca": "Segurança",
-    "regulacao": "Regulação", "pesquisa": "Pesquisa", "open-source": "Open source", "cloud": "Cloud",
+    "mercado": "Mercado",
+    "modelos": "Modelos",
+    "ferramentas-dev": "Ferramentas dev",
+    "llm-local": "LLM local",
+    "engenharia": "Engenharia",
+    "seguranca": "Segurança",
+    "regulacao": "Regulação",
+    "pesquisa": "Pesquisa",
+    "open-source": "Open source",
+    "cloud": "Cloud",
 }
-MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto",
-         "setembro", "outubro", "novembro", "dezembro"]
-DIAS = ["segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado", "domingo"]
+MESES = [
+    "janeiro",
+    "fevereiro",
+    "março",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro",
+]
+DIAS = [
+    "segunda-feira",
+    "terça-feira",
+    "quarta-feira",
+    "quinta-feira",
+    "sexta-feira",
+    "sábado",
+    "domingo",
+]
 
 # ---------------------------------------------------------------- mini YAML
 
@@ -89,7 +124,7 @@ def parse_scalar(raw: str) -> Any:
             i = _find_colon(part)
             if i < 0:
                 raise ValueError(f"mapa inline inválido: {part!r}")
-            out[parse_scalar(part[:i])] = parse_scalar(part[i + 1:])
+            out[parse_scalar(part[:i])] = parse_scalar(part[i + 1 :])
         return out
     if raw[0] == '"' and raw[-1] == '"' and len(raw) >= 2:
         try:
@@ -124,17 +159,24 @@ def parse_yaml(text: str) -> dict[str, Any]:
 
     def mapping(i: int, indent: int) -> tuple[dict[str, Any], int]:
         out: dict[str, Any] = {}
-        while i < len(lines) and lines[i][0] == indent and not lines[i][1].startswith("- "):
+        while (
+            i < len(lines)
+            and lines[i][0] == indent
+            and not lines[i][1].startswith("- ")
+        ):
             content = lines[i][1]
             c = _find_colon(content)
             if c < 0:
                 raise ValueError(f"linha de frontmatter inválida: {content!r}")
             key = str(parse_scalar(content[:c]))
-            rest = content[c + 1:].strip()
+            rest = content[c + 1 :].strip()
             i += 1
             if rest:
                 out[key] = parse_scalar(rest)
-            elif i < len(lines) and (lines[i][0] > indent or (lines[i][0] == indent and lines[i][1].startswith("- "))):
+            elif i < len(lines) and (
+                lines[i][0] > indent
+                or (lines[i][0] == indent and lines[i][1].startswith("- "))
+            ):
                 out[key], i = block(i, lines[i][0])
             else:
                 out[key] = None
@@ -142,7 +184,11 @@ def parse_yaml(text: str) -> dict[str, Any]:
 
     def seq(i: int, indent: int) -> tuple[list[Any], int]:
         out: list[Any] = []
-        while i < len(lines) and lines[i][0] == indent and (lines[i][1].startswith("- ") or lines[i][1] == "-"):
+        while (
+            i < len(lines)
+            and lines[i][0] == indent
+            and (lines[i][1].startswith("- ") or lines[i][1] == "-")
+        ):
             rest = lines[i][1][1:].strip()
             if not rest:
                 i += 1
@@ -172,7 +218,7 @@ def parse_yaml(text: str) -> dict[str, Any]:
 
 def split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     text = text.lstrip("﻿")
-    m = re.match(r"---[ \t]*\n(.*?)\n---[ \t]*\n?(.*)\Z", text, re.S)
+    m = re.match(r"---[ \t]*\n(.*?)\n---[ \t]*\n?(.*)\Z", text, re.DOTALL)
     if not m:
         raise ValueError("sem frontmatter (--- ... ---)")
     return parse_yaml(m.group(1)), m.group(2)
@@ -201,18 +247,37 @@ def load_edition(path: Path) -> dict[str, Any]:
     for item in meta.get("modulos_afetados") or []:
         if not isinstance(item, dict) or "modulo" not in item:
             raise ValueError(f"{path.name}: modulos_afetados exige {{modulo, motivo}}")
-        afetados.append({"modulo": str(item["modulo"]), "motivo": str(item.get("motivo") or "")})
+        afetados.append(
+            {"modulo": str(item["modulo"]), "motivo": str(item.get("motivo") or "")}
+        )
     revisao = []
     for item in (meta.get("revisao") or [])[:3]:
-        opcoes = [{"texto": str(o.get("texto")), "correta": bool(o.get("correta"))} for o in item.get("opcoes") or []]
+        opcoes = [
+            {"texto": str(o.get("texto")), "correta": bool(o.get("correta"))}
+            for o in item.get("opcoes") or []
+        ]
         if sum(o["correta"] for o in opcoes) != 1:
-            raise ValueError(f"{path.name}: cada pergunta de revisão precisa de exatamente 1 opção correta")
-        revisao.append({"pergunta": str(item.get("pergunta")), "opcoes": opcoes, "porque": str(item.get("porque") or "")})
+            raise ValueError(
+                f"{path.name}: cada pergunta de revisão precisa de exatamente 1 opção correta"
+            )
+        revisao.append(
+            {
+                "pergunta": str(item.get("pergunta")),
+                "opcoes": opcoes,
+                "porque": str(item.get("porque") or ""),
+            }
+        )
     return {
-        "data": data, "titulo": str(meta["titulo"]), "resumo": str(meta["resumo"]), "tags": tags,
-        "modulos_afetados": afetados, "revisao": revisao,
-        "fontes_count": int(meta.get("fontes_count") or 0), "body": body,
-        "url": f"{DIARIO}/edicoes/{data[:4]}/{data}.html", "path": path,
+        "data": data,
+        "titulo": str(meta["titulo"]),
+        "resumo": str(meta["resumo"]),
+        "tags": tags,
+        "modulos_afetados": afetados,
+        "revisao": revisao,
+        "fontes_count": int(meta.get("fontes_count") or 0),
+        "body": body,
+        "url": f"{DIARIO}/edicoes/{data[:4]}/{data}.html",
+        "path": path,
     }
 
 
@@ -222,9 +287,13 @@ def load_week(path: Path) -> dict[str, Any]:
     if not re.fullmatch(r"\d{4}-W\d{2}", semana):
         raise ValueError(f"{path.name}: semana inválida {semana!r}")
     return {
-        "semana": semana, "titulo": str(meta.get("titulo") or f"Semana {semana}"),
-        "resumo": str(meta.get("resumo") or ""), "periodo": str(meta.get("periodo") or ""),
-        "body": body, "url": f"{DIARIO}/semanas/{semana}.html", "path": path,
+        "semana": semana,
+        "titulo": str(meta.get("titulo") or f"Semana {semana}"),
+        "resumo": str(meta.get("resumo") or ""),
+        "periodo": str(meta.get("periodo") or ""),
+        "body": body,
+        "url": f"{DIARIO}/semanas/{semana}.html",
+        "path": path,
     }
 
 
@@ -243,8 +312,12 @@ def discover(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
 def md_to_html(body: str) -> str:
     import markdown  # imported lazily so parsing tests do not need it
 
-    out = markdown.markdown(body, extensions=["extra", "sane_lists"], output_format="html")
-    return re.sub(r'<a href="(https?://[^"]+)"', r'<a href="\1" rel="noopener noreferrer"', out)
+    out = markdown.markdown(
+        body, extensions=["extra", "sane_lists"], output_format="html"
+    )
+    return re.sub(
+        r'<a href="(https?://[^"]+)"', r'<a href="\1" rel="noopener noreferrer"', out
+    )
 
 
 def pt_date(iso: str) -> str:
@@ -298,7 +371,12 @@ def topbar(rel: str, back_label: str, back_href: str) -> str:
 </div></header>"""
 
 
-def edition_html(root: Path, ed: dict[str, Any], prev: dict[str, Any] | None, nxt: dict[str, Any] | None) -> str:
+def edition_html(
+    root: Path,
+    ed: dict[str, Any],
+    prev: dict[str, Any] | None,
+    nxt: dict[str, Any] | None,
+) -> str:
     rel = "../../../"
     cal = "../../index.html"
     here = f"{ed['data']}.html"
@@ -315,14 +393,19 @@ def edition_html(root: Path, ed: dict[str, Any], prev: dict[str, Any] | None, nx
         items = ""
         for m in ed["modulos_afetados"]:
             link = module_link(root, m["modulo"], rel)
-            name = f'<a class="dr-link" href="{link}">{esc(m["modulo"])}</a>' if link else f"<strong>{esc(m['modulo'])}</strong>"
+            name = (
+                f'<a class="dr-link" href="{link}">{esc(m["modulo"])}</a>'
+                if link
+                else f"<strong>{esc(m['modulo'])}</strong>"
+            )
             items += f"<li>{name}: {esc(m['motivo'])}</li>"
         sections += f'<section class="tr-card tr-card-raised dr-box"><h2 class="dr-h">Módulos do curso sinalizados</h2><ul class="dr-ul">{items}</ul><p class="dr-muted">O diário só sinaliza. A decisão de editar o módulo é da revisão mensal.</p></section>'
     if ed["revisao"]:
         qs = ""
         for n, q in enumerate(ed["revisao"], 1):
             opts = "".join(
-                f'<li class="{"dr-right" if o["correta"] else ""}">{esc(o["texto"])}{" (correta)" if o["correta"] else ""}</li>' for o in q["opcoes"]
+                f'<li class="{"dr-right" if o["correta"] else ""}">{esc(o["texto"])}{" (correta)" if o["correta"] else ""}</li>'
+                for o in q["opcoes"]
             )
             qs += f'<details class="dr-q"><summary>{n}. {esc(q["pergunta"])}</summary><ol class="dr-ul" type="a">{opts}</ol><p>{esc(q["porque"])}</p></details>'
         sections += f'<section class="tr-card tr-card-raised dr-box"><h2 class="dr-h">Revisão rápida</h2>{qs}</section>'
@@ -362,30 +445,54 @@ def week_html(w: dict[str, Any]) -> str:
 def build_index(eds: list[dict[str, Any]], weeks: list[dict[str, Any]]) -> str:
     data = {
         "edicoes": [
-            {k: e[k] for k in ("data", "titulo", "resumo", "tags", "modulos_afetados", "url")}
+            {
+                k: e[k]
+                for k in ("data", "titulo", "resumo", "tags", "modulos_afetados", "url")
+            }
             for e in sorted(eds, key=lambda e: e["data"], reverse=True)
         ],
         "semanas": [
             {k: w[k] for k in ("semana", "titulo", "resumo", "periodo", "url")}
             for w in sorted(weeks, key=lambda w: w["semana"], reverse=True)
         ],
-        "tags": KNOWN_TAGS + sorted({t for e in eds for t in e["tags"]} - set(KNOWN_TAGS)),
+        "tags": KNOWN_TAGS
+        + sorted({t for e in eds for t in e["tags"]} - set(KNOWN_TAGS)),
     }
-    return "/* Gerado por tools/build_diario.py — não edite. */\nwindow.DIARIO = " + json.dumps(data, ensure_ascii=False, indent=1) + ";\n"
+    return (
+        "/* Gerado por tools/build_diario.py — não edite. */\nwindow.DIARIO = "
+        + json.dumps(data, ensure_ascii=False, indent=1)
+        + ";\n"
+    )
 
 
 def build_review(eds: list[dict[str, Any]]) -> str:
     items = []
     for e in sorted(eds, key=lambda e: e["data"]):
         for n, q in enumerate(e["revisao"], 1):
-            items.append({"id": f"{e['data']}#{n}", "data": e["data"], "pergunta": q["pergunta"],
-                          "opcoes": q["opcoes"], "porque": q["porque"], "url": e["url"]})
-    return "/* Gerado por tools/build_diario.py — não edite. */\nwindow.DIARIO_REVISAO = " + json.dumps(items, ensure_ascii=False, indent=1) + ";\n"
+            items.append(
+                {
+                    "id": f"{e['data']}#{n}",
+                    "data": e["data"],
+                    "pergunta": q["pergunta"],
+                    "opcoes": q["opcoes"],
+                    "porque": q["porque"],
+                    "url": e["url"],
+                }
+            )
+    return (
+        "/* Gerado por tools/build_diario.py — não edite. */\nwindow.DIARIO_REVISAO = "
+        + json.dumps(items, ensure_ascii=False, indent=1)
+        + ";\n"
+    )
 
 
 def radar_bullets(body: str) -> list[str]:
     """Bullets of the "## Radar de ferramentas" section, as Markdown text (one string per bullet)."""
-    m = re.search(r"^##[ \t]+Radar de ferramentas[ \t]*\n(.*?)(?=^##[ \t]|^---[ \t]*$|\Z)", body, re.S | re.M)
+    m = re.search(
+        r"^##[ \t]+Radar de ferramentas[ \t]*\n(.*?)(?=^##[ \t]|^---[ \t]*$|\Z)",
+        body,
+        re.DOTALL | re.MULTILINE,
+    )
     if not m:
         return []
     items: list[str] = []
@@ -404,10 +511,20 @@ def build_radar(eds: list[dict[str, Any]]) -> str:
     for e in sorted(eds, key=lambda e: e["data"], reverse=True):
         for b in radar_bullets(e["body"]):
             texto = markdown.markdown(b, extensions=["extra"], output_format="html")
-            texto = re.sub(r"^<p>(.*)</p>$", r"\1", texto, flags=re.S)
-            texto = re.sub(r'<a href="(https?://[^"]+)"', r'<a href="\1" rel="noopener noreferrer"', texto)
-            items.append({"data": e["data"], "texto_html": texto, "url_edicao": e["url"]})
-    return "/* Gerado por tools/build_diario.py — não edite. */\nwindow.DIARIO_RADAR = " + json.dumps(items, ensure_ascii=False, indent=1) + ";\n"
+            texto = re.sub(r"^<p>(.*)</p>$", r"\1", texto, flags=re.DOTALL)
+            texto = re.sub(
+                r'<a href="(https?://[^"]+)"',
+                r'<a href="\1" rel="noopener noreferrer"',
+                texto,
+            )
+            items.append(
+                {"data": e["data"], "texto_html": texto, "url_edicao": e["url"]}
+            )
+    return (
+        "/* Gerado por tools/build_diario.py — não edite. */\nwindow.DIARIO_RADAR = "
+        + json.dumps(items, ensure_ascii=False, indent=1)
+        + ";\n"
+    )
 
 
 def read_treated(root: Path) -> set[str]:
@@ -415,7 +532,11 @@ def read_treated(root: Path) -> set[str]:
     p = root / DIARIO / "revisao-tratadas.txt"
     if not p.is_file():
         return set()
-    return {ln.split("#")[0].strip() for ln in p.read_text(encoding="utf-8").splitlines() if ln.split("#")[0].strip()}
+    return {
+        ln.split("#")[0].strip()
+        for ln in p.read_text(encoding="utf-8").splitlines()
+        if ln.split("#")[0].strip()
+    }
 
 
 def build_queue(eds: list[dict[str, Any]], treated: set[str]) -> str:
@@ -424,16 +545,24 @@ def build_queue(eds: list[dict[str, Any]], treated: set[str]) -> str:
         if e["data"] in treated:
             continue
         for m in e["modulos_afetados"]:
-            pending.setdefault(m["modulo"], []).append((e["data"], m["motivo"], e["titulo"]))
-    out = ["# Fila de revisão mensal", "",
-           "Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições ainda não tratadas. "
-           "Para dar uma edição como tratada, acrescente a data em `diario/revisao-tratadas.txt`.", ""]
+            pending.setdefault(m["modulo"], []).append(
+                (e["data"], m["motivo"], e["titulo"])
+            )
+    out = [
+        "# Fila de revisão mensal",
+        "",
+        "Gerada por `tools/build_diario.py` a partir de `modulos_afetados` das edições ainda não tratadas. "
+        "Para dar uma edição como tratada, acrescente a data em `diario/revisao-tratadas.txt`.",
+        "",
+    ]
     if not pending:
         out.append("Nenhum módulo sinalizado.")
     for code in sorted(pending):
         out += [f"## {code}", ""]
         for data, motivo, titulo in pending[code]:
-            out.append(f"- [{data}](edicoes/{data[:4]}/{data}.html) ({titulo}): {motivo}")
+            out.append(
+                f"- [{data}](edicoes/{data[:4]}/{data}.html) ({titulo}): {motivo}"
+            )
         out.append("")
     return "\n".join(out).rstrip() + "\n"
 
@@ -443,7 +572,12 @@ def queue_html(md_text: str) -> str:
 <main class="dr-wrap dr-article"><article class="dr-body">
 {md_to_html(md_text)}
 </article></main>"""
-    return page("Fila de revisão mensal · Diário", "../", inner, "Módulos do curso sinalizados pelas edições do diário.")
+    return page(
+        "Fila de revisão mensal · Diário",
+        "../",
+        inner,
+        "Módulos do curso sinalizados pelas edições do diário.",
+    )
 
 
 def write_if_changed(path: Path, text: str) -> bool:
@@ -460,7 +594,9 @@ def build(root: Path = ROOT) -> dict[str, int]:
     for i, e in enumerate(eds):
         prev = eds[i - 1] if i > 0 else None
         nxt = eds[i + 1] if i + 1 < len(eds) else None
-        write_if_changed(e["path"].with_suffix(".html"), edition_html(root, e, prev, nxt))
+        write_if_changed(
+            e["path"].with_suffix(".html"), edition_html(root, e, prev, nxt)
+        )
     for w in weeks:
         write_if_changed(w["path"].with_suffix(".html"), week_html(w))
     write_if_changed(base / "indice.js", build_index(eds, weeks))

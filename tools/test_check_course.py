@@ -59,7 +59,9 @@ class NavigationTests(unittest.TestCase):
             page = root / "index.html"
             page.write_text('<svg role="img"><path d="M0 0"/></svg>')
             errors, _ = check_paths([page], root)
-            self.assertTrue(any("svg has no accessible name" in error for error in errors))
+            self.assertTrue(
+                any("svg has no accessible name" in error for error in errors)
+            )
 
     def test_svg_title_and_labelledby_are_accepted(self) -> None:
         with TemporaryDirectory() as directory:
@@ -78,7 +80,12 @@ class NavigationTests(unittest.TestCase):
             page = root / "index.html"
             page.write_text('<svg role="img" aria-labelledby="missing-label"></svg>')
             errors, _ = check_paths([page], root)
-            self.assertTrue(any("svg aria-labelledby references missing id" in error for error in errors))
+            self.assertTrue(
+                any(
+                    "svg aria-labelledby references missing id" in error
+                    for error in errors
+                )
+            )
 
     def test_svg_labelledby_rejects_empty_text_in_referenced_target(self) -> None:
         with TemporaryDirectory() as directory:

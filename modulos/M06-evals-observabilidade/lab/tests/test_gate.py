@@ -113,9 +113,7 @@ def test_contagens_inteiras_grandes_nao_estouram_calculo_da_taxa() -> None:
         ),
     ],
 )
-def test_relatorio_invalido_rejeitado_antes_do_gate(
-    mutador: Any, mensagem: str
-) -> None:
+def test_relatorio_invalido_rejeitado_antes_do_gate(mutador: Any, mensagem: str) -> None:
     atual = relatorio()
     mutador(atual)
     with pytest.raises(ValueError, match=mensagem):
@@ -165,9 +163,7 @@ def test_amostra_abaixo_da_politica_retorna_inconclusivo() -> None:
         ("baseline", "somente em baseline: categoria_legada"),
     ],
 )
-def test_categoria_extra_em_apenas_um_relatorio_tem_diagnostico(
-    lado: str, mensagem: str
-) -> None:
+def test_categoria_extra_em_apenas_um_relatorio_tem_diagnostico(lado: str, mensagem: str) -> None:
     atual = relatorio()
     base = relatorio()
     relatorio_alvo = atual if lado == "atual" else base

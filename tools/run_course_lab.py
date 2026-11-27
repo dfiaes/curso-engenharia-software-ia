@@ -27,7 +27,9 @@ def run_lab(lab: Path) -> dict[str, bool]:
     code = lab.parent.name.split("-", 1)[0]
     env = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(Path.home() / ".venvs" / code)}
     print(f"== {code} ({lab.relative_to(ROOT)})", flush=True)
-    sync = subprocess.run(["uv", "sync"], cwd=lab, env=env, text=True, capture_output=True)
+    sync = subprocess.run(
+        ["uv", "sync"], cwd=lab, env=env, text=True, capture_output=True
+    )
     if sync.returncode:
         print(sync.stdout + sync.stderr)
         return {"sync": False}

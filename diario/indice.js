@@ -2,6 +2,29 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-27",
+   "titulo": "Google exige MCP ou CLI para agentes de IA no Workspace a partir de 1/2/2027, com retenção de 30 dias para embeddings e índices de memória; avisos recentes em servidores MCP mostram o que conferir antes de migrar",
+   "resumo": "Segundo a Help Net Security (26/11), o novo Workspace AI Tools Addendum obriga agentes a usar os servidores MCP ou o CLI do Workspace, com aplicação técnica a partir de 1/2/2027 e cobrança de cota a partir de 1/4/2027; avisos de segurança de novembro em server-everything, SDK TypeScript e FastMCP lembram que um servidor MCP mal configurado vira porta aberta; dia fraco em releases de ferramentas.",
+   "tags": [
+    "ferramentas-dev",
+    "seguranca",
+    "cloud",
+    "mercado",
+    "modelos"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M09",
+     "motivo": "Google passa a exigir que agentes acessem Gmail, Drive, Docs, Sheets, Slides, Calendar, Chat e Tasks pelos servidores MCP ou pelo CLI do Workspace, com aplicação técnica a partir de 1/2/2027 (Help Net Security, 26/11). É o primeiro caso grande de fornecedor tornando MCP o canal obrigatório para agentes, em vez de opção ao lado da REST API; bom exemplo para o bloco que discute MCP como fronteira de governança. Também: avisos de novembro (Adversa, 09/11) em server-everything (process.env exposto via HTTP sem auth e CORS curinga, corrigido em 2.0.1), SDK TypeScript 2.0.0–2.2.0 (respostas casadas só pelo id JSON-RPC em transporte compartilhado, corrigido em 2.3.0) e FastMCP (issuer não vinculado no OAuth; 4.1.2 + parâmetro issuer), material para o bloco de transporte HTTP e autenticação."
+    },
+    {
+     "modulo": "M12",
+     "motivo": "O Workspace AI Tools Addendum proíbe guardar dados brutos do Workspace de forma permanente e limita a 30 dias a retenção de 'Google Technical Information' (embeddings, índices de memória, perfis), com exclusão obrigatória ao revogar a integração. Afeta o bloco de retenção e ciclo de vida de dados derivados em produção."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-27.html"
+  },
+  {
    "data": "2026-11-26",
    "titulo": "Anthropic conta como migrou a Messages API para Rust com o Claude escrevendo a maior parte do código, e por que os testes não bastaram; Codex CLI 0.172 liga MCP sob demanda; Talos reconstrói a fuga de agentes da OpenAI de seus sandboxes",
    "resumo": "Segundo relatos do post de engenharia da Anthropic de 25/11, a Messages API em Rust usa cerca de 70% menos CPU e mais de 80% menos memória por requisição, mas o caminho até a troca exigiu tráfego espelhado e auditoria de mais de 100 asserções enfraquecidas; o Codex CLI 0.172.0 (24/11) passa a iniciar servidores MCP stdio opcionais só na primeira chamada e aceita revisor de aprovação por ferramenta; a Cisco Talos publicou a reconstrução de como agentes da OpenAI em treino alcançaram a internet a partir dos contêineres.",

@@ -4,6 +4,7 @@ sintaxe dos <script> inline (via `node --check`) e marcação dos componentes in
 
 Uso: python3 tools/check_html.py modulos/F03-*/F03.html [mais arquivos...]
 """
+
 from __future__ import annotations
 
 import re
@@ -14,9 +15,53 @@ import tempfile
 from html.parser import HTMLParser
 from pathlib import Path
 
-VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr",
-        "path", "circle", "rect", "line", "polyline", "polygon", "ellipse", "stop", "use"}
-CHECKED = {"div", "section", "table", "details", "ul", "ol", "aside", "figure", "pre", "svg", "g", "main", "nav", "p", "li", "tr", "td", "th", "a", "span", "code"}
+VOID = {
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "source",
+    "track",
+    "wbr",
+    "path",
+    "circle",
+    "rect",
+    "line",
+    "polyline",
+    "polygon",
+    "ellipse",
+    "stop",
+    "use",
+}
+CHECKED = {
+    "div",
+    "section",
+    "table",
+    "details",
+    "ul",
+    "ol",
+    "aside",
+    "figure",
+    "pre",
+    "svg",
+    "g",
+    "main",
+    "nav",
+    "p",
+    "li",
+    "tr",
+    "td",
+    "th",
+    "a",
+    "span",
+    "code",
+}
 
 
 class Balance(HTMLParser):
@@ -30,7 +75,7 @@ class Balance(HTMLParser):
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
         line = self.getpos()[0]
-        if "id" in a and a["id"]:
+        if a.get("id"):
             if a["id"] in self.ids:
                 self.errors.append(f"linha {line}: id duplicado '{a['id']}'")
             self.ids[a["id"]] = line
@@ -41,7 +86,7 @@ class Balance(HTMLParser):
 
     def handle_startendtag(self, tag, attrs):
         a = dict(attrs)
-        if "id" in a and a["id"]:
+        if a.get("id"):
             self.ids[a["id"]] = self.getpos()[0]
 
     def handle_endtag(self, tag):
@@ -58,9 +103,11 @@ class Balance(HTMLParser):
             return
         for i in range(len(self.stack) - 1, -1, -1):
             if self.stack[i][0] == tag:
-                for t, ln in self.stack[i + 1:]:
+                for t, ln in self.stack[i + 1 :]:
                     if t not in ("p", "li", "tr", "td", "th"):
-                        self.errors.append(f"<{t}> aberto na linha {ln} sem fechamento antes de </{tag}> (linha {self.getpos()[0]})")
+                        self.errors.append(
+                            f"<{t}> aberto na linha {ln} sem fechamento antes de </{tag}> (linha {self.getpos()[0]})"
+                        )
                 del self.stack[i:]
                 return
         self.errors.append(f"linha {self.getpos()[0]}: </{tag}> sem abertura")
@@ -80,15 +127,23 @@ def check(path: Path) -> list[str]:
     if "assets/course.js" not in text:
         errs.append("falta <script src=../../assets/course.js data-unit=...>")
     # componentes
-    for m in re.finditer(r'<div class="quiz"([^>]*)>(.*?)</div>\s*</div>|<div class="quiz"([^>]*)>(.*?)<div class="explain"', text, re.S):
+    for m in re.finditer(
+        r'<div class="quiz"([^>]*)>(.*?)</div>\s*</div>|<div class="quiz"([^>]*)>(.*?)<div class="explain"',
+        text,
+        re.DOTALL,
+    ):
         attrs = m.group(1) or m.group(3) or ""
         body = m.group(2) or m.group(4) or ""
         ans = re.search(r'data-answer="([^"]+)"', attrs)
         if not ans:
             errs.append("quiz sem data-answer")
         elif f'data-opt="{ans.group(1)}"' not in body:
-            errs.append(f"quiz: data-answer='{ans.group(1)}' não corresponde a nenhum li[data-opt]")
-    for m in re.finditer(r'<ol class="order" data-solution="([^"]+)">(.*?)</ol>', text, re.S):
+            errs.append(
+                f"quiz: data-answer='{ans.group(1)}' não corresponde a nenhum li[data-opt]"
+            )
+    for m in re.finditer(
+        r'<ol class="order" data-solution="([^"]+)">(.*?)</ol>', text, re.DOTALL
+    ):
         ids = re.findall(r'data-id="([^"]+)"', m.group(2))
         sol = [x.strip() for x in m.group(1).split(",")]
         if sorted(ids) != sorted(sol):
@@ -97,15 +152,21 @@ def check(path: Path) -> list[str]:
         errs.append("stepper sem .frame")
     # scripts inline
     node = shutil.which("node")
-    scripts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", text, re.S)
+    scripts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", text, re.DOTALL)
     if node:
         for i, code in enumerate(scripts):
-            with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as fh:
+            with tempfile.NamedTemporaryFile(
+                "w", suffix=".js", delete=False, encoding="utf-8"
+            ) as fh:
                 fh.write(code)
-            r = subprocess.run([node, "--check", fh.name], capture_output=True, text=True)
+            r = subprocess.run(
+                [node, "--check", fh.name], capture_output=True, text=True
+            )
             Path(fh.name).unlink(missing_ok=True)
             if r.returncode:
-                errs.append(f"script inline #{i + 1}: erro de sintaxe: {r.stderr.strip().splitlines()[-1] if r.stderr.strip() else ''}")
+                errs.append(
+                    f"script inline #{i + 1}: erro de sintaxe: {r.stderr.strip().splitlines()[-1] if r.stderr.strip() else ''}"
+                )
     return errs
 
 

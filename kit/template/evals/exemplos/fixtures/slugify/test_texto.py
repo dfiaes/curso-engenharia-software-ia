@@ -1,4 +1,5 @@
 import unittest
+
 from texto import slugify
 
 

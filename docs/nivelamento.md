@@ -49,6 +49,7 @@ def adiciona(x, acc=[]):
     acc.append(x)
     return acc
 
+
 print(adiciona(1), adiciona(2))
 ```
 

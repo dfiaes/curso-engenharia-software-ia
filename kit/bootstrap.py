@@ -10,27 +10,40 @@ Uso:
 --tools     copia os comandos (.agents/commands) e as skills (.agents/skills) para os diretórios de
             cada ferramenta: cursor, claude, codex, opencode. Nunca sobrescreve.
 """
+
 from __future__ import annotations
 
 import argparse
 import shutil
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Sequence
 
 TEMPLATE = Path(__file__).resolve().parent / "template"
 EXISTING_SKIP = {".github/workflows/deploy.yml", "azure-pipelines.yml"}
 IGNORED_PARTS = {"__pycache__", ".pytest_cache"}
-EXCLUDED_PREFIXES = ("evals/resultados/",)  # saídas geradas dos evals nunca são copiadas
+EXCLUDED_PREFIXES = (
+    "evals/resultados/",
+)  # saídas geradas dos evals nunca são copiadas
 GITIGNORE_LINE = "evals/resultados/"
 TOOLS = ("cursor", "claude", "codex", "opencode")
 COMMANDS_DIR = ".agents/commands"
 SKILLS_DIR = ".agents/skills"
 # Onde cada ferramenta procura comandos e skills (verificado em 12/10/2026, ver Trilha rápida).
 # None = a ferramenta já lê a pasta .agents/ nativamente (ou não tem o recurso em arquivo de repositório).
-COMMAND_TARGET = {"cursor": ".cursor/commands", "claude": ".claude/commands", "opencode": ".opencode/commands", "codex": None}
-SKILL_TARGET = {"cursor": None, "claude": ".claude/skills", "opencode": None, "codex": None}
+COMMAND_TARGET = {
+    "cursor": ".cursor/commands",
+    "claude": ".claude/commands",
+    "opencode": ".opencode/commands",
+    "codex": None,
+}
+SKILL_TARGET = {
+    "cursor": None,
+    "claude": ".claude/skills",
+    "opencode": None,
+    "codex": None,
+}
 
 
 @dataclass
@@ -44,14 +57,18 @@ class Report:
 
 def iter_template(template: Path) -> list[Path]:
     files = [
-        p for p in template.rglob("*")
-        if p.is_file() and not (IGNORED_PARTS & set(p.parts))
+        p
+        for p in template.rglob("*")
+        if p.is_file()
+        and not (IGNORED_PARTS & set(p.parts))
         and not p.relative_to(template).as_posix().startswith(EXCLUDED_PREFIXES)
     ]
     return sorted(files)
 
 
-def apply_kit(dest: Path, existing: bool = False, dry_run: bool = False, template: Path = TEMPLATE) -> Report:
+def apply_kit(
+    dest: Path, existing: bool = False, dry_run: bool = False, template: Path = TEMPLATE
+) -> Report:
     report = Report()
     for src in iter_template(template):
         rel = src.relative_to(template).as_posix()
@@ -68,7 +85,10 @@ def apply_kit(dest: Path, existing: bool = False, dry_run: bool = False, templat
             shutil.copy2(src, target)
     # .gitignore já existente: acrescenta só a linha dos resultados de evals (nunca reescreve o resto).
     gi = dest / ".gitignore"
-    if gi.is_file() and GITIGNORE_LINE not in gi.read_text(encoding="utf-8").splitlines():
+    if (
+        gi.is_file()
+        and GITIGNORE_LINE not in gi.read_text(encoding="utf-8").splitlines()
+    ):
         report.gitignore_updated = True
         if not dry_run:
             texto = gi.read_text(encoding="utf-8")
@@ -81,7 +101,9 @@ def parse_tools(value: str) -> list[str]:
     tools = [t.strip().lower() for t in value.split(",") if t.strip()]
     unknown = [t for t in tools if t not in TOOLS]
     if unknown:
-        raise ValueError(f"ferramenta(s) desconhecida(s): {', '.join(unknown)} (use: {', '.join(TOOLS)})")
+        raise ValueError(
+            f"ferramenta(s) desconhecida(s): {', '.join(unknown)} (use: {', '.join(TOOLS)})"
+        )
     return list(dict.fromkeys(tools))
 
 
@@ -107,7 +129,9 @@ def _codex_skill_from_command(name: str, text: str) -> str:
     return f"---\nname: {name}\ndescription: {desc}. Invocar explicitamente com ${name}.\n---\n\n{body}"
 
 
-def apply_tools(dest: Path, tools: Sequence[str], dry_run: bool = False, template: Path = TEMPLATE) -> list[str]:
+def apply_tools(
+    dest: Path, tools: Sequence[str], dry_run: bool = False, template: Path = TEMPLATE
+) -> list[str]:
     """Copia .agents/commands e .agents/skills para os diretórios de cada ferramenta. Não sobrescreve."""
     created: list[str] = []
 
@@ -130,7 +154,12 @@ def apply_tools(dest: Path, tools: Sequence[str], dry_run: bool = False, templat
         if tool == "codex":
             for src in commands:
                 text = src.read_text(encoding="utf-8")
-                put(f"{SKILLS_DIR}/{src.stem}/SKILL.md", lambda t, n=src.stem, x=text: t.write_text(_codex_skill_from_command(n, x), encoding="utf-8"))
+                put(
+                    f"{SKILLS_DIR}/{src.stem}/SKILL.md",
+                    lambda t, n=src.stem, x=text: t.write_text(
+                        _codex_skill_from_command(n, x), encoding="utf-8"
+                    ),
+                )
         sdir = SKILL_TARGET[tool]
         if sdir:
             for src in skill_files:
@@ -146,17 +175,25 @@ def format_report(report: Report, dry_run: bool) -> str:
     lines += [f"ignorado (--existing): {p}" for p in report.skipped_mode]
     lines += [f"{verb} (--tools): {p}" for p in report.tools_created]
     if report.gitignore_updated:
-        lines.append(f"{'acrescentaria' if dry_run else 'acrescentado'} ao .gitignore: {GITIGNORE_LINE}")
-    lines.append(f"resumo: {len(report.created)} {verb}(s), {len(report.skipped_existing)} mantido(s), {len(report.skipped_mode)} ignorado(s), {len(report.tools_created)} por ferramenta")
+        lines.append(
+            f"{'acrescentaria' if dry_run else 'acrescentado'} ao .gitignore: {GITIGNORE_LINE}"
+        )
+    lines.append(
+        f"resumo: {len(report.created)} {verb}(s), {len(report.skipped_existing)} mantido(s), {len(report.skipped_mode)} ignorado(s), {len(report.tools_created)} por ferramenta"
+    )
     return "\n".join(lines)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("destino", type=Path)
     parser.add_argument("--existing", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--tools", default="", help="lista separada por vírgula: " + ",".join(TOOLS))
+    parser.add_argument(
+        "--tools", default="", help="lista separada por vírgula: " + ",".join(TOOLS)
+    )
     args = parser.parse_args(argv)
     try:
         tools = parse_tools(args.tools)
@@ -172,9 +209,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         report.tools_created = apply_tools(args.destino, tools, dry_run=args.dry_run)
     print(format_report(report, args.dry_run))
     if not args.dry_run:
-        print("\nPróximo passo: preencha os [PREENCHER] do AGENTS.md e ajuste o Makefile à sua stack.")
+        print(
+            "\nPróximo passo: preencha os [PREENCHER] do AGENTS.md e ajuste o Makefile à sua stack."
+        )
         if args.existing:
-            print("Projeto existente: rode prompts/onboarding-repo-existente.md numa sessão só-leitura.")
+            print(
+                "Projeto existente: rode prompts/onboarding-repo-existente.md numa sessão só-leitura."
+            )
     return 0
 
 

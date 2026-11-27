@@ -21,7 +21,15 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS_MANIFEST = ROOT / "assets" / "docs-manifest.js"
 ROOT_FILES = ("README.md", "CURRICULO.md", "STATUS.md", "PROGRESSO.md")
 INCLUDE_DIRS = ("docs", "kit")
-EXCLUDED_PARTS = {"lab", "capstone", ".claude", ".github", "node_modules", ".venv", ".git"}
+EXCLUDED_PARTS = {
+    "lab",
+    "capstone",
+    ".claude",
+    ".github",
+    "node_modules",
+    ".venv",
+    ".git",
+}
 
 
 def doc_sources(root: Path = ROOT) -> list[str]:
@@ -45,7 +53,9 @@ def doc_sources(root: Path = ROOT) -> list[str]:
 def slugify(value: str, separator: str = "-") -> str:
     """Same anchors as tools/check_course.py:markdown_slug (GitHub style, accents kept)."""
     value = re.sub(r"<[^>]*>", "", value).strip().lower().replace("`", "")
-    value = "".join(c for c in value if c in "-_ " or unicodedata.category(c)[0] in "LN")
+    value = "".join(
+        c for c in value if c in "-_ " or unicodedata.category(c)[0] in "LN"
+    )
     return value.replace(" ", separator)
 
 
@@ -62,7 +72,11 @@ def rewrite_links(page: str, source: str, docs: set[str]) -> str:
         if target not in docs:
             return match.group(0)
         new_path = url.path[: -len(".md")] + ".html"
-        rebuilt = new_path + ("?" + url.query if url.query else "") + ("#" + url.fragment if url.fragment else "")
+        rebuilt = (
+            new_path
+            + ("?" + url.query if url.query else "")
+            + ("#" + url.fragment if url.fragment else "")
+        )
         return f"href={quote}{html.escape(rebuilt, quote=False)}{quote}"
 
     return re.sub(r"href=([\"'])([^\"']*)\1", fix, page)
@@ -148,7 +162,9 @@ def build(check: bool = False) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="fail if generated pages are stale")
+    parser.add_argument(
+        "--check", action="store_true", help="fail if generated pages are stale"
+    )
     args = parser.parse_args()
     errors = build(check=args.check)
     if errors:

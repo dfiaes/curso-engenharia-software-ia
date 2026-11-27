@@ -62,8 +62,20 @@ class CourseHTML(HTMLParser):
         "svg",
     }
     void_elements: ClassVar[set[str]] = {
-        "area", "base", "br", "col", "embed", "hr", "img", "input",
-        "link", "meta", "param", "source", "track", "wbr",
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
     }
 
     def __init__(self, document: Document) -> None:
@@ -84,9 +96,8 @@ class CourseHTML(HTMLParser):
             label = (data.get("aria-label") or "").strip()
             label_refs = tuple((data.get("aria-labelledby") or "").split())
             decorative = (
-                (data.get("aria-hidden") or "").strip().lower() == "true"
-                or role in {"none", "presentation"}
-            )
+                data.get("aria-hidden") or ""
+            ).strip().lower() == "true" or role in {"none", "presentation"}
             self.svg_stack.append(
                 SVGState(
                     line=line,
@@ -134,11 +145,17 @@ class CourseHTML(HTMLParser):
             if not svg.decorative:
                 if not svg.image_role:
                     self.document.errors.append(
-                        (svg.line, 'svg needs role="img" or an explicit decorative role')
+                        (
+                            svg.line,
+                            'svg needs role="img" or an explicit decorative role',
+                        )
                     )
                 if not (svg.has_label or svg.label_refs or svg.title_text):
                     self.document.errors.append(
-                        (svg.line, "svg has no accessible name: add aria-label, aria-labelledby or title")
+                        (
+                            svg.line,
+                            "svg has no accessible name: add aria-label, aria-labelledby or title",
+                        )
                     )
         if tag not in self.containers:
             return
@@ -154,11 +171,7 @@ class CourseHTML(HTMLParser):
         if not self.hidden and data.strip():
             for _, identifier in self.id_nodes:
                 self.document.id_text[identifier] += data
-        if (
-            self.svg_stack
-            and self.svg_stack[-1].title_open
-            and data.strip()
-        ):
+        if self.svg_stack and self.svg_stack[-1].title_open and data.strip():
             self.svg_stack[-1].title_text = True
         if not self.hidden and re.search(r"\.NET\b|\bC#|\bASP\.NET|\bEF Core", data):
             self.document.legacy.append(
@@ -237,13 +250,17 @@ def check_paths(paths: list[Path], root: Path) -> tuple[list[str], list[str]]:
             f"{label(path)}:{line}: {message}" for line, message in doc.errors
         )
         for line, references in doc.svg_label_refs:
-            missing = [reference for reference in references if reference not in doc.ids]
+            missing = [
+                reference for reference in references if reference not in doc.ids
+            ]
             if missing:
                 errors.append(
                     f"{label(path)}:{line}: svg aria-labelledby references missing id(s): "
                     + ", ".join(missing)
                 )
-            elif not any(doc.id_text.get(reference, "").strip() for reference in references):
+            elif not any(
+                doc.id_text.get(reference, "").strip() for reference in references
+            ):
                 errors.append(
                     f"{label(path)}:{line}: svg aria-labelledby has no text in referenced id(s)"
                 )
@@ -289,7 +306,11 @@ def course_paths(root: Path, include_history: bool = False) -> list[Path]:
 
         for source in build_docs.doc_sources(root):
             html_path = (root / source).with_suffix(".html")
-            if html_path.is_file() and not include_history and html_path.is_relative_to(historical):
+            if (
+                html_path.is_file()
+                and not include_history
+                and html_path.is_relative_to(historical)
+            ):
                 continue
             if html_path.is_file():
                 paths.append(html_path)

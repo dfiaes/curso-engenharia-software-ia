@@ -133,8 +133,7 @@ def validar_relatorio(relatorio: Any, nome: str) -> list[str]:
 
     if isinstance(total, int) and not isinstance(total, bool) and total > 0 and soma_total != total:
         erros.append(
-            f"{nome}: soma das amostras por categoria ({soma_total}) "
-            f"deve igualar total ({total})"
+            f"{nome}: soma das amostras por categoria ({soma_total}) deve igualar total ({total})"
         )
     return erros
 

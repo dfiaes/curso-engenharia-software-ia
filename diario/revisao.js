@@ -860,5 +860,47 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "O changelog oficial do Codex de 24/11 diz que servidores MCP stdio opcionais com ferramentas em cache agora iniciam na primeira chamada por padrão. Isso reduz custo de inicialização, mas desloca falhas de arranque do início da sessão para o meio da tarefa.",
   "url": "diario/edicoes/2026/2026-11-26.html"
+ },
+ {
+  "id": "2026-11-27#1",
+  "data": "2026-11-27",
+  "pergunta": "Segundo o relato da Help Net Security sobre o Workspace AI Tools Addendum, como agentes de IA de terceiros deverão acessar dados do Google Workspace a partir de 1/2/2027?",
+  "opcoes": [
+   {
+    "texto": "Pelos servidores MCP ou pelo CLI do Workspace; apps convencionais podem continuar na REST API",
+    "correta": true
+   },
+   {
+    "texto": "Somente pela REST API, com chave de API dedicada",
+    "correta": false
+   },
+   {
+    "texto": "Somente por agentes hospedados no Google Cloud",
+    "correta": false
+   }
+  ],
+  "porque": "A matéria de 26/11 diz que o adendo exige MCP ou CLI para agentes, com aplicação técnica a partir de 1/2/2027, enquanto aplicações convencionais seguem usando as APIs REST. A troca de canal permite checar cada requisição contra permissões, DLP e rótulos de classificação da organização.",
+  "url": "diario/edicoes/2026/2026-11-27.html"
+ },
+ {
+  "id": "2026-11-27#2",
+  "data": "2026-11-27",
+  "pergunta": "Por que atualizar o FastMCP para 4.1.2 não basta para fechar o aviso GHSA-vqqp-x5qm-5qp4?",
+  "opcoes": [
+   {
+    "texto": "É preciso também configurar o novo parâmetro issuer e rotacionar as credenciais reutilizáveis que possam ter vazado",
+    "correta": true
+   },
+   {
+    "texto": "Porque a 4.1.2 ainda não foi publicada",
+    "correta": false
+   },
+   {
+    "texto": "Porque o aviso só se aplica a servidores stdio",
+    "correta": false
+   }
+  ],
+  "porque": "Segundo a Adversa (09/11), os provedores OAuth de client credentials e private key JWT não vinculavam o issuer, então o segredo podia ir para um servidor de autorização anunciado pelo atacante. A versão nova só ajuda se o issuer for configurado, e segredo que pode ter vazado precisa ser trocado.",
+  "url": "diario/edicoes/2026/2026-11-27.html"
  }
 ];

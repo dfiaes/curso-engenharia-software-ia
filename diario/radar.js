@@ -1,6 +1,26 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-27",
+  "texto_html": "<strong>Hub (dispatcher de sessões Claude Code/Codex):</strong> orquestra várias sessões de agente de código com metas pelo navegador ou Telegram. Não avaliado; confira como guarda tokens antes de expor.",
+  "url_edicao": "diario/edicoes/2026/2026-11-27.html"
+ },
+ {
+  "data": "2026-11-27",
+  "texto_html": "<strong>tabc:</strong> contêineres em abas do navegador via Linux em WebAssembly. Não avaliado; candidato a sandbox leve para código gerado por agente.",
+  "url_edicao": "diario/edicoes/2026/2026-11-27.html"
+ },
+ {
+  "data": "2026-11-27",
+  "texto_html": "<strong>Moat:</strong> acesso barato a modelos de pesos abertos. Não avaliado; sem informação sobre quem opera a inferência nem retenção de dados.",
+  "url_edicao": "diario/edicoes/2026/2026-11-27.html"
+ },
+ {
+  "data": "2026-11-27",
+  "texto_html": "<strong>Nemotron 3.5 Parse:</strong> extração de documentos com especulador DFlash2. Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-27.html"
+ },
+ {
   "data": "2026-11-26",
   "texto_html": "<strong>Codex CLI 0.172.0, revisor de aprovação por ferramenta:</strong> aprovação granular para ferramentas de apps conectados em <code>config.toml</code>. Não avaliado.",
   "url_edicao": "diario/edicoes/2026/2026-11-26.html"
