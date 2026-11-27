@@ -6,7 +6,6 @@
 3. Drift: se código mudou e nenhuma doc mudou, exige 'Docs: não se aplica (motivo)' no corpo do PR
    (variável de ambiente PR_BODY).
 """
-
 from __future__ import annotations
 
 import argparse
@@ -46,18 +45,10 @@ def main() -> int:
     add_range_args(parser)
     args = parser.parse_args()
     root = Path(".")
-    problems = [
-        f"modelo ausente: docs/{d}/_modelo.md"
-        for d in ("intent", "specs", "plans", "adr", "runbooks")
-        if not (root / "docs" / d / "_modelo.md").is_file()
-    ]
+    problems = [f"modelo ausente: docs/{d}/_modelo.md" for d in ("intent", "specs", "plans", "adr", "runbooks") if not (root / "docs" / d / "_modelo.md").is_file()]
     problems += front_matter_errors(root)
-    if drift_violation(
-        changed_files(args.staged, args.base), os.environ.get("PR_BODY", "")
-    ):
-        problems.append(
-            "código mudou sem nenhuma doc; atualize a doc no mesmo PR ou escreva 'Docs: não se aplica (motivo)' no PR"
-        )
+    if drift_violation(changed_files(args.staged, args.base), os.environ.get("PR_BODY", "")):
+        problems.append("código mudou sem nenhuma doc; atualize a doc no mesmo PR ou escreva 'Docs: não se aplica (motivo)' no PR")
     if problems:
         return fail("checagem de documentação", problems)
     return 0

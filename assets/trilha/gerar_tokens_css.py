@@ -53,9 +53,7 @@ def gerar(dados):
     linhas = []
     add = linhas.append
 
-    add(
-        "/* Trilha tokens: gerado de tokens.json por assets/trilha/gerar_tokens_css.py (não editar à mão) */"
-    )
+    add("/* Trilha tokens: gerado de tokens.json por assets/trilha/gerar_tokens_css.py (não editar à mão) */")
 
     # Tema claro (padrão).
     add(":root {")
@@ -85,7 +83,7 @@ def gerar(dados):
     add("}")
 
     # Escuro explícito.
-    add(':root[data-theme="dark"] {')
+    add(":root[data-theme=\"dark\"] {")
     add("  color-scheme: dark;")
     for t in colors:
         add(_decl(t["name"], _pair(t["value"], "dark"), "  "))
@@ -94,7 +92,7 @@ def gerar(dados):
     add("}")
 
     # Papel (sépia para leitura), em qualquer elemento.
-    add('[data-theme="paper"] {')
+    add("[data-theme=\"paper\"] {")
     add("  color-scheme: light;")
     for t in colors:
         add(_decl(t["name"], _pair(t["value"], PAPER_KEY), "  "))

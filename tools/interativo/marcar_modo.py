@@ -5,15 +5,10 @@ Idempotente: rodar de novo não duplica nada. Faz duas coisas:
 - põe data-interativo="<COD>-interativo.html" em <html>, lido por assets/course.js.
 Nunca escreve dentro de <script>. Uso: python3 tools/interativo/marcar_modo.py [modulos/*/]
 """
+import pathlib, re, sys
 
-import pathlib
-import re
-import sys
-
-BOX = re.compile(
-    r'\n?<div class="box ok"><strong>Versão interativa:</strong>[^\n]*?</div>'
-)
-HTML_TAG = re.compile(r"<html\b([^>]*)>")
+BOX = re.compile(r'\n?<div class="box ok"><strong>Versão interativa:</strong>[^\n]*?</div>')
+HTML_TAG = re.compile(r'<html\b([^>]*)>')
 
 
 def marcar(texto_path: pathlib.Path, cod: str) -> bool:
@@ -22,9 +17,7 @@ def marcar(texto_path: pathlib.Path, cod: str) -> bool:
     novo = BOX.sub("", fonte, count=1)
     alvo = f"{cod}-interativo.html"
     if f'data-interativo="{alvo}"' not in novo:
-        novo = HTML_TAG.sub(
-            lambda m: f'<html{m.group(1)} data-interativo="{alvo}">', novo, count=1
-        )
+        novo = HTML_TAG.sub(lambda m: f'<html{m.group(1)} data-interativo="{alvo}">', novo, count=1)
     if novo != fonte:
         texto_path.write_text(novo, encoding="utf-8")
         return True

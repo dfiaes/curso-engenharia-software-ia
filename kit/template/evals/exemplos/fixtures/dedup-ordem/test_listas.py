@@ -1,5 +1,4 @@
 import unittest
-
 from listas import sem_duplicados
 
 

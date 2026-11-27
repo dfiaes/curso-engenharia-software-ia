@@ -3,7 +3,6 @@
 O Claude Code envia os dados do evento como JSON no stdin do hook.
 Sair com código 2 cancela a ferramenta e devolve o stderr ao modelo.
 """
-
 import json
 import sys
 

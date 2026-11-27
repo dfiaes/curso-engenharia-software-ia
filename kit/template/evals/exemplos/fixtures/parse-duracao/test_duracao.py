@@ -1,5 +1,4 @@
 import unittest
-
 from duracao import para_segundos
 
 
@@ -12,5 +11,6 @@ class TestDuracao(unittest.TestCase):
 
     def test_invalidos(self):
         for ruim in ["", "abc", "30", "1m1h", "1h 30m", "-5s", "1h1h"]:
-            with self.subTest(ruim=ruim), self.assertRaises(ValueError):
-                para_segundos(ruim)
+            with self.subTest(ruim=ruim):
+                with self.assertRaises(ValueError):
+                    para_segundos(ruim)

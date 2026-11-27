@@ -6,4 +6,4 @@ def paginar(itens, pagina, tamanho):
     if tamanho <= 0 or pagina < 1:
         raise ValueError("pagina >= 1 e tamanho > 0")
     ini = (pagina - 1) * tamanho
-    return list(itens[ini : ini + tamanho])
+    return list(itens[ini:ini + tamanho])

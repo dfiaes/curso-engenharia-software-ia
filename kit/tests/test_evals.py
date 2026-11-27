@@ -9,40 +9,24 @@ import pytest
 EVALS = Path(__file__).resolve().parents[1] / "template" / "evals"
 sys.path.insert(0, str(EVALS))
 
-import run_evals as ev
+import run_evals as ev  # noqa: E402
 
 EXEMPLOS = EVALS / "exemplos"
 
 
-def reg(
-    caso: str, variante: str, tentativa: int, ok: bool, custo: float | None = 0.01, **kw
-):  # type: ignore[no-untyped-def]
-    base = {
-        "caso": caso,
-        "variante": variante,
-        "modelo": "m",
-        "tentativa": tentativa,
-        "sucesso": ok,
-        "motivo": "" if ok else "verificar.comando (exit 1)",
-        "latencia_s": 1.0,
-        "tokens_entrada": 1,
-        "tokens_saida": 1,
-        "custo": custo,
-        "acionou_skill": None,
-        "deve_acionar_skill": None,
-    }
+def reg(caso: str, variante: str, tentativa: int, ok: bool, custo: float | None = 0.01, **kw):  # type: ignore[no-untyped-def]
+    base = {"caso": caso, "variante": variante, "modelo": "m", "tentativa": tentativa, "sucesso": ok,
+            "motivo": "" if ok else "verificar.comando (exit 1)", "latencia_s": 1.0, "tokens_entrada": 1,
+            "tokens_saida": 1, "custo": custo, "acionou_skill": None, "deve_acionar_skill": None}
     base.update(kw)
     return base
 
 
 def test_pass_k_pass_at_k_e_custo_por_sucesso() -> None:
     regs = [
-        reg("c1", "A", 1, True, 0.10),
-        reg("c1", "A", 2, True, 0.10),  # sempre ok
-        reg("c2", "A", 1, True, 0.10),
-        reg("c2", "A", 2, False, 0.10),  # intermitente
-        reg("c3", "A", 1, False, 0.10),
-        reg("c3", "A", 2, False, 0.10),  # nunca
+        reg("c1", "A", 1, True, 0.10), reg("c1", "A", 2, True, 0.10),   # sempre ok
+        reg("c2", "A", 1, True, 0.10), reg("c2", "A", 2, False, 0.10),  # intermitente
+        reg("c3", "A", 1, False, 0.10), reg("c3", "A", 2, False, 0.10), # nunca
     ]
     m = ev.pass_metricas(ev.por_caso(regs, "A"))
     assert m["pass1"] == pytest.approx((1 + 0.5 + 0) / 3)
@@ -103,113 +87,48 @@ def test_parsing_toml(tmp_path: Path) -> None:
 
 def test_segredo_literal_recusado(tmp_path: Path) -> None:
     f = tmp_path / "v.toml"
-    f.write_text(
-        '[[variante]]\nnome="a"\ncomando="x"\nenv={ MY_API_KEY = "sk-literal" }\n',
-        encoding="utf-8",
-    )
+    f.write_text('[[variante]]\nnome="a"\ncomando="x"\nenv={ MY_API_KEY = "sk-literal" }\n', encoding="utf-8")
     with pytest.raises(ValueError, match="segredo"):
         ev.carregar_variantes(f)
-    f.write_text(
-        '[[variante]]\nnome="a"\ncomando="x"\nenv={ MY_API_KEY = "$MY_API_KEY" }\n',
-        encoding="utf-8",
-    )
+    f.write_text('[[variante]]\nnome="a"\ncomando="x"\nenv={ MY_API_KEY = "$MY_API_KEY" }\n', encoding="utf-8")
     assert ev.carregar_variantes(f)[0][0].env["MY_API_KEY"] == "$MY_API_KEY"
 
 
 def test_extrair_tokens() -> None:
-    assert ev.extrair_tokens(
-        r"entrada=(?P<entrada>\d+) saida=(?P<saida>\d+)", "uso: entrada=10 saida=20"
-    ) == (10, 20)
+    assert ev.extrair_tokens(r"entrada=(?P<entrada>\d+) saida=(?P<saida>\d+)", "uso: entrada=10 saida=20") == (10, 20)
     assert ev.extrair_tokens(r"in (\d+) out (\d+)", "in 5 out 6") == (5, 6)
     assert ev.extrair_tokens(None, "x") == (None, None)
 
 
 def _cli(tmp_path: Path, *extra: str) -> Path:
     saida = tmp_path / "saida"
-    rc = ev.main(
-        [
-            "--config",
-            str(EXEMPLOS / "variantes.toml"),
-            "--casos-dir",
-            str(EXEMPLOS / "casos"),
-            "--saida",
-            str(saida),
-            "--paralelo",
-            "4",
-            *extra,
-        ]
-    )
+    rc = ev.main(["--config", str(EXEMPLOS / "variantes.toml"), "--casos-dir", str(EXEMPLOS / "casos"),
+                  "--saida", str(saida), "--paralelo", "4", *extra])
     assert rc == 0
     return saida
 
 
 def test_ponta_a_ponta_com_agente_fake(tmp_path: Path) -> None:
-    saida = _cli(
-        tmp_path, "--variantes", "modelo-grande,modelo-pequeno", "--repeticoes", "2"
-    )
-    linhas = [
-        json.loads(x)
-        for x in (saida / "resultados.jsonl").read_text(encoding="utf-8").splitlines()
-    ]
+    saida = _cli(tmp_path, "--variantes", "modelo-grande,modelo-pequeno", "--repeticoes", "2")
+    linhas = [json.loads(x) for x in (saida / "resultados.jsonl").read_text(encoding="utf-8").splitlines()]
     assert len(linhas) == 8 * 2 * 2
-    assert {
-        "caso",
-        "variante",
-        "tentativa",
-        "sucesso",
-        "motivo",
-        "latencia_s",
-        "custo",
-        "acionou_skill",
-    } <= set(linhas[0])
+    assert {"caso", "variante", "tentativa", "sucesso", "motivo", "latencia_s", "custo", "acionou_skill"} <= set(linhas[0])
     rel = (saida / "relatorio.md").read_text(encoding="utf-8")
-    for trecho in (
-        "pass^k",
-        "pass@k",
-        "Custo/sucesso",
-        "McNemar exato",
-        "Recomendação",
-        "modelo-grande",
-        "modelo-pequeno",
-    ):
+    for trecho in ("pass^k", "pass@k", "Custo/sucesso", "McNemar exato", "Recomendação", "modelo-grande", "modelo-pequeno"):
         assert trecho in rel
-    por = {
-        v: ev.resumo_variante(linhas, v) for v in ("modelo-grande", "modelo-pequeno")
-    }
+    por = {v: ev.resumo_variante(linhas, v) for v in ("modelo-grande", "modelo-pequeno")}
     assert por["modelo-grande"]["pass1"] > por["modelo-pequeno"]["pass1"]
     assert por["modelo-grande"]["custo_total"] > por["modelo-pequeno"]["custo_total"]
     # determinístico: segunda execução dá os mesmos sucessos
-    saida2 = _cli(
-        tmp_path / "b",
-        "--variantes",
-        "modelo-grande,modelo-pequeno",
-        "--repeticoes",
-        "2",
-    )
-    l2 = [
-        json.loads(x)
-        for x in (saida2 / "resultados.jsonl").read_text(encoding="utf-8").splitlines()
-    ]
-    chave = lambda r: (r["variante"], r["caso"], r["tentativa"])
-    assert {chave(r): r["sucesso"] for r in linhas} == {
-        chave(r): r["sucesso"] for r in l2
-    }
+    saida2 = _cli(tmp_path / "b", "--variantes", "modelo-grande,modelo-pequeno", "--repeticoes", "2")
+    l2 = [json.loads(x) for x in (saida2 / "resultados.jsonl").read_text(encoding="utf-8").splitlines()]
+    chave = lambda r: (r["variante"], r["caso"], r["tentativa"])  # noqa: E731
+    assert {chave(r): r["sucesso"] for r in linhas} == {chave(r): r["sucesso"] for r in l2}
 
 
 def test_modo_skill_detecta_falso_positivo(tmp_path: Path) -> None:
-    saida = _cli(
-        tmp_path,
-        "--variantes",
-        "modelo-grande",
-        "--skill-ab",
-        "corrigir-bug",
-        "--repeticoes",
-        "3",
-    )
-    linhas = [
-        json.loads(x)
-        for x in (saida / "resultados.jsonl").read_text(encoding="utf-8").splitlines()
-    ]
+    saida = _cli(tmp_path, "--variantes", "modelo-grande", "--skill-ab", "corrigir-bug", "--repeticoes", "3")
+    linhas = [json.loads(x) for x in (saida / "resultados.jsonl").read_text(encoding="utf-8").splitlines()]
     ac = ev.acionamento(linhas, "modelo-grande+com-skill")
     assert ac["disponivel"] and ac["falsos_positivos"] > 0
     assert ev.acionamento(linhas, "modelo-grande+sem-skill")["falsos_positivos"] == 0
@@ -233,21 +152,11 @@ def test_comando_que_falha_e_timeout(tmp_path: Path) -> None:
     r = ev.executar_tentativa(caso, lento, 1, timeout=0.5)
     assert r["sucesso"] is False and r["motivo"] == "timeout" and r["latencia_s"] < 4
     quebra = ev.Variante(nome="quebra", comando="exit 3")
-    assert ev.executar_tentativa(caso, quebra, 1, timeout=5)["motivo"].startswith(
-        "agente_erro"
-    )
+    assert ev.executar_tentativa(caso, quebra, 1, timeout=5)["motivo"].startswith("agente_erro")
     verif = ev.Caso(id="v", descricao="", prompt="p", comando="exit 1")
     ok = ev.Variante(nome="ok", comando="echo oi")
-    assert ev.executar_tentativa(verif, ok, 1, timeout=5)["motivo"].startswith(
-        "verificar.comando"
-    )
-    rx = ev.Caso(
-        id="r",
-        descricao="",
-        prompt="p",
-        regex_saida="^oi$",
-        arquivos_esperados=["nao-existe.txt"],
-    )
+    assert ev.executar_tentativa(verif, ok, 1, timeout=5)["motivo"].startswith("verificar.comando")
+    rx = ev.Caso(id="r", descricao="", prompt="p", regex_saida="^oi$", arquivos_esperados=["nao-existe.txt"])
     assert "arquivos_esperados" in ev.executar_tentativa(rx, ok, 1, timeout=5)["motivo"]
 
 

@@ -11,7 +11,6 @@ class ListaWrapper:
     async def processar(self):
         # código bloqueante dentro de async
         import time
-
         time.sleep(2)
         try:
             for i in range(len(self._dados)):

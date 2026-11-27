@@ -4,13 +4,14 @@
 from __future__ import annotations
 
 import argparse
-import json
-import re
 from html.parser import HTMLParser
+import json
 from pathlib import Path
+import re
 from typing import Any
 
 import build_docs
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "portal" / "course-source.json"
@@ -35,11 +36,7 @@ class HeadingParser(HTMLParser):
             self._section_ids.append(values.get("id", ""))
         if tag in {"h1", "h2"}:
             inherited = next((item for item in reversed(self._section_ids) if item), "")
-            self._heading = {
-                "tag": tag,
-                "id": values.get("id", "") or inherited,
-                "text": [],
-            }
+            self._heading = {"tag": tag, "id": values.get("id", "") or inherited, "text": []}
 
     def handle_data(self, data: str) -> None:
         if self._heading is not None:
@@ -99,9 +96,7 @@ def build_manifest(allow_missing: bool = False) -> dict[str, Any]:
             raise ValueError(f"{code}: phase {phase!r} is not contiguous")
 
         content_files = unit.pop("contentFiles", [unit["file"]])
-        missing = [
-            relative for relative in content_files if not (ROOT / relative).is_file()
-        ]
+        missing = [relative for relative in content_files if not (ROOT / relative).is_file()]
         if missing and not allow_missing:
             raise ValueError(f"missing unit file: {missing[0]}")
 
@@ -132,9 +127,7 @@ def build_manifest(allow_missing: bool = False) -> dict[str, Any]:
 
         ordered = [blocks_by_number[number] for number in sorted(blocks_by_number)]
         if not ordered and not allow_missing:
-            raise ValueError(
-                f"{code}: no 'Bloco N' headings found in {content_files[0]}"
-            )
+            raise ValueError(f"{code}: no 'Bloco N' headings found in {content_files[0]}")
         main_headings = parsed_by_file[0][1] if parsed_by_file else []
         unit["blocks"] = ordered
         unit["optional"] = {
@@ -142,9 +135,7 @@ def build_manifest(allow_missing: bool = False) -> dict[str, Any]:
             "checkpointAnchor": optional_anchor(main_headings, "Checkpoint"),
         }
         unit["status"] = AVAILABLE if ordered else WRITING
-        interactive = Path(unit["file"]).with_name(
-            Path(unit["file"]).stem + "-interativo.html"
-        )
+        interactive = Path(unit["file"]).with_name(Path(unit["file"]).stem + "-interativo.html")
         if (ROOT / interactive).is_file():
             unit["fileInterativo"] = interactive.as_posix()
         units.append(unit)
@@ -153,13 +144,9 @@ def build_manifest(allow_missing: bool = False) -> dict[str, Any]:
     for index, unit in enumerate(units):
         for prerequisite in unit["prerequisites"]:
             if prerequisite not in position:
-                raise ValueError(
-                    f"{unit['code']}: unknown prerequisites {[prerequisite]}"
-                )
+                raise ValueError(f"{unit['code']}: unknown prerequisites {[prerequisite]}")
             if position[prerequisite] >= index:
-                raise ValueError(
-                    f"{unit['code']}: prerequisite {prerequisite} must come earlier in the curriculum"
-                )
+                raise ValueError(f"{unit['code']}: prerequisite {prerequisite} must come earlier in the curriculum")
 
     return {
         "schemaVersion": 2,
@@ -170,10 +157,7 @@ def build_manifest(allow_missing: bool = False) -> dict[str, Any]:
         "totalBlocks": sum(len(unit["blocks"]) for unit in units),
         "totalHours": sum(unit["hours"] for unit in units),
         "phases": [
-            {
-                "name": name,
-                "units": [unit["code"] for unit in units if unit["phase"] == name],
-            }
+            {"name": name, "units": [unit["code"] for unit in units if unit["phase"] == name]}
             for name in phase_order
         ],
         "units": units,
@@ -189,11 +173,7 @@ def render(manifest: dict[str, Any]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="validate generated files without rewriting",
-    )
+    parser.add_argument("--check", action="store_true", help="validate generated files without rewriting")
     parser.add_argument(
         "--allow-missing",
         action="store_true",
@@ -203,28 +183,14 @@ def main() -> int:
     manifest = build_manifest(allow_missing=args.allow_missing)
     manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
     output_text = render(manifest)
-    manifest_js = (
-        "window.COURSE_MANIFEST = "
-        + json.dumps(manifest, ensure_ascii=False, separators=(",", ":"))
-        + ";\n"
-    )
+    manifest_js = "window.COURSE_MANIFEST = " + json.dumps(manifest, ensure_ascii=False, separators=(",", ":")) + ";\n"
 
     if args.check:
         errors: list[str] = build_docs.build(check=True)
-        if (
-            not MANIFEST.is_file()
-            or MANIFEST.read_text(encoding="utf-8") != manifest_text
-        ):
-            errors.append(
-                "portal/course-manifest.json is stale; run tools/build_course_portal.py"
-            )
-        if (
-            not MANIFEST_JS.is_file()
-            or MANIFEST_JS.read_text(encoding="utf-8") != manifest_js
-        ):
-            errors.append(
-                "assets/course-manifest.js is stale; run tools/build_course_portal.py"
-            )
+        if not MANIFEST.is_file() or MANIFEST.read_text(encoding="utf-8") != manifest_text:
+            errors.append("portal/course-manifest.json is stale; run tools/build_course_portal.py")
+        if not MANIFEST_JS.is_file() or MANIFEST_JS.read_text(encoding="utf-8") != manifest_js:
+            errors.append("assets/course-manifest.js is stale; run tools/build_course_portal.py")
         if not OUTPUT.is_file() or OUTPUT.read_text(encoding="utf-8") != output_text:
             errors.append("index.html is stale; run tools/build_course_portal.py")
         if errors:
