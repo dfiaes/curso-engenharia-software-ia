@@ -1,6 +1,16 @@
 /* Gerado por tools/build_diario.py — não edite. */
 window.DIARIO_RADAR = [
  {
+  "data": "2026-11-28",
+  "texto_html": "<strong>Lip Dictation:</strong> plugin protótipo para Claude Code em Macs Apple Silicon que lê lábios com modelo local e coloca o texto no prompt sem enviar; o autor avisa que a precisão com boca em silêncio é menor que no benchmark (repositório criado em 26/11, não aberto aqui; via AI Impact Hub). Não avaliado.",
+  "url_edicao": "diario/edicoes/2026/2026-11-28.html"
+ },
+ {
+  "data": "2026-11-28",
+  "texto_html": "<strong>Conversation Management API do Antigravity (2.35.0):</strong> API para gerenciar conversas do app. Não avaliada; documentação não lida.",
+  "url_edicao": "diario/edicoes/2026/2026-11-28.html"
+ },
+ {
   "data": "2026-11-27",
   "texto_html": "<strong>Hub (dispatcher de sessões Claude Code/Codex):</strong> orquestra várias sessões de agente de código com metas pelo navegador ou Telegram. Não avaliado; confira como guarda tokens antes de expor.",
   "url_edicao": "diario/edicoes/2026/2026-11-27.html"

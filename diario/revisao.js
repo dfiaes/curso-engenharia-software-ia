@@ -902,5 +902,26 @@ window.DIARIO_REVISAO = [
   ],
   "porque": "Segundo a Adversa (09/11), os provedores OAuth de client credentials e private key JWT não vinculavam o issuer, então o segredo podia ir para um servidor de autorização anunciado pelo atacante. A versão nova só ajuda se o issuer for configurado, e segredo que pode ter vazado precisa ser trocado.",
   "url": "diario/edicoes/2026/2026-11-27.html"
+ },
+ {
+  "id": "2026-11-28#1",
+  "data": "2026-11-28",
+  "pergunta": "Segundo a análise da i-scoop sobre o llama.cpp 1.0, o que o novo contrato de versão semântica garante?",
+  "opcoes": [
+   {
+    "texto": "Que mudança incompatível na API C pública de libllama e libggml só sai em versão major",
+    "correta": true
+   },
+   {
+    "texto": "Que a API HTTP do llama-server e as flags de linha de comando não mudam dentro da 1.x",
+    "correta": false
+   },
+   {
+    "texto": "Que todo arquivo GGUF criado hoje continuará carregando em qualquer 1.x",
+    "correta": false
+   }
+  ],
+  "porque": "O contrato vale para os headers públicos de libllama e libggml. A matéria diz que ele não cobre o llama-server, as flags de CLI, o GGUF nem uma janela de suporte para a 1.x. Quem fala com o llama-server por HTTP continua precisando fixar versão e testar.",
+  "url": "diario/edicoes/2026/2026-11-28.html"
  }
 ];

@@ -2,6 +2,29 @@
 window.DIARIO = {
  "edicoes": [
   {
+   "data": "2026-11-28",
+   "titulo": "O contrato da 1.0 do llama.cpp não cobre o llama-server nem o GGUF; Antigravity 2.36 deixa o modo Auto aprovar edições fora do projeto",
+   "resumo": "Análise de 27/11 detalha que o versionamento semântico do llama.cpp 1.0 vale só para libllama e libggml, não para a API HTTP do llama-server, as flags de linha de comando nem o formato GGUF; o app Antigravity 2.36.0 (27/11) passa a aprovar no modo Auto edições seguras fora do projeto; OpenAI contra-processa a Apple; dia fraco em releases.",
+   "tags": [
+    "llm-local",
+    "ferramentas-dev",
+    "seguranca",
+    "mercado",
+    "open-source"
+   ],
+   "modulos_afetados": [
+    {
+     "modulo": "M11",
+     "motivo": "Segundo a i-scoop (27/11), o contrato de versão do llama.cpp 1.0 cobre só a API C de libllama e libggml; a API HTTP do llama-server, as flags de CLI e o formato GGUF ficam fora, e não há janela de suporte para a 1.x. Se o módulo apresenta a 1.0 como garantia de estabilidade para quem usa o llama-server, precisa da ressalva."
+    },
+    {
+     "modulo": "M01",
+     "motivo": "Antigravity 2.36.0 (27/11): o modo Auto passa a aprovar edições consideradas seguras fora da pasta do projeto. Bom contraste para o bloco de permissões e escopo de escrita de agentes de código; conferir se o módulo trata o diretório do projeto como fronteira garantida."
+    }
+   ],
+   "url": "diario/edicoes/2026/2026-11-28.html"
+  },
+  {
    "data": "2026-11-27",
    "titulo": "Google exige MCP ou CLI para agentes de IA no Workspace a partir de 1/2/2027, com retenção de 30 dias para embeddings e índices de memória; avisos recentes em servidores MCP mostram o que conferir antes de migrar",
    "resumo": "Segundo a Help Net Security (26/11), o novo Workspace AI Tools Addendum obriga agentes a usar os servidores MCP ou o CLI do Workspace, com aplicação técnica a partir de 1/2/2027 e cobrança de cota a partir de 1/4/2027; avisos de segurança de novembro em server-everything, SDK TypeScript e FastMCP lembram que um servidor MCP mal configurado vira porta aberta; dia fraco em releases de ferramentas.",
